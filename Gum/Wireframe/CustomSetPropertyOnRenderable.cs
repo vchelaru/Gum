@@ -1099,6 +1099,7 @@ public class CustomSetPropertyOnRenderable
                     // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
                     try
                     {
+                        var projectState = Locator.GetRequiredService<IProjectState>();
                         BmfcSave.CreateBitmapFontFilesIfNecessary(
                             fontSizeStack.Peek(),
                             fontNameStack.Peek(),
@@ -1106,9 +1107,9 @@ public class CustomSetPropertyOnRenderable
                             useFontSmoothingStack.Peek(),
                             isItalicStack.Peek(),
                             isBoldStack.Peek(),
-                            GumState.Self.ProjectState.GumProjectSave?.FontRanges,
-                            GumState.Self.ProjectState.GumProjectSave?.FontSpacingHorizontal ?? 1,
-                            GumState.Self.ProjectState.GumProjectSave?.FontSpacingVertical ?? 1
+                            projectState.GumProjectSave?.FontRanges,
+                            projectState.GumProjectSave?.FontSpacingHorizontal ?? 1,
+                            projectState.GumProjectSave?.FontSpacingVertical ?? 1
 
                             );
                     }

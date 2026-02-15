@@ -11,15 +11,17 @@ namespace Gum.Logic.FileWatch;
 
 public class FileWatchLogic
 {
-    FileWatchManager _fileWatchManager;
+    IFileWatchManager _fileWatchManager;
     private readonly IGuiCommands _guiCommands;
+    private readonly IProjectState _projectState;
 
     public bool Enabled => _fileWatchManager.Enabled;
 
     public FileWatchLogic()
     {
-        _fileWatchManager = Locator.GetRequiredService<FileWatchManager>();
+        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _projectState = Locator.GetRequiredService<IProjectState>();
     }
 
     public void HandleProjectLoaded()
@@ -34,7 +36,7 @@ public class FileWatchLogic
     public void RefreshRootDirectory()
     {
 
-        if (ProjectManager.Self.GumProjectSave?.FullFileName != null)
+        if (Locator.GetRequiredService<IProjectManager>().GumProjectSave?.FullFileName != null)
         {
             var directories = GetFileWatchRootDirectories();
             _fileWatchManager.EnableWithDirectories(directories);
@@ -88,7 +90,7 @@ public class FileWatchLogic
             }
         }
 
-        foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+        foreach (var screen in _projectState.GumProjectSave.Screens)
         {
             try
             {
@@ -101,7 +103,7 @@ public class FileWatchLogic
                 _guiCommands.PrintOutput(e.ToString());
             }
         }
-        foreach (var component in ProjectState.Self.GumProjectSave.Components)
+        foreach (var component in _projectState.GumProjectSave.Components)
         {
             try
             {
@@ -113,7 +115,7 @@ public class FileWatchLogic
                 _guiCommands.PrintOutput(e.ToString());
             }
         }
-        foreach (var standardElement in ProjectState.Self.GumProjectSave.StandardElements)
+        foreach (var standardElement in _projectState.GumProjectSave.StandardElements)
         {
             try
             {
@@ -126,7 +128,7 @@ public class FileWatchLogic
             }
         }
 
-        FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
+        FilePath gumProjectFilePath = Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName;
 
         if (gumProjectFilePath != null)
         {
@@ -141,18 +143,18 @@ public class FileWatchLogic
             //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Behaviors/");
             //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "FontCache/");
 
-            var gumProject = GumState.Self.ProjectState.GumProjectSave;
+            var gumProject = _projectState.GumProjectSave;
             if (!string.IsNullOrEmpty(gumProject.LocalizationFile))
             {
                 var localizationDirectory = new FilePath(
-                        GumState.Self.ProjectState.ProjectDirectory + gumProject.LocalizationFile)
+                        _projectState.ProjectDirectory + gumProject.LocalizationFile)
                     .GetDirectoryContainingThis();
                 directories.Add(localizationDirectory);
             }
             if (gumProject.UseFontCharacterFile)
             {
                 var fontCharacterDirectory = new FilePath(
-                        GumState.Self.ProjectState.ProjectDirectory + ".gumfcs")
+                        _projectState.ProjectDirectory + ".gumfcs")
                     .GetDirectoryContainingThis();
                 directories.Add(fontCharacterDirectory);
             }

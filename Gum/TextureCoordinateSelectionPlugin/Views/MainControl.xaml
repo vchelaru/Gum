@@ -17,9 +17,15 @@
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
 
-            <Button Content="-" MinWidth="24" Click="HandleMinusClicked"/>
-            <ComboBox ItemsSource="{Binding AvailableZoomLevels}" SelectedItem="{Binding SelectedZoomLevel}"/>
-            <Button Content="+" MinWidth="24" Click="HandlePlusClicked"/>
+            <Button
+                MinWidth="24"
+                Click="HandleMinusClicked"
+                Content="-" />
+            <ComboBox ItemsSource="{Binding AvailableZoomLevels}" SelectedItem="{Binding SelectedZoomLevel}" />
+            <Button
+                MinWidth="24"
+                Click="HandlePlusClicked"
+                Content="+" />
 
 
             <CheckBox
@@ -38,18 +44,21 @@
         </StackPanel>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <WindowsFormsHost KeyDown="HandleKeyDown">
                 <specializedxnacontrols:ImageRegionSelectionControl x:Name="InnerControl" />
             </WindowsFormsHost>
-            <ScrollBar Grid.Column="1" x:Name="VerticalScrollBar"/>
-            <ScrollBar Grid.Row="1" Orientation="Horizontal" x:Name="HorizontalScrollBar"/>
+            <ScrollBar x:Name="VerticalScrollBar" Grid.Column="1" />
+            <ScrollBar
+                x:Name="HorizontalScrollBar"
+                Grid.Row="1"
+                Orientation="Horizontal" />
         </Grid>
     </Grid>
 </UserControl>

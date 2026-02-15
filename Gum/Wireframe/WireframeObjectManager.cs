@@ -63,13 +63,15 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     GraphicalUiElementManager gueManager;
     private LocalizationService _localizationService;
     private readonly PluginManager _pluginManager;
+    private readonly IProjectState _projectState;
 
     public WireframeObjectManager(FontManager fontManager,
         ISelectedState selectedState,
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationService localizationService, 
-        PluginManager pluginManager)
+        LocalizationService localizationService,
+        PluginManager pluginManager,
+        IProjectState projectState)
     {
         _fontManager = fontManager;
         _selectedState = selectedState;
@@ -77,6 +79,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         _guiCommands = guiCommands;
         _localizationService = localizationService;
         _pluginManager = pluginManager;
+        _projectState = projectState;
 
         gueManager = new GraphicalUiElementManager();
     }
@@ -299,7 +302,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
     public void ApplyLocalization(GraphicalUiElement gue, string forcedId = null)
     {
-        var shouldLocalize = GumState.Self.ProjectState.GumProjectSave.ShowLocalizationInGum;
+        var shouldLocalize = _projectState.GumProjectSave.ShowLocalizationInGum;
         //if(gue.Tag is InstanceSave instance)
         //{
         //    var rfv = new RecursiveVariableFinder(_selectedState.SelectedStateSave);

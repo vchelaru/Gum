@@ -15,11 +15,13 @@ internal class CodeGenerationFileLocationsService
 {
     CodeGenerator _codeGenerator;
     private readonly CodeGenerationNameVerifier _nameVerifier;
+    private readonly IProjectState _projectState;
 
-    public CodeGenerationFileLocationsService(CodeGenerator codeGenerator, CodeGenerationNameVerifier nameVerifier)
+    public CodeGenerationFileLocationsService(CodeGenerator codeGenerator, CodeGenerationNameVerifier nameVerifier, IProjectState projectState)
     {
         _codeGenerator = codeGenerator;
         _nameVerifier = nameVerifier;
+        _projectState = projectState;
     }
 
     public FilePath? GetGeneratedFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
@@ -62,7 +64,7 @@ internal class CodeGenerationFileLocationsService
                 var folder = codeOutputProjectSettings.CodeProjectRoot;
                 if (FileManager.IsRelative(folder))
                 {
-                    folder = GumState.Self.ProjectState.ProjectDirectory + folder;
+                    folder = _projectState.ProjectDirectory + folder;
                 }
 
                 generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
@@ -71,7 +73,7 @@ internal class CodeGenerationFileLocationsService
 
         if (!string.IsNullOrEmpty(generatedFileName) && FileManager.IsRelative(generatedFileName))
         {
-            generatedFileName = ProjectState.Self.ProjectDirectory + generatedFileName;
+            generatedFileName = _projectState.ProjectDirectory + generatedFileName;
         }
 
         // If it's empty, return null so it doesn't get used in code generation externally

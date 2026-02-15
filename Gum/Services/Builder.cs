@@ -86,9 +86,9 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<PluginManager>(PluginManager.Self);
         services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>(TypeManager.Self);
-        services.AddSingleton<ProjectState>(ProjectState.Self);
         services.AddSingleton<ProjectManager>(ProjectManager.Self);
         services.AddSingleton<IProjectManager>(provider => provider.GetRequiredService<ProjectManager>());
+        services.AddSingleton<IProjectState, ProjectState>();
         // We can do this once we get rid of usages of ProjectManager.Self because we have to inject. Until then, we can't do this.
         //services.AddSingleton<ProjectManager>(ProjectManager.Self);
 
@@ -115,11 +115,11 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IImportLogic>(provider => provider.GetRequiredService<ImportLogic>());
         services.AddSingleton<MainOutputViewModel>();
 
-        // temporary while transitioning all usage from WireframeObjectManager to IWireframeObjectManager
-        services.AddSingleton<WireframeObjectManager>();
-        services.AddSingleton<IWireframeObjectManager>(provider => provider.GetRequiredService<WireframeObjectManager>());
+        // WireframeObjectManager concrete class is needed for Initialize() call in Program.cs (two-stage initialization)
+        services.AddSingleton<IWireframeObjectManager, WireframeObjectManager>();
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
         services.AddSingleton<FileWatchManager>();
+        services.AddSingleton<IFileWatchManager>(provider => provider.GetRequiredService<FileWatchManager>());
         services.AddSingleton<ReorderLogic>();
         services.AddSingleton<IReorderLogic>(provider => provider.GetRequiredService<ReorderLogic>());
 

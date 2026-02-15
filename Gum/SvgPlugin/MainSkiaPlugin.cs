@@ -70,7 +70,8 @@ namespace SkiaPlugin
             var item = this.AddMenuItem(new List<string>() { "Plugins", "Add Skia Standard Elements" });
             item.Click += (not, used) =>
             {
-                if(GumState.Self.ProjectState.NeedsToSaveProject)
+                var projectState = Locator.GetRequiredService<IProjectState>();
+                if(projectState.NeedsToSaveProject)
                 {
                     _dialogService.ShowMessage("You must first save your project before adding Skia Standard Elements");
                 }

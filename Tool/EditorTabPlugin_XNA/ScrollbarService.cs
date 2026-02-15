@@ -1,5 +1,6 @@
 ﻿using FlatRedBall.SpecializedXnaControls;
 using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Services;
@@ -17,13 +18,13 @@ public class ScrollbarService
 {
     ScrollBarControlLogic scrollBarControlLogic;
     private readonly ISelectedState _selectedState;
-    private readonly WireframeObjectManager _wireframeObjectManager;
-    private readonly ProjectManager _projectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly IProjectManager _projectManager;
 
-    public ScrollbarService(ProjectManager projectManager)
+    public ScrollbarService(IProjectManager projectManager)
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
         _projectManager = projectManager;
     }
     

@@ -14,6 +14,8 @@ namespace Gum.DataTypes;
 public static class ElementSaveExtensionMethodsGumTool
 {
     private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
+    private static readonly IProjectManager _projectManager = Locator.GetRequiredService<IProjectManager>();
+
     public static FilePath? GetFullPathXmlFile(this ElementSave? elementSave)
     {
         return elementSave?.GetFullPathXmlFile(elementSave.Name);
@@ -22,8 +24,7 @@ public static class ElementSaveExtensionMethodsGumTool
 
     public static FilePath? GetFullPathXmlFile(this ElementSave elementSave, string elementSaveName)
     {
-        ProjectManager projectManager = ProjectManager.Self;
-        var gumProject = projectManager.GumProjectSave;
+        var gumProject = _projectManager.GumProjectSave;
         if (string.IsNullOrEmpty(gumProject?.FullFileName))
         {
             return null;

@@ -1,7 +1,9 @@
 using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views;
+using Gum.Services;
 using System;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -30,7 +32,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
         private void RefreshMenuItems()
         {
-            var recentFiles = ProjectManager.Self.GeneralSettingsFile?.RecentProjects;
+            var recentFiles = Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile?.RecentProjects;
 
 
             recentFilesMenuItem.DropDownItems.Clear();
@@ -113,7 +115,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
         private async void HandleLoadRecentClicked(object? sender, EventArgs e)
         {
             var viewModel = new LoadRecentViewModel();
-            var recentFiles = ProjectManager.Self.GeneralSettingsFile.RecentProjects;
+            var recentFiles = Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile.RecentProjects;
             viewModel.AllItems.Clear();
             if (recentFiles != null)
             {

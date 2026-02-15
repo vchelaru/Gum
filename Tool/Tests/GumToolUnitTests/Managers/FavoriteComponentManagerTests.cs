@@ -37,7 +37,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
 
         // Assert
         project.FavoriteComponents.ShouldContain("TestComponent");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Once);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Once);
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
         // Assert
         project.FavoriteComponents.Count.ShouldBe(1);
         project.FavoriteComponents.ShouldContain("TestComponent");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Never);
     }
 
 
@@ -69,7 +69,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
 
         // Act & Assert - should not throw
         _favoriteComponentManager.AddToFavorites(component);
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Never);
     }
 
     #endregion
@@ -222,7 +222,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
         project.FavoriteComponents.Count.ShouldBe(1);
         project.FavoriteComponents.ShouldNotContain("Component1");
         project.FavoriteComponents.ShouldContain("Component2");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Once);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Once);
     }
 
     [Fact]
@@ -241,7 +241,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
         // Assert
         project.FavoriteComponents.Count.ShouldBe(1);
         project.FavoriteComponents.ShouldContain("Component1");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]
@@ -253,7 +253,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
 
         // Act & Assert - should not throw
         _favoriteComponentManager.HandleComponentDeleted(component);
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Never);
     }
 
     #endregion
@@ -276,7 +276,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
         project.FavoriteComponents.ShouldNotContain("OldName");
         project.FavoriteComponents.ShouldContain("NewName");
         project.FavoriteComponents.ShouldContain("Component2");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Once);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Once);
     }
 
     [Fact]
@@ -295,7 +295,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
         project.FavoriteComponents.ShouldContain("Component1");
         project.FavoriteComponents.ShouldContain("Component2");
         project.FavoriteComponents.ShouldNotContain("NewName");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]
@@ -309,7 +309,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
         // Act & Assert - should not throw
         _favoriteComponentManager.HandleComponentRenamed("", "NewName");
         project.FavoriteComponents.Count.ShouldBe(1);
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]
@@ -326,7 +326,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
         // Assert
         project.FavoriteComponents.Count.ShouldBe(1);
         project.FavoriteComponents.ShouldContain(""); // Empty string replaces old name
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Once);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Once);
     }
 
     [Fact]
@@ -337,7 +337,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
 
         // Act & Assert - should not throw
         _favoriteComponentManager.HandleComponentRenamed("OldName", "NewName");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Never);
     }
 
     #endregion
@@ -412,7 +412,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
         // Assert
         project.FavoriteComponents.Count.ShouldBe(1);
         project.FavoriteComponents.ShouldContain("Component1");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]
@@ -432,7 +432,7 @@ public class FavoriteComponentManagerTests : BaseTestClass
         project.FavoriteComponents.Count.ShouldBe(1);
         project.FavoriteComponents.ShouldNotContain("Component1");
         project.FavoriteComponents.ShouldContain("Component2");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Once);
+        _mockProjectManager.Verify(pm => pm.SaveProject(It.IsAny<bool>()), Times.Once);
     }
 
     #endregion

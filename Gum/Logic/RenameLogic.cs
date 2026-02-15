@@ -75,13 +75,17 @@ public class RenameLogic : IRenameLogic
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly DeleteLogic _deleteLogic;
+    private readonly IProjectManager _projectManager;
+    private readonly IProjectState _projectState;
 
-    public RenameLogic(ISelectedState selectedState, 
-        INameVerifier nameVerifier, 
-        IDialogService dialogService, 
+    public RenameLogic(ISelectedState selectedState,
+        INameVerifier nameVerifier,
+        IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        DeleteLogic deleteLogic)
+        DeleteLogic deleteLogic,
+        IProjectManager projectManager,
+        IProjectState projectState)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -89,6 +93,8 @@ public class RenameLogic : IRenameLogic
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _deleteLogic = deleteLogic;
+        _projectManager = projectManager;
+        _projectState = projectState;
     }
 
     #region StateSave
@@ -222,7 +228,7 @@ public class RenameLogic : IRenameLogic
     {
         List<VariableChange> toReturn = new List<VariableChange>();
 
-        var project = GumState.Self.ProjectState.GumProjectSave;
+        var project = _projectState.GumProjectSave;
 
         var ownerAsElement = owner as ElementSave;
 
@@ -400,7 +406,7 @@ public class RenameLogic : IRenameLogic
 
     private void RenameAllReferencesTo(ElementSave elementSave, InstanceSave instance, string oldName)
     {
-        var project = ProjectManager.Self.GumProjectSave;
+        var project = _projectManager.GumProjectSave;
         // Tell the GumProjectSave to react to the rename.
         // This changes the names of the ElementSave references.
         project.ReactToRenamed(elementSave, instance, oldName);
@@ -411,7 +417,7 @@ public class RenameLogic : IRenameLogic
 
         if (instance == null)
         {
-            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+            foreach (var screen in _projectState.GumProjectSave.Screens)
             {
                 bool shouldSave = false;
 
@@ -445,7 +451,7 @@ public class RenameLogic : IRenameLogic
                 }
             }
 
-            foreach (var component in ProjectState.Self.GumProjectSave.Components)
+            foreach (var component in _projectState.GumProjectSave.Components)
             {
                 bool shouldSave = false;
                 if (component.BaseType == oldName)
@@ -617,8 +623,8 @@ public class RenameLogic : IRenameLogic
     // public void HandleRename(ElementSave containerElement, EventSave eventSave, string oldName)
     // {
     //     List<ElementSave> elements = new List<ElementSave>();
-    //     elements.AddRange(ProjectManager.Self.GumProjectSave.Screens);
-    //     elements.AddRange(ProjectManager.Self.GumProjectSave.Components);
+    //     elements.AddRange(_projectManager.GumProjectSave.Screens);
+    //     elements.AddRange(_projectManager.GumProjectSave.Components);
     //
     //     foreach (var possibleElement in elements)
     //     {
@@ -650,7 +656,7 @@ public class RenameLogic : IRenameLogic
         List<VariableChange> variableChanges = new List<VariableChange>();
         List<VariableReferenceChange> variableReferenceChanges = new List<VariableReferenceChange>();
 
-        var project = GumState.Self.ProjectState.GumProjectSave;
+        var project = _projectState.GumProjectSave;
 
         var changedVariableOwnerElement = owner as ElementSave;
 

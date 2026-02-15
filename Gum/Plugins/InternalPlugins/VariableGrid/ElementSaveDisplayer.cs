@@ -458,7 +458,7 @@ public class ElementSaveDisplayer
                 var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
                 var _fileCommands = Locator.GetRequiredService<IFileCommands>();
                 var _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
-                var _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+                var _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
 
                 string variableName = instance != null
                     ? instance.Name + "." + variableList.Name
@@ -540,7 +540,7 @@ public class ElementSaveDisplayer
         var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         var _fileCommands = Locator.GetRequiredService<IFileCommands>();
         var _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
-        var _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        var _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
 
         var srim = new StateReferencingInstanceMember(
             propertyData.Attributes,

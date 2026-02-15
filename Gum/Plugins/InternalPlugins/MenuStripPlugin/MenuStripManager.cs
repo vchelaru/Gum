@@ -308,7 +308,7 @@ namespace Gum.Managers
 
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 
-            Add(fileToolStripMenuItem, "Load Project...", () => ProjectManager.Self.LoadProject());
+            Add(fileToolStripMenuItem, "Load Project...", () => Locator.GetRequiredService<IProjectManager>().LoadProject());
 
             Add(fileToolStripMenuItem, "Save Project", () =>
             {

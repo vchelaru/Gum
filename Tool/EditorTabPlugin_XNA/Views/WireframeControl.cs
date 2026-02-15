@@ -31,9 +31,9 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views;
 public class WireframeControl : GraphicsDeviceControl
 {
     #region Fields
-    
+
     private IHotkeyManager _hotkeyManager;
-    private ProjectManager _projectManager;
+    private IProjectManager _projectManager;
     private SelectionManager _selectionManager;
     private DragDropManager _dragDropManager;
     LineRectangle mCanvasBounds;
@@ -135,7 +135,7 @@ public class WireframeControl : GraphicsDeviceControl
         SelectionManager selectionManager,
         DragDropManager dragDropManager,
         EditorViewModel editorViewModel,
-        ProjectManager projectManager)
+        IProjectManager projectManager)
     {
         _selectionManager = selectionManager;
         _dragDropManager = dragDropManager;

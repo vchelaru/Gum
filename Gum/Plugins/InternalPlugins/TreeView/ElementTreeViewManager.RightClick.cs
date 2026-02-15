@@ -601,7 +601,7 @@ public partial class ElementTreeViewManager
 
     private bool GuardProjectSaved(string? reason = null)
     {
-        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName))
         {
             _dialogService.ShowMessage("You must first save the project");
             return false;
@@ -613,7 +613,7 @@ public partial class ElementTreeViewManager
     private void HandleAddLinkedComponentClick(object? sender, EventArgs e)
     {
         ////////////////Early Out/////////////////////////
-        if (string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave?.FullFileName))
+        if (string.IsNullOrEmpty(Locator.GetRequiredService<IProjectManager>().GumProjectSave?.FullFileName))
         {
             _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;
@@ -653,7 +653,7 @@ public partial class ElementTreeViewManager
             gumProject.ComponentReferences.Sort();
 
 
-            var components = ProjectManager.Self.GumProjectSave.Components;
+            var components = Locator.GetRequiredService<IProjectManager>().GumProjectSave.Components;
             components.Add(componentSave);
             components.Sort((first, second) => first.Name.CompareTo(second.Name));
 

@@ -116,14 +116,14 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly SelectionManager _selectionManager;
     private readonly IElementCommands _elementCommands;
     private readonly SinglePixelTextureService _singlePixelTextureService;
-    private BackgroundSpriteService _backgroundSpriteService;
+    private BackgroundManager _backgroundManager;
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
-    private readonly ProjectManager _projectManager;
+    private readonly IProjectManager _projectManager;
     private EditorViewModel _editorViewModel;
     private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private readonly FileLocations _fileLocations;
@@ -137,7 +137,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private ContextMenuStrip _wireframeContextMenuStrip;
     private EditingManager _editingManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
 
 
     // This is used to punch through the selected and go back up to the top. More info here:
@@ -149,20 +149,20 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     public MainEditorTabPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _projectManager = ProjectManager.Self;
+        _projectManager = Locator.GetRequiredService<IProjectManager>();
 
         _scrollbarService = new ScrollbarService(_projectManager);
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _localizationService = Locator.GetRequiredService<LocalizationService>();
         _editingManager = new EditingManager(
-            Locator.GetRequiredService<WireframeObjectManager>(),
+            Locator.GetRequiredService<IWireframeObjectManager>(),
             Locator.GetRequiredService<IReorderLogic>(),
             Locator.GetRequiredService<IElementCommands>(),
             Locator.GetRequiredService<INameVerifier>(),
             Locator.GetRequiredService<ISetVariableLogic>()
             );
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
         _fileLocations = Locator.GetRequiredService<FileLocations>();
 
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
@@ -173,6 +173,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         _uiSettingsService = Locator.GetRequiredService<IUiSettingsService>();
+        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
 
         _selectionManager = new SelectionManager(
             _selectedState,
@@ -191,9 +192,10 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         _screenshotService = new ScreenshotService(_selectionManager);
         _singlePixelTextureService = new SinglePixelTextureService();
-        _backgroundSpriteService = new BackgroundSpriteService();
+        _backgroundManager = new BackgroundManager(_wireframeCommands, 
+            Locator.GetRequiredService<IMessenger>(), 
+            Locator.GetRequiredService<IThemingService>());
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
-        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _hotkeyManager = hotkeyManager;
         PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
 
@@ -700,7 +702,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         _editingManager.Initialize(_wireframeContextMenuStrip);
 
-        _backgroundSpriteService.Initialize(_wireframeControl.SystemManagers);
+        _backgroundManager.Initialize(_wireframeControl.SystemManagers);
 
         _scrollbarService.HandleXnaInitialized();
 
@@ -1017,7 +1019,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         _wireframeControl.XnaUpdate += () =>
         {
-            _backgroundSpriteService.Activity();
+            _backgroundManager.Activity();
             _wireframeObjectManager.Activity();
             ToolLayerService.Self.Activity();
         };

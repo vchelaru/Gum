@@ -61,6 +61,8 @@ public class DragDropManager
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IPluginManager _pluginManager;
     private readonly IReorderLogic _reorderLogic;
+    private readonly IProjectManager _projectManager;
+    private readonly IProjectState _projectState;
 
     #endregion
 
@@ -84,12 +86,14 @@ public class DragDropManager
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        ISetVariableLogic setVariableLogic, 
+        ISetVariableLogic setVariableLogic,
         ICopyPasteLogic copyPasteLogic,
         IImportLogic importLogic,
         IWireframeObjectManager wireframeObjectManager,
         IPluginManager pluginManager,
-        IReorderLogic reorderLogic)
+        IReorderLogic reorderLogic,
+        IProjectManager projectManager,
+        IProjectState projectState)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -105,6 +109,8 @@ public class DragDropManager
         _wireframeObjectManager = wireframeObjectManager;
         _pluginManager = pluginManager;
         _reorderLogic = reorderLogic;
+        _projectManager = projectManager;
+        _projectState = projectState;
     }
 
     #endregion
@@ -213,7 +219,7 @@ public class DragDropManager
 
             if(fullFolderPath != fullElementFilePath)
             {
-                var projectFolder = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+                var projectFolder = FileManager.GetDirectory(_projectManager.GumProjectSave.FullFileName);
 
                 string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath.FullPath, projectFolder + draggedAsElementSave.Subfolder + "/", preserveCase:true)
                     .Replace("\\", "/");
@@ -844,8 +850,8 @@ public class DragDropManager
         float containerLeft = 0;
         float containerTop = 0;
 
-        float containerWidth = ProjectState.Self.GumProjectSave.DefaultCanvasWidth;
-        float containerHeight = ProjectState.Self.GumProjectSave.DefaultCanvasHeight;
+        float containerWidth = _projectState.GumProjectSave.DefaultCanvasWidth;
+        float containerHeight = _projectState.GumProjectSave.DefaultCanvasHeight;
 
         if (component != null)
         {

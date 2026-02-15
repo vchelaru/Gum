@@ -20,21 +20,24 @@ namespace Gum.Commands;
 public class FileCommands : IFileCommands
 {
     private readonly LocalizationService _localizationService;
-    private readonly FileWatchManager _fileWatchManager;
+    private readonly IFileWatchManager _fileWatchManager;
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IUndoManager> _undoManager;
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IOutputManager _outputManager;
-    private readonly ProjectManager _projectManager;
+    private readonly IProjectManager _projectManager;
+    private readonly IProjectState _projectState;
 
-    public FileCommands(ISelectedState selectedState, 
-        Lazy<IUndoManager> undoManager, 
+    public FileCommands(ISelectedState selectedState,
+        Lazy<IUndoManager> undoManager,
         IDialogService dialogService,
         IGuiCommands guiCommands,
         LocalizationService localizationService,
         IOutputManager outputManager,
-        FileWatchManager fileWatchManager)
+        IFileWatchManager fileWatchManager,
+        IProjectManager projectManager,
+        IProjectState projectState)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -43,7 +46,8 @@ public class FileCommands : IFileCommands
         _localizationService = localizationService;
         _fileWatchManager = fileWatchManager;
         _outputManager = outputManager;
-        _projectManager = ProjectManager.Self;
+        _projectManager = projectManager;
+        _projectState = projectState;
 
     }
 
@@ -178,7 +182,7 @@ public class FileCommands : IFileCommands
 
         var succeeded = _projectManager.SaveProject(forceSaveContainedElements);
 
-        if (string.IsNullOrEmpty(ProjectState.Self.GumProjectSave.FullFileName))
+        if (string.IsNullOrEmpty(_projectState.GumProjectSave.FullFileName))
         {
             // The user most likely canceled the save, as such, we have no filename
             // Do nothing, do not error.
@@ -191,7 +195,7 @@ public class FileCommands : IFileCommands
             return;
         }
 
-        _outputManager.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
+        _outputManager.AddOutput("Saved Gum project to " + _projectState.GumProjectSave.FullFileName);
         CreateDefaultFontCharacterFile();
     }
 
@@ -335,16 +339,16 @@ public class FileCommands : IFileCommands
     {
         _localizationService.Clear();
 
-        if (!string.IsNullOrEmpty(GumState.Self.ProjectState.GumProjectSave.LocalizationFile))
+        if (!string.IsNullOrEmpty(_projectState.GumProjectSave.LocalizationFile))
         {
-            FilePath file = GumState.Self.ProjectState.ProjectDirectory + GumState.Self.ProjectState.GumProjectSave.LocalizationFile;
+            FilePath file = _projectState.ProjectDirectory + _projectState.GumProjectSave.LocalizationFile;
 
             if (file.Exists())
             {
                 try
                 {
                     _localizationService.AddDatabaseFromCsv(file.FullPath, ',');
-                    _localizationService.CurrentLanguage = GumState.Self.ProjectState.GumProjectSave.CurrentLanguageIndex;
+                    _localizationService.CurrentLanguage = _projectState.GumProjectSave.CurrentLanguageIndex;
                 }
                 catch (Exception e)
                 {

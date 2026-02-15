@@ -21,21 +21,24 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly IGuiCommands _guiCommands;
     private readonly FileLocations _fileLocations;
     private readonly IFileCommands _fileCommands;
+    private readonly IProjectState _projectState;
 
     public ITreeNode? FolderNode { get; set; }
-    
+
     public RenameFolderDialogViewModel(
-        INameVerifier nameVerifier, 
+        INameVerifier nameVerifier,
         IRenameLogic renameLogic,
         IGuiCommands guiCommands,
         FileLocations fileLocations,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        IProjectState projectState)
     {
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;
         _guiCommands = guiCommands;
         _fileLocations = fileLocations;
         _fileCommands = fileCommands;
+        _projectState = projectState;
     }
 
     public override void OnAffirmative()
@@ -83,7 +86,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         if (FolderNode.IsScreensFolderTreeNode())
         {
             // rename logic may adjust the order so let's get a copy:
-            var screensCopy = ProjectState.Self.GumProjectSave.Screens.ToArray();
+            var screensCopy = _projectState.GumProjectSave.Screens.ToArray();
             foreach (var screen in screensCopy)
             {
                 if (screen.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/").ToLowerInvariant()))
@@ -98,7 +101,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         }
         else if (FolderNode.IsComponentsFolderTreeNode())
         {
-            var componentsCopy = ProjectState.Self.GumProjectSave.Components.ToArray();
+            var componentsCopy = _projectState.GumProjectSave.Components.ToArray();
             foreach (var component in componentsCopy)
             {
                 if (component.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/").ToLowerInvariant()))

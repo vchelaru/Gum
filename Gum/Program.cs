@@ -100,17 +100,18 @@ namespace Gum
 
         private static async Task InitializeGum(IServiceProvider services)
         {
+            var projectManager = services.GetRequiredService<IProjectManager>();
 
             // This has to happen before plugins are loaded since they may depend on settings...
-            ProjectManager.Self.LoadSettings();
+            projectManager.LoadSettings();
 
-            MigrateAppSettings(services, ProjectManager.Self.GeneralSettingsFile);
+            MigrateAppSettings(services, projectManager.GeneralSettingsFile);
             services.GetRequiredService<IThemingService>().ApplyInitialTheme();
             TypeManager.Self.Initialize();
 
             ElementTreeViewManager.Self.Initialize();
 
-            services.GetRequiredService<WireframeObjectManager>().Initialize();
+            (services.GetRequiredService<IWireframeObjectManager>() as WireframeObjectManager).Initialize();
             // This has to be initialized very early because other things depend on it.
 
             // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
@@ -138,15 +139,15 @@ namespace Gum
             // XnaInitialize is where wireframe controls are initialized.
             PluginManager.Self.XnaInitialized();
 
-            await ProjectManager.Self.Initialize();
+            await projectManager.Initialize();
 
             PeriodicUiTimer fileWatchTimer = services.GetRequiredService<PeriodicUiTimer>();
 
-            var fileWatchManager = Locator.GetRequiredService<FileWatchManager>(); 
+            var fileWatchManager = Locator.GetRequiredService<IFileWatchManager>(); 
 
             fileWatchTimer.Tick += () =>
             {
-                GumProjectSave? gumProject = ProjectState.Self.GumProjectSave;
+                GumProjectSave? gumProject = Locator.GetRequiredService<IProjectState>().GumProjectSave;
                 if (gumProject != null && !string.IsNullOrEmpty(gumProject.FullFileName))
                 {
                     fileWatchManager.Flush();

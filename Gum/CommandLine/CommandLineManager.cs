@@ -19,7 +19,7 @@ namespace Gum.CommandLine
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
         private readonly IMessenger _messenger;
-        private readonly ProjectManager _projectManager;
+        private readonly IProjectManager _projectManager;
 
         #region Fields/Properties
 
@@ -46,7 +46,7 @@ namespace Gum.CommandLine
             _guiCommands = Locator.GetRequiredService<IGuiCommands>();
             _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _messenger = Locator.GetRequiredService<IMessenger>();
-            _projectManager = ProjectManager.Self;
+            _projectManager = Locator.GetRequiredService<IProjectManager>();
         }
 
         public async Task ReadCommandLine()

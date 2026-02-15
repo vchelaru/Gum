@@ -1,4 +1,5 @@
 ﻿using CodeOutputPlugin.Models;
+using Gum.Services;
 using Gum.ToolStates;
 using Newtonsoft.Json;
 using System;
@@ -26,7 +27,8 @@ namespace CodeOutputPlugin.Manager
 
         private static FilePath? GetProjectCodeSettingsFile()
         {
-            FilePath folder = GumState.Self.ProjectState.ProjectDirectory;
+            var projectState = Locator.GetRequiredService<IProjectState>();
+            FilePath folder = projectState.ProjectDirectory;
             if(folder == null)
             {
                 return null;

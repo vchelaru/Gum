@@ -42,7 +42,7 @@ public class CodeWindowViewModel : ViewModel
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     public bool CanGenerateCode
     {
@@ -173,7 +173,7 @@ public class CodeWindowViewModel : ViewModel
 
     #endregion
 
-    public CodeWindowViewModel(ProjectState projectState,
+    public CodeWindowViewModel(IProjectState projectState,
         IFileCommands fileCommands,
         IDialogService dialogService,
         IGuiCommands guiCommands)

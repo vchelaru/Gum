@@ -65,7 +65,7 @@ namespace StateAnimationPlugin.Managers
             }
             else // renaming an element that is not currently selected. See if it has an animation, and if so move it
             {
-                var gumProject = ProjectManager.Self.GumProjectSave;
+                var gumProject = Locator.GetRequiredService<IProjectManager>().GumProjectSave;
                 if(gumProject == null)
                 {
                     throw new InvalidOperationException("Renaming elements is not supported when a Gum project is null...how did this happen anyway?");

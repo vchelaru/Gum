@@ -1,6 +1,7 @@
 ﻿using Gum;
 using Gum.Commands;
 using Gum.Logic.FileWatch;
+using Gum.Managers;
 using Gum.Mvvm;
 using Newtonsoft.Json;
 using System;
@@ -17,7 +18,7 @@ namespace TextureCoordinateSelectionPlugin.ViewModels;
 
 public class MainControlViewModel : ViewModel
 {
-    public bool IsSnapToGridChecked 
+    public bool IsSnapToGridChecked
     {
         get => Get<bool>();
         set => Set(value);
@@ -48,9 +49,9 @@ public class MainControlViewModel : ViewModel
         set => Set(value);
     }
 
-    private ProjectManager _projectManager;
+    private IProjectManager _projectManager;
     private readonly IFileCommands _fileCommands;
-    private readonly FileWatchManager _fileWatchManager;
+    private readonly IFileWatchManager _fileWatchManager;
     private readonly IGuiCommands _guiCommands;
 
     [DependsOn(nameof(IsSnapToGridChecked))]
@@ -59,9 +60,9 @@ public class MainControlViewModel : ViewModel
     bool _isSavingSuppressed = false;
 
     public MainControlViewModel(
-        ProjectManager projectManager,
+        IProjectManager projectManager,
         IFileCommands fileCommands,
-        FileWatchManager fileWatchManager,
+        IFileWatchManager fileWatchManager,
         IGuiCommands guiCommands)
     {
         SelectedSnapToGridValue = 16;

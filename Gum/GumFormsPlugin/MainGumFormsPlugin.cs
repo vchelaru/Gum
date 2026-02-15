@@ -79,16 +79,17 @@ internal class MainGumFormsPlugin : PluginBase
 
     private void HandleAddFormsComponents(object? sender, EventArgs e)
     {
+        var projectState = Locator.GetRequiredService<IProjectState>();
         #region Early Out
 
-        if (GumState.Self.ProjectState.NeedsToSaveProject)
+        if (projectState.NeedsToSaveProject)
         {
             _dialogService.ShowMessage("You must first save the project before importing forms");
             return;
         }
         #endregion
 
-        var viewModel = new AddFormsViewModel(_formsFileService, _dialogService, _fileCommands, _importLogic);
+        var viewModel = new AddFormsViewModel(_formsFileService, _dialogService, _fileCommands, _importLogic, projectState);
         _dialogService.Show(viewModel);
     }
 

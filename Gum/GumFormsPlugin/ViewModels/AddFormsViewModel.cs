@@ -6,6 +6,7 @@ using ToolsUtilities;
 using GumFormsPlugin.Services;
 using Gum.Managers;
 using Gum.Commands;
+using Gum.Services;
 using Gum.Services.Dialogs;
 
 namespace GumFormsPlugin.ViewModels;
@@ -18,6 +19,7 @@ public class AddFormsViewModel : DialogViewModel
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
     private readonly IImportLogic _importLogic;
+    private readonly IProjectState _projectState;
 
     public bool IsIncludeDemoScreenGum
     {
@@ -27,15 +29,17 @@ public class AddFormsViewModel : DialogViewModel
 
     #endregion
 
-    public AddFormsViewModel(FormsFileService formsFileService, 
-        IDialogService dialogService, 
+    public AddFormsViewModel(FormsFileService formsFileService,
+        IDialogService dialogService,
         IFileCommands fileCommands,
-        IImportLogic importLogic)
+        IImportLogic importLogic,
+        IProjectState projectState)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;
         _fileCommands = fileCommands;
         _importLogic = importLogic;
+        _projectState = projectState;
     }
 
     public override void OnAffirmative()
@@ -51,7 +55,7 @@ public class AddFormsViewModel : DialogViewModel
             AddAllElementsToProject(sourceDestinations);
 
             // reload standards:
-            var fileName = GumState.Self.ProjectState.GumProjectSave.FullFileName;
+            var fileName = _projectState.GumProjectSave.FullFileName;
             bool wasSaved = _fileCommands.TryAutoSaveProject();
             if (wasSaved)
             {
@@ -149,7 +153,7 @@ public class AddFormsViewModel : DialogViewModel
                 {
                     return item.Extension != "gumx";
                 })
-                .Select(item => item.RelativeTo(GumState.Self.ProjectState.ProjectDirectory))
+                .Select(item => item.RelativeTo(_projectState.ProjectDirectory))
                 .ToList();
 
             var standardFiles = filesWhichWouldGetOverwritten.Where(item => item.EndsWith(".gutx")).ToList();

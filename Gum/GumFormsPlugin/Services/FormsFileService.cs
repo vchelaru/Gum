@@ -1,4 +1,5 @@
-﻿using Gum.ToolStates;
+﻿using Gum.Services;
+using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,8 @@ public class FormsFileService
 
     public Dictionary<string, FilePath> GetSourceDestinations(bool isIncludeDemoScreenGum)
     {
-        var destinationFolder = GumState.Self.ProjectState.ProjectDirectory;
+        var projectState = Locator.GetRequiredService<IProjectState>();
+        var destinationFolder = projectState.ProjectDirectory;
 
         Dictionary<string, FilePath> sourceDestinations = new Dictionary<string, FilePath>();
 

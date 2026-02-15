@@ -569,7 +569,7 @@ public class UndoManager : IUndoManager
         _fileCommands.TryAutoSaveCurrentElement();
 
         // Don't do this anymore due to filtering through search
-        //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
+        //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(Locator.GetRequiredService<IProjectManager>().GumProjectSave);
     }
 
     public bool CanRedo()

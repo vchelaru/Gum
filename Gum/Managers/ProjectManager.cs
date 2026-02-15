@@ -47,7 +47,7 @@ public class ProjectManager : IProjectManager
     private IGuiCommands _guiCommands;
     private IFileCommands _fileCommands;
     private IMessenger _messenger;
-    private FileWatchManager _fileWatchManager;
+    private IFileWatchManager _fileWatchManager;
 
     #endregion
 
@@ -103,7 +103,7 @@ public class ProjectManager : IProjectManager
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _messenger =  Locator.GetRequiredService<IMessenger>();
-        _fileWatchManager = Locator.GetRequiredService<FileWatchManager>();
+        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
 
         await CommandLineManager.Self.ReadCommandLine();
 
@@ -277,7 +277,7 @@ public class ProjectManager : IProjectManager
 
             if (wasModified)
             {
-                ProjectManager.Self.SaveProject(forceSaveContainedElements: true);
+                SaveProject(forceSaveContainedElements: true);
             }
         }
         else
@@ -682,12 +682,7 @@ public class ProjectManager : IProjectManager
         }
     }
 
-    public void SaveProject()
-    {
-        SaveProject(forceSaveContainedElements: false);
-    }
-
-    internal bool SaveProject(bool forceSaveContainedElements = false)
+    public bool SaveProject(bool forceSaveContainedElements = false)
     {
         bool succeeded = false;
 

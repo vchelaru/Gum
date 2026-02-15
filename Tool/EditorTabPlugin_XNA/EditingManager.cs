@@ -22,7 +22,7 @@ public partial class EditingManager : IEditingManager
 {
     private readonly ISelectedState _selectedState;
     private readonly IReorderLogic _reorderLogic;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IElementCommands _elementCommands;
     private readonly INameVerifier _nameVerifier;
     private readonly ISetVariableLogic _setVariableLogic;
@@ -30,7 +30,7 @@ public partial class EditingManager : IEditingManager
     private readonly IFavoriteComponentManager _favoriteComponentManager;
 
     public EditingManager(
-        WireframeObjectManager wireframeObjectManager,
+        IWireframeObjectManager wireframeObjectManager,
         IReorderLogic reorderLogic,
         IElementCommands elementCommands,
         INameVerifier nameVerifier,
