@@ -139,7 +139,7 @@ internal class CodeGenerationService
 
         var hasDirectory = true;
 
-        if (!System.IO.Directory.Exists(codeDirectory.FullPath))
+        if (codeDirectory != null && !System.IO.Directory.Exists(codeDirectory.FullPath))
         {
             hasDirectory = false;
             try

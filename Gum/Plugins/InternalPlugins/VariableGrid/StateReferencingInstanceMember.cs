@@ -45,14 +45,14 @@ public class StateReferencingInstanceMember : InstanceMember
     private readonly WireframeObjectManager _wireframeObjectManager;
     StateSave mStateSave;
     string mVariableName;
-    public InstanceSave InstanceSave { get; private set; }
+    public InstanceSave? InstanceSave { get; private set; }
     public ElementSave? ElementSave { get; private set; }
 
     public object LastOldFullCommitValue { get; private set; }
 
     Attribute[] _attributes;
-    TypeConverter _converter;
-    Type _componentType;
+    TypeConverter? _converter;
+    Type? _componentType;
     bool _isReadOnlyFromDescriptor;
     bool _isAssignedByReference;
     bool _isVariable;
@@ -61,7 +61,7 @@ public class StateReferencingInstanceMember : InstanceMember
 
     #region Properties
 
-    public StateSaveCategory StateSaveCategory { get; set; }
+    public StateSaveCategory? StateSaveCategory { get; set; }
 
     public StateSave StateSave => mStateSave;
 
@@ -230,15 +230,15 @@ public class StateReferencingInstanceMember : InstanceMember
 
     public StateReferencingInstanceMember(
         Attribute[] attributes,
-        TypeConverter converter,
-        Type componentType,
+        TypeConverter? converter,
+        Type? componentType,
         bool isReadOnly,
         bool isAssignedByReference,
         bool isVariable,
         StateSave stateSave,
-        StateSaveCategory stateSaveCategory,
+        StateSaveCategory? stateSaveCategory,
         string variableName,
-        InstanceSave instanceSave,
+        InstanceSave? instanceSave,
         IStateContainer stateListCategoryContainer,
         IUndoManager undoManager,
         IEditVariableService editVariableService,
