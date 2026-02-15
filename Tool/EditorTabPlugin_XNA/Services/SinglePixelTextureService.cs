@@ -13,7 +13,7 @@ internal class SinglePixelTextureService
 {
     public void RefreshSinglePixelTexture()
     {
-        var projectState = Locator.GetRequiredService<ProjectState>();
+        var projectState = Locator.GetRequiredService<IProjectState>();
         var gumProject = projectState.GumProjectSave;
 
 

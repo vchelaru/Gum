@@ -49,7 +49,7 @@ namespace Gum.Wireframe
 #if GUM
                         lineRectangle.IsDotted = true;
 
-                        var projectState = Locator.GetRequiredService<ProjectState>();
+                        var projectState = Locator.GetRequiredService<IProjectState>();
                         lineRectangle.Color = System.Drawing.Color.FromArgb(
                             255,
                             projectState.GeneralSettings.OutlineColorR,

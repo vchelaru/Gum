@@ -24,7 +24,7 @@ public class ProjectCommands
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IProjectManager _projectManager;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     #endregion
 
@@ -32,7 +32,7 @@ public class ProjectCommands
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         IProjectManager projectManager,
-        ProjectState projectState)
+        IProjectState projectState)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;

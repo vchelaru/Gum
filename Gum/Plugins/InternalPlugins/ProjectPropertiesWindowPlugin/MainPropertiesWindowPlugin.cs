@@ -47,7 +47,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
     private readonly IDispatcher _dispatcher;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly FileWatchLogic _fileWatchLogic;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
     private FilePath? _fontCharacterFileAbsolute;
 
     private PluginTab? _pluginTab;
@@ -60,7 +60,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
         _dispatcher = Locator.GetRequiredService<IDispatcher>();
         _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
         _fileWatchLogic = Locator.GetRequiredService<FileWatchLogic>();
-        _projectState = Locator.GetRequiredService<ProjectState>();
+        _projectState = Locator.GetRequiredService<IProjectState>();
     }
 
     public override void StartUp()

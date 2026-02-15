@@ -29,7 +29,7 @@ internal class RenameService
         CustomCodeGenerator customCodeGenerator,
         CodeGenerationNameVerifier nameVerifier,
         IDialogService dialogService,
-        ProjectState projectState)
+        IProjectState projectState)
     {
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator, nameVerifier, projectState);
         _codeGenerationService = codeGenerationService;

@@ -297,7 +297,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IElementCommands _elementCommands;
     private readonly INameVerifier _nameVerifier;
     private readonly ISetVariableLogic _setVariableLogic;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     public bool HasMouseOver
     {
@@ -332,7 +332,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         _circularReferenceManager = Locator.GetRequiredService<ICircularReferenceManager>();
         _favoriteComponentManager = Locator.GetRequiredService<IFavoriteComponentManager>();
-        _projectState = Locator.GetRequiredService<ProjectState>();
+        _projectState = Locator.GetRequiredService<IProjectState>();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
 

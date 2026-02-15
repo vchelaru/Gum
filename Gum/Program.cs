@@ -147,7 +147,7 @@ namespace Gum
 
             fileWatchTimer.Tick += () =>
             {
-                GumProjectSave? gumProject = Locator.GetRequiredService<ProjectState>().GumProjectSave;
+                GumProjectSave? gumProject = Locator.GetRequiredService<IProjectState>().GumProjectSave;
                 if (gumProject != null && !string.IsNullOrEmpty(gumProject.FullFileName))
                 {
                     fileWatchManager.Flush();

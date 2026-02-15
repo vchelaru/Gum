@@ -15,9 +15,9 @@ internal class CodeGenerationFileLocationsService
 {
     CodeGenerator _codeGenerator;
     private readonly CodeGenerationNameVerifier _nameVerifier;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
-    public CodeGenerationFileLocationsService(CodeGenerator codeGenerator, CodeGenerationNameVerifier nameVerifier, ProjectState projectState)
+    public CodeGenerationFileLocationsService(CodeGenerator codeGenerator, CodeGenerationNameVerifier nameVerifier, IProjectState projectState)
     {
         _codeGenerator = codeGenerator;
         _nameVerifier = nameVerifier;

@@ -59,7 +59,7 @@ namespace Gum.PropertyGridHelpers.Converters
             {
                 if(FileManager.IsRelative(sourceFile))
                 {
-                    var projectState = Locator.GetRequiredService<ProjectState>();
+                    var projectState = Locator.GetRequiredService<IProjectState>();
                     sourceFile = projectState.ProjectDirectory + sourceFile;
                 }
 

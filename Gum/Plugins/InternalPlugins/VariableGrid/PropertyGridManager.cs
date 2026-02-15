@@ -42,7 +42,7 @@ public partial class PropertyGridManager
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly TypeManager _typeManager;
     private readonly IPluginManager _pluginManager;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
 
@@ -125,7 +125,7 @@ public partial class PropertyGridManager
         _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
         _typeManager = Locator.GetRequiredService<TypeManager>();
         _pluginManager = Locator.GetRequiredService<IPluginManager>();
-        _projectState = Locator.GetRequiredService<ProjectState>();
+        _projectState = Locator.GetRequiredService<IProjectState>();
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)

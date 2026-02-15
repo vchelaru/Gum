@@ -27,7 +27,7 @@ public class FileCommands : IFileCommands
     private readonly IGuiCommands _guiCommands;
     private readonly IOutputManager _outputManager;
     private readonly IProjectManager _projectManager;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     public FileCommands(ISelectedState selectedState,
         Lazy<IUndoManager> undoManager,
@@ -37,7 +37,7 @@ public class FileCommands : IFileCommands
         IOutputManager outputManager,
         IFileWatchManager fileWatchManager,
         IProjectManager projectManager,
-        ProjectState projectState)
+        IProjectState projectState)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;

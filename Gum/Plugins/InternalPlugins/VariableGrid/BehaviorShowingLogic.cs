@@ -39,7 +39,7 @@ internal static class BehaviorShowingLogic
                 _fileCommands.TryAutoSaveBehavior(behavior);
             };
 
-            var projectState = Locator.GetRequiredService<ProjectState>();
+            var projectState = Locator.GetRequiredService<IProjectState>();
             var componentsImplementingBehavior = projectState.GumProjectSave.Components
                 .Where(item => item.Behaviors.Any(behaviorSave => behaviorSave.BehaviorName == behavior.Name));
 

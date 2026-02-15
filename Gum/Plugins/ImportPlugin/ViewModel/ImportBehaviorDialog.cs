@@ -18,7 +18,7 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
     private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
     private readonly IImportLogic _importLogic;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     public override string Title => "Import Behavior";
     public override string BrowseFileFilter => "Behavior Files (*.behaviors)|*.behaviors";
@@ -29,7 +29,7 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
         ISelectedState selectedState,
         IDialogService dialogService,
         IImportLogic importLogic,
-        ProjectState projectState
+        IProjectState projectState
 
         ) : base(dialogService)
     {

@@ -13,7 +13,7 @@ public class FileWatchLogic
 {
     IFileWatchManager _fileWatchManager;
     private readonly IGuiCommands _guiCommands;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     public bool Enabled => _fileWatchManager.Enabled;
 
@@ -21,7 +21,7 @@ public class FileWatchLogic
     {
         _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _projectState = Locator.GetRequiredService<ProjectState>();
+        _projectState = Locator.GetRequiredService<IProjectState>();
     }
 
     public void HandleProjectLoaded()

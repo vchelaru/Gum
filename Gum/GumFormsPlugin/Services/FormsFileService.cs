@@ -15,7 +15,7 @@ public class FormsFileService
 
     public Dictionary<string, FilePath> GetSourceDestinations(bool isIncludeDemoScreenGum)
     {
-        var projectState = Locator.GetRequiredService<ProjectState>();
+        var projectState = Locator.GetRequiredService<IProjectState>();
         var destinationFolder = projectState.ProjectDirectory;
 
         Dictionary<string, FilePath> sourceDestinations = new Dictionary<string, FilePath>();

@@ -39,7 +39,7 @@ public class EditCommands : IEditCommands
     private readonly PluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
     private readonly IDeleteLogic _deleteLogic;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     public EditCommands(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -53,7 +53,7 @@ public class EditCommands : IEditCommands
         PluginManager pluginManager,
         IDeleteLogic deleteLogic,
         IProjectManager projectManager,
-        ProjectState projectState)
+        IProjectState projectState)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;

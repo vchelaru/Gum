@@ -27,7 +27,7 @@ namespace CodeOutputPlugin.Manager
 
         private static FilePath? GetProjectCodeSettingsFile()
         {
-            var projectState = Locator.GetRequiredService<ProjectState>();
+            var projectState = Locator.GetRequiredService<IProjectState>();
             FilePath folder = projectState.ProjectDirectory;
             if(folder == null)
             {

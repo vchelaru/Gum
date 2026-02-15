@@ -1099,7 +1099,7 @@ public class CustomSetPropertyOnRenderable
                     // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
                     try
                     {
-                        var projectState = Locator.GetRequiredService<ProjectState>();
+                        var projectState = Locator.GetRequiredService<IProjectState>();
                         BmfcSave.CreateBitmapFontFilesIfNecessary(
                             fontSizeStack.Peek(),
                             fontNameStack.Peek(),

@@ -21,7 +21,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly IGuiCommands _guiCommands;
     private readonly FileLocations _fileLocations;
     private readonly IFileCommands _fileCommands;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     public ITreeNode? FolderNode { get; set; }
 
@@ -31,7 +31,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         IGuiCommands guiCommands,
         FileLocations fileLocations,
         IFileCommands fileCommands,
-        ProjectState projectState)
+        IProjectState projectState)
     {
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;

@@ -31,7 +31,7 @@ public class ElementCommands : IElementCommands
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly PluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     #endregion
 
@@ -42,7 +42,7 @@ public class ElementCommands : IElementCommands
         IWireframeObjectManager wireframeObjectManager,
         PluginManager pluginManager,
         IProjectManager projectManager,
-        ProjectState projectState)
+        IProjectState projectState)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;

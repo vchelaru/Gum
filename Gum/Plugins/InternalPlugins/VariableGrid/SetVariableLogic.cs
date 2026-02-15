@@ -68,7 +68,7 @@ public class SetVariableLogic : ISetVariableLogic
     private readonly IDialogService _dialogService;
     private readonly PluginManager _pluginManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
     private readonly IProjectManager _projectManager;
 
     public SetVariableLogic(ISelectedState selectedState,
@@ -86,7 +86,7 @@ public class SetVariableLogic : ISetVariableLogic
         IDialogService dialogService,
         PluginManager pluginManager,
         IWireframeObjectManager wireframeObjectManager,
-        ProjectState projectState,
+        IProjectState projectState,
         IProjectManager projectManager)
     {
         _selectedState = selectedState;

@@ -52,7 +52,7 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
 
         if (nodeToAddTo == null || !nodeToAddTo.IsPartOfScreensFolderStructure())
         {
-            var projectState = Locator.GetRequiredService<ProjectState>();
+            var projectState = Locator.GetRequiredService<IProjectState>();
             path = projectState.ScreenFilePath.FullPath;
         }
         

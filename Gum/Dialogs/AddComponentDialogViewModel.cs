@@ -43,7 +43,7 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
         FilePath? path = nodeToAddTo?.GetFullFilePath();
         if (nodeToAddTo == null || !nodeToAddTo.IsPartOfComponentsFolderStructure())
         {
-            var projectState = Locator.GetRequiredService<ProjectState>();
+            var projectState = Locator.GetRequiredService<IProjectState>();
             path = projectState.ComponentFilePath;
         }
 

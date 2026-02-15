@@ -75,7 +75,7 @@ public class MainCodeOutputPlugin : PluginBase
 
         _codeGenerator = new CodeGenerator(codeGenerationNameVerifier, _localizationService);
 
-        var projectState = Locator.GetRequiredService<ProjectState>();
+        var projectState = Locator.GetRequiredService<IProjectState>();
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, codeGenerationNameVerifier, projectState);
 
         _selectedState = Locator.GetRequiredService<ISelectedState>();
@@ -99,7 +99,7 @@ public class MainCodeOutputPlugin : PluginBase
             (_, message) => HandleRequestCodeGeneration(message));
 
         viewModel = new ViewModels.CodeWindowViewModel(
-            Locator.GetRequiredService<ProjectState>(),
+            Locator.GetRequiredService<IProjectState>(),
             Locator.GetRequiredService<IFileCommands>(),
             Locator.GetRequiredService<IDialogService>(),
             Locator.GetRequiredService<IGuiCommands>());
@@ -237,7 +237,7 @@ public class MainCodeOutputPlugin : PluginBase
         if (control == null) return;
         ///////////////////////End Early Out//////////////////
 
-        var projectState = Locator.GetRequiredService<ProjectState>();
+        var projectState = Locator.GetRequiredService<IProjectState>();
         if (element != null && projectState.GumProjectSave?.FullFileName != null)
         {
             control.CodeOutputElementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
@@ -434,7 +434,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleMainViewModelPropertyChanged(string? propertyName)
     {
-        var projectState = Locator.GetRequiredService<ProjectState>();
+        var projectState = Locator.GetRequiredService<IProjectState>();
         /////////////////Early Out////////////////////
         if(projectState.GumProjectSave == null)
         {
@@ -493,7 +493,7 @@ public class MainCodeOutputPlugin : PluginBase
             {
                 if(viewModel.IsAllInProjectGenerating)
                 {
-                    var projectState = Locator.GetRequiredService<ProjectState>();
+                    var projectState = Locator.GetRequiredService<IProjectState>();
                     int numberOfElements = 0;
                     foreach(var element in projectState.GumProjectSave.AllElements)
                     {
@@ -526,7 +526,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleGenerateAllCodeButtonClicked(bool showPopups = true)
     {
-        var projectState = Locator.GetRequiredService<ProjectState>();
+        var projectState = Locator.GetRequiredService<IProjectState>();
         var gumProject = projectState.GumProjectSave;
         foreach (var screen in gumProject.Screens)
         {

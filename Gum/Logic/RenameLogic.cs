@@ -76,7 +76,7 @@ public class RenameLogic : IRenameLogic
     private readonly IFileCommands _fileCommands;
     private readonly DeleteLogic _deleteLogic;
     private readonly IProjectManager _projectManager;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     public RenameLogic(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -85,7 +85,7 @@ public class RenameLogic : IRenameLogic
         IFileCommands fileCommands,
         DeleteLogic deleteLogic,
         IProjectManager projectManager,
-        ProjectState projectState)
+        IProjectState projectState)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;

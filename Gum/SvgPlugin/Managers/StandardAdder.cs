@@ -33,13 +33,13 @@ namespace SkiaPlugin.Managers
         {
             StandardElementSave toReturn = null;
 
-            var targetFile = Locator.GetRequiredService<ProjectState>().ProjectDirectory + $"Standards/{standardName}.gutx";
+            var targetFile = Locator.GetRequiredService<IProjectState>().ProjectDirectory + $"Standards/{standardName}.gutx";
             FileManager.SaveEmbeddedResource(
                 typeof(StandardAdder).Assembly,
                 $"SkiaPlugin.Embedded.{standardName}.gutx",
                 targetFile);
 
-            var gumProject = Locator.GetRequiredService<ProjectState>().GumProjectSave;
+            var gumProject = Locator.GetRequiredService<IProjectState>().GumProjectSave;
             var hasStandard = gumProject.StandardElementReferences.Any(item => item.Name == standardName);
             if (!hasStandard)
             {
@@ -52,7 +52,7 @@ namespace SkiaPlugin.Managers
                 {
                     GumLoadResult result = new GumLoadResult();
                     var loaded = newReference.ToElementSave<StandardElementSave>(
-                        Locator.GetRequiredService<ProjectState>().ProjectDirectory,
+                        Locator.GetRequiredService<IProjectState>().ProjectDirectory,
                         "gutx",
                         result);
 

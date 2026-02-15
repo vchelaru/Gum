@@ -6,7 +6,7 @@ using ToolsUtilities;
 
 namespace Gum.ToolStates;
 
-public class ProjectState
+public class ProjectState : IProjectState
 {
     private IProjectManager _projectManager;
 
@@ -18,7 +18,7 @@ public class ProjectState
     public GumProjectSave GumProjectSave => _projectManager.GumProjectSave;
     public GeneralSettingsFile GeneralSettings => _projectManager.GeneralSettingsFile;
 
-    public string ProjectDirectory
+    public string? ProjectDirectory
     {
         get
         {

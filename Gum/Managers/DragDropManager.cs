@@ -62,7 +62,7 @@ public class DragDropManager
     private readonly IPluginManager _pluginManager;
     private readonly IReorderLogic _reorderLogic;
     private readonly IProjectManager _projectManager;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     #endregion
 
@@ -93,7 +93,7 @@ public class DragDropManager
         IPluginManager pluginManager,
         IReorderLogic reorderLogic,
         IProjectManager projectManager,
-        ProjectState projectState)
+        IProjectState projectState)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;

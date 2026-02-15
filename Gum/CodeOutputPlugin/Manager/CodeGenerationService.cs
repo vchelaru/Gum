@@ -27,7 +27,7 @@ internal class CodeGenerationService
         IDialogService dialogService,
         CustomCodeGenerator customCodeGenerator,
         CodeGenerationNameVerifier nameVerifier,
-        ProjectState projectState)
+        IProjectState projectState)
     {
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;

@@ -23,7 +23,7 @@ namespace Gum.Managers
         private readonly IFileCommands _fileCommands;
         private readonly IOutputManager _outputManager;
         private readonly IWireframeObjectManager _wireframeObjectManager;
-        private readonly ProjectState _projectState;
+        private readonly IProjectState _projectState;
 
         public FileChangeReactionLogic()
         {
@@ -33,7 +33,7 @@ namespace Gum.Managers
             _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _outputManager = Locator.GetRequiredService<IOutputManager>();
             _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
-            _projectState = Locator.GetRequiredService<ProjectState>();
+            _projectState = Locator.GetRequiredService<IProjectState>();
         }
         
         public void ReactToFileChanged(FilePath file)

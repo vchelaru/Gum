@@ -27,7 +27,7 @@ public class ElementCommandsTests
     Mock<IWireframeObjectManager> _wireframeObjectManager;
     Mock<PluginManager> _pluginManager;
     Mock<IProjectManager> _projectManager;
-    Mock<ProjectState> _projectState;
+    Mock<IProjectState> _projectState;
 
     ObjectFinder _objectFinder => ObjectFinder.Self;
 
@@ -40,7 +40,7 @@ public class ElementCommandsTests
         _wireframeObjectManager = new Mock<IWireframeObjectManager>();
         _pluginManager = new Mock<PluginManager>();
         _projectManager = new Mock<IProjectManager>();
-        _projectState = new Mock<ProjectState>();
+        _projectState = new Mock<IProjectState>();
 
         _sut = new ElementCommands(
             _selectedState.Object,

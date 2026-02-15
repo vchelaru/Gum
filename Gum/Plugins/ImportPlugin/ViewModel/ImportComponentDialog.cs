@@ -19,7 +19,7 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
     private readonly ISelectedState _selectedState;
     private readonly IImportLogic _importLogic;
     private readonly IProjectManager _projectManager;
-    private readonly ProjectState _projectState;
+    private readonly IProjectState _projectState;
 
     public override string Title => "Import Component";
     public override string BrowseFileFilter => "Gum Component (*.gucx)|*.gucx";
@@ -30,7 +30,7 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
         ISelectedState selectedState,
         IDialogService dialogService,
         IImportLogic importLogic,
-        ProjectState projectState)
+        IProjectState projectState)
         : base(dialogService)
     {
         _fileCommands = fileCommands;

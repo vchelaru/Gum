@@ -147,7 +147,7 @@ public partial class CodeWindow : UserControl
 
                 if (!string.IsNullOrWhiteSpace(valueToSet) && FileManager.IsRelative(valueToSet) == false)
                 {
-                    var projectState = Locator.GetRequiredService<ProjectState>();
+                    var projectState = Locator.GetRequiredService<IProjectState>();
                     var projectDirectory = projectState.ProjectDirectory;
                     valueToSet = FileManager.MakeRelative(valueToSet, projectDirectory, preserveCase: true);
 
@@ -168,7 +168,7 @@ public partial class CodeWindow : UserControl
 
         member.CustomGetEvent += (owner) =>
         {
-            var projectState = Locator.GetRequiredService<ProjectState>();
+            var projectState = Locator.GetRequiredService<IProjectState>();
             var projectRoot = CodeOutputProjectSettings?.CodeProjectRoot;
             if (string.IsNullOrEmpty(projectRoot))
             {
@@ -545,9 +545,9 @@ public partial class CodeWindow : UserControl
             if (codeOutputElementSettings != null)
             {
                 var valueAsString = (string?)args.Value ?? string.Empty;
-                if (!string.IsNullOrWhiteSpace(Locator.GetRequiredService<ProjectState>().ProjectDirectory) && FileManager.IsRelative(valueAsString) == false)
+                if (!string.IsNullOrWhiteSpace(Locator.GetRequiredService<IProjectState>().ProjectDirectory) && FileManager.IsRelative(valueAsString) == false)
                 {
-                    valueAsString = FileManager.MakeRelative(valueAsString, Locator.GetRequiredService<ProjectState>().ProjectDirectory, preserveCase: true);
+                    valueAsString = FileManager.MakeRelative(valueAsString, Locator.GetRequiredService<IProjectState>().ProjectDirectory, preserveCase: true);
                 }
                 codeOutputElementSettings.GeneratedFileName = valueAsString;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);

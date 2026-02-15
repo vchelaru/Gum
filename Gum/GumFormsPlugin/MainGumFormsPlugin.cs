@@ -79,7 +79,7 @@ internal class MainGumFormsPlugin : PluginBase
 
     private void HandleAddFormsComponents(object? sender, EventArgs e)
     {
-        var projectState = Locator.GetRequiredService<ProjectState>();
+        var projectState = Locator.GetRequiredService<IProjectState>();
         #region Early Out
 
         if (projectState.NeedsToSaveProject)
