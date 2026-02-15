@@ -115,7 +115,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IImportLogic>(provider => provider.GetRequiredService<ImportLogic>());
         services.AddSingleton<MainOutputViewModel>();
 
-        // temporary while transitioning all usage from WireframeObjectManager to IWireframeObjectManager
+        // WireframeObjectManager concrete class is needed for Initialize() call in Program.cs (two-stage initialization)
         services.AddSingleton<WireframeObjectManager>();
         services.AddSingleton<IWireframeObjectManager>(provider => provider.GetRequiredService<WireframeObjectManager>());
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());

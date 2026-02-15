@@ -40,4 +40,8 @@ public interface IWireframeObjectManager
     /// This is used to find elements within a selection rectangle.
     /// </summary>
     IEnumerable<GraphicalUiElement> GetAllVisibleElements();
+
+    void Activity();
+
+    void ApplyLocalization(GraphicalUiElement gue, string forcedId = null);
 }

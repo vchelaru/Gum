@@ -18,13 +18,13 @@ public class ScrollbarService
 {
     ScrollBarControlLogic scrollBarControlLogic;
     private readonly ISelectedState _selectedState;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectManager _projectManager;
 
     public ScrollbarService(IProjectManager projectManager)
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
         _projectManager = projectManager;
     }
     

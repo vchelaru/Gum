@@ -137,7 +137,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private ContextMenuStrip _wireframeContextMenuStrip;
     private EditingManager _editingManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
 
 
     // This is used to punch through the selected and go back up to the top. More info here:
@@ -155,14 +155,14 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _localizationService = Locator.GetRequiredService<LocalizationService>();
         _editingManager = new EditingManager(
-            Locator.GetRequiredService<WireframeObjectManager>(),
+            Locator.GetRequiredService<IWireframeObjectManager>(),
             Locator.GetRequiredService<IReorderLogic>(),
             Locator.GetRequiredService<IElementCommands>(),
             Locator.GetRequiredService<INameVerifier>(),
             Locator.GetRequiredService<ISetVariableLogic>()
             );
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
         _fileLocations = Locator.GetRequiredService<FileLocations>();
 
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();

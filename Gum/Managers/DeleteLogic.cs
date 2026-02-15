@@ -30,7 +30,7 @@ public class DeleteLogic : IDeleteLogic
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly PluginManager _pluginManager;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectManager _projectManager;
 
     public DeleteLogic(
@@ -40,7 +40,7 @@ public class DeleteLogic : IDeleteLogic
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         PluginManager pluginManager,
-        WireframeObjectManager wireframeObjectManager,
+        IWireframeObjectManager wireframeObjectManager,
         IProjectManager projectManager)
     {
         _projectCommands = projectCommands;

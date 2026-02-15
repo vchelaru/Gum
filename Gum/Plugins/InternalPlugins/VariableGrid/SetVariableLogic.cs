@@ -67,7 +67,7 @@ public class SetVariableLogic : ISetVariableLogic
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IDialogService _dialogService;
     private readonly PluginManager _pluginManager;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly ProjectState _projectState;
     private readonly IProjectManager _projectManager;
 
@@ -85,7 +85,7 @@ public class SetVariableLogic : ISetVariableLogic
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IDialogService dialogService,
         PluginManager pluginManager,
-        WireframeObjectManager wireframeObjectManager,
+        IWireframeObjectManager wireframeObjectManager,
         ProjectState projectState,
         IProjectManager projectManager)
     {

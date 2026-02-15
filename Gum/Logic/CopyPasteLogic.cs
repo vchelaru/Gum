@@ -64,7 +64,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly DeleteLogic _deleteLogic;
     private readonly PluginManager _pluginManager;
     private readonly IMessenger _messenger;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly ProjectState _projectState;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
@@ -92,7 +92,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         IUndoManager undoManager,
         DeleteLogic deleteLogic,
         PluginManager pluginManager,
-        WireframeObjectManager wireframeObjectManager,
+        IWireframeObjectManager wireframeObjectManager,
         IMessenger messenger,
         ProjectState projectState
         )

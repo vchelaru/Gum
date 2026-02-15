@@ -39,7 +39,7 @@ public partial class PropertyGridManager
     private readonly IDialogService _dialogService;
     private readonly LocalizationService _localizationService;
     private readonly ITabManager _tabManager;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly TypeManager _typeManager;
     private readonly IPluginManager _pluginManager;
     private readonly ProjectState _projectState;
@@ -122,7 +122,7 @@ public partial class PropertyGridManager
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _localizationService = Locator.GetRequiredService<LocalizationService>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
         _typeManager = Locator.GetRequiredService<TypeManager>();
         _pluginManager = Locator.GetRequiredService<IPluginManager>();
         _projectState = Locator.GetRequiredService<ProjectState>();

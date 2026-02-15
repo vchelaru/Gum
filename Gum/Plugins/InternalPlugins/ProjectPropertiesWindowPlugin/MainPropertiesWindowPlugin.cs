@@ -45,7 +45,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
     private readonly WireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
     private readonly IDispatcher _dispatcher;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly FileWatchLogic _fileWatchLogic;
     private readonly ProjectState _projectState;
     private FilePath? _fontCharacterFileAbsolute;
@@ -58,7 +58,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _dispatcher = Locator.GetRequiredService<IDispatcher>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
         _fileWatchLogic = Locator.GetRequiredService<FileWatchLogic>();
         _projectState = Locator.GetRequiredService<ProjectState>();
     }

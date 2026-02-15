@@ -5,8 +5,8 @@ namespace Gum.Commands;
 
 public class WireframeCommands : IWireframeCommands
 {
-    private readonly WireframeObjectManager _wireframeObjectManager;
-    public WireframeCommands(WireframeObjectManager wireframeObjectManager)
+    private readonly IWireframeObjectManager _wireframeObjectManager;
+    public WireframeCommands(IWireframeObjectManager wireframeObjectManager)
     {
         _wireframeObjectManager = wireframeObjectManager;
     }

@@ -58,7 +58,7 @@ public class StateReferencingInstanceMemberTests
             _mocker.Get<IGuiCommands>(),
             _mocker.Get<IFileCommands>(),
             setVariableLogic.Object,
-            _mocker.Get<WireframeObjectManager>());
+            _mocker.Get<IWireframeObjectManager>());
     }
 
     [Fact]

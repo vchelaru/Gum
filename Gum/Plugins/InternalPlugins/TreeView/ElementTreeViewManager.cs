@@ -292,7 +292,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IMessenger _messenger;
     private readonly DeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly FileLocations _fileLocations;
     private readonly IElementCommands _elementCommands;
     private readonly INameVerifier _nameVerifier;
@@ -325,7 +325,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _messenger.RegisterAll(this);
         _deleteLogic = Locator.GetRequiredService<DeleteLogic>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
         _fileLocations = Locator.GetRequiredService<FileLocations>();
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
