@@ -682,12 +682,7 @@ public class ProjectManager : IProjectManager
         }
     }
 
-    public void SaveProject()
-    {
-        SaveProject(forceSaveContainedElements: false);
-    }
-
-    internal bool SaveProject(bool forceSaveContainedElements = false)
+    public bool SaveProject(bool forceSaveContainedElements = false)
     {
         bool succeeded = false;
 

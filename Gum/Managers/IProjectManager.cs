@@ -20,7 +20,7 @@ public interface IProjectManager
     void CreateNewProject();
     bool LoadProject();
     void LoadProject(FilePath fileName);
-    void SaveProject();
+    bool SaveProject(bool forceSaveContainedElements = false);
     string MakeAbsoluteIfNecessary(string textureAsString);
     bool AskUserForProjectNameIfNecessary(out bool isProjectNew);
 }

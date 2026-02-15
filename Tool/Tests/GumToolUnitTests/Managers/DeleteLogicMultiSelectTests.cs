@@ -26,6 +26,7 @@ public class DeleteLogicMultiSelectTests : BaseTestClass
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<PluginManager> _pluginManager;
     private readonly Mock<WireframeObjectManager> _wireframeObjectManager;
+    private readonly Mock<IProjectManager> _projectManager;
 
     public DeleteLogicMultiSelectTests()
     {
@@ -37,6 +38,7 @@ public class DeleteLogicMultiSelectTests : BaseTestClass
         _fileCommands = _mocker.GetMock<IFileCommands>();
         _pluginManager = _mocker.GetMock<PluginManager>();
         _wireframeObjectManager = _mocker.GetMock<WireframeObjectManager>();
+        _projectManager = _mocker.GetMock<IProjectManager>();
 
         _deleteLogic = new DeleteLogic(
             _projectCommands.Object,
@@ -45,7 +47,8 @@ public class DeleteLogicMultiSelectTests : BaseTestClass
             _guiCommands.Object,
             _fileCommands.Object,
             _pluginManager.Object,
-            _wireframeObjectManager.Object);
+            _wireframeObjectManager.Object,
+            _projectManager.Object);
 
         var gumProject = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave = gumProject;

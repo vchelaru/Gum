@@ -1,7 +1,9 @@
 using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views;
+using Gum.Services;
 using System;
 using System.ComponentModel.Composition;
 using System.Linq;
