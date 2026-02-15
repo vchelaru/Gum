@@ -17,3 +17,5 @@ Validate behavior against intent. Look for null/edge cases (0, -1, int.MaxValue,
 - **Avoid verbosity**: If similar scenarios require nearly identical tests, consider combining them or testing only the most representative case
 - **Maintainability**: Prefer fewer, clear tests over many verbose tests. Each test should justify its existence by testing something meaningfully different
 - **Balance**: Aim for ~3-5 tests per public method, not 10+. Test what matters, not what's possible.
+
+**Explicit test arrangements:** Every test must explicitly declare all values it will assert against in its Arrange section. Do NOT rely on shared helper methods to define expected values. If a test checks that a value should be "Screens", the test itself must declare that "Screens" string in the Arrange section. Helper methods are fine for common setup (file creation, object initialization), but should accept parameters for the specific values being tested. This makes tests self-contained and prevents hidden dependencies that could break when helper methods change. Pattern: If you assert a specific value, that value must be explicitly declared in the test's Arrange section.

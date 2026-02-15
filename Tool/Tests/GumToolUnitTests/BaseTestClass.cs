@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace GumToolUnitTests;
 public class BaseTestClass : IDisposable
 {
-    public void Dispose()
+    public virtual void Dispose()
     {
         ObjectFinder.Self.GumProjectSave = null;
     }

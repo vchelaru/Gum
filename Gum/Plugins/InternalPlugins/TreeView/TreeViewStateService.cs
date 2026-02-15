@@ -34,14 +34,14 @@ public class TreeViewStateService : ITreeViewStateService
             return;
         }
 
-        var settings = _settingsManager.CurrentSettings;
-        if (settings?.TreeViewState?.ExpandedNodes == null)
-        {
-            return;
-        }
-
         try
         {
+            var settings = _settingsManager.CurrentSettings;
+            if (settings?.TreeViewState?.ExpandedNodes == null)
+            {
+                return;
+            }
+
             ApplyExpandedNodePaths(treeView, settings.TreeViewState.ExpandedNodes);
         }
         catch (Exception ex)
@@ -61,14 +61,14 @@ public class TreeViewStateService : ITreeViewStateService
             return;
         }
 
-        var settings = _settingsManager.CurrentSettings;
-        if (settings == null)
-        {
-            return;
-        }
-
         try
         {
+            var settings = _settingsManager.CurrentSettings;
+            if (settings == null)
+            {
+                return;
+            }
+
             List<string> expandedPaths = GetExpandedNodePaths(treeView);
 
             if (settings.TreeViewState == null)
