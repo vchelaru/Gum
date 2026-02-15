@@ -197,6 +197,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     System.Windows.Controls.TextBox searchTextBox;
     System.Windows.Controls.CheckBox deepSearchCheckBox;
+    System.Windows.Controls.Button collapseAllButton;
+    System.Windows.Controls.Button collapseToElementButton;
     #endregion
 
     #region Properties
@@ -575,13 +577,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         var grid = new Grid();
         grid.Margin = new Thickness(4);
         grid.RowDefinitions.Add(
-            new System.Windows.Controls.RowDefinition() 
+            new System.Windows.Controls.RowDefinition()
+            { Height = System.Windows.GridLength.Auto });
+        grid.RowDefinitions.Add(
+            new System.Windows.Controls.RowDefinition()
             { Height = System.Windows.GridLength.Auto });
         grid.RowDefinitions.Add(
             new System.Windows.Controls.RowDefinition()
                 { Height = System.Windows.GridLength.Auto });
         grid.RowDefinitions.Add(
-            new System.Windows.Controls.RowDefinition() 
+            new System.Windows.Controls.RowDefinition()
             { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
 
         _tabManager.AddControl(grid, "Project", TabLocation.Left);
@@ -602,21 +607,24 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         TreeViewHost.Child = scrollContainer;
         TreeViewHost.Margin = new Thickness(0,4,0,0);
-        
-        Grid.SetRow(TreeViewHost, 2);
+
+        Grid.SetRow(TreeViewHost, 3);
         grid.Children.Add(TreeViewHost);
 
+        var buttonPanel = CreateCollapseButtonsPanel();
+        Grid.SetRow(buttonPanel, 0);
+        grid.Children.Add(buttonPanel);
 
         var searchBarUi = CreateSearchBoxUi();
-        Grid.SetRow(searchBarUi, 0);
+        Grid.SetRow(searchBarUi, 1);
         grid.Children.Add(searchBarUi);
 
         var checkBoxUi = CreateSearchCheckBoxUi();
         checkBoxUi.Visibility = Visibility.Collapsed;
         checkBoxUi.Focusable = false;
         checkBoxUi.Margin = new Thickness(0, 2, 0, 0);
-        
-        Grid.SetRow(checkBoxUi, 1);
+
+        Grid.SetRow(checkBoxUi, 2);
         grid.Children.Add(checkBoxUi);
 
         FlatList = CreateFlatSearchList();
@@ -625,7 +633,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         FlatList.Margin = new(0, 4, 0, 0);
         FlatList.Visibility = Visibility.Collapsed;
 
-        Grid.SetRow(FlatList, 2);
+        Grid.SetRow(FlatList, 3);
         grid.Children.Add(FlatList);
 
         //_guiCommands.AddControl(panel, "Project", TabLocation.Left);
@@ -2374,6 +2382,39 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
+    private System.Windows.Controls.StackPanel CreateCollapseButtonsPanel()
+    {
+        var panel = new System.Windows.Controls.StackPanel
+        {
+            Orientation = System.Windows.Controls.Orientation.Horizontal,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+            Margin = new Thickness(0, 0, 0, 4)
+        };
+
+        collapseAllButton = new System.Windows.Controls.Button
+        {
+            Content = "Collapse All",
+            Margin = new Thickness(0, 0, 4, 0),
+            Padding = new Thickness(8, 2, 8, 2),
+            ToolTip = "Collapse all nodes in the tree"
+        };
+        collapseAllButton.Click += (_, _) => CollapseAll();
+
+        collapseToElementButton = new System.Windows.Controls.Button
+        {
+            Content = "Collapse to Element",
+            Margin = new Thickness(0, 0, 4, 0),
+            Padding = new Thickness(8, 2, 8, 2),
+            ToolTip = "Collapse to element level (preserves folder expansion state)"
+        };
+        collapseToElementButton.Click += (_, _) => CollapseToElementLevel();
+
+        panel.Children.Add(collapseAllButton);
+        panel.Children.Add(collapseToElementButton);
+
+        return panel;
+    }
+
     private System.Windows.Controls.CheckBox CreateSearchCheckBoxUi()
     {
         deepSearchCheckBox = new System.Windows.Controls.CheckBox();
@@ -2384,6 +2425,39 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         deepSearchCheckBox.Checked += (_, _) => ReactToFilterTextChanged();
 
         return deepSearchCheckBox;
+    }
+
+    private void CollapseAll()
+    {
+        ObjectTreeView.CollapseAll();
+    }
+
+    private void CollapseToElementLevel()
+    {
+        // Recursively collapse only element nodes (nodes with Tag != null)
+        // This preserves the expansion state of all folder nodes
+        CollapseElementNodesRecursively(ObjectTreeView.Nodes);
+    }
+
+    private void CollapseElementNodesRecursively(TreeNodeCollection nodes)
+    {
+        foreach (TreeNode node in nodes)
+        {
+            // If this node has a Tag, it's an element (Screen, Component, Behavior, Instance)
+            // so we should collapse it
+            if (node.Tag != null)
+            {
+                node.Collapse();
+            }
+            // If it's a folder node (top-level or subfolder), leave it alone but recurse into its children
+            else if ((node.IsTopElementContainerTreeNode() ||
+                      node.IsScreensFolderTreeNode() ||
+                      node.IsComponentsFolderTreeNode()) &&
+                     node.Nodes.Count > 0)
+            {
+                CollapseElementNodesRecursively(node.Nodes);
+            }
+        }
     }
 
     private void HandleSelectedSearchNode(SearchItemViewModel vm)
@@ -2605,7 +2679,7 @@ public static class TreeNodeExtensionMethods
         : false;
 
 
-    static bool IsScreensFolderTreeNode(this TreeNode treeNode)
+    public static bool IsScreensFolderTreeNode(this TreeNode treeNode)
     {
         return treeNode.Tag == null &&
             treeNode.Parent != null &&
@@ -2664,7 +2738,7 @@ public static class TreeNodeExtensionMethods
         ? wrapper.Node.IsComponentsFolderTreeNode()
         : false;
 
-    static bool IsComponentsFolderTreeNode(this TreeNode treeNode)
+    public static bool IsComponentsFolderTreeNode(this TreeNode treeNode)
     {
         return treeNode.Tag == null &&
             treeNode.Parent != null &&
