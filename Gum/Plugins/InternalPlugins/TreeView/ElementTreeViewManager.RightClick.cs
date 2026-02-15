@@ -29,21 +29,21 @@ public partial class ElementTreeViewManager
 
 
 
-    ToolStripMenuItem mAddScreen;
-    ToolStripMenuItem mImportScreen;
+    ToolStripMenuItem mAddScreen = default!;
+    ToolStripMenuItem mImportScreen = default!;
 
-    ToolStripMenuItem mImportComponent;
-    ToolStripMenuItem mAddLinkedComponent;
+    ToolStripMenuItem mImportComponent = default!;
+    ToolStripMenuItem mAddLinkedComponent = default!;
 
-    ToolStripMenuItem mAddParentInstance;
-    ToolStripMenuItem mSaveObject;
-    ToolStripMenuItem mGoToDefinition;
-    ToolStripMenuItem mCreateComponent;
-    ToolStripMenuItem mDeleteObject;
+    ToolStripMenuItem mAddParentInstance = default!;
+    ToolStripMenuItem mSaveObject = default!;
+    ToolStripMenuItem mGoToDefinition = default!;
+    ToolStripMenuItem mCreateComponent = default!;
+    ToolStripMenuItem mDeleteObject = default!;
 
-    ToolStripMenuItem mAddFolder;
+    ToolStripMenuItem mAddFolder = default!;
 
-    ToolStripMenuItem duplicateElement;
+    ToolStripMenuItem duplicateElement = default!;
     #endregion
 
 

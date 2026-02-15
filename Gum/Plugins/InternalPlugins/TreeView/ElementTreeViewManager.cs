@@ -154,12 +154,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public const int BehaviorImageIndex = 8;
     public const int DerivedInstanceImageIndex = 9;
 
-    static ElementTreeViewManager mSelf;
-    ContextMenuStrip mMenuStrip;
-    
+    static ElementTreeViewManager mSelf = default!;
+    ContextMenuStrip mMenuStrip = default!;
 
-    internal MultiSelectTreeView ObjectTreeView;
-    private ImageList originalImageList;
+
+    internal MultiSelectTreeView ObjectTreeView = default!;
+    private ImageList originalImageList = default!;
     public ImageList unmodifiableImageList
     {
         get
@@ -175,17 +175,17 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    TreeNode mScreensTreeNode;
-    TreeNode mComponentsTreeNode;
-    TreeNode mStandardElementsTreeNode;
-    TreeNode mBehaviorsTreeNode;
+    TreeNode mScreensTreeNode = default!;
+    TreeNode mComponentsTreeNode = default!;
+    TreeNode mStandardElementsTreeNode = default!;
+    TreeNode mBehaviorsTreeNode = default!;
     TreeNode? mLastHoveredNode;
     private DateTime? hoverStartTime;
     private Cursor AddCursor { get; }
 
 
-    FlatSearchListBox FlatList;
-    System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost;
+    FlatSearchListBox FlatList = default!;
+    System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost = default!;
 
 
     /// <summary>
@@ -195,10 +195,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// </summary>
     object? mRecordedSelectedObject;
 
-    System.Windows.Controls.TextBox searchTextBox;
-    System.Windows.Controls.CheckBox deepSearchCheckBox;
-    System.Windows.Controls.Button collapseAllButton;
-    System.Windows.Controls.Button collapseToElementButton;
+    System.Windows.Controls.TextBox searchTextBox = default!;
+    System.Windows.Controls.CheckBox deepSearchCheckBox = default!;
+    System.Windows.Controls.Button collapseAllButton = default!;
+    System.Windows.Controls.Button collapseToElementButton = default!;
     #endregion
 
     #region Properties
@@ -243,8 +243,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    ExpandedState expandedStateBeforeFilter;
-    string filterText;
+    ExpandedState expandedStateBeforeFilter = default!;
+    string filterText = default!;
     public string FilterText
     {
         get => filterText;
@@ -287,7 +287,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     public TreeNode RootBehaviorsTreeNode => mBehaviorsTreeNode;
 
-    private DragDropManager _dragDropManager;
+    private DragDropManager _dragDropManager = default!;
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
     private readonly DeleteLogic _deleteLogic;
