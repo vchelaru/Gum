@@ -83,7 +83,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
     {
         if (control != null && viewModel != null)
         {
-            viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+            viewModel.SetFrom(Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile, ProjectState.Self.GumProjectSave);
             control.ViewModel = null;
             control.ViewModel = viewModel;
             RefreshFontRangeEditability();
@@ -112,7 +112,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
     {
         try
         {
-            viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+            viewModel.SetFrom(Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile, ProjectState.Self.GumProjectSave);
             control.ViewModel = viewModel;
             if(_pluginTab != null)
             {

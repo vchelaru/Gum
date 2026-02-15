@@ -18,19 +18,21 @@ public class ImportLogic : IImportLogic
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
+    private readonly IProjectManager _projectManager;
 
-    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService)
+    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _dialogService = dialogService;
+        _projectManager = projectManager;
     }
 
     public ScreenSave? ImportScreen(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
     {
         string screensOrComponents = "Screens";
-        var elementReferences = ProjectManager.Self.GumProjectSave.ScreenReferences;
+        var elementReferences = _projectManager.GumProjectSave.ScreenReferences;
 
         bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, screensOrComponents);
 
@@ -54,7 +56,7 @@ public class ImportLogic : IImportLogic
             elementReferences.Add(new ElementReference { Name = screenSave!.Name, ElementType = ElementType.Screen });
             elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            var screens = ProjectManager.Self.GumProjectSave.Screens;
+            var screens = _projectManager.GumProjectSave.Screens;
             screens.Add(screenSave);
             screens.Sort((first, second) => first.Name.CompareTo(second.Name));
 
@@ -72,7 +74,7 @@ public class ImportLogic : IImportLogic
     public ComponentSave? ImportComponent(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
     {
         string screensOrComponents = "Components";
-        var elementReferences = ProjectManager.Self.GumProjectSave.ComponentReferences;
+        var elementReferences = _projectManager.GumProjectSave.ComponentReferences;
 
         bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, screensOrComponents);
 
@@ -96,7 +98,7 @@ public class ImportLogic : IImportLogic
             elementReferences.Add(new ElementReference { Name = componentSave!.Name, ElementType = ElementType.Component });
             elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            var components = ProjectManager.Self.GumProjectSave.Components;
+            var components = _projectManager.GumProjectSave.Components;
             components.Add(componentSave);
             components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
@@ -128,7 +130,7 @@ public class ImportLogic : IImportLogic
     {
         var shouldAdd = true;
         desiredDirectory = desiredDirectory ?? FileManager.GetDirectory(
-            ProjectManager.Self.GumProjectSave.FullFileName) + $"{screensOrComponents}/";
+            _projectManager.GumProjectSave.FullFileName) + $"{screensOrComponents}/";
 
         if (!FileManager.IsRelativeTo(filePath.FullPath, desiredDirectory))
         {
@@ -165,7 +167,7 @@ public class ImportLogic : IImportLogic
         var shouldAdd = true;
 
         desiredDirectory = desiredDirectory ?? FileManager.GetDirectory(
-            ProjectManager.Self.GumProjectSave.FullFileName) + "Behaviors/";
+            _projectManager.GumProjectSave.FullFileName) + "Behaviors/";
 
         if (!FileManager.IsRelativeTo(filePath.FullPath, desiredDirectory))
         {
@@ -201,11 +203,11 @@ public class ImportLogic : IImportLogic
 
             var behaviorSave = FileManager.XmlDeserialize<BehaviorSave>(filePath.FullPath);
 
-            var behaviorReferences = ProjectManager.Self.GumProjectSave.BehaviorReferences;
+            var behaviorReferences = _projectManager.GumProjectSave.BehaviorReferences;
             behaviorReferences.Add(new BehaviorReference { Name = behaviorSave.Name });
             behaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            var behaviors = ProjectManager.Self.GumProjectSave.Behaviors;
+            var behaviors = _projectManager.GumProjectSave.Behaviors;
             behaviors.Add(behaviorSave);
             behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 

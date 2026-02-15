@@ -60,7 +60,7 @@ public class MainTextureCoordinatePlugin : PluginBase
         _selectedState = Locator.GetRequiredService<ISelectedState>();
 
         _viewModel = new (
-            ProjectManager.Self,
+            Locator.GetRequiredService<IProjectManager>(),
             Locator.GetRequiredService<IFileCommands>(),
             Locator.GetRequiredService<IFileWatchManager>(),
             Locator.GetRequiredService<IGuiCommands>());

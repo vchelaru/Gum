@@ -69,11 +69,12 @@ public class SetVariableLogic : ISetVariableLogic
     private readonly PluginManager _pluginManager;
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly ProjectState _projectState;
+    private readonly IProjectManager _projectManager;
 
-    public SetVariableLogic(ISelectedState selectedState, 
-        INameVerifier nameVerifier, 
-        IRenameLogic renameLogic, 
-        IElementCommands elementCommands, 
+    public SetVariableLogic(ISelectedState selectedState,
+        INameVerifier nameVerifier,
+        IRenameLogic renameLogic,
+        IElementCommands elementCommands,
         IUndoManager undoManager,
         WireframeCommands wireframeCommands,
         VariableReferenceLogic variableReferenceLogic,
@@ -85,7 +86,8 @@ public class SetVariableLogic : ISetVariableLogic
         IDialogService dialogService,
         PluginManager pluginManager,
         WireframeObjectManager wireframeObjectManager,
-        ProjectState projectState)
+        ProjectState projectState,
+        IProjectManager projectManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -103,6 +105,7 @@ public class SetVariableLogic : ISetVariableLogic
         _pluginManager = pluginManager;
         _wireframeObjectManager = wireframeObjectManager;
         _projectState = projectState;
+        _projectManager = projectManager;
     }
 
     public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
@@ -905,7 +908,7 @@ public class SetVariableLogic : ISetVariableLogic
 
                 if (!string.IsNullOrEmpty(sourceFile))
                 {
-                    string absolute = ProjectManager.Self.MakeAbsoluteIfNecessary(sourceFile);
+                    string absolute = _projectManager.MakeAbsoluteIfNecessary(sourceFile);
 
                     if (System.IO.File.Exists(absolute))
                     {

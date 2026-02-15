@@ -75,13 +75,15 @@ public class RenameLogic : IRenameLogic
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly DeleteLogic _deleteLogic;
+    private readonly IProjectManager _projectManager;
 
-    public RenameLogic(ISelectedState selectedState, 
-        INameVerifier nameVerifier, 
-        IDialogService dialogService, 
+    public RenameLogic(ISelectedState selectedState,
+        INameVerifier nameVerifier,
+        IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        DeleteLogic deleteLogic)
+        DeleteLogic deleteLogic,
+        IProjectManager projectManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -89,6 +91,7 @@ public class RenameLogic : IRenameLogic
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _deleteLogic = deleteLogic;
+        _projectManager = projectManager;
     }
 
     #region StateSave
@@ -400,7 +403,7 @@ public class RenameLogic : IRenameLogic
 
     private void RenameAllReferencesTo(ElementSave elementSave, InstanceSave instance, string oldName)
     {
-        var project = ProjectManager.Self.GumProjectSave;
+        var project = _projectManager.GumProjectSave;
         // Tell the GumProjectSave to react to the rename.
         // This changes the names of the ElementSave references.
         project.ReactToRenamed(elementSave, instance, oldName);
@@ -617,8 +620,8 @@ public class RenameLogic : IRenameLogic
     // public void HandleRename(ElementSave containerElement, EventSave eventSave, string oldName)
     // {
     //     List<ElementSave> elements = new List<ElementSave>();
-    //     elements.AddRange(ProjectManager.Self.GumProjectSave.Screens);
-    //     elements.AddRange(ProjectManager.Self.GumProjectSave.Components);
+    //     elements.AddRange(_projectManager.GumProjectSave.Screens);
+    //     elements.AddRange(_projectManager.GumProjectSave.Components);
     //
     //     foreach (var possibleElement in elements)
     //     {

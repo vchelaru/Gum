@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Services;
 
 namespace Gum.PropertyGridHelpers.Converters
 {
@@ -11,6 +12,7 @@ namespace Gum.PropertyGridHelpers.Converters
         ElementSave elementViewing;
         InstanceSave instance;
         private StandardValuesCollection standardValues;
+        private static readonly IProjectManager _projectManager = Locator.GetRequiredService<IProjectManager>();
 
         public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
         {
@@ -35,7 +37,7 @@ namespace Gum.PropertyGridHelpers.Converters
         {
             List<string> values = new List<string>();
 
-            var gumProject = ProjectManager.Self.GumProjectSave;
+            var gumProject = _projectManager.GumProjectSave;
 
             ElementSave? effectiveElement = elementViewing;
             if (instance != null)

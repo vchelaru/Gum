@@ -23,16 +23,19 @@ public class ProjectCommands
     private readonly ISelectedState _selectedState;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
+    private readonly IProjectManager _projectManager;
 
     #endregion
-    
-    public ProjectCommands(ISelectedState selectedState, 
-        IGuiCommands guiCommands, 
-        IFileCommands fileCommands)
+
+    public ProjectCommands(ISelectedState selectedState,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        IProjectManager projectManager)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _projectManager = projectManager;
     }
     
     #region Screens
@@ -55,10 +58,10 @@ public class ProjectCommands
     {
         screenSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Screen"));
         StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
-        ProjectManager.Self.GumProjectSave.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
-        ProjectManager.Self.GumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-        ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
-        ProjectManager.Self.GumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
+        _projectManager.GumProjectSave.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
+        _projectManager.GumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+        _projectManager.GumProjectSave.Screens.Add(screenSave);
+        _projectManager.GumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
 
 
         _fileCommands.TryAutoSaveProject();
@@ -73,7 +76,7 @@ public class ProjectCommands
 
     internal void RemoveElement(ElementSave element)
     {
-        GumProjectSave gps = ProjectManager.Self.GumProjectSave;
+        GumProjectSave gps = _projectManager.GumProjectSave;
         string name = element.Name;
         var removed = false;
         if (element is ScreenSave asScreenSave)
@@ -123,7 +126,7 @@ public class ProjectCommands
     {
         string behaviorName = behavior.Name;
 
-        GumProjectSave gps = ProjectManager.Self.GumProjectSave;
+        GumProjectSave gps = _projectManager.GumProjectSave;
         List<BehaviorReference> references = gps.BehaviorReferences;
 
         references.RemoveAll(item => item.Name == behavior.Name);

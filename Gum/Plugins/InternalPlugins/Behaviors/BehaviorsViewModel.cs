@@ -1,5 +1,7 @@
 ﻿using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Mvvm;
+using Gum.Services;
 using Gum.ToolStates;
 using System;
 using System.Collections.ObjectModel;
@@ -11,6 +13,7 @@ namespace Gum.Plugins.Behaviors
     public class BehaviorsViewModel : ViewModel
     {
         private readonly ISelectedState _selectedState;
+        private readonly IProjectManager _projectManager;
 
         public event EventHandler ApplyChangedValues;
 
@@ -58,6 +61,7 @@ namespace Gum.Plugins.Behaviors
         public BehaviorsViewModel(ISelectedState selectedState)
         {
             _selectedState = selectedState;
+            _projectManager = Locator.GetRequiredService<IProjectManager>();
         }
 
         internal void HandleOkEditClick()
@@ -76,7 +80,7 @@ namespace Gum.Plugins.Behaviors
             }
 
             AllBehaviors.Clear();
-            foreach (var behavior in ProjectManager.Self.GumProjectSave.Behaviors)
+            foreach (var behavior in _projectManager.GumProjectSave.Behaviors)
             {
                 var newItem = new CheckListBehaviorItem();
 

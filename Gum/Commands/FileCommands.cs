@@ -26,7 +26,7 @@ public class FileCommands : IFileCommands
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IOutputManager _outputManager;
-    private readonly ProjectManager _projectManager;
+    private readonly IProjectManager _projectManager;
 
     public FileCommands(ISelectedState selectedState,
         Lazy<IUndoManager> undoManager,
@@ -34,7 +34,8 @@ public class FileCommands : IFileCommands
         IGuiCommands guiCommands,
         LocalizationService localizationService,
         IOutputManager outputManager,
-        IFileWatchManager fileWatchManager)
+        IFileWatchManager fileWatchManager,
+        IProjectManager projectManager)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -43,7 +44,7 @@ public class FileCommands : IFileCommands
         _localizationService = localizationService;
         _fileWatchManager = fileWatchManager;
         _outputManager = outputManager;
-        _projectManager = ProjectManager.Self;
+        _projectManager = projectManager;
 
     }
 

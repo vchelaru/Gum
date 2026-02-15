@@ -1,5 +1,7 @@
 ﻿using Gum.Commands;
+using Gum.Managers;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using System.Collections.Generic;
@@ -56,7 +58,7 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
         BehaviorSave lastImportedBehavior = null;
 
         string desiredDirectory = FileManager.GetDirectory(
-            ProjectManager.Self.GumProjectSave.FullFileName) + "Behaviors/";
+            Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName) + "Behaviors/";
 
         foreach (string file in SelectedFiles)
         {

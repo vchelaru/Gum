@@ -30,15 +30,17 @@ public class ElementCommands : IElementCommands
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly PluginManager _pluginManager;
+    private readonly IProjectManager _projectManager;
 
     #endregion
 
-    public ElementCommands(ISelectedState selectedState, 
-        IGuiCommands guiCommands, 
+    public ElementCommands(ISelectedState selectedState,
+        IGuiCommands guiCommands,
         IFileCommands fileCommands,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
-        PluginManager pluginManager)
+        PluginManager pluginManager,
+        IProjectManager projectManager)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
@@ -46,6 +48,7 @@ public class ElementCommands : IElementCommands
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _wireframeObjectManager = wireframeObjectManager;
         _pluginManager = pluginManager;
+        _projectManager = projectManager;
     }
 
     #region Instance
@@ -499,7 +502,7 @@ public class ElementCommands : IElementCommands
             var ipso = _wireframeObjectManager.GetSelectedRepresentation();
             ipso.GetFileWidthAndHeightOrDefault(out fileWidth, out fileHeight);
             ipso.GetParentWidthAndHeight(
-                ProjectManager.Self.GumProjectSave.DefaultCanvasWidth, ProjectManager.Self.GumProjectSave.DefaultCanvasHeight,
+                _projectManager.GumProjectSave.DefaultCanvasWidth, _projectManager.GumProjectSave.DefaultCanvasHeight,
                 out parentWidth, out parentHeight);
 
             var unitsVariable = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
@@ -691,7 +694,7 @@ public class ElementCommands : IElementCommands
 
     public void AddBehaviorTo(string behaviorName, ComponentSave componentSave, bool performSave = true)
     {
-        var project = ProjectManager.Self.GumProjectSave;
+        var project = _projectManager.GumProjectSave;
         var behaviorSave = project.Behaviors.FirstOrDefault(item => item.Name == behaviorName);
 
         if(behaviorSave != null)

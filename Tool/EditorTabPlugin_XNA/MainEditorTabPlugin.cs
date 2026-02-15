@@ -123,7 +123,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IHotkeyManager _hotkeyManager;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
-    private readonly ProjectManager _projectManager;
+    private readonly IProjectManager _projectManager;
     private EditorViewModel _editorViewModel;
     private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private readonly FileLocations _fileLocations;
@@ -149,7 +149,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     public MainEditorTabPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _projectManager = ProjectManager.Self;
+        _projectManager = Locator.GetRequiredService<IProjectManager>();
 
         _scrollbarService = new ScrollbarService(_projectManager);
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();

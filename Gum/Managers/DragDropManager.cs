@@ -61,6 +61,7 @@ public class DragDropManager
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IPluginManager _pluginManager;
     private readonly IReorderLogic _reorderLogic;
+    private readonly IProjectManager _projectManager;
 
     #endregion
 
@@ -84,12 +85,13 @@ public class DragDropManager
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        ISetVariableLogic setVariableLogic, 
+        ISetVariableLogic setVariableLogic,
         ICopyPasteLogic copyPasteLogic,
         IImportLogic importLogic,
         IWireframeObjectManager wireframeObjectManager,
         IPluginManager pluginManager,
-        IReorderLogic reorderLogic)
+        IReorderLogic reorderLogic,
+        IProjectManager projectManager)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -105,6 +107,7 @@ public class DragDropManager
         _wireframeObjectManager = wireframeObjectManager;
         _pluginManager = pluginManager;
         _reorderLogic = reorderLogic;
+        _projectManager = projectManager;
     }
 
     #endregion
@@ -213,7 +216,7 @@ public class DragDropManager
 
             if(fullFolderPath != fullElementFilePath)
             {
-                var projectFolder = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+                var projectFolder = FileManager.GetDirectory(_projectManager.GumProjectSave.FullFileName);
 
                 string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath.FullPath, projectFolder + draggedAsElementSave.Subfolder + "/", preserveCase:true)
                     .Replace("\\", "/");

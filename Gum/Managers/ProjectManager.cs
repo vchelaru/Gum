@@ -277,7 +277,7 @@ public class ProjectManager : IProjectManager
 
             if (wasModified)
             {
-                ProjectManager.Self.SaveProject(forceSaveContainedElements: true);
+                SaveProject(forceSaveContainedElements: true);
             }
         }
         else

@@ -11,10 +11,12 @@ namespace Gum.PropertyGridHelpers.Converters
     public class AvailableContainedTypeConverter : TypeConverter
     {
         private readonly ISelectedState _selectedState;
-        
+        private readonly IProjectManager _projectManager;
+
         public AvailableContainedTypeConverter()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _projectManager = Locator.GetRequiredService<IProjectManager>();
         }
         
         public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
@@ -35,7 +37,7 @@ namespace Gum.PropertyGridHelpers.Converters
 
             values.AddRange(Enum.GetNames(typeof(StandardElementTypes)));
 
-            foreach (ComponentSave componentSave in ProjectManager.Self.GumProjectSave.Components)
+            foreach (ComponentSave componentSave in _projectManager.GumProjectSave.Components)
             {
                 // Currently we allow any type. We may want to make sure we don't include the current type....or do we?
                 //if (element == null || element.IsOfType(componentSave.Name) == false || element.Name == instance?.BaseType)

@@ -31,6 +31,7 @@ public class DeleteLogic : IDeleteLogic
     private readonly IFileCommands _fileCommands;
     private readonly PluginManager _pluginManager;
     private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IProjectManager _projectManager;
 
     public DeleteLogic(
         ProjectCommands projectCommands,
@@ -39,7 +40,8 @@ public class DeleteLogic : IDeleteLogic
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         PluginManager pluginManager,
-        WireframeObjectManager wireframeObjectManager)
+        WireframeObjectManager wireframeObjectManager,
+        IProjectManager projectManager)
     {
         _projectCommands = projectCommands;
         _selectedState = selectedState;
@@ -48,6 +50,7 @@ public class DeleteLogic : IDeleteLogic
         _fileCommands = fileCommands;
         _pluginManager = pluginManager;
         _wireframeObjectManager = wireframeObjectManager;
+        _projectManager = projectManager;
     }
 
 
@@ -516,7 +519,7 @@ public class DeleteLogic : IDeleteLogic
         {
             var behaviorNames = componentSave.Behaviors.Select(item => item.BehaviorName);
 
-            foreach (var behavior in ProjectManager.Self.GumProjectSave.Behaviors.Where(item => behaviorNames.Contains(item.Name)))
+            foreach (var behavior in _projectManager.GumProjectSave.Behaviors.Where(item => behaviorNames.Contains(item.Name)))
             {
                 bool needsCategory = behavior.Categories.Any(item => item.Name == category.Name);
 

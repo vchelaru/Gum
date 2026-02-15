@@ -22,7 +22,7 @@ namespace StateAnimationPlugin.Managers
         
         public void HandleDuplicate(ElementSave oldElement, ElementSave newElement)
         {
-            var project = ProjectManager.Self.GumProjectSave;
+            var project = Locator.GetRequiredService<IProjectManager>().GumProjectSave;
             //////////////////////Early Out////////////////////
             if(project == null)
             {

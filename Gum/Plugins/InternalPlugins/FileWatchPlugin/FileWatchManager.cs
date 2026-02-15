@@ -71,7 +71,7 @@ public class FileWatchManager : IFileWatchManager
 
     public void EnableWithDirectories(HashSet<FilePath> directories)
     {
-        var gumProject = ProjectManager.Self.GumProjectSave;
+        var gumProject = Locator.GetRequiredService<IProjectManager>().GumProjectSave;
         if(gumProject == null)
         {
             return;

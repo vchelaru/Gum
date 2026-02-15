@@ -34,7 +34,7 @@ public class FileWatchLogic
     public void RefreshRootDirectory()
     {
 
-        if (ProjectManager.Self.GumProjectSave?.FullFileName != null)
+        if (Locator.GetRequiredService<IProjectManager>().GumProjectSave?.FullFileName != null)
         {
             var directories = GetFileWatchRootDirectories();
             _fileWatchManager.EnableWithDirectories(directories);
@@ -126,7 +126,7 @@ public class FileWatchLogic
             }
         }
 
-        FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
+        FilePath gumProjectFilePath = Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName;
 
         if (gumProjectFilePath != null)
         {

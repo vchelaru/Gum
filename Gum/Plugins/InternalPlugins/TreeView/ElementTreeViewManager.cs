@@ -438,7 +438,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public TreeNode GetTreeNodeFor(string absoluteDirectory)
     {
         string relative = FileManager.MakeRelative(absoluteDirectory,
-            FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName));
+            FileManager.GetDirectory(Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName));
 
 
         relative = FileManager.Standardize(relative);
@@ -1229,7 +1229,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void AddAndRemoveScreensComponentsStandardsAndBehaviors()
     {
-        var gumProject = ProjectManager.Self.GumProjectSave;
+        var gumProject = Locator.GetRequiredService<IProjectManager>().GumProjectSave;
         /////////////Early Out////////////////
         if (gumProject == null)
             return;
@@ -1243,7 +1243,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         #region Add nodes that haven't been added yet
 
-        foreach (ScreenSave screenSave in ProjectManager.Self.GumProjectSave.Screens)
+        foreach (ScreenSave screenSave in Locator.GetRequiredService<IProjectManager>().GumProjectSave.Screens)
         {
             var treeNode = GetTreeNodeFor(screenSave);
             if (treeNode == null && ShouldShow(screenSave))
@@ -1255,7 +1255,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        foreach (ComponentSave componentSave in ProjectManager.Self.GumProjectSave.Components)
+        foreach (ComponentSave componentSave in Locator.GetRequiredService<IProjectManager>().GumProjectSave.Components)
         {
             if (GetTreeNodeFor(componentSave) == null && ShouldShow(componentSave))
             {
@@ -1271,7 +1271,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        foreach (StandardElementSave standardSave in ProjectManager.Self.GumProjectSave.StandardElements)
+        foreach (StandardElementSave standardSave in Locator.GetRequiredService<IProjectManager>().GumProjectSave.StandardElements)
         {
             if (standardSave.Name != "Component")
             {
@@ -1282,7 +1282,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        foreach(BehaviorSave behaviorSave in ProjectManager.Self.GumProjectSave.Behaviors)
+        foreach(BehaviorSave behaviorSave in Locator.GetRequiredService<IProjectManager>().GumProjectSave.Behaviors)
         {
             if(GetTreeNodeFor(behaviorSave) == null && ShouldShow(behaviorSave))
             {
@@ -1373,7 +1373,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if(behavior != null)
             {
-                if(behavior == null || !ProjectManager.Self.GumProjectSave.Behaviors.Contains(behavior) || !ShouldShow(behavior))
+                if(behavior == null || !Locator.GetRequiredService<IProjectManager>().GumProjectSave.Behaviors.Contains(behavior) || !ShouldShow(behavior))
                 {
                     mBehaviorsTreeNode.Nodes.RemoveAt(i);
                 }
@@ -2759,15 +2759,15 @@ public static class TreeNodeExtensionMethods
             treeNode.IsTopBehaviorTreeNode()
             )
         {
-            if (ProjectManager.Self.GumProjectSave == null ||
-                string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+            if (Locator.GetRequiredService<IProjectManager>().GumProjectSave == null ||
+                string.IsNullOrEmpty(Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName))
             {
                 Locator.GetRequiredService<IDialogService>().ShowMessage("Project isn't saved yet so the root of the project isn't known");
                 return null;
             }
             else
             {
-                string projectDirectory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+                string projectDirectory = FileManager.GetDirectory(Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName);
 
                 if (treeNode.IsTopComponentContainerTreeNode())
                 {

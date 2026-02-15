@@ -30,7 +30,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
         private void RefreshMenuItems()
         {
-            var recentFiles = ProjectManager.Self.GeneralSettingsFile?.RecentProjects;
+            var recentFiles = Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile?.RecentProjects;
 
 
             recentFilesMenuItem.DropDownItems.Clear();
@@ -113,7 +113,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
         private async void HandleLoadRecentClicked(object? sender, EventArgs e)
         {
             var viewModel = new LoadRecentViewModel();
-            var recentFiles = ProjectManager.Self.GeneralSettingsFile.RecentProjects;
+            var recentFiles = Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile.RecentProjects;
             viewModel.AllItems.Clear();
             if (recentFiles != null)
             {
