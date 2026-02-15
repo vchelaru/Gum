@@ -21,3 +21,14 @@ As of February 2025 the `Is Render Target` variable is considered experimental. 
 Containers with Is Render Target set to true automatically clip their children. This behavior is the same as setting [Clips Children](../general-properties/clips-children.md) to true. This happens because render targets internally create a texture which matches their size. Therefore, any items which are placed outside of the bounds of a render target container are not rendered.
 
 <figure><img src="../../../.gitbook/assets/22_05 49 40.gif" alt=""><figcaption><p>Is Render Target set to true clips children</p></figcaption></figure>
+
+## Using Is Render Target for Special Effects
+
+Once a container is rendered to a render target, additional special effects can be applied at runtime. These include:
+
+* Scaling
+* Rotating
+* Rendering portions using texture coordinates
+
+For more information see the [SpriteRuntime RenderTargetTextureSource](../../../code/standard-visuals/spriteruntime/rendertargettexturesource.md) documentation.
+
