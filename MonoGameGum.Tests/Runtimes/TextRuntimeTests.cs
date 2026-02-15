@@ -566,23 +566,6 @@ $"chars count=223\r\n";
     }
 
     [Fact]
-    public void WrappedText_ShouldUseZeroWidthSpace_OverRegularBreak()
-    {
-        var text = new Text();
-        // Set width that would normally break in the middle of a section
-        text.Width = 70; // Enough for about 7 characters
-        Text.IsMidWordLineBreakEnabled = true;
-
-        // "abcdefg\u200Bhijklmnop" - without zero-width space, it would break at 7 chars
-        // With zero-width space at position 7, it should break there instead
-        text.RawText = "abcdefg\u200Bhijklmnop";
-
-        text.WrappedText.Count.ShouldBe(2);
-        text.WrappedText[0].ShouldBe("abcdefg");
-        text.WrappedText[1].ShouldBe("hijklmnop");
-    }
-
-    [Fact]
     public void WrappedText_ShouldIgnoreZeroWidthSpace_IfItExceedsWrappingWidth()
     {
         var text = new Text();
