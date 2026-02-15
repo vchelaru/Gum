@@ -6,7 +6,12 @@
 
 set -e
 
-GUM_WINE_PREFIX_PATH="${1:-$HOME/.wine_gum_dotnet8/}"
+if [ -z "$1" ]; then
+    GUM_WINE_PREFIX_PATH="$HOME/.wine_gum_dotnet8"
+else
+    GUM_WINE_PREFIX_PATH="$1"
+fi
+
 INSTALL_LOG_FILE="/tmp/gum_install.log"
 
 write_log_section_header() {
