@@ -17,6 +17,14 @@
             Text="{Binding FileName, ElementName=root}"
             TextTrimming="CharacterEllipsis"
             ToolTip="{Binding FullPath, ElementName=root}"
-            ToolTipService.InitialShowDelay="100" />
+            ToolTipService.InitialShowDelay="100">
+            <TextBlock.ContextMenu>
+                <ContextMenu>
+                    <MenuItem
+                        Click="OnViewInExplorerClick"
+                        Header="View in explorer" />
+                </ContextMenu>
+            </TextBlock.ContextMenu>
+        </TextBlock>
     </Border>
 </UserControl>
