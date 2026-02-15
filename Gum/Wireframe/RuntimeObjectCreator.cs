@@ -6,6 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if GUM
+using Gum.Services;
+using Gum.ToolStates;
+#endif
 
 #if RAYLIB
 using Gum.Renderables;
@@ -45,11 +49,12 @@ namespace Gum.Wireframe
 #if GUM
                         lineRectangle.IsDotted = true;
 
+                        var projectState = Locator.GetRequiredService<ProjectState>();
                         lineRectangle.Color = System.Drawing.Color.FromArgb(
                             255,
-                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
-                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
-                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorB
+                            projectState.GeneralSettings.OutlineColorR,
+                            projectState.GeneralSettings.OutlineColorG,
+                            projectState.GeneralSettings.OutlineColorB
                             );
 #endif
                         containedObject = lineRectangle;

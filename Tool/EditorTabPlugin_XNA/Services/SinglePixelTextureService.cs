@@ -1,4 +1,5 @@
-﻿using Gum.ToolStates;
+﻿using Gum.Services;
+using Gum.ToolStates;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,8 @@ internal class SinglePixelTextureService
 {
     public void RefreshSinglePixelTexture()
     {
-        var gumProject = GumState.Self.ProjectState.GumProjectSave;
+        var projectState = Locator.GetRequiredService<ProjectState>();
+        var gumProject = projectState.GumProjectSave;
 
 
 

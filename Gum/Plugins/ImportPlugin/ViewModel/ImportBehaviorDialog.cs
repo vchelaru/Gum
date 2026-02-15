@@ -18,6 +18,7 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
     private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
     private readonly IImportLogic _importLogic;
+    private readonly ProjectState _projectState;
 
     public override string Title => "Import Behavior";
     public override string BrowseFileFilter => "Behavior Files (*.behaviors)|*.behaviors";
@@ -27,7 +28,8 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
         IGuiCommands guiCommands,
         ISelectedState selectedState,
         IDialogService dialogService,
-        IImportLogic importLogic
+        IImportLogic importLogic,
+        ProjectState projectState
 
         ) : base(dialogService)
     {
@@ -35,15 +37,16 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
         _guiCommands = guiCommands;
         _selectedState = selectedState;
         _importLogic = importLogic;
+        _projectState = projectState;
 
         List<FilePath> behaviorFilesNotInProject = FileManager.GetAllFilesInDirectory(
-            GumState.Self.ProjectState.BehaviorFilePath.FullPath, "behx")
+            _projectState.BehaviorFilePath.FullPath, "behx")
             .Select(item => new FilePath(item))
             .ToList();
 
-        FilePath[] behaviorFilesInProject = GumState.Self.ProjectState.GumProjectSave
+        FilePath[] behaviorFilesInProject = _projectState.GumProjectSave
             .Behaviors
-            .Select(item => new FilePath(GumState.Self.ProjectState.BehaviorFilePath + item.Name + ".behx"))
+            .Select(item => new FilePath(_projectState.BehaviorFilePath + item.Name + ".behx"))
             .ToArray();
 
         behaviorFilesNotInProject = behaviorFilesNotInProject

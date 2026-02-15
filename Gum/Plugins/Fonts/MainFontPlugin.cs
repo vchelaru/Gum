@@ -19,12 +19,14 @@ public class MainFontPlugin : InternalPlugin
     private readonly IGuiCommands _guiCommands;
     private readonly FontManager _fontManager;
     private readonly IDialogService _dialogService;
+    private readonly ProjectState _projectState;
 
     public MainFontPlugin()
     {
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _fontManager = Locator.GetRequiredService<FontManager>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _projectState = Locator.GetRequiredService<ProjectState>();
     }
 
     public override void StartUp()
@@ -60,7 +62,7 @@ public class MainFontPlugin : InternalPlugin
     private async void HandleProjectLoaded(GumProjectSave save)
     {
         await _fontManager.CreateAllMissingFontFiles(
-            ProjectState.Self.GumProjectSave);
+            _projectState.GumProjectSave);
     }
 
     private void HandleClearFontCache(object? sender, EventArgs e)
@@ -93,7 +95,7 @@ public class MainFontPlugin : InternalPlugin
 
     private async Task HandleRefreshFontCache(bool forceRecreate)
     {
-        var gumProjectSave = ProjectState.Self.GumProjectSave;
+        var gumProjectSave = _projectState.GumProjectSave;
         if(gumProjectSave == null)
         {
             _dialogService.ShowMessage(
@@ -103,7 +105,7 @@ public class MainFontPlugin : InternalPlugin
         {
             var before = DateTime.Now;
             await _fontManager.CreateAllMissingFontFiles(
-                ProjectState.Self.GumProjectSave, forceRecreate:forceRecreate);
+                _projectState.GumProjectSave, forceRecreate:forceRecreate);
             var after = DateTime.Now;
 
             var difference = after - before;

@@ -297,6 +297,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IElementCommands _elementCommands;
     private readonly INameVerifier _nameVerifier;
     private readonly ISetVariableLogic _setVariableLogic;
+    private readonly ProjectState _projectState;
 
     public bool HasMouseOver
     {
@@ -331,6 +332,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         _circularReferenceManager = Locator.GetRequiredService<ICircularReferenceManager>();
         _favoriteComponentManager = Locator.GetRequiredService<IFavoriteComponentManager>();
+        _projectState = Locator.GetRequiredService<ProjectState>();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
 
@@ -2218,7 +2220,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             if(filterText != null)
             {
                 var filterTextLower = filterText.ToLower();
-                var project = GumState.Self.ProjectState.GumProjectSave;
+                var project = _projectState.GumProjectSave;
                 foreach (var screen in project.Screens)
                 {
                     if (screen.Name.ToLower().Contains(filterTextLower))

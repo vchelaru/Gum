@@ -47,6 +47,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
     private readonly IDispatcher _dispatcher;
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly FileWatchLogic _fileWatchLogic;
+    private readonly ProjectState _projectState;
     private FilePath? _fontCharacterFileAbsolute;
 
     private PluginTab? _pluginTab;
@@ -59,6 +60,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
         _dispatcher = Locator.GetRequiredService<IDispatcher>();
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
         _fileWatchLogic = Locator.GetRequiredService<FileWatchLogic>();
+        _projectState = Locator.GetRequiredService<ProjectState>();
     }
 
     public override void StartUp()
@@ -83,14 +85,14 @@ class MainPropertiesWindowPlugin : InternalPlugin
     {
         if (control != null && viewModel != null)
         {
-            viewModel.SetFrom(Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+            viewModel.SetFrom(Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile, _projectState.GumProjectSave);
             control.ViewModel = null;
             control.ViewModel = viewModel;
             RefreshFontRangeEditability();
             
             if(viewModel.UseFontCharacterFile)
             {
-                var absolute = new FilePath(GumState.Self.ProjectState.ProjectDirectory + ".gumfcs");
+                var absolute = new FilePath(_projectState.ProjectDirectory + ".gumfcs");
                 _fontCharacterFileAbsolute = absolute;
 
                 if(System.IO.File.Exists(absolute.FullPath))
@@ -112,7 +114,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
     {
         try
         {
-            viewModel.SetFrom(Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+            viewModel.SetFrom(Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile, _projectState.GumProjectSave);
             control.ViewModel = viewModel;
             if(_pluginTab != null)
             {
@@ -148,7 +150,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 if (!string.IsNullOrEmpty(viewModel.LocalizationFile) && FileManager.IsRelative(viewModel.LocalizationFile) == false)
                 {
                     viewModel.LocalizationFile = FileManager.MakeRelative(viewModel.LocalizationFile,
-                        GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
+                        _projectState.ProjectDirectory, preserveCase:true);
                     shouldSaveAndRefresh = false;
                 }
                 else
@@ -186,7 +188,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                     }
                     else
                     {
-                        if (GumState.Self.ProjectState.GumProjectSave != null)
+                        if (_projectState.GumProjectSave != null)
                         {
                             var wasAbleToDelete = false;
                             try
@@ -210,7 +212,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                             if(wasAbleToDelete)
                             {
                                 await _fontManager.CreateAllMissingFontFiles(
-                                    ProjectState.Self.GumProjectSave);
+                                    _projectState.GumProjectSave);
                             }
 
                         }
@@ -222,7 +224,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
             case nameof(viewModel.UseFontCharacterFile):
                 if(viewModel.UseFontCharacterFile)
                 {
-                    var absolute = new FilePath(GumState.Self.ProjectState.ProjectDirectory + ".gumfcs");
+                    var absolute = new FilePath(_projectState.ProjectDirectory + ".gumfcs");
                     _fontCharacterFileAbsolute = absolute;
 
                     if(System.IO.File.Exists(absolute.FullPath))
@@ -249,7 +251,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 {
                     // This will loop:
                     viewModel.SinglePixelTextureFile = FileManager.MakeRelative(viewModel.SinglePixelTextureFile,
-                        GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
+                        _projectState.ProjectDirectory, preserveCase:true);
                     shouldSaveAndRefresh = false;
                 }
 
@@ -288,7 +290,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                     // ignore, if the folder is locked fonts will be recreated on next change
                 }
 
-                await _fontManager.CreateAllMissingFontFiles(ProjectState.Self.GumProjectSave);
+                await _fontManager.CreateAllMissingFontFiles(_projectState.GumProjectSave);
             }
         }
     }

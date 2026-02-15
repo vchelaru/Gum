@@ -90,7 +90,7 @@ namespace SkiaGum.Renderables
                     // todo - support MonoGame loads here using the normal content loader...
 #if GUM
                     var sourceFileAbsolute =
-                        FileManager.RemoveDotDotSlash(Gum.ToolStates.ProjectState.Self.ProjectDirectory + sourceFile);
+                        FileManager.RemoveDotDotSlash(Gum.Services.Locator.GetRequiredService<Gum.ToolStates.ProjectState>().ProjectDirectory + sourceFile);
                     if(System.IO.File.Exists(sourceFileAbsolute))
                     {
                         animation = SkiaSharp.Skottie.Animation.Create(sourceFileAbsolute);

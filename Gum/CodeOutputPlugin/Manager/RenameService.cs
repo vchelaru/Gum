@@ -12,6 +12,7 @@ using ToolsUtilities;
 using System.IO;
 using Gum;
 using Gum.Commands;
+using Gum.ToolStates;
 
 namespace CodeOutputPlugin.Manager;
 
@@ -27,9 +28,10 @@ internal class RenameService
         CodeGenerator codeGenerator,
         CustomCodeGenerator customCodeGenerator,
         CodeGenerationNameVerifier nameVerifier,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        ProjectState projectState)
     {
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator, nameVerifier);
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator, nameVerifier, projectState);
         _codeGenerationService = codeGenerationService;
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;

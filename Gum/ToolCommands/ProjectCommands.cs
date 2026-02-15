@@ -24,18 +24,21 @@ public class ProjectCommands
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IProjectManager _projectManager;
+    private readonly ProjectState _projectState;
 
     #endregion
 
     public ProjectCommands(ISelectedState selectedState,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        ProjectState projectState)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _projectManager = projectManager;
+        _projectState = projectState;
     }
     
     #region Screens
@@ -172,7 +175,7 @@ public class ProjectCommands
 
     public void AddComponent(ComponentSave componentSave)
     {
-        var gumProject = ProjectState.Self.GumProjectSave;
+        var gumProject = _projectState.GumProjectSave;
         gumProject.ComponentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
         gumProject.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
         gumProject.Components.Add(componentSave);

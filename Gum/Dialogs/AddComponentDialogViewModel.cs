@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -42,7 +43,8 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
         FilePath? path = nodeToAddTo?.GetFullFilePath();
         if (nodeToAddTo == null || !nodeToAddTo.IsPartOfComponentsFolderStructure())
         {
-            path = GumState.Self.ProjectState.ComponentFilePath;
+            var projectState = Locator.GetRequiredService<ProjectState>();
+            path = projectState.ComponentFilePath;
         }
 
         if (path != null)

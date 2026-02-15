@@ -2,6 +2,7 @@
 using CodeOutputPlugin.ViewModels;
 using Gum;
 using Gum.Mvvm;
+using Gum.Services;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -146,7 +147,8 @@ public partial class CodeWindow : UserControl
 
                 if (!string.IsNullOrWhiteSpace(valueToSet) && FileManager.IsRelative(valueToSet) == false)
                 {
-                    var projectDirectory = GumState.Self.ProjectState.ProjectDirectory;
+                    var projectState = Locator.GetRequiredService<ProjectState>();
+                    var projectDirectory = projectState.ProjectDirectory;
                     valueToSet = FileManager.MakeRelative(valueToSet, projectDirectory, preserveCase: true);
 
                     if (string.IsNullOrEmpty(valueToSet))
@@ -166,6 +168,7 @@ public partial class CodeWindow : UserControl
 
         member.CustomGetEvent += (owner) =>
         {
+            var projectState = Locator.GetRequiredService<ProjectState>();
             var projectRoot = CodeOutputProjectSettings?.CodeProjectRoot;
             if (string.IsNullOrEmpty(projectRoot))
             {
@@ -173,11 +176,11 @@ public partial class CodeWindow : UserControl
             }
             else if (projectRoot == "./")
             {
-                return GumState.Self.ProjectState.ProjectDirectory;
+                return projectState.ProjectDirectory;
             }
             else if (projectRoot != null && FileManager.IsRelative(projectRoot))
             {
-                return FileManager.RemoveDotDotSlash(GumState.Self.ProjectState.ProjectDirectory + projectRoot);
+                return FileManager.RemoveDotDotSlash(projectState.ProjectDirectory + projectRoot);
             }
             else
             {
@@ -542,9 +545,9 @@ public partial class CodeWindow : UserControl
             if (codeOutputElementSettings != null)
             {
                 var valueAsString = (string?)args.Value ?? string.Empty;
-                if (!string.IsNullOrWhiteSpace(ProjectState.Self.ProjectDirectory) && FileManager.IsRelative(valueAsString) == false)
+                if (!string.IsNullOrWhiteSpace(Locator.GetRequiredService<ProjectState>().ProjectDirectory) && FileManager.IsRelative(valueAsString) == false)
                 {
-                    valueAsString = FileManager.MakeRelative(valueAsString, ProjectState.Self.ProjectDirectory, preserveCase: true);
+                    valueAsString = FileManager.MakeRelative(valueAsString, Locator.GetRequiredService<ProjectState>().ProjectDirectory, preserveCase: true);
                 }
                 codeOutputElementSettings.GeneratedFileName = valueAsString;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);

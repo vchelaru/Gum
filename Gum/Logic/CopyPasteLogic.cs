@@ -65,6 +65,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly PluginManager _pluginManager;
     private readonly IMessenger _messenger;
     private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly ProjectState _projectState;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -92,7 +93,8 @@ public class CopyPasteLogic : ICopyPasteLogic
         DeleteLogic deleteLogic,
         PluginManager pluginManager,
         WireframeObjectManager wireframeObjectManager,
-        IMessenger messenger
+        IMessenger messenger,
+        ProjectState projectState
         )
     {
         _wireframeObjectManager = wireframeObjectManager;
@@ -106,6 +108,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         _deleteLogic = deleteLogic;
         _pluginManager = pluginManager;
         _messenger = messenger;
+        _projectState = projectState;
 
 
         _messenger.Register<SelectionChangedMessage>(
@@ -936,9 +939,9 @@ public class CopyPasteLogic : ICopyPasteLogic
         }
 
         List<string> allElementNames = new List<string>();
-        allElementNames.AddRange(ProjectState.Self.GumProjectSave.Screens.Select(item => item.Name.ToLowerInvariant()));
-        allElementNames.AddRange(ProjectState.Self.GumProjectSave.Components.Select(item => item.Name.ToLowerInvariant()));
-        allElementNames.AddRange(ProjectState.Self.GumProjectSave.StandardElements.Select(item => item.Name.ToLowerInvariant()));
+        allElementNames.AddRange(_projectState.GumProjectSave.Screens.Select(item => item.Name.ToLowerInvariant()));
+        allElementNames.AddRange(_projectState.GumProjectSave.Components.Select(item => item.Name.ToLowerInvariant()));
+        allElementNames.AddRange(_projectState.GumProjectSave.StandardElements.Select(item => item.Name.ToLowerInvariant()));
 
         while (allElementNames.Contains(toAdd.Name.ToLowerInvariant()))
         {

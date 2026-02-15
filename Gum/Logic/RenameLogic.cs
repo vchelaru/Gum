@@ -76,6 +76,7 @@ public class RenameLogic : IRenameLogic
     private readonly IFileCommands _fileCommands;
     private readonly DeleteLogic _deleteLogic;
     private readonly IProjectManager _projectManager;
+    private readonly ProjectState _projectState;
 
     public RenameLogic(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -83,7 +84,8 @@ public class RenameLogic : IRenameLogic
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         DeleteLogic deleteLogic,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        ProjectState projectState)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -92,6 +94,7 @@ public class RenameLogic : IRenameLogic
         _fileCommands = fileCommands;
         _deleteLogic = deleteLogic;
         _projectManager = projectManager;
+        _projectState = projectState;
     }
 
     #region StateSave
@@ -225,7 +228,7 @@ public class RenameLogic : IRenameLogic
     {
         List<VariableChange> toReturn = new List<VariableChange>();
 
-        var project = GumState.Self.ProjectState.GumProjectSave;
+        var project = _projectState.GumProjectSave;
 
         var ownerAsElement = owner as ElementSave;
 
@@ -414,7 +417,7 @@ public class RenameLogic : IRenameLogic
 
         if (instance == null)
         {
-            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+            foreach (var screen in _projectState.GumProjectSave.Screens)
             {
                 bool shouldSave = false;
 
@@ -448,7 +451,7 @@ public class RenameLogic : IRenameLogic
                 }
             }
 
-            foreach (var component in ProjectState.Self.GumProjectSave.Components)
+            foreach (var component in _projectState.GumProjectSave.Components)
             {
                 bool shouldSave = false;
                 if (component.BaseType == oldName)
@@ -653,7 +656,7 @@ public class RenameLogic : IRenameLogic
         List<VariableChange> variableChanges = new List<VariableChange>();
         List<VariableReferenceChange> variableReferenceChanges = new List<VariableReferenceChange>();
 
-        var project = GumState.Self.ProjectState.GumProjectSave;
+        var project = _projectState.GumProjectSave;
 
         var changedVariableOwnerElement = owner as ElementSave;
 

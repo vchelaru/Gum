@@ -88,7 +88,7 @@ public class MainStateAnimationPlugin : PluginBase
         _elementDeleteService = new ElementDeleteService(_animationFilePathService);
         _renameManager = RenameManager.Self;
         _settingsManager = SettingsManager.Self;
-        _projectState = GumState.Self.ProjectState;
+        _projectState = Locator.GetRequiredService<ProjectState>();
         _animationCollectionViewModelManager = AnimationCollectionViewModelManager.Self;
     }
 

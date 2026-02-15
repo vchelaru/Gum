@@ -25,9 +25,9 @@ namespace EventOutputPlugin.Managers
             get
             {
 
-                if (string.IsNullOrEmpty(ProjectState.Self.ProjectDirectory) == false)
+                if (string.IsNullOrEmpty(Locator.GetRequiredService<ProjectState>().ProjectDirectory) == false)
                 {
-                    return Path.Combine(ProjectState.Self.ProjectDirectory, "EventExport");
+                    return Path.Combine(Locator.GetRequiredService<ProjectState>().ProjectDirectory, "EventExport");
                 }
                 else
                 {

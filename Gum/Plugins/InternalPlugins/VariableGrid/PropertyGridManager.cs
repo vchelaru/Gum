@@ -42,6 +42,7 @@ public partial class PropertyGridManager
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly TypeManager _typeManager;
     private readonly IPluginManager _pluginManager;
+    private readonly ProjectState _projectState;
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
 
@@ -124,6 +125,7 @@ public partial class PropertyGridManager
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
         _typeManager = Locator.GetRequiredService<TypeManager>();
         _pluginManager = Locator.GetRequiredService<IPluginManager>();
+        _projectState = Locator.GetRequiredService<ProjectState>();
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -590,7 +592,7 @@ public partial class PropertyGridManager
 
         if(asComponent != null)
         {
-            var behaviors = ProjectState.Self.GumProjectSave.Behaviors;
+            var behaviors = _projectState.GumProjectSave.Behaviors;
             var behaviorReferences = asComponent.Behaviors;
 
             string message = null;

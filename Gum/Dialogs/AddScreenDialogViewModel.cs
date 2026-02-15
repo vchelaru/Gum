@@ -1,6 +1,7 @@
 ﻿using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -51,7 +52,8 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
 
         if (nodeToAddTo == null || !nodeToAddTo.IsPartOfScreensFolderStructure())
         {
-            path = GumState.Self.ProjectState.ScreenFilePath.FullPath;
+            var projectState = Locator.GetRequiredService<ProjectState>();
+            path = projectState.ScreenFilePath.FullPath;
         }
         
         string relativeToScreens = FileManager.MakeRelative(path, _fileLocations.ScreensFolder);

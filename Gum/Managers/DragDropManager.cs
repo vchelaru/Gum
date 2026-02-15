@@ -62,6 +62,7 @@ public class DragDropManager
     private readonly IPluginManager _pluginManager;
     private readonly IReorderLogic _reorderLogic;
     private readonly IProjectManager _projectManager;
+    private readonly ProjectState _projectState;
 
     #endregion
 
@@ -91,7 +92,8 @@ public class DragDropManager
         IWireframeObjectManager wireframeObjectManager,
         IPluginManager pluginManager,
         IReorderLogic reorderLogic,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        ProjectState projectState)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -108,6 +110,7 @@ public class DragDropManager
         _pluginManager = pluginManager;
         _reorderLogic = reorderLogic;
         _projectManager = projectManager;
+        _projectState = projectState;
     }
 
     #endregion
@@ -847,8 +850,8 @@ public class DragDropManager
         float containerLeft = 0;
         float containerTop = 0;
 
-        float containerWidth = ProjectState.Self.GumProjectSave.DefaultCanvasWidth;
-        float containerHeight = ProjectState.Self.GumProjectSave.DefaultCanvasHeight;
+        float containerWidth = _projectState.GumProjectSave.DefaultCanvasWidth;
+        float containerHeight = _projectState.GumProjectSave.DefaultCanvasHeight;
 
         if (component != null)
         {

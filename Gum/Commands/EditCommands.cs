@@ -39,6 +39,7 @@ public class EditCommands : IEditCommands
     private readonly PluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
     private readonly IDeleteLogic _deleteLogic;
+    private readonly ProjectState _projectState;
 
     public EditCommands(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -51,7 +52,8 @@ public class EditCommands : IEditCommands
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         PluginManager pluginManager,
         IDeleteLogic deleteLogic,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        ProjectState projectState)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -64,6 +66,7 @@ public class EditCommands : IEditCommands
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _pluginManager = pluginManager;
         _projectManager = projectManager;
+        _projectState = projectState;
 
         _deleteLogic = deleteLogic;
     }
@@ -344,7 +347,7 @@ public class EditCommands : IEditCommands
 
     public void AddBehavior()
     {
-        if (GumState.Self.ProjectState.NeedsToSaveProject)
+        if (_projectState.NeedsToSaveProject)
         {
             _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;

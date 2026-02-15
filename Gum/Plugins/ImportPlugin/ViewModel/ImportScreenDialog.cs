@@ -11,24 +11,27 @@ namespace Gum.Plugins.ImportPlugin.ViewModel;
 public class ImportScreenDialog : ImportBaseDialogViewModel
 {
     private readonly IImportLogic _importLogic;
+    private readonly ProjectState _projectState;
 
     public override string Title => "Import Screen";
     public override string BrowseFileFilter => "Gum Screen (*.gusx)|*.gusx";
     public ImportScreenDialog(IDialogService dialogService,
-        IImportLogic importLogic
+        IImportLogic importLogic,
+        ProjectState projectState
 
         ) : base(dialogService)
     {
         _importLogic = importLogic;
+        _projectState = projectState;
 
         List<FilePath> screenFilesNotInProject = FileManager.GetAllFilesInDirectory(
-                GumState.Self.ProjectState.ScreenFilePath.FullPath, "gusx")
+                _projectState.ScreenFilePath.FullPath, "gusx")
             .Select(item => new FilePath(item))
             .ToList();
 
-        FilePath[] screenFilesInProject = GumState.Self.ProjectState.GumProjectSave
+        FilePath[] screenFilesInProject = _projectState.GumProjectSave
             .Screens
-            .Select(item => new FilePath(GumState.Self.ProjectState.ComponentFilePath + item.Name + ".gusx"))
+            .Select(item => new FilePath(_projectState.ComponentFilePath + item.Name + ".gusx"))
             .ToArray();
 
         screenFilesNotInProject = screenFilesNotInProject

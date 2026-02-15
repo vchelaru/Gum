@@ -31,6 +31,7 @@ public class ElementCommands : IElementCommands
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly PluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
+    private readonly ProjectState _projectState;
 
     #endregion
 
@@ -40,7 +41,8 @@ public class ElementCommands : IElementCommands
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
         PluginManager pluginManager,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        ProjectState projectState)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
@@ -49,6 +51,7 @@ public class ElementCommands : IElementCommands
         _wireframeObjectManager = wireframeObjectManager;
         _pluginManager = pluginManager;
         _projectManager = projectManager;
+        _projectState = projectState;
     }
 
     #region Instance
@@ -213,7 +216,7 @@ public class ElementCommands : IElementCommands
 
     public void SortVariables()
     {
-        var gumProject = GumState.Self.ProjectState.GumProjectSave;
+        var gumProject = _projectState.GumProjectSave;
 
         foreach (var elementSave in gumProject.AllElements)
         {

@@ -130,7 +130,7 @@ public class MainErrorsPlugin : InternalPlugin
 
     private void UpdateErrorsForElement(ElementSave? element)
     {
-        var errors = errorChecker.GetErrorsFor(element, ProjectState.Self.GumProjectSave);
+        var errors = errorChecker.GetErrorsFor(element, Locator.GetRequiredService<ProjectState>().GumProjectSave);
 
         viewModel.Errors.Clear();
         foreach (var item in errors)
