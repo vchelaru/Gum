@@ -391,7 +391,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     }
 
-    private void HandleSetHighlightedElement(IPositionedSizedObject whatToHighlight)
+    private void HandleSetHighlightedElement(IPositionedSizedObject? whatToHighlight)
     {
         _selectionManager.HighlightedIpso = whatToHighlight;
     }

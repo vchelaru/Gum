@@ -1,6 +1,8 @@
-﻿using Gum.DataTypes;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
+using Gum.Mvvm;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -17,15 +19,27 @@ using Gum.Services;
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
 [Export(typeof(PluginBase))]
-internal class MainTreeViewPlugin : InternalPlugin
+internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardownMessage>
 {
     private readonly ISelectedState _selectedState;
     private readonly ElementTreeViewManager _elementTreeViewManager;
-    
+    private readonly IUserProjectSettingsManager _userProjectSettingsManager;
+    private readonly ITreeViewStateService _treeViewStateService;
+    private readonly IMessenger _messenger;
+
     public MainTreeViewPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementTreeViewManager = ElementTreeViewManager.Self;
+        _userProjectSettingsManager = Locator.GetRequiredService<IUserProjectSettingsManager>();
+        _messenger = Locator.GetRequiredService<IMessenger>();
+
+        // Create plugin-specific service with required dependencies
+        var outputManager = Locator.GetRequiredService<IOutputManager>();
+        _treeViewStateService = new TreeViewStateService(_userProjectSettingsManager, outputManager);
+
+        // Register to receive ApplicationTeardownMessage
+        _messenger.RegisterAll(this);
     }
     
     public override void StartUp()
@@ -119,6 +133,10 @@ internal class MainTreeViewPlugin : InternalPlugin
     private void HandleProjectLoad(GumProjectSave save)
     {
         _elementTreeViewManager.RefreshUi();
+
+        // Load user settings and apply tree view state
+        _userProjectSettingsManager.LoadForProject(save.FullFileName);
+        _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.ObjectTreeView);
     }
 
     private void HandleElementAdd(ElementSave save)
@@ -172,5 +190,16 @@ internal class MainTreeViewPlugin : InternalPlugin
             }
         }
 
+    }
+
+    void IRecipient<ApplicationTeardownMessage>.Receive(ApplicationTeardownMessage message)
+    {
+        message.OnTearDown(SaveTreeViewState);
+    }
+
+    private void SaveTreeViewState()
+    {
+        _treeViewStateService.CaptureAndSaveState(_elementTreeViewManager.ObjectTreeView);
+        _userProjectSettingsManager.Save();
     }
 }

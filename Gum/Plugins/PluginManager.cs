@@ -592,7 +592,7 @@ public class PluginManager : IPluginManager
         CallMethodOnPlugin(plugin => plugin.CallReactToFileChanged(filePath));
     
 
-    public void SetHighlightedIpso(IPositionedSizedObject positionedSizedObject) =>
+    public void SetHighlightedIpso(IPositionedSizedObject? positionedSizedObject) =>
         CallMethodOnPlugin(plugin => plugin.CallSetHighlightedIpso(positionedSizedObject));
 
     public void IpsoSelected(IPositionedSizedObject? positionedSizedObject) =>

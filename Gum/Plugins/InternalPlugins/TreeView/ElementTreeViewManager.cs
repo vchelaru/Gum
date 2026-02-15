@@ -158,7 +158,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     ContextMenuStrip mMenuStrip;
     
 
-    MultiSelectTreeView ObjectTreeView;
+    internal MultiSelectTreeView ObjectTreeView;
     private ImageList originalImageList;
     public ImageList unmodifiableImageList
     {
@@ -715,15 +715,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         ObjectTreeView.DragOver += (sender, e) =>
         {
             // allow file drops
-            if (e.Data.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop))
+            if (e.Data?.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop) == true)
             {
                 e.Effect = DragDropEffects.Copy;
             }
 
             // auto expand hovered nodes when they're collapsed
-            var treeview = (MultiSelectTreeView)sender;
-            Point pointWithinTreeview = treeview.PointToClient(new Point(e.X, e.Y));
-            if (treeview.GetNodeAt(pointWithinTreeview) is { } hovered)
+            var treeview = (MultiSelectTreeView?)sender;
+            Point? pointWithinTreeview = treeview?.PointToClient(new Point(e.X, e.Y));
+            if (pointWithinTreeview != null && treeview?.GetNodeAt(pointWithinTreeview.Value) is { } hovered)
             {
                 DelayExpandHoveredNode(hovered);
             }
@@ -812,6 +812,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         static (int index, TreeNode target)? ProcessDrop(TreeNode? originalTarget, MultiSelectTreeView.DropKind kind)
         {
+            if (originalTarget == null)
+            {
+                return null;
+            }
             int? index = kind switch
             {
                 MultiSelectTreeView.DropKind.Into => originalTarget.GetNodeCount(false),
@@ -896,8 +900,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // Clone each image from the original list
         for (int i = 0; i < original.Images.Count; i++)
         {
-            string key = original.Images.Keys[i];
-            copy.Images.Add(key, (Image)original.Images[i].Clone());
+            var key = original.Images.Keys[i];
+            copy.Images.Add(key!, (Image)original.Images[i].Clone());
         }
 
         return copy;
@@ -944,9 +948,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 ColorDepth = originalImageList.ColorDepth // preserve
             };
 
-            foreach (string key in originalImageList.Images.Keys)
+            foreach (var key in originalImageList.Images.Keys)
             {
-                var src = originalImageList.Images[key];
+                if (key == null) continue;
+
+                var src = originalImageList.Images[key]!;
 
                 // pick the color for this key (fallback if none specified)
                 var tint = (perKeyColors != null && perKeyColors.TryGetValue(key, out var c)) ? c : fallbackColor;
@@ -1035,7 +1041,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void ObjectTreeView_PreviewKeyDown(object? sender, PreviewKeyDownEventArgs e)
     {
-        int m = 3;
+
     }
 
     private void ObjectTreeView_KeyPress(object? sender, KeyPressEventArgs e)
@@ -1087,17 +1093,17 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             string currentDirectory = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
 
             // Let's make sure these folders exist, they better!
-            Directory.CreateDirectory(mStandardElementsTreeNode.GetFullFilePath().FullPath);
-            Directory.CreateDirectory(mScreensTreeNode.GetFullFilePath().FullPath);
-            Directory.CreateDirectory(mComponentsTreeNode.GetFullFilePath().FullPath);
-            Directory.CreateDirectory(mBehaviorsTreeNode.GetFullFilePath().FullPath);
+            Directory.CreateDirectory(mStandardElementsTreeNode.GetFullFilePath()!.FullPath);
+            Directory.CreateDirectory(mScreensTreeNode.GetFullFilePath()!.FullPath);
+            Directory.CreateDirectory(mComponentsTreeNode.GetFullFilePath()!.FullPath);
+            Directory.CreateDirectory(mBehaviorsTreeNode.GetFullFilePath()!.FullPath);
 
 
             // add folders to the screens, entities, and standard elements
-            AddAndRemoveFolderNodesFromFileSystem(mStandardElementsTreeNode.GetFullFilePath().FullPath, mStandardElementsTreeNode.Nodes);
-            AddAndRemoveFolderNodesFromFileSystem(mScreensTreeNode.GetFullFilePath().FullPath, mScreensTreeNode.Nodes);
-            AddAndRemoveFolderNodesFromFileSystem(mComponentsTreeNode.GetFullFilePath().FullPath, mComponentsTreeNode.Nodes);
-            AddAndRemoveFolderNodesFromFileSystem(mBehaviorsTreeNode.GetFullFilePath().FullPath, mBehaviorsTreeNode.Nodes);
+            AddAndRemoveFolderNodesFromFileSystem(mStandardElementsTreeNode.GetFullFilePath()!.FullPath, mStandardElementsTreeNode.Nodes);
+            AddAndRemoveFolderNodesFromFileSystem(mScreensTreeNode.GetFullFilePath()!.FullPath, mScreensTreeNode.Nodes);
+            AddAndRemoveFolderNodesFromFileSystem(mComponentsTreeNode.GetFullFilePath()!.FullPath, mComponentsTreeNode.Nodes);
+            AddAndRemoveFolderNodesFromFileSystem(mBehaviorsTreeNode.GetFullFilePath()!.FullPath, mBehaviorsTreeNode.Nodes);
 
 
             AddNeededButMissingFromFileSystemFolderNodes();
@@ -1115,7 +1121,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private void AddNeededButMissingFromFileSystemFolderNodes()
     {
         var project = ObjectFinder.Self.GumProjectSave;
-
+        System.Diagnostics.Debug.Assert(project != null, "GumProjectSave was null when trying to add missing folder nodes.");
         HashSet<string> neededFolders = new HashSet<string>();
 
         foreach(var element in project.AllElements)
@@ -1146,7 +1152,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         if(treeNode == null)
         {
-            TreeNode parentNode = null;
+            TreeNode? parentNode = null;
             string parentDirectory = string.Empty;
             try
             {
@@ -1171,7 +1177,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        return treeNode;
+        return treeNode!;
     }
 
     private void AddAndRemoveFolderNodesFromFileSystem(string currentDirectory, TreeNodeCollection nodesToAddTo)
@@ -1221,17 +1227,18 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     bool ShouldShow(StandardElementSave standardElementSave) => string.IsNullOrEmpty(filterText) || standardElementSave.Name.ToLower().Contains(filterText.ToLower());
     bool ShouldShow(BehaviorSave behavior) => string.IsNullOrEmpty(filterText) || behavior.Name?.ToLower().Contains(filterText.ToLower()) == true;
 
-    private void AddAndRemoveScreensComponentsStandardsAndBehaviors(TreeNode folderTreeNode)
+    private void AddAndRemoveScreensComponentsStandardsAndBehaviors()
     {
+        var gumProject = ProjectManager.Self.GumProjectSave;
         /////////////Early Out////////////////
-        if (ProjectManager.Self.GumProjectSave == null)
+        if (gumProject == null)
             return;
         ////////////End Early Out////////////
 
         // Save off old selected stuff
-        InstanceSave selectedInstance = _selectedState.SelectedInstance;
-        ElementSave selectedElement = _selectedState.SelectedElement;
-        BehaviorSave selectedBehavior = _selectedState.SelectedBehavior;
+        InstanceSave? selectedInstance = _selectedState.SelectedInstance;
+        ElementSave? selectedElement = _selectedState.SelectedElement;
+        BehaviorSave? selectedBehavior = _selectedState.SelectedBehavior;
 
 
         #region Add nodes that haven't been added yet
@@ -1297,12 +1304,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         void RemoveScreenRecursively(TreeNode treeNode, int i, TreeNode container)
         {
-            ScreenSave screen = treeNode.Tag as ScreenSave;
+            ScreenSave? screen = treeNode.Tag as ScreenSave;
 
             // If the screen is null, that means that it's a folder TreeNode, so we don't want to remove it
             if (screen != null)
             {
-                if (!ProjectManager.Self.GumProjectSave.Screens.Contains(screen) || !ShouldShow(screen))
+                if (!gumProject.Screens.Contains(screen) || !ShouldShow(screen))
                 {
                     container.Nodes.RemoveAt(i);
                 }
@@ -1324,12 +1331,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         void RemoveComponentRecursively(TreeNode treeNode, int i, TreeNode container)
         {
-            ComponentSave component = treeNode.Tag as ComponentSave;
+            ComponentSave? component = treeNode.Tag as ComponentSave;
 
             // If the component is null, that means that it's a folder TreeNode, so we don't want to remove it
             if (component != null)
             {
-                if (!ProjectManager.Self.GumProjectSave.Components.Contains(component) || !ShouldShow(component))
+                if (!gumProject.Components.Contains(component) || !ShouldShow(component))
                 {
                     container.Nodes.RemoveAt(i);
                 }
@@ -1352,9 +1359,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         for (int i = mStandardElementsTreeNode.Nodes.Count - 1; i > -1; i-- )
         {
             // Do we want to support folders here?
-            StandardElementSave standardElement = mStandardElementsTreeNode.Nodes[i].Tag as StandardElementSave;
+            StandardElementSave? standardElement = mStandardElementsTreeNode.Nodes[i].Tag as StandardElementSave;
 
-            if (!ProjectManager.Self.GumProjectSave.StandardElements.Contains(standardElement) || !ShouldShow(standardElement))
+            if (standardElement == null || !gumProject.StandardElements.Contains(standardElement) || !ShouldShow(standardElement))
             {
                 mStandardElementsTreeNode.Nodes.RemoveAt(i);
             }
@@ -1362,11 +1369,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         for(int i = mBehaviorsTreeNode.Nodes.Count - 1; i > -1; i--)
         {
-            BehaviorSave behavior = mBehaviorsTreeNode.Nodes[i].Tag as BehaviorSave;
+            BehaviorSave? behavior = mBehaviorsTreeNode.Nodes[i].Tag as BehaviorSave;
 
             if(behavior != null)
             {
-                if(!ProjectManager.Self.GumProjectSave.Behaviors.Contains(behavior) || !ShouldShow(behavior))
+                if(behavior == null || !ProjectManager.Self.GumProjectSave.Behaviors.Contains(behavior) || !ShouldShow(behavior))
                 {
                     mBehaviorsTreeNode.Nodes.RemoveAt(i);
                 }
@@ -1386,16 +1393,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         var screenList = mScreensTreeNode.Nodes;
         for (int i = 0; i < screenList.Count; i++)
         {
-            object treeNode = screenList[i];
-            RefreshUi(treeNode as TreeNode);
+            var treeNode = (TreeNode)screenList[i];
+            RefreshUi(treeNode);
         }
 
         // see above on why we use a for instead foreach
         var componentList = mComponentsTreeNode.Nodes;
         for (int i = 0; i < componentList.Count; i++)
         {
-            object treeNode = componentList[i];
-            RefreshUi(treeNode as TreeNode);
+            var treeNode = (TreeNode)componentList[i];
+            RefreshUi(treeNode);
         }
 
         foreach (TreeNode treeNode in mStandardElementsTreeNode.Nodes)
@@ -1569,7 +1576,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
         else
         {
-            Select((TreeNode)null);
+            Select((TreeNode?)null);
         }
     }
 
@@ -1593,7 +1600,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             var firstItem = list.First();
 
-            TreeNode parentContainer = null;
+            TreeNode? parentContainer = null;
             if(firstItem.ParentContainer != null)
             {
                 parentContainer = GetTreeNodeFor(firstItem.ParentContainer);
@@ -1622,7 +1629,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
         else
         {
-            Select((TreeNode)null);
+            Select((TreeNode?)null);
         }
     }
 
@@ -1638,7 +1645,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 // why do we explicitly set this here rather than calling Select? If we set it to null without calling that, we don't get the benefit of the 
                 // plugins being notified of a null selection:
                 //ObjectTreeView.SelectedNode = null;
-                Select((TreeNode)null);
+                Select((TreeNode?)null);
 
             }
         }
@@ -1656,7 +1663,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    private void Select(TreeNode treeNode)
+    private void Select(TreeNode? treeNode)
     {
         if (IsInUiInitiatedSelection) return;
 
@@ -1702,7 +1709,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             AddAndRemoveFolderNodes();
 
-            AddAndRemoveScreensComponentsStandardsAndBehaviors(null);
+            AddAndRemoveScreensComponentsStandardsAndBehaviors();
             ObjectTreeView.ResumeLayout(performLayout:true);
 
         }
@@ -1790,7 +1797,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         if(elementSave is ScreenSave || elementSave is ComponentSave)
         {
 
-            string fullPath = null;
+            string fullPath;
             if(elementSave is ScreenSave)
             {
                 fullPath = _fileLocations.ScreensFolder + FileManager.GetDirectory(elementSave.Name);
@@ -1846,7 +1853,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             var instance = instanceNode.Tag as InstanceSave;
 
-            if(!allInstances.Contains(instance))
+            if(instance == null || !allInstances.Contains(instance))
             {
                 instanceNode.Remove();
             }
@@ -1971,7 +1978,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    private TreeNode AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode, bool tolerateMissingTypes, HashSet<InstanceSave> pendingAdditions = null)
+    private TreeNode AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode, 
+        bool tolerateMissingTypes, HashSet<InstanceSave>? pendingAdditions = null)
     {
         TreeNode treeNode = new TreeNode();
 
@@ -2014,7 +2022,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         return treeNode;
     }
 
-    private InstanceSave FindParentInstance(InstanceSave instance)
+    private InstanceSave? FindParentInstance(InstanceSave instance)
     {
         if(instance is BehaviorInstanceSave)
         {
@@ -2026,7 +2034,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             ElementSave element = instance.ParentContainer ?? ObjectFinder.Self.GetElementContainerOf(instance);
 
             string name = instance.Name + ".Parent";
-            VariableSave variable = element.DefaultState.Variables.FirstOrDefault(v => v.Name == name);
+            VariableSave? variable = element.DefaultState.Variables.FirstOrDefault(v => v.Name == name);
 
             if (variable != null && variable.SetsValue && variable.Value != null)
             {
@@ -2487,7 +2495,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 _selectedState.SelectedBehavior = asBehavior;
 
             searchTextBox.Text = null;
-            FilterText = null;
+            FilterText = string.Empty;
         }
     }
 
@@ -2544,7 +2552,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
 public static class TreeNodeExtensionMethods
 {
-    public static ElementTreeViewManager ElementTreeViewManager { get; set; }
+    public static ElementTreeViewManager ElementTreeViewManager { get; set; } = default!;
 
     /// <summary>
     /// Determines whether the tree node represents a Screen element.
@@ -2784,7 +2792,7 @@ public static class TreeNodeExtensionMethods
             treeNode.IsComponentTreeNode() ||
             treeNode.IsScreenTreeNode())
         {
-            ElementSave element = treeNode.Tag as ElementSave;
+            ElementSave element = (ElementSave)treeNode.Tag;
             return treeNode.Parent.GetFullFilePath() + treeNode.Text + "." + element.FileExtension;
         }
         else if(treeNode.IsBehaviorTreeNode())
