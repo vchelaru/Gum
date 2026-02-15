@@ -26,9 +26,9 @@ namespace Gum.Mvvm
 
         public int GetPropertyChangeCount() => PropertyChanged?.GetInvocationList().Length ?? 0;
 
-        protected T Get<T>([CallerMemberName]string propertyName = null)
+        protected T Get<T>([CallerMemberName]string? propertyName = null)
         {
-            T toReturn = default(T);
+            T toReturn = default(T)!;
 
             if (propertyName != null && propertyDictionary.ContainsKey(propertyName))
             {
@@ -38,7 +38,7 @@ namespace Gum.Mvvm
             return toReturn;
         }
 
-        protected bool Set<T>(T propertyValue, [CallerMemberName]string propertyName = null)
+        protected bool Set<T>(T propertyValue, [CallerMemberName]string? propertyName = null)
         {
             if (propertyValue is INotifyCollectionChanged collection)
             {
@@ -77,8 +77,9 @@ namespace Gum.Mvvm
             }
         }
 
-        protected bool SetWithoutNotifying<T>(T propertyValue, [CallerMemberName]string propertyName = null)
+        protected bool SetWithoutNotifying<T>(T propertyValue, [CallerMemberName]string? propertyName = null)
         {
+            System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
             var didSet = false;
 
             if (propertyDictionary.ContainsKey(propertyName))
@@ -143,8 +144,9 @@ namespace Gum.Mvvm
             }
 
         }
-        protected void ChangeAndNotify<T>(ref T property, T value, [CallerMemberName] string propertyName = null)
+        protected void ChangeAndNotify<T>(ref T property, T value, [CallerMemberName] string? propertyName = null)
         {
+            System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
             if (EqualityComparer<T>.Default.Equals(property, value) == false)
             {
                 property = value;
@@ -152,8 +154,9 @@ namespace Gum.Mvvm
             }
         }
 
-        protected virtual void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
+            System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
             if (PropertyChanged != null)
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
@@ -171,7 +174,7 @@ namespace Gum.Mvvm
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected T Clone<T>()
         {

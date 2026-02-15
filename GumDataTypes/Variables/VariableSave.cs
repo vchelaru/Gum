@@ -50,7 +50,7 @@ public class VariableSave
     // should save in performance.
     string name;
     string rootName;
-    string sourceObject;
+    string? sourceObject;
     public string Name
     {
         get => name;

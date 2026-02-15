@@ -327,8 +327,9 @@ public class ObjectFinder : IObjectFinder
     /// <param name="list">An optional list to fill. If null, a new list will be created. This can help reduce allocation if this method is called frequently.</param>
     /// <param name="foundInstances">An optional list of InstanceSaves to fill with the instances that reference the argument elementSave. If null, instances will not be recorded.</param>
     /// <returns>A List containing all Elements</returns>
-    public List<ElementSave> GetElementsReferencing(ElementSave elementSave, List<ElementSave> list = null, List<InstanceSave> foundInstances = null)
+    public List<ElementSave> GetElementsReferencing(ElementSave elementSave, List<ElementSave>? list = null, List<InstanceSave>? foundInstances = null)
     {
+        System.Diagnostics.Debug.Assert(this.GumProjectSave != null, "GumProjectSave cannot be null when calling GetElementsReferencing");
         if(elementSave == null)
         {
             throw new ArgumentNullException(nameof(elementSave));
@@ -342,7 +343,7 @@ public class ObjectFinder : IObjectFinder
         {
             foreach (InstanceSave instanceSave in screen.Instances)
             {
-                ElementSave elementForInstance = this.GetElementSave(instanceSave.BaseType);
+                ElementSave? elementForInstance = this.GetElementSave(instanceSave.BaseType);
 
                 if (elementForInstance != null && elementForInstance.IsOfType(elementSave.Name))
                 {

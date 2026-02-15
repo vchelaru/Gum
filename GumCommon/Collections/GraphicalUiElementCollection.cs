@@ -10,7 +10,7 @@ using System.Text;
 namespace Gum.Collections;
 
 /// <summary>
-/// A wrapper collection that presents an ObservableCollection<IRenderableIpso> as ObservableCollection<GraphicalUiElement>.
+/// A wrapper collection that presents an ObservableCollection&lt;IRenderableIpso&gt; as ObservableCollection&lt;GraphicalUiElement&gt;.
 /// Maintains bidirectional synchronization between the inner collection and this wrapper.
 /// </summary>
 public class GraphicalUiElementCollection : ObservableCollectionNoReset<GraphicalUiElement>
@@ -22,7 +22,7 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
     /// </summary>
     public static GraphicalUiElementCollection Empty => _empty;
 
-    private readonly ObservableCollection<IRenderableIpso> _innerCollection;
+    private readonly ObservableCollection<IRenderableIpso> _innerCollection = default!;
     private bool _isUpdatingFromInner = false;
     private bool _isUpdatingFromOuter = false;
 
@@ -54,7 +54,7 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
     /// </summary>
     private GraphicalUiElementCollection()
     {
-        _innerCollection = null; // No backing collection for empty instance
+        _innerCollection = default!; // No backing collection for empty instance
         IsReadOnly = true;
     }
 

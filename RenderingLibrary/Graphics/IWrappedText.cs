@@ -11,9 +11,7 @@ namespace RenderingLibrary.Graphics;
 public interface IWrappedText : IText
 {
     int? MaxNumberOfLines { get; }
-    TextOverflowVerticalMode TextOverflowVerticalMode { get; }
 
-    string RawText { get; }
 
     float Height { get; }
 

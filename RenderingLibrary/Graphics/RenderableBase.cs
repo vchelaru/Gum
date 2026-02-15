@@ -65,7 +65,7 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
 
     public float Rotation { get; set; }
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
     public bool Visible { get; set; } = true;
 
