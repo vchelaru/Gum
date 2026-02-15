@@ -27,6 +27,7 @@ When creating design documents:
 - **DO NOT save to `docs/` folder** - that folder contains published documentation for the Gum docs site
 - Use descriptive filenames like `feature-name-design.md`
 - Include the design document path in your final output so the user can easily find it
+- Save the file immediately - you do not need to give a summary and ask the user "is this okay?" before saving. You can ask for feedback after saving.
 
 ## Scope: Product Design, Not Technical Implementation
 
