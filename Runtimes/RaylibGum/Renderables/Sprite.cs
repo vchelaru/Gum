@@ -55,6 +55,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         }
     }
 
+    public bool FlipVertical { get; set; }
 
     public int Alpha
     {
@@ -130,6 +131,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
 
     bool ITextureCoordinate.Wrap{ get; set; }
 
+
     public override void Render(ISystemManagers managers)
     {
         if (!Visible || Texture == null) return;
@@ -140,10 +142,23 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         var absoluteRotation = this.GetAbsoluteRotation();
         var destinationRectangle = new Rectangle(
             x, y, this.Width, this.Height);
-        
+
         // if we don't have a source rectangle, the source is the entire texture
-        var srcRect = SourceRectangle ?? new Rectangle(0, 0, TextureWidth.Value, TextureHeight.Value); 
-        
+        var srcRect = SourceRectangle ?? new Rectangle(0, 0, TextureWidth.Value, TextureHeight.Value);
+
+        // Apply flipping by adjusting the source rectangle
+        if (FlipHorizontal)
+        {
+            srcRect.X += srcRect.Width;
+            srcRect.Width = -srcRect.Width;
+        }
+
+        if (FlipVertical)
+        {
+            srcRect.Y += srcRect.Height;
+            srcRect.Height = -srcRect.Height;
+        }
+
         DrawTexturePro(Texture.Value, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
     }
 
