@@ -45,6 +45,32 @@ public partial class DialogWindow : WindowChromeWindow
                 Close();
             }
         }
+        else if (e.Key == Key.C && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            if (DataContext is MessageDialogViewModel messageVm && !string.IsNullOrEmpty(messageVm.Message))
+            {
+                TrySetClipboardText(messageVm.Message);
+                e.Handled = true;
+            }
+        }
+    }
+
+    private static void TrySetClipboardText(string text, int retries = 3)
+    {
+        for (int i = 0; i < retries; i++)
+        {
+            try
+            {
+                Clipboard.SetText(text);
+                return;
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                if (i == retries - 1)
+                    throw;
+                System.Threading.Thread.Sleep(10);
+            }
+        }
     }
 
     private void ScrollViewer_PreviewMouseWheel(object? sender, MouseWheelEventArgs e)
