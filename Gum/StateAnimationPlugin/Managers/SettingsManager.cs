@@ -46,7 +46,10 @@ namespace StateAnimationPlugin.Managers
 
             var directory = GlobalSettingsFilePath.GetDirectoryContainingThis();
 
-            System.IO.Directory.CreateDirectory(directory.FullPath);
+            if(directory != null)
+            {
+                System.IO.Directory.CreateDirectory(directory.FullPath);
+            }
 
             System.IO.File.WriteAllText(GlobalSettingsFilePath.FullPath, text);
         }
