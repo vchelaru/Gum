@@ -46,18 +46,11 @@ public class ControlLogic
     private readonly ITabManager _tabManager;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly ScrollBarLogicWpf _scrollBarLogic;
-
-    LineRectangle textureOutlineRectangle = null;
+    private readonly LineGridManager _lineGridManager;
+    private readonly NineSliceGuideManager _nineSliceGuideManager;
+    private readonly TextureOutlineManager _textureOutlineManager;
 
     MainControlViewModel ViewModel;
-
-    // [0] - left vertical line
-    // [1] - right vertical line
-    // [2] - top horizontal line
-    // [3] - bottom horizontal line
-    Line[] nineSliceGuideLines = new Line[4];
-
-    LineGrid lineGrid;
 
     object oldTextureLeftValue;
     object oldTextureTopValue;
@@ -100,6 +93,10 @@ public class ControlLogic
         _scrollBarLogic = scrollBarLogic;
 
         ViewModel = mainControlViewModel;
+
+        _lineGridManager = new LineGridManager();
+        _nineSliceGuideManager = new NineSliceGuideManager();
+        _textureOutlineManager = new TextureOutlineManager();
     }
 
     public PluginTab CreateControl()
@@ -134,16 +131,16 @@ public class ControlLogic
 
         var pluginTab = _tabManager.AddControl(mainControl, "Texture Coordinates", TabLocation.RightBottom);
         innerControl.DoubleClick += (not, used) =>
-            HandleRegionDoubleClicked(innerControl, ref textureOutlineRectangle);
+            HandleRegionDoubleClicked(innerControl);
 
         ViewModel.AvailableZoomLevels = innerControl.AvailableZoomLevels;
         mainControl.DataContext = ViewModel;
 
         ViewModel.PropertyChanged += HandleViewModelPropertyChanged;
 
-        CreateLineRectangle();
-
-        CreateNineSliceLines();
+        _lineGridManager.Initialize(SystemManagers);
+        _nineSliceGuideManager.Initialize(SystemManagers);
+        _textureOutlineManager.Initialize(SystemManagers);
 
         RefreshLineGrid();
 
@@ -213,45 +210,6 @@ public class ControlLogic
         _scrollBarLogic.UpdateScrollBarsToCamera(width, height);
     }
 
-    private void CreateNineSliceLines()
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            nineSliceGuideLines[i] = new Line(mainControl.InnerControl.SystemManagers);
-            nineSliceGuideLines[i].Visible = false;
-            nineSliceGuideLines[i].Z = 1;
-            nineSliceGuideLines[i].Color = Color.White;
-            nineSliceGuideLines[i].IsDotted = true;
-
-            var alpha = (int)(0.6f * 0xFF);
-
-            nineSliceGuideLines[i].Color =
-                Color.FromArgb(alpha, alpha, alpha, alpha);
-
-            mainControl.InnerControl.SystemManagers.Renderer.MainLayer.Add(nineSliceGuideLines[i]);
-        }
-    }
-
-    private void CreateLineRectangle()
-    {
-        lineGrid = new LineGrid(mainControl.InnerControl.SystemManagers);
-        lineGrid.ColumnWidth = 16;
-        lineGrid.ColumnCount = 16;
-
-        lineGrid.RowWidth = 16;
-        lineGrid.RowCount = 16;
-
-        lineGrid.Visible = true;
-        lineGrid.Z = 1;
-
-        var alpha = (int)(.2f * 0xFF);
-
-        // premultiplied
-        lineGrid.Color = Color.FromArgb(alpha, alpha, alpha, alpha);
-
-        mainControl.InnerControl.SystemManagers.Renderer.MainLayer.Add(lineGrid);
-    }
-
     private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         void RefreshSnappingGridSize()
@@ -284,133 +242,33 @@ public class ControlLogic
         }
     }
 
-    bool showNineSliceGuides;
-    float? customFrameTextureCoordinateWidth;
     internal void Refresh(Texture2D textureToAssign, bool showNineSliceGuides, float? customFrameTextureCoordinateWidth)
     {
-        this.showNineSliceGuides = showNineSliceGuides;
-        this.customFrameTextureCoordinateWidth = customFrameTextureCoordinateWidth;
         mainControl.InnerControl.CurrentTexture = textureToAssign;
 
         RefreshSelector(Logic.RefreshType.OnlyIfGrabbed);
 
-        RefreshOutline(mainControl.InnerControl, ref textureOutlineRectangle);
+        _textureOutlineManager.CurrentTexture = textureToAssign;
+        _textureOutlineManager.Refresh();
 
         RefreshLineGrid();
 
-        RefreshNineSliceGuides();
-    }
-
-    private void RefreshNineSliceGuides()
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            nineSliceGuideLines[i].Visible = showNineSliceGuides;
-        }
-
-        // todo - this hasn't been tested extensively to make sure it aligns
-        // pixel-perfect with how NineSlices work, but it's a good initial guess
-        if (showNineSliceGuides && CurrentTexture != null)
-        {
-            var texture = CurrentTexture;
-
-            var textureWidth = texture.Width;
-            var textureHeight = texture.Height;
-
-            var control = mainControl.InnerControl;
-            var selector = control.RectangleSelector;
-
-            float left = 0;
-            float top = 0;
-            float right = CurrentTexture.Width;
-            float bottom = CurrentTexture.Height;
-
-            float width = CurrentTexture.Width;
-            float height = CurrentTexture.Height;
-
-            if (selector != null)
-            {
-                left = selector.Left;
-                right = selector.Right;
-                top = selector.Top;
-                bottom = selector.Bottom;
-
-                width = selector.Width;
-                height = selector.Height;
-            }
-
-            var guideLeft = left + width / 3.0f;
-            var guideRight = left + width * 2.0f / 3.0f;
-            var guideTop = top + height / 3.0f;
-            var guideBottom = top + height * 2.0f / 3.0f;
-
-            if (customFrameTextureCoordinateWidth != null)
-            {
-                guideLeft = left + customFrameTextureCoordinateWidth.Value;
-                guideRight = right - customFrameTextureCoordinateWidth.Value;
-                guideTop = top + customFrameTextureCoordinateWidth.Value;
-                guideBottom = bottom - customFrameTextureCoordinateWidth.Value;
-            }
-
-            var leftLine = nineSliceGuideLines[0];
-            leftLine.X = guideLeft;
-            leftLine.Y = top;
-            leftLine.RelativePoint.X = 0;
-            leftLine.RelativePoint.Y = bottom - top;
-
-            var rightLine = nineSliceGuideLines[1];
-            rightLine.X = guideRight;
-            rightLine.Y = top;
-            rightLine.RelativePoint.X = 0;
-            rightLine.RelativePoint.Y = bottom - top;
-
-            var topLine = nineSliceGuideLines[2];
-            topLine.X = left;
-            topLine.Y = guideTop;
-            topLine.RelativePoint.X = right - left;
-            topLine.RelativePoint.Y = 0;
-
-            var bottomLine = nineSliceGuideLines[3];
-            bottomLine.X = left;
-            bottomLine.Y = guideBottom;
-            bottomLine.RelativePoint.X = right - left;
-            bottomLine.RelativePoint.Y = 0;
-        }
+        _nineSliceGuideManager.ShowGuides = showNineSliceGuides;
+        _nineSliceGuideManager.CurrentTexture = textureToAssign;
+        _nineSliceGuideManager.Selector = mainControl.InnerControl.RectangleSelector;
+        _nineSliceGuideManager.CustomFrameWidth = customFrameTextureCoordinateWidth;
+        _nineSliceGuideManager.Refresh();
     }
 
     private void RefreshLineGrid()
     {
-        lineGrid.Visible = ViewModel.IsSnapToGridChecked;
-
-
-        lineGrid.ColumnWidth = ViewModel.SelectedSnapToGridValue;
-        lineGrid.RowWidth = ViewModel.SelectedSnapToGridValue;
-
-        if (CurrentTexture != null)
-        {
-            var totalWidth = CurrentTexture.Width;
-
-            var columnCount = (totalWidth / lineGrid.ColumnWidth);
-            if (columnCount != (int)columnCount)
-            {
-                columnCount++;
-            }
-
-            lineGrid.ColumnCount = (int)columnCount;
-
-
-            var totalHeight = CurrentTexture.Height;
-            var rowCount = (totalHeight / lineGrid.RowWidth);
-            if (rowCount != (int)rowCount)
-            {
-                rowCount++;
-            }
-
-            lineGrid.RowCount = (int)rowCount;
-        }
+        _lineGridManager.IsVisible = ViewModel.IsSnapToGridChecked;
+        _lineGridManager.GridSize = ViewModel.SelectedSnapToGridValue;
+        _lineGridManager.CurrentTexture = CurrentTexture;
+        _lineGridManager.Refresh();
     }
 
-    public void HandleRegionDoubleClicked(ImageRegionSelectionControl control, ref LineRectangle textureOutlineRectangle)
+    public void HandleRegionDoubleClicked(ImageRegionSelectionControl control)
     {
         using var undoLock = _undoManager.RequestLock();
 
@@ -445,7 +303,8 @@ public class ControlLogic
             state.SetValue($"{instancePrefix}TextureAddress",
                 Gum.Managers.TextureAddress.Custom, nameof(TextureAddress));
 
-            RefreshOutline(control, ref textureOutlineRectangle);
+            _textureOutlineManager.CurrentTexture = control.CurrentTexture;
+            _textureOutlineManager.Refresh();
 
             RefreshSelector(RefreshType.Force);
 
@@ -537,7 +396,8 @@ public class ControlLogic
             _guiCommands.RefreshVariableValues();
         }
 
-        RefreshNineSliceGuides();
+        _nineSliceGuideManager.Selector = mainControl.InnerControl.RectangleSelector;
+        _nineSliceGuideManager.Refresh();
     }
 
     private void HandleEndRegionChanged(object? sender, EventArgs e)
@@ -563,31 +423,6 @@ public class ControlLogic
         _undoManager.RecordUndo();
 
         _fileCommands.TryAutoSaveCurrentElement();
-    }
-
-    public void RefreshOutline(ImageRegionSelectionControl control, ref LineRectangle textureOutlineRectangle)
-    {
-        var shouldShowOutline = control.CurrentTexture != null;
-        if (shouldShowOutline)
-        {
-            if (textureOutlineRectangle == null)
-            {
-                textureOutlineRectangle = new LineRectangle(control.SystemManagers);
-                textureOutlineRectangle.IsDotted = false;
-                textureOutlineRectangle.Color = Color.FromArgb(128, 255, 255, 255);
-                control.SystemManagers.ShapeManager.Add(textureOutlineRectangle);
-            }
-            textureOutlineRectangle.Width = control.CurrentTexture.Width;
-            textureOutlineRectangle.Height = control.CurrentTexture.Height;
-            textureOutlineRectangle.Visible = true;
-        }
-        else
-        {
-            if (textureOutlineRectangle != null)
-            {
-                textureOutlineRectangle.Visible = false;
-            }
-        }
     }
 
     public void RefreshSelector(RefreshType refreshType)
