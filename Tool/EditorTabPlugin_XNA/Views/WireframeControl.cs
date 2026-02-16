@@ -212,7 +212,12 @@ public class WireframeControl : GraphicsDeviceControl
     {
         ElementSaveExtensions.RegisterGueInstantiation(
             "Text",
-            () => new TextRuntime(systemManagers: this.SystemManagers));
+            () =>
+            {
+                // Set this to false to make Text instantiation faster - we always set defaults explicitly
+                TextRuntime.AssignFontInConstructor = false;
+                return new TextRuntime(systemManagers: this.SystemManagers);
+            });
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Sprite",

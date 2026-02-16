@@ -157,7 +157,6 @@ public class RectangleSelector
 
     public void Update(bool isHandlerActive = false)
     {
-        System.Diagnostics.Debug.WriteLine($"Rect Selector active: {_isActive}");
         // Update visual visibility
         // Don't show if a handler is active (even if rectangle selector thinks it's active)
         _selectionRectangle.Visible = _isActive && _hasMovedEnough && !isHandlerActive;
