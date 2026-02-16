@@ -74,14 +74,23 @@ public partial class ListBoxDisplay : UserControl, IDataUi
             this.RefreshContextMenu(ListBox.ContextMenu);
             //this.RefreshContextMenu(StackPanel.ContextMenu);
 
-            if (InstanceMember.IsDefault)
+            Dispatcher.BeginInvoke(() =>
             {
-                this.ListBox.Background = DefaultValueBackground;
-            }
-            else
-            {
-                this.ListBox.ClearValue(BackgroundProperty);
-            }
+                if (DataUiGrid.GetOverridesIsDefaultStyling(this))
+                {
+                    return;
+                }
+
+                if (InstanceMember.IsDefault)
+                {
+                    this.ListBox.Background = DefaultValueBackground;
+                }
+                else
+                {
+                    this.ListBox.ClearValue(BackgroundProperty);
+                }
+            });
+
 
             //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             //HintTextBlock.Text = InstanceMember?.DetailText;
