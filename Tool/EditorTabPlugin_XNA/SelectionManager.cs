@@ -305,7 +305,8 @@ public class SelectionManager : ISelectionManager
 
     public void LateActivity(SystemManagers systemManagers)
     {
-        WireframeEditor?.Activity(SelectedGues, systemManagers);
+        // Only update visuals here - input processing happens in SelectionActivity via ProcessInputForSelection
+        WireframeEditor?.UpdateVisuals(SelectedGues);
 
         // Update rectangle selector visual
         // Pass handler active state to ensure rectangle doesn't show when handles are being used
@@ -878,53 +879,295 @@ public class SelectionManager : ISelectionManager
             _uiSettingsService);
     }
 
+    #region New Explicit Input Processing System
+
+    /// <summary>
+    /// Context about what's under the cursor and the current state.
+    /// Everything needed to make an input decision.
+    /// </summary>
+    private struct InputContext
+    {
+        public bool IsOverHandle;           // Is cursor over a handle (resize, rotate, polygon point)?
+        public bool IsHandlerCurrentlyActive; // Is a handler already active (mid-drag)?
+        public bool IsOverElementBody;      // Is cursor over an element's body?
+        public bool IsShiftHeld;           // Is shift key held (multi-select)?
+        public IRenderableIpso? ElementUnderCursor; // What element is under cursor (if any)?
+        public float WorldX;               // World X coordinate
+        public float WorldY;               // World Y coordinate
+
+        // For debugging and logging
+        public string DebugInfo;
+    }
+
+    /// <summary>
+    /// Possible input handling decisions, in priority order.
+    /// </summary>
+    private enum InputDecision
+    {
+        None,                    // Don't handle input this frame
+        HandleSelection,         // Let handles (resize, rotate, polygon) handle it (HIGHEST PRIORITY)
+        RectangleSelection,      // Let rectangle selector handle it (MEDIUM PRIORITY)
+        NormalClickSelection,    // Do normal click selection (LOWEST PRIORITY)
+    }
+
+    /// <summary>
+    /// Processes all mouse input for selection in a single, explicit order.
+    /// This replaces the implicit timing dependencies between Activity and LateActivity.
+    ///
+    /// CRITICAL ORDERING:
+    /// - On PrimaryPush: Selection logic runs FIRST, then handlers (so handlers see correct selection)
+    /// - On PrimaryDown/PrimaryClick: Handlers run FIRST (to continue their operation)
+    /// </summary>
+    private void ProcessInputForSelection()
+    {
+        var cursor = Cursor;
+        float worldX = cursor.GetWorldX();
+        float worldY = cursor.GetWorldY();
+
+        // ═══════════════════════════════════════════════════════════════
+        // DIFFERENT ORDERING FOR PUSH vs DOWN/CLICK
+        // ═══════════════════════════════════════════════════════════════
+
+        if (cursor.PrimaryPush || cursor.SecondaryPush || cursor.PrimaryDoubleClick)
+        {
+            // ───────────────────────────────────────────────────────────
+            // ON PUSH: Selection logic FIRST, then handlers
+            // This ensures that clicking object B when A is selected will
+            // select B first, then handlers operate on B (not A)
+            // ───────────────────────────────────────────────────────────
+
+            // PHASE 1: QUERY - What's under the cursor?
+            var inputContext = DetermineInputContext(worldX, worldY, cursor);
+
+            // PHASE 2: DECIDE - What selection logic to run?
+            var decision = MakeInputDecision(inputContext, cursor);
+
+            // PHASE 3: EXECUTE SELECTION - Update selection if needed
+            ExecuteInputDecision(decision, inputContext, cursor, worldX, worldY);
+
+            // PHASE 4: HANDLERS - Now let handlers process with correct selection
+            WireframeEditor?.ProcessHandleInput(cursor, worldX, worldY);
+        }
+        else if (cursor.PrimaryDown || cursor.PrimaryClick)
+        {
+            // ───────────────────────────────────────────────────────────
+            // ON DOWN/CLICK: Handlers FIRST
+            // If a handler is active (dragging), it should continue its
+            // operation without any selection logic interfering
+            // ───────────────────────────────────────────────────────────
+
+            // PHASE 1: HANDLERS - Let active handlers continue
+            WireframeEditor?.ProcessHandleInput(cursor, worldX, worldY);
+
+            // PHASE 2: QUERY - Check state after handlers ran
+            var inputContext = DetermineInputContext(worldX, worldY, cursor);
+
+            // PHASE 3: DECIDE - Do we need additional logic?
+            var decision = MakeInputDecision(inputContext, cursor);
+
+            // PHASE 4: EXECUTE - Additional selection logic if no handler claimed it
+            ExecuteInputDecision(decision, inputContext, cursor, worldX, worldY);
+        }
+    }
+
+    /// <summary>
+    /// Determines what's under the cursor without changing any state.
+    /// This is a pure query - no side effects.
+    /// </summary>
+    private InputContext DetermineInputContext(float worldX, float worldY, InputLibrary.Cursor cursor)
+    {
+        var context = new InputContext
+        {
+            WorldX = worldX,
+            WorldY = worldY
+        };
+
+        // Check handles FIRST (highest priority)
+        // Important: Call the wireframe editor directly to get CURRENT frame data
+        if (WireframeEditor != null)
+        {
+            // Check if cursor is over any handle right now
+            context.IsOverHandle = WireframeEditor.HasCursorOverHandles;
+
+            // Check if any handler is currently active (mid-drag)
+            context.IsHandlerCurrentlyActive = WireframeEditor.IsAnyHandlerActive;
+        }
+
+        // Check if over element body (for normal selection)
+        context.IsOverElementBody = IsOverBody;
+
+        // Check modifiers
+        context.IsShiftHeld = _hotkeyManager.MultiSelect.IsPressedInControl();
+
+        // Find what element is under cursor (for normal selection)
+        if (!context.IsOverHandle)
+        {
+            var elementStack = _selectedState.GetTopLevelElementStack();
+            context.ElementUnderCursor = GetRepresentationAt(
+                worldX, worldY,
+                cursor.PrimaryDoubleClick || IsComponentNoInstanceSelected,
+                elementStack);
+        }
+
+        // Build debug info
+        context.DebugInfo = $"IsOverHandle={context.IsOverHandle}, " +
+                           $"IsHandlerActive={context.IsHandlerCurrentlyActive}, " +
+                           $"IsOverBody={context.IsOverElementBody}, " +
+                           $"HasElement={context.ElementUnderCursor != null}";
+
+        return context;
+    }
+
+    /// <summary>
+    /// Decides what selection logic should run based on priority rules.
+    /// This makes the priority system EXPLICIT.
+    ///
+    /// NOTE: Timing varies by input type:
+    /// - PrimaryPush: Called BEFORE handlers (selection updates first)
+    /// - PrimaryDown/Click: Called AFTER handlers (handlers continue operation)
+    /// </summary>
+    private InputDecision MakeInputDecision(InputContext context, InputLibrary.Cursor cursor)
+    {
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 1: If any handler is active (dragging),
+        // skip all other selection logic to avoid interfering
+        // ═══════════════════════════════════════════════════════════════
+        if (context.IsHandlerCurrentlyActive)
+        {
+            System.Diagnostics.Debug.WriteLine($"[INPUT DECISION] HANDLER ACTIVE - skipping other selection - {context.DebugInfo}");
+            return InputDecision.HandleSelection;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 2: Rectangle selection (if shift held OR not over body)
+        // IMPORTANT: Don't trigger rectangle selection when over a handle!
+        // When over a handle, IsOverElementBody is false (intentional), but
+        // we should let handlers process it, not rectangle selector.
+        // Rectangle selector will only activate if user drags far enough.
+        // If user just clicks without dragging, it will return early and
+        // we'll handle it in ProcessRectangleSelection as a fallback.
+        // ═══════════════════════════════════════════════════════════════
+        if (context.IsShiftHeld || (!context.IsOverElementBody && !context.IsOverHandle))
+        {
+            System.Diagnostics.Debug.WriteLine($"[INPUT DECISION] RECTANGLE SELECTION - {context.DebugInfo}");
+            return InputDecision.RectangleSelection;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 3: Normal click selection
+        // Handles clicking on element bodies and selecting them
+        // ═══════════════════════════════════════════════════════════════
+        if (cursor.PrimaryPush || cursor.SecondaryPush || cursor.PrimaryDoubleClick)
+        {
+            System.Diagnostics.Debug.WriteLine($"[INPUT DECISION] NORMAL CLICK SELECTION - {context.DebugInfo}");
+            return InputDecision.NormalClickSelection;
+        }
+
+        // No selection logic needed this frame
+        return InputDecision.None;
+    }
+
+    /// <summary>
+    /// Executes the selection logic based on the decision.
+    ///
+    /// NOTE: Handler timing varies:
+    /// - PrimaryPush: This runs BEFORE handlers (updates selection, then handlers operate on it)
+    /// - PrimaryDown/Click: This runs AFTER handlers (handlers already processed)
+    /// </summary>
+    private void ExecuteInputDecision(
+        InputDecision decision,
+        InputContext context,
+        InputLibrary.Cursor cursor,
+        float worldX,
+        float worldY)
+    {
+        switch (decision)
+        {
+            case InputDecision.HandleSelection:
+                // A handler is active - don't run any other selection logic
+                // Handlers will process separately (before or after this depending on input type)
+                break;
+
+            case InputDecision.RectangleSelection:
+                ProcessRectangleSelection(cursor, worldX, worldY, context);
+                break;
+
+            case InputDecision.NormalClickSelection:
+                ProcessNormalClickSelection(context, worldX, worldY);
+                break;
+
+            case InputDecision.None:
+                // Nothing to do this frame
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Handles rectangle selection input.
+    /// Separated into its own method for clarity.
+    /// If rectangle selector doesn't activate (no drag), falls back to normal selection.
+    /// </summary>
+    private void ProcessRectangleSelection(InputLibrary.Cursor cursor, float worldX, float worldY, InputContext context)
+    {
+        if (_rectangleSelector == null)
+            return;
+
+        if (cursor.PrimaryPush)
+        {
+            _rectangleSelector.HandlePush(worldX, worldY);
+        }
+        else if (cursor.PrimaryDown)
+        {
+            // Pass the handler active state so rectangle selector can bail if needed
+            _rectangleSelector.HandleDrag(context.IsHandlerCurrentlyActive);
+        }
+        else if (cursor.PrimaryClick)
+        {
+            // Check if rectangle selector was activated (user dragged)
+            bool wasActive = _rectangleSelector.IsActive;
+
+            _rectangleSelector.HandleRelease();
+
+            // If rectangle selector was never activated (simple click, no drag),
+            // fall back to normal click selection to handle deselection
+            if (!wasActive)
+            {
+                System.Diagnostics.Debug.WriteLine($"[RECTANGLE FALLBACK] Rectangle selector not active, calling normal selection");
+                ProcessNormalClickSelection(context, worldX, worldY);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles normal click selection (clicking on elements, not handles).
+    /// Separated into its own method for clarity.
+    /// </summary>
+    private void ProcessNormalClickSelection(InputContext context, float worldX, float worldY)
+    {
+        // Don't do normal selection if rectangle selector is active
+        if (_rectangleSelector?.IsActive == true)
+            return;
+
+        // Call the existing PushAndDoubleClickSelectionActivity logic
+        // but with the context we already gathered
+        PushAndDoubleClickSelectionActivity();
+    }
+
+    #endregion
+
     void SelectionActivity()
     {
+        // Update hover state EVERY frame (not just when there's input)
+        // This ensures hover highlights (e.g., polygon point highlights) show correctly
+        var cursor = Cursor;
+        float worldX = cursor.GetWorldX();
+        float worldY = cursor.GetWorldY();
+        WireframeEditor?.UpdateHover(worldX, worldY);
+
+        // Process input only when no context menu is visible
         if (_editingManager.ContextMenuStrip?.Visible != true)
         {
-            // Handle rectangle selection input
-            if (_rectangleSelector != null)
-            {
-                if (Cursor.PrimaryPush)
-                {
-                    // Don't activate rectangle selector if cursor is over handles
-                    // Check both current cursor position AND if any handler will claim this push
-                    bool isCursorOverHandles = WireframeEditor?.HasCursorOverHandles == true;
-                    if (!isCursorOverHandles)
-                    {
-                        float worldX = Cursor.GetWorldX();
-                        float worldY = Cursor.GetWorldY();
-                        _rectangleSelector.HandlePush(worldX, worldY);
-                    }
-                }
-
-                if (Cursor.PrimaryDown)
-                {
-                    // Check if any handler is actively being dragged
-                    bool isHandlerActive = WireframeEditor?.IsAnyHandlerActive == true;
-                    _rectangleSelector.HandleDrag(isHandlerActive);
-                }
-
-                if (Cursor.PrimaryClick)
-                {
-                    _rectangleSelector.HandleRelease();
-                }
-            }
-
-            // Handle normal click/double-click selection
-            // Only if rectangle selector didn't handle it
-            if (_rectangleSelector?.IsActive != true)
-            {
-                if (Cursor.PrimaryPush || Cursor.SecondaryPush || Cursor.PrimaryDoubleClick)
-                {
-                    PushAndDoubleClickSelectionActivity();
-                }
-            }
-
-            //if (Cursor.PrimaryClick)
-            //{
-            //    SideOver = ResizeSide.None;
-            //}
+            ProcessInputForSelection();
         }
     }
 

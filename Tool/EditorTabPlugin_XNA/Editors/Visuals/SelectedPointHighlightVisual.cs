@@ -75,9 +75,8 @@ public class SelectedPointHighlightVisual : EditorVisualBase
 
     public override void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects)
     {
-        // Clear selection when selection changes
-        SelectedIndex = null;
-        _highlightRectangle.Visible = false;
+        // Don't clear the point selection here - let the handler manage it via OnSelectionChanged
+        // The visual will update its visibility in Update() based on whether SelectedIndex is valid
     }
 
     public override void Destroy()

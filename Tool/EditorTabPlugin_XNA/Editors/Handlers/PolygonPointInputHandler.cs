@@ -23,6 +23,7 @@ public class PolygonPointInputHandler : InputHandlerBase
 
     private int? _grabbedIndex = null;
     private int? _selectedIndex = null;
+    private GraphicalUiElement? _lastSelectedElement = null;
 
     public override int Priority => 95; // Higher than move, lower than resize
 
@@ -46,12 +47,14 @@ public class PolygonPointInputHandler : InputHandlerBase
 
     public override bool HasCursorOver(float worldX, float worldY)
     {
+        // Check if cursor is over an existing point node
         var pointIndexOver = _pointNodesVisual.GetIndexOver(worldX, worldY);
         if (pointIndexOver != null)
         {
             return true;
         }
 
+        // Check if cursor is over the add point sprite
         if (_addPointSpriteVisual.IsPointOver(worldX, worldY))
         {
             return true;
@@ -151,7 +154,16 @@ public class PolygonPointInputHandler : InputHandlerBase
     public override void OnSelectionChanged()
     {
         _grabbedIndex = null;
-        _selectedIndex = null;
+
+        var currentSelection = Context.SelectedObjects.FirstOrDefault();
+
+        // Only clear point selection if we switched to a different element
+        if (currentSelection != _lastSelectedElement)
+        {
+            _selectedIndex = null;
+        }
+
+        _lastSelectedElement = currentSelection;
         UpdateVisualState();
     }
 

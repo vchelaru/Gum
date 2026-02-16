@@ -121,8 +121,60 @@ public abstract class WireframeEditor
     }
 
     /// <summary>
+    /// Updates hover state for all handlers.
+    /// This should be called EVERY frame to show hover highlights correctly.
+    /// </summary>
+    public void UpdateHover(float worldX, float worldY)
+    {
+        foreach (var handler in _inputHandlers)
+        {
+            handler.UpdateHover(worldX, worldY);
+        }
+    }
+
+    /// <summary>
+    /// Processes input for handles (resize, rotate, polygon points).
+    /// This is called DIRECTLY from SelectionManager, not in a separate Activity method.
+    /// This ensures input decisions are made in the same frame.
+    /// NOTE: Hover updates are called separately in UpdateHover() every frame.
+    /// </summary>
+    public void ProcessHandleInput(InputLibrary.Cursor cursor, float worldX, float worldY)
+    {
+        // NOTE: Hover state is updated separately in UpdateHover() which is called every frame
+        // We don't update hover here to avoid duplicate updates
+
+        // Process input based on cursor state
+        if (cursor.PrimaryPush)
+        {
+            _context.HasChangedAnythingSinceLastPush = false;
+            _context.GrabbedState.HandlePush();
+
+            // Try handlers in priority order
+            foreach (var handler in _inputHandlers.OrderByDescending(h => h.Priority))
+            {
+                if (handler.HandlePush(worldX, worldY))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[HANDLE INPUT] Handler {handler.GetType().Name} claimed push");
+                    break; // Handler claimed the input
+                }
+            }
+        }
+        else if (cursor.PrimaryDown && _context.GrabbedState.HasMovedEnough)
+        {
+            var activeHandler = _inputHandlers.FirstOrDefault(h => h.IsActive);
+            activeHandler?.HandleDrag();
+        }
+        else if (cursor.PrimaryClick)
+        {
+            var activeHandler = _inputHandlers.FirstOrDefault(h => h.IsActive);
+            activeHandler?.HandleRelease();
+        }
+    }
+
+    /// <summary>
     /// Main activity loop that processes input through registered handlers and updates visuals.
     /// Derived classes can customize behavior by overriding ShouldProcessActivity and OnActivityComplete.
+    /// DEPRECATED: Use ProcessHandleInput() for input processing and UpdateVisuals() for visual updates.
     /// </summary>
     public virtual void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers)
     {
@@ -169,6 +221,25 @@ public abstract class WireframeEditor
             var activeHandler = _inputHandlers.FirstOrDefault(h => h.IsActive);
             activeHandler?.HandleRelease();
         }
+
+        // Update all visuals
+        foreach (var visual in _visuals)
+        {
+            visual.Update();
+        }
+
+        // Allow derived classes to do custom post-processing
+        OnActivityComplete(selectedObjects);
+    }
+
+    /// <summary>
+    /// Updates visual state only. Called separately from input processing.
+    /// This is the new preferred way to update visuals.
+    /// </summary>
+    public virtual void UpdateVisuals(ICollection<GraphicalUiElement> selectedObjects)
+    {
+        if (selectedObjects.Count == 0)
+            return;
 
         // Update all visuals
         foreach (var visual in _visuals)
