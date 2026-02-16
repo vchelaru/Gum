@@ -8,7 +8,7 @@ The Dock section of the Alignment tab is used to easily adjust the variables on 
 
 Keep in mind that docking an instance does not toggle a dock state, but rather modifies variables on the instance so that it has docking behavior. This distinction has the following consequences:
 
-* Docking behavior can be achieved by manually modifying variable - this tab does not add any additional behavior which is not already available through the Variables tab
+* Docking behavior can be achieved by manually modifying variables - this tab does not add any additional behavior which is not already available through the Variables tab.
 * Docking cannot be undone by toggling the dock button, and pressing multiple dock buttons results in multiple dock variables being assigned which may result in undesirable behavior. To undo docking, use the CTRL+Z shortcut for undo.
 
 ## Dock types
@@ -65,8 +65,6 @@ This section lists all of the dock types, provides a visual examples, and lists 
 | Height       | 0                  |
 | Height Units | Relative to Parent |
 
-
-
 ### Right
 
 <figure><img src="../../../.gitbook/assets/01_08 32 19.png" alt=""><figcaption></figcaption></figure>
@@ -119,4 +117,3 @@ This section lists all of the dock types, provides a visual examples, and lists 
 | Width Units  | Relative to Children |
 | Height       | 0                    |
 | Height Units | Relative to Children |
-

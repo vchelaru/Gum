@@ -31,6 +31,7 @@
 * [Gum Elements](gum-tool/gum-elements/README.md)
   * [General Properties](gum-tool/gum-elements/general-properties/README.md)
     * [Alpha](gum-tool/gum-elements/general-properties/alpha.md)
+    * [Anchor](gum-tool/gum-elements/general-properties/anchor.md)
     * [Base Type (Inheritance)](gum-tool/gum-elements/general-properties/base-type-inheritance.md)
     * [Blend](gum-tool/gum-elements/general-properties/blend.md)
     * [Clips Children](gum-tool/gum-elements/general-properties/clips-children.md)
