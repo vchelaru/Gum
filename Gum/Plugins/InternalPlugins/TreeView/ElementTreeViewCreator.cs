@@ -540,9 +540,11 @@ internal class ElementTreeViewCreator
                 Height = 14
             },
             Margin = new Thickness(0, 0, 4, 0),
-            Padding = new Thickness(8, 2, 8, 2),
-            ToolTip = "Collapse all nodes in the tree"
+            Padding = new Thickness(4, 2, 4, 2),
+            ToolTip = "Collapse all nodes in the tree",
+            Style = Application.Current.TryFindResource("MaterialDesignToolForegroundButton") as System.Windows.Style
         };
+        RippleAssist.SetIsDisabled(CollapseAllButton, true);
         CollapseAllButton.Click += (_, _) => onCollapseAll();
 
         CollapseToElementButton = new System.Windows.Controls.Button
@@ -553,9 +555,11 @@ internal class ElementTreeViewCreator
                 Height = 14
             },
             Margin = new Thickness(0, 0, 4, 0),
-            Padding = new Thickness(8, 2, 8, 2),
-            ToolTip = "Collapse to element level (preserves folder expansion state)"
+            Padding = new Thickness(4, 2, 4, 2),
+            ToolTip = "Collapse to element level (preserves folder expansion state)",
+            Style = Application.Current.TryFindResource("MaterialDesignToolForegroundButton") as System.Windows.Style
         };
+        RippleAssist.SetIsDisabled(CollapseToElementButton, true);
         CollapseToElementButton.Click += (_, _) => onCollapseToElementLevel();
 
         panel.Children.Add(CollapseAllButton);
