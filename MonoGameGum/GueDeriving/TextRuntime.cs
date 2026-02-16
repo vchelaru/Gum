@@ -413,6 +413,14 @@ public class TextRuntime : InteractiveGue
     public static string DefaultFont = "Arial";
     public static int DefaultFontSize = 18;
 
+    /// <summary>
+    /// Indicates whether the font should be assigned during object construction.
+    /// </summary>
+    /// <remarks>Set this field to <see langword="true"/> to assign the font in the constructor, or to <see
+    /// langword="false"/> to defer font assignment until later in the object's lifecycle. This can be set to false
+    /// if TextRuntime instances are always given a custom font, so this can prevent unnecessary font loading/assignment.</remarks>
+    public static bool AssignFontInConstructor = true;
+
     public float DefaultWidth = 0;
     public float DefaultHeight = 0;
 
@@ -436,8 +444,11 @@ public class TextRuntime : InteractiveGue
             WidthUnits = DefaultWidthUnits;
             Height = DefaultHeight;
             HeightUnits = DefaultHeightUnits;
-            this.FontSize = DefaultFontSize;
-            this.Font = DefaultFont;
+            if(AssignFontInConstructor)
+            {
+                this.FontSize = DefaultFontSize;
+                this.Font = DefaultFont;
+            }
             HasEvents = false;
 
             textRenderable.RawText = "Hello World";
