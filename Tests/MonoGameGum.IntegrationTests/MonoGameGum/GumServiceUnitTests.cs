@@ -80,7 +80,9 @@ public class GumServiceUnitTests : BaseTestClass
 
         var gumService = game.GumService;
 
+#pragma warning disable CS0618 // Type or member is obsolete
         var exception = Should.Throw<InvalidOperationException>(() => gumService.LoadAnimations());
+#pragma warning restore CS0618 // Type or member is obsolete
 
         exception.Message.ShouldContain("You must first load a project before attempting to load its animations");
         exception.Message.ShouldContain("Did you call GumUI.Initialize with a valid .gumx first?");
