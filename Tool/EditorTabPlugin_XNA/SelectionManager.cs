@@ -423,10 +423,6 @@ public class SelectionManager : ISelectionManager
     /// to un-highlight anything if the cursor is outside of the window</param>
     void HighlightActivity(bool forceNoHighlight)
     {
-        if(InputLibrary.Cursor.Self.SecondaryPush)
-        {
-            int m = 3;
-        }
         if (!InputLibrary.Cursor.Self.PrimaryDownIgnoringIsInWindow)
         {
             // There is currently a known
@@ -666,10 +662,9 @@ public class SelectionManager : ISelectionManager
                 {
                     ipsoOver = _wireframeObjectManager.GetRepresentation(element);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    int m = 3;
-                    throw e;
+                    throw;
                 }
             }
 
@@ -956,17 +951,30 @@ public class SelectionManager : ISelectionManager
             // operation without any selection logic interfering
             // ───────────────────────────────────────────────────────────
 
-            // PHASE 1: HANDLERS - Let active handlers continue
+            // Track whether a handler owned this push-drag-release cycle.
+            // If a handler was active and just released (PrimaryClick),
+            // we must not run selection logic that could spuriously deselect.
+            bool handlerProcessedRelease = false;
+
+            if (WireframeEditor?.IsAnyHandlerActive == true && cursor.PrimaryClick)
+            {
+                handlerProcessedRelease = true;
+            }
+
+            // PHASE 1: HANDLERS - Let active handlers continue/release
             WireframeEditor?.ProcessHandleInput(cursor, worldX, worldY);
 
-            // PHASE 2: QUERY - Check state after handlers ran
-            var inputContext = DetermineInputContext(worldX, worldY, cursor);
+            if (!handlerProcessedRelease)
+            {
+                // PHASE 2: QUERY - Check state after handlers ran
+                var inputContext = DetermineInputContext(worldX, worldY, cursor);
 
-            // PHASE 3: DECIDE - Do we need additional logic?
-            var decision = MakeInputDecision(inputContext, cursor);
+                // PHASE 3: DECIDE - Do we need additional logic?
+                var decision = MakeInputDecision(inputContext, cursor);
 
-            // PHASE 4: EXECUTE - Additional selection logic if no handler claimed it
-            ExecuteInputDecision(decision, inputContext, cursor, worldX, worldY);
+                // PHASE 4: EXECUTE - Additional selection logic if no handler claimed it
+                ExecuteInputDecision(decision, inputContext, cursor, worldX, worldY);
+            }
         }
     }
 
@@ -1030,9 +1038,12 @@ public class SelectionManager : ISelectionManager
     {
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 1: If any handler is active (dragging),
-        // skip all other selection logic to avoid interfering
+        // skip all other selection logic to avoid interfering.
+        // Exception: PrimaryDoubleClick overrides this so that
+        // "punch through" (cycling to the next overlapping object)
+        // works even though the second click's push activated a handler.
         // ═══════════════════════════════════════════════════════════════
-        if (context.IsHandlerCurrentlyActive)
+        if (context.IsHandlerCurrentlyActive && !cursor.PrimaryDoubleClick)
         {
             System.Diagnostics.Debug.WriteLine($"[INPUT DECISION] HANDLER ACTIVE - skipping other selection - {context.DebugInfo}");
             return InputDecision.HandleSelection;
@@ -1271,7 +1282,7 @@ public class SelectionManager : ISelectionManager
         catch (Exception e)
         {
             _dialogService.ShowMessage("Error in PushAndDoubleClickSelectionActivity: " + e.ToString());
-            throw e;
+            throw;
         }
 
     }
