@@ -302,6 +302,438 @@ public class ListBoxTests : BaseTestClass
     }
     #endregion
 
+    #region Multi-Select Tests
+
+    [Fact]
+    public void ExtendedMode_ClickAlone_ShouldSelectOnlyClickedItem()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Extended };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        // Select first item
+        listBox.ListBoxItems[0].IsSelected = true;
+
+        // Act - click second item without modifiers
+        listBox.ListBoxItems[1].IsSelected = true;
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(1);
+        listBox.SelectedItems[0].ShouldBe("Item 1");
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
+        listBox.ListBoxItems[2].IsSelected.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ModifierKeys_ShouldBeCustomizable()
+    {
+        // Arrange
+        var originalToggle = ListBox.ToggleSelectionModifierKey;
+        var originalRange = ListBox.RangeSelectionModifierKey;
+
+        // Act
+        ListBox.ToggleSelectionModifierKey = Microsoft.Xna.Framework.Input.Keys.LeftAlt;
+        ListBox.RangeSelectionModifierKey = Microsoft.Xna.Framework.Input.Keys.LeftControl;
+
+        // Assert
+        ListBox.ToggleSelectionModifierKey.ShouldBe(Microsoft.Xna.Framework.Input.Keys.LeftAlt);
+        ListBox.RangeSelectionModifierKey.ShouldBe(Microsoft.Xna.Framework.Input.Keys.LeftControl);
+
+        // Cleanup
+        ListBox.ToggleSelectionModifierKey = originalToggle;
+        ListBox.RangeSelectionModifierKey = originalRange;
+    }
+
+    [Fact]
+    public void MultipleMode_Click_ShouldToggleSelection()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        // Act - select first item
+        listBox.ListBoxItems[0].IsSelected = true;
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(1);
+        listBox.SelectedItems[0].ShouldBe("Item 0");
+
+        // Act - select second item (both should be selected)
+        listBox.ListBoxItems[1].IsSelected = true;
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(2);
+        listBox.SelectedItems.Cast<object>().ShouldContain("Item 0");
+        listBox.SelectedItems.Cast<object>().ShouldContain("Item 1");
+
+        // Act - deselect first item
+        listBox.ListBoxItems[0].IsSelected = false;
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(1);
+        listBox.SelectedItems[0].ShouldBe("Item 1");
+    }
+
+    [Fact]
+    public void MultipleMode_ClickSelectedItem_ShouldDeselectItem()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.AddToRoot();
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        // Select first item
+        listBox.ListBoxItems[0].IsSelected = true;
+        listBox.SelectedItems.Count.ShouldBe(1);
+        listBox.SelectedItems[0].ShouldBe("Item 0");
+
+        // Act - Click the already-selected item (simulate push)
+        Mock<ICursor> mockCursor = SetupForPush();
+        mockCursor.SetupProperty(x => x.VisualOver);
+        mockCursor.SetupProperty(x => x.WindowPushed);
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(
+            listBox.Visual,
+            mockCursor.Object,
+            null!,
+            0);
+
+        // Assert - item should be deselected (toggled off)
+        listBox.SelectedItems.Count.ShouldBe(0);
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SelectedIndex_Getter_ShouldReturnFirstSelectedItemIndex()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        // Act
+        listBox.SelectedItems.Add("Item 1");
+        listBox.SelectedItems.Add("Item 2");
+
+        // Assert
+        listBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SelectedIndex_Getter_ShouldReturnNegativeOneWhenNoSelection()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+
+        // Assert
+        listBox.SelectedIndex.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void SelectedIndex_Setter_ShouldClearSelectedItemsAndSelectOne()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        listBox.SelectedItems.Add("Item 0");
+        listBox.SelectedItems.Add("Item 1");
+
+        // Act
+        listBox.SelectedIndex = 2;
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(1);
+        listBox.SelectedItems[0].ShouldBe("Item 2");
+        listBox.SelectedIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void SelectedItems_Add_ShouldSyncIsSelected()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        // Act
+        listBox.SelectedItems.Add("Item 1");
+
+        // Assert
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
+        listBox.ListBoxItems[2].IsSelected.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SelectedItems_Clear_ShouldDeselectAllItems()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        listBox.SelectedItems.Add("Item 0");
+        listBox.SelectedItems.Add("Item 1");
+
+        // Act
+        listBox.SelectedItems.Clear();
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(0);
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[1].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[2].IsSelected.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SelectedItems_Remove_ShouldSyncIsSelected()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        listBox.SelectedItems.Add("Item 0");
+        listBox.SelectedItems.Add("Item 1");
+
+        // Act
+        listBox.SelectedItems.Remove("Item 0");
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(1);
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SelectedItems_ShouldNotBeReplaceable()
+    {
+        // Arrange
+        var listBox = new ListBox();
+
+        // Act
+        var selectedItems = listBox.SelectedItems;
+
+        // Assert - getting it twice should return the same instance
+        listBox.SelectedItems.ShouldBeSameAs(selectedItems);
+    }
+
+    [Fact]
+    public void SelectedObject_Getter_ShouldReturnFirstSelectedItem()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        // Act
+        listBox.SelectedItems.Add("Item 1");
+        listBox.SelectedItems.Add("Item 2");
+
+        // Assert
+        listBox.SelectedObject.ShouldBe("Item 1");
+    }
+
+    [Fact]
+    public void SelectedObject_Getter_ShouldReturnNullWhenNoSelection()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+
+        // Assert
+        listBox.SelectedObject.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SelectedObject_Setter_ShouldClearSelectedItemsAndSelectOne()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        listBox.SelectedItems.Add("Item 0");
+        listBox.SelectedItems.Add("Item 1");
+
+        // Act
+        listBox.SelectedObject = "Item 2";
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(1);
+        listBox.SelectedItems[0].ShouldBe("Item 2");
+        listBox.SelectedObject.ShouldBe("Item 2");
+    }
+
+    [Fact]
+    public void SelectionChanged_ShouldFireOnSelectedItemsAdd()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+
+        bool eventFired = false;
+        SelectionChangedEventArgs capturedArgs = null;
+
+        listBox.SelectionChanged += (sender, args) =>
+        {
+            eventFired = true;
+            capturedArgs = args;
+        };
+
+        // Act
+        listBox.SelectedItems.Add("Item 0");
+
+        // Assert
+        eventFired.ShouldBeTrue();
+        capturedArgs.ShouldNotBeNull();
+        capturedArgs.AddedItems.Count.ShouldBe(1);
+        capturedArgs.AddedItems[0].ShouldBe("Item 0");
+        capturedArgs.RemovedItems.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void SelectionChanged_ShouldFireOnSelectedItemsRemove()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+
+        listBox.SelectedItems.Add("Item 0");
+
+        bool eventFired = false;
+        SelectionChangedEventArgs capturedArgs = null;
+
+        listBox.SelectionChanged += (sender, args) =>
+        {
+            eventFired = true;
+            capturedArgs = args;
+        };
+
+        // Act
+        listBox.SelectedItems.Remove("Item 0");
+
+        // Assert
+        eventFired.ShouldBeTrue();
+        capturedArgs.ShouldNotBeNull();
+        capturedArgs.AddedItems.Count.ShouldBe(0);
+        capturedArgs.RemovedItems.Count.ShouldBe(1);
+        capturedArgs.RemovedItems[0].ShouldBe("Item 0");
+    }
+
+    [Fact]
+    public void SelectionMode_ChangeToSingle_ShouldKeepOnlyFirstSelection()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        listBox.SelectedItems.Add("Item 0");
+        listBox.SelectedItems.Add("Item 1");
+        listBox.SelectedItems.Add("Item 2");
+
+        // Act
+        listBox.SelectionMode = SelectionMode.Single;
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(1);
+        listBox.SelectedItems[0].ShouldBe("Item 0");
+    }
+
+    [Fact]
+    public void SelectionMode_DefaultValue_ShouldBeSingle()
+    {
+        // Arrange & Act
+        var listBox = new ListBox();
+
+        // Assert
+        listBox.SelectionMode.ShouldBe(SelectionMode.Single);
+    }
+
+    [Fact]
+    public void SingleMode_Click_ShouldDeselectOtherItems()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Single };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        // Act
+        listBox.ListBoxItems[0].IsSelected = true;
+        listBox.ListBoxItems[1].IsSelected = true;
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(1);
+        listBox.SelectedItems[0].ShouldBe("Item 1");
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void WhenItemRemovedFromItems_ShouldRemoveFromSelectedItems()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        listBox.SelectedItems.Add("Item 0");
+        listBox.SelectedItems.Add("Item 1");
+
+        // Act
+        listBox.Items.Remove("Item 1");
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(1);
+        listBox.SelectedItems.Cast<object>().ShouldContain("Item 0");
+        listBox.SelectedItems.Cast<object>().ShouldNotContain("Item 1");
+    }
+
+    [Fact]
+    public void WhenItemsCleared_ShouldClearSelectedItems()
+    {
+        // Arrange
+        var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
+        listBox.Items.Add("Item 0");
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+
+        listBox.SelectedItems.Add("Item 0");
+        listBox.SelectedItems.Add("Item 1");
+
+        // Act
+        listBox.Items.Clear();
+
+        // Assert
+        listBox.SelectedItems.Count.ShouldBe(0);
+    }
+
+    #endregion
+
     private static Mock<ICursor> SetupForPush()
     {
         Mock<ICursor> mockCursor = new();
