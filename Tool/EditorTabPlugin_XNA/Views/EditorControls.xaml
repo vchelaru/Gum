@@ -4,15 +4,16 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:EditorTabPlugin_XNA.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" >
     <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
-        <Button Content="-" Width="20" Command="{Binding ZoomOutCommand}"/>
+        <Button Content="-" Width="20" Command="{Binding ZoomOutCommand}" Style="{StaticResource MaterialDesignToolForegroundButton}" materialDesign:RippleAssist.IsDisabled="True"/>
         <ComboBox Grid.Column="1" Width="100"
                   SelectedItem="{Binding PercentZoomLevel}"
                   ItemsSource="{Binding ZoomLevels}"
                   DisplayMemberPath="ZoomDisplay"
                   />
-        <Button Grid.Column="2" Width="20" Content="+" Command="{Binding ZoomInCommand}"/>
+        <Button Grid.Column="2" Width="20" Content="+" Command="{Binding ZoomInCommand}" Style="{StaticResource MaterialDesignToolForegroundButton}" materialDesign:RippleAssist.IsDisabled="True"/>
 
         <ComboBox
             Margin="10,0,0,0"

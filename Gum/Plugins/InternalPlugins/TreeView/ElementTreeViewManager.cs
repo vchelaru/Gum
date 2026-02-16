@@ -155,24 +155,20 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public const int DerivedInstanceImageIndex = 9;
 
     static ElementTreeViewManager mSelf;
-    ContextMenuStrip mMenuStrip;
-    
+    private ElementTreeViewCreator _viewCreator;
 
-    internal MultiSelectTreeView ObjectTreeView;
-    private ImageList originalImageList;
+    // Forwarding properties for UI controls owned by _viewCreator
+    internal MultiSelectTreeView ObjectTreeView => _viewCreator.ObjectTreeView;
+    private ContextMenuStrip mMenuStrip => _viewCreator.MenuStrip;
+    private FlatSearchListBox FlatList => _viewCreator.FlatList;
+    private System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost => _viewCreator.TreeViewHost;
+    private System.Windows.Controls.TextBox searchTextBox => _viewCreator.SearchTextBox;
+    private System.Windows.Controls.CheckBox deepSearchCheckBox => _viewCreator.DeepSearchCheckBox;
+
     public ImageList unmodifiableImageList
     {
-        get
-        {
-            return CloneImageList(originalImageList);
-        }
-        set
-        {
-            if (originalImageList == null)
-            {
-                originalImageList = value;
-            }
-        }
+        get => _viewCreator.UnmodifiableImageList;
+        set => _viewCreator.UnmodifiableImageList = value;
     }
 
     TreeNode mScreensTreeNode;
@@ -184,21 +180,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private Cursor AddCursor { get; }
 
 
-    FlatSearchListBox FlatList;
-    System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost;
-
-
     /// <summary>
     /// Used to store off what was previously selected
     /// when the tree view refreshes itself - so the user
     /// doesn't lose the old selection.
     /// </summary>
     object? mRecordedSelectedObject;
-
-    System.Windows.Controls.TextBox searchTextBox;
-    System.Windows.Controls.CheckBox deepSearchCheckBox;
-    System.Windows.Controls.Button collapseAllButton;
-    System.Windows.Controls.Button collapseToElementButton;
     #endregion
 
     #region Properties
@@ -566,251 +553,104 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public void Initialize()
     {
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
+        _viewCreator = new ElementTreeViewCreator();
 
-        CreateObjectTreeView();
+        var grid = _viewCreator.CreateView(
+            onAfterClickSelect: this.ObjectTreeView_AfterClickSelect,
+            onAfterSelect: this.ObjectTreeView_AfterSelect_1,
+            onKeyDown: this.ObjectTreeView_KeyDown,
+            onKeyPress: this.ObjectTreeView_KeyPress,
+            onMouseClick: this.ObjectTreeView_MouseClick,
+            onMouseMove: (x, y) => HandleMouseOver(x, y),
+            onFontChanged: (sender, _) =>
+            {
+                if (sender is MultiSelectTreeView { Font: { Size: var fontSize } font })
+                {
+                    const float defaultFontSize = 9f;
+                    _viewCreator.UpdateTreeviewIcons(fontSize / defaultFontSize);
+                    mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out var _);
+                    mMenuStrip.Font = font;
+                }
+            },
+            onDragOver: (sender, e) =>
+            {
+                // allow file drops
+                if (e.Data?.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop) == true)
+                {
+                    e.Effect = DragDropEffects.Copy;
+                }
 
-        CreateContextMenuStrip();
+                // auto expand hovered nodes when they're collapsed
+                var treeview = (MultiSelectTreeView?)sender;
+                Point? pointWithinTreeview = treeview?.PointToClient(new Point(e.X, e.Y));
+                if (pointWithinTreeview != null && treeview?.GetNodeAt(pointWithinTreeview.Value) is { } hovered)
+                {
+                    DelayExpandHoveredNode(hovered);
+                }
+            },
+            onDragDrop: (_, e) =>
+            {
+                if (e.Data?.GetData(System.Windows.Forms.DataFormats.FileDrop) is string[] files)
+                {
+                    _dragDropManager.OnFilesDroppedInTreeView(files);
+                }
+            },
+            onQueryContinueDrag: (_, e) =>
+            {
+                if (e.Action != DragAction.Continue)
+                {
+                    Locator.GetRequiredService<IDispatcher>().Post(() =>
+                    {
+                        OnSelect(ObjectTreeView.SelectedNode);
+                    });
+                }
+            },
+            onValidateSortingDrop: (_, e) =>
+            {
+                e.Allow = false;
+
+                if (ProcessDrop(e.TargetNode, e.Kind) is { } drop)
+                {
+                    IEnumerable<ITreeNode> wrappedNodes = e.DraggedNodes.Select(n => new TreeNodeWrapper(n));
+                    ITreeNode wrappedTarget = new TreeNodeWrapper(drop.target);
+
+                    e.Allow = _dragDropManager.ValidateNodeSorting(wrappedNodes, wrappedTarget, drop.index);
+                }
+            },
+            onNodeSortingDropped: (_, e) =>
+            {
+                if (ProcessDrop(e.TargetNode, e.Kind) is { } drop)
+                {
+                    IEnumerable<ITreeNode> wrappedNodes = e.DraggedNodes.Select(n => new TreeNodeWrapper(n));
+                    ITreeNode wrappedTarget = new TreeNodeWrapper(drop.target);
+
+                    e.Kind = e.Kind == MultiSelectTreeView.DropKind.None
+                        ? MultiSelectTreeView.DropKind.None
+                        : MultiSelectTreeView.DropKind.Into;
+
+                    _dragDropManager.OnNodeSortingDropped(wrappedNodes, wrappedTarget, drop.index);
+                }
+                e.PerformNativeReorder = false;
+            },
+            onGiveFeedback: (sender, e) =>
+            {
+                if (InputLibrary.Cursor.Self.IsInWindow)
+                {
+                    e.UseDefaultCursors = false;
+                    System.Windows.Forms.Cursor.Current = AddCursor;
+                }
+            },
+            onFilterTextChanged: text => FilterText = text,
+            onSearchNodeSelected: HandleSelectedSearchNode,
+            onCollapseAll: () => _viewCreator.CollapseAll(),
+            onCollapseToElementLevel: () => _viewCreator.CollapseToElementLevel(),
+            onDeepSearchChecked: () => ReactToFilterTextChanged());
+
+        _tabManager.AddControl(grid, "Project", TabLocation.Left);
 
         RefreshUi();
 
         InitializeMenuItems();
-
-
-        var grid = new Grid();
-        grid.Margin = new Thickness(4);
-        grid.RowDefinitions.Add(
-            new System.Windows.Controls.RowDefinition()
-            { Height = System.Windows.GridLength.Auto });
-        grid.RowDefinitions.Add(
-            new System.Windows.Controls.RowDefinition()
-            { Height = System.Windows.GridLength.Auto });
-        grid.RowDefinitions.Add(
-            new System.Windows.Controls.RowDefinition()
-                { Height = System.Windows.GridLength.Auto });
-        grid.RowDefinitions.Add(
-            new System.Windows.Controls.RowDefinition()
-            { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
-
-        _tabManager.AddControl(grid, "Project", TabLocation.Left);
-
-        ObjectTreeView.Dock = DockStyle.Fill;
-
-        TreeViewHost = new System.Windows.Forms.Integration.WindowsFormsHost();
-        TreeViewHost.Background = System.Windows.Media.Brushes.Transparent;
-
-        ThemedScrollContainer scrollContainer = new()
-        {
-            AutoComputeExtent = false,
-            Dock = DockStyle.Fill,
-            EnableHorizontalScroll = true
-        };
-        scrollContainer.AddContent(ObjectTreeView);
-        scrollContainer.WireTreeToScroller(ObjectTreeView);
-
-        TreeViewHost.Child = scrollContainer;
-        TreeViewHost.Margin = new Thickness(0,4,0,0);
-
-        Grid.SetRow(TreeViewHost, 3);
-        grid.Children.Add(TreeViewHost);
-
-        var buttonPanel = CreateCollapseButtonsPanel();
-        Grid.SetRow(buttonPanel, 0);
-        grid.Children.Add(buttonPanel);
-
-        var searchBarUi = CreateSearchBoxUi();
-        Grid.SetRow(searchBarUi, 1);
-        grid.Children.Add(searchBarUi);
-
-        var checkBoxUi = CreateSearchCheckBoxUi();
-        checkBoxUi.Visibility = Visibility.Collapsed;
-        checkBoxUi.Focusable = false;
-        checkBoxUi.Margin = new Thickness(0, 2, 0, 0);
-
-        Grid.SetRow(checkBoxUi, 2);
-        grid.Children.Add(checkBoxUi);
-
-        FlatList = CreateFlatSearchList();
-        FlatList.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
-        FlatList.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
-        FlatList.Margin = new(0, 4, 0, 0);
-        FlatList.Visibility = Visibility.Collapsed;
-
-        Grid.SetRow(FlatList, 3);
-        grid.Children.Add(FlatList);
-
-        //_guiCommands.AddControl(panel, "Project", TabLocation.Left);
-
-        searchBarUi.GotKeyboardFocus += (_, _) => UpdateCheckBoxVisibility();
-        searchBarUi.LostKeyboardFocus += (_, _) => UpdateCheckBoxVisibility();
-        FlatList.IsVisibleChanged += (_, _) => UpdateCheckBoxVisibility();
-        void UpdateCheckBoxVisibility()
-        {
-            bool textBoxFocused = searchTextBox.IsKeyboardFocusWithin;
-            bool listViewVisible = FlatList.Visibility == Visibility.Visible;
-
-            checkBoxUi.Visibility = (textBoxFocused || listViewVisible)
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-        }
-        ApplyThemeColors();
-    }
-
-
-    internal void FocusSearch()
-    {
-        searchTextBox.Focus();
-    }
-
-    private void CreateContextMenuStrip()
-    {
-        this.mMenuStrip = new System.Windows.Forms.ContextMenuStrip();
-        this.mMenuStrip.Name = "ElementMenuStrip";
-        this.mMenuStrip.Size = new System.Drawing.Size(61, 4);
-        this.mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
-        this.ObjectTreeView.ContextMenuStrip = this.mMenuStrip;
-    }
-
-    private void CreateObjectTreeView()
-    {
-        this.ObjectTreeView = new CommonFormsAndControls.MultiSelectTreeView();
-        this.ObjectTreeView.IsSelectingOnPush = false;
-        this.ObjectTreeView.AllowDrop = true;
-        this.ObjectTreeView.AlwaysHaveOneNodeSelected = false;
-        // External drag/drop logic is provided; disable native reorder for this host
-        this.ObjectTreeView.EnableNativeReorder = true;
-        this.ObjectTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-        this.ObjectTreeView.HotTracking = true;
-        this.ObjectTreeView.ImageIndex = 0;
-        this.ObjectTreeView.ImageList = ObjectTreeView.ElementTreeImageList;
-        unmodifiableImageList = ObjectTreeView.ElementTreeImageList;
-        this.ObjectTreeView.Location = new System.Drawing.Point(0, 0);
-        this.ObjectTreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
-        this.ObjectTreeView.Name = "ObjectTreeView";
-        this.ObjectTreeView.SelectedImageIndex = 0;
-        this.ObjectTreeView.Size = new System.Drawing.Size(196, 621);
-        this.ObjectTreeView.TabIndex = 0;
-        this.ObjectTreeView.AfterClickSelect += this.ObjectTreeView_AfterClickSelect;
-        this.ObjectTreeView.AfterSelect += this.ObjectTreeView_AfterSelect_1;
-        this.ObjectTreeView.KeyDown += this.ObjectTreeView_KeyDown;
-        this.ObjectTreeView.KeyPress += this.ObjectTreeView_KeyPress;
-        this.ObjectTreeView.PreviewKeyDown += this.ObjectTreeView_PreviewKeyDown;
-        this.ObjectTreeView.MouseClick += this.ObjectTreeView_MouseClick;
-        this.ObjectTreeView.BackColor =
-            Application.Current.TryFindResource("Frb.Colors.SurfaceO1") is System.Windows.Media.Color color
-                ? System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B)
-                : System.Drawing.SystemColors.Window;
-        this.ObjectTreeView.LineColor = ObjectTreeView.BackColor;
-
-        this.ObjectTreeView.MouseMove += (sender, e) => HandleMouseOver(e.X, e.Y);
-        this.ObjectTreeView.FontChanged += (sender, _) =>
-        {
-            if (sender is MultiSelectTreeView { Font: { Size: var fontSize } font })
-            {
-                const float defaultFontSize = 9f;
-                UpdateTreeviewIcons(fontSize/defaultFontSize);
-                mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out var _);
-                mMenuStrip.Font = font;
-            }
-        };
-        this.ObjectTreeView.BorderStyle = BorderStyle.None;
-
-        ObjectTreeView.DragOver += (sender, e) =>
-        {
-            // allow file drops
-            if (e.Data?.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop) == true)
-            {
-                e.Effect = DragDropEffects.Copy;
-            }
-
-            // auto expand hovered nodes when they're collapsed
-            var treeview = (MultiSelectTreeView?)sender;
-            Point? pointWithinTreeview = treeview?.PointToClient(new Point(e.X, e.Y));
-            if (pointWithinTreeview != null && treeview?.GetNodeAt(pointWithinTreeview.Value) is { } hovered)
-            {
-                DelayExpandHoveredNode(hovered);
-            }
-        };
-
-        ObjectTreeView.DragDrop += (_, e) =>
-        {
-            if (e.Data?.GetData(System.Windows.Forms.DataFormats.FileDrop) is string[] files)
-            {
-                _dragDropManager.OnFilesDroppedInTreeView(files);
-            }
-        };
-
-        
-        ObjectTreeView.QueryContinueDrag += (_, e) =>
-        {
-            if (e.Action != DragAction.Continue)
-            {
-                Locator.GetRequiredService<IDispatcher>().Post(() =>
-                {
-                    // When a node is dragged, it becomes internally selected in the treeview.
-                    // In the case a drop fails, is cancelled, or a successful drop doesn't result
-                    // in a selection change, we use this as a safety-net to ensure the selection-manager
-                    // is in-sync with the treeview selection.
-                    OnSelect(ObjectTreeView.SelectedNode);
-                });
-            }
-        };
-
-        ObjectTreeView.ValidateSortingDrop += (_, e) =>
-        {
-            // --- Early return example of existing behavior ---
-            //e.Kind = e.Kind == MultiSelectTreeView.DropKind.None
-            //    ? MultiSelectTreeView.DropKind.None
-            //    : MultiSelectTreeView.DropKind.Into;
-            //e.Allow = e.Kind != MultiSelectTreeView.DropKind.None;
-            //return;
-
-            e.Allow = false; // Probably best to default to false?
-
-            if (ProcessDrop(e.TargetNode, e.Kind) is { } drop)
-            {
-                IEnumerable<ITreeNode> wrappedNodes = e.DraggedNodes.Select(n => new TreeNodeWrapper(n));
-                ITreeNode wrappedTarget = new TreeNodeWrapper(drop.target);
-                
-                e.Allow = _dragDropManager.ValidateNodeSorting(wrappedNodes, wrappedTarget, drop.index);
-            }
-        };
-
-        ObjectTreeView.NodeSortingDropped += (_, e) =>
-        {
-            // --- Early return example of existing behavior ---
-            //e.Kind = e.Kind == MultiSelectTreeView.DropKind.None
-            //    ? MultiSelectTreeView.DropKind.None
-            //    : MultiSelectTreeView.DropKind.Into;
-            //_dragDropManager.OnNodeSortingDropped(e.DraggedNodes.Select(n => new TreeNodeWrapper(n)), new TreeNodeWrapper(e.TargetNode), e.TargetNode.GetNodeCount(false));
-            //e.PerformNativeReorder = false;
-            //return;
-
-            if (ProcessDrop(e.TargetNode, e.Kind) is { } drop)
-            {
-                IEnumerable<ITreeNode> wrappedNodes = e.DraggedNodes.Select(n => new TreeNodeWrapper(n));
-                ITreeNode wrappedTarget = new TreeNodeWrapper(drop.target);
-
-                e.Kind = e.Kind == MultiSelectTreeView.DropKind.None
-                    ? MultiSelectTreeView.DropKind.None
-                    : MultiSelectTreeView.DropKind.Into;
-
-                _dragDropManager.OnNodeSortingDropped(wrappedNodes, wrappedTarget, drop.index);
-                
-            }
-            e.PerformNativeReorder = false;
-        };
-
-        ObjectTreeView.GiveFeedback += (sender, e) =>
-        {
-            // Use custom cursors if the check box is checked.
-            // Sets the custom cursor based upon the effect.
-            //InputManager.
-            if(InputLibrary.Cursor.Self.IsInWindow)
-            {
-                e.UseDefaultCursors = false;
-                System.Windows.Forms.Cursor.Current = AddCursor;
-            }
-        };
 
         static (int index, TreeNode target)? ProcessDrop(TreeNode? originalTarget, MultiSelectTreeView.DropKind kind)
         {
@@ -840,210 +680,18 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
 
             return null;
-        } 
+        }
     }
 
-    private void ApplyThemeColors()
+
+    internal void FocusSearch()
     {
-        if (System.Windows.Application.Current is { } current &&
-            current.TryFindResource("Frb.Brushes.Foreground") is SolidColorBrush { Color: var fg } &&
-            current.TryFindResource("Frb.Surface01") is SolidColorBrush { Color: var field } bgBrush)
-        {
-            Color foregroundColor = Color.FromArgb(fg.A, fg.R, fg.G, fg.B);
-            Color fieldColor = Color.FromArgb(field.A, field.R, field.G, field.B);
-            this.ObjectTreeView.ForeColor = mMenuStrip.ForeColor = foregroundColor;
-            this.ObjectTreeView.BackColor = mMenuStrip.BackColor = fieldColor;
-            this.ObjectTreeView.LineColor = ObjectTreeView.BackColor;
-            this.mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
-            this.TreeViewHost.Background = bgBrush;
-            (TreeViewHost.Child as ThemedScrollContainer)!.BackColor = fieldColor;
-
-            if (current.TryFindResource("Frb.Brushes.Primary.Transparent") is SolidColorBrush
-                {
-                    Opacity: var primOpacity
-                } T &&
-                current.TryFindResource("Frb.Brushes.Primary") is SolidColorBrush { Color: var primColor })
-            {
-                this.ObjectTreeView.HoverBgColor =
-                    Color.FromArgb(Map01To255(primOpacity), primColor.R, primColor.G, primColor.B);
-                this.ObjectTreeView.SelectedBorderColor =
-                    Color.FromArgb(primColor.A, primColor.R, primColor.G, primColor.B);
-
-                const float defaultFontSize = 9f;
-                UpdateTreeviewIcons(ObjectTreeView.Font.Size / defaultFontSize);
-            }
-        }
-
-        static int Map01To255(double value)
-        {
-            // clamp just in case
-            if (value < 0) value = 0;
-            if (value > 1) value = 1;
-
-            return (int)Math.Round(value * 255);
-        }
+        searchTextBox.Focus();
     }
 
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
-        ApplyThemeColors();
-    }
-
-    private ImageList CloneImageList(ImageList original)
-    {
-        // Create a new ImageList with matching properties
-        ImageList copy = new ImageList
-        {
-            ImageSize = original.ImageSize,
-            ColorDepth = original.ColorDepth,
-            TransparentColor = original.TransparentColor
-        };
-
-        // Clone each image from the original list
-        for (int i = 0; i < original.Images.Count; i++)
-        {
-            var key = original.Images.Keys[i];
-            copy.Images.Add(key!, (Image)original.Images[i].Clone());
-        }
-
-        return copy;
-    }
-
-
-
-    private void UpdateTreeviewIcons(
-        float scale = 1.0f)
-    {
-        float baseImageSize = 16;
-
-        using (var g = ObjectTreeView.CreateGraphics())
-        {
-            baseImageSize *= (g.DpiX / 96f);
-        }
-        
-        var size = new Size((int)(baseImageSize * scale), (int)(baseImageSize * scale));
-
-        var keyedColors = GetCurrentColorMap();
-        Application app = Application.Current;
-        Color? defaultColor = null;
-        if (app.TryFindResource("Frb.Colors.Primary") is System.Windows.Media.Color dc)
-        {
-            defaultColor = Color.FromArgb(dc.A, dc.R, dc.G, dc.B);
-        }
-
-        ObjectTreeView.ImageList = BuildTintedImageList(unmodifiableImageList, size, keyedColors, defaultColor ?? Color.White);
-
-        // for some reason, after the .net upgrade, the indent doesn't auto-adjust to account
-        // for the size of the images on first load, so we just force it here every time, despite
-        // it playing nice with follow-up size changes.
-        ObjectTreeView.Indent = (int)baseImageSize;
-
-        ImageList BuildTintedImageList(
-            ImageList originalImageList,
-            Size newSize,
-            IDictionary<string, Color>? perKeyColors,
-            Color fallbackColor)
-        {
-            var outList = new ImageList
-            {
-                ImageSize = newSize,
-                ColorDepth = originalImageList.ColorDepth // preserve
-            };
-
-            foreach (var key in originalImageList.Images.Keys)
-            {
-                if (key == null) continue;
-
-                var src = originalImageList.Images[key]!;
-
-                // pick the color for this key (fallback if none specified)
-                var tint = (perKeyColors != null && perKeyColors.TryGetValue(key, out var c)) ? c : fallbackColor;
-
-                // resize + tint in one pass
-                var tinted = ResizeAndTint(src, newSize, tint);
-
-                // ImageList takes ownership of the Image; don't dispose tinted here
-                outList.Images.Add(key, tinted);
-            }
-
-            return outList;
-        }
-
-        static Bitmap ResizeAndTint(Image original, Size newSize, Color tint)
-        {
-            // Normalize multipliers: white(1,1,1) * (r,g,b) => tint
-            float r = tint.R / 255f;
-            float g = tint.G / 255f;
-            float b = tint.B / 255f;
-            float a = tint.A / 255f; // scales source alpha; use 1.0f to keep original alpha
-
-            var cm = new ColorMatrix(new float[][]
-            {
-            new float[] { r, 0, 0, 0, 0 },
-            new float[] { 0, g, 0, 0, 0 },
-            new float[] { 0, 0, b, 0, 0 },
-            new float[] { 0, 0, 0, a, 0 },
-            new float[] { 0, 0, 0, 0, 1 }
-            });
-
-            using var ia = new ImageAttributes();
-            ia.SetColorMatrix(cm, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
-
-            // 32bpp ARGB ensures we keep transparency nice and crisp
-            var dest = new Bitmap(newSize.Width, newSize.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-            using (var graphics = System.Drawing.Graphics.FromImage(dest))
-            {
-                graphics.CompositingQuality = CompositingQuality.HighQuality;
-                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-
-                var rect = new Rectangle(Point.Empty, newSize);
-                // Draw with the color matrix applied
-                graphics.DrawImage(original,
-                            destRect: rect,
-                            srcX: 0, srcY: 0, srcWidth: original.Width, srcHeight: original.Height,
-                            srcUnit: GraphicsUnit.Pixel,
-                            imageAttr: ia);
-            }
-
-            return dest;
-        }
-
-        static Dictionary<string, Color> GetCurrentColorMap()
-        {
-            Application app = Application.Current;
-
-            var manillaColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Manilla");
-            var greenColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Green");
-            var blueColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Blue");
-            var redColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Red");
-            var purpleColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Purple");
-
-            var manilla = System.Drawing.Color.FromArgb(manillaColor.A, manillaColor.R, manillaColor.G, manillaColor.B);
-            var green = System.Drawing.Color.FromArgb(greenColor.A, greenColor.R, greenColor.G, greenColor.B);
-            var blue = System.Drawing.Color.FromArgb(blueColor.A, blueColor.R, blueColor.G, blueColor.B);
-            var red = System.Drawing.Color.FromArgb(redColor.A, redColor.R, redColor.G, redColor.B);
-            var purple = System.Drawing.Color.FromArgb(purpleColor.A, purpleColor.R, purpleColor.G, purpleColor.B);
-
-            return new()
-            {
-                ["Folder.png"] = manilla,
-                ["Component.png"] = green,
-                ["Instance.png"] = blue,
-                ["Screen.png"] = red,
-                ["StandardElement.png"] = purple,
-                ["redExclamation.png"] = red,
-                ["state.png"] = blue,
-                ["behavior.png"] = manilla,
-            };
-        }
-    }
-
-    private void ObjectTreeView_PreviewKeyDown(object? sender, PreviewKeyDownEventArgs e)
-    {
-
+        _viewCreator.ApplyThemeColors();
     }
 
     private void ObjectTreeView_KeyPress(object? sender, KeyPressEventArgs e)
@@ -2184,12 +1832,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     #region Searching
 
-    private FlatSearchListBox CreateFlatSearchList()
-    {
-        var list = new FlatSearchListBox();
-        list.SelectSearchNode += HandleSelectedSearchNode;
-        return list;
-    }
 
 
     private void ReactToFilterTextChanged()
@@ -2323,161 +1965,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         FlatList.FlatList.Items.Add(vm);
     }
 
-    private System.Windows.Controls.TextBox CreateSearchBoxUi()
-    {
-        searchTextBox = new System.Windows.Controls.TextBox();
-        searchTextBox.SetValue(TextFieldAssist.HasClearButtonProperty, true);
-        searchTextBox.SetValue(HintAssist.HintProperty, "Search...");
-        searchTextBox.SetValue(HintAssist.IsFloatingProperty, false);
-        searchTextBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-        searchTextBox.TextChanged += (not, used) => FilterText = searchTextBox.Text;
-        searchTextBox.PreviewKeyDown += (sender, args) =>
-        {
-            bool isCtrlDown = WpfInput.Keyboard.IsKeyDown(WpfInput.Key.LeftCtrl) || WpfInput.Keyboard.IsKeyDown(WpfInput.Key.RightCtrl);
-
-            if (args.Key == WpfInput.Key.Escape)
-            {
-                searchTextBox.Text = null;
-                args.Handled = true;
-                ObjectTreeView.Focus();
-            }
-            else if (args.Key == WpfInput.Key.Back
-             && isCtrlDown)
-            {
-                searchTextBox.Text = null;
-                args.Handled = true;
-            }
-            else if (args.Key == WpfInput.Key.Down)
-            {
-                if(FlatList.FlatList.SelectedIndex < FlatList.FlatList.Items.Count -1)
-                {
-                    FlatList.FlatList.SelectedIndex++;
-                    BringSelectedIntoView();
-                }
-                args.Handled = true;
-            }
-            else if (args.Key == WpfInput.Key.Up)
-            {
-                if (FlatList.FlatList.SelectedIndex > 0)
-                {
-                    FlatList.FlatList.SelectedIndex--;
-                    BringSelectedIntoView();
-                }
-                args.Handled = true;
-            }
-            else if (args.Key == WpfInput.Key.Enter)
-            {
-                args.Handled = true;
-                ObjectTreeView.Focus();
-
-                var selectedItem = FlatList.FlatList.SelectedItem as SearchItemViewModel;
-                if(selectedItem != null)
-                {
-                    HandleSelectedSearchNode(selectedItem);
-
-                    searchTextBox.Text = null;
-                }
-            }
-        };
-
-        return searchTextBox;
-
-        void BringSelectedIntoView()
-        {
-            if (FlatList.FlatList.SelectedItem is { } selected)
-            {
-                FlatList.Dispatcher.BeginInvoke(() => FlatList.FlatList.ScrollIntoView(selected),
-                    DispatcherPriority.Loaded);
-            }
-        }
-    }
-
-    private System.Windows.Controls.StackPanel CreateCollapseButtonsPanel()
-    {
-        var panel = new System.Windows.Controls.StackPanel
-        {
-            Orientation = System.Windows.Controls.Orientation.Horizontal,
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
-            Margin = new Thickness(0, 0, 0, 4)
-        };
-
-        collapseAllButton = new System.Windows.Controls.Button
-        {
-            Content = new PackIcon
-            {
-                Kind = PackIconKind.UnfoldLessHorizontal,
-                Height = 14
-            },
-            Margin = new Thickness(0, 0, 4, 0),
-            Padding = new Thickness(8, 2, 8, 2),
-            ToolTip = "Collapse all nodes in the tree"
-        };
-        collapseAllButton.Click += (_, _) => CollapseAll();
-
-        collapseToElementButton = new System.Windows.Controls.Button
-        {
-            Content = new PackIcon
-            {
-                Kind = PackIconKind.FileTree,
-                Height = 14
-            },
-            Margin = new Thickness(0, 0, 4, 0),
-            Padding = new Thickness(8, 2, 8, 2),
-            ToolTip = "Collapse to element level (preserves folder expansion state)"
-        };
-        collapseToElementButton.Click += (_, _) => CollapseToElementLevel();
-
-        panel.Children.Add(collapseAllButton);
-        panel.Children.Add(collapseToElementButton);
-
-        return panel;
-    }
-
-    private System.Windows.Controls.CheckBox CreateSearchCheckBoxUi()
-    {
-        deepSearchCheckBox = new System.Windows.Controls.CheckBox();
-        deepSearchCheckBox.IsChecked = false;
-        deepSearchCheckBox.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
-        deepSearchCheckBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
-        deepSearchCheckBox.Content = "Include Variables";
-        deepSearchCheckBox.Checked += (_, _) => ReactToFilterTextChanged();
-
-        return deepSearchCheckBox;
-    }
-
-    private void CollapseAll()
-    {
-        ObjectTreeView.CollapseAll();
-    }
-
-    private void CollapseToElementLevel()
-    {
-        // Recursively collapse only element nodes (nodes with Tag != null)
-        // This preserves the expansion state of all folder nodes
-        CollapseElementNodesRecursively(ObjectTreeView.Nodes);
-    }
-
-    private void CollapseElementNodesRecursively(TreeNodeCollection nodes)
-    {
-        foreach (TreeNode node in nodes)
-        {
-            // If this node has a Tag, it's an element (Screen, Component, Behavior, Instance)
-            // so we should collapse it
-            if (node.Tag != null)
-            {
-                node.Collapse();
-            }
-            // If it's a folder node (top-level or subfolder), leave it alone but recurse into its children
-            else if ((node.IsTopElementContainerTreeNode() ||
-                      node.IsScreensFolderTreeNode() ||
-                      node.IsComponentsFolderTreeNode()) &&
-                     node.Nodes.Count > 0)
-            {
-                CollapseElementNodesRecursively(node.Nodes);
-            }
-        }
-    }
-
     private void HandleSelectedSearchNode(SearchItemViewModel vm)
     {
         var backingObject = vm?.BackingObject;
@@ -2543,9 +2030,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     void IRecipient<ApplicationStartupMessage>.Receive(ApplicationStartupMessage message)
     {
-        ObjectTreeView.BackColor = Application.Current.TryFindResource("Frb.Colors.Surface01") is System.Windows.Media.Color c
-            ? Color.FromArgb(c.A, c.R, c.G, c.B)
-            : Color.Transparent;
+        _viewCreator.ApplyThemeColors();
     }
 }
 
