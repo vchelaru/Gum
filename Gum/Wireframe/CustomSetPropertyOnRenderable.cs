@@ -28,7 +28,10 @@ using System.Security.Policy;
 using Gum.Managers;
 using Microsoft.Xna.Framework.Graphics;
 using Gum.Converters;
+
+#if !FRB
 using MonoGameGum.GueDeriving;
+#endif
 
 #if GUM
 using Gum.Services;
@@ -433,6 +436,7 @@ public class CustomSetPropertyOnRenderable
             graphicalUiElement.UpdateLayout();
             handled = true;
         }
+#if !FRB
         else if(propertyName == nameof(SpriteRuntime.RenderTargetTextureSource))
         {
             var runtime = graphicalUiElement as SpriteRuntime;
@@ -454,7 +458,7 @@ public class CustomSetPropertyOnRenderable
                 handled = true;
             }
         }
-
+#endif
         return handled;
     }
 
