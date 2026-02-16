@@ -82,6 +82,7 @@ public class PolygonPointNodesVisual : EditorVisualBase
             var rectangle = new SolidRectangle();
             rectangle.Width = NodeDisplayWidth;
             rectangle.Height = NodeDisplayWidth;
+            rectangle.Visible = Visible; // Inherit visibility from parent visual
             ShapeManager.Self.Add(rectangle, _layer);
             _pointNodes.Add(rectangle);
         }
