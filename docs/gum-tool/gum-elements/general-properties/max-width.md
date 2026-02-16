@@ -17,3 +17,7 @@ Notice that the `Width` variable can still be set to a value larger than `Max Wi
 `Max Width` can also be used if `Width Units` is set to values other than `Absolute`. For example, `Max Width` can be used to limit the width of a ColoredRectangle when `Width Units` is `Relative to Parent`.
 
 <figure><img src="../../../.gitbook/assets/13_06 45 03.gif" alt=""><figcaption><p>ColoredRectangle's width limited by its <code>Max Width</code> of <code>100</code></p></figcaption></figure>
+
+## Max Width and Relative to Children
+
+Note that Max Width can prevent a container from growing according to its children. For more information, see the [Relative to Children Width Units page](width-units.md#relative-to-children).

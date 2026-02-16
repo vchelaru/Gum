@@ -22,7 +22,7 @@ Similarly, column width in a Top to bottom Stack is determined by the largest ch
 
 ## Wraps Children and Width Units
 
-Wrapping of children can only be performed if the parent's size does not depend on its children. If the parent's size does depend on its children, then the parent will expand to fit is children so wrapping will not occur.
+Wrapping of children can only be performed if the parent's size does not depend on its children (see more info below). If the parent's size does depend on its children, then the parent will expand to fit is children so wrapping will not occur.
 
 If a parent container's Width Units is set to Relative to Children, then it adjusts in response to children size and positioning, so wrapping will not occur.
 
@@ -38,8 +38,22 @@ A parent can use the following `Width Units` and `Height Units` with children wr
 
 A parent does not wrap its children if it uses:
 
-* ❌Relative to Children
+* ❌Relative to Children (see below)
 
 Note that Relative to Children can be used on the non-stacking axis. For example, if a parent uses `Left to Right Stack`, then it can still have its `Height Units` set to `Relative to Children`.
 
 <figure><img src="../../../.gitbook/assets/18_05 58 33.gif" alt=""><figcaption><p>Left to Right Stack with Height Units set to Relative to Children</p></figcaption></figure>
+
+## Relative to Children and Max Width and Max Height
+
+If a container has a non-null Max Width, then it will expand according to its children until it reaches its max width. Once it reaches a max width, it wraps its children.
+
+The following animation shows a container which has:
+
+* Width Units of Relative to Children
+* Max Width of 400
+* Children Layout of Left to Right Stack
+* Wraps Children set to True
+
+<figure><img src="../../../.gitbook/assets/16_09 21 11 (1).gif" alt=""><figcaption><p>Wraps Children allowed when max width is set</p></figcaption></figure>
+

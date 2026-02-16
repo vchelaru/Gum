@@ -58,7 +58,7 @@ A non-zero `Width` when using `Relative to Children` can be used to add addition
 
 `Relative to Children` results in effective width dynamically adjusting in response to changes on a container's children. The following animation shows a container with `Children Layout` of `Left to Right Stack`. Adding additional children expands the container automatically:
 
-![Adding children expands the effective width of the parent if the children are positioned in a horizontal stack.](<../../../.gitbook/assets/LeftToRightStackSizeChildren (1).gif>)
+![Adding children expands the effective width of the parent if the children are positioned in a horizontal stack.](<../../../.gitbook/assets/16_08 45 50.gif>)
 
 ### Ignored Width Values
 
