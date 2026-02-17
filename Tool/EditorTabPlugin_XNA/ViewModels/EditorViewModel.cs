@@ -233,7 +233,10 @@ public partial class EditorViewModel : ViewModel
         {
             save.CustomCanvasSizes = DefaultCanvasSizes.ToList();
 
-            _fileCommands.TryAutoSaveProject();
+            if(!string.IsNullOrEmpty(save.FullFileName))
+            {
+                _fileCommands.TryAutoSaveProject();
+            }
         }
 
         this.CustomCanvasSizes = save.CustomCanvasSizes.ToArray();
