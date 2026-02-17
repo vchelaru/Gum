@@ -25,13 +25,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum.Services;
 using TextureCoordinateSelectionPlugin.Logic;
 using TextureCoordinateSelectionPlugin.ViewModels;
 
 namespace TextureCoordinateSelectionPlugin;
 
 [Export(typeof(PluginBase))]
-public class MainTextureCoordinatePlugin : PluginBase
+public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSizeChangedMessage>
 {
     #region Fields/Properties
 
@@ -64,6 +66,8 @@ public class MainTextureCoordinatePlugin : PluginBase
             Locator.GetRequiredService<IFileCommands>(),
             Locator.GetRequiredService<IFileWatchManager>(),
             Locator.GetRequiredService<IGuiCommands>());
+
+        Locator.GetRequiredService<IMessenger>().RegisterAll(this);
 
         _controlLogic = new ControlLogic(
             Locator.GetRequiredService<ISelectedState>(),
@@ -101,6 +105,11 @@ public class MainTextureCoordinatePlugin : PluginBase
     private void HandleTabShown()
     {
         _controlLogic.CenterCameraOnSelection();
+    }
+
+    void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
+    {
+        _controlLogic.UpdateButtonSizes(message.Size);
     }
 
     private void AssignEvents()

@@ -142,6 +142,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly ITabManager _tabManager;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
+    private readonly ElementTreeViewCreator _viewCreator;
 
     public const int TransparentImageIndex = 0;
     public const int FolderImageIndex = 1;
@@ -155,7 +156,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public const int DerivedInstanceImageIndex = 9;
 
     static ElementTreeViewManager mSelf;
-    private ElementTreeViewCreator _viewCreator;
 
     // Forwarding properties for UI controls owned by _viewCreator
     internal MultiSelectTreeView ObjectTreeView => _viewCreator.ObjectTreeView;
@@ -170,6 +170,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         get => _viewCreator.UnmodifiableImageList;
         set => _viewCreator.UnmodifiableImageList = value;
     }
+
+    internal void UpdateCollapseButtonSizes(double baseFontSize) =>
+        _viewCreator.UpdateCollapseButtonSizes(baseFontSize);
 
     TreeNode mScreensTreeNode;
     TreeNode mComponentsTreeNode;
@@ -324,6 +327,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _collapseToggleService = new CollapseToggleService();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
+        _dragDropManager = Locator.GetRequiredService<DragDropManager>();
+        _viewCreator = new ElementTreeViewCreator();
 
         Cursor GetAddCursor()
         {
@@ -554,8 +559,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     public void Initialize()
     {
-        _dragDropManager = Locator.GetRequiredService<DragDropManager>();
-        _viewCreator = new ElementTreeViewCreator();
 
         var grid = _viewCreator.CreateView(
             onAfterClickSelect: this.ObjectTreeView_AfterClickSelect,

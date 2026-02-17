@@ -19,6 +19,7 @@
         <StackPanel Orientation="Horizontal">
 
             <Button
+                x:Name="MinusButton"
                 MinWidth="24"
                 materialDesign:RippleAssist.IsDisabled="True"
                 Click="HandleMinusClicked"
@@ -26,6 +27,7 @@
                 Style="{StaticResource MaterialDesignToolForegroundButton}" />
             <ComboBox ItemsSource="{Binding AvailableZoomLevels}" SelectedItem="{Binding SelectedZoomLevel}" />
             <Button
+                x:Name="PlusButton"
                 MinWidth="24"
                 materialDesign:RippleAssist.IsDisabled="True"
                 Click="HandlePlusClicked"

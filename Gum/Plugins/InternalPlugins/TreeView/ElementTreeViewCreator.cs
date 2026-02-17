@@ -537,6 +537,7 @@ internal class ElementTreeViewCreator
             Content = new PackIcon
             {
                 Kind = PackIconKind.UnfoldLessHorizontal,
+                Width = 14,
                 Height = 14
             },
             Margin = new Thickness(0, 0, 4, 0),
@@ -552,6 +553,7 @@ internal class ElementTreeViewCreator
             Content = new PackIcon
             {
                 Kind = PackIconKind.FileTree,
+                Width = 14,
                 Height = 14
             },
             Margin = new Thickness(0, 0, 4, 0),
@@ -566,6 +568,27 @@ internal class ElementTreeViewCreator
         panel.Children.Add(CollapseToElementButton);
 
         return panel;
+    }
+
+    private const double DefaultBaseFontSize = 12.0;
+    private const double DefaultIconHeight = 14.0;
+
+    internal void UpdateCollapseButtonSizes(double baseFontSize)
+    {
+        double scale = baseFontSize / DefaultBaseFontSize;
+        double iconHeight = DefaultIconHeight * scale;
+
+        if (CollapseAllButton?.Content is PackIcon collapseAllIcon)
+        {
+            collapseAllIcon.Width = iconHeight;
+            collapseAllIcon.Height = iconHeight;
+        }
+
+        if (CollapseToElementButton?.Content is PackIcon collapseToElementIcon)
+        {
+            collapseToElementIcon.Width = iconHeight;
+            collapseToElementIcon.Height = iconHeight;
+        }
     }
 
     private System.Windows.Controls.CheckBox CreateSearchCheckBoxUi(Action onDeepSearchChecked)

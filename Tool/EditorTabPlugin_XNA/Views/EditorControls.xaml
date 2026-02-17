@@ -7,13 +7,13 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" >
     <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
-        <Button Content="-" Width="20" Command="{Binding ZoomOutCommand}" Style="{StaticResource MaterialDesignToolForegroundButton}" materialDesign:RippleAssist.IsDisabled="True"/>
+        <Button x:Name="MinusButton" Content="-" Width="20" Command="{Binding ZoomOutCommand}" Style="{StaticResource MaterialDesignToolForegroundButton}" materialDesign:RippleAssist.IsDisabled="True"/>
         <ComboBox Grid.Column="1" Width="100"
                   SelectedItem="{Binding PercentZoomLevel}"
                   ItemsSource="{Binding ZoomLevels}"
                   DisplayMemberPath="ZoomDisplay"
                   />
-        <Button Grid.Column="2" Width="20" Content="+" Command="{Binding ZoomInCommand}" Style="{StaticResource MaterialDesignToolForegroundButton}" materialDesign:RippleAssist.IsDisabled="True"/>
+        <Button x:Name="PlusButton" Grid.Column="2" Width="20" Content="+" Command="{Binding ZoomInCommand}" Style="{StaticResource MaterialDesignToolForegroundButton}" materialDesign:RippleAssist.IsDisabled="True"/>
 
         <ComboBox
             Margin="10,0,0,0"
