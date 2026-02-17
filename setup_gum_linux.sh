@@ -12,7 +12,7 @@ else
     GUM_WINE_PREFIX_PATH="$1"
 fi
 
-INSTALL_LOG_FILE="/tmp/gum_install.log"
+INSTALL_LOG_FILE="/tmp/gum_install_$(date +%Y%m%d_%H%M%S).log"
 
 write_log_section_header() {
     echo "#############################################" >> "$INSTALL_LOG_FILE" 2>&1
@@ -270,10 +270,8 @@ echo " - Fonts installed"
 ### to appear.  They can take a few minutes to finish, please be patient
 ################################################################################
 
-echo "Installing .NET 8 using winetricks"
-echo " - Two installer dialogs will appear, follow the steps for both to install"
-echo " - They may take a few minutes to install, please be patient"
-run_winetricks dotnetdesktop8
+echo "Installing .NET 8 using winetricks (this may take a few minutes)..."
+run_winetricks -q dotnetdesktop8
 
 ################################################################################
 ### Download the gum.zip file from the FRB site into the Program Files directory
