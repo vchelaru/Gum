@@ -309,21 +309,12 @@ rm -f "$GUM_ZIP_FILE" \
 ################################################################################
 echo -e "\nChecking for Vulkan support..."
 if check_vulkan_support; then
-    echo "Vulkan support detected! (via $VULKAN_DETECTION_METHOD)"
-    read -p "Do you wish to install DXVK for better graphics performance? (Y/n): " choice
-    case "$choice" in
-        ""|y|Y )
-            echo "Installing DXVK via winetricks..."
-            run_winetricks dxvk
-            echo " - DXVK installed successfully."
-            ;;
-        n|N ) echo "Skipping DXVK installation.";;
-          * ) echo "Invalid option. Skipping DXVK installation.";;
-    esac
+    echo "Vulkan detected (via $VULKAN_DETECTION_METHOD). Installing DXVK..."
+    run_winetricks dxvk
+    echo " - DXVK installed. To revert: ~/bin/gum d3d"
 else
-    echo "Vulkan support not detected. Skipping DXVK installation."
-    echo "TIP: If you install Vulkan drivers later, you can install DXVK manually with:"
-    echo "     WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" winetricks dxvk"
+    echo "Vulkan not detected, skipping DXVK."
+    echo "WARNING: If Gum crashes, install Vulkan drivers and run: ~/bin/gum dxvk"
 fi
 
 ################################################################################
@@ -390,8 +381,25 @@ if [ "\$1" = "upgrade" ]; then
     exit 0
 fi
 
+# Switch to DXVK (Vulkan-based Direct3D)
+if [ "\$1" = "dxvk" ]; then
+    echo "Switching to DXVK..."
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks dxvk
+    echo "Done. To revert: ~/bin/gum d3d"
+    exit 0
+fi
+
+# Revert to WineD3D (Wine's built-in Direct3D)
+if [ "\$1" = "d3d" ]; then
+    echo "Switching to WineD3D..."
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks d3d11=builtin d3d10core=builtin d3d9=builtin dxgi=builtin
+    echo "Done. To switch back: ~/bin/gum dxvk"
+    exit 0
+fi
+
 # Unknown argument
 echo "Unknown argument: \$1"
+echo "Usage: gum [upgrade|dxvk|d3d]"
 exit 1
 EOF
 
