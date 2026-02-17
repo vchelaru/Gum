@@ -314,6 +314,62 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
         }
     }
 
+    bool canChangeX = true;
+    public bool CanChangeX
+    {
+        get => canChangeX;
+        set
+        {
+            canChangeX = value;
+            foreach (var item in mRectangleSelectors)
+            {
+                item.CanChangeX = canChangeX;
+            }
+        }
+    }
+
+    bool canChangeY = true;
+    public bool CanChangeY
+    {
+        get => canChangeY;
+        set
+        {
+            canChangeY = value;
+            foreach (var item in mRectangleSelectors)
+            {
+                item.CanChangeY = canChangeY;
+            }
+        }
+    }
+
+    bool canChangeWidth = true;
+    public bool CanChangeWidth
+    {
+        get => canChangeWidth;
+        set
+        {
+            canChangeWidth = value;
+            foreach (var item in mRectangleSelectors)
+            {
+                item.CanChangeWidth = canChangeWidth;
+            }
+        }
+    }
+
+    bool canChangeHeight = true;
+    public bool CanChangeHeight
+    {
+        get => canChangeHeight;
+        set
+        {
+            canChangeHeight = value;
+            foreach (var item in mRectangleSelectors)
+            {
+                item.CanChangeHeight = canChangeHeight;
+            }
+        }
+    }
+
     public bool ShowFullAlpha
     {
         get
@@ -453,6 +509,10 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
         newSelector.EndRegionChanged += EndRegionChangedInternal;
         newSelector.SnappingGridSize = snappingGridSize;
         newSelector.RoundToUnitCoordinates = mRoundRectangleSelectorToUnit;
+        newSelector.CanChangeX = canChangeX;
+        newSelector.CanChangeY = canChangeY;
+        newSelector.CanChangeWidth = canChangeWidth;
+        newSelector.CanChangeHeight = canChangeHeight;
 
         mRectangleSelectors.Add(newSelector);
 
