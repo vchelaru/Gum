@@ -801,7 +801,7 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
                     if (mHandles[i].HasCursorOver(x, y))
                     {
                         var side = (ResizeSide)i;
-                        if (IsSideAllowed(side))
+                        if (IsHandleVisible(side))
                         {
                             toReturn = side;
                         }

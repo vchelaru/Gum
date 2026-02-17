@@ -156,6 +156,16 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
             }
         }
 
+        // Check for exposed texture coordinate variables on the selected instance's type
+        if (!hasTextureCoordinates && _selectedState.SelectedInstance != null && element != null)
+        {
+            hasTextureCoordinates = RefreshExposedTextureCoordinateInfo(element);
+        }
+        else
+        {
+            ResetExposedTextureCoordinateInfo();
+        }
+
         if(hasTextureCoordinates)
         {
             textureCoordinatePluginTab.Show();
@@ -165,6 +175,98 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
         {
             textureCoordinatePluginTab.Hide();
         }
+    }
+
+    private bool RefreshExposedTextureCoordinateInfo(ElementSave element)
+    {
+        _controlLogic.IsExposedMode = false;
+        _controlLogic.ExposedSourceObjectName = null;
+        _controlLogic.ExposedLeftName = null;
+        _controlLogic.ExposedTopName = null;
+        _controlLogic.ExposedWidthName = null;
+        _controlLogic.ExposedHeightName = null;
+
+        var state = element.DefaultState;
+        string? sourceObject = null;
+
+        foreach (var variable in state.Variables)
+        {
+            if (string.IsNullOrEmpty(variable.ExposedAsName)) continue;
+            if (string.IsNullOrEmpty(variable.SourceObject)) continue;
+
+            var rootName = variable.GetRootName();
+
+            bool isTextureCoordinate = rootName == "TextureLeft" || rootName == "TextureTop" ||
+                                       rootName == "TextureWidth" || rootName == "TextureHeight";
+
+            if (!isTextureCoordinate) continue;
+
+            // If we haven't determined the source object yet, validate it's a Sprite or NineSlice
+            if (sourceObject == null)
+            {
+                var instance = element.Instances.FirstOrDefault(i => i.Name == variable.SourceObject);
+                if (instance != null)
+                {
+                    var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                    bool isSpriteOrNineSlice = false;
+                    if (instanceElement is StandardElementSave ses)
+                    {
+                        isSpriteOrNineSlice = ses.Name == "Sprite" || ses.Name == "NineSlice";
+                    }
+                    else if (instanceElement != null)
+                    {
+                        var innerBaseElements = ObjectFinder.Self.GetBaseElements(instanceElement);
+                        isSpriteOrNineSlice = innerBaseElements.Any(b =>
+                            b is StandardElementSave bs && (bs.Name == "Sprite" || bs.Name == "NineSlice"));
+                    }
+
+                    if (isSpriteOrNineSlice)
+                    {
+                        sourceObject = variable.SourceObject;
+                    }
+                }
+            }
+
+            if (variable.SourceObject == sourceObject)
+            {
+                switch (rootName)
+                {
+                    case "TextureLeft":
+                        _controlLogic.ExposedLeftName = variable.ExposedAsName;
+                        break;
+                    case "TextureTop":
+                        _controlLogic.ExposedTopName = variable.ExposedAsName;
+                        break;
+                    case "TextureWidth":
+                        _controlLogic.ExposedWidthName = variable.ExposedAsName;
+                        break;
+                    case "TextureHeight":
+                        _controlLogic.ExposedHeightName = variable.ExposedAsName;
+                        break;
+                }
+            }
+        }
+
+        bool hasAny = _controlLogic.ExposedLeftName != null || _controlLogic.ExposedTopName != null ||
+                      _controlLogic.ExposedWidthName != null || _controlLogic.ExposedHeightName != null;
+
+        if (hasAny)
+        {
+            _controlLogic.IsExposedMode = true;
+            _controlLogic.ExposedSourceObjectName = sourceObject;
+        }
+
+        return hasAny;
+    }
+
+    private void ResetExposedTextureCoordinateInfo()
+    {
+        _controlLogic.IsExposedMode = false;
+        _controlLogic.ExposedSourceObjectName = null;
+        _controlLogic.ExposedLeftName = null;
+        _controlLogic.ExposedTopName = null;
+        _controlLogic.ExposedWidthName = null;
+        _controlLogic.ExposedHeightName = null;
     }
 
     private void HandleTreeNodeSelected(TreeNode? treeNode)
@@ -229,6 +331,41 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
                 if (isUsingSameTextures)
                 {
                     textureToAssign = nineSlice.CenterTexture;
+                }
+            }
+
+            // For exposed mode, find the inner child's texture
+            if (textureToAssign == null && _controlLogic.IsExposedMode && _controlLogic.ExposedSourceObjectName != null)
+            {
+                var innerChild = graphicalUiElement.Children
+                    .FirstOrDefault(c => c.Name == _controlLogic.ExposedSourceObjectName);
+
+                if (innerChild is GraphicalUiElement innerGue)
+                {
+                    var innerRenderable = innerGue.RenderableComponent;
+                    if (innerRenderable is Sprite innerSprite)
+                    {
+                        textureToAssign = innerSprite.Texture;
+                    }
+                    else if (innerRenderable is NineSlice innerNineSlice)
+                    {
+                        isNineslice = true;
+                        customFrameTextureCoordinateWidth = innerNineSlice.CustomFrameTextureCoordinateWidth;
+                        var isUsingSameTextures =
+                            innerNineSlice.TopLeftTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.TopTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.TopRightTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.LeftTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.RightTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.BottomLeftTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.BottomTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.BottomRightTexture == innerNineSlice.CenterTexture;
+
+                        if (isUsingSameTextures)
+                        {
+                            textureToAssign = innerNineSlice.CenterTexture;
+                        }
+                    }
                 }
             }
         }
