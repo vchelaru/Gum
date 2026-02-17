@@ -6,6 +6,8 @@
 
 set -e
 
+SCRIPT_VERSION="2026.02.16"
+
 if [ -z "$1" ]; then
     GUM_WINE_PREFIX_PATH="$HOME/.wine_gum_dotnet8"
 else
@@ -54,8 +56,7 @@ check_vulkan_support() {
 echo "" > $INSTALL_LOG_FILE # clear the log file
 write_log_section_header "Starting installation process..."
 
-echo "This is an experimental script."
-echo "Script last updated on the 23rd of November 2025!"
+echo "This is an experimental script. (v$SCRIPT_VERSION)"
 echo "This will set up a new Wine prefix for gum in $GUM_WINE_PREFIX_PATH"
 echo "Install logs will be written to $INSTALL_LOG_FILE"
 
@@ -379,6 +380,12 @@ if [ "\$1" = "upgrade" ]; then
     exit 0
 fi
 
+# Print the wine prefix path
+if [ "\$1" = "prefix" ]; then
+    echo "$GUM_WINE_PREFIX_PATH"
+    exit 0
+fi
+
 # Switch to DXVK (Vulkan-based Direct3D)
 if [ "\$1" = "dxvk" ]; then
     echo "Switching to DXVK..."
@@ -397,7 +404,7 @@ fi
 
 # Unknown argument
 echo "Unknown argument: \$1"
-echo "Usage: gum [upgrade|dxvk|d3d]"
+echo "Usage: gum [upgrade|dxvk|d3d|prefix]"
 exit 1
 EOF
 

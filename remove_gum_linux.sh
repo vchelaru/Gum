@@ -6,11 +6,19 @@
 
 set -e
 
-GUM_WINE_PREFIX_PATH="${1:-$HOME/.wine_gum_dotnet8/}"
+SCRIPT_VERSION="2026.02.16"
 
+# Determine the wine prefix: CLI arg > gum launcher > default
+GUM_WINE_PREFIX_PATH="$HOME/.wine_gum_dotnet8"
+if [ -n "$1" ]; then
+    GUM_WINE_PREFIX_PATH="$1"
+elif [ -f ~/bin/gum ]; then
+    GUM_WINE_PREFIX_PATH=$(~/bin/gum prefix 2>/dev/null)
+fi
+
+echo "GUM removal script (v$SCRIPT_VERSION)"
 echo "This will attempt to remove the automated install of wine, winetricks, and GUM on Linux systems."
 echo "If you did not install GUM using the setup_gum_linux.sh script, please do not run this script !!!!"
-echo "Script last updated on the 29th of December 2025!"
 echo "Using WINE PREFIX: $GUM_WINE_PREFIX_PATH"
 echo ""
 
@@ -22,7 +30,14 @@ case "$choice" in
 esac
 
 
-rm -rf $GUM_WINE_PREFIX_PATH && echo "Removed wine folder $GUM_WINE_PREFIX_PATH"
+rm -rf "$GUM_WINE_PREFIX_PATH" && echo "Removed wine folder $GUM_WINE_PREFIX_PATH"
+
+################################################################################
+### Remove the gum launcher script
+################################################################################
+if [ -f ~/bin/gum ]; then
+    rm -f ~/bin/gum && echo "Removed ~/bin/gum launcher script"
+fi
 
 # Uninstall depending on the OS
 DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release 2>/dev/null || echo "${OSTYPE//[0-9\.]/}" 2>/dev/null || name ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
@@ -32,9 +47,10 @@ VERSION=$(( lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release 2
 case "$DISTRO" in
     ubuntu|linuxmint)
 
-        sudo apt remove --purge winetricks || echo "ERROR: Failed to uninstall winetricks"
-        sudo apt remove --purge winehq-* wine-* || echo "ERROR: Failed to uninstall wine"
-        sudo rm /etc/apt/keyrings/winehq-archive.key
+        sudo apt remove --purge winetricks -y || echo "ERROR: Failed to uninstall winetricks"
+        sudo apt remove --purge winehq-* wine-* -y || echo "ERROR: Failed to uninstall wine"
+        sudo rm -f /etc/apt/keyrings/winehq-archive.key 2>/dev/null || true
+        sudo rm -f /etc/apt/sources.list.d/winehq-*.sources 2>/dev/null || true
 
         ;;
 
@@ -59,6 +75,22 @@ case "$DISTRO" in
         ;;
 esac
 
+
+################################################################################
+### Clean up PATH entries added by setup script (safe: only removes exact lines)
+################################################################################
+if [ -f ~/.bashrc ] && grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bashrc 2>/dev/null; then
+    sed -i '\|export PATH="$HOME/bin:$PATH"|d' ~/.bashrc
+    echo "Removed PATH entry from ~/.bashrc"
+fi
+if [ -f ~/.zshrc ] && grep -q 'export PATH="$HOME/bin:$PATH"' ~/.zshrc 2>/dev/null; then
+    sed -i '\|export PATH="$HOME/bin:$PATH"|d' ~/.zshrc
+    echo "Removed PATH entry from ~/.zshrc"
+fi
+if [ -f ~/.config/fish/config.fish ] && grep -q 'set -x PATH $HOME/bin $PATH' ~/.config/fish/config.fish 2>/dev/null; then
+    sed -i '\|set -x PATH $HOME/bin $PATH|d' ~/.config/fish/config.fish
+    echo "Removed PATH entry from config.fish"
+fi
 
 ################################################################################
 ### Finished
