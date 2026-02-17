@@ -130,6 +130,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
+    private EditorControls _editorControls;
     private int _defaultWireframeEditControlHeight;
 
     System.Windows.Forms.Panel gumEditorPanel;
@@ -506,6 +507,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     {
         _wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out var fontSize);
         _wireframeContextMenuStrip.Font = new Font("Segoe UI", fontSize);
+
+        _editorControls?.UpdateButtonSizes(message.Size);
     }
 
     private void HandleVariableSetLate(ElementSave? element, InstanceSave instance, string unqualifiedName, object oldValue)
@@ -1003,9 +1006,9 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         wpfGrid.RowDefinitions.Add(new () { Height = GridLength.Auto});
         wpfGrid.RowDefinitions.Add(new () { Height = new (1, GridUnitType.Star) });
 
-        EditorControls editorControls = new ();
-        wpfGrid.Children.Add(editorControls);
-        Grid.SetRow(editorControls, 0);
+        _editorControls = new EditorControls();
+        wpfGrid.Children.Add(_editorControls);
+        Grid.SetRow(_editorControls, 0);
 
         WindowsFormsHost host = new WindowsFormsHost();
         host.Child = gumEditorPanel;

@@ -19,7 +19,7 @@ using Gum.Services;
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
 [Export(typeof(PluginBase))]
-internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardownMessage>
+internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>
 {
     private readonly ISelectedState _selectedState;
     private readonly ElementTreeViewManager _elementTreeViewManager;
@@ -195,6 +195,11 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     void IRecipient<ApplicationTeardownMessage>.Receive(ApplicationTeardownMessage message)
     {
         message.OnTearDown(SaveTreeViewState);
+    }
+
+    void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
+    {
+        _elementTreeViewManager.UpdateCollapseButtonSizes(message.Size);
     }
 
     private void SaveTreeViewState()
