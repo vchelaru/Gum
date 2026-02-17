@@ -41,54 +41,54 @@
         <Button
           Click="TopLeftButton_Click"
           Content="{wpf:FluentIcon Icon=ArrowUpLeft}"
-          ToolTip="Top Left" />
+          ToolTip="Anchor Top Left" />
 
         <Button
           Grid.Column="1"
           Click="TopButton_Click"
           Content="{wpf:FluentIcon Icon=ArrowUp}"
-          ToolTip="Top Middle" />
+          ToolTip="Anchor Top" />
         <Button
           Grid.Column="2"
           Click="TopRightButton_Click"
           Content="{wpf:FluentIcon Icon=ArrowUpRight}"
-          ToolTip="Top Right" />
+          ToolTip="Anchor Top Right" />
         <Button
           Grid.Row="1"
           Grid.Column="0"
           Click="MiddleLeftButton_Click"
           Content="{wpf:FluentIcon Icon=ArrowLeft}"
-          ToolTip="Middle Left" />
+          ToolTip="Anchor Left" />
         <Button
           Grid.Row="1"
           Grid.Column="1"
           Click="MiddleMiddleButton_Click"
           Content="{wpf:FluentIcon Icon=Stop}"
-          ToolTip="Middle" />
+          ToolTip="Anchor Center" />
         <Button
           Grid.Row="1"
           Grid.Column="2"
           Click="MiddleRightButton_Click"
           Content="{wpf:FluentIcon Icon=ArrowRight}"
-          ToolTip="Middle Right" />
+          ToolTip="Anchor Right" />
         <Button
           Grid.Row="2"
           Grid.Column="0"
           Click="BottomLeftButton_Click"
           Content="{wpf:FluentIcon Icon=ArrowDownLeft}"
-          ToolTip="Bottom Left" />
+          ToolTip="Anchor Bottom Left" />
         <Button
           Grid.Row="2"
           Grid.Column="1"
           Click="BottomMiddleButton_Click"
           Content="{wpf:FluentIcon Icon=ArrowDown}"
-          ToolTip="Bottom Middle" />
+          ToolTip="Anchor Bottom" />
         <Button
           Grid.Row="2"
           Grid.Column="2"
           Click="BottomRightButton_Click"
           Content="{wpf:FluentIcon Icon=ArrowDownRight}"
-          ToolTip="Bottom Right" />
+          ToolTip="Anchor Bottom Right" />
 
       </Grid>
 
