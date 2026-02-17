@@ -959,6 +959,14 @@ public class SelectionManager : ISelectionManager
             if (WireframeEditor?.IsAnyHandlerActive == true && cursor.PrimaryClick)
             {
                 handlerProcessedRelease = true;
+
+                // Even when a handler owns the release, clean up the rectangle
+                // selector in case it was partially started before the handler
+                // took over.
+                if (_rectangleSelector?.IsActive == true)
+                {
+                    _rectangleSelector.HandleRelease();
+                }
             }
 
             // PHASE 1: HANDLERS - Let active handlers continue/release
@@ -974,6 +982,17 @@ public class SelectionManager : ISelectionManager
 
                 // PHASE 4: EXECUTE - Additional selection logic if no handler claimed it
                 ExecuteInputDecision(decision, inputContext, cursor, worldX, worldY);
+
+                // PHASE 5: Always give rectangle selector a chance to clean up on release.
+                // The decision logic may route to NormalClickSelection (e.g., when the
+                // cursor ends over an instance body), but the rectangle selector may still
+                // be active from the initial push. We must release it so the visual clears.
+                if (cursor.PrimaryClick
+                    && decision != InputDecision.RectangleSelection
+                    && _rectangleSelector?.IsActive == true)
+                {
+                    _rectangleSelector.HandleRelease();
+                }
             }
         }
     }
