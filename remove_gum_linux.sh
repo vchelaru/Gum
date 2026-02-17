@@ -4,16 +4,17 @@
 ### Check if wine-stable is installed
 ################################################################################
 
-set -e
-
 SCRIPT_VERSION="2026.02.16"
 
-# Determine the wine prefix: CLI arg > gum launcher > default
+# Determine the wine prefix: CLI arg > read from gum launcher > default
 GUM_WINE_PREFIX_PATH="$HOME/.wine_gum_dotnet8"
 if [ -n "$1" ]; then
     GUM_WINE_PREFIX_PATH="$1"
 elif [ -f ~/bin/gum ]; then
-    GUM_WINE_PREFIX_PATH=$(~/bin/gum prefix 2>/dev/null)
+    FOUND=$(grep 'WINEPREFIX=' ~/bin/gum | head -1 | sed 's/.*WINEPREFIX="//' | sed 's/".*//')
+    if [ -n "$FOUND" ]; then
+        GUM_WINE_PREFIX_PATH="$FOUND"
+    fi
 fi
 
 echo "GUM removal script (v$SCRIPT_VERSION)"
@@ -30,13 +31,21 @@ case "$choice" in
 esac
 
 
-rm -rf "$GUM_WINE_PREFIX_PATH" && echo "Removed wine folder $GUM_WINE_PREFIX_PATH"
+if ! rm -rf "$GUM_WINE_PREFIX_PATH"; then
+    echo "ERROR: Failed to remove wine folder $GUM_WINE_PREFIX_PATH"
+    exit 1
+fi
+echo "Removed wine folder $GUM_WINE_PREFIX_PATH"
 
 ################################################################################
 ### Remove the gum launcher script
 ################################################################################
 if [ -f ~/bin/gum ]; then
-    rm -f ~/bin/gum && echo "Removed ~/bin/gum launcher script"
+    if ! rm -f ~/bin/gum; then
+        echo "ERROR: Failed to remove ~/bin/gum launcher script"
+        exit 1
+    fi
+    echo "Removed ~/bin/gum launcher script"
 fi
 
 # Uninstall depending on the OS
@@ -80,15 +89,24 @@ esac
 ### Clean up PATH entries added by setup script (safe: only removes exact lines)
 ################################################################################
 if [ -f ~/.bashrc ] && grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bashrc 2>/dev/null; then
-    sed -i '\|export PATH="$HOME/bin:$PATH"|d' ~/.bashrc
+    if ! sed -i '\|export PATH="$HOME/bin:$PATH"|d' ~/.bashrc; then
+        echo "ERROR: Failed to update ~/.bashrc"
+        exit 1
+    fi
     echo "Removed PATH entry from ~/.bashrc"
 fi
 if [ -f ~/.zshrc ] && grep -q 'export PATH="$HOME/bin:$PATH"' ~/.zshrc 2>/dev/null; then
-    sed -i '\|export PATH="$HOME/bin:$PATH"|d' ~/.zshrc
+    if ! sed -i '\|export PATH="$HOME/bin:$PATH"|d' ~/.zshrc; then
+        echo "ERROR: Failed to update ~/.zshrc"
+        exit 1
+    fi
     echo "Removed PATH entry from ~/.zshrc"
 fi
 if [ -f ~/.config/fish/config.fish ] && grep -q 'set -x PATH $HOME/bin $PATH' ~/.config/fish/config.fish 2>/dev/null; then
-    sed -i '\|set -x PATH $HOME/bin $PATH|d' ~/.config/fish/config.fish
+    if ! sed -i '\|set -x PATH $HOME/bin $PATH|d' ~/.config/fish/config.fish; then
+        echo "ERROR: Failed to update config.fish"
+        exit 1
+    fi
     echo "Removed PATH entry from config.fish"
 fi
 
