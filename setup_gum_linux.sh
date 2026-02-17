@@ -31,6 +31,26 @@ run_winetricks() {
     run_and_write_log WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks "$@"
 }
 
+check_vulkan_support() {
+    # Try vulkaninfo directly (most reliable, cross-platform)
+    if vulkaninfo 2>/dev/null | grep -q "deviceName"; then
+        VULKAN_DETECTION_METHOD="vulkaninfo"
+        return 0
+    fi
+    # Fallback: check for Vulkan ICD loader files (Linux)
+    if ls /usr/share/vulkan/icd.d/*.json > /dev/null 2>&1 || \
+       ls /etc/vulkan/icd.d/*.json > /dev/null 2>&1; then
+        VULKAN_DETECTION_METHOD="Vulkan ICD loader files"
+        return 0
+    fi
+    # Fallback: check for MoltenVK (macOS)
+    if [ "$DISTRO" = "darwin" ] && [ -f /usr/local/lib/libMoltenVK.dylib ]; then
+        VULKAN_DETECTION_METHOD="MoltenVK"
+        return 0
+    fi
+    return 1
+}
+
 echo "" > $INSTALL_LOG_FILE # clear the log file
 write_log_section_header "Starting installation process..."
 
@@ -285,6 +305,28 @@ rm -f "$GUM_ZIP_FILE" \
 
 
 ################################################################################
+### Check for Vulkan support and offer DXVK installation
+################################################################################
+echo -e "\nChecking for Vulkan support..."
+if check_vulkan_support; then
+    echo "Vulkan support detected! (via $VULKAN_DETECTION_METHOD)"
+    read -p "Do you wish to install DXVK for better graphics performance? (Y/n): " choice
+    case "$choice" in
+        ""|y|Y )
+            echo "Installing DXVK via winetricks..."
+            run_winetricks dxvk
+            echo " - DXVK installed successfully."
+            ;;
+        n|N ) echo "Skipping DXVK installation.";;
+          * ) echo "Invalid option. Skipping DXVK installation.";;
+    esac
+else
+    echo "Vulkan support not detected. Skipping DXVK installation."
+    echo "TIP: If you install Vulkan drivers later, you can install DXVK manually with:"
+    echo "     WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" winetricks dxvk"
+fi
+
+################################################################################
 ### Define the script variables
 ################################################################################
 echo "Creating gum script and adding to path"
@@ -394,7 +436,4 @@ fi
 echo "SUCCESS: Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'gum'."
 echo "TIP: To start Gum: in a terminal type ~/bin/gum"
 echo "TIP: You may need to restart the terminal or your computer if it doesn't work at first"
-echo "-------------------"
-echo "OPTIONAL: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
-echo "-------------------"
 echo "Enjoy using GUM!"
