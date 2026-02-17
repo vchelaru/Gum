@@ -549,6 +549,11 @@ public class ControlLogic : IDisposable
 
     }
 
+    internal void UpdateButtonSizes(double baseFontSize)
+    {
+        mainControl?.UpdateButtonSizes(baseFontSize);
+    }
+
     public void Dispose()
     {
         _backgroundManager?.Dispose();

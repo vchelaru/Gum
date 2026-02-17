@@ -19,8 +19,23 @@ namespace EditorTabPlugin_XNA.Views;
 /// </summary>
 public partial class EditorControls : UserControl
 {
+    private const double DefaultBaseFontSize = 12.0;
+    private const double DefaultButtonWidth = 20.0;
+
     public EditorControls()
     {
         InitializeComponent();
+    }
+
+    internal void UpdateButtonSizes(double baseFontSize)
+    {
+        double scale = baseFontSize / DefaultBaseFontSize;
+        double buttonWidth = DefaultButtonWidth * scale;
+
+        MinusButton.Width = buttonWidth;
+        MinusButton.FontSize = baseFontSize;
+
+        PlusButton.Width = buttonWidth;
+        PlusButton.FontSize = baseFontSize;
     }
 }
