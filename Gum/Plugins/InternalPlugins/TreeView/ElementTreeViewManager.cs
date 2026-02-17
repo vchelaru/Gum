@@ -288,6 +288,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly INameVerifier _nameVerifier;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IProjectState _projectState;
+    private readonly ICollapseToggleService _collapseToggleService;
 
     public bool HasMouseOver
     {
@@ -323,6 +324,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _circularReferenceManager = Locator.GetRequiredService<ICircularReferenceManager>();
         _favoriteComponentManager = Locator.GetRequiredService<IFavoriteComponentManager>();
         _projectState = Locator.GetRequiredService<IProjectState>();
+        _collapseToggleService = new CollapseToggleService();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
@@ -346,23 +348,23 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
 
     #region Find/Get
-    public TreeNode GetTreeNodeFor(ElementSave elementSave)
+    public TreeNode? GetTreeNodeFor(ElementSave? elementSave)
     {
         if (elementSave == null)
         {
             return null;
         }
-        else if (elementSave is ScreenSave)
+        else if (elementSave is ScreenSave screenSave)
         {
-            return GetTreeNodeFor(elementSave as ScreenSave);
+            return GetTreeNodeFor(screenSave);
         }
-        else if (elementSave is ComponentSave)
+        else if (elementSave is ComponentSave componentSave)
         {
-            return GetTreeNodeFor(elementSave as ComponentSave);
+            return GetTreeNodeFor(componentSave);
         }
-        else if (elementSave is StandardElementSave)
+        else if (elementSave is StandardElementSave standardElementSave)
         {
-            return GetTreeNodeFor(elementSave as StandardElementSave);
+            return GetTreeNodeFor(standardElementSave);
         }
 
         return null;
@@ -386,7 +388,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         return GetTreeNodeForTag(standardElementSave, RootStandardElementsTreeNode);
     }
 
-    public TreeNode GetTreeNodeFor(InstanceSave instanceSave, TreeNode container)
+    public TreeNode? GetTreeNodeFor(InstanceSave instanceSave, TreeNode container)
     {
         foreach (TreeNode node in container.Nodes)
         {
@@ -395,7 +397,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 return node;
             }
 
-            TreeNode childNode = GetTreeNodeFor(instanceSave, node);
+            TreeNode? childNode = GetTreeNodeFor(instanceSave, node);
             if (childNode != null)
             {
                 return childNode;
@@ -405,7 +407,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         return null;
     }
 
-    public TreeNode GetInstanceTreeNodeByName(string name, TreeNode container)
+    public TreeNode? GetInstanceTreeNodeByName(string name, TreeNode container)
     {
         foreach (TreeNode node in container.Nodes)
         {
@@ -414,7 +416,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 return node;
             }
 
-            TreeNode childNode = GetInstanceTreeNodeByName(name, node);
+            TreeNode? childNode = GetInstanceTreeNodeByName(name, node);
             if (childNode != null)
             {
                 return childNode;
@@ -432,7 +434,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public TreeNode GetTreeNodeFor(string absoluteDirectory)
     {
         string relative = FileManager.MakeRelative(absoluteDirectory,
-            FileManager.GetDirectory(Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName));
+            FileManager.GetDirectory(_projectState.GumProjectSave.FullFileName));
 
 
         relative = FileManager.Standardize(relative);
@@ -645,11 +647,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             },
             onFilterTextChanged: text => FilterText = text,
             onSearchNodeSelected: HandleSelectedSearchNode,
-            onCollapseAll: () => _viewCreator.CollapseAll(),
-            onCollapseToElementLevel: () => _viewCreator.CollapseToElementLevel(),
+            onCollapseAll: () => _collapseToggleService.HandleCollapseAll(ObjectTreeView, () => _viewCreator.CollapseAll()),
+            onCollapseToElementLevel: () => _collapseToggleService.HandleCollapseToElementLevel(ObjectTreeView, () => _viewCreator.CollapseToElementLevel()),
             onDeepSearchChecked: () => ReactToFilterTextChanged());
 
         _tabManager.AddControl(grid, "Project", TabLocation.Left);
+
+        ObjectTreeView.AfterExpand += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
+        ObjectTreeView.AfterCollapse += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
 
         RefreshUi();
 
@@ -1219,7 +1224,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         if (IsInUiInitiatedSelection) return;
         if (instanceSave != null)
         {
-            TreeNode parentTreeNode = GetTreeNodeFor(parent);
+            TreeNode? parentTreeNode = GetTreeNodeFor(parent);
 
             // This could be null if the user started a new project or loaded a different project.
             if (parentTreeNode != null)
@@ -1353,6 +1358,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// </summary>
     public void RefreshUi()
     {
+        _collapseToggleService.Clear();
         RecordSelection();
         // brackets are used simply to indicate the recording and selection should
         // go around the rest of the function:
