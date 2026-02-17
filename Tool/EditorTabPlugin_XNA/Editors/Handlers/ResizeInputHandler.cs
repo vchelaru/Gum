@@ -644,36 +644,35 @@ public class ResizeInputHandler : InputHandlerBase
         // neither are null
         else
         {
-            if (oldValue is float)
+            if (oldValue is float oldFloat)
             {
-                var oldFloat = (float)oldValue;
-                var newFloat = (float)newValue;
+                var newFloat = (float)newValue!;
 
                 return oldFloat != newFloat;
             }
-            else if (oldValue is string)
+            else if (oldValue is string oldString)
             {
-                return (string)oldValue != (string)newValue;
+                return oldString != (string)newValue!;
             }
-            else if (oldValue is bool)
+            else if (oldValue is bool oldBool)
             {
-                return (bool)oldValue != (bool)newValue;
+                return oldBool != (bool)newValue!;
             }
-            else if (oldValue is int)
+            else if (oldValue is int oldInt)
             {
-                return (int)oldValue != (int)newValue;
+                return oldInt != (int)newValue!;
             }
-            else if (oldValue is Vector2)
+            else if (oldValue is Vector2 oldVector2)
             {
-                return (Vector2)oldValue != (Vector2)newValue;
+                return oldVector2 != (Vector2)newValue!;
             }
             else if (oldValue is IList oldList)
             {
-                return AreListsSame(oldList, (IList)newValue);
+                return AreListsSame(oldList, (IList)newValue!);
             }
             else
             {
-                return oldValue.Equals(newValue) == false;
+                return oldValue!.Equals(newValue) == false;
             }
         }
     }
