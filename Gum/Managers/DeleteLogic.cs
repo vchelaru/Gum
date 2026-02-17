@@ -257,7 +257,14 @@ public class DeleteLogic : IDeleteLogic
         optionsWindow.Message = "Are you sure you want to delete:\n";
         foreach (var item in objectsToDelete)
         {
-            optionsWindow.Message += item.ToString() + "\n";
+            if(item != null)
+            {
+                string itemDisplay = item is InstanceSave instanceSave 
+                    ? instanceSave.Name 
+                    : item.ToString() ?? "";
+                // I tried a tab, but the spacing was too big
+                optionsWindow.Message += $"  •{itemDisplay}\n";
+            }
 
         }
 

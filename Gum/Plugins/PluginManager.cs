@@ -59,7 +59,6 @@ public class PluginManager : IPluginManager
     private const String CompatibilityFileName = "Compatibility.txt";
     
     static PluginManager mGlobalInstance;
-    static PluginManager mProjectInstance;
     static List<PluginManager> mInstances = new List<PluginManager>();
     private bool mGlobal;
 
@@ -137,16 +136,6 @@ public class PluginManager : IPluginManager
     #endregion
 
     #region Exported objects
-
-    public static PluginManager GetGlobal()
-    {
-        return mGlobalInstance;
-    }
-
-    public static PluginManager GetProject()
-    {
-        return mProjectInstance;
-    }
 
 
     public static List<PluginManager> GetInstances()
@@ -1071,21 +1060,17 @@ public class PluginManager : IPluginManager
         PluginShutDownReason shutDownReason)
     {
         bool doesPluginWantToShutDown = true;
-        PluginContainer container;
+        PluginContainer? container = null;
 
         if (mGlobalInstance.mPluginContainers.ContainsKey(pluginToShutDown))
         {
             container = mGlobalInstance.mPluginContainers[pluginToShutDown];
         }
-        else
-        {
-            container = mProjectInstance.mPluginContainers[pluginToShutDown];
-        }
 
         try
         {
             doesPluginWantToShutDown =
-                container.Plugin.ShutDown(shutDownReason);
+                container?.Plugin.ShutDown(shutDownReason) ?? false;
         }
         catch (Exception)
         {
@@ -1095,7 +1080,7 @@ public class PluginManager : IPluginManager
 
         if (doesPluginWantToShutDown)
         {
-            container.IsEnabled = false;
+            container!.IsEnabled = false;
         }
 
         if (shutDownReason == PluginShutDownReason.UserDisabled)

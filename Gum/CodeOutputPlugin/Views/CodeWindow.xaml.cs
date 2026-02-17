@@ -43,6 +43,8 @@ public partial class CodeWindow : UserControl
     }
 
     CodeOutputElementSettings? codeOutputElementSettings;
+    private readonly IProjectState _projectState;
+
     public CodeOutputElementSettings? CodeOutputElementSettings
     {
         get => codeOutputElementSettings;
@@ -69,6 +71,8 @@ public partial class CodeWindow : UserControl
 
     public CodeWindow(CodeWindowViewModel viewModel)
     {
+        _projectState = Locator.GetRequiredService<IProjectState>();
+
         InitializeComponent();
 
         this.DataContext = viewModel;
@@ -147,8 +151,7 @@ public partial class CodeWindow : UserControl
 
                 if (!string.IsNullOrWhiteSpace(valueToSet) && FileManager.IsRelative(valueToSet) == false)
                 {
-                    var projectState = Locator.GetRequiredService<IProjectState>();
-                    var projectDirectory = projectState.ProjectDirectory;
+                    var projectDirectory = _projectState.ProjectDirectory;
                     valueToSet = FileManager.MakeRelative(valueToSet, projectDirectory, preserveCase: true);
 
                     if (string.IsNullOrEmpty(valueToSet))
@@ -168,7 +171,6 @@ public partial class CodeWindow : UserControl
 
         member.CustomGetEvent += (owner) =>
         {
-            var projectState = Locator.GetRequiredService<IProjectState>();
             var projectRoot = CodeOutputProjectSettings?.CodeProjectRoot;
             if (string.IsNullOrEmpty(projectRoot))
             {
@@ -176,11 +178,11 @@ public partial class CodeWindow : UserControl
             }
             else if (projectRoot == "./")
             {
-                return projectState.ProjectDirectory;
+                return _projectState.ProjectDirectory;
             }
             else if (projectRoot != null && FileManager.IsRelative(projectRoot))
             {
-                return FileManager.RemoveDotDotSlash(projectState.ProjectDirectory + projectRoot);
+                return FileManager.RemoveDotDotSlash(_projectState.ProjectDirectory + projectRoot);
             }
             else
             {
@@ -545,9 +547,9 @@ public partial class CodeWindow : UserControl
             if (codeOutputElementSettings != null)
             {
                 var valueAsString = (string?)args.Value ?? string.Empty;
-                if (!string.IsNullOrWhiteSpace(Locator.GetRequiredService<IProjectState>().ProjectDirectory) && FileManager.IsRelative(valueAsString) == false)
+                if (!string.IsNullOrWhiteSpace(_projectState.ProjectDirectory) && FileManager.IsRelative(valueAsString) == false)
                 {
-                    valueAsString = FileManager.MakeRelative(valueAsString, Locator.GetRequiredService<IProjectState>().ProjectDirectory, preserveCase: true);
+                    valueAsString = FileManager.MakeRelative(valueAsString, _projectState.ProjectDirectory, preserveCase: true);
                 }
                 codeOutputElementSettings.GeneratedFileName = valueAsString;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
