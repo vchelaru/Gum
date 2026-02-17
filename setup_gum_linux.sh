@@ -33,25 +33,6 @@ run_winetricks() {
     run_and_write_log WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks "$@"
 }
 
-check_vulkan_support() {
-    # Try vulkaninfo directly (most reliable, cross-platform)
-    if vulkaninfo 2>/dev/null | grep -q "deviceName"; then
-        VULKAN_DETECTION_METHOD="vulkaninfo"
-        return 0
-    fi
-    # Fallback: check for Vulkan ICD loader files (Linux)
-    if ls /usr/share/vulkan/icd.d/*.json > /dev/null 2>&1 || \
-       ls /etc/vulkan/icd.d/*.json > /dev/null 2>&1; then
-        VULKAN_DETECTION_METHOD="Vulkan ICD loader files"
-        return 0
-    fi
-    # Fallback: check for MoltenVK (macOS)
-    if [ "$DISTRO" = "darwin" ] && [ -f /usr/local/lib/libMoltenVK.dylib ]; then
-        VULKAN_DETECTION_METHOD="MoltenVK"
-        return 0
-    fi
-    return 1
-}
 
 echo "" > "$INSTALL_LOG_FILE" # clear the log file
 write_log_section_header "Starting installation process..."
@@ -304,17 +285,15 @@ rm -f "$GUM_ZIP_FILE" \
 
 
 ################################################################################
-### Check for Vulkan support and offer DXVK installation
+### Install DXVK (for optional Vulkan support) but default to WineD3D
 ################################################################################
-echo -e "\nChecking for Vulkan support..."
-if check_vulkan_support; then
-    echo "Vulkan detected (via $VULKAN_DETECTION_METHOD). Installing DXVK..."
-    run_winetricks dxvk
-    echo " - DXVK installed. To revert: ~/bin/gum d3d"
-else
-    echo "Vulkan not detected, skipping DXVK."
-    echo "WARNING: If Gum crashes, install Vulkan drivers and run: ~/bin/gum dxvk"
-fi
+echo -e "\nInstalling DXVK (for optional Vulkan support)..."
+run_winetricks dxvk
+# Default to WineD3D — user can switch with: ~/bin/gum dxvk
+echo "Reverting to WineD3D as the default renderer..."
+run_and_write_log WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks d3d8=builtin d3d9=builtin d3d10=builtin d3d10_1=builtin d3d10core=builtin d3d11=builtin dxgi=builtin
+run_and_write_log WINEPREFIX="$GUM_WINE_PREFIX_PATH" wineboot -u
+echo " - DXVK installed. WineD3D is the default. To switch: ~/bin/gum dxvk"
 
 ################################################################################
 ### Define the script variables
@@ -390,6 +369,7 @@ fi
 if [ "\$1" = "dxvk" ]; then
     echo "Switching to DXVK..."
     WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks dxvk
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wineboot -u
     echo "Done. To revert: ~/bin/gum d3d"
     exit 0
 fi
@@ -397,7 +377,8 @@ fi
 # Revert to WineD3D (Wine's built-in Direct3D)
 if [ "\$1" = "d3d" ]; then
     echo "Switching to WineD3D..."
-    WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks d3d11=builtin d3d10core=builtin d3d9=builtin dxgi=builtin
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks d3d8=builtin d3d9=builtin d3d10=builtin d3d10_1=builtin d3d10core=builtin d3d11=builtin dxgi=builtin
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wineboot -u
     echo "Done. To switch back: ~/bin/gum dxvk"
     exit 0
 fi
