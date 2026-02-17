@@ -44,6 +44,7 @@ public class ElementSaveDisplayer
     private readonly VariableSaveLogic _variableSaveLogic;
     private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
     private readonly IPluginManager _pluginManager;
+    private readonly StandardElementsManager _standardElementsManager;
 
     #endregion
 
@@ -75,6 +76,7 @@ public class ElementSaveDisplayer
         _variableSaveLogic = new VariableSaveLogic();
         _categorySortAndColorLogic = new CategorySortAndColorLogic();
         _pluginManager = pluginManager;
+        _standardElementsManager = StandardElementsManager.Self;
     }
 
     private List<PropertyData> GetProperties(ElementSave instanceOwner, InstanceSave instanceSave, StateSave stateSave)
@@ -148,7 +150,7 @@ public class ElementSaveDisplayer
         // if component
         if (instanceSave == null && effectiveElementSave as ComponentSave != null)
         {
-            var defaultElementState = StandardElementsManager.Self.GetDefaultStateFor("Component");
+            var defaultElementState = _standardElementsManager.GetDefaultStateFor("Component");
             var variables = defaultElementState.Variables;
             foreach (var item in variables)
             {
@@ -177,7 +179,7 @@ public class ElementSaveDisplayer
         // else if screen
         else if (instanceSave == null && effectiveElementSave as ScreenSave != null)
         {
-            var defaultElementState = StandardElementsManager.Self.GetDefaultStateFor("Screen");
+            var defaultElementState = _standardElementsManager.GetDefaultStateFor("Screen");
             var variables = defaultElementState.Variables;
 
             foreach (var item in variables)
@@ -419,6 +421,12 @@ public class ElementSaveDisplayer
             }
             string category = propertyData.Category?.Trim();
 
+            if(string.IsNullOrEmpty(category))
+            {
+                category = "General";
+            }
+
+
             var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
 
             if (categoryToAddTo == null)
@@ -613,7 +621,7 @@ public class ElementSaveDisplayer
         }
     }
 
-    private static StateSave GetRecursiveStateFor(ElementSave elementSave, StateSave stateToAddTo = null)
+    private StateSave GetRecursiveStateFor(ElementSave elementSave, StateSave stateToAddTo = null)
     {
         // go bottom up
         var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
@@ -632,7 +640,7 @@ public class ElementSaveDisplayer
 
         if (elementSave is StandardElementSave)
         {
-            var defaultStates = StandardElementsManager.Self.GetDefaultStateFor(elementSave.Name);
+            var defaultStates = _standardElementsManager.GetDefaultStateFor(elementSave.Name);
             var variablesToAdd = defaultStates.Variables
                 .Select(item => item.Clone())
                 .Where(item => existingVariableNames.Contains(item.Name) == false);
@@ -708,7 +716,7 @@ public class ElementSaveDisplayer
     /// <summary>
     /// Retrieves the base element type and its default state for the specified instance.
     /// </summary>
-    private static void GetDefaultState(InstanceSave instanceSave, out ElementSave instanceBaseType, out StateSave defaultState)
+    private void GetDefaultState(InstanceSave instanceSave, out ElementSave instanceBaseType, out StateSave defaultState)
     {
         instanceBaseType = instanceSave.GetBaseElementSave();
         if (instanceBaseType != null)
@@ -716,7 +724,7 @@ public class ElementSaveDisplayer
             if (instanceBaseType is StandardElementSave)
             {
                 // if we use the standard elements manager, we don't get any custom categories, so we need to add those:
-                defaultState = StandardElementsManager.Self.GetDefaultStateFor(instanceBaseType.Name).Clone();
+                defaultState = _standardElementsManager.GetDefaultStateFor(instanceBaseType.Name).Clone();
                 foreach (var category in instanceBaseType.Categories)
                 {
                     var expectedName = category.Name + "State";

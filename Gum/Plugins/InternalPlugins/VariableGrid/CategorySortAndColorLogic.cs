@@ -21,6 +21,7 @@ public class CategorySortAndColorLogic
 
     List<CategoryColor> OrderedCategories = new List<CategoryColor>
     {
+        new CategoryColor { Name = "General", Color = $"#{alphaHex}4300FF" },
         new CategoryColor { Name = "Position", Color = $"#{alphaHex}0000FF" },
         new CategoryColor { Name = "Dimensions", Color = $"#{alphaHex}0090FF" },
         new CategoryColor { Name = "Text", Color = $"#{alphaHex}00F6FF" },
@@ -41,7 +42,7 @@ public class CategorySortAndColorLogic
     {
         int GetDesiredIndex(string category)
         {
-            if (string.IsNullOrEmpty(category))
+            if (string.IsNullOrEmpty(category) || category == "General")
             {
                 return -1;
             }
