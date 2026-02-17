@@ -48,6 +48,14 @@
                 IsEnabled="{Binding IsSnapToGridComboBoxEnabled}"
                 ItemsSource="{Binding AvailableSnapToGridValues}"
                 SelectedItem="{Binding SelectedSnapToGridValue}" />
+
+            <ComboBox
+                Margin="16,0,0,0"
+                MinWidth="80"
+                Visibility="{Binding ExposedSourceDropdownVisibility}"
+                ItemsSource="{Binding AvailableExposedSources}"
+                SelectedItem="{Binding SelectedExposedSource}"
+                DisplayMemberPath="SourceObjectName" />
         </StackPanel>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>

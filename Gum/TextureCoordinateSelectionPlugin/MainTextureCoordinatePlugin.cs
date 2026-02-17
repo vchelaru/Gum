@@ -20,6 +20,7 @@ using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
@@ -28,6 +29,7 @@ using System.Windows.Forms;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Services;
 using TextureCoordinateSelectionPlugin.Logic;
+using TextureCoordinateSelectionPlugin.Models;
 using TextureCoordinateSelectionPlugin.ViewModels;
 
 namespace TextureCoordinateSelectionPlugin;
@@ -99,7 +101,24 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
         textureCoordinatePluginTab.Hide();
         textureCoordinatePluginTab.GotFocus += HandleTabShown;
 
+        _viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+
         AssignEvents();
+    }
+
+    private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainControlViewModel.SelectedExposedSource))
+        {
+            var selectedSource = _viewModel.SelectedExposedSource;
+            _controlLogic.IsExposedMode = selectedSource != null;
+            _controlLogic.ExposedSourceObjectName = selectedSource?.SourceObjectName;
+            _controlLogic.ExposedLeftName = selectedSource?.ExposedLeftName;
+            _controlLogic.ExposedTopName = selectedSource?.ExposedTopName;
+            _controlLogic.ExposedWidthName = selectedSource?.ExposedWidthName;
+            _controlLogic.ExposedHeightName = selectedSource?.ExposedHeightName;
+            RefreshControl();
+        }
     }
 
     private void HandleTabShown()
@@ -179,15 +198,8 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 
     private bool RefreshExposedTextureCoordinateInfo(ElementSave element)
     {
-        _controlLogic.IsExposedMode = false;
-        _controlLogic.ExposedSourceObjectName = null;
-        _controlLogic.ExposedLeftName = null;
-        _controlLogic.ExposedTopName = null;
-        _controlLogic.ExposedWidthName = null;
-        _controlLogic.ExposedHeightName = null;
-
         var state = element.DefaultState;
-        string? sourceObject = null;
+        var sourceSets = new Dictionary<string, ExposedTextureCoordinateSet>();
 
         foreach (var variable in state.Variables)
         {
@@ -201,72 +213,71 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 
             if (!isTextureCoordinate) continue;
 
-            // If we haven't determined the source object yet, validate it's a Sprite or NineSlice
-            if (sourceObject == null)
-            {
-                var instance = element.Instances.FirstOrDefault(i => i.Name == variable.SourceObject);
-                if (instance != null)
-                {
-                    var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-                    bool isSpriteOrNineSlice = false;
-                    if (instanceElement is StandardElementSave ses)
-                    {
-                        isSpriteOrNineSlice = ses.Name == "Sprite" || ses.Name == "NineSlice";
-                    }
-                    else if (instanceElement != null)
-                    {
-                        var innerBaseElements = ObjectFinder.Self.GetBaseElements(instanceElement);
-                        isSpriteOrNineSlice = innerBaseElements.Any(b =>
-                            b is StandardElementSave bs && (bs.Name == "Sprite" || bs.Name == "NineSlice"));
-                    }
+            var sourceObjectName = variable.SourceObject!;
 
-                    if (isSpriteOrNineSlice)
-                    {
-                        sourceObject = variable.SourceObject;
-                    }
+            if (!sourceSets.ContainsKey(sourceObjectName))
+            {
+                var instance = element.Instances.FirstOrDefault(i => i.Name == sourceObjectName);
+                if (instance == null) continue;
+
+                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                bool isSpriteOrNineSlice = false;
+                if (instanceElement is StandardElementSave ses)
+                {
+                    isSpriteOrNineSlice = ses.Name == "Sprite" || ses.Name == "NineSlice";
                 }
+                else if (instanceElement != null)
+                {
+                    var innerBaseElements = ObjectFinder.Self.GetBaseElements(instanceElement);
+                    isSpriteOrNineSlice = innerBaseElements.Any(b =>
+                        b is StandardElementSave bs && (bs.Name == "Sprite" || bs.Name == "NineSlice"));
+                }
+
+                if (!isSpriteOrNineSlice) continue;
+
+                sourceSets[sourceObjectName] = new ExposedTextureCoordinateSet
+                {
+                    SourceObjectName = sourceObjectName
+                };
             }
 
-            if (variable.SourceObject == sourceObject)
+            var set = sourceSets[sourceObjectName];
+            switch (rootName)
             {
-                switch (rootName)
-                {
-                    case "TextureLeft":
-                        _controlLogic.ExposedLeftName = variable.ExposedAsName;
-                        break;
-                    case "TextureTop":
-                        _controlLogic.ExposedTopName = variable.ExposedAsName;
-                        break;
-                    case "TextureWidth":
-                        _controlLogic.ExposedWidthName = variable.ExposedAsName;
-                        break;
-                    case "TextureHeight":
-                        _controlLogic.ExposedHeightName = variable.ExposedAsName;
-                        break;
-                }
+                case "TextureLeft":
+                    set.ExposedLeftName = variable.ExposedAsName;
+                    break;
+                case "TextureTop":
+                    set.ExposedTopName = variable.ExposedAsName;
+                    break;
+                case "TextureWidth":
+                    set.ExposedWidthName = variable.ExposedAsName;
+                    break;
+                case "TextureHeight":
+                    set.ExposedHeightName = variable.ExposedAsName;
+                    break;
             }
         }
 
-        bool hasAny = _controlLogic.ExposedLeftName != null || _controlLogic.ExposedTopName != null ||
-                      _controlLogic.ExposedWidthName != null || _controlLogic.ExposedHeightName != null;
+        var allSources = sourceSets.Values.ToList();
 
-        if (hasAny)
-        {
-            _controlLogic.IsExposedMode = true;
-            _controlLogic.ExposedSourceObjectName = sourceObject;
-        }
+        // Preserve the previously selected source when refreshing
+        var previouslySelected = _viewModel.SelectedExposedSource;
+        var newSelection = allSources.FirstOrDefault(s => s.SourceObjectName == previouslySelected?.SourceObjectName)
+                           ?? allSources.FirstOrDefault();
 
-        return hasAny;
+        _viewModel.AvailableExposedSources = allSources;
+        // Setting SelectedExposedSource fires HandleViewModelPropertyChanged, which updates ControlLogic props
+        _viewModel.SelectedExposedSource = newSelection;
+
+        return newSelection != null;
     }
 
     private void ResetExposedTextureCoordinateInfo()
     {
-        _controlLogic.IsExposedMode = false;
-        _controlLogic.ExposedSourceObjectName = null;
-        _controlLogic.ExposedLeftName = null;
-        _controlLogic.ExposedTopName = null;
-        _controlLogic.ExposedWidthName = null;
-        _controlLogic.ExposedHeightName = null;
+        _viewModel.AvailableExposedSources = null;
+        // Setting SelectedExposedSource to null fires HandleViewModelPropertyChanged, which clears ControlLogic props
+        _viewModel.SelectedExposedSource = null;
     }
 
     private void HandleTreeNodeSelected(TreeNode? treeNode)

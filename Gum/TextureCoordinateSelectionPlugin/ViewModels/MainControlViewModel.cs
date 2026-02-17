@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TextureCoordinateSelectionPlugin.Models;
 using ToolsUtilities;
+using System.Windows;
 
 namespace TextureCoordinateSelectionPlugin.ViewModels;
 
@@ -56,6 +57,22 @@ public class MainControlViewModel : ViewModel
 
     [DependsOn(nameof(IsSnapToGridChecked))]
     public bool IsSnapToGridComboBoxEnabled => IsSnapToGridChecked;
+
+    public List<ExposedTextureCoordinateSet>? AvailableExposedSources
+    {
+        get => Get<List<ExposedTextureCoordinateSet>?>();
+        set => Set(value);
+    }
+
+    public ExposedTextureCoordinateSet? SelectedExposedSource
+    {
+        get => Get<ExposedTextureCoordinateSet?>();
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(AvailableExposedSources))]
+    public Visibility ExposedSourceDropdownVisibility =>
+        (AvailableExposedSources?.Count ?? 0) > 1 ? Visibility.Visible : Visibility.Collapsed;
 
     bool _isSavingSuppressed = false;
 
