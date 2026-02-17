@@ -73,7 +73,7 @@ case "$DISTRO" in
     darwin)
         brew uninstall winetricks || echo "ERROR: Failed to uninstall winetricks"
         brew uninstall --cask wine-stable || echo "ERROR: Failed to uninstall wine-stable"
-        echo "BREW will not be uninstalled, if you do no want that, you can uninstall that manually"
+        echo "BREW will not be uninstalled, if you do not want that, you can uninstall that manually"
         ;;
         
     *)
@@ -84,26 +84,32 @@ case "$DISTRO" in
         ;;
 esac
 
+# macOS (BSD) sed requires -i '' while GNU sed uses -i
+if [ "$DISTRO" = "darwin" ]; then
+    SED_INPLACE=(sed -i '')
+else
+    SED_INPLACE=(sed -i)
+fi
 
 ################################################################################
 ### Clean up PATH entries added by setup script (safe: only removes exact lines)
 ################################################################################
 if [ -f ~/.bashrc ] && grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bashrc 2>/dev/null; then
-    if ! sed -i '\|export PATH="$HOME/bin:$PATH"|d' ~/.bashrc; then
+    if ! "${SED_INPLACE[@]}" '\|export PATH="$HOME/bin:$PATH"|d' ~/.bashrc; then
         echo "ERROR: Failed to update ~/.bashrc"
         exit 1
     fi
     echo "Removed PATH entry from ~/.bashrc"
 fi
 if [ -f ~/.zshrc ] && grep -q 'export PATH="$HOME/bin:$PATH"' ~/.zshrc 2>/dev/null; then
-    if ! sed -i '\|export PATH="$HOME/bin:$PATH"|d' ~/.zshrc; then
+    if ! "${SED_INPLACE[@]}" '\|export PATH="$HOME/bin:$PATH"|d' ~/.zshrc; then
         echo "ERROR: Failed to update ~/.zshrc"
         exit 1
     fi
     echo "Removed PATH entry from ~/.zshrc"
 fi
 if [ -f ~/.config/fish/config.fish ] && grep -q 'set -x PATH $HOME/bin $PATH' ~/.config/fish/config.fish 2>/dev/null; then
-    if ! sed -i '\|set -x PATH $HOME/bin $PATH|d' ~/.config/fish/config.fish; then
+    if ! "${SED_INPLACE[@]}" '\|set -x PATH $HOME/bin $PATH|d' ~/.config/fish/config.fish; then
         echo "ERROR: Failed to update config.fish"
         exit 1
     fi
@@ -114,6 +120,16 @@ fi
 ### Finished
 ################################################################################
 echo -e "\nFinished!  Wine and GUM have been removed from your system."
-echo "Leftover installers may be purged with sudo apt autoremove && sudo apt clean."
+case "$DISTRO" in
+    ubuntu|linuxmint)
+        echo "Leftover installers may be purged with: sudo apt autoremove && sudo apt clean"
+        ;;
+    fedora|nobara)
+        echo "Leftover installers may be purged with: sudo dnf autoremove"
+        ;;
+    darwin)
+        echo "Leftover installers may be purged with: brew cleanup"
+        ;;
+esac
 echo "If you wish to reinstall GUM, please run setup_gum_linux.sh again."
 

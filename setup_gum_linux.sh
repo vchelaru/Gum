@@ -53,7 +53,7 @@ check_vulkan_support() {
     return 1
 }
 
-echo "" > $INSTALL_LOG_FILE # clear the log file
+echo "" > "$INSTALL_LOG_FILE" # clear the log file
 write_log_section_header "Starting installation process..."
 
 echo "This is an experimental script. (v$SCRIPT_VERSION)"
@@ -223,7 +223,7 @@ if [[ ! "${WINETRICKS_YEAR}" || "${WINETRICKS_YEAR}" -le 2024 ]]; then
             sudo winetricks --self-update
             ;;
         darwin)
-            brew winetricks --self-update
+            brew upgrade winetricks
             ;;
         *)
             echo "Unsupported distribution [${DISTRO}] for automated winetricks update."
@@ -320,7 +320,7 @@ fi
 ### Define the script variables
 ################################################################################
 echo "Creating gum script and adding to path"
-GUM_EXE_PATH=$(find "$GUM_WINE_EXTRACT_DIR" -name "Gum.exe" -type f)
+GUM_EXE_PATH=$(find "$GUM_WINE_EXTRACT_DIR" -name "Gum.exe" -type f | head -n1)
 
 ################################################################################
 ### Create the ~/bin directory if it doesn't exist
@@ -421,7 +421,6 @@ if [[ $SHELL == *"bash"* ]]; then
     if ! grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bashrc 2>/dev/null; then
         echo "Adding ~/bin to PATH in ~/.bashrc, please wait..."
         echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
-        echo source ~/.bashrc
     fi
     echo "Reloading ~/.bashrc, please wait..."
     source ~/.bash_profile &> /dev/null
@@ -437,8 +436,7 @@ elif [[ $SHELL == *"fish"* ]]; then
         echo "Adding ~/bin to PATH in config.fish, please wait..."
         echo 'set -x PATH $HOME/bin $PATH' >> ~/.config/fish/config.fish
     fi
-    echo "Reloading config.fish, please wait..."
-    source ~/.config/fish/config.fish &> /dev/null
+    echo "Please restart your terminal for PATH changes to take effect."
 else
     echo "WARNING: Unable to determine shell type. Please ensure ~/bin is in your PATH manually."
 fi
