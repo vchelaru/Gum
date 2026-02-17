@@ -457,7 +457,7 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
 
     private void HandleInstanceMemberSetByUi(object? sender, EventArgs e)
     {
-        if (PropertyChange != null)
+        if (PropertyChange != null && sender is InstanceMember senderInstanceMember)
         {
             PropertyChangedArgs args = new PropertyChangedArgs();
             args.Owner = this.Instance;
@@ -465,18 +465,18 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
             // This assumes reflection, which is bad...
             //args.NewValue = LateBinder.GetValueStatic(this.Instance, ((InstanceMember)sender).Name);
 
-            args.NewValue = ((InstanceMember)sender).Value;
-            args.PropertyName = ((InstanceMember)sender).Name;
+            args.NewValue = senderInstanceMember.Value;
+            args.PropertyName = senderInstanceMember.Name;
 
-            PropertyChange(((InstanceMember)sender).Name, args);
+            PropertyChange(senderInstanceMember.Name, args);
         }
         foreach (var item in Items)
         {
-            MemberCategory memberCategory = item as MemberCategory;
+            MemberCategory memberCategory = (MemberCategory)item;
 
             foreach (var instanceMember in memberCategory.Members)
             {
-                if (instanceMember.Name != ((InstanceMember)sender).Name)
+                if (sender is InstanceMember senderInstanceMemberInner && instanceMember.Name != senderInstanceMemberInner.Name)
                 {
                     instanceMember.SimulateValueChanged();
                 }
