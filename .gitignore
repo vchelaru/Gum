@@ -37,8 +37,8 @@ Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/EventExport/gum_event
 
 # Ignore the DIST folder so that the RELEASE automation in github actions doesn't try to include the dist/gum.zip every time we release
 dist/
-/.claude
 **/settings.local.json
 
 # Windows NUL file artifact (created by incorrect output redirection)
 nul
+/.claude/designs
