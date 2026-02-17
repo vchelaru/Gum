@@ -18,8 +18,8 @@ elif [ -f ~/bin/gum ]; then
 fi
 
 echo "GUM removal script (v$SCRIPT_VERSION)"
-echo "This will attempt to remove the automated install of wine, winetricks, and GUM on Linux systems."
-echo "If you did not install GUM using the setup_gum_linux.sh script, please do not run this script !!!!"
+echo "This will attempt to remove the automated install of wine, winetricks, and GUM."
+echo "If you did not install GUM using the setup_gum_linux.sh or setup_gum_mac.sh script, please do not run this script !!!!"
 echo "Using WINE PREFIX: $GUM_WINE_PREFIX_PATH"
 echo ""
 
@@ -49,9 +49,7 @@ if [ -f ~/bin/gum ]; then
 fi
 
 # Uninstall depending on the OS
-DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release 2>/dev/null || echo "${OSTYPE//[0-9\.]/}" 2>/dev/null || name ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
-VERSION=$(( lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release 2>/dev/null || echo "${OSTYPE//[A-Za-z]/}" 2>/dev/null | cut -d '.' -f1 || sw_vers --productVersion ) | cut -d= -f2 | tr -d '"' | cut -c1-2 )
-
+DISTRO=$( (lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release 2>/dev/null || echo "${OSTYPE//[0-9\.]/}" 2>/dev/null || name) | cut -d= -f2 | tr -d '"' | tr '[:upper:]' '[:lower:]')
 
 case "$DISTRO" in
     ubuntu|linuxmint)
@@ -131,5 +129,9 @@ case "$DISTRO" in
         echo "Leftover installers may be purged with: brew cleanup"
         ;;
 esac
-echo "If you wish to reinstall GUM, please run setup_gum_linux.sh again."
+if [ "$DISTRO" = "darwin" ]; then
+    echo "If you wish to reinstall GUM, please run setup_gum_mac.sh again."
+else
+    echo "If you wish to reinstall GUM, please run setup_gum_linux.sh again."
+fi
 
