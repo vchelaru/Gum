@@ -36,6 +36,7 @@ public class CategorySortAndColorLogic
         new CategoryColor { Name = "Dropshadow", Color = $"#{alphaHex}00B6FF" },
         new CategoryColor { Name = "Stroke and Fill", Color = $"#{alphaHex}00FF83" },
         new CategoryColor { Name = "Behavior", Color = $"#{alphaHex}2EFF00" },
+        new CategoryColor { Name = "References", Color = $"#{alphaHex}90FF00" }, // yellow-green
     };
 
     public List<MemberCategory> SortAndColorCategories(List<MemberCategory> categories)

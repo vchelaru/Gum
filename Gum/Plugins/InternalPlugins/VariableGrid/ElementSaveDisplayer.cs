@@ -503,7 +503,7 @@ public class ElementSaveDisplayer
                     srim.PreferredDisplayer = typeof(ListBoxDisplay);
                 }
 
-                string? category = null;
+                string? category = variableList.Category;
 
                 var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
 
@@ -621,7 +621,7 @@ public class ElementSaveDisplayer
         }
     }
 
-    private StateSave GetRecursiveStateFor(ElementSave elementSave, StateSave stateToAddTo = null)
+    private StateSave GetRecursiveStateFor(ElementSave elementSave, StateSave? stateToAddTo = null)
     {
         // go bottom up
         var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
