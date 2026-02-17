@@ -33,18 +33,36 @@ public class CollapseToggleServiceTests : BaseTestClass
         child1.Expand();
     }
 
+    private void CollapseAllNodes()
+    {
+        foreach (TreeNode node in _treeView.Nodes)
+        {
+            CollapseNodeRecursive(node);
+        }
+    }
+
+    private void CollapseNodeRecursive(TreeNode node)
+    {
+        node.Collapse();
+        foreach (TreeNode child in node.Nodes)
+        {
+            CollapseNodeRecursive(child);
+        }
+    }
+
     [Fact]
     public void Clear_ShouldDiscardSavedState()
     {
         // Arrange
         SetupTreeWithExpandedNodes();
-        _service.HandleCollapseAll(_treeView, () => _treeView.CollapseAll());
+        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
 
         // Act
         _service.Clear();
+        _treeView.Nodes.Clear();
         // Click again - should capture and collapse, not restore
         SetupTreeWithExpandedNodes();
-        _service.HandleCollapseAll(_treeView, () => _treeView.CollapseAll());
+        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
 
         // Assert - all collapsed because it re-captured, not restored
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
@@ -58,7 +76,7 @@ public class CollapseToggleServiceTests : BaseTestClass
         _treeView.Nodes[0].IsExpanded.ShouldBeTrue();
 
         // Act
-        _service.HandleCollapseAll(_treeView, () => _treeView.CollapseAll());
+        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
 
         // Assert
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
@@ -69,7 +87,7 @@ public class CollapseToggleServiceTests : BaseTestClass
     {
         // Arrange
         SetupTreeWithExpandedNodes();
-        _service.HandleCollapseAll(_treeView, () => _treeView.CollapseAll());
+        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
 
         // Simulate manual change
         _service.OnNodeManuallyChanged();
@@ -78,7 +96,7 @@ public class CollapseToggleServiceTests : BaseTestClass
         _treeView.Nodes[0].Expand();
 
         // Act - click again after manual change, should capture new state and collapse
-        _service.HandleCollapseAll(_treeView, () => _treeView.CollapseAll());
+        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
 
         // Assert - collapsed again (re-captured, not restored)
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
@@ -95,11 +113,11 @@ public class CollapseToggleServiceTests : BaseTestClass
         buttonWasExpanded.ShouldBeTrue();
 
         // Act - first click collapses
-        _service.HandleCollapseAll(_treeView, () => _treeView.CollapseAll());
+        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
 
         // Act - second click restores
-        _service.HandleCollapseAll(_treeView, () => _treeView.CollapseAll());
+        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
 
         // Assert - restored to original state
         _treeView.Nodes[0].IsExpanded.ShouldBeTrue();
@@ -145,7 +163,7 @@ public class CollapseToggleServiceTests : BaseTestClass
         SetupTreeWithExpandedNodes();
 
         // First click on CollapseAll
-        _service.HandleCollapseAll(_treeView, () => _treeView.CollapseAll());
+        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
 
         // Expand nodes again to have something to snapshot
@@ -184,7 +202,7 @@ public class CollapseToggleServiceTests : BaseTestClass
     {
         // Arrange
         SetupTreeWithExpandedNodes();
-        _service.HandleCollapseAll(_treeView, () => _treeView.CollapseAll());
+        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
 
         // Act - simulate manual change
         _service.OnNodeManuallyChanged();
@@ -193,7 +211,7 @@ public class CollapseToggleServiceTests : BaseTestClass
         _treeView.Nodes[0].Expand();
 
         // Click again - should NOT restore (snapshot invalidated), should re-capture and collapse
-        _service.HandleCollapseAll(_treeView, () => _treeView.CollapseAll());
+        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
 
         // Assert - collapsed because it re-captured instead of restoring
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
