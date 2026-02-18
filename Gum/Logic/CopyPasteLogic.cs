@@ -66,6 +66,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly IMessenger _messenger;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectState _projectState;
+    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -94,7 +95,8 @@ public class CopyPasteLogic : ICopyPasteLogic
         PluginManager pluginManager,
         IWireframeObjectManager wireframeObjectManager,
         IMessenger messenger,
-        IProjectState projectState
+        IProjectState projectState,
+        StandardElementsManagerGumTool standardElementsManagerGumTool
         )
     {
         _wireframeObjectManager = wireframeObjectManager;
@@ -109,6 +111,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         _pluginManager = pluginManager;
         _messenger = messenger;
         _projectState = projectState;
+        _standardElementsManagerGumTool = standardElementsManagerGumTool;
 
 
         _messenger.Register<SelectionChangedMessage>(
@@ -911,13 +914,13 @@ public class CopyPasteLogic : ICopyPasteLogic
         {
             toAdd = ((ScreenSave)CopiedData.CopiedElement).Clone();
             toAdd.Initialize(null);
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(toAdd);
+            _standardElementsManagerGumTool.FixCustomTypeConverters(toAdd);
         }
         else
         {
             toAdd = ((ComponentSave)CopiedData.CopiedElement).Clone();
             ((ComponentSave)toAdd).InitializeDefaultAndComponentVariables();
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters((ComponentSave)toAdd);
+            _standardElementsManagerGumTool.FixCustomTypeConverters((ComponentSave)toAdd);
 
         }
 

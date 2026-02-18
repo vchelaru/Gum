@@ -3,6 +3,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Services;
 using System.ComponentModel.Composition;
 using System.Linq;
 
@@ -11,6 +12,13 @@ namespace Gum.Plugins.Inheritance;
 [Export(typeof(PluginBase))]
 public class MainInheritancePlugin : InternalPlugin
 {
+    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+
+    public MainInheritancePlugin()
+    {
+        _standardElementsManagerGumTool = Locator.GetRequiredService<StandardElementsManagerGumTool>();
+    }
+
     public override void StartUp()
     {
         this.InstanceAdd += HandleInstanceAdded;
@@ -144,7 +152,7 @@ public class MainInheritancePlugin : InternalPlugin
                 // StandardElementSave. Instead, we should inherit
                 // from the base:
                 //asElementSave.Initialize(defaultStateSave);
-                //StandardElementsManagerGumTool.Self.FixCustomTypeConverters(asElementSave);
+                //_standardElementsManagerGumTool.FixCustomTypeConverters(asElementSave);
             }
             else
             {
@@ -172,7 +180,7 @@ public class MainInheritancePlugin : InternalPlugin
                         }
                     }
                     asElementSave.Initialize(stateSave);
-                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(asElementSave);
+                    _standardElementsManagerGumTool.FixCustomTypeConverters(asElementSave);
                 }
             }
         }

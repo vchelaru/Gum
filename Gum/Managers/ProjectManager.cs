@@ -48,6 +48,7 @@ public class ProjectManager : IProjectManager
     private IFileCommands _fileCommands;
     private IMessenger _messenger;
     private IFileWatchManager _fileWatchManager;
+    private StandardElementsManagerGumTool _standardElementsManagerGumTool;
 
     #endregion
 
@@ -104,6 +105,7 @@ public class ProjectManager : IProjectManager
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _messenger =  Locator.GetRequiredService<IMessenger>();
         _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
+        _standardElementsManagerGumTool = Locator.GetRequiredService<StandardElementsManagerGumTool>();
 
         await CommandLineManager.Self.ReadCommandLine();
 
@@ -230,7 +232,7 @@ public class ProjectManager : IProjectManager
             {
 
                 wasModified = _gumProjectSave.Initialize();
-                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(_gumProjectSave);
+                _standardElementsManagerGumTool.FixCustomTypeConverters(_gumProjectSave);
                 RecreateMissingStandardElements();
 
                 if (RecreateMissingDefinedByBaseObjects())
@@ -273,7 +275,7 @@ public class ProjectManager : IProjectManager
             }
             PluginManager.Self.ProjectLoad(_gumProjectSave);
 
-            StandardElementsManagerGumTool.Self.RefreshStateVariablesThroughPlugins();
+            _standardElementsManagerGumTool.RefreshStateVariablesThroughPlugins();
 
             if (wasModified)
             {

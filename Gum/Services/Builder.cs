@@ -87,6 +87,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>(TypeManager.Self);
         services.AddSingleton<ProjectManager>(ProjectManager.Self);
+        services.AddSingleton<StandardElementsManagerGumTool>(StandardElementsManagerGumTool.Self);
         services.AddSingleton<IProjectManager>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<IProjectState, ProjectState>();
         // We can do this once we get rid of usages of ProjectManager.Self because we have to inject. Until then, we can't do this.

@@ -40,6 +40,7 @@ public class EditCommands : IEditCommands
     private readonly IProjectManager _projectManager;
     private readonly IDeleteLogic _deleteLogic;
     private readonly IProjectState _projectState;
+    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
 
     public EditCommands(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -53,7 +54,8 @@ public class EditCommands : IEditCommands
         PluginManager pluginManager,
         IDeleteLogic deleteLogic,
         IProjectManager projectManager,
-        IProjectState projectState)
+        IProjectState projectState,
+        StandardElementsManagerGumTool standardElementsManagerGumTool)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -67,6 +69,7 @@ public class EditCommands : IEditCommands
         _pluginManager = pluginManager;
         _projectManager = projectManager;
         _projectState = projectState;
+        _standardElementsManagerGumTool = standardElementsManagerGumTool;
 
         _deleteLogic = deleteLogic;
     }
@@ -416,7 +419,7 @@ public class EditCommands : IEditCommands
                 var newScreen = elementAsScreen.Clone();
                 newScreen.Name = name;
                 newScreen.Initialize(null);
-                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newScreen);
+                _standardElementsManagerGumTool.FixCustomTypeConverters(newScreen);
 
                 _projectCommands.AddScreen(newScreen);
 
@@ -455,7 +458,7 @@ public class EditCommands : IEditCommands
                 }
                 newComponent.Name = folder + name;
                 newComponent.Initialize(null);
-                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newComponent);
+                _standardElementsManagerGumTool.FixCustomTypeConverters(newComponent);
 
                 _projectCommands.AddComponent(newComponent);
 
@@ -539,7 +542,7 @@ public class EditCommands : IEditCommands
                         componentSave.States.Add(state.Clone());
                     }
 
-                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
+                    _standardElementsManagerGumTool.FixCustomTypeConverters(componentSave);
                     _projectCommands.AddComponent(componentSave);
 
                 }

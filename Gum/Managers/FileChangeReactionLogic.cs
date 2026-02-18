@@ -24,6 +24,7 @@ namespace Gum.Managers
         private readonly IOutputManager _outputManager;
         private readonly IWireframeObjectManager _wireframeObjectManager;
         private readonly IProjectState _projectState;
+        private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
 
         public FileChangeReactionLogic()
         {
@@ -34,6 +35,7 @@ namespace Gum.Managers
             _outputManager = Locator.GetRequiredService<IOutputManager>();
             _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
             _projectState = Locator.GetRequiredService<IProjectState>();
+            _standardElementsManagerGumTool = Locator.GetRequiredService<StandardElementsManagerGumTool>();
         }
         
         public void ReactToFileChanged(FilePath file)
@@ -249,7 +251,7 @@ namespace Gum.Managers
             {
                 _projectState.GumProjectSave.ReloadElement(element);
                 _projectState.GumProjectSave.Initialize();
-                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(_projectState.GumProjectSave);
+                _standardElementsManagerGumTool.FixCustomTypeConverters(_projectState.GumProjectSave);
 
 
                 if (refreshingSelected)
@@ -309,7 +311,7 @@ namespace Gum.Managers
             {
                 _projectState.GumProjectSave.ReloadBehavior(behavior);
                 _projectState.GumProjectSave.Initialize();
-                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(_projectState.GumProjectSave);
+                _standardElementsManagerGumTool.FixCustomTypeConverters(_projectState.GumProjectSave);
 
                 if (refreshingSelected)
                 {

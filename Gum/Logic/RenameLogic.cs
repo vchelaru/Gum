@@ -78,6 +78,7 @@ public class RenameLogic : IRenameLogic
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
     private readonly IPluginManager _pluginManager;
+    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
 
     public RenameLogic(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -87,7 +88,8 @@ public class RenameLogic : IRenameLogic
         IDeleteLogic deleteLogic,
         IProjectManager projectManager,
         IProjectState projectState,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        StandardElementsManagerGumTool standardElementsManagerGumTool)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -98,6 +100,7 @@ public class RenameLogic : IRenameLogic
         _projectManager = projectManager;
         _projectState = projectState;
         _pluginManager = pluginManager;
+        _standardElementsManagerGumTool = standardElementsManagerGumTool;
     }
 
     #region StateSave
@@ -216,12 +219,12 @@ public class RenameLogic : IRenameLogic
 
         if (owner is ElementSave ownerAsElementSave)
         {
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(ownerAsElementSave);
+            _standardElementsManagerGumTool.FixCustomTypeConverters(ownerAsElementSave);
         }
 
         foreach (var item in elementsWithChangedVariables)
         {
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(item);
+            _standardElementsManagerGumTool.FixCustomTypeConverters(item);
 
             _fileCommands.TryAutoSaveElement(item);
         }

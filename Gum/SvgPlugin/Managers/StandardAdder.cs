@@ -18,6 +18,7 @@ namespace SkiaPlugin.Managers
     static class StandardAdder
     {
         private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
+        private static readonly StandardElementsManagerGumTool _standardElementsManagerGumTool = Locator.GetRequiredService<StandardElementsManagerGumTool>();
         public static void AddAllStandards()
         {
             AddStandard("Arc", StandardElementsManager.GetArcState());
@@ -59,7 +60,7 @@ namespace SkiaPlugin.Managers
                     // load it:
                     gumProject.StandardElements.Add(loaded);
                     loaded.Initialize(defaultState);
-                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(loaded);
+                    _standardElementsManagerGumTool.FixCustomTypeConverters(loaded);
                     _fileCommands.TryAutoSaveElement(loaded);
                     toReturn = loaded;
                 }
