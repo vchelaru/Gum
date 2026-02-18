@@ -1,22 +1,13 @@
 #!/bin/bash
 
 ################################################################################
-### Check if wine-stable is installed
+### macOS setup script for Gum (Wine-based)
+### Works on both Intel and Apple Silicon Macs
 ################################################################################
 
 set -e
 
 SCRIPT_VERSION="2026.02.16"
-
-################################################################################
-### Check for a graphical display (Wine requires one)
-################################################################################
-if [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
-    echo "ERROR: No graphical display detected (DISPLAY and WAYLAND_DISPLAY are not set)."
-    echo "Wine requires a graphical session. Please run this script from a desktop terminal,"
-    echo "not from SSH, WinSCP, or a TTY console."
-    exit 1
-fi
 
 if [ -z "$1" ]; then
     GUM_WINE_PREFIX_PATH="$HOME/.wine_gum_dotnet8"
@@ -58,6 +49,9 @@ case "$choice" in
   * ) echo "Invalid option. Exiting."; exit 1;;
 esac
 
+################################################################################
+### Check if wine-stable is installed
+################################################################################
 echo -e "\nVerifying that WINE is installed..."
 WINE_VERSION=$(wine --version 2>/dev/null | grep -Eo '[0-9]+' | head -n1)
 INSTALL_OR_UPGRADE_NEEDED="N"
@@ -71,72 +65,47 @@ else
     echo "Wine version [${WINE_VERSION}] found!"
 fi
 
-DISTRO=$( (lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release 2>/dev/null || echo "${OSTYPE//[0-9\.]/}" 2>/dev/null || name) | cut -d= -f2 | tr -d '"' | tr '[:upper:]' '[:lower:]')
-VERSION=$( (lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release 2>/dev/null || echo "${OSTYPE//[A-Za-z]/}" 2>/dev/null | cut -d '.' -f1 || sw_vers --productVersion) | cut -d= -f2 | tr -d '"' | cut -c1-2 )
+VERSION=$(sw_vers --productVersion 2>/dev/null | cut -d '.' -f1)
 
 # Install or update wine
 if [[ "${INSTALL_OR_UPGRADE_NEEDED}" == "Y" ]]; then
-    echo ""
-    read -p "Do you wish to install the latest version of wine? (Y/n): " choice
-    case "$choice" in
-        ""|y|Y ) echo "INFO: Installing latest Wine";;
-        n|N ) echo "WARN: Unable to continue, GUM requires Wine on Linux!"; exit 0;;
-          * ) echo "ERROR: Invalid option. Exiting."; exit 1;;
-    esac
+    echo -e "\nDetected macOS Version ${VERSION}"
 
-    case "$DISTRO" in
-        ubuntu)
-            if [[ "$VERSION" == "22" ]]; then
-                echo "Installing Wine for Ubuntu 22.xx"
-                sudo dpkg --add-architecture i386
-                sudo mkdir -pm755 /etc/apt/keyrings
-                wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key -
-                sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources
-                sudo apt update
-                sudo apt install --install-recommends winehq-stable -y
-            elif [[ "$VERSION" == "24" ]]; then
-                echo "Installing Wine for Ubuntu 24.xx"
-                sudo dpkg --add-architecture i386
-                sudo mkdir -pm755 /etc/apt/keyrings
-                wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key -
-                sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources
-                sudo apt update
-                sudo apt install --install-recommends winehq-stable -y
-            fi
-            ;;
+    echo -e "\nVerifying that BREW is installed..."
+    BREW_VERSION=$(brew --version 2>/dev/null | grep -Eo '[0-9]+' | head -n1)
+    BREW_INSTALL_REQUIRED="N"
+    if [[ ! "${BREW_VERSION}" ]]; then
+        echo "Brew is not installed!"
+        BREW_INSTALL_REQUIRED="Y"
+    else
+        echo "Brew version [${BREW_VERSION}] found!"
+    fi
 
-        linuxmint)
-            if [[ "$VERSION" == "20" ]]; then
-                BASE="focal"
-            elif [[ "$VERSION" == "21" ]]; then
-                BASE="jammy"
-            elif [[ "$VERSION" == "22" ]]; then
-                BASE="noble"
-            else
-                echo "Unsupported Linux Mint version: $VERSION"
-                exit 1
-            fi
-            echo "Installing Wine for Linux Mint $VERSION ($BASE)"
-            sudo apt install -y dirmngr ca-certificates software-properties-common apt-transport-https curl
-            sudo dpkg --add-architecture i386
-            curl -s https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor | sudo tee /usr/share/keyrings/winehq.gpg > /dev/null
-            echo "deb [signed-by=/usr/share/keyrings/winehq.gpg] http://dl.winehq.org/wine-builds/ubuntu/ $BASE main" | sudo tee /etc/apt/sources.list.d/winehq.list
-            sudo apt update
-            sudo apt install --install-recommends winehq-stable -y
-            ;;
+    if [[ "${BREW_INSTALL_REQUIRED}" == "Y" ]]; then
+        read -p "Do you wish to install brew (home brew)? (Y/n): " choice
+        case "$choice" in
+            ""|y|Y ) echo "INFO: Installing brew";;
+            n|N ) echo "WARN: Unable to continue, GUM requires Wine on Mac which is installed with brew!"; exit 0;;
+            * ) echo "ERROR: Invalid option. Exiting."; exit 1;;
+        esac
 
-        fedora|nobara)
-            echo "Installing Wine for Fedora/Nobara"
-            sudo dnf install -y wine
-            ;;
+        echo -e "\nAttempting to install brew..."
 
-        *)
-            echo "ERROR: Unsupported or unknown distribution: $DISTRO"
-            echo "ERROR: Please install wine manually!"
-            echo "ERROR: https://duckduckgo.com/?t=h_&q=Insert+Your+Linux+Distro+Here+How+To+Install+Wine"
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+        # Load brew into PATH for this session (not in PATH after fresh install)
+        if [ -x /opt/homebrew/bin/brew ]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        elif [ -x /usr/local/bin/brew ]; then
+            eval "$(/usr/local/bin/brew shellenv)"
+        else
+            echo "ERROR: Homebrew installed but 'brew' not found in expected locations."
             exit 1
-            ;;
-    esac
+        fi
+    fi
+
+    echo -e "\nAttempting to install Wine-stable"
+    brew install --cask --no-quarantine wine-stable
 fi
 
 ################################################################################
@@ -144,19 +113,7 @@ fi
 ################################################################################
 if ! winetricks --version &> /dev/null; then
     echo -e "\nWinetricks is not installed. Attempting to install..."
-
-    case "$DISTRO" in
-        ubuntu|linuxmint)
-            sudo apt install -y winetricks
-            ;;
-        fedora|nobara)
-            sudo dnf install -y winetricks
-            ;;
-        *)
-            echo "ERROR: Unsupported distribution [${DISTRO}] for automated winetricks install."
-            exit 1
-            ;;
-    esac
+    brew install winetricks
 fi
 
 echo "Winetricks is installed"
@@ -170,24 +127,20 @@ WINETRICKS_YEAR=$(winetricks --version 2>/dev/null | grep -Eo '[0-9]{4}' | head 
 if [[ ! "${WINETRICKS_YEAR}" || "${WINETRICKS_YEAR}" -le 2024 ]]; then
     echo "Winetricks version is older than 2024 or could not be determined."
     echo " - A newer version is required for dotnet 8. Attempting to update..."
-    echo " - Attempting to self update winetricks..."
-
-    case "$DISTRO" in
-        ubuntu|linuxmint)
-            sudo winetricks --self-update
-            ;;
-        fedora|nobara)
-            sudo winetricks --self-update
-            ;;
-        *)
-            echo "Unsupported distribution [${DISTRO}] for automated winetricks update."
-            exit 1
-            ;;
-    esac
+    echo " - Attempting to upgrade winetricks via brew..."
+    brew upgrade winetricks
 else
     echo "Winetricks version is new enough ${WINETRICKS_YEAR}."
 fi
 
+
+################################################################################
+### Install MoltenVK (Vulkan-to-Metal translation layer)
+### macOS caps OpenGL at 4.1 and has deprecated it. MoltenVK provides Vulkan
+### support so WineD3D can use its Vulkan backend as an alternative to OpenGL.
+################################################################################
+echo -e "\nInstalling MoltenVK (Vulkan support for macOS)..."
+brew install molten-vk || echo "WARN: Failed to install MoltenVK - Vulkan renderer will not be available"
 
 ################################################################################
 ### Make sure gum prefix is clear
@@ -195,12 +148,12 @@ fi
 if [ -d "$GUM_WINE_PREFIX_PATH" ]; then
     echo "Error: The gum wine prefix directory '$GUM_WINE_PREFIX_PATH' already exists."
     echo "This script can only be used on the initial creation of the gum wine prefix."
-    echo "Call '~/bin/gum upgrade' if upgrading the gum version, or call this script with a different directory to setup gum in (e.g. './setup_gum_linux.sh ~/.other_gum_wine_prefix')"
+    echo "Call '~/bin/gum upgrade' if upgrading the gum version, or call this script with a different directory to setup gum in (e.g. './setup_gum_mac.sh ~/.other_gum_wine_prefix')"
     exit 1
 fi
 
 ################################################################################
-### Install two fonts with winetricks.
+### Install fonts with winetricks
 ################################################################################
 echo "Checking and Installing Some fonts using winetricks"
 echo " - They may take a few minutes to install, please be patient"
@@ -208,25 +161,30 @@ run_winetricks arial
 run_winetricks tahoma
 run_winetricks courier
 run_winetricks calibri
-#run_winetricks micross # not available in 2024 winetricks
 echo " - Fonts installed"
 
 ################################################################################
-### Install dotnet48 with winetricks. This will cause two installation prompts
-### to appear.  They can take a few minutes to finish, please be patient
+### Install dotnetdesktop8 with winetricks
 ################################################################################
-#echo "Installing .NET Framework 4.8 using winetricks"
-#echo " - Two installer dialogs will appear, follow the steps for both to install"
-#echo " - They may take a few minutes to install, please be patient"
-#$RUN_WINETRICKS dotnet48
-
-################################################################################
-### Install dotnetdeskop8 with winetricks. This will cause two installation prompts
-### to appear.  They can take a few minutes to finish, please be patient
-################################################################################
-
 echo "Installing .NET 8 using winetricks (this may take a few minutes)..."
 run_winetricks -q dotnetdesktop8
+
+################################################################################
+### Configure WineD3D renderer (after .NET install to avoid registry reset)
+### macOS OpenGL is capped at 4.1 (deprecated by Apple). If MoltenVK is
+### available, we default to the Vulkan renderer. Otherwise, fall back to
+### OpenGL which still works for many apps including Gum.
+### Users can switch with: ~/bin/gum vulkan  or  ~/bin/gum opengl
+################################################################################
+if brew list molten-vk &> /dev/null; then
+    echo "MoltenVK found. Setting WineD3D renderer to Vulkan..."
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\Direct3D" /v renderer /t REG_SZ /d vulkan /f >> "$INSTALL_LOG_FILE" 2>&1
+    echo " - Vulkan renderer set as default (via MoltenVK -> Metal)"
+else
+    echo "MoltenVK not found. Using OpenGL renderer (capped at 4.1 on macOS)."
+    echo " - If you experience rendering issues, install MoltenVK: brew install molten-vk"
+    echo " - Then switch renderer: ~/bin/gum vulkan"
+fi
 
 ################################################################################
 ### Download the gum.zip file from the FRB site into the Program Files directory
@@ -236,13 +194,8 @@ echo "Installing GUM Tool..."
 GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
 GUM_ZIP_DOWNLOAD="https://github.com/vchelaru/gum/releases/latest/download/gum.zip"
 
-if ! curl --version &> /dev/null; then
-    wget -O "$GUM_ZIP_FILE" "$GUM_ZIP_DOWNLOAD" \
-        && echo " - Download completed." || { echo "Download failed using WGET."; exit 1; }
-else
-    curl -L -o "$GUM_ZIP_FILE" "$GUM_ZIP_DOWNLOAD" \
-        && echo " - Download completed." || { echo "Download failed using CURL."; exit 1; }
-fi
+curl -L -o "$GUM_ZIP_FILE" "$GUM_ZIP_DOWNLOAD" \
+    && echo " - Download completed." || { echo "Download failed using CURL."; exit 1; }
 
 ################################################################################
 ### Unzip the gum.zip file into Program Files/Gum
@@ -255,33 +208,6 @@ unzip -q "$GUM_ZIP_FILE" -d "$GUM_WINE_EXTRACT_DIR" \
 echo " - Cleaning up..."
 rm -f "$GUM_ZIP_FILE" \
     && echo "Cleanup completed." || { echo "Cleanup failed."; exit 1; }
-
-
-################################################################################
-### Install 32-bit Vulkan loader (required for DXVK in Wine)
-################################################################################
-echo -e "\nInstalling 32-bit Vulkan loader for DXVK support..."
-case "$DISTRO" in
-    ubuntu|linuxmint)
-        sudo apt install -y libvulkan1:i386 || echo "WARN: Failed to install libvulkan1:i386 - DXVK may not work"
-        ;;
-    fedora|nobara)
-        sudo dnf install -y vulkan-loader.i686 || echo "WARN: Failed to install vulkan-loader.i686 - DXVK may not work"
-        ;;
-    *)
-        echo "WARN: Unknown distro [$DISTRO] - skipping 32-bit Vulkan loader install. DXVK may not work."
-        ;;
-esac
-
-################################################################################
-### Install DXVK (for optional Vulkan support) but default to WineD3D
-################################################################################
-echo -e "\nInstalling DXVK (for optional Vulkan support)..."
-run_winetricks dxvk
-# Default to WineD3D — user can switch with: ~/bin/gum dxvk
-echo "Reverting to WineD3D as the default renderer..."
-run_and_write_log WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks d3d8=builtin d3d9=builtin d3d10=builtin d3d10_1=builtin d3d10core=builtin d3d11=builtin dxgi=builtin
-echo " - DXVK installed. WineD3D is the default. To switch: ~/bin/gum dxvk"
 
 ################################################################################
 ### Define the script variables
@@ -296,7 +222,7 @@ mkdir -p ~/bin &> /dev/null
 
 ################################################################################
 ### Create the Gum script in the ~/bin directory using a HEREDOC
-### Some variables are escaped lke GUM_ZIP_FILE so the variable is expanded at runtime
+### Some variables are escaped so the variable is expanded at runtime
 ################################################################################
 
 cat > ~/bin/gum <<EOF
@@ -316,7 +242,7 @@ unset DOTNET_ROOT_X64
 if [ \$# -eq 0 ]; then
 
     # Attempt to add registry keys
-    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\X11 Driver" /v Decorated /t REG_SZ /d N /f
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\Mac Driver" /v Decorated /t REG_SZ /d N /f
 
     WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine "$GUM_EXE_PATH"
     exit 0
@@ -327,13 +253,8 @@ if [ "\$1" = "upgrade" ]; then
     GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
     GUM_ZIP_DOWNLOAD="https://github.com/vchelaru/gum/releases/latest/download/gum.zip"
 
-    if ! curl --version &> /dev/null; then
-        wget -O "\$GUM_ZIP_FILE" "\$GUM_ZIP_DOWNLOAD" \
-            && echo " - Download completed." || { echo "Download failed using WGET."; exit 1; }
-    else
-        curl -L -o "\$GUM_ZIP_FILE" "\$GUM_ZIP_DOWNLOAD" \
-            && echo " - Download completed." || { echo "Download failed using CURL."; exit 1; }
-    fi
+    curl -L -o "\$GUM_ZIP_FILE" "\$GUM_ZIP_DOWNLOAD" \
+        && echo " - Download completed." || { echo "Download failed using CURL."; exit 1; }
 
     rm -rf "$GUM_WINE_EXTRACT_DIR"
     unzip -q "\$GUM_ZIP_FILE" -d "$GUM_WINE_EXTRACT_DIR" \
@@ -352,26 +273,25 @@ if [ "\$1" = "prefix" ]; then
     exit 0
 fi
 
-# Switch to DXVK (Vulkan-based Direct3D)
-if [ "\$1" = "dxvk" ]; then
-    echo "Switching to DXVK..."
-    WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks dxvk
-    WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks d3d8=native d3d9=native d3d10=native d3d10_1=native d3d10core=native d3d11=native dxgi=native
-    echo "Done. To revert: ~/bin/gum d3d"
+# Switch to Vulkan renderer (WineD3D -> Vulkan -> MoltenVK -> Metal)
+if [ "\$1" = "vulkan" ]; then
+    echo "Switching WineD3D to Vulkan renderer (requires MoltenVK)..."
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\Direct3D" /v renderer /t REG_SZ /d vulkan /f
+    echo "Done. To revert: ~/bin/gum opengl"
     exit 0
 fi
 
-# Revert to WineD3D (Wine's built-in Direct3D)
-if [ "\$1" = "d3d" ]; then
-    echo "Switching to WineD3D..."
-    WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks d3d8=builtin d3d9=builtin d3d10=builtin d3d10_1=builtin d3d10core=builtin d3d11=builtin dxgi=builtin
-    echo "Done. To switch back: ~/bin/gum dxvk"
+# Switch to OpenGL renderer (WineD3D -> OpenGL, capped at 4.1 on macOS)
+if [ "\$1" = "opengl" ]; then
+    echo "Switching WineD3D to OpenGL renderer..."
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\Direct3D" /v renderer /t REG_SZ /d gl /f
+    echo "Done. To switch back: ~/bin/gum vulkan"
     exit 0
 fi
 
 # Unknown argument
 echo "Unknown argument: \$1"
-echo "Usage: gum [upgrade|dxvk|d3d|prefix]"
+echo "Usage: gum [upgrade|vulkan|opengl|prefix]"
 exit 1
 EOF
 
@@ -407,7 +327,7 @@ fi
 ### Finished
 ################################################################################
 echo ""
-echo "SUCCESS: Gum setup on Linux using WINE is now complete!"
+echo "SUCCESS: Gum setup on macOS using WINE is now complete!"
 echo ""
 echo "To start Gum, open a new terminal and type: gum"
 echo "  Or in this terminal: ~/bin/gum"

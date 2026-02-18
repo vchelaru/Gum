@@ -64,4 +64,4 @@
 
 
 # Force line endings to always be just LF (linux style)
-setup_gum_linux.sh eol=lf
+*.sh eol=lf
