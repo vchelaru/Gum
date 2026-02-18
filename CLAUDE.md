@@ -1,5 +1,12 @@
 # Gum Repository Guidelines
 
+## What Is This?
+
+This project (Gum) provides UI solutions for game developers using C#. It includes:
+* A Common library which can run in any C# environment for layout and some UI control logic
+* Runtime libraries for various platforms including MonoGame, KNI, and FNA. Also SkiaSharp and raylib.
+* A tool also called Gum or Gum UI or Gum UI tool which is a WYSIWYG editor for game UI
+
 ## Agent Workflow
 
 For every task, invoke the appropriate agent from `.claude/agents/` before proceeding. The agent's instructions provide guidelines for how the task should be performed.
