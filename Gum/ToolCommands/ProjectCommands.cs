@@ -25,6 +25,7 @@ public class ProjectCommands
     private readonly IFileCommands _fileCommands;
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
+    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
 
     #endregion
 
@@ -32,13 +33,15 @@ public class ProjectCommands
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         IProjectManager projectManager,
-        IProjectState projectState)
+        IProjectState projectState,
+        StandardElementsManagerGumTool standardElementsManagerGumTool)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _projectManager = projectManager;
         _projectState = projectState;
+        _standardElementsManagerGumTool = standardElementsManagerGumTool;
     }
     
     #region Screens
@@ -60,7 +63,7 @@ public class ProjectCommands
     public void AddScreen(ScreenSave screenSave)
     {
         screenSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Screen"));
-        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
+        _standardElementsManagerGumTool.FixCustomTypeConverters(screenSave);
         _projectManager.GumProjectSave.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
         _projectManager.GumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
         _projectManager.GumProjectSave.Screens.Add(screenSave);
@@ -196,7 +199,7 @@ public class ProjectCommands
         componentSave.BaseType = "Container";
 
         componentSave.InitializeDefaultAndComponentVariables();
-        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
+        _standardElementsManagerGumTool.FixCustomTypeConverters(componentSave);
 
 
         // components shouldn't set their positions to 0 by default, so if the

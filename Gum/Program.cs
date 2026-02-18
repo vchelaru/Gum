@@ -127,7 +127,7 @@ namespace Gum
             ElementSaveExtensions.VariableChangedThroughReference +=
                 Gum.Plugins.PluginManager.Self.VariableSet;
 
-            StandardElementsManagerGumTool.Self.Initialize();
+            Locator.GetRequiredService<StandardElementsManagerGumTool>().Initialize();
 
             VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
 

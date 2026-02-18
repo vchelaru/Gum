@@ -18,7 +18,7 @@ namespace GumToolUnitTests.Managers;
 public class DeleteLogicMultiSelectTests : BaseTestClass
 {
     private readonly AutoMocker _mocker;
-    private readonly DeleteLogic _deleteLogic;
+    private readonly IDeleteLogic _deleteLogic;
     private readonly Mock<ProjectCommands> _projectCommands;
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IDialogService> _dialogService;

@@ -19,14 +19,16 @@ public class ImportLogic : IImportLogic
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
     private readonly IProjectManager _projectManager;
+    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
 
-    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager)
+    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager, StandardElementsManagerGumTool standardElementsManagerGumTool)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _dialogService = dialogService;
         _projectManager = projectManager;
+        _standardElementsManagerGumTool = standardElementsManagerGumTool;
     }
 
     public ScreenSave? ImportScreen(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
@@ -103,7 +105,7 @@ public class ImportLogic : IImportLogic
             components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             componentSave.InitializeDefaultAndComponentVariables();
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
+            _standardElementsManagerGumTool.FixCustomTypeConverters(componentSave);
 
             DoAfterImportLogic(saveProject, componentSave);
 
@@ -115,7 +117,7 @@ public class ImportLogic : IImportLogic
 
     private void DoAfterImportLogic(bool saveProject, ElementSave screenSave)
     {
-        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
+        _standardElementsManagerGumTool.FixCustomTypeConverters(screenSave);
 
         if (saveProject)
         {

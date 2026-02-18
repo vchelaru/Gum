@@ -658,7 +658,7 @@ public partial class ElementTreeViewManager
             components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             componentSave.InitializeDefaultAndComponentVariables();
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
+            _standardElementsManagerGumTool.FixCustomTypeConverters(componentSave);
 
             lastImportedComponent = componentSave;
         }

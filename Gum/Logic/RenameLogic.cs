@@ -74,18 +74,22 @@ public class RenameLogic : IRenameLogic
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly DeleteLogic _deleteLogic;
+    private readonly IDeleteLogic _deleteLogic;
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
+    private readonly IPluginManager _pluginManager;
+    private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
 
     public RenameLogic(ISelectedState selectedState,
         INameVerifier nameVerifier,
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        DeleteLogic deleteLogic,
+        IDeleteLogic deleteLogic,
         IProjectManager projectManager,
-        IProjectState projectState)
+        IProjectState projectState,
+        IPluginManager pluginManager,
+        IStandardElementsManagerGumTool standardElementsManagerGumTool)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -95,6 +99,8 @@ public class RenameLogic : IRenameLogic
         _deleteLogic = deleteLogic;
         _projectManager = projectManager;
         _projectState = projectState;
+        _pluginManager = pluginManager;
+        _standardElementsManagerGumTool = standardElementsManagerGumTool;
     }
 
     #region StateSave
@@ -118,7 +124,7 @@ public class RenameLogic : IRenameLogic
             // because it displays the state name at the top
             _guiCommands.RefreshVariables(force: true);
 
-            PluginManager.Self.StateRename(stateSave, oldName);
+            _pluginManager.StateRename(stateSave, oldName);
 
             _fileCommands.TryAutoSaveCurrentElement();
         }
@@ -207,18 +213,18 @@ public class RenameLogic : IRenameLogic
         // I don't think we need to save the project when renaming a state:
         //_fileCommands.TryAutoSaveProject();
 
-        PluginManager.Self.CategoryRename(category, oldName);
+        _pluginManager.CategoryRename(category, oldName);
 
         _fileCommands.TryAutoSaveCurrentObject();
 
         if (owner is ElementSave ownerAsElementSave)
         {
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(ownerAsElementSave);
+            _standardElementsManagerGumTool.FixCustomTypeConverters(ownerAsElementSave);
         }
 
         foreach (var item in elementsWithChangedVariables)
         {
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(item);
+            _standardElementsManagerGumTool.FixCustomTypeConverters(item);
 
             _fileCommands.TryAutoSaveElement(item);
         }
@@ -384,7 +390,7 @@ public class RenameLogic : IRenameLogic
             System.IO.File.Delete(oldXml.FullPath);
         }
 
-        PluginManager.Self.ElementRename(elementSave, oldName);
+        _pluginManager.ElementRename(elementSave, oldName);
 
         _fileCommands.TryAutoSaveProject();
 
@@ -801,6 +807,65 @@ public class RenameLogic : IRenameLogic
             VariableChanges = variableChanges,
             VariableReferenceChanges = variableReferenceChanges
         };
+    }
+
+    public void PropagateVariableRename(ElementSave parent, string variableFullName,
+        string oldStrippedOrExposedName, string newStrippedOrExposedName,
+        HashSet<ElementSave> elementsNeedingSave)
+    {
+        var changes = GetVariableChangesForRenamedVariable(parent, variableFullName, oldStrippedOrExposedName);
+
+        foreach (var change in changes.VariableChanges)
+        {
+            if (change.Container is ElementSave element)
+                elementsNeedingSave.Add(element);
+
+            if (change.Variable.ExposedAsName == oldStrippedOrExposedName)
+            {
+                change.Variable.ExposedAsName = newStrippedOrExposedName;
+            }
+            else if (change.Variable.GetRootName() == oldStrippedOrExposedName)
+            {
+                var prefix = change.Variable.SourceObject != null
+                    ? change.Variable.SourceObject + "."
+                    : string.Empty;
+                change.Variable.Name = prefix + newStrippedOrExposedName;
+            }
+        }
+
+        foreach (var referenceChange in changes.VariableReferenceChanges)
+        {
+            if (referenceChange.Container != null)
+                elementsNeedingSave.Add(referenceChange.Container);
+
+            var variableList = referenceChange.VariableReferenceList;
+            var oldLine = variableList.ValueAsIList[referenceChange.LineIndex]?.ToString();
+            if (oldLine == null) continue;
+
+            var leftAndRight = oldLine.Split('=').Select(item => item.Trim()).ToArray();
+            if (leftAndRight.Length < 2) continue;
+
+            if (referenceChange.ChangedSide is SideOfEquals.Left or SideOfEquals.Both)
+            {
+                if (leftAndRight[0] == oldStrippedOrExposedName)
+                    leftAndRight[0] = newStrippedOrExposedName;
+            }
+
+            if (referenceChange.ChangedSide is SideOfEquals.Right or SideOfEquals.Both)
+            {
+                if (leftAndRight[1] == oldStrippedOrExposedName)
+                {
+                    leftAndRight[1] = newStrippedOrExposedName;
+                }
+                else if (leftAndRight[1].EndsWith("." + oldStrippedOrExposedName))
+                {
+                    var newLength = leftAndRight[1].Length - oldStrippedOrExposedName.Length;
+                    leftAndRight[1] = leftAndRight[1].Substring(0, newLength) + newStrippedOrExposedName;
+                }
+            }
+
+            variableList.ValueAsIList[referenceChange.LineIndex] = $"{leftAndRight[0]}={leftAndRight[1]}";
+        }
     }
 
 

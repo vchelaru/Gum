@@ -17,7 +17,15 @@ using WpfDataUi.Controls;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
-public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerGumTool>
+public interface IStandardElementsManagerGumTool
+{
+    void Initialize();
+    void FixCustomTypeConverters(GumProjectSave project);
+    void FixCustomTypeConverters(ElementSave elementSave);
+    void RefreshStateVariablesThroughPlugins();
+}
+
+public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerGumTool>, IStandardElementsManagerGumTool
 {
     public void Initialize()
     {

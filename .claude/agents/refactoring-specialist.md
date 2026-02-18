@@ -51,6 +51,9 @@ public class MyService : IDisposable
 ```
 
 ## Dependency Injection
-- **Use constructor injection**, NOT Service Locator pattern (`Locator.GetRequiredService<>()`)
+- **Use constructor injection**, NOT Service Locator pattern (`Locator.GetRequiredService<>()`) except for in the following cases:
+  - Plugin classes (inheriting from PluginBase) where DI is not available
+  - Views such as SomeUserControl.xaml.cs where DI is not available
+  - If a class is still a singleton (e.g., a static helper class) and cannot be refactored to use DI, then Service Locator may be used as a last resort, but this should be rare and justified in comments.
 - Makes dependencies explicit and testable
 - Inject interfaces like `IMessenger`, `IThemingService`, etc.
