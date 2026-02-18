@@ -1,35 +1,15 @@
-using CommonFormsAndControls;
-using Gum.ToolStates;
-using StateAnimationPlugin.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Forms.Integration;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Threading;
-using StateAnimationPlugin.Validation;
+using Gum;
 using Gum.Managers;
 using StateAnimationPlugin.Managers;
-using Gum;
-using SkiaSharp;
+using StateAnimationPlugin.ViewModels;
+using System;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Threading;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using SkiaSharp.Views.WPF;
-using Gum.Logic;
-using ToolsUtilities;
 using Gum.Services;
-using Gum.Services.Dialogs;
 
 namespace StateAnimationPlugin.Views
 {
@@ -57,28 +37,19 @@ namespace StateAnimationPlugin.Views
 
         #endregion
 
-        private readonly ISelectedState _selectedState;
-        private readonly INameVerifier _nameVerifier;
-        private readonly NameValidator _nameValidator;
-        private readonly IDialogService _dialogService;
+        private readonly IHotkeyManager _hotkeyManager;
 
         public event EventHandler? AddStateKeyframeClicked;
         public event Action<AnimatedKeyframeViewModel>? AnimationKeyframeAdded;
-        AnimatedKeyframeViewModel? copiedFrame;
-
 
         public event Action? AnimationColumnsResized;
 
         public MainWindow()
         {
             InitializeComponent();
-
             InitializeTimer();
 
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _nameVerifier = Locator.GetRequiredService<INameVerifier>();
-            _nameValidator = new NameValidator(_nameVerifier);
-            _dialogService = Locator.GetRequiredService<IDialogService>();
+            _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
         }
 
         private void InitializeTimer()
@@ -87,46 +58,8 @@ namespace StateAnimationPlugin.Views
 
         private void AddAnimationButton_Click(object? sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                throw new NullReferenceException("The ViewModel for this is invalid - set the DataContext on this view before showing it.");
-            }
-
-            string? whyIsntValid = null;
-
-            whyIsntValid = this.ViewModel.GetWhyAddingAnimationIsInvalid();
-
-            if(!string.IsNullOrEmpty(whyIsntValid))
-            {
-                _dialogService.ShowMessage(whyIsntValid);
-            }
-            else
-            {
-
-                GetUserStringOptions options = new()
-                {
-                    Validator = x =>
-                        _nameValidator.IsAnimationNameValid(x, ViewModel.Animations, out string? whyInvalid)
-                            ? null
-                            : whyInvalid,
-                };
-
-                if(_dialogService.GetUserString(
-                       message: "Enter new animation name:",
-                       title: "New animation",
-                       options: options) is {} result)
-                {
-
-                    var newAnimation = new AnimationViewModel() { Name = result };
-
-                    this.ViewModel.Animations.Add(newAnimation);
-
-                    this.ViewModel.SelectedAnimation = newAnimation;
-                }
-            }
+            ViewModel.AddAnimation();
         }
-
-
 
         private void AddStateKeyframeButton_Click(object? sender, RoutedEventArgs e)
         {
@@ -135,119 +68,12 @@ namespace StateAnimationPlugin.Views
 
         private void AddSubAnimationButton_Click(object? sender, RoutedEventArgs e)
         {
-            ////////////// Early Out//////////
-            if(ViewModel.SelectedAnimation == null)
-            {
-                _dialogService.ShowMessage("You must first select an animation");
-                return;
-            }
-            /////////// End Early Out/////////
-
-            SubAnimationSelectionDialogViewModel window = new();
-
-            window.AnimationToExclude = this.ViewModel.SelectedAnimation;
-
-            window.AnimationContainers = CreateAnimationContainers();
-
-            if (_dialogService.Show(window) && window.SelectedAnimation is { } selectedAnimation)
-            {
-                AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
-                if (selectedAnimation.ContainingInstance != null)
-                {
-                    newVm.AnimationName = selectedAnimation.ContainingInstance.Name + "." + selectedAnimation.Name;
-                }
-                else
-                {
-                    newVm.AnimationName = selectedAnimation.Name;
-                }
-
-                newVm.SubAnimationViewModel = selectedAnimation;
-
-                newVm.HasValidState = true;
-
-                if (ViewModel.SelectedAnimation.SelectedKeyframe != null)
-                {
-                    // put this after the current animation
-                    newVm.Time = ViewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
-                }
-                else if (ViewModel.SelectedAnimation.Keyframes.Count != 0)
-                {
-                    newVm.Time = ViewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
-                }
-
-
-                ViewModel.SelectedAnimation.Keyframes.Add(newVm);
-
-                ViewModel.SelectedAnimation.Keyframes.BubbleSort();
-
-                ViewModel.SelectedAnimation.SelectedKeyframe = newVm;
-            }
+            ViewModel.AddSubAnimation();
         }
 
         private void AddNamedEventButton_Click(object? sender, RoutedEventArgs e)
         {
-            ////////////// Early Out//////////
-            if (ViewModel.SelectedAnimation == null)
-            {
-                _dialogService.ShowMessage("You must first select an animation");
-                return;
-            }
-            /////////// End Early Out/////////
-            
-            if(_dialogService.GetUserString("Enter new event name", "New event") is { } result)
-            {
-                AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
-
-                newVm.EventName = result;
-
-                if (ViewModel.SelectedAnimation.SelectedKeyframe != null)
-                {
-                    // put this after the current animation
-                    newVm.Time = ViewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
-                }
-                else if (ViewModel.SelectedAnimation.Keyframes.Count != 0)
-                {
-                    newVm.Time = ViewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
-                }
-
-
-                ViewModel.SelectedAnimation.Keyframes.Add(newVm);
-
-                ViewModel.SelectedAnimation.Keyframes.BubbleSort();
-
-                ViewModel.SelectedAnimation.SelectedKeyframe = newVm;
-            }
-        }
-
-        private List<AnimationContainerViewModel> CreateAnimationContainers()
-        {
-            if(_selectedState.SelectedElement == null)
-            {
-                throw new NullReferenceException("No selected element to get animation containers from");
-            }
-
-            var AnimationContainers = new List<AnimationContainerViewModel>();
-
-            var acvm = new AnimationContainerViewModel(
-                _selectedState.SelectedElement, null
-                );
-            AnimationContainers.Add(acvm);
-
-            foreach (var instance in _selectedState.SelectedElement.Instances)
-            {
-                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-                if (instanceElement != null)
-                {
-                    var animationSave = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
-                    if (animationSave != null && animationSave.Animations.Count != 0)
-                    {
-                        acvm = new AnimationContainerViewModel(_selectedState.SelectedElement, instance);
-                        AnimationContainers.Add(acvm);
-                    }
-                }
-            }
-
-            return AnimationContainers;
+            ViewModel.AddNamedEvent();
         }
 
         private void LoopToggleClick(object? sender, RoutedEventArgs e)
@@ -261,121 +87,59 @@ namespace StateAnimationPlugin.Views
 
         private void HandleAnimationListKeyPressed(object? sender, KeyEventArgs e)
         {
-            // todo - this should use the hotkey manager
-            var alt = e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Alt);
-
-            if (this.ViewModel.SelectedAnimation != null && alt)
+            if (ViewModel.SelectedAnimation != null && _hotkeyManager.ReorderUp.IsPressed(e))
             {
-                if(e.SystemKey == Key.Up)
+                if (ViewModel.MoveSelectedAnimationUp())
                 {
-                    var index = this.ViewModel.Animations.IndexOf(ViewModel.SelectedAnimation);
-
-                    if(index > 0)
-                    {
-                        this.ViewModel.Animations.Move(index, index - 1);
-                        e.Handled = true;
-                    }
+                    e.Handled = true;
                 }
-                else if(e.SystemKey == Key.Down)
-                {
-                    var index = this.ViewModel.Animations.IndexOf(ViewModel.SelectedAnimation);
-
-                    if(index < this.ViewModel.Animations.Count-1)
-                    {
-                        this.ViewModel.Animations.Move(index, index + 1);
-                        e.Handled = true;
-                    }
-                }
-
-
             }
-
-            if (e.Key == Key.Delete && this.ViewModel.SelectedAnimation != null)
+            else if (ViewModel.SelectedAnimation != null && _hotkeyManager.ReorderDown.IsPressed(e))
+            {
+                if (ViewModel.MoveSelectedAnimationDown())
+                {
+                    e.Handled = true;
+                }
+            }
+            else if (ViewModel.SelectedAnimation != null && _hotkeyManager.Delete.IsPressed(e))
             {
                 e.Handled = true;
-                if(_dialogService.ShowYesNoMessage($"Delete animation {ViewModel.SelectedAnimation.Name}?", "Delete?"))
-                {
-                    this.ViewModel.Animations.Remove(this.ViewModel.SelectedAnimation);
-                    this.ViewModel.SelectedAnimation = null;
-                }
+                ViewModel.DeleteSelectedAnimation();
             }
-
-            var isCtrlDown =
-                Keyboard.IsKeyDown(Key.LeftCtrl);
-
-            if (isCtrlDown )
+            else if (_hotkeyManager.Copy.IsPressed(e))
             {
-                if( e.Key == Key.C)
+                var objectToCopy = ViewModel.SelectedAnimation;
+                if (objectToCopy != null)
                 {
-                    var objectToCopy = ViewModel.SelectedAnimation;
-
-                    if(objectToCopy != null)
-                    {
-                        AnimationCopyPasteManager.Copy(objectToCopy);
-                    }
-                }
-                else if(e.Key == Key.V)
-                {
-                    AnimationCopyPasteManager.Paste(ViewModel);
-                }
-                else if(e.Key == Key.X)
-                {
-
+                    AnimationCopyPasteManager.Copy(objectToCopy);
                 }
             }
-            
-
-            //if ((e. & Keys.Control) == Keys.Control)
-            //{
-            //    // copy, ctrl c, ctrl + c
-            //    if (e.KeyCode == Keys.C)
-            //    {
-            //        e.Handled = true;
-            //        e.SuppressKeyPress = true;
-            //    }
-            //    // paste, ctrl v, ctrl + v
-            //    else if (e.KeyCode == Keys.V)
-            //    {
-            //        e.Handled = true;
-            //        e.SuppressKeyPress = true;
-            //    }
-            //    // cut, ctrl x, ctrl + x
-            //    else if (e.KeyCode == Keys.X)
-            //    {
-            //        e.Handled = true;
-            //        e.SuppressKeyPress = true;
-            //    }
-            //}
+            else if (_hotkeyManager.Paste.IsPressed(e))
+            {
+                AnimationCopyPasteManager.Paste(ViewModel);
+            }
         }
 
 
         private void HandleAnimationKeyframeListBoxKey(object? sender, KeyEventArgs e)
         {
-            if(this.ViewModel.SelectedAnimation != null && this.ViewModel.SelectedAnimation.SelectedKeyframe != null)
+            if (this.ViewModel.SelectedAnimation != null && this.ViewModel.SelectedAnimation.SelectedKeyframe != null)
             {
-                var isCtrlDown = e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Control);
-                if (e.Key == Key.Delete)
+                if (_hotkeyManager.Delete.IsPressed(e))
                 {
-                    // delete the selected keyframe
-                    this.ViewModel.SelectedAnimation.Keyframes.Remove(this.ViewModel.SelectedAnimation.SelectedKeyframe);
-                    this.ViewModel.SelectedAnimation.SelectedKeyframe = null;
+                    ViewModel.DeleteSelectedKeyframe();
                 }
-                // check if the ctrl key is held down and the C key is pressed
-                else if (isCtrlDown && e.Key == Key.C)
+                else if (_hotkeyManager.Copy.IsPressed(e))
                 {
-                    // copy the selected keyframe
-                    copiedFrame = this.ViewModel.SelectedAnimation.SelectedKeyframe.Clone();
+                    ViewModel.CopySelectedKeyframe();
                 }
-                else if (isCtrlDown && e.Key == Key.V && copiedFrame != null)
+                else if (_hotkeyManager.Paste.IsPressed(e))
                 {
-                    // paste the selected keyframe
-                    var copiedKeyframe = copiedFrame.Clone();
-                    copiedKeyframe.Time += .1f;
-                    this.ViewModel.SelectedAnimation.Keyframes.Add(copiedKeyframe);
-                    this.ViewModel.SelectedAnimation.Keyframes.BubbleSort();
-                    this.ViewModel.SelectedAnimation.SelectedKeyframe = copiedKeyframe;
-
-                    AnimationKeyframeAdded?.Invoke(copiedFrame);
+                    var source = ViewModel.PasteKeyframe();
+                    if (source != null)
+                    {
+                        AnimationKeyframeAdded?.Invoke(source);
+                    }
                 }
             }
         }

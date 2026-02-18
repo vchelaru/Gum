@@ -266,6 +266,11 @@ public class MainStateAnimationPlugin : PluginBase
         if(pluginTab != null)
         {
             pluginTab.IsVisible = !pluginTab.IsVisible;
+
+            if(pluginTab.IsVisible)
+            {
+                pluginTab.IsSelected = true;
+            }
         }
     }
 
@@ -466,6 +471,7 @@ public class MainStateAnimationPlugin : PluginBase
             {
                 _viewModel.PropertyChanged += HandlePropertyChanged;
                 _viewModel.AnyChange += HandleDataChange;
+                _viewModel.AddStateKeyframeRequested += HandleAddStateKeyframe;
 
                 foreach (var item in _viewModel.Animations)
                 {

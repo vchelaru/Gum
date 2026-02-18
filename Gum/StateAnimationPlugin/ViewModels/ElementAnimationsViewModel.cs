@@ -45,6 +45,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
     private readonly NameValidator _nameValidator;
+    private AnimatedKeyframeViewModel? _copiedKeyframe;
 
     #endregion
 
@@ -97,6 +98,7 @@ public partial class ElementAnimationsViewModel : ViewModel
                 }
 
                 RefreshAnimationsRightClickMenuItems();
+                RefreshAnimationStatesRightClickMenuitems();
 
             }
         }
@@ -204,6 +206,8 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     //public event EventHandler SelectedItemPropertyChanged;
 
+    public event EventHandler? AddStateKeyframeRequested;
+
     #endregion
 
 
@@ -229,6 +233,8 @@ public partial class ElementAnimationsViewModel : ViewModel
         _nameVerifier = nameVerifier;
         _nameValidator = new NameValidator(_nameVerifier);
         _dialogService = dialogService;
+
+        RefreshAnimationsRightClickMenuItems();
     }
 
     public void LoadFromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element)
@@ -264,6 +270,11 @@ public partial class ElementAnimationsViewModel : ViewModel
     {
         AnimationRightClickItems.Clear();
 
+        var addAnimation = new MenuItem();
+        addAnimation.Header = "Add Animation";
+        addAnimation.Click += (_, _) => AddAnimation();
+        AnimationRightClickItems.Add(addAnimation);
+
         if(SelectedAnimation != null)
         {
             var menuItem = new MenuItem();
@@ -285,12 +296,45 @@ public partial class ElementAnimationsViewModel : ViewModel
             duplicateAnimation.Header = "Duplicate Animation";
             duplicateAnimation.Click += HandleDuplicateAnimation;
             AnimationRightClickItems.Add(duplicateAnimation);
+
+            var toggleLoop = new MenuItem();
+            toggleLoop.Header = SelectedAnimation.Loops ? "Set to Single Play" : "Set to Looping";
+            toggleLoop.Click += (_, _) =>
+            {
+                SelectedAnimation.ToggleLoop();
+                RefreshAnimationsRightClickMenuItems();
+            };
+            AnimationRightClickItems.Add(toggleLoop);
         }
     }
 
     private void RefreshAnimationStatesRightClickMenuitems()
     {
         AnimationStateRightClickItems.Clear();
+
+        if (SelectedAnimation != null)
+        {
+            var addKeyframe = new MenuItem();
+            addKeyframe.Header = "Add Keyframe";
+
+            var addState = new MenuItem();
+            addState.Header = "State";
+            addState.Click += (_, _) => AddStateKeyframeRequested?.Invoke(this, EventArgs.Empty);
+
+            var addSubAnimation = new MenuItem();
+            addSubAnimation.Header = "Sub-Animation";
+            addSubAnimation.Click += (_, _) => AddSubAnimation();
+
+            var addNamedEvent = new MenuItem();
+            addNamedEvent.Header = "Named Event";
+            addNamedEvent.Click += (_, _) => AddNamedEvent();
+
+            addKeyframe.Items.Add(addState);
+            addKeyframe.Items.Add(addSubAnimation);
+            addKeyframe.Items.Add(addNamedEvent);
+
+            AnimationStateRightClickItems.Add(addKeyframe);
+        }
 
         if(this.SelectedAnimation?.SelectedKeyframe != null)
         {
@@ -535,6 +579,203 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
 
         return whyIsntValid;
+    }
+
+    public void AddAnimation()
+    {
+        string? whyIsntValid = GetWhyAddingAnimationIsInvalid();
+        if (!string.IsNullOrEmpty(whyIsntValid))
+        {
+            _dialogService.ShowMessage(whyIsntValid);
+        }
+        else
+        {
+            var dialogViewModel = new AddAnimationDialogViewModel
+            {
+                Validator = x =>
+                    _nameValidator.IsAnimationNameValid(x, Animations, out string? whyInvalid)
+                        ? null
+                        : whyInvalid,
+            };
+
+            if (_dialogService.Show(dialogViewModel))
+            {
+                var newAnimation = new AnimationViewModel()
+                {
+                    Name = dialogViewModel.Name,
+                    Loops = dialogViewModel.Loops
+                };
+                Animations.Add(newAnimation);
+                SelectedAnimation = newAnimation;
+            }
+        }
+    }
+
+    private List<AnimationContainerViewModel> CreateAnimationContainers()
+    {
+        if (_selectedState.SelectedElement == null)
+        {
+            throw new NullReferenceException("No selected element to get animation containers from");
+        }
+
+        var animationContainers = new List<AnimationContainerViewModel>();
+
+        var acvm = new AnimationContainerViewModel(_selectedState.SelectedElement, null);
+        animationContainers.Add(acvm);
+
+        foreach (var instance in _selectedState.SelectedElement.Instances)
+        {
+            var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+            if (instanceElement != null)
+            {
+                var animationSave = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
+                if (animationSave != null && animationSave.Animations.Count != 0)
+                {
+                    acvm = new AnimationContainerViewModel(_selectedState.SelectedElement, instance);
+                    animationContainers.Add(acvm);
+                }
+            }
+        }
+
+        return animationContainers;
+    }
+
+    public void AddSubAnimation()
+    {
+        if (SelectedAnimation == null)
+        {
+            _dialogService.ShowMessage("You must first select an animation");
+            return;
+        }
+
+        SubAnimationSelectionDialogViewModel window = new();
+        window.AnimationToExclude = SelectedAnimation;
+        window.AnimationContainers = CreateAnimationContainers();
+
+        if (_dialogService.Show(window) && window.SelectedAnimation is { } selectedAnimation)
+        {
+            AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
+            if (selectedAnimation.ContainingInstance != null)
+            {
+                newVm.AnimationName = selectedAnimation.ContainingInstance.Name + "." + selectedAnimation.Name;
+            }
+            else
+            {
+                newVm.AnimationName = selectedAnimation.Name;
+            }
+
+            newVm.SubAnimationViewModel = selectedAnimation;
+            newVm.HasValidState = true;
+
+            if (SelectedAnimation.SelectedKeyframe != null)
+            {
+                newVm.Time = SelectedAnimation.SelectedKeyframe.Time + 1f;
+            }
+            else if (SelectedAnimation.Keyframes.Count != 0)
+            {
+                newVm.Time = SelectedAnimation.Keyframes.Last().Time + 1f;
+            }
+
+            SelectedAnimation.Keyframes.Add(newVm);
+            SelectedAnimation.Keyframes.BubbleSort();
+            SelectedAnimation.SelectedKeyframe = newVm;
+        }
+    }
+
+    public void AddNamedEvent()
+    {
+        if (SelectedAnimation == null)
+        {
+            _dialogService.ShowMessage("You must first select an animation");
+            return;
+        }
+
+        if (_dialogService.GetUserString("Enter new event name", "New event") is { } result)
+        {
+            AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
+            newVm.EventName = result;
+
+            if (SelectedAnimation.SelectedKeyframe != null)
+            {
+                newVm.Time = SelectedAnimation.SelectedKeyframe.Time + 1f;
+            }
+            else if (SelectedAnimation.Keyframes.Count != 0)
+            {
+                newVm.Time = SelectedAnimation.Keyframes.Last().Time + 1f;
+            }
+
+            SelectedAnimation.Keyframes.Add(newVm);
+            SelectedAnimation.Keyframes.BubbleSort();
+            SelectedAnimation.SelectedKeyframe = newVm;
+        }
+    }
+
+    public void CopySelectedKeyframe()
+    {
+        if (SelectedAnimation?.SelectedKeyframe != null)
+        {
+            _copiedKeyframe = SelectedAnimation.SelectedKeyframe.Clone();
+        }
+    }
+
+    /// <summary>
+    /// Pastes the copied keyframe. Returns the source keyframe that was copied, or null if nothing was pasted.
+    /// </summary>
+    public AnimatedKeyframeViewModel? PasteKeyframe()
+    {
+        if (SelectedAnimation != null && _copiedKeyframe != null)
+        {
+            var copiedKeyframe = _copiedKeyframe.Clone();
+            copiedKeyframe.Time += .1f;
+            SelectedAnimation.Keyframes.Add(copiedKeyframe);
+            SelectedAnimation.Keyframes.BubbleSort();
+            SelectedAnimation.SelectedKeyframe = copiedKeyframe;
+            return _copiedKeyframe;
+        }
+        return null;
+    }
+
+    public void DeleteSelectedKeyframe()
+    {
+        if (SelectedAnimation?.SelectedKeyframe != null)
+        {
+            SelectedAnimation.Keyframes.Remove(SelectedAnimation.SelectedKeyframe);
+            SelectedAnimation.SelectedKeyframe = null;
+        }
+    }
+
+    public bool MoveSelectedAnimationUp()
+    {
+        if (SelectedAnimation == null) return false;
+        var index = Animations.IndexOf(SelectedAnimation);
+        if (index > 0)
+        {
+            Animations.Move(index, index - 1);
+            return true;
+        }
+        return false;
+    }
+
+    public bool MoveSelectedAnimationDown()
+    {
+        if (SelectedAnimation == null) return false;
+        var index = Animations.IndexOf(SelectedAnimation);
+        if (index < Animations.Count - 1)
+        {
+            Animations.Move(index, index + 1);
+            return true;
+        }
+        return false;
+    }
+
+    public void DeleteSelectedAnimation()
+    {
+        if (SelectedAnimation == null) return;
+        if (_dialogService.ShowYesNoMessage($"Delete animation {SelectedAnimation.Name}?", "Delete?"))
+        {
+            Animations.Remove(SelectedAnimation);
+            SelectedAnimation = null;
+        }
     }
 
     public IEnumerable<ErrorViewModel> GetErrors()

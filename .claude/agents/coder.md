@@ -29,6 +29,23 @@ NEVER run git push, git reset --hard, or other destructive git commands.
 
 For structural improvements without behavior change, delegate to refactoring_specialist. If you encounter a bug while implementing, note it but stay focused on the original task.
 
+# High-Level Project Structure
+
+The Gum repository is organized into several key areas:
+
+* GumCommon - Common code used in all C# environments. This is used by all of our runtimes, but can also be used by itself for shared logic that doesn't depend on any particular runtime.
+* Runtimes - these are runtimes usually tied to specific rendering technologies. The most common ones are:
+  * XNA-likes
+    * MonoGame
+    * FNA
+    * KNI
+  * raylib (raylib-cs)
+  * SkiaSharp - Although this is a rendering technology by itself, more specific runtimes exist to help embed Gum in different environments. Note that the SkiaSharp runtime can also be used by itself in projects like Silk.NET
+    * Maui
+    * WPF
+* Gum Tool - This is the WYSIWYG editor for Gum. It currently uses the KNI runtime. Much of the logic exists in the main Gum project, but it also has plugins, usually broken up by tab. Some plugins are embedded in the Gum tool itself, some are separate projects (csproj) which are dynamically loaded.
+
+
 # Code Style
 
 * Use nullable method parameters when appropriate: If a method checks for null (e.g., `if (instance == null)` or `instance?.SomeProperty`), the parameter MUST be declared as nullable (e.g., `InstanceSave?` instead of `InstanceSave`). Non-nullable parameters should never have null checks.
