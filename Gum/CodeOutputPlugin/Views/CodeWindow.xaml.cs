@@ -149,7 +149,7 @@ public partial class CodeWindow : UserControl
                     valueToSet += "\\";
                 }
 
-                if (!string.IsNullOrWhiteSpace(valueToSet) && FileManager.IsRelative(valueToSet) == false)
+                if (!string.IsNullOrWhiteSpace(valueToSet) && FileManager.IsRelative(valueToSet) == false && _projectState.ProjectDirectory != null)
                 {
                     var projectDirectory = _projectState.ProjectDirectory;
                     valueToSet = FileManager.MakeRelative(valueToSet, projectDirectory, preserveCase: true);

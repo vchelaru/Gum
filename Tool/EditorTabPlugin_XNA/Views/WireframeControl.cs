@@ -35,7 +35,7 @@ public class WireframeControl : GraphicsDeviceControl
     private IHotkeyManager _hotkeyManager;
     private IProjectManager _projectManager;
     private SelectionManager _selectionManager;
-    private DragDropManager _dragDropManager;
+    private IDragDropManager _dragDropManager;
     LineRectangle mCanvasBounds;
 
     public Color ScreenBoundsColor = Color.LightBlue;
@@ -133,7 +133,7 @@ public class WireframeControl : GraphicsDeviceControl
         Panel wireframeParentPanel,
         IHotkeyManager hotkeyManager,
         SelectionManager selectionManager,
-        DragDropManager dragDropManager,
+        IDragDropManager dragDropManager,
         EditorViewModel editorViewModel,
         IProjectManager projectManager)
     {

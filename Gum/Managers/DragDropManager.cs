@@ -43,7 +43,7 @@ public interface ITreeNode
     void Expand();
 }
 
-public class DragDropManager
+public class DragDropManager : IDragDropManager
 {
     #region Fields
 
@@ -618,7 +618,7 @@ public class DragDropManager
         }
     }
 
-    internal void HandleKeyPress(KeyPressEventArgs e)
+    public void HandleKeyPress(KeyPressEventArgs e)
     {
         int m = 3;
     }
@@ -627,7 +627,7 @@ public class DragDropManager
 
     #region General Functions
 
-    internal bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
+    public bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
     {
         if (targetNode == null) return false;
 
@@ -737,9 +737,18 @@ public class DragDropManager
 
     public void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
     {
-        IEnumerable<object> tags = draggedNodes
+        // Sort InstanceSaves by descending index in their parent container so that,
+        // as each item is inserted at the target position, the final relative order
+        // matches the original order. Non-InstanceSave objects sort last.
+        var tags = draggedNodes
             .Where(n => n.Tag != null)
-            .Select(n => n.Tag);
+            .Select(n => n.Tag)
+            .OrderByDescending(tag => tag is InstanceSave instance
+                ? instance.ParentContainer?.Instances.IndexOf(instance) ?? int.MinValue
+                : int.MinValue)
+            .ToList();
+
+        using var undoLock = _undoManager.RequestLock();
 
         foreach (object draggedObject in tags)
         {
@@ -747,7 +756,7 @@ public class DragDropManager
         }
     }
 
-    internal void OnFilesDroppedInTreeView(string[] files)
+    public void OnFilesDroppedInTreeView(string[] files)
     {
         var targetTreeNode = _pluginManager.GetTreeNodeOver();
 

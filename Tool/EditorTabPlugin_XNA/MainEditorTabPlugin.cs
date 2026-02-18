@@ -127,7 +127,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private EditorViewModel _editorViewModel;
     private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private readonly FileLocations _fileLocations;
-    private DragDropManager _dragDropManager;
+    private IDragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
     private EditorControls _editorControls;
@@ -196,7 +196,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _backgroundManager = new BackgroundManager(_wireframeCommands, 
             Locator.GetRequiredService<IMessenger>(), 
             Locator.GetRequiredService<IThemingService>());
-        _dragDropManager = Locator.GetRequiredService<DragDropManager>();
+        _dragDropManager = Locator.GetRequiredService<IDragDropManager>();
         _hotkeyManager = hotkeyManager;
         PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
 

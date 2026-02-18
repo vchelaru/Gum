@@ -28,6 +28,10 @@ public static class CodeOutputProjectSettingsManager
     private static FilePath? GetProjectCodeSettingsFile()
     {
         var projectState = Locator.GetRequiredService<IProjectState>();
+        if(projectState.ProjectDirectory == null)
+        {
+            return null;
+        }
         FilePath folder = projectState.ProjectDirectory;
         if(folder == null)
         {

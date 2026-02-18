@@ -186,9 +186,15 @@ public class CodeWindowViewModel : ViewModel
 
     public FilePath? GetCsprojDirectoryAboveGumx()
     {
-        FilePath gumDirectory = _projectState.ProjectDirectory;
-
-        return GetCsprojDirectoryAboveGumx(gumDirectory);
+        if(_projectState.ProjectDirectory == null)
+        {
+            return null;
+        }
+        else
+        {
+            FilePath gumDirectory = _projectState.ProjectDirectory;
+            return GetCsprojDirectoryAboveGumx(gumDirectory);
+        }
     }
 
     FilePath? GetCsprojDirectoryAboveGumx(FilePath filePath)
@@ -232,7 +238,7 @@ public class CodeWindowViewModel : ViewModel
 
         if (shouldContinue)
         {
-            var gumDirectory = _projectState.ProjectDirectory;
+            var gumDirectory = _projectState.ProjectDirectory!;
             var relativePath = FileManager.MakeRelative(csprojLocation!.FullPath, gumDirectory);
             codeOutputProjectSettings.CodeProjectRoot = relativePath;
 
