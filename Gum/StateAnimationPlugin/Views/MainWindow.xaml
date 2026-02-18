@@ -210,9 +210,25 @@
                                 <ToggleButton IsChecked="{Binding Loops, Mode=TwoWay}">
                                     <ToggleButton.Style>
                                         <Style BasedOn="{StaticResource IconButton}" TargetType="ToggleButton">
-                                            <Setter Property="Content" Value="{wpf:FluentIcon Icon=ArrowRight}" />
+                                            <Setter Property="ToolTip" Value="Plays once" />
+                                            <Setter Property="Content">
+                                                <Setter.Value>
+                                                    <Grid>
+                                                        <wpf:FluentIcon Icon="ArrowRight" />
+                                                        <TextBlock
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Bottom"
+                                                            FontSize="8"
+                                                            FontWeight="Bold"
+                                                            Foreground="{DynamicResource Frb.Brushes.Primary}"
+                                                            Text="1"
+                                                            Visibility="Visible" />
+                                                    </Grid>
+                                                </Setter.Value>
+                                            </Setter>
                                             <Style.Triggers>
                                                 <Trigger Property="IsChecked" Value="True">
+                                                    <Setter Property="ToolTip" Value="Loops forever" />
                                                     <Setter Property="Content" Value="{wpf:FluentIcon Icon=ArrowRepeatAll}" />
                                                 </Trigger>
                                             </Style.Triggers>

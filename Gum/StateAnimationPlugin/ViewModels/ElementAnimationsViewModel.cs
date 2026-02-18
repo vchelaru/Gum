@@ -98,6 +98,7 @@ public partial class ElementAnimationsViewModel : ViewModel
                 }
 
                 RefreshAnimationsRightClickMenuItems();
+                RefreshAnimationStatesRightClickMenuitems();
 
             }
         }
@@ -205,6 +206,8 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     //public event EventHandler SelectedItemPropertyChanged;
 
+    public event EventHandler? AddStateKeyframeRequested;
+
     #endregion
 
 
@@ -293,12 +296,45 @@ public partial class ElementAnimationsViewModel : ViewModel
             duplicateAnimation.Header = "Duplicate Animation";
             duplicateAnimation.Click += HandleDuplicateAnimation;
             AnimationRightClickItems.Add(duplicateAnimation);
+
+            var toggleLoop = new MenuItem();
+            toggleLoop.Header = SelectedAnimation.Loops ? "Set to Single Play" : "Set to Looping";
+            toggleLoop.Click += (_, _) =>
+            {
+                SelectedAnimation.ToggleLoop();
+                RefreshAnimationsRightClickMenuItems();
+            };
+            AnimationRightClickItems.Add(toggleLoop);
         }
     }
 
     private void RefreshAnimationStatesRightClickMenuitems()
     {
         AnimationStateRightClickItems.Clear();
+
+        if (SelectedAnimation != null)
+        {
+            var addKeyframe = new MenuItem();
+            addKeyframe.Header = "Add Keyframe";
+
+            var addState = new MenuItem();
+            addState.Header = "State";
+            addState.Click += (_, _) => AddStateKeyframeRequested?.Invoke(this, EventArgs.Empty);
+
+            var addSubAnimation = new MenuItem();
+            addSubAnimation.Header = "Sub-Animation";
+            addSubAnimation.Click += (_, _) => AddSubAnimation();
+
+            var addNamedEvent = new MenuItem();
+            addNamedEvent.Header = "Named Event";
+            addNamedEvent.Click += (_, _) => AddNamedEvent();
+
+            addKeyframe.Items.Add(addState);
+            addKeyframe.Items.Add(addSubAnimation);
+            addKeyframe.Items.Add(addNamedEvent);
+
+            AnimationStateRightClickItems.Add(addKeyframe);
+        }
 
         if(this.SelectedAnimation?.SelectedKeyframe != null)
         {
@@ -554,7 +590,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
         else
         {
-            GetUserStringOptions options = new()
+            var dialogViewModel = new AddAnimationDialogViewModel
             {
                 Validator = x =>
                     _nameValidator.IsAnimationNameValid(x, Animations, out string? whyInvalid)
@@ -562,12 +598,13 @@ public partial class ElementAnimationsViewModel : ViewModel
                         : whyInvalid,
             };
 
-            if (_dialogService.GetUserString(
-                   message: "Enter new animation name:",
-                   title: "New animation",
-                   options: options) is { } result)
+            if (_dialogService.Show(dialogViewModel))
             {
-                var newAnimation = new AnimationViewModel() { Name = result };
+                var newAnimation = new AnimationViewModel()
+                {
+                    Name = dialogViewModel.Name,
+                    Loops = dialogViewModel.Loops
+                };
                 Animations.Add(newAnimation);
                 SelectedAnimation = newAnimation;
             }

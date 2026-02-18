@@ -9,7 +9,7 @@ This project (Gum) provides UI solutions for game developers using C#. It includ
 
 ## Agent Workflow
 
-For every task, invoke the appropriate agent from `.claude/agents/` before proceeding. The agent's instructions provide guidelines for how the task should be performed.
+For every task, invoke the appropriate agent from `.claude/agents/` before proceeding. The agent's instructions provide guidelines for how the task should be performed. Before doing any work, announce which agent you are using such as "Invoking coder agent for this task..."
 
 Available agents:
 - **coder** — Writing or modifying code (not unit tests) for new features or bugs
