@@ -382,28 +382,23 @@ chmod +x ~/bin/gum &> /dev/null
 
 ################################################################################
 ### Check if the bin directory is in PATH based on the shell being used
-### If not, add it to PATH and reload the shell configuration.
+### If not, add it to PATH for future terminal sessions.
 ################################################################################
 if [[ $SHELL == *"bash"* ]]; then
     if ! grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bashrc 2>/dev/null; then
-        echo "Adding ~/bin to PATH in ~/.bashrc, please wait..."
+        echo "Adding ~/bin to PATH in ~/.bashrc..."
         echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
     fi
-    echo "Reloading ~/.bashrc, please wait..."
-    source ~/.bashrc &> /dev/null
 elif [[ $SHELL == *"zsh"* ]]; then
     if ! grep -q 'export PATH="$HOME/bin:$PATH"' ~/.zshrc 2>/dev/null; then
-        echo "Adding ~/bin to PATH in ~/.zshrc, please wait..."
+        echo "Adding ~/bin to PATH in ~/.zshrc..."
         echo 'export PATH="$HOME/bin:$PATH"' >> ~/.zshrc
     fi
-    echo "Reloading ~/.zshrc, please wait..."
-    source ~/.zshrc &> /dev/null
 elif [[ $SHELL == *"fish"* ]]; then
     if ! grep -q 'set -x PATH $HOME/bin $PATH' ~/.config/fish/config.fish 2>/dev/null; then
-        echo "Adding ~/bin to PATH in config.fish, please wait..."
+        echo "Adding ~/bin to PATH in config.fish..."
         echo 'set -x PATH $HOME/bin $PATH' >> ~/.config/fish/config.fish
     fi
-    echo "Please restart your terminal for PATH changes to take effect."
 else
     echo "WARNING: Unable to determine shell type. Please ensure ~/bin is in your PATH manually."
 fi
@@ -411,7 +406,10 @@ fi
 ################################################################################
 ### Finished
 ################################################################################
-echo "SUCCESS: Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'gum'."
-echo "TIP: To start Gum: in a terminal type ~/bin/gum"
-echo "TIP: You may need to restart the terminal or your computer if it doesn't work at first"
+echo ""
+echo "SUCCESS: Gum setup on Linux using WINE is now complete!"
+echo ""
+echo "To start Gum, open a new terminal and type: gum"
+echo "  Or in this terminal: ~/bin/gum"
+echo ""
 echo "Enjoy using GUM!"
