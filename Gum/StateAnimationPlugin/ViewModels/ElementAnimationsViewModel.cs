@@ -45,6 +45,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
     private readonly NameValidator _nameValidator;
+    private AnimatedKeyframeViewModel? _copiedKeyframe;
 
     #endregion
 
@@ -535,6 +536,202 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
 
         return whyIsntValid;
+    }
+
+    public void AddAnimation()
+    {
+        string? whyIsntValid = GetWhyAddingAnimationIsInvalid();
+        if (!string.IsNullOrEmpty(whyIsntValid))
+        {
+            _dialogService.ShowMessage(whyIsntValid);
+        }
+        else
+        {
+            GetUserStringOptions options = new()
+            {
+                Validator = x =>
+                    _nameValidator.IsAnimationNameValid(x, Animations, out string? whyInvalid)
+                        ? null
+                        : whyInvalid,
+            };
+
+            if (_dialogService.GetUserString(
+                   message: "Enter new animation name:",
+                   title: "New animation",
+                   options: options) is { } result)
+            {
+                var newAnimation = new AnimationViewModel() { Name = result };
+                Animations.Add(newAnimation);
+                SelectedAnimation = newAnimation;
+            }
+        }
+    }
+
+    private List<AnimationContainerViewModel> CreateAnimationContainers()
+    {
+        if (_selectedState.SelectedElement == null)
+        {
+            throw new NullReferenceException("No selected element to get animation containers from");
+        }
+
+        var animationContainers = new List<AnimationContainerViewModel>();
+
+        var acvm = new AnimationContainerViewModel(_selectedState.SelectedElement, null);
+        animationContainers.Add(acvm);
+
+        foreach (var instance in _selectedState.SelectedElement.Instances)
+        {
+            var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+            if (instanceElement != null)
+            {
+                var animationSave = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
+                if (animationSave != null && animationSave.Animations.Count != 0)
+                {
+                    acvm = new AnimationContainerViewModel(_selectedState.SelectedElement, instance);
+                    animationContainers.Add(acvm);
+                }
+            }
+        }
+
+        return animationContainers;
+    }
+
+    public void AddSubAnimation()
+    {
+        if (SelectedAnimation == null)
+        {
+            _dialogService.ShowMessage("You must first select an animation");
+            return;
+        }
+
+        SubAnimationSelectionDialogViewModel window = new();
+        window.AnimationToExclude = SelectedAnimation;
+        window.AnimationContainers = CreateAnimationContainers();
+
+        if (_dialogService.Show(window) && window.SelectedAnimation is { } selectedAnimation)
+        {
+            AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
+            if (selectedAnimation.ContainingInstance != null)
+            {
+                newVm.AnimationName = selectedAnimation.ContainingInstance.Name + "." + selectedAnimation.Name;
+            }
+            else
+            {
+                newVm.AnimationName = selectedAnimation.Name;
+            }
+
+            newVm.SubAnimationViewModel = selectedAnimation;
+            newVm.HasValidState = true;
+
+            if (SelectedAnimation.SelectedKeyframe != null)
+            {
+                newVm.Time = SelectedAnimation.SelectedKeyframe.Time + 1f;
+            }
+            else if (SelectedAnimation.Keyframes.Count != 0)
+            {
+                newVm.Time = SelectedAnimation.Keyframes.Last().Time + 1f;
+            }
+
+            SelectedAnimation.Keyframes.Add(newVm);
+            SelectedAnimation.Keyframes.BubbleSort();
+            SelectedAnimation.SelectedKeyframe = newVm;
+        }
+    }
+
+    public void AddNamedEvent()
+    {
+        if (SelectedAnimation == null)
+        {
+            _dialogService.ShowMessage("You must first select an animation");
+            return;
+        }
+
+        if (_dialogService.GetUserString("Enter new event name", "New event") is { } result)
+        {
+            AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
+            newVm.EventName = result;
+
+            if (SelectedAnimation.SelectedKeyframe != null)
+            {
+                newVm.Time = SelectedAnimation.SelectedKeyframe.Time + 1f;
+            }
+            else if (SelectedAnimation.Keyframes.Count != 0)
+            {
+                newVm.Time = SelectedAnimation.Keyframes.Last().Time + 1f;
+            }
+
+            SelectedAnimation.Keyframes.Add(newVm);
+            SelectedAnimation.Keyframes.BubbleSort();
+            SelectedAnimation.SelectedKeyframe = newVm;
+        }
+    }
+
+    public void CopySelectedKeyframe()
+    {
+        if (SelectedAnimation?.SelectedKeyframe != null)
+        {
+            _copiedKeyframe = SelectedAnimation.SelectedKeyframe.Clone();
+        }
+    }
+
+    /// <summary>
+    /// Pastes the copied keyframe. Returns the source keyframe that was copied, or null if nothing was pasted.
+    /// </summary>
+    public AnimatedKeyframeViewModel? PasteKeyframe()
+    {
+        if (SelectedAnimation != null && _copiedKeyframe != null)
+        {
+            var copiedKeyframe = _copiedKeyframe.Clone();
+            copiedKeyframe.Time += .1f;
+            SelectedAnimation.Keyframes.Add(copiedKeyframe);
+            SelectedAnimation.Keyframes.BubbleSort();
+            SelectedAnimation.SelectedKeyframe = copiedKeyframe;
+            return _copiedKeyframe;
+        }
+        return null;
+    }
+
+    public void DeleteSelectedKeyframe()
+    {
+        if (SelectedAnimation?.SelectedKeyframe != null)
+        {
+            SelectedAnimation.Keyframes.Remove(SelectedAnimation.SelectedKeyframe);
+            SelectedAnimation.SelectedKeyframe = null;
+        }
+    }
+
+    public bool MoveSelectedAnimationUp()
+    {
+        if (SelectedAnimation == null) return false;
+        var index = Animations.IndexOf(SelectedAnimation);
+        if (index > 0)
+        {
+            Animations.Move(index, index - 1);
+            return true;
+        }
+        return false;
+    }
+
+    public bool MoveSelectedAnimationDown()
+    {
+        if (SelectedAnimation == null) return false;
+        var index = Animations.IndexOf(SelectedAnimation);
+        if (index < Animations.Count - 1)
+        {
+            Animations.Move(index, index + 1);
+            return true;
+        }
+        return false;
+    }
+
+    public void DeleteSelectedAnimation()
+    {
+        if (SelectedAnimation == null) return;
+        if (_dialogService.ShowYesNoMessage($"Delete animation {SelectedAnimation.Name}?", "Delete?"))
+        {
+            Animations.Remove(SelectedAnimation);
+            SelectedAnimation = null;
+        }
     }
 
     public IEnumerable<ErrorViewModel> GetErrors()
