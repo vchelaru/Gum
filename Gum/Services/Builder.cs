@@ -109,7 +109,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IEditVariableService, EditVariableService>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
-        services.AddSingleton<DragDropManager>();
+        services.AddSingleton<IDragDropManager, DragDropManager>();
         services.AddSingleton<MenuStripManager>();
         services.AddSingleton<ImportLogic>();
         services.AddSingleton<IImportLogic>(provider => provider.GetRequiredService<ImportLogic>());

@@ -277,7 +277,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     public TreeNode RootBehaviorsTreeNode => mBehaviorsTreeNode;
 
-    private DragDropManager _dragDropManager;
+    private IDragDropManager _dragDropManager;
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
     private readonly DeleteLogic _deleteLogic;
@@ -327,7 +327,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _collapseToggleService = new CollapseToggleService();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
-        _dragDropManager = Locator.GetRequiredService<DragDropManager>();
+        _dragDropManager = Locator.GetRequiredService<IDragDropManager>();
         _viewCreator = new ElementTreeViewCreator();
 
         Cursor GetAddCursor()

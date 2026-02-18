@@ -60,7 +60,6 @@ public class PluginManager : IPluginManager
     
     static PluginManager mGlobalInstance;
     static List<PluginManager> mInstances = new List<PluginManager>();
-    private bool mGlobal;
 
     private IGuiCommands _guiCommands;
     private IMessenger _messenger;
@@ -1042,14 +1041,6 @@ public class PluginManager : IPluginManager
             }
         }
     }
-
-
-    private static bool ShouldProcessPluginManager(PluginCategories pluginCategories, PluginManager pluginManager)
-    {
-        return (pluginManager.mGlobal && (pluginCategories & PluginCategories.Global) == PluginCategories.Global) ||
-                            (!pluginManager.mGlobal && (pluginCategories & PluginCategories.ProjectSpecific) == PluginCategories.ProjectSpecific);
-    }
-
 
     public static bool ShutDownPlugin(IPlugin pluginToShutDown)
     {

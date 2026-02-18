@@ -43,7 +43,7 @@ public interface ITreeNode
     void Expand();
 }
 
-public class DragDropManager
+public class DragDropManager : IDragDropManager
 {
     #region Fields
 
@@ -618,7 +618,7 @@ public class DragDropManager
         }
     }
 
-    internal void HandleKeyPress(KeyPressEventArgs e)
+    public void HandleKeyPress(KeyPressEventArgs e)
     {
         int m = 3;
     }
@@ -627,7 +627,7 @@ public class DragDropManager
 
     #region General Functions
 
-    internal bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
+    public bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
     {
         if (targetNode == null) return false;
 
@@ -741,13 +741,15 @@ public class DragDropManager
             .Where(n => n.Tag != null)
             .Select(n => n.Tag);
 
+        using var undoLock = _undoManager.RequestLock();
+
         foreach (object draggedObject in tags)
         {
             HandleDroppedItemOnTreeView(draggedObject, targetNode, index);
         }
     }
 
-    internal void OnFilesDroppedInTreeView(string[] files)
+    public void OnFilesDroppedInTreeView(string[] files)
     {
         var targetTreeNode = _pluginManager.GetTreeNodeOver();
 
