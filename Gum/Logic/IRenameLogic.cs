@@ -34,5 +34,9 @@ public interface IRenameLogic
 
     VariableChangeResponse GetVariableChangesForRenamedVariable(IStateContainer owner, string oldFullName, string oldStrippedOrExposedName);
 
+    void PropagateVariableRename(ElementSave parent, string variableFullName,
+        string oldStrippedOrExposedName, string newStrippedOrExposedName,
+        HashSet<ElementSave> elementsNeedingSave);
+
     #endregion
 }

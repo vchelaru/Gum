@@ -213,6 +213,64 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void PerformUndo_ExposedVariableRename_ShouldDelegatePropagationToRenameLogic()
+    {
+        ComponentSave componentA = _selectedState.Object.SelectedComponent!;
+
+        var exposedVar = new VariableSave
+        {
+            Name = "instanceX.Color",
+            ExposedAsName = "ButtonColor"
+        };
+        componentA.DefaultState.Variables.Add(exposedVar);
+
+        _undoManager.RecordState();
+
+        exposedVar.ExposedAsName = "ButtonBgColor";
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        _renameLogic.Verify(x => x.PropagateVariableRename(
+            componentA,
+            "instanceX.Color",
+            "ButtonBgColor",
+            "ButtonColor",
+            It.IsAny<HashSet<ElementSave>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public void PerformUndo_CustomVariableRename_ShouldDelegatePropagationToRenameLogic()
+    {
+        ComponentSave componentA = _selectedState.Object.SelectedComponent!;
+
+        var customVar = new VariableSave
+        {
+            Name = "OldName",
+            Type = "float",
+            IsCustomVariable = true,
+            Value = 5f
+        };
+        componentA.DefaultState.Variables.Add(customVar);
+
+        _undoManager.RecordState();
+
+        customVar.Name = "NewName";
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        _renameLogic.Verify(x => x.PropagateVariableRename(
+            componentA,
+            "NewName",
+            "NewName",
+            "OldName",
+            It.IsAny<HashSet<ElementSave>>()),
+            Times.Once);
+    }
+
+    [Fact]
     public void RecordUndo_ShouldNotCrash_WithDifferentSelectedElement()
     {
         var component1 = new ComponentSave();

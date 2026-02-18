@@ -685,6 +685,25 @@ public class UndoManager : IUndoManager
         shouldRefreshStateTreeView = false;
         shouldRefreshBehaviorView = false;
 
+        Dictionary<string, string>? previousExposedNames = null;
+        List<(string Name, string Type)>? previousCustomVariables = null;
+
+        if (propagateNameChanges && elementInUndoSnapshot.States != null)
+        {
+            previousExposedNames = new Dictionary<string, string>();
+            previousCustomVariables = new List<(string Name, string Type)>();
+            foreach (var currentState in toApplyTo.States)
+            {
+                foreach (var variable in currentState.Variables)
+                {
+                    if (!string.IsNullOrEmpty(variable.ExposedAsName))
+                        previousExposedNames[variable.Name] = variable.ExposedAsName;
+                    if (variable.IsCustomVariable)
+                        previousCustomVariables.Add((variable.Name, variable.Type));
+                }
+            }
+        }
+
         if (elementInUndoSnapshot.States != null)
         {
             foreach (var state in elementInUndoSnapshot.States)
@@ -696,6 +715,11 @@ public class UndoManager : IUndoManager
                 }
             }
 
+        }
+
+        if (previousExposedNames != null)
+        {
+            PropagateVariableRenames(toApplyTo, previousExposedNames, previousCustomVariables!);
         }
 
         if (elementInUndoSnapshot.Categories != null)
@@ -788,6 +812,54 @@ public class UndoManager : IUndoManager
     {
         toApplyTo.SetFrom(undoStateSave);
 
+    }
+
+    private void PropagateVariableRenames(ElementSave parent,
+        Dictionary<string, string> previousExposedNames,
+        List<(string Name, string Type)> previousCustomVariables)
+    {
+        var elementsNeedingSave = new HashSet<ElementSave>();
+
+        // Handle exposed variable renames
+        foreach (var state in parent.States)
+        {
+            foreach (var variable in state.Variables)
+            {
+                if (!string.IsNullOrEmpty(variable.ExposedAsName) &&
+                    previousExposedNames.TryGetValue(variable.Name, out var previousExposedAsName) &&
+                    previousExposedAsName != variable.ExposedAsName)
+                {
+                    _renameLogic.PropagateVariableRename(parent, variable.Name, previousExposedAsName, variable.ExposedAsName, elementsNeedingSave);
+                }
+            }
+        }
+
+        // Handle custom variable renames (matched by type heuristic)
+        var currentCustomVariables = parent.States
+            .SelectMany(s => s.Variables.Where(v => v.IsCustomVariable))
+            .Select(v => (v.Name, v.Type))
+            .Distinct()
+            .ToList();
+
+        var disappearedCustomVars = previousCustomVariables
+            .Where(prev => !currentCustomVariables.Any(c => c.Name == prev.Name))
+            .ToList();
+        var appearedCustomVars = currentCustomVariables
+            .Where(curr => !previousCustomVariables.Any(prev => prev.Name == curr.Name))
+            .ToList();
+
+        foreach (var disappeared in disappearedCustomVars)
+        {
+            var matchingAppeared = appearedCustomVars.FirstOrDefault(a => a.Type == disappeared.Type);
+            if (matchingAppeared == default) continue;
+            appearedCustomVars.Remove(matchingAppeared);
+            _renameLogic.PropagateVariableRename(parent, disappeared.Name, disappeared.Name, matchingAppeared.Name, elementsNeedingSave);
+        }
+
+        foreach (var element in elementsNeedingSave)
+        {
+            _fileCommands.TryAutoSaveElement(element);
+        }
     }
 
     private void AddAndRemoveBehaviors(List<ElementBehaviorReference> undoList, List<ElementBehaviorReference> listToApplyTo, ElementSave parent)
