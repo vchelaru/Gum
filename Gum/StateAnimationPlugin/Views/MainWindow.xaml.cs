@@ -1,24 +1,15 @@
+using Gum;
+using Gum.Managers;
+using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Forms.Integration;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
-using StateAnimationPlugin.Managers;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Gum.Services;
 
 namespace StateAnimationPlugin.Views
 {
@@ -46,6 +37,8 @@ namespace StateAnimationPlugin.Views
 
         #endregion
 
+        private readonly IHotkeyManager _hotkeyManager;
+
         public event EventHandler? AddStateKeyframeClicked;
         public event Action<AnimatedKeyframeViewModel>? AnimationKeyframeAdded;
 
@@ -55,6 +48,8 @@ namespace StateAnimationPlugin.Views
         {
             InitializeComponent();
             InitializeTimer();
+
+            _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
         }
 
         private void InitializeTimer()
@@ -65,8 +60,6 @@ namespace StateAnimationPlugin.Views
         {
             ViewModel.AddAnimation();
         }
-
-
 
         private void AddStateKeyframeButton_Click(object? sender, RoutedEventArgs e)
         {
@@ -94,49 +87,36 @@ namespace StateAnimationPlugin.Views
 
         private void HandleAnimationListKeyPressed(object? sender, KeyEventArgs e)
         {
-            // todo - this should use the hotkey manager
-            var alt = e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Alt);
-
-            if (this.ViewModel.SelectedAnimation != null && alt)
+            if (ViewModel.SelectedAnimation != null && _hotkeyManager.ReorderUp.IsPressed(e))
             {
-                if (e.SystemKey == Key.Up)
+                if (ViewModel.MoveSelectedAnimationUp())
                 {
-                    if (ViewModel.MoveSelectedAnimationUp())
-                    {
-                        e.Handled = true;
-                    }
-                }
-                else if (e.SystemKey == Key.Down)
-                {
-                    if (ViewModel.MoveSelectedAnimationDown())
-                    {
-                        e.Handled = true;
-                    }
+                    e.Handled = true;
                 }
             }
-
-            if (e.Key == Key.Delete && this.ViewModel.SelectedAnimation != null)
+            else if (ViewModel.SelectedAnimation != null && _hotkeyManager.ReorderDown.IsPressed(e))
+            {
+                if (ViewModel.MoveSelectedAnimationDown())
+                {
+                    e.Handled = true;
+                }
+            }
+            else if (ViewModel.SelectedAnimation != null && _hotkeyManager.Delete.IsPressed(e))
             {
                 e.Handled = true;
                 ViewModel.DeleteSelectedAnimation();
             }
-
-            var isCtrlDown = Keyboard.IsKeyDown(Key.LeftCtrl);
-
-            if (isCtrlDown)
+            else if (_hotkeyManager.Copy.IsPressed(e))
             {
-                if (e.Key == Key.C)
+                var objectToCopy = ViewModel.SelectedAnimation;
+                if (objectToCopy != null)
                 {
-                    var objectToCopy = ViewModel.SelectedAnimation;
-                    if (objectToCopy != null)
-                    {
-                        AnimationCopyPasteManager.Copy(objectToCopy);
-                    }
+                    AnimationCopyPasteManager.Copy(objectToCopy);
                 }
-                else if (e.Key == Key.V)
-                {
-                    AnimationCopyPasteManager.Paste(ViewModel);
-                }
+            }
+            else if (_hotkeyManager.Paste.IsPressed(e))
+            {
+                AnimationCopyPasteManager.Paste(ViewModel);
             }
         }
 
@@ -145,16 +125,15 @@ namespace StateAnimationPlugin.Views
         {
             if (this.ViewModel.SelectedAnimation != null && this.ViewModel.SelectedAnimation.SelectedKeyframe != null)
             {
-                var isCtrlDown = e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Control);
-                if (e.Key == Key.Delete)
+                if (_hotkeyManager.Delete.IsPressed(e))
                 {
                     ViewModel.DeleteSelectedKeyframe();
                 }
-                else if (isCtrlDown && e.Key == Key.C)
+                else if (_hotkeyManager.Copy.IsPressed(e))
                 {
                     ViewModel.CopySelectedKeyframe();
                 }
-                else if (isCtrlDown && e.Key == Key.V)
+                else if (_hotkeyManager.Paste.IsPressed(e))
                 {
                     var source = ViewModel.PasteKeyframe();
                     if (source != null)
