@@ -18,6 +18,59 @@ namespace Gum.Forms.Data;
 
 internal static class BinderHelpers
 {
+    public static bool CanWritePath(Type targetType, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        string[] segments = path.Split('.');
+        Type currentType = targetType;
+
+        for (int i = 0; i < segments.Length - 1; i++)
+        {
+            if (!TryGetMember(currentType, segments[i], out _, out Type? memberType))
+            {
+                return false;
+            }
+
+            currentType = memberType;
+        }
+
+        if (!TryGetMember(currentType, segments[^1], out MemberInfo? leafMember, out _))
+        {
+            return false;
+        }
+
+        return leafMember switch
+        {
+            PropertyInfo propertyInfo => propertyInfo.SetMethod is not null && propertyInfo.SetMethod.IsPublic,
+            FieldInfo fieldInfo => !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral,
+            _ => false
+        };
+    }
+
+    private static bool TryGetMember(Type declaringType, string memberName, out MemberInfo? member, out Type memberType)
+    {
+        member = declaringType.GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public);
+        if (member is PropertyInfo propertyInfo)
+        {
+            memberType = propertyInfo.PropertyType;
+            return true;
+        }
+
+        member = declaringType.GetField(memberName, BindingFlags.Instance | BindingFlags.Public);
+        if (member is FieldInfo fieldInfo)
+        {
+            memberType = fieldInfo.FieldType;
+            return true;
+        }
+
+        memberType = typeof(object);
+        return false;
+    }
+
     /// <summary>
     /// Null-safe getter: returns DependencyProperty.UnsetValue if any intermediate is null.
     /// </summary>

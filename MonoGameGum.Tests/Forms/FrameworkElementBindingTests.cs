@@ -709,6 +709,52 @@ public class FrameworkElementBindingTests : BaseTestClass
     }
 
     [Fact]
+    public void ModeTwoWay_ReadonlySourceProperty_DoesNotUpdateSource()
+    {
+        // Arrange
+        TestViewModel viewModel = new()
+        {
+            Text = "source text"
+        };
+        TextBox textBox = new()
+        {
+            BindingContext = viewModel
+        };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.ReadonlyText));
+
+        // Act
+        textBox.Text = "ui text";
+
+        // Assert
+        viewModel.Text.ShouldBe("source text");
+    }
+
+    [Fact]
+    public void ModeOneWayToSource_ReadonlySourceProperty_DoesNotThrowOrUpdateSource()
+    {
+        // Arrange
+        TestViewModel viewModel = new()
+        {
+            Text = "source text"
+        };
+        TextBox textBox = new()
+        {
+            BindingContext = viewModel
+        };
+        Binding binding = new(nameof(TestViewModel.ReadonlyText))
+        {
+            Mode = BindingMode.OneWayToSource
+        };
+        textBox.SetBinding(nameof(TextBox.Text), binding);
+
+        // Act
+        textBox.Text = "ui text";
+
+        // Assert
+        viewModel.Text.ShouldBe("source text");
+    }
+
+    [Fact]
     public void SetBindingExt_UsingParameterlessLambda()
     {
         // Arrange

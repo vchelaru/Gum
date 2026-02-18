@@ -61,23 +61,27 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
         PathObserver.Attach(newSource);
 
-        try
+        bool shouldBuildSourceSetter =
+            Binding.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource;
+
+        if (shouldBuildSourceSetter && BinderHelpers.CanWritePath(newSource.GetType(), Binding.Path))
         {
-            // Since simple inpc properties can't define default binding modes,
-            // we always default to two-way and just make an attempt to build a setter
-            SourceSetter = BinderHelpers.BuildSetter(newSource.GetType(), Binding.Path);
-        }
-        catch (Exception aex)
-        {
-            // The property might not have a setter
-            // -or- we have other binding errors
+            try
+            {
+                SourceSetter = BinderHelpers.BuildSetter(newSource.GetType(), Binding.Path);
+            }
+            catch (Exception)
+            {
+                // Keep this safe for edge-case expression failures, but do not rely on exceptions
+                // for normal readonly binding behavior.
+            }
         }
 
         try
         {
             SourceGetter = BinderHelpers.BuildGetter(newSource.GetType(), Binding.Path);
         }
-        catch (Exception aex)
+        catch (Exception)
         {
             // If we have binding errors in the source-getter we have nothing to update the target with.
             return;
