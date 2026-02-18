@@ -266,6 +266,11 @@ public class MainStateAnimationPlugin : PluginBase
         if(pluginTab != null)
         {
             pluginTab.IsVisible = !pluginTab.IsVisible;
+
+            if(pluginTab.IsVisible)
+            {
+                pluginTab.IsSelected = true;
+            }
         }
     }
 

@@ -230,6 +230,8 @@ public partial class ElementAnimationsViewModel : ViewModel
         _nameVerifier = nameVerifier;
         _nameValidator = new NameValidator(_nameVerifier);
         _dialogService = dialogService;
+
+        RefreshAnimationsRightClickMenuItems();
     }
 
     public void LoadFromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element)
@@ -264,6 +266,11 @@ public partial class ElementAnimationsViewModel : ViewModel
     private void RefreshAnimationsRightClickMenuItems()
     {
         AnimationRightClickItems.Clear();
+
+        var addAnimation = new MenuItem();
+        addAnimation.Header = "Add Animation";
+        addAnimation.Click += (_, _) => AddAnimation();
+        AnimationRightClickItems.Add(addAnimation);
 
         if(SelectedAnimation != null)
         {
