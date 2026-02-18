@@ -61,7 +61,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly IFileCommands _fileCommands;
     private readonly ProjectCommands _projectCommands;
     private readonly IUndoManager _undoManager;
-    private readonly DeleteLogic _deleteLogic;
+    private readonly IDeleteLogic _deleteLogic;
     private readonly PluginManager _pluginManager;
     private readonly IMessenger _messenger;
     private readonly IWireframeObjectManager _wireframeObjectManager;
@@ -90,7 +90,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         IFileCommands fileCommands,
         ProjectCommands projectCommands,
         IUndoManager undoManager,
-        DeleteLogic deleteLogic,
+        IDeleteLogic deleteLogic,
         PluginManager pluginManager,
         IWireframeObjectManager wireframeObjectManager,
         IMessenger messenger,

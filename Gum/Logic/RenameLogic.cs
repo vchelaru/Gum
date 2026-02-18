@@ -74,7 +74,7 @@ public class RenameLogic : IRenameLogic
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly DeleteLogic _deleteLogic;
+    private readonly IDeleteLogic _deleteLogic;
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
 
@@ -83,7 +83,7 @@ public class RenameLogic : IRenameLogic
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        DeleteLogic deleteLogic,
+        IDeleteLogic deleteLogic,
         IProjectManager projectManager,
         IProjectState projectState)
     {

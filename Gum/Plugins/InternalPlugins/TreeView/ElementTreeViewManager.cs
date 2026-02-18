@@ -280,7 +280,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private IDragDropManager _dragDropManager;
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
-    private readonly DeleteLogic _deleteLogic;
+    private readonly IDeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly FileLocations _fileLocations;
@@ -314,7 +314,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _copyPasteLogic = Locator.GetRequiredService<ICopyPasteLogic>();
         _messenger = Locator.GetRequiredService<IMessenger>();
         _messenger.RegisterAll(this);
-        _deleteLogic = Locator.GetRequiredService<DeleteLogic>();
+        _deleteLogic = Locator.GetRequiredService<IDeleteLogic>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();
         _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
         _fileLocations = Locator.GetRequiredService<FileLocations>();

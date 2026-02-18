@@ -96,8 +96,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ICircularReferenceManager, CircularReferenceManager>();
         services.AddSingleton<IFavoriteComponentManager, FavoriteComponentManager>();
         services.AddSingleton<ICopyPasteLogic, CopyPasteLogic>();
-        services.AddSingleton<DeleteLogic>();
-        services.AddSingleton<IDeleteLogic>(provider => provider.GetRequiredService<DeleteLogic>());
+        services.AddSingleton<IDeleteLogic, DeleteLogic>();
         services.AddSingleton<FileLocations>();
         services.AddSingleton<FileWatchLogic>();
         services.AddSingleton<FontManager>();

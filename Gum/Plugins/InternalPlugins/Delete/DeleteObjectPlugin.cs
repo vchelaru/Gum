@@ -24,14 +24,14 @@ public class DeleteObjectPlugin : InternalPlugin
     private RadioButton deleteAllContainedObjects;
     private readonly IElementCommands _elementCommands;
     private readonly WireframeCommands _wireframeCommands;
-    private readonly DeleteLogic _deleteLogic;
+    private readonly IDeleteLogic _deleteLogic;
     private readonly InstanceDeletionHelper _instanceDeletionHelper;
 
     public DeleteObjectPlugin()
     {
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-        _deleteLogic = Locator.GetRequiredService<DeleteLogic>();
+        _deleteLogic = Locator.GetRequiredService<IDeleteLogic>();
         _instanceDeletionHelper = new InstanceDeletionHelper(_deleteLogic, _guiCommands, _wireframeCommands, _fileCommands);
     }
 
