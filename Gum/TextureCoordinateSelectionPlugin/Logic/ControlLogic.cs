@@ -14,6 +14,7 @@ using InputLibrary;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
@@ -21,6 +22,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TextureCoordinateSelectionPlugin.Models;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
@@ -37,7 +39,7 @@ public enum RefreshType
 
 #endregion
 
-public class ControlLogic : IDisposable
+public class TextureCoordinateDisplayController : IDisposable
 {
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
@@ -54,12 +56,7 @@ public class ControlLogic : IDisposable
 
     MainControlViewModel ViewModel;
 
-    internal bool IsExposedMode { get; set; }
-    internal string? ExposedSourceObjectName { get; set; }
-    internal string? ExposedLeftName { get; set; }
-    internal string? ExposedTopName { get; set; }
-    internal string? ExposedWidthName { get; set; }
-    internal string? ExposedHeightName { get; set; }
+    ExposedTextureCoordinateSet? _currentExposedSource;
 
     object oldTextureLeftValue;
     object oldTextureTopValue;
@@ -82,7 +79,7 @@ public class ControlLogic : IDisposable
         set => mainControl.InnerControl.CurrentTexture = value;
     }
 
-    public ControlLogic(ISelectedState selectedState,
+    public TextureCoordinateDisplayController(ISelectedState selectedState,
         IUndoManager undoManager,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
@@ -145,8 +142,6 @@ public class ControlLogic : IDisposable
 
         ViewModel.AvailableZoomLevels = innerControl.AvailableZoomLevels;
         mainControl.DataContext = ViewModel;
-
-        ViewModel.PropertyChanged += HandleViewModelPropertyChanged;
 
         _backgroundManager.Initialize(SystemManagers);
         _lineGridManager.Initialize(SystemManagers);
@@ -221,55 +216,54 @@ public class ControlLogic : IDisposable
         _scrollBarLogic.UpdateScrollBarsToCamera(width, height);
     }
 
-    private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    internal void SetCurrentExposedSource(ExposedTextureCoordinateSet? source)
     {
-        void RefreshSnappingGridSize()
-        {
-            if (!ViewModel.IsSnapToGridChecked)
-            {
-                mainControl.InnerControl.SnappingGridSize = null;
-            }
-            else
-            {
-                mainControl.InnerControl.SnappingGridSize = ViewModel.SelectedSnapToGridValue;
-            }
-        }
+        _currentExposedSource = source;
+    }
 
-        switch (e.PropertyName)
-        {
-            case nameof(MainControlViewModel.IsSnapToGridChecked):
-                RefreshSnappingGridSize();
-                RefreshLineGrid();
+    internal void UpdateZoom(int zoomLevel)
+    {
+        mainControl.InnerControl.ZoomValue = zoomLevel;
+        UpdateScrollBarsToTexture();
+    }
 
-                break;
-            case nameof(MainControlViewModel.SelectedSnapToGridValue):
-                RefreshSnappingGridSize();
-                RefreshLineGrid();
-                break;
-            case nameof(MainControlViewModel.SelectedZoomLevel):
-                mainControl.InnerControl.ZoomValue = ViewModel.SelectedZoomLevel;
-                UpdateScrollBarsToTexture();
-                break;
+    internal void UpdateSnapGrid()
+    {
+        if (!ViewModel.IsSnapToGridChecked)
+        {
+            mainControl.InnerControl.SnappingGridSize = null;
         }
+        else
+        {
+            mainControl.InnerControl.SnappingGridSize = ViewModel.SelectedSnapToGridValue;
+        }
+        RefreshLineGrid();
     }
 
     private GraphicalUiElement? FindExposedSourceChild(GraphicalUiElement parent)
     {
-        if (ExposedSourceObjectName == null) return null;
+        if (_currentExposedSource?.SourceObjectName == null) return null;
         return parent.Children
-            .FirstOrDefault(c => c.Name == ExposedSourceObjectName) as GraphicalUiElement;
+            .FirstOrDefault(c => c.Name == _currentExposedSource.SourceObjectName) as GraphicalUiElement;
     }
 
-    internal void Refresh(Texture2D? textureToAssign, bool showNineSliceGuides, float? customFrameTextureCoordinateWidth)
+    internal void Refresh()
     {
+        var textureToAssign = GetTextureToAssign(out bool showNineSliceGuides, out float? customFrameTextureCoordinateWidth);
+
+        if (textureToAssign?.IsDisposed == true)
+        {
+            textureToAssign = null;
+        }
+
         mainControl.InnerControl.CurrentTexture = textureToAssign;
 
-        if (IsExposedMode)
+        if (_currentExposedSource != null)
         {
-            mainControl.InnerControl.CanChangeX = ExposedLeftName != null;
-            mainControl.InnerControl.CanChangeY = ExposedTopName != null;
-            mainControl.InnerControl.CanChangeWidth = ExposedWidthName != null;
-            mainControl.InnerControl.CanChangeHeight = ExposedHeightName != null;
+            mainControl.InnerControl.CanChangeX = _currentExposedSource.ExposedLeftName != null;
+            mainControl.InnerControl.CanChangeY = _currentExposedSource.ExposedTopName != null;
+            mainControl.InnerControl.CanChangeWidth = _currentExposedSource.ExposedWidthName != null;
+            mainControl.InnerControl.CanChangeHeight = _currentExposedSource.ExposedHeightName != null;
         }
         else
         {
@@ -293,6 +287,79 @@ public class ControlLogic : IDisposable
         _nineSliceGuideManager.Refresh();
     }
 
+    private Texture2D? GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
+    {
+        var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
+        isNineslice = false;
+        customFrameTextureCoordinateWidth = null;
+        Texture2D? textureToAssign = null;
+
+        if (graphicalUiElement != null)
+        {
+            var containedRenderable = graphicalUiElement.RenderableComponent;
+
+            if (containedRenderable is Sprite asSprite)
+            {
+                textureToAssign = asSprite.Texture;
+            }
+            else if (containedRenderable is NineSlice nineSlice)
+            {
+                isNineslice = true;
+                customFrameTextureCoordinateWidth = nineSlice.CustomFrameTextureCoordinateWidth;
+                var isUsingSameTextures =
+                    nineSlice.TopLeftTexture == nineSlice.CenterTexture &&
+                    nineSlice.TopTexture == nineSlice.CenterTexture &&
+                    nineSlice.TopRightTexture == nineSlice.CenterTexture &&
+                    nineSlice.LeftTexture == nineSlice.CenterTexture &&
+                    nineSlice.RightTexture == nineSlice.CenterTexture &&
+                    nineSlice.BottomLeftTexture == nineSlice.CenterTexture &&
+                    nineSlice.BottomTexture == nineSlice.CenterTexture &&
+                    nineSlice.BottomRightTexture == nineSlice.CenterTexture;
+
+                if (isUsingSameTextures)
+                {
+                    textureToAssign = nineSlice.CenterTexture;
+                }
+            }
+
+            if (textureToAssign == null && _currentExposedSource != null)
+            {
+                var innerChild = graphicalUiElement.Children
+                    .FirstOrDefault(c => c.Name == _currentExposedSource.SourceObjectName);
+
+                if (innerChild is GraphicalUiElement innerGue)
+                {
+                    var innerRenderable = innerGue.RenderableComponent;
+                    if (innerRenderable is Sprite innerSprite)
+                    {
+                        textureToAssign = innerSprite.Texture;
+                    }
+                    else if (innerRenderable is NineSlice innerNineSlice)
+                    {
+                        isNineslice = true;
+                        customFrameTextureCoordinateWidth = innerNineSlice.CustomFrameTextureCoordinateWidth;
+                        var isUsingSameTextures =
+                            innerNineSlice.TopLeftTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.TopTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.TopRightTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.LeftTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.RightTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.BottomLeftTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.BottomTexture == innerNineSlice.CenterTexture &&
+                            innerNineSlice.BottomRightTexture == innerNineSlice.CenterTexture;
+
+                        if (isUsingSameTextures)
+                        {
+                            textureToAssign = innerNineSlice.CenterTexture;
+                        }
+                    }
+                }
+            }
+        }
+
+        return textureToAssign;
+    }
+
     private void RefreshLineGrid()
     {
         _lineGridManager.IsVisible = ViewModel.IsSnapToGridChecked;
@@ -303,7 +370,7 @@ public class ControlLogic : IDisposable
 
     public void HandleRegionDoubleClicked(ImageRegionSelectionControl control)
     {
-        if (IsExposedMode) return;
+        if (_currentExposedSource != null) return;
 
         using var undoLock = _undoManager.RequestLock();
 
@@ -390,12 +457,12 @@ public class ControlLogic : IDisposable
             instancePrefix += ".";
         }
 
-        if (IsExposedMode)
+        if (_currentExposedSource != null)
         {
-            oldTextureLeftValue = ExposedLeftName != null ? state.GetValue($"{instancePrefix}{ExposedLeftName}") : null;
-            oldTextureTopValue = ExposedTopName != null ? state.GetValue($"{instancePrefix}{ExposedTopName}") : null;
-            oldTextureWidthValue = ExposedWidthName != null ? state.GetValue($"{instancePrefix}{ExposedWidthName}") : null;
-            oldTextureHeightValue = ExposedHeightName != null ? state.GetValue($"{instancePrefix}{ExposedHeightName}") : null;
+            oldTextureLeftValue = _currentExposedSource.ExposedLeftName != null ? state.GetValue($"{instancePrefix}{_currentExposedSource.ExposedLeftName}") : null;
+            oldTextureTopValue = _currentExposedSource.ExposedTopName != null ? state.GetValue($"{instancePrefix}{_currentExposedSource.ExposedTopName}") : null;
+            oldTextureWidthValue = _currentExposedSource.ExposedWidthName != null ? state.GetValue($"{instancePrefix}{_currentExposedSource.ExposedWidthName}") : null;
+            oldTextureHeightValue = _currentExposedSource.ExposedHeightName != null ? state.GetValue($"{instancePrefix}{_currentExposedSource.ExposedHeightName}") : null;
         }
         else
         {
@@ -424,7 +491,7 @@ public class ControlLogic : IDisposable
                 instancePrefix += ".";
             }
 
-            if (IsExposedMode)
+            if (_currentExposedSource != null)
             {
                 var innerChild = FindExposedSourceChild(graphicalUiElement);
                 if (innerChild != null)
@@ -434,14 +501,14 @@ public class ControlLogic : IDisposable
                     innerChild.TextureWidth = MathFunctions.RoundToInt(selector.Width);
                     innerChild.TextureHeight = MathFunctions.RoundToInt(selector.Height);
 
-                    if (ExposedLeftName != null)
-                        state.SetValue($"{instancePrefix}{ExposedLeftName}", innerChild.TextureLeft, "int");
-                    if (ExposedTopName != null)
-                        state.SetValue($"{instancePrefix}{ExposedTopName}", innerChild.TextureTop, "int");
-                    if (ExposedWidthName != null)
-                        state.SetValue($"{instancePrefix}{ExposedWidthName}", innerChild.TextureWidth, "int");
-                    if (ExposedHeightName != null)
-                        state.SetValue($"{instancePrefix}{ExposedHeightName}", innerChild.TextureHeight, "int");
+                    if (_currentExposedSource.ExposedLeftName != null)
+                        state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedLeftName}", innerChild.TextureLeft, "int");
+                    if (_currentExposedSource.ExposedTopName != null)
+                        state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedTopName}", innerChild.TextureTop, "int");
+                    if (_currentExposedSource.ExposedWidthName != null)
+                        state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedWidthName}", innerChild.TextureWidth, "int");
+                    if (_currentExposedSource.ExposedHeightName != null)
+                        state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedHeightName}", innerChild.TextureHeight, "int");
                 }
             }
             else
@@ -472,19 +539,19 @@ public class ControlLogic : IDisposable
 
         shouldRefreshAccordingToVariableSets = false;
         {
-            if (IsExposedMode)
+            if (_currentExposedSource != null)
             {
-                if (ExposedLeftName != null)
-                    _setVariableLogic.ReactToPropertyValueChanged(ExposedLeftName, oldTextureLeftValue,
+                if (_currentExposedSource.ExposedLeftName != null)
+                    _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedLeftName, oldTextureLeftValue,
                         element, instance, state, refresh: false);
-                if (ExposedTopName != null)
-                    _setVariableLogic.ReactToPropertyValueChanged(ExposedTopName, oldTextureTopValue,
+                if (_currentExposedSource.ExposedTopName != null)
+                    _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedTopName, oldTextureTopValue,
                         element, instance, state, refresh: false);
-                if (ExposedWidthName != null)
-                    _setVariableLogic.ReactToPropertyValueChanged(ExposedWidthName, oldTextureWidthValue,
+                if (_currentExposedSource.ExposedWidthName != null)
+                    _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedWidthName, oldTextureWidthValue,
                         element, instance, state, refresh: false);
-                if (ExposedHeightName != null)
-                    _setVariableLogic.ReactToPropertyValueChanged(ExposedHeightName, oldTextureHeightValue,
+                if (_currentExposedSource.ExposedHeightName != null)
+                    _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedHeightName, oldTextureHeightValue,
                         element, instance, state, refresh: false);
             }
             else
@@ -542,7 +609,7 @@ public class ControlLogic : IDisposable
         {
             var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
 
-            if (IsExposedMode && graphicalUiElement != null)
+            if (_currentExposedSource != null && graphicalUiElement != null)
             {
                 var innerChild = FindExposedSourceChild(graphicalUiElement);
                 if (innerChild != null &&
@@ -559,7 +626,7 @@ public class ControlLogic : IDisposable
 
                     selector.Visible = true;
                     selector.ShowHandles = true;
-                    selector.ShowMoveCursorWhenOver = ExposedLeftName != null || ExposedTopName != null;
+                    selector.ShowMoveCursorWhenOver = _currentExposedSource.ExposedLeftName != null || _currentExposedSource.ExposedTopName != null;
 
                     this.CenterCameraOnSelection();
                 }

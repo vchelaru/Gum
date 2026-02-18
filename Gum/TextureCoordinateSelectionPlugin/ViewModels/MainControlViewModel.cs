@@ -11,6 +11,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using TextureCoordinateSelectionPlugin.Logic;
 using TextureCoordinateSelectionPlugin.Models;
 using ToolsUtilities;
 using System.Windows;
@@ -54,6 +55,7 @@ public class MainControlViewModel : ViewModel
     private readonly IFileCommands _fileCommands;
     private readonly IFileWatchManager _fileWatchManager;
     private readonly IGuiCommands _guiCommands;
+    TextureCoordinateDisplayController? _displayController;
 
     [DependsOn(nameof(IsSnapToGridChecked))]
     public bool IsSnapToGridComboBoxEnabled => IsSnapToGridChecked;
@@ -74,7 +76,21 @@ public class MainControlViewModel : ViewModel
     public Visibility ExposedSourceDropdownVisibility =>
         (AvailableExposedSources?.Count ?? 0) > 1 ? Visibility.Visible : Visibility.Collapsed;
 
+    public void UpdateExposedSources(List<ExposedTextureCoordinateSet> sources, bool preserveSelection)
+    {
+        var previouslySelected = preserveSelection ? SelectedExposedSource : null;
+        AvailableExposedSources = sources.Count > 0 ? sources : null;
+        SelectedExposedSource = sources.FirstOrDefault(s =>
+            s.SourceObjectName == previouslySelected?.SourceObjectName)
+            ?? sources.FirstOrDefault();
+    }
+
     bool _isSavingSuppressed = false;
+
+    public void Initialize(TextureCoordinateDisplayController displayController)
+    {
+        _displayController = displayController;
+    }
 
     public MainControlViewModel(
         IProjectManager projectManager,
@@ -96,17 +112,23 @@ public class MainControlViewModel : ViewModel
 
     private void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        ////////////////////////////Early Out////////////////////////////////
-        if (_isSavingSuppressed)
+        switch (e.PropertyName)
         {
-            return;
-        }
-        ////////////////////////////End Early Out////////////////////////////
-
-        if (e.PropertyName == nameof(IsSnapToGridChecked) ||
-            e.PropertyName == nameof(SelectedSnapToGridValue))
-        {
-            SaveSettings();
+            case nameof(SelectedZoomLevel):
+                _displayController?.UpdateZoom(SelectedZoomLevel);
+                break;
+            case nameof(IsSnapToGridChecked):
+            case nameof(SelectedSnapToGridValue):
+                _displayController?.UpdateSnapGrid();
+                if (!_isSavingSuppressed)
+                {
+                    SaveSettings();
+                }
+                break;
+            case nameof(SelectedExposedSource):
+                _displayController?.SetCurrentExposedSource(SelectedExposedSource);
+                _displayController?.Refresh();
+                break;
         }
     }
 
