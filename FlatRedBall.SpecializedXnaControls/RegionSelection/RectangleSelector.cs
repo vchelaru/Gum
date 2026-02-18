@@ -269,6 +269,31 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             set;
         }
 
+        public bool CanChangeX { get; set; } = true;
+        public bool CanChangeY { get; set; } = true;
+
+        bool canChangeWidth = true;
+        public bool CanChangeWidth
+        {
+            get => canChangeWidth;
+            set
+            {
+                canChangeWidth = value;
+                UpdateVisibility();
+            }
+        }
+
+        bool canChangeHeight = true;
+        public bool CanChangeHeight
+        {
+            get => canChangeHeight;
+            set
+            {
+                canChangeHeight = value;
+                UpdateVisibility();
+            }
+        }
+
         #endregion
 
         public event EventHandler StartRegionChanged;
@@ -443,26 +468,22 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
                     }
 
 
-                    if (keyBoard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Left))
+                    if (CanChangeX && keyBoard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Left))
                     {
                         this.Left--;
-                        // Width should take care of this
-                        //this.Right--;
                         changed = true;
                     }
-                    if (keyBoard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Right))
+                    if (CanChangeX && keyBoard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Right))
                     {
                         this.Left++;
-                        // Width should take care of this
-                        //this.Right--;
                         changed = true;
                     }
-                    if (keyBoard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Up))
+                    if (CanChangeY && keyBoard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Up))
                     {
                         this.Top--;
                         changed = true;
                     }
-                    if (keyBoard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Down))
+                    if (CanChangeY && keyBoard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Down))
                     {
                         this.Top++;
                         changed = true;
@@ -578,6 +599,11 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
                 widthMultiplier /= managers.Renderer.Camera.Zoom;
                 heightMultiplier /= managers.Renderer.Camera.Zoom;
 
+
+                if (!CanChangeX) xMultiplier = 0;
+                if (!CanChangeY) yMultiplier = 0;
+                if (!CanChangeWidth) widthMultiplier = 0;
+                if (!CanChangeHeight) heightMultiplier = 0;
 
                 this.Left = mCoordinates.X + xMultiplier * cursor.XChange;
                 this.Top = mCoordinates.Y + yMultiplier * cursor.YChange;
@@ -774,7 +800,11 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
                 {
                     if (mHandles[i].HasCursorOver(x, y))
                     {
-                        toReturn = (ResizeSide)i;
+                        var side = (ResizeSide)i;
+                        if (IsHandleVisible(side))
+                        {
+                            toReturn = side;
+                        }
                     }
                 }
             }
@@ -783,11 +813,36 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             {
                 if (this.mLineRectangle.HasCursorOver(x, y))
                 {
-                    toReturn = ResizeSide.Middle;
+                    if (IsSideAllowed(ResizeSide.Middle))
+                    {
+                        toReturn = ResizeSide.Middle;
+                    }
                 }
             }
 
             return toReturn;
+        }
+
+        private bool IsSideAllowed(ResizeSide side)
+        {
+            switch (side)
+            {
+                case ResizeSide.Top:
+                case ResizeSide.Bottom:
+                    return CanChangeY || CanChangeHeight;
+                case ResizeSide.Left:
+                case ResizeSide.Right:
+                    return CanChangeX || CanChangeWidth;
+                case ResizeSide.TopLeft:
+                case ResizeSide.TopRight:
+                case ResizeSide.BottomLeft:
+                case ResizeSide.BottomRight:
+                    return CanChangeX || CanChangeY || CanChangeWidth || CanChangeHeight;
+                case ResizeSide.Middle:
+                    return CanChangeX || CanChangeY;
+                default:
+                    return true;
+            }
         }
 
 
@@ -795,9 +850,30 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         {
             mLineRectangle.Visible = mVisible;
 
-            foreach (var handle in mHandles)
+            for (int i = 0; i < mHandles.Count; i++)
             {
-                handle.Visible = mShowHandles && mVisible;
+                bool handleVisible = mShowHandles && mVisible && IsHandleVisible((ResizeSide)i);
+                mHandles[i].Visible = handleVisible;
+            }
+        }
+
+        private bool IsHandleVisible(ResizeSide side)
+        {
+            switch (side)
+            {
+                case ResizeSide.Top:
+                case ResizeSide.Bottom:
+                    return CanChangeHeight;
+                case ResizeSide.Left:
+                case ResizeSide.Right:
+                    return CanChangeWidth;
+                case ResizeSide.TopLeft:
+                case ResizeSide.TopRight:
+                case ResizeSide.BottomLeft:
+                case ResizeSide.BottomRight:
+                    return CanChangeWidth && CanChangeHeight;
+                default:
+                    return true;
             }
         }
 

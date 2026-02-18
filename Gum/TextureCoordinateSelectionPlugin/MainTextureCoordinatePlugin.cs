@@ -1,33 +1,20 @@
-﻿using FlatRedBall.SpecializedXnaControls;
-using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
-using Gum.Mvvm;
 using Gum.Plugins;
-using Gum.Plugins.AlignmentButtons;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
-using Gum.Wireframe;
-using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary.Graphics;
-using RenderingLibrary.Math;
-using RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using CommunityToolkit.Mvvm.Messaging;
-using Gum.Services;
 using TextureCoordinateSelectionPlugin.Logic;
+using TextureCoordinateSelectionPlugin.Models;
 using TextureCoordinateSelectionPlugin.ViewModels;
 
 namespace TextureCoordinateSelectionPlugin;
@@ -37,10 +24,11 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 {
     #region Fields/Properties
 
-    PluginTab textureCoordinatePluginTab;
+    PluginTab textureCoordinatePluginTab = default!;
     ISelectedState _selectedState;
-    ControlLogic _controlLogic;
+    TextureCoordinateDisplayController _displayController;
     MainControlViewModel _viewModel;
+    ExposedTextureCoordinateLogic _exposedCoordinateLogic;
 
     public override string FriendlyName
     {
@@ -61,15 +49,7 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
 
-        _viewModel = new (
-            Locator.GetRequiredService<IProjectManager>(),
-            Locator.GetRequiredService<IFileCommands>(),
-            Locator.GetRequiredService<IFileWatchManager>(),
-            Locator.GetRequiredService<IGuiCommands>());
-
-        Locator.GetRequiredService<IMessenger>().RegisterAll(this);
-
-        _controlLogic = new ControlLogic(
+        _displayController = new TextureCoordinateDisplayController(
             Locator.GetRequiredService<ISelectedState>(),
             Locator.GetRequiredService<IUndoManager>(),
             Locator.GetRequiredService<IGuiCommands>(),
@@ -77,8 +57,22 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
             Locator.GetRequiredService<ISetVariableLogic>(),
             Locator.GetRequiredService<ITabManager>(),
             Locator.GetRequiredService<IHotkeyManager>(),
-            new ScrollBarLogicWpf(),
-            _viewModel);
+            new ScrollBarLogicWpf());
+
+        _viewModel = new (
+            Locator.GetRequiredService<IProjectManager>(),
+            Locator.GetRequiredService<IFileCommands>(),
+            Locator.GetRequiredService<IFileWatchManager>(),
+            Locator.GetRequiredService<IGuiCommands>(),
+            _displayController);
+        
+
+
+        Locator.GetRequiredService<IMessenger>().RegisterAll(this);
+
+
+        _exposedCoordinateLogic = new ExposedTextureCoordinateLogic(
+            Locator.GetRequiredService<IObjectFinder>());
     }
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)
@@ -88,14 +82,15 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
             RemoveTab(textureCoordinatePluginTab);
         }
 
-        _controlLogic?.Dispose();
+        _displayController?.Dispose();
 
         return true;
     }
 
     public override void StartUp()
     {
-        textureCoordinatePluginTab = _controlLogic.CreateControl();
+        textureCoordinatePluginTab = _displayController.CreateControl(_viewModel, out var availableZoomLevels);
+        _viewModel.AvailableZoomLevels = availableZoomLevels;
         textureCoordinatePluginTab.Hide();
         textureCoordinatePluginTab.GotFocus += HandleTabShown;
 
@@ -104,12 +99,12 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 
     private void HandleTabShown()
     {
-        _controlLogic.CenterCameraOnSelection();
+        _displayController.CenterCameraOnSelection();
     }
 
     void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
-        _controlLogic.UpdateButtonSizes(message.Size);
+        _displayController.UpdateButtonSizes(message.Size);
     }
 
     private void AssignEvents()
@@ -131,35 +126,28 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
     private void HandleWireframeRefreshed()
     {
         var element = _selectedState.SelectedElement;
-        if(_selectedState.SelectedInstance != null)
+        if (_selectedState.SelectedInstance != null)
         {
             element = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance);
         }
 
-        var hasTextureCoordinates = false;
+        var hasTextureCoordinates = element != null && _exposedCoordinateLogic.IsDirectSpriteOrNineSlice(element);
 
-        // Sprite and NineSlice have texture coords:
-        if(element != null)
+        if (!hasTextureCoordinates && _selectedState.SelectedInstance != null && element != null)
         {
-            if(element is StandardElementSave)
-            {
-                hasTextureCoordinates = element.Name == "Sprite" || element.Name == "NineSlice";
-            }
-            else
-            {
-                var baseElements = ObjectFinder.Self.GetBaseElements(element);
-
-                hasTextureCoordinates = baseElements.Any(item =>
-                {
-                    return element is StandardElementSave && (element.Name == "Sprite" || element.Name == "NineSlice");
-                });
-            }
+            var sets = _exposedCoordinateLogic.GetExposedSets(element);
+            _viewModel.UpdateExposedSources(sets, preserveSelection: true);
+            hasTextureCoordinates = sets.Count > 0;
+        }
+        else
+        {
+            _viewModel.UpdateExposedSources(new List<ExposedTextureCoordinateSet>(), preserveSelection: false);
         }
 
-        if(hasTextureCoordinates)
+        if (hasTextureCoordinates)
         {
             textureCoordinatePluginTab.Show();
-            RefreshControl();
+            _displayController.Refresh();
         }
         else
         {
@@ -169,75 +157,13 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 
     private void HandleTreeNodeSelected(TreeNode? treeNode)
     {
-        RefreshControl();
-
-        _controlLogic.CenterCameraOnSelection();
+        _displayController.Refresh();
+        _displayController.CenterCameraOnSelection();
     }
 
-    private void RefreshControl()
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
     {
-        Texture2D? textureToAssign = GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth);
-
-        _controlLogic.Refresh(textureToAssign, isNineslice, customFrameTextureCoordinateWidth);
-    }
-
-    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
-    {
-        var shouldRefresh = true;
-
-        if(shouldRefresh)
-        {
-            RefreshControl();
-            _controlLogic.RefreshSelector(Logic.RefreshType.Force);
-        }
-    }
-
-
-
-    private Texture2D? GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
-    {
-        var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
-        isNineslice = false;
-        customFrameTextureCoordinateWidth = null;
-        Texture2D? textureToAssign = null;
-
-        if (graphicalUiElement != null)
-        {
-            var containedRenderable = graphicalUiElement.RenderableComponent;
-
-            if (containedRenderable is Sprite asSprite)
-            {
-                textureToAssign = asSprite.Texture;
-            }
-            else if (containedRenderable is NineSlice nineSlice)
-            {
-                isNineslice = true;
-                customFrameTextureCoordinateWidth = nineSlice.CustomFrameTextureCoordinateWidth;
-                var isUsingSameTextures =
-                    nineSlice.TopLeftTexture == nineSlice.CenterTexture &&
-                    nineSlice.TopTexture == nineSlice.CenterTexture &&
-                    nineSlice.TopRightTexture == nineSlice.CenterTexture &&
-
-                    nineSlice.LeftTexture == nineSlice.CenterTexture &&
-                    //nineSlice.TopLeftTexture ==
-                    nineSlice.RightTexture == nineSlice.CenterTexture &&
-
-                    nineSlice.BottomLeftTexture == nineSlice.CenterTexture &&
-                    nineSlice.BottomTexture == nineSlice.CenterTexture &&
-                    nineSlice.BottomRightTexture == nineSlice.CenterTexture;
-
-                if (isUsingSameTextures)
-                {
-                    textureToAssign = nineSlice.CenterTexture;
-                }
-            }
-        }
-
-        if (textureToAssign?.IsDisposed == true)
-        {
-            textureToAssign = null;
-        }
-
-        return textureToAssign;
+        _displayController.Refresh();
+        _displayController.RefreshSelector(Logic.RefreshType.Force);
     }
 }
