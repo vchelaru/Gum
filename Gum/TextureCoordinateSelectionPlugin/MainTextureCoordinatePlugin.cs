@@ -24,7 +24,7 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 {
     #region Fields/Properties
 
-    PluginTab textureCoordinatePluginTab;
+    PluginTab textureCoordinatePluginTab = default!;
     ISelectedState _selectedState;
     TextureCoordinateDisplayController _displayController;
     MainControlViewModel _viewModel;
@@ -49,14 +49,6 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
 
-        _viewModel = new (
-            Locator.GetRequiredService<IProjectManager>(),
-            Locator.GetRequiredService<IFileCommands>(),
-            Locator.GetRequiredService<IFileWatchManager>(),
-            Locator.GetRequiredService<IGuiCommands>());
-
-        Locator.GetRequiredService<IMessenger>().RegisterAll(this);
-
         _displayController = new TextureCoordinateDisplayController(
             Locator.GetRequiredService<ISelectedState>(),
             Locator.GetRequiredService<IUndoManager>(),
@@ -65,9 +57,19 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
             Locator.GetRequiredService<ISetVariableLogic>(),
             Locator.GetRequiredService<ITabManager>(),
             Locator.GetRequiredService<IHotkeyManager>(),
-            new ScrollBarLogicWpf(),
-            _viewModel);
-        _viewModel.Initialize(_displayController);
+            new ScrollBarLogicWpf());
+
+        _viewModel = new (
+            Locator.GetRequiredService<IProjectManager>(),
+            Locator.GetRequiredService<IFileCommands>(),
+            Locator.GetRequiredService<IFileWatchManager>(),
+            Locator.GetRequiredService<IGuiCommands>(),
+            _displayController);
+        
+
+
+        Locator.GetRequiredService<IMessenger>().RegisterAll(this);
+
 
         _exposedCoordinateLogic = new ExposedTextureCoordinateLogic(
             Locator.GetRequiredService<IObjectFinder>());
@@ -87,7 +89,8 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 
     public override void StartUp()
     {
-        textureCoordinatePluginTab = _displayController.CreateControl();
+        textureCoordinatePluginTab = _displayController.CreateControl(_viewModel, out var availableZoomLevels);
+        _viewModel.AvailableZoomLevels = availableZoomLevels;
         textureCoordinatePluginTab.Hide();
         textureCoordinatePluginTab.GotFocus += HandleTabShown;
 
@@ -144,7 +147,7 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
         if (hasTextureCoordinates)
         {
             textureCoordinatePluginTab.Show();
-            RefreshControl();
+            _displayController.Refresh();
         }
         else
         {
@@ -154,19 +157,13 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 
     private void HandleTreeNodeSelected(TreeNode? treeNode)
     {
-        RefreshControl();
-
+        _displayController.Refresh();
         _displayController.CenterCameraOnSelection();
     }
 
-    private void RefreshControl()
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
     {
         _displayController.Refresh();
-    }
-
-    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
-    {
-        RefreshControl();
         _displayController.RefreshSelector(Logic.RefreshType.Force);
     }
 }

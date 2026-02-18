@@ -18,12 +18,12 @@ using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TextureCoordinateSelectionPlugin.Models;
-using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
 
@@ -54,7 +54,10 @@ public class TextureCoordinateDisplayController : IDisposable
     private readonly NineSliceGuideManager _nineSliceGuideManager;
     private readonly TextureOutlineManager _textureOutlineManager;
 
-    MainControlViewModel ViewModel;
+    bool _isSnapToGridEnabled;
+    int _snapToGridSize;
+
+    internal event Action<int>? ZoomLevelChanged;
 
     ExposedTextureCoordinateSet? _currentExposedSource;
 
@@ -86,8 +89,7 @@ public class TextureCoordinateDisplayController : IDisposable
         ISetVariableLogic setVariableLogic,
         ITabManager tabManager,
         IHotkeyManager hotkeyManager,
-        ScrollBarLogicWpf scrollBarLogic,
-        MainControlViewModel mainControlViewModel)
+        ScrollBarLogicWpf scrollBarLogic)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -98,15 +100,13 @@ public class TextureCoordinateDisplayController : IDisposable
         _hotkeyManager = hotkeyManager;
         _scrollBarLogic = scrollBarLogic;
 
-        ViewModel = mainControlViewModel;
-
         _backgroundManager = new BackgroundManager();
         _lineGridManager = new LineGridManager();
         _nineSliceGuideManager = new NineSliceGuideManager();
         _textureOutlineManager = new TextureOutlineManager();
     }
 
-    public PluginTab CreateControl()
+    public PluginTab CreateControl(object dataContext, out IList<int> availableZoomLevels)
     {
         mainControl = new MainControl();
         //var control = new ImageRegionSelectionControl();
@@ -140,8 +140,8 @@ public class TextureCoordinateDisplayController : IDisposable
         innerControl.DoubleClick += (not, used) =>
             HandleRegionDoubleClicked(innerControl);
 
-        ViewModel.AvailableZoomLevels = innerControl.AvailableZoomLevels;
-        mainControl.DataContext = ViewModel;
+        availableZoomLevels = innerControl.AvailableZoomLevels;
+        mainControl.DataContext = dataContext;
 
         _backgroundManager.Initialize(SystemManagers);
         _lineGridManager.Initialize(SystemManagers);
@@ -167,7 +167,7 @@ public class TextureCoordinateDisplayController : IDisposable
         mainControl.InnerControl.MouseWheelZoom += (_, _) =>
         {
             UpdateScrollBarsToTexture();
-            ViewModel.SelectedZoomLevel = mainControl.InnerControl.ZoomValue;
+            ZoomLevelChanged?.Invoke(mainControl.InnerControl.ZoomValue);
         };
 
         mainControl.InnerControl.Panning += () =>
@@ -227,15 +227,18 @@ public class TextureCoordinateDisplayController : IDisposable
         UpdateScrollBarsToTexture();
     }
 
-    internal void UpdateSnapGrid()
+    internal void UpdateSnapGrid(bool isEnabled, int gridSize)
     {
-        if (!ViewModel.IsSnapToGridChecked)
+        _isSnapToGridEnabled = isEnabled;
+        _snapToGridSize = gridSize;
+
+        if (!_isSnapToGridEnabled)
         {
             mainControl.InnerControl.SnappingGridSize = null;
         }
         else
         {
-            mainControl.InnerControl.SnappingGridSize = ViewModel.SelectedSnapToGridValue;
+            mainControl.InnerControl.SnappingGridSize = _snapToGridSize;
         }
         RefreshLineGrid();
     }
@@ -362,8 +365,8 @@ public class TextureCoordinateDisplayController : IDisposable
 
     private void RefreshLineGrid()
     {
-        _lineGridManager.IsVisible = ViewModel.IsSnapToGridChecked;
-        _lineGridManager.GridSize = ViewModel.SelectedSnapToGridValue;
+        _lineGridManager.IsVisible = _isSnapToGridEnabled;
+        _lineGridManager.GridSize = _snapToGridSize;
         _lineGridManager.CurrentTexture = CurrentTexture;
         _lineGridManager.Refresh();
     }
@@ -428,16 +431,14 @@ public class TextureCoordinateDisplayController : IDisposable
         int top = Math.Max(0, cursorY - 32);
 
         // If they are using the grid size, snap to it instead!
-        if (ViewModel.IsSnapToGridChecked)
+        if (_isSnapToGridEnabled)
         {
-            var gridSize = ViewModel.SelectedSnapToGridValue;
-
             // find the top left using division and floor
-            left = (cursorX / gridSize) * gridSize;
-            top = (cursorY / gridSize) * gridSize;
+            left = (cursorX / _snapToGridSize) * _snapToGridSize;
+            top = (cursorY / _snapToGridSize) * _snapToGridSize;
 
             // send back the rectangle selection
-            return new Rectangle(left, top, ViewModel.SelectedSnapToGridValue, ViewModel.SelectedSnapToGridValue);
+            return new Rectangle(left, top, _snapToGridSize, _snapToGridSize);
         }
 
         return new Rectangle(left, top, 64, 64);

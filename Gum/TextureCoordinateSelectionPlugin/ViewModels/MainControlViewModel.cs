@@ -87,16 +87,12 @@ public class MainControlViewModel : ViewModel
 
     bool _isSavingSuppressed = false;
 
-    public void Initialize(TextureCoordinateDisplayController displayController)
-    {
-        _displayController = displayController;
-    }
-
     public MainControlViewModel(
         IProjectManager projectManager,
         IFileCommands fileCommands,
         IFileWatchManager fileWatchManager,
-        IGuiCommands guiCommands)
+        IGuiCommands guiCommands,
+        TextureCoordinateDisplayController displayController)
     {
         SelectedSnapToGridValue = 16;
         SelectedZoomLevel = 100;
@@ -105,6 +101,9 @@ public class MainControlViewModel : ViewModel
         _fileCommands = fileCommands;
         _fileWatchManager = fileWatchManager;
         _guiCommands = guiCommands;
+
+        _displayController = displayController;
+        _displayController.ZoomLevelChanged += zoomLevel => SelectedZoomLevel = zoomLevel;
 
         this.PropertyChanged += HandlePropertyChanged;
 
@@ -119,7 +118,7 @@ public class MainControlViewModel : ViewModel
                 break;
             case nameof(IsSnapToGridChecked):
             case nameof(SelectedSnapToGridValue):
-                _displayController?.UpdateSnapGrid();
+                _displayController?.UpdateSnapGrid(IsSnapToGridChecked, SelectedSnapToGridValue);
                 if (!_isSavingSuppressed)
                 {
                     SaveSettings();
