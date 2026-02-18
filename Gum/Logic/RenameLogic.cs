@@ -78,7 +78,7 @@ public class RenameLogic : IRenameLogic
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
     private readonly IPluginManager _pluginManager;
-    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
 
     public RenameLogic(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -89,7 +89,7 @@ public class RenameLogic : IRenameLogic
         IProjectManager projectManager,
         IProjectState projectState,
         IPluginManager pluginManager,
-        StandardElementsManagerGumTool standardElementsManagerGumTool)
+        IStandardElementsManagerGumTool standardElementsManagerGumTool)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
