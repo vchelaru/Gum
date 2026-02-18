@@ -695,7 +695,8 @@ public class StandardElementsManager
 
     public static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)
     {
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions",
+            ToolTipText = "The width of this object in units determined by Width Units." });
 
         var defaultValue = DimensionUnitType.Absolute;
 
@@ -704,7 +705,8 @@ public class StandardElementsManager
             defaultValue = DimensionUnitType.PercentageOfSourceFile;
         }
 
-        VariableSave variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "WidthUnits", Category = "Dimensions" };
+        VariableSave variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "WidthUnits", Category = "Dimensions",
+            ToolTipText = "Determines how the Width value is interpreted (e.g. absolute pixels, percentage of parent, relative to children)." };
         if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
         {
             variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
@@ -718,9 +720,11 @@ public class StandardElementsManager
 
 
 
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions",
+            ToolTipText = "The height of this object in units determined by Height Units." });
 
-        variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "HeightUnits", Category = "Dimensions" };
+        variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "HeightUnits", Category = "Dimensions",
+            ToolTipText = "Determines how the Height value is interpreted (e.g. absolute pixels, percentage of parent, relative to children)." };
         if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
 
         {
@@ -752,11 +756,15 @@ public class StandardElementsManager
         yUnitsExclusions.Add(PositionUnitType.PixelsFromRight);
 
 
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "X", Category = "Position" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "XUnits", Category = "Position", ExcludedValuesForEnum = xUnitsExclusions });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "X", Category = "Position",
+            ToolTipText = "The horizontal position of this object's origin in units determined by X Units." });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "XUnits", Category = "Position", ExcludedValuesForEnum = xUnitsExclusions,
+            ToolTipText = "Determines how the X value is interpreted (e.g. pixels from left edge, percentage of parent width, pixels from center)." });
 
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Y", Category = "Position" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "YUnits", Category = "Position", ExcludedValuesForEnum = yUnitsExclusions });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Y", Category = "Position",
+            ToolTipText = "The vertical position of this object's origin in units determined by Y Units." });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "YUnits", Category = "Position", ExcludedValuesForEnum = yUnitsExclusions,
+            ToolTipText = "Determines how the Y value is interpreted (e.g. pixels from top edge, percentage of parent height, pixels from center)." });
 
         if(addOriginVariables)
         {

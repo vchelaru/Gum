@@ -1489,7 +1489,11 @@
                         Visibility="{Binding IsDefault, Converter={StaticResource InverseBoolVis}}" />
                 </Border>
 
-                <Border Grid.Column="1" Margin="0,0,6,0">
+                <Border
+                    Grid.Column="1"
+                    Margin="0,0,6,0"
+                    ToolTip="{Binding ToolTipText}"
+                    ToolTipService.InitialShowDelay="500">
 
                     <wpfdataui:SingleDataUiContainer x:Name="Container" DataContext="{Binding}" />
                 </Border>

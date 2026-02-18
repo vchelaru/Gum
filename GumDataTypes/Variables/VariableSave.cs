@@ -194,6 +194,9 @@ public class VariableSave
     [XmlIgnore]
     public string DetailText { get; set; }
 
+    [XmlIgnore]
+    public string? ToolTipText { get; set; }
+
 
     public VariableSave Clone()
     {

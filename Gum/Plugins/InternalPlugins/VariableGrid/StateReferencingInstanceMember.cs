@@ -350,6 +350,7 @@ public class StateReferencingInstanceMember : InstanceMember
                             this.PreferredDisplayer = definingVariable.PreferredDisplayer;
                         }
                         this.DetailText = definingVariable.DetailText;
+                        this.ToolTipText = definingVariable.ToolTipText;
 
                         foreach (var kvp in definingVariable.PropertiesToSetOnDisplayer)
                         {
