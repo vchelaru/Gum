@@ -18,6 +18,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Gum.Commands;
 using Gum.Services.Dialogs;
+using Gum.Undo;
 using WpfDataUi.DataTypes;
 
 namespace Gum.Services;
@@ -51,16 +52,19 @@ public class EditVariableService : IEditVariableService
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
+    private readonly IUndoManager _undoManager;
 
-    public EditVariableService(IRenameLogic renameLogic, 
-        IDialogService dialogService, 
+    public EditVariableService(IRenameLogic renameLogic,
+        IDialogService dialogService,
         IGuiCommands guiCommands,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        IUndoManager undoManager)
     {
         _renameLogic = renameLogic;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _undoManager = undoManager;
     }
 
     public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
@@ -198,6 +202,8 @@ public class EditVariableService : IEditVariableService
 
     private void RenameExposedVariable(VariableSave variable, string newName, IStateContainer container, VariableChangeResponse changeResponse)
     {
+        using var undoLock = _undoManager.RequestLock();
+
         var variableChanges = changeResponse.VariableChanges;
 
         var oldName = variable.ExposedAsName;
