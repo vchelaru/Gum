@@ -737,9 +737,16 @@ public class DragDropManager : IDragDropManager
 
     public void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
     {
-        IEnumerable<object> tags = draggedNodes
+        // Sort InstanceSaves by descending index in their parent container so that,
+        // as each item is inserted at the target position, the final relative order
+        // matches the original order. Non-InstanceSave objects sort last.
+        var tags = draggedNodes
             .Where(n => n.Tag != null)
-            .Select(n => n.Tag);
+            .Select(n => n.Tag)
+            .OrderByDescending(tag => tag is InstanceSave instance
+                ? instance.ParentContainer?.Instances.IndexOf(instance) ?? int.MinValue
+                : int.MinValue)
+            .ToList();
 
         using var undoLock = _undoManager.RequestLock();
 
