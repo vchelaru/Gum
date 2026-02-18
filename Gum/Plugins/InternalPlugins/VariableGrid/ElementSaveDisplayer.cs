@@ -59,7 +59,8 @@ public class ElementSaveDisplayer
         bool IsReadOnly,
         bool IsAssignedByReference,
         string Subtext,
-        string? DisplayName = null);
+        string? DisplayName = null,
+        string? ToolTipText = null);
 
     #endregion
 
@@ -121,11 +122,13 @@ public class ElementSaveDisplayer
 
         if (instanceSave != null)
         {
-            propertyList.Add(new PropertyData("Locked", typeof(bool), new Attribute[0], null, "", !isDefault, false, null));
+            propertyList.Add(new PropertyData("Locked", typeof(bool), new Attribute[0], null, "", !isDefault, false, null,
+                ToolTipText: "When locked, the instance cannot be selected in the editor by clicking on it."));
 
             if (instanceOwner is ComponentSave)
             {
-                propertyList.Add(new PropertyData("IsSlot", typeof(bool), new Attribute[0], null, "", !isDefault, false, null, DisplayName: "Is Slot"));
+                propertyList.Add(new PropertyData("IsSlot", typeof(bool), new Attribute[0], null, "", !isDefault, false, null, DisplayName: "Is Slot",
+                    ToolTipText: "Marks this instance as a slot — a designated area that can hold child instances when this component is placed inside another component or screen."));
             }
         }
 
@@ -580,6 +583,8 @@ public class ElementSaveDisplayer
             srim.DisplayName = propertyData.DisplayName;
         }
 
+        srim.ToolTipText = propertyData.ToolTipText;
+
         // moved to internal
         //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
         SetSubtext(stateSave, propertyData.Subtext, srim, variableName);
@@ -834,7 +839,8 @@ public class ElementSaveDisplayer
 
             var propertySubtext = _subtextLogic.GetDefaultSubtext(defaultVariable, subtext, name, elementSave, instanceSave);
 
-            return new PropertyData(name, type, customAttributes, typeConverter, category, forceReadOnly, isAssignedByReference, propertySubtext);
+            return new PropertyData(name, type, customAttributes, typeConverter, category, forceReadOnly, isAssignedByReference, propertySubtext,
+                ToolTipText: defaultVariable.ToolTipText);
         }
         return null;
     }
@@ -851,7 +857,8 @@ public class ElementSaveDisplayer
             !isDefault,
             false,
             null,
-            DisplayName: "Default Slot"));
+            DisplayName: "Default Slot",
+            ToolTipText: "The slot instance that receives child objects by default when this component is placed inside another component or screen."));
     }
 
     private void AddNameAndBaseTypeProperties(List<PropertyData> pdc, ElementSave? instanceOwner, InstanceSave instance, bool isReadOnly)

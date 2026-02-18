@@ -357,7 +357,7 @@ namespace WpfDataUi.DataTypes
 
 
         string detailText;
-        public string DetailText 
+        public string DetailText
         {
             get => detailText;
             set
@@ -366,6 +366,21 @@ namespace WpfDataUi.DataTypes
                 {
                     detailText = value;
                     OnPropertyChanged(nameof(DetailText));
+                }
+            }
+        }
+
+        string? toolTipText;
+        public string? ToolTipText
+        {
+            get => toolTipText;
+            set
+            {
+                var normalizedValue = string.IsNullOrEmpty(value) ? null : value;
+                if (toolTipText != normalizedValue)
+                {
+                    toolTipText = normalizedValue;
+                    OnPropertyChanged(nameof(ToolTipText));
                 }
             }
         }
