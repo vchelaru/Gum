@@ -784,7 +784,7 @@ public class RenameLogic : IRenameLogic
                             }
 
 
-                            if ((matchesLeft || matchesRight) && changedVariableOwnerElement.AllStates.Contains(stateContainingRightSideVariable))
+                            if (matchesLeft || matchesRight)
                             {
                                 // we have a match!!
                                 var referenceChange = new VariableReferenceChange();

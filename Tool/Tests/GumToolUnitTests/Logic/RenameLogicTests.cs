@@ -62,6 +62,85 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void GetVariableChangesForRenamedVariable_VariableReferenceLeftSideOnInstance_OnlyDetectedForMatchingComponent()
+    {
+        // ComponentA and ComponentB both have a variable named BeforeRename.
+        // ComponentC has one instance of each, both with a VariableReferences entry "BeforeRename = SomeVariable".
+        // Renaming BeforeRename on ComponentA should detect only instanceA's reference, not instanceB's.
+        var componentA = new ComponentSave { Name = "ComponentA" };
+        componentA.States.Add(new StateSave { Name = "Default", ParentContainer = componentA });
+        _project.Components.Add(componentA);
+
+        var componentB = new ComponentSave { Name = "ComponentB" };
+        componentB.States.Add(new StateSave { Name = "Default", ParentContainer = componentB });
+        _project.Components.Add(componentB);
+
+        var componentC = new ComponentSave { Name = "ComponentC" };
+        var defaultStateC = new StateSave { Name = "Default", ParentContainer = componentC };
+        componentC.States.Add(defaultStateC);
+
+        var instanceA = new InstanceSave { Name = "instanceA", BaseType = "ComponentA", ParentContainer = componentC };
+        componentC.Instances.Add(instanceA);
+        var instanceB = new InstanceSave { Name = "instanceB", BaseType = "ComponentB", ParentContainer = componentC };
+        componentC.Instances.Add(instanceB);
+
+        var varRefListA = new VariableListSave<string> { Type = "string", Name = "instanceA.VariableReferences" };
+        varRefListA.Value.Add("BeforeRename = SomeVariable");
+        defaultStateC.VariableLists.Add(varRefListA);
+
+        var varRefListB = new VariableListSave<string> { Type = "string", Name = "instanceB.VariableReferences" };
+        varRefListB.Value.Add("BeforeRename = SomeVariable");
+        defaultStateC.VariableLists.Add(varRefListB);
+
+        _project.Components.Add(componentC);
+
+        var result = _renameLogic.GetVariableChangesForRenamedVariable(
+            componentA,
+            oldFullName: "BeforeRename",
+            oldStrippedOrExposedName: "BeforeRename");
+
+        result.VariableReferenceChanges.Count.ShouldBe(1);
+        result.VariableReferenceChanges[0].VariableReferenceList.ShouldBe(varRefListA);
+    }
+
+    [Fact]
+    public void GetVariableChangesForRenamedVariable_VariableReferenceRightSideOnQualifiedName_OnlyDetectedForMatchingComponent()
+    {
+        // ComponentA and ComponentB both have a variable named BeforeRename.
+        // ComponentC has a VariableReferences list with two entries using qualified names:
+        // one referencing Components/ComponentA.BeforeRename and one referencing Components/ComponentB.BeforeRename.
+        // Renaming BeforeRename on ComponentA should detect only the ComponentA entry (index 0).
+        var componentA = new ComponentSave { Name = "ComponentA" };
+        componentA.States.Add(new StateSave { Name = "Default", ParentContainer = componentA });
+        _project.Components.Add(componentA);
+
+        var componentB = new ComponentSave { Name = "ComponentB" };
+        componentB.States.Add(new StateSave { Name = "Default", ParentContainer = componentB });
+        _project.Components.Add(componentB);
+
+        var componentC = new ComponentSave { Name = "ComponentC" };
+        var defaultStateC = new StateSave { Name = "Default", ParentContainer = componentC };
+        componentC.States.Add(defaultStateC);
+
+        var varRefList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varRefList.Value.Add("SomeVar = Components/ComponentA.BeforeRename");
+        varRefList.Value.Add("SomeOtherVar = Components/ComponentB.BeforeRename");
+        defaultStateC.VariableLists.Add(varRefList);
+
+        _project.Components.Add(componentC);
+
+        var result = _renameLogic.GetVariableChangesForRenamedVariable(
+            componentA,
+            oldFullName: "BeforeRename",
+            oldStrippedOrExposedName: "BeforeRename");
+
+        result.VariableReferenceChanges.Count.ShouldBe(1);
+        result.VariableReferenceChanges[0].VariableReferenceList.ShouldBe(varRefList);
+        result.VariableReferenceChanges[0].LineIndex.ShouldBe(0);
+        result.VariableReferenceChanges[0].ChangedSide.ShouldBe(SideOfEquals.Right);
+    }
+
+    [Fact]
     public void GetVariableChangesForRenamedVariable_VariableReferenceRightSideOnSelf_IsDetected()
     {
         // ComponentA has a VariableReferences entry where MyVar appears on the right side:
