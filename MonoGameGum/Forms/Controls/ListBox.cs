@@ -771,8 +771,8 @@ public class ListBox : ItemsControl, IInputReceiver
 
                         if (anchorIndex >= 0)
                         {
-                            var minIndex = Math.Min(anchorIndex, clickedIndex);
-                            var maxIndex = Math.Max(anchorIndex, clickedIndex);
+                            var minIndex = System.Math.Min(anchorIndex, clickedIndex);
+                            var maxIndex = System.Math.Max(anchorIndex, clickedIndex);
 
                             // Select all enabled items in range
                             for (int i = minIndex; i <= maxIndex; i++)
