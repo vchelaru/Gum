@@ -83,6 +83,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="SkiaInGumShared\Renderables\RenderableArc.cs" />
+    <Compile Remove="SkiaInGumShared\Renderables\RenderableCircle.cs" />
+    <Compile Remove="SkiaInGumShared\Renderables\RenderableRoundedRectangle.cs" />
     <Compile Remove="SkiaInGumShared\Rendering\ISkiaRenderable.cs" />
     <Compile Remove="SkiaInGumShared\Rendering\SkiaGLUtils.cs" />
     <Compile Remove="SkiaInGumShared\Rendering\SkiaRenderableInfo.cs" />
