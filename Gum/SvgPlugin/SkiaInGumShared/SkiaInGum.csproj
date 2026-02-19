@@ -32,4 +32,6 @@
 		<Folder Include="Rendering\" />
 	</ItemGroup>
 
+	<Import Project="SkiaInGumShared.projitems" Label="Shared" />
+
 </Project>
