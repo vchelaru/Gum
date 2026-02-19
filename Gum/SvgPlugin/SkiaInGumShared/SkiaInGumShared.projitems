@@ -9,27 +9,12 @@
     <Import_RootNamespace>SkiaInGumShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\Runtimes\SkiaGum\Renderables\IClipPath.cs">
-      <Link>Renderables\IClipPath.cs</Link>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\Runtimes\SkiaGum\Renderables\RenderableShapeBase.cs">
-      <Link>Renderables\RenderableShapeBase.cs</Link>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\Runtimes\SkiaGum\Renderables\Arc.cs">
-      <Link>Renderables\Arc.cs</Link>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\Runtimes\SkiaGum\Renderables\Circle.cs">
-      <Link>Renderables\Circle.cs</Link>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\Runtimes\SkiaGum\Renderables\RoundedRectangle.cs">
-      <Link>Renderables\RoundedRectangle.cs</Link>
-    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableArc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableCanvas.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableCircle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableLottieAnimation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableRoundedRectangle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableSkiaObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableSvg.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Rendering\ISkiaSurfaceDrawable.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Rendering\SkiaObjectTextureRenderer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Rendering\SkiaTexturedRenderable.cs" />
   </ItemGroup>
 </Project>
