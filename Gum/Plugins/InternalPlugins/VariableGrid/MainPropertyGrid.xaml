@@ -70,10 +70,16 @@
         Margin="0,2,0,0"
         BorderThickness="1"
         Click="HandleAddVariableClicked"
-        Content="{wpf:FluentIcon Icon=Add}"
         Style="{StaticResource IconButton}"
         ToolTip="Add Variable"
-        Visibility="{Binding AddVariableButtonVisibility}" />
+        Visibility="{Binding AddVariableButtonVisibility}">
+        <Button.Content>
+          <StackPanel Orientation="Horizontal">
+            <ContentPresenter Content="{wpf:FluentIcon Icon=Add}" />
+            <TextBlock Text="Add Variable" />
+          </StackPanel>
+        </Button.Content>
+      </Button>
     </Grid>
   </Grid>
 </UserControl>
