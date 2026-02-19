@@ -1792,6 +1792,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
         {
+            // Defer EnsureVisible so it runs after the native TreeView has processed
+            // the arrow key and moved the selection. BeginInvoke posts to the message
+            // queue, which executes after all synchronous WM_KEYDOWN handling (including
+            // the AfterSelect notification) has completed.
+            ObjectTreeView.BeginInvoke(() => ObjectTreeView.SelectedNode?.EnsureVisible());
             OnSelect((SelectedNode as TreeNodeWrapper)?.Node);
         }
 
