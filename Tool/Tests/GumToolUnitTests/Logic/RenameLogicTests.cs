@@ -31,6 +31,60 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void GetVariableChangesForRenamedVariable_VariableReferenceLeftSideOnInstance_IsDetected()
+    {
+        // ComponentA has a variable MyVar.
+        // ComponentB has instance myA of type ComponentA with a VariableReferences entry
+        // where MyVar appears on the left side: "MyVar = someOtherVar".
+        // Renaming MyVar in ComponentA should detect this as a left-side reference change.
+        var componentA = new ComponentSave { Name = "ComponentA" };
+        componentA.States.Add(new StateSave { Name = "Default", ParentContainer = componentA });
+        _project.Components.Add(componentA);
+
+        var componentB = new ComponentSave { Name = "ComponentB" };
+        var defaultStateB = new StateSave { Name = "Default", ParentContainer = componentB };
+        componentB.States.Add(defaultStateB);
+        var myA = new InstanceSave { Name = "myA", BaseType = "ComponentA", ParentContainer = componentB };
+        componentB.Instances.Add(myA);
+
+        var varRefList = new VariableListSave<string> { Type = "string", Name = "myA.VariableReferences" };
+        varRefList.Value.Add("MyVar = someOtherVar");
+        defaultStateB.VariableLists.Add(varRefList);
+        _project.Components.Add(componentB);
+
+        var result = _renameLogic.GetVariableChangesForRenamedVariable(
+            componentA,
+            oldFullName: "MyVar",
+            oldStrippedOrExposedName: "MyVar");
+
+        result.VariableReferenceChanges.Count.ShouldBe(1);
+        result.VariableReferenceChanges[0].ChangedSide.ShouldBe(SideOfEquals.Left);
+    }
+
+    [Fact]
+    public void GetVariableChangesForRenamedVariable_VariableReferenceRightSideOnSelf_IsDetected()
+    {
+        // ComponentA has a VariableReferences entry where MyVar appears on the right side:
+        // "SomeOtherVar = MyVar". Renaming MyVar in ComponentA should detect this.
+        var componentA = new ComponentSave { Name = "ComponentA" };
+        var defaultStateA = new StateSave { Name = "Default", ParentContainer = componentA };
+        componentA.States.Add(defaultStateA);
+
+        var varRefList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varRefList.Value.Add("SomeOtherVar = MyVar");
+        defaultStateA.VariableLists.Add(varRefList);
+        _project.Components.Add(componentA);
+
+        var result = _renameLogic.GetVariableChangesForRenamedVariable(
+            componentA,
+            oldFullName: "MyVar",
+            oldStrippedOrExposedName: "MyVar");
+
+        result.VariableReferenceChanges.Count.ShouldBe(1);
+        result.VariableReferenceChanges[0].ChangedSide.ShouldBe(SideOfEquals.Right);
+    }
+
+    [Fact]
     public void PropagateVariableRename_InstanceVariableRename_PreservesValue()
     {
         var button = new ComponentSave { Name = "Button" };
