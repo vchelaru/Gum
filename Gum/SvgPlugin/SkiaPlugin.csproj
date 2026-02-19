@@ -34,25 +34,7 @@
     <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
     <ProjectReference Include="..\..\WpfDataUi\WpfDataUi.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <!-- Link SkiaGum renderable shape files directly so RenderableShapeAdapter can reference them
-         without pulling in the entire SkiaGum project (which has conflicting dependencies). -->
-    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\IClipPath.cs">
-      <Link>SkiaGumRenderables\IClipPath.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\RenderableShapeBase.cs">
-      <Link>SkiaGumRenderables\RenderableShapeBase.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\Arc.cs">
-      <Link>SkiaGumRenderables\Arc.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\Circle.cs">
-      <Link>SkiaGumRenderables\Circle.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\RoundedRectangle.cs">
-      <Link>SkiaGumRenderables\RoundedRectangle.cs</Link>
-    </Compile>
-  </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Embedded\Svg.gutx" />
     <EmbeddedResource Include="Embedded\ColoredCircle.gutx" />
@@ -78,25 +60,19 @@
     <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="SkiaInGumShared\Renderables\RenderableArc.cs" />
-    <Compile Remove="SkiaInGumShared\Renderables\RenderableCanvas.cs" />
-    <Compile Remove="SkiaInGumShared\Renderables\RenderableCircle.cs" />
-    <Compile Remove="SkiaInGumShared\Renderables\RenderableLottieAnimation.cs" />
-    <Compile Remove="SkiaInGumShared\Renderables\RenderableRoundedRectangle.cs" />
-    <Compile Remove="SkiaInGumShared\Renderables\RenderableSkiaObject.cs" />
-    <Compile Remove="SkiaInGumShared\Renderables\RenderableSvg.cs" />
-    <Compile Remove="SkiaInGumShared\Rendering\ISkiaRenderable.cs" />
-    <Compile Remove="SkiaInGumShared\Rendering\SkiaGLUtils.cs" />
-    <Compile Remove="SkiaInGumShared\Rendering\SkiaRenderableInfo.cs" />
-    <Compile Remove="SkiaInGumShared\Rendering\SkiaRenderer.cs" />
-    <Compile Remove="SkiaInGumShared\SkiaSpriteCanvas.cs" />
-  </ItemGroup>
-	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="  echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;  IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;  echo Target path $(TargetPath) targetName $(TargetName)&#xD;&#xA;&#xD;&#xA;  copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;&#xD;&#xA;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;  copy &quot;$(TargetDir)SkiaPlugin.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;  copy &quot;$(TargetDir)SkiaPlugin.dll.config&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
 </Target>
 	
 	
   <Import Project="SkiaInGumShared\SkiaInGumShared.projitems" Label="Shared" />
+
+  <!-- These removes must come AFTER the shared project import so they apply to its explicit includes -->
+  <ItemGroup>
+    <Compile Remove="SkiaInGumShared\Rendering\ISkiaRenderable.cs" />
+    <Compile Remove="SkiaInGumShared\Rendering\SkiaGLUtils.cs" />
+    <Compile Remove="SkiaInGumShared\Rendering\SkiaRenderableInfo.cs" />
+    <Compile Remove="SkiaInGumShared\Rendering\SkiaRenderer.cs" />
+    <Compile Remove="SkiaInGumShared\SkiaSpriteCanvas.cs" />
+  </ItemGroup>
 </Project>
