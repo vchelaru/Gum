@@ -106,12 +106,12 @@ namespace Gum.Wireframe
 #endif
 
 #if SKIA
-                case  "Arc":
-                    return new SkiaGum.Renderables.RenderableArc();
-                case  "ColoredCircle":
-                    return new SkiaGum.Renderables.RenderableCircle();
-                case  "RoundedRectangle":
-                    return new SkiaGum.Renderables.RenderableRoundedRectangle();
+                case "Arc":
+                    return new SkiaGum.Renderables.Arc();
+                case "ColoredCircle":
+                    return new SkiaGum.Renderables.Circle();
+                case "RoundedRectangle":
+                    return new SkiaGum.Renderables.RoundedRectangle();
 
 #endif
 

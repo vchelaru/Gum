@@ -71,12 +71,10 @@ namespace SkiaGum.Renderables
 
         public override void PreRender()
         {
-            if((DateTime.Now - lastUpdate).TotalSeconds > SecondsBetweenUpdates)
+            if ((DateTime.Now - lastUpdate).TotalSeconds > SecondsBetweenUpdates)
             {
                 needsUpdate = true;
             }
-
-            base.PreRender();
         }
 
         private SkiaSharp.Skottie.Animation GetAnimation()

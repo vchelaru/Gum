@@ -26,10 +26,10 @@ namespace SkiaGum.Renderables
             }
         }
 
-        public ColorOperation ColorOperation
+        public new ColorOperation ColorOperation
         {
-            get => base.colorOperation;
-            set => base.colorOperation = value;
+            get => base.ColorOperation;
+            set => base.ColorOperation = value;
         }
 
         //public bool UseColorTextureAlpha

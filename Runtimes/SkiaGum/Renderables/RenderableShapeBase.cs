@@ -3,7 +3,6 @@ using Gum.DataTypes;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
-using SkiaGum.GueDeriving;
 using SkiaSharp;
 using System.Collections.ObjectModel;
 using ToolsUtilitiesStandard.Helpers;
@@ -120,9 +119,13 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         {
             var changed = _width != value;
             _width = value;
-            if(changed && UseGradient)
+            if(changed)
             {
-                ClearCachedPaint();
+                NeedsUpdate = true;
+                if(UseGradient)
+                {
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -135,9 +138,13 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         {
             var changed = _height != value;
             _height = value;
-            if(changed && UseGradient)
+            if(changed)
             {
-                ClearCachedPaint();
+                NeedsUpdate = true;
+                if(UseGradient)
+                {
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -151,7 +158,29 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
     public bool Wrap => false;
 
     protected bool CanRenderAt0Dimension { get; set; } = false;
-    protected bool IsOffsetAppliedForStroke { get; set; } = true;
+    public bool IsOffsetAppliedForStroke { get; set; } = true;
+
+    /// <summary>
+    /// Whether the texture generated from this shape needs to be regenerated.
+    /// Set to true whenever a visual property changes.
+    /// </summary>
+    public bool NeedsUpdate { get; set; } = true;
+
+    /// <summary>
+    /// Extra pixels needed on each horizontal side to accommodate effects like dropshadow.
+    /// </summary>
+    public float XSizeSpillover => HasDropshadow ? DropshadowBlurX + Math.Abs(DropshadowOffsetX) : 0;
+
+    /// <summary>
+    /// Extra pixels needed on each vertical side to accommodate effects like dropshadow.
+    /// </summary>
+    public float YSizeSpillover => HasDropshadow ? DropshadowBlurY + Math.Abs(DropshadowOffsetY) : 0;
+
+    /// <summary>
+    /// Whether the color should be applied as a multiplier during sprite rendering.
+    /// False for shapes that bake color into their paint.
+    /// </summary>
+    public virtual bool ShouldApplyColorOnSpriteRender => false;
 
     public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
@@ -576,6 +605,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
     public void Render(ISystemManagers managers)
     {
+#if SKIA
         var canvas = ((SystemManagers)managers).Canvas;
 
         var canRender =
@@ -605,8 +635,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
                 canvas.RotateDegrees(-rotation);
             }
 
-            // If this is stroke-only, then the stroke is centered around the bounds 
-            // we pass in. Therefore, we need to move the bounds "in" by half of the 
+            // If this is stroke-only, then the stroke is centered around the bounds
+            // we pass in. Therefore, we need to move the bounds "in" by half of the
             // stroke width
             if (IsFilled == false && IsOffsetAppliedForStroke)
             {
@@ -623,6 +653,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
                 canvas.Restore();
             }
         }
+#endif
     }
 
     public BlendState BlendState => BlendState.AlphaBlend;
@@ -636,7 +667,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
     {
         _cachedPaint?.Dispose();
         _cachedPaint = null;
-
+        NeedsUpdate = true;
     }
 
 

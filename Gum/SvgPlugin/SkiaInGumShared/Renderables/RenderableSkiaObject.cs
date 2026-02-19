@@ -1,113 +1,17 @@
-﻿using Gum.DataTypes;
-using Gum.Managers;
-using Gum.Wireframe;
-using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary;
+using Gum.Converters;
+using Gum.DataTypes;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
-using System;
-using System.Collections.ObjectModel;
-using System.Runtime.InteropServices;
-using ToolsUtilitiesStandard.Helpers;
-using BlendState = Gum.BlendState;
-using Point = System.Drawing.Point;
-using Color = System.Drawing.Color;
-using Rectangle = System.Drawing.Rectangle;
-using Matrix = System.Numerics.Matrix4x4;
-using Gum.RenderingLibrary;
 
-#if FAST_GL_SKIA_RENDERING
-using SkiaMonoGameRendering;
-#endif
+using System;
+using ToolsUtilitiesStandard.Helpers;
+using Color = System.Drawing.Color;
 
 namespace SkiaGum.Renderables
 {
-
-
-
-    public abstract class RenderableSkiaObject : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IManagedObject
-#if FAST_GL_SKIA_RENDERING
-        ,ISkiaRenderable
-#endif
+    public abstract class RenderableSkiaObject : ISkiaSurfaceDrawable
     {
         #region General Fields/Properties
-
-#if FAST_GL_SKIA_RENDERING
-
-        public bool ClearCanvasOnRender { get; set; } = true;
-#endif
-
-        bool IRenderableIpso.IsRenderTarget => false;
-
-        protected Microsoft.Xna.Framework.Vector2 Position;
-
-        IRenderableIpso mParent;
-        public IRenderableIpso Parent
-        {
-            get { return mParent; }
-            set
-            {
-                if (mParent != value)
-                {
-                    if (mParent != null)
-                    {
-                        mParent.Children.Remove(this);
-                    }
-                    mParent = value;
-                    if (mParent != null)
-                    {
-                        mParent.Children.Add(this);
-                    }
-                }
-            }
-        }
-
-        ObservableCollection<IRenderableIpso> mChildren;
-        public ObservableCollection<IRenderableIpso> Children
-        {
-            get { return mChildren; }
-        }
-
-        public BlendState BlendState
-        {
-            get;
-            set;
-        }
-
-        public Gum.RenderingLibrary.Blend Blend
-        {
-            get => BlendState.ToBlend();
-            set => BlendState = value.ToBlendState();
-        }
-
-        public bool ClipsChildren => false;
-
-        public bool Wrap => false;
-
-        protected Texture2D texture;
-
-        public float X
-        {
-            get { return Position.X; }
-            set { Position.X = value; }
-        }
-
-        public float Y
-        {
-            get { return Position.Y; }
-            set { Position.Y = value; }
-        }
-
-        public float Z
-        {
-            get;
-            set;
-        }
-
-        public float Rotation { get; set; }
-
-        public bool FlipHorizontal { get; set; }
-        public bool FlipVertical { get; set; }
 
         float width;
         public float Width
@@ -137,22 +41,28 @@ namespace SkiaGum.Renderables
             }
         }
 
-        public string Name
-        {
-            get;
-            set;
-        }
-
-        public object Tag { get; set; }
         /// <summary>
         /// If this is false, then the DrawToSurface will handle applying the colors (like when creating a RoundedRectangle). If true,
         /// then this will multiply the rendering by the argument color (like when rendering an SVG).
         /// </summary>
         protected virtual bool ShouldApplyColorOnSpriteRender => false;
-        protected bool needsUpdate = true;
+
+        bool ISkiaSurfaceDrawable.ShouldApplyColorOnSpriteRender => ShouldApplyColorOnSpriteRender;
 
         protected ColorOperation colorOperation = ColorOperation.Modulate;
-        ColorOperation IRenderableIpso.ColorOperation => colorOperation;
+        public ColorOperation ColorOperation
+        {
+            get => colorOperation;
+            set => colorOperation = value;
+        }
+
+        protected bool needsUpdate = true;
+
+        public bool NeedsUpdate
+        {
+            get => needsUpdate;
+            set => needsUpdate = value;
+        }
 
         #endregion
 
@@ -202,7 +112,7 @@ namespace SkiaGum.Renderables
             }
         }
 
-        public Color Color = Color.White;
+        public Color Color { get; set; } = Color.White;
 
         public int Alpha
         {
@@ -402,8 +312,8 @@ namespace SkiaGum.Renderables
         }
 
 
-        PositionUnitType gradientX1Units;
-        public PositionUnitType GradientX1Units
+        GeneralUnitType gradientX1Units;
+        public GeneralUnitType GradientX1Units
         {
             get => gradientX1Units;
             set
@@ -416,8 +326,8 @@ namespace SkiaGum.Renderables
             }
         }
 
-        PositionUnitType gradientX2Units;
-        public PositionUnitType GradientX2Units
+        GeneralUnitType gradientX2Units;
+        public GeneralUnitType GradientX2Units
         {
             get => gradientX2Units;
             set
@@ -430,8 +340,8 @@ namespace SkiaGum.Renderables
             }
         }
 
-        PositionUnitType gradientY1Units;
-        public PositionUnitType GradientY1Units
+        GeneralUnitType gradientY1Units;
+        public GeneralUnitType GradientY1Units
         {
             get => gradientY1Units;
             set
@@ -444,8 +354,8 @@ namespace SkiaGum.Renderables
             }
         }
 
-        PositionUnitType gradientY2Units;
-        public PositionUnitType GradientY2Units
+        GeneralUnitType gradientY2Units;
+        public GeneralUnitType GradientY2Units
         {
             get => gradientY2Units;
             set
@@ -587,294 +497,18 @@ namespace SkiaGum.Renderables
         /// <summary>
         /// The offset X when rendering a Skia shape considering the dropshadow
         /// </summary>
-        protected float XSizeSpillover => HasDropshadow ? DropshadowBlurX + Math.Abs(DropshadowOffsetX) : 0;
+        public float XSizeSpillover => HasDropshadow ? DropshadowBlurX + Math.Abs(DropshadowOffsetX) : 0;
 
         /// <summary>
         /// The offset Y when rendering a Skia shape considering the dropshadow
         /// </summary>
-        protected float YSizeSpillover => HasDropshadow ? DropshadowBlurY + Math.Abs(DropshadowOffsetY) : 0;
+        public float YSizeSpillover => HasDropshadow ? DropshadowBlurY + Math.Abs(DropshadowOffsetY) : 0;
 
         #endregion
 
-        #region IVisible Implementation
-
-        public bool Visible
-        {
-            get;
-            set;
-        }
-
-        public bool AbsoluteVisible
-        {
-            get
-            {
-                if (((IVisible)this).Parent == null)
-                {
-                    return Visible;
-                }
-                else
-                {
-                    return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-                }
-            }
-        }
-
-        IVisible IVisible.Parent
-        {
-            get
-            {
-                return ((IRenderableIpso)this).Parent as IVisible;
-            }
-        }
-
-
-        #endregion
-
-        #region ISkiaRenderable Implementation
-
-
-#if FAST_GL_SKIA_RENDERING
-        int ISkiaRenderable.TargetWidth => (int) Math.Min(2048, Width + XSizeSpillover * 2);
-        int ISkiaRenderable.TargetHeight => (int) Math.Min(2048, Height + YSizeSpillover * 2);
-        SKColorType ISkiaRenderable.TargetColorFormat { get => SKColorType.Rgba8888; }
-        bool ISkiaRenderable.ShouldRender => needsUpdate && Width > 0 && Height > 0 && AbsoluteVisible;
-
-        void ISkiaRenderable.NotifyDrawnTexture(Texture2D texture)
-        {
-            this.texture = texture;
-            needsUpdate = false;
-        }
-
-        void ISkiaRenderable.DrawToSurface(SKSurface surface) => DrawToSurface(surface);
-
-        
-#endif
-
-        #endregion
-
-        #region IManagedObject Implementation
-
-        public void AddToManagers()
-        {
-#if FAST_GL_SKIA_RENDERING
-            SkiaRenderer.AddRenderable(this);
-#endif
-        }
-
-        public void RemoveFromManagers()
-        {
-#if FAST_GL_SKIA_RENDERING
-            SkiaRenderer.RemoveRenderable(this);
-
-#endif
-        }
-
-
-        #endregion
-
-        public RenderableSkiaObject()
-        {
-            this.Visible = true;
-            mChildren = new ObservableCollection<IRenderableIpso>();
-        }
-
-        public override void Render(ISystemManagers managers)
-        {
-            if (AbsoluteVisible)
-            {
-                var oldX = this.X;
-                var oldY = this.Y;
-                var oldWidth = this.Width;
-                var oldHeight = this.Height;
-
-                this.X -= XSizeSpillover;
-                this.Y -= YSizeSpillover;
-                // use fields not props, to not trigger a needsUpdate = true
-                this.width += XSizeSpillover * 2;
-                this.height += YSizeSpillover * 2;
-
-                var color = ShouldApplyColorOnSpriteRender ? Color : Color.White;
-
-                var systemManagers = managers as SystemManagers;
-
-                Sprite.Render(systemManagers, systemManagers.Renderer.SpriteRenderer, this, texture, color, rotationInDegrees: Rotation);
-
-                this.X = oldX;
-                this.Y = oldY;
-                this.width = oldWidth;
-                this.height = oldHeight;
-            }
-        }
-
-        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
-        {
-            mParent = parent;
-        }
-
-        public virtual void PreRender()
-        {
-#if !FAST_GL_SKIA_RENDERING
-            if (needsUpdate && Width > 0 && Height > 0 && AbsoluteVisible)
-            {
-                if (texture != null)
-                {
-                    texture.Dispose();
-                    texture = null;
-                }
-
-                var colorType = SKImageInfo.PlatformColorType;
-
-                var widthToUse = Math.Min(2048, Width + XSizeSpillover * 2);
-                var heightToUse = Math.Min(2048, Height + YSizeSpillover * 2);
-
-                //var imageInfo = new SKImageInfo((int)widthToUse, (int)heightToUse, colorType, SKAlphaType.Unpremul);
-                var imageInfo = new SKImageInfo((int)widthToUse, (int)heightToUse, colorType, SKAlphaType.Premul);
-                using (var surface = SKSurface.Create(imageInfo))
-                {
-                    // It's possible this can fail
-                    if (surface != null)
-                    {
-                        DrawToSurface(surface);
-
-                        var skImage = surface.Snapshot();
-
-                        texture = RenderImageToTexture2D(skImage, SystemManagers.Default.Renderer.GraphicsDevice, colorType);
-                        needsUpdate = false;
-                    }
-                }
-            }
-#endif
-        }
+        public virtual void PreRender() { }
 
         public abstract void DrawToSurface(SKSurface surface);
-
-        public static bool PremultiplyRenderToTexture { get; set; } = false;
-        /// <summary>
-        /// Renders an SKImage to a Texture2D using the argument graphics device and SKColorType.
-        /// </summary>
-        /// <remarks>
-        /// The SKColorType parameter can have significant performance impacts. MonoGame (In FlatRedBall) 
-        /// uses a default color format of Rgba8888 on Windows. If the skiaColorType is Rgba8888, then the
-        /// bytes can be copied directly from skia to a byte[] to be used on the Texture2D.SetData call. If a
-        /// different format is used, then the data needs to be converted when copied, causing a much slower call.
-        /// Note that using SKImageInfo.PlatformColorType on Windows will return Bgra8888 which requires a (slower) conversion.
-        /// </remarks>
-        /// <param name="image">The SKImage containing the rendered Skia objects.</param>
-        /// <param name="graphicsDevice">The MonoGame Graphics Device</param>
-        /// <param name="skiaColorType">The color type. See remarks for info on this parameter</param>
-        /// <param name="forcedColor">Forced color to assign when rendering rather thant he original color from Skia.</param>
-        /// <returns>The new Texture2D instance.</returns>
-        public static Texture2D RenderImageToTexture2D(SKImage image, GraphicsDevice graphicsDevice, SKColorType skiaColorType, Color? forcedColor = null)
-        {
-            var pixelMap = image.PeekPixels();
-            var pointer = pixelMap.GetPixels();
-            var originalPixels = new byte[image.Height * pixelMap.RowBytes];
-
-            Marshal.Copy(pointer, originalPixels, 0, originalPixels.Length);
-
-            var texture = new Texture2D(graphicsDevice, image.Width, image.Height);
-            if (skiaColorType == SKColorType.Rgba8888)
-            {
-                texture.SetData(originalPixels);
-            }
-            else
-            {
-                // need a new byte[] to convert from BGRA to ARGB
-                var convertedBytes = new byte[originalPixels.Length];
-
-
-                if (PremultiplyRenderToTexture)
-                {
-                    for (int i = 0; i < convertedBytes.Length; i += 4)
-                    {
-                        var b = originalPixels[i + 0];
-                        var g = originalPixels[i + 1];
-                        var r = originalPixels[i + 2];
-                        var a = originalPixels[i + 3];
-
-                        //var ratio = a / 255.0f;
-
-                        //convertedBytes[i + 0] = (byte)(r * ratio + .5);
-                        //convertedBytes[i + 1] = (byte)(g * ratio + .5);
-                        //convertedBytes[i + 2] = (byte)(b * ratio + .5);
-                        //convertedBytes[i + 3] = a;
-
-                        if (forcedColor != null)
-                        {
-                            r = forcedColor.Value.R;
-                            g = forcedColor.Value.G;
-                            b = forcedColor.Value.B;
-                        }
-
-                        convertedBytes[i + 0] = r;
-                        convertedBytes[i + 1] = g;
-                        convertedBytes[i + 2] = b;
-                        convertedBytes[i + 3] = a;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < convertedBytes.Length; i += 4)
-                    {
-                        var b = originalPixels[i + 0];
-                        var g = originalPixels[i + 1];
-                        var r = originalPixels[i + 2];
-                        var a = originalPixels[i + 3];
-                        var ratio = a / 255.0f;
-
-                        if (forcedColor != null)
-                        {
-                            r = forcedColor.Value.R;
-                            g = forcedColor.Value.G;
-                            b = forcedColor.Value.B;
-                        }
-
-                        // output will always be premult so we need to unpremult
-                        convertedBytes[i + 0] = (byte)(r / ratio + .5);
-                        convertedBytes[i + 1] = (byte)(g / ratio + .5);
-                        convertedBytes[i + 2] = (byte)(b / ratio + .5);
-                        convertedBytes[i + 3] = a;
-                    }
-                }
-
-                texture.SetData(convertedBytes);
-
-            }
-            return texture;
-        }
-
-        public Texture2D ToTexture2D(GraphicsDevice graphicsDevice, SKColorType? skiaColorType = null)
-        {
-            if (skiaColorType == null)
-            {
-                skiaColorType = SKImageInfo.PlatformColorType;
-            }
-
-            RenderableSkiaObject.PremultiplyRenderToTexture = true;
-            var imageInfo = new SKImageInfo(
-                (int)width,
-                (int)height,
-                skiaColorType.Value,
-                SKAlphaType.Premul);
-
-            Texture2D textureToReturn = null;
-
-            using (var surface = SKSurface.Create(imageInfo))
-            {
-                // It's possible this can fail
-                if (surface != null)
-                {
-                    DrawToSurface(surface);
-
-                    var skImage = surface.Snapshot();
-
-                    textureToReturn = RenderableSkiaObject.RenderImageToTexture2D(skImage, graphicsDevice, skiaColorType.Value);
-
-                }
-            }
-
-            return textureToReturn;
-        }
 
         protected void SetGradientOnPaint(SKPaint paint)
         {
@@ -887,16 +521,16 @@ namespace SkiaGum.Renderables
             var effectiveGradientX1 = gradientX1;
             switch (this.GradientX1Units)
             {
-                case PositionUnitType.PixelsFromLeft:
+                case GeneralUnitType.PixelsFromSmall:
                     effectiveGradientX1 += XSizeSpillover;
                     break;
-                case PositionUnitType.PixelsFromCenterX:
+                case GeneralUnitType.PixelsFromMiddle:
                     effectiveGradientX1 += effectiveWidth / 2.0f;
                     break;
-                case PositionUnitType.PixelsFromRight:
+                case GeneralUnitType.PixelsFromLarge:
                     effectiveGradientX1 += effectiveWidth;
                     break;
-                case PositionUnitType.PercentageWidth:
+                case GeneralUnitType.Percentage:
                     effectiveGradientX1 = effectiveWidth * gradientX1 / 100;
                     break;
             }
@@ -904,16 +538,16 @@ namespace SkiaGum.Renderables
             var effectiveGradientX2 = gradientX2;
             switch (this.GradientX2Units)
             {
-                case PositionUnitType.PixelsFromLeft:
+                case GeneralUnitType.PixelsFromSmall:
                     effectiveGradientX2 += XSizeSpillover;
                     break;
-                case PositionUnitType.PixelsFromCenterX:
+                case GeneralUnitType.PixelsFromMiddle:
                     effectiveGradientX2 += effectiveWidth / 2.0f;
                     break;
-                case PositionUnitType.PixelsFromRight:
+                case GeneralUnitType.PixelsFromLarge:
                     effectiveGradientX2 += effectiveWidth;
                     break;
-                case PositionUnitType.PercentageWidth:
+                case GeneralUnitType.Percentage:
                     effectiveGradientX2 = effectiveWidth * gradientX2 / 100;
                     break;
             }
@@ -921,16 +555,16 @@ namespace SkiaGum.Renderables
             var effectiveGradientY1 = gradientY1;
             switch (this.GradientY1Units)
             {
-                case PositionUnitType.PixelsFromTop:
+                case GeneralUnitType.PixelsFromSmall:
                     effectiveGradientY1 += YSizeSpillover;
                     break;
-                case PositionUnitType.PixelsFromCenterY:
+                case GeneralUnitType.PixelsFromMiddle:
                     effectiveGradientY1 += effectiveHeight / 2.0f;
                     break;
-                case PositionUnitType.PixelsFromBottom:
+                case GeneralUnitType.PixelsFromLarge:
                     effectiveGradientY1 += effectiveHeight;
                     break;
-                case PositionUnitType.PercentageHeight:
+                case GeneralUnitType.Percentage:
                     effectiveGradientY1 = effectiveHeight * gradientY1 / 100;
                     break;
             }
@@ -938,16 +572,16 @@ namespace SkiaGum.Renderables
             var effectiveGradientY2 = gradientY2;
             switch (this.GradientY2Units)
             {
-                case PositionUnitType.PixelsFromTop:
+                case GeneralUnitType.PixelsFromSmall:
                     effectiveGradientY2 += YSizeSpillover;
                     break;
-                case PositionUnitType.PixelsFromCenterY:
+                case GeneralUnitType.PixelsFromMiddle:
                     effectiveGradientY2 += effectiveHeight / 2.0f;
                     break;
-                case PositionUnitType.PixelsFromBottom:
+                case GeneralUnitType.PixelsFromLarge:
                     effectiveGradientY2 += effectiveHeight;
                     break;
-                case PositionUnitType.PercentageHeight:
+                case GeneralUnitType.Percentage:
                     effectiveGradientY2 = effectiveHeight * gradientY2 / 100;
                     break;
             }
