@@ -147,7 +147,7 @@ namespace InputLibrary
         {
             get
             {
-                return IsInWindow && this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
+                return IsInWindow && mControl.Focused && this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
                     this.mMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
             }
         }
