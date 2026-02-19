@@ -1,4 +1,5 @@
 using Gum.Forms.Data;
+using Shouldly;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms.Data;
@@ -9,28 +10,28 @@ public class BinderHelpersTests
     public void CanWritePath_ReturnsFalse_ForReadonlyProperty()
     {
         bool canWrite = BinderHelpers.CanWritePath(typeof(TestPathRoot), nameof(TestPathRoot.ReadonlyText));
-        Assert.False(canWrite);
+        canWrite.ShouldBeFalse();
     }
 
     [Fact]
     public void CanWritePath_ReturnsTrue_ForWritableProperty()
     {
         bool canWrite = BinderHelpers.CanWritePath(typeof(TestPathRoot), nameof(TestPathRoot.Text));
-        Assert.True(canWrite);
+        canWrite.ShouldBeTrue();
     }
 
     [Fact]
     public void CanWritePath_ReturnsFalse_ForReadonlyNestedProperty()
     {
         bool canWrite = BinderHelpers.CanWritePath(typeof(TestPathRoot), $"{nameof(TestPathRoot.Child)}.{nameof(TestPathChild.ReadonlyValue)}");
-        Assert.False(canWrite);
+        canWrite.ShouldBeFalse();
     }
 
     [Fact]
     public void CanWritePath_ReturnsTrue_ForWritableNestedProperty()
     {
         bool canWrite = BinderHelpers.CanWritePath(typeof(TestPathRoot), $"{nameof(TestPathRoot.Child)}.{nameof(TestPathChild.Value)}");
-        Assert.True(canWrite);
+        canWrite.ShouldBeTrue();
     }
 
     private class TestPathRoot
