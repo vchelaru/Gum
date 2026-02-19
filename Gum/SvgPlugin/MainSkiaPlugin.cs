@@ -75,8 +75,13 @@ namespace SkiaPlugin
                     if (wrapperProp != null && wrapperProp.CanWrite)
                         return false;
 
-                    // Otherwise try the drawable (shape-specific properties like Red, Green, IsFilled, etc.).
-                    var drawableProp = skiaRenderable.Drawable.GetType().GetProperty(propertyName);
+                    // For shape adapters, target the underlying shape so reflection finds
+                    // shape-specific properties (e.g. StartAngle, CornerRadius, IsFilled).
+                    object drawableTarget = skiaRenderable.Drawable;
+                    if (drawableTarget is RenderableShapeAdapter shapeAdapter)
+                        drawableTarget = shapeAdapter.Shape;
+
+                    var drawableProp = drawableTarget.GetType().GetProperty(propertyName);
                     if (drawableProp == null || !drawableProp.CanWrite)
                         return false;
 
@@ -95,7 +100,7 @@ namespace SkiaPlugin
                         }
                     }
 
-                    drawableProp.SetValue(skiaRenderable.Drawable, value, null);
+                    drawableProp.SetValue(drawableTarget, value, null);
                     return true;
                 };
         }
@@ -167,12 +172,12 @@ namespace SkiaPlugin
         {
             switch (type)
             {
-                case "Arc": return new SkiaTexturedRenderable(new RenderableArc());
+                case "Arc": return new SkiaTexturedRenderable(new RenderableShapeAdapter(new Arc()));
                 case "Canvas": return new SkiaTexturedRenderable(new RenderableCanvas());
 
-                case "ColoredCircle": return new SkiaTexturedRenderable(new RenderableCircle());
+                case "ColoredCircle": return new SkiaTexturedRenderable(new RenderableShapeAdapter(new Circle()));
                 case "LottieAnimation": return new SkiaTexturedRenderable(new RenderableLottieAnimation());
-                case "RoundedRectangle": return new SkiaTexturedRenderable(new RenderableRoundedRectangle());
+                case "RoundedRectangle": return new SkiaTexturedRenderable(new RenderableShapeAdapter(new RoundedRectangle()));
                 case "Svg": return new SkiaTexturedRenderable(new RenderableSvg());
             }
 

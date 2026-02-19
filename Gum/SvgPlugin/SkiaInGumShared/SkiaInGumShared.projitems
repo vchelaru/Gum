@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableArc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableCanvas.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableShapeAdapter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableCircle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableLottieAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableRoundedRectangle.cs" />

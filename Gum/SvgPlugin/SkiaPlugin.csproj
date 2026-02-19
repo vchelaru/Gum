@@ -35,6 +35,25 @@
     <ProjectReference Include="..\..\WpfDataUi\WpfDataUi.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Link SkiaGum renderable shape files directly so RenderableShapeAdapter can reference them
+         without pulling in the entire SkiaGum project (which has conflicting dependencies). -->
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\IClipPath.cs">
+      <Link>SkiaGumRenderables\IClipPath.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\RenderableShapeBase.cs">
+      <Link>SkiaGumRenderables\RenderableShapeBase.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\Arc.cs">
+      <Link>SkiaGumRenderables\Arc.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\Circle.cs">
+      <Link>SkiaGumRenderables\Circle.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\RoundedRectangle.cs">
+      <Link>SkiaGumRenderables\RoundedRectangle.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Embedded\Svg.gutx" />
     <EmbeddedResource Include="Embedded\ColoredCircle.gutx" />
     <EmbeddedResource Include="Embedded\RoundedRectangle.gutx" />
