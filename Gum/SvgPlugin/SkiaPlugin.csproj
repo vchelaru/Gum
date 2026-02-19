@@ -65,9 +65,23 @@
 </Target>
 	
 	
-  <Import Project="SkiaInGumShared\SkiaInGumShared.projitems" Label="Shared" />
-
-  <!-- These removes must come AFTER the shared project import so they apply to its explicit includes -->
+  <ItemGroup>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\IClipPath.cs">
+      <Link>Renderables\IClipPath.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\RenderableShapeBase.cs">
+      <Link>Renderables\RenderableShapeBase.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\Arc.cs">
+      <Link>Renderables\Arc.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\Circle.cs">
+      <Link>Renderables\Circle.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\RoundedRectangle.cs">
+      <Link>Renderables\RoundedRectangle.cs</Link>
+    </Compile>
+  </ItemGroup>
   <ItemGroup>
     <Compile Remove="SkiaInGumShared\Rendering\ISkiaRenderable.cs" />
     <Compile Remove="SkiaInGumShared\Rendering\SkiaGLUtils.cs" />
