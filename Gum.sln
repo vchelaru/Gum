@@ -43,8 +43,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EditorTabPlugin_XNA", "Tool
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumToolUnitTests", "Tool\Tests\GumToolUnitTests\GumToolUnitTests.csproj", "{951A5743-C515-41A8-B0D9-A5B3F37B927D}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SkiaInGumShared", "Gum\SvgPlugin\SkiaInGumShared\SkiaInGumShared.shproj", "{EE3C8564-6CB2-411C-A43C-19D33C819B90}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KniGum", "MonoGameGum\KniGum\KniGum.csproj", "{BC2FFE67-E115-886E-D707-5E94DBF364A5}"
 EndProject
 Global
@@ -146,13 +144,9 @@ Global
 		{B7ABE8DF-EE36-42AB-B371-78195C614A61} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
 		{F4A5BB2F-1650-4099-9FFE-1C4A416D4438} = {28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D} = {E9BDDA50-D0CD-4172-959F-66E2C1DFEB50}
-		{EE3C8564-6CB2-411C-A43C-19D33C819B90} = {28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}
 		{BC2FFE67-E115-886E-D707-5E94DBF364A5} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {691B2E2F-58CB-4FD2-8480-695E8DE0CCE2}
-	EndGlobalSection
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Gum\SvgPlugin\SkiaInGumShared\SkiaInGumShared.projitems*{ee3c8564-6cb2-411c-a43c-19d33c819b90}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
