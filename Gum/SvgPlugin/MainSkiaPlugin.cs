@@ -57,7 +57,47 @@ namespace SkiaPlugin
 
             RegisterEnumTypes();
 
+            RegisterSkiaPropertyRedirect();
+
             DefaultStateManager.UpdateDisplayersForStandards();
+        }
+
+        private void RegisterSkiaPropertyRedirect()
+        {
+            Gum.Wireframe.CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable =
+                (renderable, gue, propertyName, value) =>
+                {
+                    if (renderable is not SkiaTexturedRenderable skiaRenderable)
+                        return false;
+
+                    // If the wrapper itself has a writable property, let normal reflection handle it.
+                    var wrapperProp = skiaRenderable.GetType().GetProperty(propertyName);
+                    if (wrapperProp != null && wrapperProp.CanWrite)
+                        return false;
+
+                    // Otherwise try the drawable (shape-specific properties like Red, Green, IsFilled, etc.).
+                    var drawableProp = skiaRenderable.Drawable.GetType().GetProperty(propertyName);
+                    if (drawableProp == null || !drawableProp.CanWrite)
+                        return false;
+
+                    var valueType = value.GetType();
+                    if (valueType != drawableProp.PropertyType)
+                    {
+                        if (valueType == typeof(Gum.Managers.PositionUnitType) &&
+                            drawableProp.PropertyType == typeof(Gum.Converters.GeneralUnitType))
+                        {
+                            value = Gum.Converters.UnitConverter.ConvertToGeneralUnit(
+                                (Gum.Managers.PositionUnitType)value);
+                        }
+                        else
+                        {
+                            value = System.Convert.ChangeType(value, drawableProp.PropertyType);
+                        }
+                    }
+
+                    drawableProp.SetValue(skiaRenderable.Drawable, value, null);
+                    return true;
+                };
         }
 
         private void RegisterEnumTypes()
@@ -127,13 +167,13 @@ namespace SkiaPlugin
         {
             switch (type)
             {
-                case "Arc": return new RenderableArc();
-                case "Canvas": return new RenderableCanvas();
+                case "Arc": return new SkiaTexturedRenderable(new RenderableArc());
+                case "Canvas": return new SkiaTexturedRenderable(new RenderableCanvas());
 
-                case "ColoredCircle": return new RenderableCircle();
-                case "LottieAnimation": return new RenderableLottieAnimation();
-                case "RoundedRectangle": return new RenderableRoundedRectangle();
-                case "Svg": return new RenderableSvg();
+                case "ColoredCircle": return new SkiaTexturedRenderable(new RenderableCircle());
+                case "LottieAnimation": return new SkiaTexturedRenderable(new RenderableLottieAnimation());
+                case "RoundedRectangle": return new SkiaTexturedRenderable(new RenderableRoundedRectangle());
+                case "Svg": return new SkiaTexturedRenderable(new RenderableSvg());
             }
 
             return null;

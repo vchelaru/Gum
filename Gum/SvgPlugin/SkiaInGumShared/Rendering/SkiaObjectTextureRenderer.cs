@@ -39,7 +39,7 @@ namespace SkiaGum.Renderables
         int ISkiaRenderable.TargetWidth => (int)Math.Min(2048, _drawable.Width + _drawable.XSizeSpillover * 2);
         int ISkiaRenderable.TargetHeight => (int)Math.Min(2048, _drawable.Height + _drawable.YSizeSpillover * 2);
         SKColorType ISkiaRenderable.TargetColorFormat => SKColorType.Rgba8888;
-        bool ISkiaRenderable.ShouldRender => NeedsUpdate && _drawable.Width > 0 && _drawable.Height > 0 && _drawable.AbsoluteVisible;
+        bool ISkiaRenderable.ShouldRender => NeedsUpdate && _drawable.Width > 0 && _drawable.Height > 0;
 
         void ISkiaRenderable.NotifyDrawnTexture(Texture2D texture)
         {
@@ -76,7 +76,7 @@ namespace SkiaGum.Renderables
         public void PreRender()
         {
 #if !FAST_GL_SKIA_RENDERING
-            if (NeedsUpdate && _drawable.Width > 0 && _drawable.Height > 0 && _drawable.AbsoluteVisible)
+            if (NeedsUpdate && _drawable.Width > 0 && _drawable.Height > 0)
             {
                 if (Texture != null)
                 {

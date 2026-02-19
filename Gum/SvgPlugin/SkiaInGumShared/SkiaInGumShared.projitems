@@ -18,5 +18,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableSvg.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Rendering\ISkiaSurfaceDrawable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Rendering\SkiaObjectTextureRenderer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Rendering\SkiaTexturedRenderable.cs" />
   </ItemGroup>
 </Project>

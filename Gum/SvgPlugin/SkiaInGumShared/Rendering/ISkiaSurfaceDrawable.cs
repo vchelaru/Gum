@@ -1,4 +1,6 @@
+using RenderingLibrary.Graphics;
 using SkiaSharp;
+using Color = System.Drawing.Color;
 
 namespace SkiaGum.Renderables
 {
@@ -8,9 +10,14 @@ namespace SkiaGum.Renderables
     /// </summary>
     public interface ISkiaSurfaceDrawable
     {
-        float Width { get; }
-        float Height { get; }
-        bool AbsoluteVisible { get; }
+        float Width { get; set; }
+        float Height { get; set; }
+
+        bool NeedsUpdate { get; set; }
+
+        Color Color { get; }
+
+        bool ShouldApplyColorOnSpriteRender { get; }
 
         /// <summary>
         /// Extra pixels needed on each horizontal side to accommodate effects like dropshadow.
@@ -22,6 +29,10 @@ namespace SkiaGum.Renderables
         /// </summary>
         float YSizeSpillover { get; }
 
+        ColorOperation ColorOperation { get; set; }
+
         void DrawToSurface(SKSurface surface);
+
+        void PreRender();
     }
 }

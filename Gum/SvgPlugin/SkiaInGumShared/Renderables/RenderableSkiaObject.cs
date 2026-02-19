@@ -1,100 +1,17 @@
 using Gum.Converters;
 using Gum.DataTypes;
-using Gum.Wireframe;
-using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
+
 using System;
-using System.Collections.ObjectModel;
 using ToolsUtilitiesStandard.Helpers;
-using BlendState = Gum.BlendState;
-using Point = System.Drawing.Point;
 using Color = System.Drawing.Color;
-using Rectangle = System.Drawing.Rectangle;
-using Matrix = System.Numerics.Matrix4x4;
-using Gum.RenderingLibrary;
 
 namespace SkiaGum.Renderables
 {
-
-
-
-    public abstract class RenderableSkiaObject : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IManagedObject, ISkiaSurfaceDrawable
+    public abstract class RenderableSkiaObject : ISkiaSurfaceDrawable
     {
         #region General Fields/Properties
-
-        bool IRenderableIpso.IsRenderTarget => false;
-
-        protected Microsoft.Xna.Framework.Vector2 Position;
-
-        IRenderableIpso mParent;
-        public IRenderableIpso Parent
-        {
-            get { return mParent; }
-            set
-            {
-                if (mParent != value)
-                {
-                    if (mParent != null)
-                    {
-                        mParent.Children.Remove(this);
-                    }
-                    mParent = value;
-                    if (mParent != null)
-                    {
-                        mParent.Children.Add(this);
-                    }
-                }
-            }
-        }
-
-        ObservableCollection<IRenderableIpso> mChildren;
-        public ObservableCollection<IRenderableIpso> Children
-        {
-            get { return mChildren; }
-        }
-
-        public BlendState BlendState
-        {
-            get;
-            set;
-        }
-
-        public Gum.RenderingLibrary.Blend Blend
-        {
-            get => BlendState.ToBlend();
-            set => BlendState = value.ToBlendState();
-        }
-
-        public bool ClipsChildren => false;
-
-        public bool Wrap => false;
-
-        readonly SkiaObjectTextureRenderer _textureRenderer;
-
-        public float X
-        {
-            get { return Position.X; }
-            set { Position.X = value; }
-        }
-
-        public float Y
-        {
-            get { return Position.Y; }
-            set { Position.Y = value; }
-        }
-
-        public float Z
-        {
-            get;
-            set;
-        }
-
-        public float Rotation { get; set; }
-
-        public bool FlipHorizontal { get; set; }
-        public bool FlipVertical { get; set; }
 
         float width;
         public float Width
@@ -124,22 +41,28 @@ namespace SkiaGum.Renderables
             }
         }
 
-        public string Name
-        {
-            get;
-            set;
-        }
-
-        public object Tag { get; set; }
         /// <summary>
         /// If this is false, then the DrawToSurface will handle applying the colors (like when creating a RoundedRectangle). If true,
         /// then this will multiply the rendering by the argument color (like when rendering an SVG).
         /// </summary>
         protected virtual bool ShouldApplyColorOnSpriteRender => false;
-        protected bool needsUpdate = true;
+
+        bool ISkiaSurfaceDrawable.ShouldApplyColorOnSpriteRender => ShouldApplyColorOnSpriteRender;
 
         protected ColorOperation colorOperation = ColorOperation.Modulate;
-        ColorOperation IRenderableIpso.ColorOperation => colorOperation;
+        public ColorOperation ColorOperation
+        {
+            get => colorOperation;
+            set => colorOperation = value;
+        }
+
+        protected bool needsUpdate = true;
+
+        public bool NeedsUpdate
+        {
+            get => needsUpdate;
+            set => needsUpdate = value;
+        }
 
         #endregion
 
@@ -189,7 +112,7 @@ namespace SkiaGum.Renderables
             }
         }
 
-        public Color Color = Color.White;
+        public Color Color { get; set; } = Color.White;
 
         public int Alpha
         {
@@ -583,157 +506,9 @@ namespace SkiaGum.Renderables
 
         #endregion
 
-        #region IVisible Implementation
-
-        public bool Visible
-        {
-            get;
-            set;
-        }
-
-        public bool AbsoluteVisible
-        {
-            get
-            {
-                if (((IVisible)this).Parent == null)
-                {
-                    return Visible;
-                }
-                else
-                {
-                    return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-                }
-            }
-        }
-
-        IVisible IVisible.Parent
-        {
-            get
-            {
-                return ((IRenderableIpso)this).Parent as IVisible;
-            }
-        }
-
-
-        #endregion
-
-        #region IManagedObject Implementation
-
-        public void AddToManagers()
-        {
-            _textureRenderer.AddToManagers();
-        }
-
-        public void RemoveFromManagers()
-        {
-            _textureRenderer.RemoveFromManagers();
-        }
-
-
-        #endregion
-
-        public RenderableSkiaObject()
-        {
-            this.Visible = true;
-            mChildren = new ObservableCollection<IRenderableIpso>();
-            _textureRenderer = new SkiaObjectTextureRenderer(this);
-        }
-
-        public override void Render(ISystemManagers managers)
-        {
-            if (AbsoluteVisible)
-            {
-                var oldX = this.X;
-                var oldY = this.Y;
-                var oldWidth = this.Width;
-                var oldHeight = this.Height;
-
-                this.X -= XSizeSpillover;
-                this.Y -= YSizeSpillover;
-                // use fields not props, to not trigger a needsUpdate = true
-                this.width += XSizeSpillover * 2;
-                this.height += YSizeSpillover * 2;
-
-                var color = ShouldApplyColorOnSpriteRender ? Color : Color.White;
-
-                var systemManagers = managers as SystemManagers;
-
-                Sprite.Render(systemManagers, systemManagers.Renderer.SpriteRenderer, this, _textureRenderer.Texture, color, rotationInDegrees: Rotation);
-
-                this.X = oldX;
-                this.Y = oldY;
-                this.width = oldWidth;
-                this.height = oldHeight;
-            }
-        }
-
-        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
-        {
-            mParent = parent;
-        }
-
-        public virtual void PreRender()
-        {
-            _textureRenderer.NeedsUpdate = needsUpdate;
-            _textureRenderer.PreRender();
-            if (!_textureRenderer.NeedsUpdate)
-            {
-                needsUpdate = false;
-            }
-        }
+        public virtual void PreRender() { }
 
         public abstract void DrawToSurface(SKSurface surface);
-
-        /// <summary>
-        /// Forwarding stub for backward compatibility. Use <see cref="SkiaObjectTextureRenderer.PremultiplyRenderToTexture"/> instead.
-        /// </summary>
-        [Obsolete("Use SkiaObjectTextureRenderer.PremultiplyRenderToTexture instead.")]
-        public static bool PremultiplyRenderToTexture
-        {
-            get => SkiaObjectTextureRenderer.PremultiplyRenderToTexture;
-            set => SkiaObjectTextureRenderer.PremultiplyRenderToTexture = value;
-        }
-
-        /// <summary>
-        /// Forwarding stub for backward compatibility. Use <see cref="SkiaObjectTextureRenderer.RenderImageToTexture2D"/> instead.
-        /// </summary>
-        [Obsolete("Use SkiaObjectTextureRenderer.RenderImageToTexture2D instead.")]
-        public static Texture2D RenderImageToTexture2D(SKImage image, GraphicsDevice graphicsDevice, SKColorType skiaColorType, Color? forcedColor = null)
-        {
-            return SkiaObjectTextureRenderer.RenderImageToTexture2D(image, graphicsDevice, skiaColorType, forcedColor);
-        }
-
-        public Texture2D ToTexture2D(GraphicsDevice graphicsDevice, SKColorType? skiaColorType = null)
-        {
-            if (skiaColorType == null)
-            {
-                skiaColorType = SKImageInfo.PlatformColorType;
-            }
-
-            SkiaObjectTextureRenderer.PremultiplyRenderToTexture = true;
-            var imageInfo = new SKImageInfo(
-                (int)width,
-                (int)height,
-                skiaColorType.Value,
-                SKAlphaType.Premul);
-
-            Texture2D textureToReturn = null;
-
-            using (var surface = SKSurface.Create(imageInfo))
-            {
-                // It's possible this can fail
-                if (surface != null)
-                {
-                    DrawToSurface(surface);
-
-                    var skImage = surface.Snapshot();
-
-                    textureToReturn = SkiaObjectTextureRenderer.RenderImageToTexture2D(skImage, graphicsDevice, skiaColorType.Value);
-                }
-            }
-
-            return textureToReturn;
-        }
 
         protected void SetGradientOnPaint(SKPaint paint)
         {
