@@ -1,5 +1,5 @@
+using Gum.Converters;
 using Gum.DataTypes;
-using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
@@ -389,8 +389,8 @@ namespace SkiaGum.Renderables
         }
 
 
-        PositionUnitType gradientX1Units;
-        public PositionUnitType GradientX1Units
+        GeneralUnitType gradientX1Units;
+        public GeneralUnitType GradientX1Units
         {
             get => gradientX1Units;
             set
@@ -403,8 +403,8 @@ namespace SkiaGum.Renderables
             }
         }
 
-        PositionUnitType gradientX2Units;
-        public PositionUnitType GradientX2Units
+        GeneralUnitType gradientX2Units;
+        public GeneralUnitType GradientX2Units
         {
             get => gradientX2Units;
             set
@@ -417,8 +417,8 @@ namespace SkiaGum.Renderables
             }
         }
 
-        PositionUnitType gradientY1Units;
-        public PositionUnitType GradientY1Units
+        GeneralUnitType gradientY1Units;
+        public GeneralUnitType GradientY1Units
         {
             get => gradientY1Units;
             set
@@ -431,8 +431,8 @@ namespace SkiaGum.Renderables
             }
         }
 
-        PositionUnitType gradientY2Units;
-        public PositionUnitType GradientY2Units
+        GeneralUnitType gradientY2Units;
+        public GeneralUnitType GradientY2Units
         {
             get => gradientY2Units;
             set
@@ -746,16 +746,16 @@ namespace SkiaGum.Renderables
             var effectiveGradientX1 = gradientX1;
             switch (this.GradientX1Units)
             {
-                case PositionUnitType.PixelsFromLeft:
+                case GeneralUnitType.PixelsFromSmall:
                     effectiveGradientX1 += XSizeSpillover;
                     break;
-                case PositionUnitType.PixelsFromCenterX:
+                case GeneralUnitType.PixelsFromMiddle:
                     effectiveGradientX1 += effectiveWidth / 2.0f;
                     break;
-                case PositionUnitType.PixelsFromRight:
+                case GeneralUnitType.PixelsFromLarge:
                     effectiveGradientX1 += effectiveWidth;
                     break;
-                case PositionUnitType.PercentageWidth:
+                case GeneralUnitType.Percentage:
                     effectiveGradientX1 = effectiveWidth * gradientX1 / 100;
                     break;
             }
@@ -763,16 +763,16 @@ namespace SkiaGum.Renderables
             var effectiveGradientX2 = gradientX2;
             switch (this.GradientX2Units)
             {
-                case PositionUnitType.PixelsFromLeft:
+                case GeneralUnitType.PixelsFromSmall:
                     effectiveGradientX2 += XSizeSpillover;
                     break;
-                case PositionUnitType.PixelsFromCenterX:
+                case GeneralUnitType.PixelsFromMiddle:
                     effectiveGradientX2 += effectiveWidth / 2.0f;
                     break;
-                case PositionUnitType.PixelsFromRight:
+                case GeneralUnitType.PixelsFromLarge:
                     effectiveGradientX2 += effectiveWidth;
                     break;
-                case PositionUnitType.PercentageWidth:
+                case GeneralUnitType.Percentage:
                     effectiveGradientX2 = effectiveWidth * gradientX2 / 100;
                     break;
             }
@@ -780,16 +780,16 @@ namespace SkiaGum.Renderables
             var effectiveGradientY1 = gradientY1;
             switch (this.GradientY1Units)
             {
-                case PositionUnitType.PixelsFromTop:
+                case GeneralUnitType.PixelsFromSmall:
                     effectiveGradientY1 += YSizeSpillover;
                     break;
-                case PositionUnitType.PixelsFromCenterY:
+                case GeneralUnitType.PixelsFromMiddle:
                     effectiveGradientY1 += effectiveHeight / 2.0f;
                     break;
-                case PositionUnitType.PixelsFromBottom:
+                case GeneralUnitType.PixelsFromLarge:
                     effectiveGradientY1 += effectiveHeight;
                     break;
-                case PositionUnitType.PercentageHeight:
+                case GeneralUnitType.Percentage:
                     effectiveGradientY1 = effectiveHeight * gradientY1 / 100;
                     break;
             }
@@ -797,16 +797,16 @@ namespace SkiaGum.Renderables
             var effectiveGradientY2 = gradientY2;
             switch (this.GradientY2Units)
             {
-                case PositionUnitType.PixelsFromTop:
+                case GeneralUnitType.PixelsFromSmall:
                     effectiveGradientY2 += YSizeSpillover;
                     break;
-                case PositionUnitType.PixelsFromCenterY:
+                case GeneralUnitType.PixelsFromMiddle:
                     effectiveGradientY2 += effectiveHeight / 2.0f;
                     break;
-                case PositionUnitType.PixelsFromBottom:
+                case GeneralUnitType.PixelsFromLarge:
                     effectiveGradientY2 += effectiveHeight;
                     break;
-                case PositionUnitType.PercentageHeight:
+                case GeneralUnitType.Percentage:
                     effectiveGradientY2 = effectiveHeight * gradientY2 / 100;
                     break;
             }
