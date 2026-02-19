@@ -153,7 +153,6 @@ Global
 		SolutionGuid = {691B2E2F-58CB-4FD2-8480-695E8DE0CCE2}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Gum\SvgPlugin\SkiaInGumShared\SkiaInGumShared.projitems*{0fee460b-616c-45ac-86d5-087b7e32546e}*SharedItemsImports = 5
 		Gum\SvgPlugin\SkiaInGumShared\SkiaInGumShared.projitems*{ee3c8564-6cb2-411c-a43c-19d33c819b90}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
