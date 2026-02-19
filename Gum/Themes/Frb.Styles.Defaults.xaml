@@ -1565,12 +1565,15 @@
                         <Setter Property="Width" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />
                         <Setter Property="Height" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />
                         <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />
+                        <Setter Property="Focusable" Value="False" />
                     </Style>
                     <Style BasedOn="{StaticResource {x:Type controls:GumIcon}}" TargetType="{x:Type controls:GumIcon}">
                         <Setter Property="HorizontalAlignment" Value="Left" />
                         <Setter Property="VerticalAlignment" Value="Top" />
                         <Setter Property="Width" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />
                         <Setter Property="Height" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />
+                        <Setter Property="IsTabStop" Value="False" />
+                        <Setter Property="Focusable" Value="False" />
                     </Style>
                 </Style.Resources>
                 <Setter Property="HorizontalAlignment" Value="Left" />
