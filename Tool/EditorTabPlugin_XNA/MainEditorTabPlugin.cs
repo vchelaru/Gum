@@ -55,7 +55,9 @@ using DialogResult = System.Windows.Forms.DialogResult;
 namespace Gum.Plugins.InternalPlugins.EditorTab;
 
 [Export(typeof(PluginBase))]
+#pragma warning disable CA1001 // Types that own disposable fields should be disposable - This is never disposed so suppressing this
 internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>
+#pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     #region Fields/Properties
 
@@ -131,7 +133,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     WireframeControl _wireframeControl;
 
     private EditorControls _editorControls;
-    private int _defaultWireframeEditControlHeight;
 
     System.Windows.Forms.Panel gumEditorPanel;
     private LayerService _layerService;

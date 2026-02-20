@@ -367,37 +367,26 @@ public partial class PropertyGridManager
 
                     mVariablesDataGrid.Instance = (object)behaviorSave ?? _selectedState.SelectedStateSave;
 
-                    mVariablesDataGrid.Categories.Clear();
-
-
                     // April 10, 2023
                     // I am adding multi-select
-                    // editing support. To do this, 
+                    // editing support. To do this,
                     // we call SetMultipleCategoryLists
                     // which creates wrappers for multi-select
-                    // editing. Currently I do this only if more 
+                    // editing. Currently I do this only if more
                     // than one object is selected, in case there
                     // are bugs in multi-select editing which would
                     // cause problems. We may consider having even single
                     // edits use the same code path in the future, but I don't
-                    // feel confident in doing that just yet.                   
+                    // feel confident in doing that just yet.
                     if (listOfCategories.Count == 1)
                     {
-                        foreach (var memberCategory in listOfCategories[0])
+                        if (SimultaneousCalls > 1)
                         {
-
-                            // We used to do this:
-                            // Application.DoEvents();
-                            // That made things go faster,
-                            // but it made the "lock" not work, which could make duplicate UI show up.
-                            mVariablesDataGrid.Categories.Add(memberCategory);
-                            if (SimultaneousCalls > 1)
-                            {
-                                SimultaneousCalls--;
-                                // EARLY OUT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                                return;
-                            }
+                            SimultaneousCalls--;
+                            // EARLY OUT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                            return;
                         }
+                        mVariablesDataGrid.SetCategories(listOfCategories[0]);
                     }
                     else
                     {
@@ -492,7 +481,16 @@ public partial class PropertyGridManager
 
             RefreshBehaviorUi(behaviorSave, newInstances, state, stateCategory);
 
-            mVariablesDataGrid.Refresh();
+            // When a structural rebuild happened (hasChangedObjectShowing = true), each control's
+            // InstanceMember setter already called Refresh(). Calling mVariablesDataGrid.Refresh()
+            // here would trigger a second Refresh() on every control via SimulateValueChanged →
+            // PropertyChanged → HandlePropertyChange. Skip it in that case.
+            // When hasChangedObjectShowing = false, existing InstanceMember objects stay in place
+            // and their values may have changed (e.g. after undo), so Refresh() is still needed.
+            if (!hasChangedObjectShowing)
+            {
+                mVariablesDataGrid.Refresh();
+            }
         }
         finally
         {

@@ -11,7 +11,9 @@ using System.Windows.Forms;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
+#pragma warning disable CA1001 // Types that own disposable fields should be disposable - this never gets disposed
 internal class ScreenshotService
+#pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     string? nextScreenshotFileLocation = null;
     Microsoft.Xna.Framework.Graphics.RenderTarget2D renderTarget;

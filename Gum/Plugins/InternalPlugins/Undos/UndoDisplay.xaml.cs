@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace Gum.Plugins.Undos
 {
@@ -53,12 +54,8 @@ namespace Gum.Plugins.Undos
             var listBox = sender as ListBox;
             if (listBox != null && listBox.SelectedItem != null)
             {
-                listBox.Dispatcher.BeginInvoke(
-                    (Action)(() =>
-                    {
-                        listBox.UpdateLayout();
-                        listBox.ScrollIntoView(listBox.SelectedItem);
-                    }));
+                listBox.Dispatcher.BeginInvoke(DispatcherPriority.Loaded,
+                    (Action)(() =>listBox.ScrollIntoView(listBox.SelectedItem)));
             }
         }
     }

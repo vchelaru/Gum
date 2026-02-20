@@ -253,7 +253,10 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
 
     private void HandleAfterUndo()
     {
-        RefreshErrorIndicatorsForAllElements();
+        if(_selectedState.SelectedElement != null)
+        {
+            RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
+        }
     }
 
     private void HandleInstanceDelete(ElementSave element, InstanceSave instance)
