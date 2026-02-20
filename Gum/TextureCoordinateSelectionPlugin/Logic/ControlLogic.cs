@@ -716,6 +716,11 @@ public class TextureCoordinateDisplayController : IDisposable
         mainControl?.UpdateButtonSizes(baseFontSize);
     }
 
+    internal void SetCheckerboardVisible(bool visible)
+    {
+        _backgroundManager.IsCheckerboardVisible = visible;
+    }
+
     public void Dispose()
     {
         _backgroundManager?.Dispose();

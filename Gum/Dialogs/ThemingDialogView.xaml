@@ -84,13 +84,13 @@
       Style="{StaticResource ResetIconButton}"
       Visibility="{Binding HasExplicitAccentColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
 
-    <!--  Checker A Color  -->
+    <!--  Editor Background  -->
     <Label
       Grid.Row="2"
       Grid.Column="0"
       HorizontalAlignment="Left"
       VerticalAlignment="Center"
-      Content="Checker A Color" />
+      Content="Editor Background" />
 
     <colorPicker:PortableColorPicker
       Grid.Row="2"
@@ -109,13 +109,13 @@
       Style="{StaticResource ResetIconButton}"
       Visibility="{Binding HasExplicitCheckerAColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
 
-    <!--  Checker B Color  -->
+    <!--  Checker Color  -->
     <Label
       Grid.Row="3"
       Grid.Column="0"
       HorizontalAlignment="Left"
       VerticalAlignment="Center"
-      Content="Checker B Color" />
+      Content="Checker Color" />
 
     <colorPicker:PortableColorPicker
       Grid.Row="3"

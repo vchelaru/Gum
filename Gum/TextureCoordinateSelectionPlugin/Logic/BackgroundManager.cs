@@ -22,6 +22,20 @@ public class BackgroundManager : IVisualOverlayManager, IRecipient<ThemeChangedM
     private Sprite _backgroundSprite;
     private SolidRectangle _backgroundSolidColor;
     private SystemManagers _systemManagers;
+    private bool _isCheckerboardVisible = true;
+
+    public bool IsCheckerboardVisible
+    {
+        get => _isCheckerboardVisible;
+        set
+        {
+            _isCheckerboardVisible = value;
+            if (_backgroundSprite != null)
+            {
+                _backgroundSprite.Visible = value;
+            }
+        }
+    }
 
     public BackgroundManager()
     {
@@ -55,6 +69,7 @@ public class BackgroundManager : IVisualOverlayManager, IRecipient<ThemeChangedM
             new System.Drawing.Rectangle(0, 0, CheckerboardRepeatCount * texture.Width, CheckerboardRepeatCount * texture.Height);
 
         systemManagers.SpriteManager.Add(_backgroundSprite);
+        _backgroundSprite.Visible = _isCheckerboardVisible;
 
         var themeSettings = _themingService.EffectiveSettings;
         ApplyThemingSettings(themeSettings);

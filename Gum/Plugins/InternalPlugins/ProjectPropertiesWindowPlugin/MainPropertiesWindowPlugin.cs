@@ -256,6 +256,13 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 }
 
                 break;
+            case nameof(viewModel.ShowCheckerBackground):
+                // Checkerboard visibility is handled via WireframePropertyChanged,
+                // so skip the wireframe refresh to avoid resetting the texture
+                // coordinates tab camera position.
+                _fileCommands.TryAutoSaveProject();
+                shouldSaveAndRefresh = false;
+                break;
         }
 
         PluginManager.Self.ProjectPropertySet(e.PropertyName);
