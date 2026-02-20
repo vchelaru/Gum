@@ -14,10 +14,10 @@ namespace Gum.Managers;
 
 public class ErrorChecker : IErrorChecker
 {
-    private readonly TypeManager _typeManager;
+    private readonly ITypeManager _typeManager;
     private readonly IPluginManager _pluginManager;
 
-    public ErrorChecker(TypeManager typeManager, IPluginManager pluginManager)
+    public ErrorChecker(ITypeManager typeManager, IPluginManager pluginManager)
     {
         _typeManager = typeManager;
         _pluginManager = pluginManager;

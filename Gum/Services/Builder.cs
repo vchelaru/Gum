@@ -86,6 +86,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<PluginManager>(PluginManager.Self);
         services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>(TypeManager.Self);
+        services.AddSingleton<ITypeManager>(provider => provider.GetRequiredService<TypeManager>());
         services.AddSingleton<ProjectManager>(ProjectManager.Self);
         services.AddSingleton<StandardElementsManagerGumTool>(StandardElementsManagerGumTool.Self);
         services.AddSingleton<IStandardElementsManagerGumTool>(provider => provider.GetRequiredService<StandardElementsManagerGumTool>());

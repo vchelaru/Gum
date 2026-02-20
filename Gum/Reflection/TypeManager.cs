@@ -6,7 +6,7 @@ using Gum.DataTypes;
 
 namespace Gum.Reflection;
 
-public class TypeManager
+public class TypeManager : ITypeManager
 {
     List<Type> mTypes;
 
