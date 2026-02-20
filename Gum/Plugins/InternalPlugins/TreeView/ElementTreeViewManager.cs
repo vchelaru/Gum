@@ -189,6 +189,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// doesn't lose the old selection.
     /// </summary>
     object? mRecordedSelectedObject;
+
+    /// <summary>
+    /// When the recorded selection is an instance, this stores the behavior or element
+    /// that owned it at record time. Used as a fallback container for name-based node
+    /// lookup after undo/redo replaces instance objects with deep-cloned snapshots,
+    /// making reference-based searches fail.
+    /// </summary>
+    object? mRecordedSelectedContainer;
     #endregion
 
     #region Properties
@@ -1185,10 +1193,17 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     public void RecordSelection()
     {
-        mRecordedSelectedObject = 
-            (object?)_selectedState.SelectedInstance ?? 
+        mRecordedSelectedObject =
+            (object?)_selectedState.SelectedInstance ??
             (object?)_selectedState.SelectedElement ??
             (object?)_selectedState.SelectedBehavior;
+
+        // When an instance is selected, record its container so FindTreeNodeForRecordedObject
+        // can fall back to a name-based search if the instance reference becomes stale after
+        // undo/redo replaces it with a deep-cloned snapshot object.
+        mRecordedSelectedContainer = _selectedState.SelectedInstance != null
+            ? (object?)_selectedState.SelectedBehavior ?? _selectedState.SelectedElement
+            : null;
     }
 
     public void SelectRecordedSelection()
@@ -1197,17 +1212,26 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             if (mRecordedSelectedObject != null)
             {
-                if (mRecordedSelectedObject is InstanceSave instanceSave)
+                var desiredNode = FindTreeNodeForRecordedObject();
+
+                if (desiredNode != null)
                 {
-                    _selectedState.SelectedInstance = instanceSave;
+                    // Use the tree-node-based Select so the correct node is set even when
+                    // the equality check in the _selectedState setter short-circuits (i.e.
+                    // the instance was never un-assigned, so assigning it again fires no events
+                    // and the tree node is never updated to reflect the new node).
+                    Select(desiredNode);
                 }
-                else if (mRecordedSelectedObject is ElementSave elementSave)
+                else
                 {
-                    _selectedState.SelectedElement = elementSave;
-                }
-                else if(mRecordedSelectedObject is BehaviorSave behaviorSave)
-                {
-                    _selectedState.SelectedBehavior = behaviorSave;
+                    // Node not found (object may have been deleted). Fall back to the
+                    // state-based path, which preserves the existing restoration behavior.
+                    if (mRecordedSelectedObject is InstanceSave instanceSave)
+                        _selectedState.SelectedInstance = instanceSave;
+                    else if (mRecordedSelectedObject is ElementSave elementSave)
+                        _selectedState.SelectedElement = elementSave;
+                    else if (mRecordedSelectedObject is BehaviorSave behaviorSave)
+                        _selectedState.SelectedBehavior = behaviorSave;
                 }
             }
         }
@@ -1215,6 +1239,52 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             // no big deal, this could have been re-loaded
         }
+    }
+
+    private TreeNode? FindTreeNodeForRecordedObject()
+    {
+        if (mRecordedSelectedObject is InstanceSave instanceSave)
+        {
+            var behavior = ObjectFinder.Self.GetBehaviorContainerOf(instanceSave);
+            if (behavior != null)
+            {
+                var behaviorNode = GetTreeNodeFor(behavior);
+                if (behaviorNode != null)
+                    return GetTreeNodeFor(instanceSave, behaviorNode)
+                        ?? GetInstanceTreeNodeByName(instanceSave.Name, behaviorNode);
+            }
+
+            if (instanceSave.ParentContainer != null)
+            {
+                var elementNode = GetTreeNodeFor(instanceSave.ParentContainer);
+                if (elementNode != null)
+                    return GetTreeNodeFor(instanceSave, elementNode)
+                        ?? GetInstanceTreeNodeByName(instanceSave.Name, elementNode);
+            }
+
+            // Behavior instances have no ParentContainer, and GetBehaviorContainerOf fails when
+            // the reference is stale (undo/redo replaces instances with deep-cloned snapshots).
+            // Fall back to name-based search using the container recorded before the refresh.
+            if (!string.IsNullOrEmpty(instanceSave.Name) &&
+                mRecordedSelectedContainer is BehaviorSave recordedBehavior)
+            {
+                var behaviorNode = GetTreeNodeFor(recordedBehavior);
+                if (behaviorNode != null)
+                    return GetInstanceTreeNodeByName(instanceSave.Name, behaviorNode);
+            }
+
+            return null;
+        }
+        else if (mRecordedSelectedObject is ElementSave elementSave)
+        {
+            return GetTreeNodeFor(elementSave);
+        }
+        else if (mRecordedSelectedObject is BehaviorSave behaviorSave)
+        {
+            return GetTreeNodeFor(behaviorSave);
+        }
+
+        return null;
     }
 
     // Discussion about Selection
@@ -1625,32 +1695,39 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private void RefreshBehaviorTreeNode(TreeNode node, BehaviorSave behavior)
     {
         var allInstances = behavior.RequiredInstances;
-        var childrenNodes = node.Nodes;
 
-        // for now assume that instances sit only at the top level:
-        for(int i = 0; i < allInstances.Count; i++)
+        // Remove nodes that no longer have a corresponding instance
+        foreach (TreeNode instanceNode in node.Nodes.Cast<TreeNode>().ToList())
         {
-            if(i < childrenNodes.Count && childrenNodes[i].Tag != allInstances[i])
+            var instance = instanceNode.Tag as InstanceSave;
+            if (instance == null || !allInstances.Contains(instance))
             {
-                childrenNodes[i].Remove();
+                instanceNode.Remove();
             }
         }
 
-
-        foreach (InstanceSave instance in allInstances)
+        // Add missing nodes and fix ordering by index
+        // Behaviors do not support hierarchy so all instances are at the top level
+        for (int i = 0; i < allInstances.Count; i++)
         {
+            var instance = allInstances[i];
             TreeNode nodeForInstance = GetTreeNodeFor(instance, node);
 
             if (nodeForInstance == null)
             {
-                nodeForInstance = AddTreeNodeForInstance(instance, node, tolerateMissingTypes:true);
+                nodeForInstance = AddTreeNodeForInstance(instance, node, tolerateMissingTypes: true);
             }
+
             if (instance.DefinedByBase)
             {
                 nodeForInstance.ImageIndex = DerivedInstanceImageIndex;
             }
-            // screens have to worry about siblings and lists. We don't care about that here because behaviors do not
-            // (currently) require instances to have a particular relationship with one another
+
+            if (node.Nodes.IndexOf(nodeForInstance) != i)
+            {
+                node.Nodes.Remove(nodeForInstance);
+                node.Nodes.Insert(i, nodeForInstance);
+            }
         }
     }
 

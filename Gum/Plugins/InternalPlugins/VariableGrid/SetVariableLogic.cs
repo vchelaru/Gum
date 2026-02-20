@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
@@ -954,6 +955,21 @@ public class SetVariableLogic : ISetVariableLogic
         {
             return variableName;
         }
+    }
+
+    public GeneralResponse PropertyValueChangedOnBehaviorInstance(string memberName, object? oldValue,
+        BehaviorSave behavior, BehaviorInstanceSave instance)
+    {
+        if (memberName == "Name")
+        {
+            var renameResponse = _renameLogic.HandleRename(behavior, instance, (string)oldValue, NameChangeAction.Rename);
+            if (!renameResponse.Succeeded)
+            {
+                return renameResponse;
+            }
+            _pluginManager.InstanceRename(null, instance, (string)oldValue);
+        }
+        return GeneralResponse.SuccessfulResponse;
     }
 
 }

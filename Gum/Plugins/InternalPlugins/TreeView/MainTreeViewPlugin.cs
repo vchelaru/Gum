@@ -179,6 +179,14 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     {
         if(save != null)
         {
+            // If an instance within this behavior is already selected (e.g. the BehaviorSelected
+            // event was fired directly by undo/redo logic rather than from a user click), preserve
+            // the instance selection. In the normal click flow, HandleBehaviorsSelected clears
+            // SelectedInstance before firing this event, so the check is a no-op in that case.
+            if (_selectedState.SelectedInstance != null && _selectedState.SelectedBehavior == save)
+            {
+                return;
+            }
             _elementTreeViewManager.Select(save);
         }
     }
@@ -253,6 +261,10 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
 
     private void HandleAfterUndo()
     {
+        if(_selectedState.SelectedBehavior != null)
+        {
+            _elementTreeViewManager.RefreshUi((IInstanceContainer)_selectedState.SelectedBehavior);
+        }
         if(_selectedState.SelectedElement != null)
         {
             RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);

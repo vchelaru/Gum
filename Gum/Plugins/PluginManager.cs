@@ -422,6 +422,9 @@ public class PluginManager : IPluginManager
     public virtual void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
         CallMethodOnPlugin(plugin => plugin.CallInstancesDelete(elementSave, instances));
 
+    public void BehaviorInstanceAdd(BehaviorSave behavior, BehaviorInstanceSave instance) =>
+        CallMethodOnPlugin(plugin => plugin.CallBehaviorInstanceAdd(behavior, instance));
+
     public StateSave? GetDefaultStateFor(string type)
     {
         StateSave? toReturn = null;

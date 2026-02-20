@@ -112,6 +112,7 @@ public interface IPluginManager
     void InstanceSelected(ElementSave elementSave, InstanceSave instance);
     void InstanceAdd(ElementSave elementSave, InstanceSave instance);
     void InstanceDelete(ElementSave elementSave, InstanceSave instance);
+    void BehaviorInstanceAdd(BehaviorSave behavior, BehaviorInstanceSave instance);
 
     void InstancesDelete(ElementSave elementSave, InstanceSave[] instances);
     StateSave? GetDefaultStateFor(string type);

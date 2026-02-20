@@ -272,6 +272,11 @@ public class DragDropManager : IDragDropManager
 
             string name = GetUniqueNameForNewInstance(draggedElement, behavior);
 
+            // Capture the pre-change state for undo. We bypass the undo lock here because
+            // OnNodeSortingDropped already holds a lock, which would normally block
+            // RecordBehaviorState(). We need the snapshot before any change occurs.
+            _undoManager.RecordBehaviorState(behavior);
+
             // First we want to re-select the target so that it is highlighted in the tree view and not
             // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
             _selectedState.SelectedBehavior = behavior;
@@ -517,13 +522,12 @@ public class DragDropManager : IDragDropManager
 
     private void HandleDroppingInstanceOnBehaviorSave(InstanceSave draggedAsInstanceSave, BehaviorSave asBehaviorSave)
     {
-        var behaviorInstanceSave = new BehaviorInstanceSave();
-        behaviorInstanceSave.Name = draggedAsInstanceSave.Name;
-        behaviorInstanceSave.BaseType = draggedAsInstanceSave.BaseType;
-        asBehaviorSave.RequiredInstances.Add(behaviorInstanceSave);
-        _guiCommands.RefreshElementTreeView();
-        _fileCommands.TryAutoSaveBehavior(asBehaviorSave);
+        // Capture the pre-change state for undo (bypasses the undo lock held by OnNodeSortingDropped).
+        _undoManager.RecordBehaviorState(asBehaviorSave);
 
+        _selectedState.SelectedBehavior = asBehaviorSave;
+
+        _elementCommands.AddInstance(asBehaviorSave, draggedAsInstanceSave.Name, draggedAsInstanceSave.BaseType);
     }
 
     private void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, ITreeNode targetTreeNode, int index)

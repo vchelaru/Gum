@@ -169,6 +169,11 @@ public abstract class PluginBase : IPlugin
     public event Action<ElementSave, InstanceSave, string>? InstanceRename;
     public event Action<InstanceSave>? InstanceReordered;
 
+    /// <summary>
+    /// Event raised whenever a new instance is added to a behavior's RequiredInstances list.
+    /// </summary>
+    public event Action<BehaviorSave, BehaviorInstanceSave>? BehaviorInstanceAdd;
+
     public event Action? RefreshBehaviorView;
     public event Action<bool>? RefreshVariableView;
 
@@ -437,6 +442,8 @@ public abstract class PluginBase : IPlugin
     public void CallInstanceSelected(ElementSave elementSave, InstanceSave instance) => InstanceSelected?.Invoke(elementSave, instance);
 
     public void CallInstanceAdd(ElementSave elementSave, InstanceSave instance) => InstanceAdd?.Invoke(elementSave, instance);
+
+    public void CallBehaviorInstanceAdd(BehaviorSave behavior, BehaviorInstanceSave instance) => BehaviorInstanceAdd?.Invoke(behavior, instance);
 
     public void CallBehaviorReferencesChanged(ElementSave element) => BehaviorReferencesChanged?.Invoke(element);
 

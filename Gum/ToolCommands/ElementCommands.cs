@@ -654,6 +654,8 @@ public class ElementCommands : IElementCommands
         instanceSave.BaseType = type ?? StandardElementsManager.Self.DefaultType;
         behaviorToAddTo.RequiredInstances.Add(instanceSave);
 
+        _pluginManager.BehaviorInstanceAdd(behaviorToAddTo, instanceSave);
+
         _guiCommands.RefreshElementTreeView(behaviorToAddTo);
 
         _wireframeObjectManager.RefreshAll(true);

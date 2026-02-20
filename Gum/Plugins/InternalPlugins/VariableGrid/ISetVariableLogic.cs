@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using System;
@@ -20,4 +21,7 @@ public interface ISetVariableLogic
 
     GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object? oldValue, IInstanceContainer instanceContainer,
         InstanceSave instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true);
+
+    GeneralResponse PropertyValueChangedOnBehaviorInstance(string memberName, object? oldValue,
+        BehaviorSave behavior, BehaviorInstanceSave instance);
 }
