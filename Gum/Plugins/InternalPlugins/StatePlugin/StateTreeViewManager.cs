@@ -23,34 +23,17 @@ public partial class StateTreeViewManager
 
     #endregion
 
-    #region Properties
 
-    public static StateTreeViewManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new StateTreeViewManager();
-            }
-            return mSelf;
-        }
-    }
-
-    #endregion
-
-    public StateTreeViewManager()
-    {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-    }
-
-    public void Initialize(
+    public StateTreeViewManager(
         StateTreeViewRightClickService stateTreeViewRightClickService,
-        IHotkeyManager hotkeyManager)
+        IHotkeyManager hotkeyManager, 
+        ISelectedState selectedState)
     {
+        _selectedState = selectedState;
         _stateTreeViewRightClickService = stateTreeViewRightClickService;
         _hotkeyManager = hotkeyManager;
     }
+
 
     private void HandleKeyDown(object? sender, KeyEventArgs e)
     {

@@ -75,6 +75,7 @@ public partial class PropertyGridManager
     public List<object> ObjectsSuppressingRefresh { get; private set; } = new List<object>();
 
     private ColorPickerLogic _colorPickerLogic;
+    private StateSaveCategoryDisplayer _stateSaveCategoryDisplayer;
 
     #endregion
 
@@ -126,6 +127,8 @@ public partial class PropertyGridManager
         _typeManager = Locator.GetRequiredService<TypeManager>();
         _pluginManager = Locator.GetRequiredService<IPluginManager>();
         _projectState = Locator.GetRequiredService<IProjectState>();
+        _stateSaveCategoryDisplayer = new StateSaveCategoryDisplayer(
+            Locator.GetRequiredService<IVariableInCategoryPropagationLogic>());
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -485,6 +488,8 @@ public partial class PropertyGridManager
 
             RefreshStateLabel(element, stateCategory, state);
 
+            RefreshCategoryNotification(stateCategory, state);
+
             RefreshBehaviorUi(behaviorSave, newInstances, state, stateCategory);
 
             mVariablesDataGrid.Refresh();
@@ -510,7 +515,7 @@ public partial class PropertyGridManager
         {
             VariableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
         }
-        else if(state == element.DefaultState || state == null)
+        else if(state == null || state == element.DefaultState)
         {
             VariableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
         }
@@ -530,6 +535,37 @@ public partial class PropertyGridManager
                 stateName = category.Name + "/" + stateName;
             }
             VariableViewModel.StateInformation = $"Editing state {stateName}";
+        }
+    }
+
+    private void RefreshCategoryNotification(StateSaveCategory? stateCategory, StateSave? state)
+    {
+        if (stateCategory == null || state != null)
+        {
+            VariableViewModel.HasCategoryNotification = System.Windows.Visibility.Collapsed;
+            return;
+        }
+
+        if (stateCategory.States.Count == 0)
+        {
+            VariableViewModel.CategoryNotification = "This category has no states.";
+            VariableViewModel.HasCategoryNotification = System.Windows.Visibility.Visible;
+        }
+        else
+        {
+            var firstState = stateCategory.States[0];
+            var hasVariables = firstState.Variables.Any() || firstState.VariableLists.Any();
+
+            if (!hasVariables)
+            {
+                VariableViewModel.CategoryNotification =
+                    "This category does not set any variables. To set a variable, select a state and change the desired variable.";
+                VariableViewModel.HasCategoryNotification = System.Windows.Visibility.Visible;
+            }
+            else
+            {
+                VariableViewModel.HasCategoryNotification = System.Windows.Visibility.Collapsed;
+            }
         }
     }
 
@@ -689,7 +725,7 @@ public partial class PropertyGridManager
         }
         else if(stateCategory != null)
         {
-            StateSaveCategoryDisplayer.DisplayMembersForCategoryInElement( instance, categories, stateCategory);
+            _stateSaveCategoryDisplayer.DisplayMembersForCategoryInElement(instance, categories, stateCategory);
         }
         return categories;
 
@@ -799,7 +835,7 @@ public partial class PropertyGridManager
 
 
 
-    internal void HandleVariableSet(ElementSave element, InstanceSave instance, string strippedName, object oldValue)
+    internal void HandleVariableSet(ElementSave element, InstanceSave? instance, string strippedName, object? oldValue)
     {
         if (strippedName == "VariableReferences")
         {

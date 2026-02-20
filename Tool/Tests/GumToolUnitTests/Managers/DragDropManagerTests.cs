@@ -41,7 +41,7 @@ public class DragDropManagerTests : BaseTestClass
 
         _mocker.GetMock<IUndoManager>()
             .Setup(x => x.RequestLock())
-            .Returns((UndoLock)null);
+            .Returns((UndoLock)null!);
     }
 
     [Fact]

@@ -41,7 +41,7 @@ public class AddVariableViewModelTests : BaseTestClass
         _dialogService = new Mock<IDialogService>();
 
         _selectedState.Setup(x => x.SelectedElement).Returns(_component);
-        _selectedState.Setup(x => x.SelectedBehavior).Returns((BehaviorSave)null);
+        _selectedState.Setup(x => x.SelectedBehavior).Returns((BehaviorSave?)null);
 
         string? whyNotValid = null;
         _nameVerifier
@@ -110,7 +110,7 @@ public class AddVariableViewModelTests : BaseTestClass
         screen.Instances.Add(instance);
         screen.DefaultState.SetValue("myComp.OldVar", 5f, "float");
 
-        ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave!.Screens.Add(screen);
 
         _viewModel.Variable = customVariable;
         _viewModel.Element = _component;
