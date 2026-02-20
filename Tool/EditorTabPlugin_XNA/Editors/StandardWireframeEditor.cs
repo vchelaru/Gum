@@ -180,7 +180,12 @@ public class StandardWireframeEditor : WireframeEditor
         }
         if(tag is ElementSave element)
         {
-            rfv = new RecursiveVariableFinder(_context.SelectedState.SelectedStateSave);
+            // SelectedStateSave is null when a category node is selected (no state to check)
+            var selectedStateSave = _context.SelectedState.SelectedStateSave;
+            if(selectedStateSave != null)
+            {
+                rfv = new RecursiveVariableFinder(selectedStateSave);
+            }
         }
 
         var variableReferences = rfv?.GetVariableList("VariableReferences");
