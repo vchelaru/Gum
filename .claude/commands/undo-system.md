@@ -53,6 +53,12 @@ The system uses a two-phase record approach:
 
 An **UndoLock** mechanism prevents intermediate states from being recorded during complex multi-step operations. The lock is released once the full operation completes, triggering a single `RecordUndo()`.
 
+## Snapshots Are Deep Copies
+
+Both element and behavior snapshots use `CloneElement`/`CloneBehavior`, so every saved snapshot contains **new object instances** with different references than the live data. When undo is applied, the restored instances replace the live ones — meaning any code holding a reference to the pre-undo instance now has a **stale reference** that no longer exists in the element or behavior.
+
+Consequence: after an undo, `_selectedState.SelectedInstance` may point to a stale object. Reference-based lookups (e.g. tree node searches using `==`) will fail. Name-based fallback is required to re-locate the logically equivalent node. If undo also changes the instance's name, selection cannot be restored and is silently dropped — this is considered acceptable.
+
 ## Implementation Files
 
 | File | Purpose |
