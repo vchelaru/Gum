@@ -20,7 +20,6 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using Gum.Services;
 using Gum.StateAnimation.Runtime;
-using Gum.Plugins.Errors;
 
 namespace StateAnimationPlugin.ViewModels;
 

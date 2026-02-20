@@ -1,7 +1,7 @@
-﻿using Gum.Mvvm;
+using Gum.Mvvm;
 using Gum.Plugins.BaseClasses;
 
-namespace Gum.Plugins.Errors;
+namespace Gum.Managers;
 
 public class ErrorViewModel : ViewModel
 {

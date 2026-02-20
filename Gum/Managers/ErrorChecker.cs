@@ -1,26 +1,23 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
-using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Reflection;
-using SharpVectors.Dom;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
-using System.Windows.Forms;
 using ToolsUtilities;
-using Xceed.Wpf.AvalonDock.Themes;
 
-namespace Gum.Plugins.Errors;
+namespace Gum.Managers;
 
-public class ErrorChecker
+public class ErrorChecker : IErrorChecker
 {
     private readonly TypeManager _typeManager;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
 
-    public ErrorChecker(TypeManager typeManager, PluginManager pluginManager)
+    public ErrorChecker(TypeManager typeManager, IPluginManager pluginManager)
     {
         _typeManager = typeManager;
         _pluginManager = pluginManager;
@@ -216,7 +213,7 @@ public class ErrorChecker
         // Do we want to use the RecursiveVariableFinder
         // to report parenting errors recursively? I vote "no"
         // because if we report an error in a derived element or
-        // state, the user may fix the parent error there, when it 
+        // state, the user may fix the parent error there, when it
         // really should be fixed in the base.
         foreach(var state in  elementSave.AllStates)
         {

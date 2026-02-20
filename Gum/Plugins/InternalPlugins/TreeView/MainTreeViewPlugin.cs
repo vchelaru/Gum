@@ -26,6 +26,8 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     private readonly IUserProjectSettingsManager _userProjectSettingsManager;
     private readonly ITreeViewStateService _treeViewStateService;
     private readonly IMessenger _messenger;
+    private readonly IErrorChecker _errorChecker;
+    private readonly IProjectState _projectState;
 
     public MainTreeViewPlugin()
     {
@@ -37,6 +39,9 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
         // Create plugin-specific service with required dependencies
         var outputManager = Locator.GetRequiredService<IOutputManager>();
         _treeViewStateService = new TreeViewStateService(_userProjectSettingsManager, outputManager);
+
+        _errorChecker = Locator.GetRequiredService<IErrorChecker>();
+        _projectState = Locator.GetRequiredService<IProjectState>();
 
         // Register to receive ApplicationTeardownMessage
         _messenger.RegisterAll(this);
@@ -74,6 +79,13 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
 
         this.GetTreeNodeOver += HandleGetTreeNodeOver;
         this.GetSelectedNodes += HandleGetSelectedNodes;
+
+        this.VariableSet += HandleVariableSetForErrors;
+        this.AfterUndo += HandleAfterUndo;
+        this.InstanceDelete += HandleInstanceDelete;
+        this.StateAdd += HandleStateAdd;
+        this.StateDelete += HandleStateDelete;
+        this.CategoryDelete += HandleCategoryDelete;
     }
 
     private IEnumerable<ITreeNode> HandleGetSelectedNodes()
@@ -90,6 +102,7 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     private void HandleCategoryAdd(StateSaveCategory category)
     {
         _elementTreeViewManager.RefreshUi(_selectedState.SelectedStateContainer);
+        RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
     }
 
     private void HandleFocusSearch()
@@ -123,6 +136,7 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     private void HandleInstanceAdd(ElementSave save1, InstanceSave save2)
     {
         _elementTreeViewManager.RefreshUi();
+        RefreshErrorIndicatorsForElement(save1);
     }
 
     private void HandleBehaviorDeleted(BehaviorSave save)
@@ -137,6 +151,7 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
         // Load user settings and apply tree view state
         _userProjectSettingsManager.LoadForProject(save.FullFileName);
         _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.ObjectTreeView);
+        RefreshErrorIndicatorsForAllElements();
     }
 
     private void HandleElementAdd(ElementSave save)
@@ -200,6 +215,61 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
         _elementTreeViewManager.UpdateCollapseButtonSizes(message.Size);
+    }
+
+    private void RefreshErrorIndicatorsForElement(ElementSave? element)
+    {
+        if (element == null) return;
+        var project = _projectState.GumProjectSave;
+        if (project == null) return;
+        bool hasErrors = _errorChecker.GetErrorsFor(element, project).Length > 0;
+        _elementTreeViewManager.UpdateErrorIndicatorsForElement(element, hasErrors);
+    }
+
+    private void RefreshErrorIndicatorsForAllElements()
+    {
+        var project = _projectState.GumProjectSave;
+        if (project == null) return;
+        var allElements = project.Screens.Cast<ElementSave>()
+            .Concat(project.Components)
+            .Concat(project.StandardElements);
+        foreach (var element in allElements)
+        {
+            bool hasErrors = _errorChecker.GetErrorsFor(element, project).Length > 0;
+            _elementTreeViewManager.UpdateErrorIndicatorsForElement(element, hasErrors);
+        }
+    }
+
+    private void HandleVariableSetForErrors(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
+    {
+        RefreshErrorIndicatorsForElement(element);
+    }
+
+    private void HandleAfterUndo()
+    {
+        RefreshErrorIndicatorsForAllElements();
+    }
+
+    private void HandleInstanceDelete(ElementSave element, InstanceSave instance)
+    {
+        _elementTreeViewManager.RefreshUi();
+        RefreshErrorIndicatorsForElement(element);
+    }
+
+    private void HandleStateAdd(StateSave state)
+    {
+        RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
+    }
+
+    private void HandleStateDelete(StateSave state)
+    {
+        RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
+    }
+
+    private void HandleCategoryDelete(StateSaveCategory category)
+    {
+        _elementTreeViewManager.RefreshUi();
+        RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
     }
 
     private void SaveTreeViewState()

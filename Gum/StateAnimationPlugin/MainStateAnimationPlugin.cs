@@ -8,7 +8,6 @@ using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
-using Gum.Plugins.Errors;
 using Gum.Responses;
 using Gum.Services;
 using Gum.Services.Dialogs;

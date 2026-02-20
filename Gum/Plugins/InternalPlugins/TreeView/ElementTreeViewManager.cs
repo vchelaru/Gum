@@ -433,6 +433,21 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         return GetTreeNodeForTag(behavior, RootBehaviorsTreeNode);
     }
 
+    public void UpdateErrorIndicatorsForElement(ElementSave element, bool hasErrors)
+    {
+        var treeNode = GetTreeNodeFor(element);
+        if (treeNode == null) return;
+
+        bool showExclamation = element.IsSourceFileMissing || hasErrors;
+        int normalIndex = element is ScreenSave ? ScreenImageIndex
+                        : element is ComponentSave ? ComponentImageIndex
+                        : StandardElementImageIndex;
+        int desiredIndex = showExclamation ? ExclamationIndex : normalIndex;
+
+        if (treeNode.ImageIndex != desiredIndex)
+            treeNode.ImageIndex = desiredIndex;
+    }
+
     public TreeNode GetTreeNodeFor(string absoluteDirectory)
     {
         string relative = FileManager.MakeRelative(absoluteDirectory,

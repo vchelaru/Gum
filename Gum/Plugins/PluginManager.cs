@@ -26,7 +26,6 @@ using Gum.Commands;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Services.Dialogs;
 using Gum.Undo;
-using Gum.Plugins.Errors;
 using Gum.Localization;
 
 namespace Gum.Plugins;

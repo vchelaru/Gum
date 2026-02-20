@@ -18,7 +18,6 @@ using Gum.Commands;
 using Gum.Managers;
 using Gum.Services;
 using Gum.Services.Dialogs;
-using Gum.Plugins.Errors;
 
 namespace Gum.Plugins.BaseClasses;
 
