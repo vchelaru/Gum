@@ -132,6 +132,7 @@
 * [Menu](gum-tool/menu/README.md)
   * [Content](gum-tool/menu/content.md)
 * [Project Properties](gum-tool/project-properties.md)
+* [Project Files](gum-tool/project-files/README.md)
 * [Plugins](gum-tool/plugins/README.md)
   * [AddAndRemoveVariablesForType](gum-tool/plugins/pluginbase.addandremovevariablesfortype.md)
   * [AddMenuItem](gum-tool/plugins/pluginbase.addmenuitem.md)
