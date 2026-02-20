@@ -49,6 +49,7 @@ public abstract class PluginBase : IPlugin
     /// Raised when an element is duplicated. First argument is the old element, second is the new.
     /// </summary>
     public event Action<ElementSave, ElementSave>? ElementDuplicate;
+    public event Action<ElementSave> ElementReloaded;
 
     /// <summary>
     /// Event raised when the element is renamed.
@@ -371,6 +372,8 @@ public abstract class PluginBase : IPlugin
     public void CallElementRename(ElementSave elementSave, string oldName) =>
         ElementRename?.Invoke(elementSave, oldName);
 
+    public void CallElementReloaded(ElementSave elementSave) =>
+        ElementReloaded?.Invoke(elementSave);
     public void CallStateRename(StateSave stateSave, string oldName) => 
         StateRename?.Invoke(stateSave, oldName);
     public void CallStateAdd(StateSave stateSave) => StateAdd?.Invoke(stateSave);
