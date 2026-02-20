@@ -1,6 +1,7 @@
 using CommonFormsAndControls;
 using ExCSS;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
@@ -1081,7 +1082,7 @@ public class StateReferencingInstanceMember : InstanceMember
         if (!handledByExposedVariable)
         {
             var element = gumElementOrInstanceSaveAsObject as ElementSave ??
-                (gumElementOrInstanceSaveAsObject as InstanceSave).ParentContainer;
+                (gumElementOrInstanceSaveAsObject as InstanceSave)?.ParentContainer;
 
             StateSave? stateToSet;
 
@@ -1112,6 +1113,15 @@ public class StateReferencingInstanceMember : InstanceMember
                     refresh: effectiveRefresh,
                     recordUndo: effectiveRecordUndo,
                     trySave: trySave);
+            }
+            else if (_selectedState.SelectedBehavior != null &&
+                     gumElementOrInstanceSaveAsObject is BehaviorInstanceSave behaviorInstance)
+            {
+                response = _setVariableLogic.PropertyValueChangedOnBehaviorInstance(
+                    name,
+                    LastOldFullCommitValue,
+                    _selectedState.SelectedBehavior,
+                    behaviorInstance);
             }
         }
 

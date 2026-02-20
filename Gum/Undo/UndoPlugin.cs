@@ -1,6 +1,7 @@
 ﻿using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using System;
 using Gum.ToolStates;
@@ -28,8 +29,15 @@ public class UndoPlugin : InternalPlugin
         this.InstanceDelete += HandleInstanceDelete;
         this.InstancesDelete += HandleInstancesDelete;
         this.ReactToStateSaveSelected += HandleStateSelected;
-
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+
+        this.BehaviorSelected += HandleBehaviorSelected;
+        this.BehaviorInstanceAdd += HandleBehaviorInstanceAddForUndo;
+        this.StateAdd += HandleStateAddForUndo;
+        this.StateDelete += HandleStateDeleteForUndo;
+        this.CategoryAdd += HandleCategoryAddForUndo;
+        this.CategoryDelete += HandleCategoryDeleteForUndo;
+        this.InstanceRename += HandleInstanceRenameForBehaviorUndo;
     }
 
     ElementSave? lastSelectedElement;
@@ -54,8 +62,15 @@ public class UndoPlugin : InternalPlugin
 
     void HandleInstanceDelete(ElementSave arg1, InstanceSave arg2)
     {
-        _undoManager.RecordUndo();
-        OptionallyBroadcastUndosChanged();
+        if (_selectedState.SelectedBehavior != null)
+        {
+            _undoManager.RecordBehaviorUndo();
+        }
+        else
+        {
+            _undoManager.RecordUndo();
+            OptionallyBroadcastUndosChanged();
+        }
     }
 
     void HandleInstanceAdd(ElementSave arg1, InstanceSave arg2)
@@ -78,11 +93,66 @@ public class UndoPlugin : InternalPlugin
 
     void HandleInstanceSelected(DataTypes.ElementSave elementSave, InstanceSave instanceSave)
     {
-
         _undoManager.RecordState();
-        // the instance could have changed the element, so broadcast anyway
 
+        if (_selectedState.SelectedBehavior != null)
+        {
+            _undoManager.RecordBehaviorState();
+        }
+
+        // the instance could have changed the element, so broadcast anyway
         OptionallyBroadcastUndosChanged();
+    }
+
+    private void HandleBehaviorSelected(BehaviorSave? behavior)
+    {
+        _undoManager.RecordBehaviorState();
+        _undoManager.BroadcastUndosChanged();
+    }
+
+    private void HandleStateAddForUndo(StateSave state)
+    {
+        if (_selectedState.SelectedBehavior != null)
+        {
+            _undoManager.RecordBehaviorUndo();
+        }
+    }
+
+    private void HandleStateDeleteForUndo(StateSave state)
+    {
+        if (_selectedState.SelectedBehavior != null)
+        {
+            _undoManager.RecordBehaviorUndo();
+        }
+    }
+
+    private void HandleCategoryAddForUndo(StateSaveCategory category)
+    {
+        if (_selectedState.SelectedBehavior != null)
+        {
+            _undoManager.RecordBehaviorUndo();
+        }
+    }
+
+    private void HandleCategoryDeleteForUndo(StateSaveCategory category)
+    {
+        if (_selectedState.SelectedBehavior != null)
+        {
+            _undoManager.RecordBehaviorUndo();
+        }
+    }
+
+    private void HandleBehaviorInstanceAddForUndo(BehaviorSave behavior, BehaviorInstanceSave instance)
+    {
+        _undoManager.RecordBehaviorUndo();
+    }
+
+    private void HandleInstanceRenameForBehaviorUndo(ElementSave element, InstanceSave instance, string oldName)
+    {
+        if (_selectedState.SelectedBehavior != null)
+        {
+            _undoManager.RecordBehaviorUndo();
+        }
     }
 
     private void OptionallyBroadcastUndosChanged()

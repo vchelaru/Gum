@@ -67,6 +67,31 @@ public class ElementHistory
 
 #endregion
 
+#region BehaviorHistory
+
+public class BehaviorSnapshot
+{
+    public BehaviorSave Behavior { get; set; }
+}
+
+public class BehaviorHistoryAction
+{
+    public BehaviorSnapshot UndoState { get; set; }
+    public BehaviorSnapshot? RedoState { get; set; }
+}
+
+public class BehaviorHistory
+{
+    public List<BehaviorHistoryAction> Actions { get; set; } = new List<BehaviorHistoryAction>();
+
+    /// <summary>
+    /// The index of the next undo to perform. If this is -1, there are no undos to perform.
+    /// </summary>
+    public int UndoIndex { get; set; } = -1;
+}
+
+#endregion
+
 #region UndoOperation
 
 public enum UndoOperation
@@ -100,8 +125,10 @@ public class UndoManager : IUndoManager
     bool isRecordingUndos = true;
 
     Dictionary<ElementSave, ElementHistory> mUndos = new Dictionary<ElementSave, ElementHistory>();
+    Dictionary<BehaviorSave, BehaviorHistory> _behaviorUndos = new Dictionary<BehaviorSave, BehaviorHistory>();
 
     UndoSnapshot? recordedSnapshot;
+    BehaviorSnapshot? _recordedBehaviorSnapshot;
     
     public UndoSnapshot? RecordedSnapshot => recordedSnapshot;
     public ElementHistory CurrentElementHistory
@@ -158,6 +185,7 @@ public class UndoManager : IUndoManager
         if (UndoLocks.Count == 0)
         {
             RecordUndo();
+            RecordBehaviorUndo();
         }
     }
 
@@ -422,9 +450,22 @@ public class UndoManager : IUndoManager
     
     public bool CanUndo()
     {
-        var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
+        if (_selectedState.SelectedBehavior != null)
+        {
+            return CanBehaviorUndo(_selectedState.SelectedBehavior);
+        }
 
+        var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
         return CanUndo(elementHistory);
+    }
+
+    private bool CanBehaviorUndo(BehaviorSave behavior)
+    {
+        if (_behaviorUndos.TryGetValue(behavior, out var history))
+        {
+            return history.Actions.Count > 0 && history.UndoIndex > -1;
+        }
+        return false;
     }
 
     public bool CanUndo(ElementHistory? elementHistory)
@@ -451,6 +492,12 @@ public class UndoManager : IUndoManager
 
     public void PerformUndo()
     {
+        if (_selectedState.SelectedBehavior != null)
+        {
+            PerformBehaviorUndo();
+            return;
+        }
+
         var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
 
         //////////////////////////////////////Early Out///////////////////////////////////////
@@ -574,11 +621,25 @@ public class UndoManager : IUndoManager
 
     public bool CanRedo()
     {
+        if (_selectedState.SelectedBehavior != null)
+        {
+            return CanBehaviorRedo(_selectedState.SelectedBehavior);
+        }
+
         var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
-
         UndoSnapshot? redoSnapshot = GetRedoSnapshot(elementHistory);
-
         return CanRedo(elementHistory, redoSnapshot);
+    }
+
+    private bool CanBehaviorRedo(BehaviorSave behavior)
+    {
+        if (_behaviorUndos.TryGetValue(behavior, out var history))
+        {
+            var indexToApply = history.UndoIndex + 1;
+            return indexToApply < history.Actions.Count &&
+                   history.Actions[indexToApply].RedoState != null;
+        }
+        return false;
     }
 
     public bool CanRedo(ElementHistory? elementHistory, UndoSnapshot? redoSnapshot)
@@ -611,6 +672,12 @@ public class UndoManager : IUndoManager
 
     public void PerformRedo()
     {
+        if (_selectedState.SelectedBehavior != null)
+        {
+            PerformBehaviorRedo();
+            return;
+        }
+
         var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
 
         UndoSnapshot? redoSnapshot = GetRedoSnapshot(elementHistory);
@@ -935,6 +1002,187 @@ public class UndoManager : IUndoManager
         return new AddedAndRemovedInstances(added, removed);
     }
 
+    #region Behavior Undo/Redo
+
+    public BehaviorHistory? CurrentBehaviorHistory
+    {
+        get
+        {
+            var behavior = _selectedState.SelectedBehavior;
+            if (behavior != null && _behaviorUndos.TryGetValue(behavior, out var history))
+            {
+                return history;
+            }
+            return null;
+        }
+    }
+
+    public void RecordBehaviorState()
+    {
+        if (UndoLocks.Count > 0)
+        {
+            return;
+        }
+
+        _recordedBehaviorSnapshot = null;
+
+        var behavior = _selectedState.SelectedBehavior;
+        if (behavior != null)
+        {
+            if (!_behaviorUndos.ContainsKey(behavior))
+            {
+                _behaviorUndos.Add(behavior, new BehaviorHistory());
+            }
+
+            _recordedBehaviorSnapshot = new BehaviorSnapshot
+            {
+                Behavior = CloneBehavior(behavior)
+            };
+        }
+    }
+
+    /// <inheritdoc cref="IUndoManager.RecordBehaviorState(BehaviorSave)"/>
+    public void RecordBehaviorState(BehaviorSave behavior)
+    {
+        if (!_behaviorUndos.ContainsKey(behavior))
+        {
+            _behaviorUndos.Add(behavior, new BehaviorHistory());
+        }
+
+        _recordedBehaviorSnapshot = new BehaviorSnapshot
+        {
+            Behavior = CloneBehavior(behavior)
+        };
+    }
+
+    public void RecordBehaviorUndo()
+    {
+        var canUndo = _recordedBehaviorSnapshot != null &&
+            _selectedState.SelectedBehavior != null &&
+            isRecordingUndos &&
+            UndoLocks.Count == 0;
+
+        if (!canUndo)
+        {
+            return;
+        }
+
+        var behavior = _selectedState.SelectedBehavior!;
+        bool didChange = !FileManager.AreSaveObjectsEqual(_recordedBehaviorSnapshot!.Behavior, behavior);
+
+        if (didChange && _behaviorUndos.ContainsKey(behavior))
+        {
+            var history = _behaviorUndos[behavior];
+
+            var isAtEnd = history.UndoIndex == history.Actions.Count - 1;
+            if (!isAtEnd)
+            {
+                while (history.Actions.Count > history.UndoIndex + 1)
+                {
+                    history.Actions.RemoveAt(history.Actions.Count - 1);
+                }
+            }
+
+            var action = new BehaviorHistoryAction
+            {
+                UndoState = new BehaviorSnapshot { Behavior = CloneBehavior(_recordedBehaviorSnapshot.Behavior) },
+                RedoState = new BehaviorSnapshot { Behavior = CloneBehavior(behavior) }
+            };
+
+            history.Actions.Add(action);
+            history.UndoIndex = history.Actions.Count - 1;
+
+            RecordBehaviorState();
+
+            InvokeUndosChanged(UndoOperation.HistoryAppended);
+        }
+    }
+
+    private void PerformBehaviorUndo()
+    {
+        var behavior = _selectedState.SelectedBehavior;
+        if (behavior == null || !_behaviorUndos.TryGetValue(behavior, out var history))
+        {
+            return;
+        }
+
+        if (history.UndoIndex < 0)
+        {
+            return;
+        }
+
+        var action = history.Actions[history.UndoIndex];
+        ApplyBehaviorSnapshot(action.UndoState, behavior);
+        history.UndoIndex--;
+
+        DoAfterBehaviorUndoLogic(behavior, UndoOperation.Undo);
+    }
+
+    private void PerformBehaviorRedo()
+    {
+        var behavior = _selectedState.SelectedBehavior;
+        if (behavior == null || !_behaviorUndos.TryGetValue(behavior, out var history))
+        {
+            return;
+        }
+
+        var indexToApply = history.UndoIndex + 1;
+        if (indexToApply >= history.Actions.Count)
+        {
+            return;
+        }
+
+        var action = history.Actions[indexToApply];
+        if (action.RedoState == null)
+        {
+            return;
+        }
+
+        ApplyBehaviorSnapshot(action.RedoState, behavior);
+        history.UndoIndex++;
+
+        DoAfterBehaviorUndoLogic(behavior, UndoOperation.Redo);
+    }
+
+    private void ApplyBehaviorSnapshot(BehaviorSnapshot snapshot, BehaviorSave target)
+    {
+        target.Categories.Clear();
+        foreach (var category in snapshot.Behavior.Categories)
+        {
+            target.Categories.Add(category);
+        }
+
+        target.RequiredVariables.SetFrom(snapshot.Behavior.RequiredVariables);
+
+        target.RequiredInstances.Clear();
+        foreach (var instance in snapshot.Behavior.RequiredInstances)
+        {
+            target.RequiredInstances.Add(instance);
+        }
+    }
+
+    private void DoAfterBehaviorUndoLogic(BehaviorSave behavior, UndoOperation operation)
+    {
+        RecordBehaviorState();
+
+        InvokeUndosChanged(operation);
+
+        _messenger.Send(new AfterUndoMessage());
+
+        _guiCommands.RefreshStateTreeView();
+
+        _pluginManager.BehaviorSelected(behavior);
+
+        _fileCommands.TryAutoSaveBehavior(behavior);
+    }
+
+    private static BehaviorSave CloneBehavior(BehaviorSave behavior)
+    {
+        return FileManager.CloneSaveObject(behavior);
+    }
+
+    #endregion
+
     void PrintStatus(string reason)
     {
         List<HistoryAction> stack = null;
@@ -963,5 +1211,7 @@ public class UndoManager : IUndoManager
     public void ClearAll()
     {
         mUndos.Clear();
+        _behaviorUndos.Clear();
+        _recordedBehaviorSnapshot = null;
     }
 }

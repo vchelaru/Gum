@@ -254,6 +254,12 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     private void HandleAfterUndo()
     {
         RefreshErrorIndicatorsForAllElements();
+
+        if(_selectedState.SelectedBehavior != null)
+        {
+            _elementTreeViewManager.RefreshUi((IInstanceContainer)_selectedState.SelectedBehavior);
+        }
+        // I think element refreshes are handled explicitly by the undo manager, which we should eventually move here if performance allows
     }
 
     private void HandleInstanceDelete(ElementSave element, InstanceSave instance)
