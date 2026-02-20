@@ -154,7 +154,6 @@ public abstract class WireframeEditor
             {
                 if (handler.HandlePush(worldX, worldY))
                 {
-                    System.Diagnostics.Debug.WriteLine($"[HANDLE INPUT] Handler {handler.GetType().Name} claimed push");
                     break; // Handler claimed the input
                 }
             }

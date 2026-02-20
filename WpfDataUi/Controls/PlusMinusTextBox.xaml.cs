@@ -37,6 +37,12 @@ public partial class PlusMinusTextBox : UserControl, IDataUi, ISetDefaultable
                 _instanceMember.PropertyChanged += HandlePropertyChange;
             }
 
+            if (instanceMemberChanged)
+            {
+                // Reset stale apply result so a pooled control that previously
+                // received NotSupported doesn't stay disabled for the new member.
+                lastApplyValueResult = null;
+            }
 
             //if (mInstanceMember != null)
             //{

@@ -112,7 +112,7 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
 
     public ObservableCollection<Type> TypesToIgnore { get; } = [];
     public ObservableCollection<string> MembersToIgnore { get; } = [];
-    public ObservableCollection<MemberCategory> Categories { get; } = [];
+    public BulkObservableCollection<MemberCategory> Categories { get; } = new();
 
     #endregion
 
@@ -149,6 +149,8 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
 
     private void HandleCategoriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+            return; // subscriptions are managed manually by SetCategories when Reset is fired
         Subscribe(e.NewItems);
         Unsubscribe(e.OldItems);
     }
@@ -169,6 +171,18 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
         {
             category.MemberValueChangedByUi -= HandleCategoryMemberChanged;
         }
+    }
+
+    /// <summary>
+    /// Replaces all categories at once, firing a single Reset notification instead of one
+    /// notification per category. This is faster than calling Categories.Clear() followed
+    /// by individual Categories.Add() calls when rebuilding the grid.
+    /// </summary>
+    public void SetCategories(IList<MemberCategory> newCategories)
+    {
+        Unsubscribe(Categories);
+        Categories.ReplaceAll(newCategories);
+        Subscribe((IList)newCategories);
     }
 
     private void HandleCategoryMemberChanged(InstanceMember member)
@@ -656,13 +670,7 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
             }
         }
 
-        this.Categories.Clear();
-
-        foreach (var category in effectiveCategory)
-        {
-            this.Categories.Add(category);
-
-        }
+        SetCategories(effectiveCategory);
     }
 
     private MultiSelectInstanceMember TryCreateMultiGroup(List<List<MemberCategory>> source, InstanceMember templateMember)
@@ -751,4 +759,25 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
     }
 
     #endregion
+}
+
+/// <summary>
+/// An ObservableCollection that supports replacing all items with a single Reset notification,
+/// avoiding the per-item CollectionChanged notifications that ObservableCollection fires by default.
+/// </summary>
+public class BulkObservableCollection<T> : ObservableCollection<T>
+{
+    /// <summary>
+    /// Clears all items and adds the new items, firing a single Reset CollectionChanged notification
+    /// instead of individual Add/Remove notifications per item.
+    /// </summary>
+    public void ReplaceAll(IEnumerable<T> newItems)
+    {
+        Items.Clear();
+        foreach (var item in newItems)
+            Items.Add(item);
+        OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Count"));
+        OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Item[]"));
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+    }
 }

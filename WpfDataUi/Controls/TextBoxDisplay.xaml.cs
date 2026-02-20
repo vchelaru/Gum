@@ -55,6 +55,9 @@ namespace WpfDataUi.Controls
 
                 if(instanceMemberChanged)
                 {
+                    // Reset stale apply result so a pooled control that previously
+                    // received NotSupported doesn't stay disabled for the new member.
+                    lastApplyValueResult = null;
                     this.RefreshAllContextMenus(force:true);
                 }
 
