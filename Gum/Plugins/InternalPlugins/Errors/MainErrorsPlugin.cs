@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.Errors.Views;
@@ -19,8 +20,7 @@ public class MainErrorsPlugin : InternalPlugin
     #region Fields/Properties
 
     AllErrorsViewModel viewModel;
-    private PluginManager _pluginManager;
-    ErrorChecker errorChecker;
+    IErrorChecker errorChecker;
     private IMessenger _messenger;
     ErrorDisplay control;
     PluginTab tabPage;
@@ -33,11 +33,7 @@ public class MainErrorsPlugin : InternalPlugin
     {
         viewModel = new AllErrorsViewModel();
 
-        TypeManager typeManager = Locator.GetRequiredService<TypeManager>();
-
-        _pluginManager = Locator.GetRequiredService<PluginManager>();
-
-        errorChecker = new ErrorChecker(typeManager, _pluginManager);
+        errorChecker = Locator.GetRequiredService<IErrorChecker>();
 
         _messenger = Locator.GetRequiredService<IMessenger>();
 

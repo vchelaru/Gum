@@ -26,7 +26,6 @@ using Gum.Commands;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Services.Dialogs;
 using Gum.Undo;
-using Gum.Plugins.Errors;
 using Gum.Localization;
 
 namespace Gum.Plugins;
@@ -283,6 +282,9 @@ public class PluginManager : IPluginManager
 
     public void ElementDuplicate(ElementSave oldElement, ElementSave newElement) =>
         CallMethodOnPlugin(plugin => plugin.CallElementDuplicate(oldElement, newElement));
+
+    public void ElementReloaded(ElementSave element) =>
+        CallMethodOnPlugin(plugin => plugin.CallElementReloaded(element));
 
     public void StateRename(StateSave stateSave, string oldName) => 
         CallMethodOnPlugin(plugin => plugin.CallStateRename(stateSave, oldName));

@@ -4,7 +4,6 @@ using Gum.DataTypes.Variables;
 using Gum.Gui.Windows;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
-using Gum.Plugins.Errors;
 using Gum.Wireframe;
 using RenderingLibrary;
 using System;
@@ -52,6 +51,8 @@ public interface IPluginManager
     void ElementDelete(ElementSave element);
 
     void ElementDuplicate(ElementSave oldElement, ElementSave newElement);
+
+    void ElementReloaded(ElementSave element);
 
     void StateRename(StateSave stateSave, string oldName);
     void StateAdd(StateSave stateSave);

@@ -25,6 +25,7 @@ namespace Gum.Managers
         private readonly IWireframeObjectManager _wireframeObjectManager;
         private readonly IProjectState _projectState;
         private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+        private readonly IPluginManager _pluginManager;
 
         public FileChangeReactionLogic()
         {
@@ -36,6 +37,7 @@ namespace Gum.Managers
             _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
             _projectState = Locator.GetRequiredService<IProjectState>();
             _standardElementsManagerGumTool = Locator.GetRequiredService<StandardElementsManagerGumTool>();
+            _pluginManager = Locator.GetRequiredService<IPluginManager>();
         }
         
         public void ReactToFileChanged(FilePath file)
@@ -265,7 +267,7 @@ namespace Gum.Managers
                     element = ObjectFinder.Self.GetElementSave(file.StandardizedNoPathNoExtension);
                     _selectedState.SelectedElement = element;
                 }
-
+                _pluginManager.ElementReloaded(element);
             }
 
             bool shouldReloadWireframe = false;

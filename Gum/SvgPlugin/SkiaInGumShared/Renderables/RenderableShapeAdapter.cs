@@ -44,6 +44,7 @@ namespace SkiaGum.Renderables
             set => _shape.NeedsUpdate = value;
         }
 
+
         public Color Color => Color.FromArgb(
             _shape.Color.Alpha, _shape.Color.Red, _shape.Color.Green, _shape.Color.Blue);
 
