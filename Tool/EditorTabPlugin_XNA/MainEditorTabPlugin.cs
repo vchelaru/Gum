@@ -133,7 +133,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     WireframeControl _wireframeControl;
 
     private EditorControls _editorControls;
-    private int _defaultWireframeEditControlHeight;
 
     System.Windows.Forms.Panel gumEditorPanel;
     private LayerService _layerService;

@@ -1064,7 +1064,6 @@ public class SelectionManager : ISelectionManager
         // ═══════════════════════════════════════════════════════════════
         if (context.IsHandlerCurrentlyActive && !cursor.PrimaryDoubleClick)
         {
-            System.Diagnostics.Debug.WriteLine($"[INPUT DECISION] HANDLER ACTIVE - skipping other selection - {context.DebugInfo}");
             return InputDecision.HandleSelection;
         }
 
@@ -1079,7 +1078,6 @@ public class SelectionManager : ISelectionManager
         // ═══════════════════════════════════════════════════════════════
         if (context.IsShiftHeld || (!context.IsOverElementBody && !context.IsOverHandle))
         {
-            System.Diagnostics.Debug.WriteLine($"[INPUT DECISION] RECTANGLE SELECTION - {context.DebugInfo}");
             return InputDecision.RectangleSelection;
         }
 
@@ -1089,7 +1087,6 @@ public class SelectionManager : ISelectionManager
         // ═══════════════════════════════════════════════════════════════
         if (cursor.PrimaryPush || cursor.SecondaryPush || cursor.PrimaryDoubleClick)
         {
-            System.Diagnostics.Debug.WriteLine($"[INPUT DECISION] NORMAL CLICK SELECTION - {context.DebugInfo}");
             return InputDecision.NormalClickSelection;
         }
 
@@ -1162,7 +1159,6 @@ public class SelectionManager : ISelectionManager
             // fall back to normal click selection to handle deselection
             if (!wasActive)
             {
-                System.Diagnostics.Debug.WriteLine($"[RECTANGLE FALLBACK] Rectangle selector not active, calling normal selection");
                 ProcessNormalClickSelection(context, worldX, worldY);
             }
         }
