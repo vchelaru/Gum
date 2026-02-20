@@ -31,6 +31,119 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void GetChangesForRenamedElement_ComponentBaseType_IsDetected()
+    {
+        // A component that inherits from the renamed element should appear in ElementsWithBaseTypeReference.
+        var button = new ComponentSave { Name = "ButtonNew" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        _project.Components.Add(button);
+
+        var derivedButton = new ComponentSave { Name = "DerivedButton", BaseType = "Button" };
+        derivedButton.States.Add(new StateSave { Name = "Default", ParentContainer = derivedButton });
+        _project.Components.Add(derivedButton);
+
+        var changes = _renameLogic.GetChangesForRenamedElement(button, oldName: "Button");
+
+        changes.ElementsWithBaseTypeReference.ShouldContain(derivedButton);
+    }
+
+    [Fact]
+    public void GetChangesForRenamedElement_ContainedTypeVariable_IsDetected()
+    {
+        // A ContainedType variable whose value matches oldName should appear in ContainedTypeVariableReferences.
+        var button = new ComponentSave { Name = "ButtonNew" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        _project.Components.Add(button);
+
+        var listBox = new ComponentSave { Name = "ListBox" };
+        var defaultState = new StateSave { Name = "Default", ParentContainer = listBox };
+        listBox.States.Add(defaultState);
+        var containedTypeVar = new VariableSave { Name = "ContainedType", Value = "Button" };
+        defaultState.Variables.Add(containedTypeVar);
+        _project.Components.Add(listBox);
+
+        var changes = _renameLogic.GetChangesForRenamedElement(button, oldName: "Button");
+
+        changes.ContainedTypeVariableReferences.Count.ShouldBe(1);
+        changes.ContainedTypeVariableReferences[0].Container.ShouldBe(listBox);
+        changes.ContainedTypeVariableReferences[0].Variable.ShouldBe(containedTypeVar);
+    }
+
+    [Fact]
+    public void GetChangesForRenamedElement_InstanceBaseType_IsDetected()
+    {
+        // An instance of the renamed element should appear in InstancesWithBaseTypeReference
+        // with the correct container.
+        var button = new ComponentSave { Name = "ButtonNew" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        _project.Components.Add(button);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        var instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        _project.Screens.Add(screen);
+
+        var changes = _renameLogic.GetChangesForRenamedElement(button, oldName: "Button");
+
+        changes.InstancesWithBaseTypeReference.Count.ShouldBe(1);
+        changes.InstancesWithBaseTypeReference[0].Container.ShouldBe(screen);
+        changes.InstancesWithBaseTypeReference[0].Instance.ShouldBe(instance);
+    }
+
+    [Fact]
+    public void GetChangesForRenamedElement_NoMatchingReferences_ReturnsEmptyLists()
+    {
+        var button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        _project.Components.Add(button);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        _project.Screens.Add(screen);
+
+        var changes = _renameLogic.GetChangesForRenamedElement(button, oldName: "OldButtonName");
+
+        changes.ElementsWithBaseTypeReference.ShouldBeEmpty();
+        changes.InstancesWithBaseTypeReference.ShouldBeEmpty();
+        changes.ContainedTypeVariableReferences.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetChangesForRenamedElement_ScreenBaseType_IsDetected()
+    {
+        // A screen that inherits from the renamed element should appear in ElementsWithBaseTypeReference.
+        var panel = new ComponentSave { Name = "PanelNew" };
+        panel.States.Add(new StateSave { Name = "Default", ParentContainer = panel });
+        _project.Components.Add(panel);
+
+        var screen = new ScreenSave { Name = "MainScreen", BaseType = "Panel" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        _project.Screens.Add(screen);
+
+        var changes = _renameLogic.GetChangesForRenamedElement(panel, oldName: "Panel");
+
+        changes.ElementsWithBaseTypeReference.ShouldContain(screen);
+    }
+
+    [Fact]
+    public void GetChangesForRenamedElement_UnrelatedBaseType_IsNotDetected()
+    {
+        // An element whose BaseType doesn't match oldName should not be collected.
+        var button = new ComponentSave { Name = "ButtonNew" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        _project.Components.Add(button);
+
+        var otherComponent = new ComponentSave { Name = "OtherComponent", BaseType = "SomeOtherType" };
+        otherComponent.States.Add(new StateSave { Name = "Default", ParentContainer = otherComponent });
+        _project.Components.Add(otherComponent);
+
+        var changes = _renameLogic.GetChangesForRenamedElement(button, oldName: "Button");
+
+        changes.ElementsWithBaseTypeReference.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void GetVariableChangesForRenamedVariable_VariableReferenceLeftSideOnInstance_IsDetected()
     {
         // ComponentA has a variable MyVar.
