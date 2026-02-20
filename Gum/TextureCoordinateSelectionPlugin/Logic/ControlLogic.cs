@@ -696,29 +696,19 @@ public class TextureCoordinateDisplayController : IDisposable
         }
     }
 
-    public async void CenterCameraOnSelection()
+    public void CenterCameraOnSelection()
     {
         var camera = SystemManagers.Renderer.Camera;
-
-        // For Vic K:
-        // I could not figure
-        // out how to get the control
-        // to be fully laid out here. I
-        // had to put a delay of 100 ms and
-        // all works, but this feels dirty. I've
-        // tried looking at the control's ActualWidth 
-        // and ActualHeight, but that still returned 0
-        // uless I had the delay.
-        await Task.Delay(100);
-        mainControl.UpdateLayout();
-        var selector = mainControl.InnerControl.RectangleSelector;
-        if(selector != null)
+        mainControl.Dispatcher.BeginInvoke(() =>
         {
-            camera.X = selector.Left + selector.Width / 2.0f - camera.ClientWidth/(2 * camera.Zoom);
-            camera.Y = selector.Top + selector.Height / 2.0f - camera.ClientHeight/(2 * camera.Zoom);
-            UpdateScrollBarsToTexture();
-        }
-
+            var selector = mainControl.InnerControl.RectangleSelector;
+            if(selector != null)
+            {
+                camera.X = selector.Left + selector.Width / 2.0f - camera.ClientWidth/(2 * camera.Zoom);
+                camera.Y = selector.Top + selector.Height / 2.0f - camera.ClientHeight/(2 * camera.Zoom);
+                UpdateScrollBarsToTexture();
+            }
+        }, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     internal void UpdateButtonSizes(double baseFontSize)
