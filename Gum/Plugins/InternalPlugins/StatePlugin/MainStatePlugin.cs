@@ -39,6 +39,7 @@ public class MainStatePlugin : InternalPlugin
     private readonly ObjectFinder _objectFinder;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly ICopyPasteLogic _copyPasteLogic;
+    private readonly StateTreeViewManager _stateTreeViewManager;
 
     #endregion
 
@@ -63,6 +64,11 @@ public class MainStatePlugin : InternalPlugin
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
         _copyPasteLogic = Locator.GetRequiredService<ICopyPasteLogic>();
 
+        _stateTreeViewManager = new StateTreeViewManager(
+            _stateTreeViewRightClickService,
+            _hotkeyManager,
+            _selectedState);
+
         stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService,
             selectedState);
     }
@@ -74,9 +80,6 @@ public class MainStatePlugin : InternalPlugin
         CreateNewStateTab();
 
         // State Tree ViewManager needs init before MenuStripManager
-        StateTreeViewManager.Self.Initialize(
-            _stateTreeViewRightClickService,
-            _hotkeyManager);
     }
 
     private void AssignEvents()
@@ -130,7 +133,7 @@ public class MainStatePlugin : InternalPlugin
         stateTreeViewModel.RefreshTo(_selectedState.SelectedStateContainer, _selectedState, _objectFinder);
     }
 
-    private void HandleElementSelected(ElementSave save)
+    private void HandleElementSelected(ElementSave? save)
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
         HandleRefreshStateTreeView();
@@ -148,7 +151,7 @@ public class MainStatePlugin : InternalPlugin
         _stateTreeViewRightClickService.PopulateMenuStrip();
     }
 
-    private void HandleBehaviorSelected(BehaviorSave behavior)
+    private void HandleBehaviorSelected(BehaviorSave? behavior)
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
         HandleRefreshStateTreeView();
@@ -176,7 +179,7 @@ public class MainStatePlugin : InternalPlugin
         stateTreeViewModel.RefreshTo(_selectedState.SelectedStateContainer, _selectedState, _objectFinder);
     }
 
-    private void HandleStateSelected(StateSave state)
+    private void HandleStateSelected(StateSave? state)
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
         stateTreeViewModel.SetSelectedState(state);
@@ -196,7 +199,7 @@ public class MainStatePlugin : InternalPlugin
         }
     }
 
-    private void HandleStateSaveCategorySelected(StateSaveCategory stateSaveCategory)
+    private void HandleStateSaveCategorySelected(StateSaveCategory? stateSaveCategory)
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
         stateTreeViewModel.SetSelectedStateSaveCategory(stateSaveCategory);
@@ -232,7 +235,7 @@ public class MainStatePlugin : InternalPlugin
         newPluginTab.Title = desiredTitle;
     }
 
-    private void HandleVariableSet(ElementSave elementSave, InstanceSave instance, string variableName, object oldValue)
+    private void HandleVariableSet(ElementSave elementSave, InstanceSave? instance, string variableName, object? oldValue)
     {
         // Do this to refresh the yellow highlights - We may not need to do more than this:
         stateTreeViewModel.RefreshTo(elementSave, _selectedState, _objectFinder);

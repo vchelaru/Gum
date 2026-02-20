@@ -77,10 +77,10 @@ public class MainVariableGridPlugin : InternalPlugin
     }
     private void HandleElementRenamed(ElementSave save, string arg2)
     {
-        PropertyGridManager.Self.RefreshVariablesDataGridValues();
+        _propertyGridManager.RefreshVariablesDataGridValues();
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave instance, string strippedName, object oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string strippedName, object? oldValue)
     {
         _propertyGridManager.HandleVariableSet(element, instance, strippedName, oldValue);
     }
@@ -120,7 +120,7 @@ public class MainVariableGridPlugin : InternalPlugin
         _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
-    private void MainVariableGridPlugin_ReactToStateSaveCategorySelected(StateSaveCategory obj)
+    private void MainVariableGridPlugin_ReactToStateSaveCategorySelected(StateSaveCategory? obj)
     {
         _propertyGridManager.RefreshEntireGrid(force: true);
 
@@ -131,12 +131,12 @@ public class MainVariableGridPlugin : InternalPlugin
         _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
-    private void HandleStateSelected(StateSave save)
+    private void HandleStateSelected(StateSave? save)
     {
         _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
-    private void HandleCustomStateSelected(StateSave save)
+    private void HandleCustomStateSelected(StateSave? save)
     {
         // custom states are states where an animation is playing. This slows down
         // the animation considerably so let's not do it:
@@ -153,7 +153,7 @@ public class MainVariableGridPlugin : InternalPlugin
         {
             shouldShowButton = _selectedState.SelectedInstance == null;
         }
-        PropertyGridManager.Self.VariableViewModel.AddVariableButtonVisibility =
+        _propertyGridManager.VariableViewModel.AddVariableButtonVisibility =
             shouldShowButton.ToVisibility();
 
         if(selectedState.SelectedBehavior == null && selectedState.SelectedInstance == null && selectedState.SelectedElement == null)

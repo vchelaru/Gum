@@ -22,6 +22,7 @@
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" MaxHeight="200" />
       <RowDefinition Height="Auto" MaxHeight="200" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
@@ -34,7 +35,13 @@
       Content="{Binding ErrorInformation}"
       Foreground="{DynamicResource Frb.Brushes.Error}"
       Visibility="{Binding HasErrors}" />
-    <Grid Grid.Row="2">
+    <TextBlock
+      Grid.Row="2"
+      Margin="5"
+      Text="{Binding CategoryNotification}"
+      TextWrapping="Wrap"
+      Visibility="{Binding HasCategoryNotification}" />
+    <Grid Grid.Row="3">
       <Grid.RowDefinitions>
         <RowDefinition />
         <RowDefinition Height="Auto" />

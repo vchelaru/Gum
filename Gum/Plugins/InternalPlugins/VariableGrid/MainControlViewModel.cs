@@ -94,6 +94,18 @@ namespace Gum.Plugins.VariableGrid
 
         #endregion
 
+        public Visibility HasCategoryNotification
+        {
+            get => Get<Visibility>();
+            set => Set(value);
+        }
+
+        public string CategoryNotification
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
         public Visibility ShowVariableGrid
         {
             //get => Visibility.Hidden;
