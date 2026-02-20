@@ -26,6 +26,7 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 
     PluginTab textureCoordinatePluginTab = default!;
     ISelectedState _selectedState;
+    IWireframeCommands _wireframeCommands;
     TextureCoordinateDisplayController _displayController;
     MainControlViewModel _viewModel;
     ExposedTextureCoordinateLogic _exposedCoordinateLogic;
@@ -48,6 +49,7 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
     public MainTextureCoordinatePlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _wireframeCommands = Locator.GetRequiredService<IWireframeCommands>();
 
         _displayController = new TextureCoordinateDisplayController(
             Locator.GetRequiredService<ISelectedState>(),
@@ -114,6 +116,7 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
         this.VariableSetLate += HandleVariableSet;
         // This is needed for when undos happen
         this.WireframeRefreshed += HandleWireframeRefreshed;
+        this.WireframePropertyChanged += HandleWireframePropertyChanged;
 
         this.ProjectLoad += HandleProjectLoaded;
     }
@@ -121,6 +124,15 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
     private void HandleProjectLoaded(GumProjectSave save)
     {
         _viewModel.LoadSettings();
+        _displayController.SetCheckerboardVisible(save.ShowCheckerBackground);
+    }
+
+    private void HandleWireframePropertyChanged(string name)
+    {
+        if (name == nameof(IWireframeCommands.IsBackgroundGridVisible))
+        {
+            _displayController.SetCheckerboardVisible(_wireframeCommands.IsBackgroundGridVisible);
+        }
     }
 
     private void HandleWireframeRefreshed()

@@ -45,6 +45,12 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value);
     }
 
+    public bool ShowCheckerBackground
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
     public bool RestrictToUnitValues
     {
         get => Get<bool>();
@@ -181,6 +187,7 @@ public class ProjectPropertiesViewModel : ViewModel
                 TextureFilter = TextureFilter.Point;
             }
             ShowCanvasOutline = this.gumProject.ShowCanvasOutline;
+            ShowCheckerBackground = this.gumProject.ShowCheckerBackground;
             FontRanges = this.gumProject.FontRanges;
             FontSpacingHorizontal = this.gumProject.FontSpacingHorizontal;
             FontSpacingVertical = this.gumProject.FontSpacingVertical;
@@ -212,6 +219,7 @@ public class ProjectPropertiesViewModel : ViewModel
         this.generalSettings.AutoSave = AutoSave;
         this.gumProject.ShowOutlines = ShowOutlines;
         this.gumProject.ShowCanvasOutline = ShowCanvasOutline;
+        this.gumProject.ShowCheckerBackground = ShowCheckerBackground;
         GraphicalUiElement.ShowLineRectangles = ShowOutlines;
         GraphicalUiElement.CanvasWidth = CanvasWidth;
         GraphicalUiElement.CanvasHeight = CanvasHeight;

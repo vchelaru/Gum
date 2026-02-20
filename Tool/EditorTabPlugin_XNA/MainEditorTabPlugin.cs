@@ -450,6 +450,9 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _selectionManager.RestrictToUnitValues =
             save.RestrictToUnitValues;
 
+        _wireframeCommands.IsBackgroundGridVisible =
+            save.ShowCheckerBackground;
+
         _wireframeObjectManager.RefreshAll(true);
 
         AdjustTextureFilter();
@@ -465,6 +468,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         {
             _selectionManager.RestrictToUnitValues =
                 _projectManager.GumProjectSave.RestrictToUnitValues;
+        }
+        else if (propertyName == nameof(GumProjectSave.ShowCheckerBackground))
+        {
+            _wireframeCommands.IsBackgroundGridVisible =
+                _projectManager.GumProjectSave.ShowCheckerBackground;
         }
         else if (propertyName == nameof(GumProjectSave.SinglePixelTextureFile) ||
             propertyName == nameof(GumProjectSave.SinglePixelTextureTop) ||
