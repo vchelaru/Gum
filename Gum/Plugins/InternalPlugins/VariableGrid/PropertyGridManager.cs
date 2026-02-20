@@ -481,7 +481,16 @@ public partial class PropertyGridManager
 
             RefreshBehaviorUi(behaviorSave, newInstances, state, stateCategory);
 
-            mVariablesDataGrid.Refresh();
+            // When a structural rebuild happened (hasChangedObjectShowing = true), each control's
+            // InstanceMember setter already called Refresh(). Calling mVariablesDataGrid.Refresh()
+            // here would trigger a second Refresh() on every control via SimulateValueChanged →
+            // PropertyChanged → HandlePropertyChange. Skip it in that case.
+            // When hasChangedObjectShowing = false, existing InstanceMember objects stay in place
+            // and their values may have changed (e.g. after undo), so Refresh() is still needed.
+            if (!hasChangedObjectShowing)
+            {
+                mVariablesDataGrid.Refresh();
+            }
         }
         finally
         {

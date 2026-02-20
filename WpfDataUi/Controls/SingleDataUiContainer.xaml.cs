@@ -17,6 +17,12 @@ namespace WpfDataUi
 
         static List<KeyValuePair<Func<Type, bool>, Type>> mTypeDisplayerAssociation = new List<KeyValuePair<Func<Type, bool>, Type>>();
 
+        // Controls are expensive to create (WPF InitializeComponent builds a full visual tree).
+        // When a SingleDataUiContainer is removed from the visual tree during a grid rebuild,
+        // its inner displayer control is returned here and reused by the next container that
+        // needs the same type, avoiding repeated construction.
+        static Dictionary<Type, Stack<UserControl>> _controlPool = new();
+
         #endregion
 
         #region Properties
@@ -78,11 +84,34 @@ namespace WpfDataUi
         public SingleDataUiContainer()
         {
             this.DataContextChanged += HandleDataContextChanged;
+            this.Unloaded += HandleUnloaded;
             InitializeComponent();
 
         }
 
         #endregion
+
+        private void HandleUnloaded(object? sender, RoutedEventArgs e)
+        {
+            if (UserControl != null)
+            {
+                // Detach from this Grid first so the control can be re-parented when
+                // reused from the pool (a UIElement can only have one visual parent).
+                Grid.Children.Remove(UserControl);
+
+                var type = UserControl.GetType();
+                if (!_controlPool.TryGetValue(type, out var stack))
+                    _controlPool[type] = stack = new Stack<UserControl>();
+                stack.Push(UserControl);
+            }
+        }
+
+        static UserControl? TryGetFromPool(Type type)
+        {
+            if (_controlPool.TryGetValue(type, out var stack) && stack.Count > 0)
+                return stack.Pop();
+            return null;
+        }
 
         private void HandleDataContextChanged(object? sender, DependencyPropertyChangedEventArgs e)
         {
@@ -112,14 +141,15 @@ namespace WpfDataUi
                 }
                 else
                 {
-                    controlToAdd = (UserControl)Activator.CreateInstance(preferredDisplayer);
+                    controlToAdd = TryGetFromPool(preferredDisplayer)
+                        ?? (UserControl)Activator.CreateInstance(preferredDisplayer);
                 }
             }
 
             // give preference to CustomOptions...:
             if(controlToAdd == null && InstanceMember.CustomOptions != null && InstanceMember.CustomOptions.Count != 0)
             {
-                controlToAdd = new ComboBoxDisplay();
+                controlToAdd = TryGetFromPool(typeof(ComboBoxDisplay)) ?? new ComboBoxDisplay();
             }
 
             // ... then fall back if that isn't found:
@@ -131,14 +161,15 @@ namespace WpfDataUi
                 {
                     if (kvp.Key(type))
                     {
-                        controlToAdd = (UserControl)Activator.CreateInstance(kvp.Value);
+                        controlToAdd = TryGetFromPool(kvp.Value)
+                            ?? (UserControl)Activator.CreateInstance(kvp.Value);
                     }
                 }
             }
 
             if (controlToAdd == null)
             {
-                controlToAdd = new TextBoxDisplay();
+                controlToAdd = TryGetFromPool(typeof(TextBoxDisplay)) ?? new TextBoxDisplay();
             }
 
             var displayerType = controlToAdd.GetType();
