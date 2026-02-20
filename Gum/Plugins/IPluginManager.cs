@@ -52,6 +52,8 @@ public interface IPluginManager
 
     void ElementDuplicate(ElementSave oldElement, ElementSave newElement);
 
+    void ElementReloaded(ElementSave element);
+
     void StateRename(StateSave stateSave, string oldName);
     void StateAdd(StateSave stateSave);
 

@@ -66,6 +66,7 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
         this.ElementDelete += HandleElementDeleted;
         this.ElementAdd += HandleElementAdd;
         this.ElementDuplicate += HandleElementDuplicate;
+        this.ElementReloaded += HandleElementReloaded;
 
         this.RefreshElementTreeView += HandleRefreshElementTreeView;
 
@@ -86,6 +87,11 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
         this.StateAdd += HandleStateAdd;
         this.StateDelete += HandleStateDelete;
         this.CategoryDelete += HandleCategoryDelete;
+    }
+
+    private void HandleElementReloaded(ElementSave save)
+    {
+        RefreshErrorIndicatorsForElement(save);
     }
 
     private IEnumerable<ITreeNode> HandleGetSelectedNodes()
