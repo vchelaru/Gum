@@ -588,6 +588,9 @@ public class PluginManager : IPluginManager
     public void SetHighlightedIpso(IPositionedSizedObject? positionedSizedObject) =>
         CallMethodOnPlugin(plugin => plugin.CallSetHighlightedIpso(positionedSizedObject));
 
+    public void HighlightTreeNode(IPositionedSizedObject? positionedSizedObject) =>
+        CallMethodOnPlugin(plugin => plugin.CallHighlightTreeNode(positionedSizedObject));
+
     public void IpsoSelected(IPositionedSizedObject? positionedSizedObject) =>
         CallMethodOnPlugin(plugin => plugin.CallIpsoSelected(positionedSizedObject));
 

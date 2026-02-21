@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Gum.DataTypes.Variables;
 using Gum.Services;
+using RenderingLibrary;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
@@ -81,6 +82,8 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
         this.GetTreeNodeOver += HandleGetTreeNodeOver;
         this.GetSelectedNodes += HandleGetSelectedNodes;
 
+        this.HighlightTreeNode += HandleHighlightTreeNode;
+
         this.VariableSet += HandleVariableSetForErrors;
         this.AfterUndo += HandleAfterUndo;
         this.InstanceDelete += HandleInstanceDelete;
@@ -131,6 +134,17 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     private void HandleElementDuplicate(ElementSave save1, ElementSave save2)
     {
         _elementTreeViewManager.RefreshUi();
+    }
+
+    private void HandleHighlightTreeNode(IPositionedSizedObject? ipso)
+    {
+        // If the mouse is over the treeview, it manages its own hot node via MouseMove - skip to prevent loop
+        if (_elementTreeViewManager.HasMouseOver)
+        {
+            return;
+        }
+
+        _elementTreeViewManager.HighlightTreeNodeForIpso(ipso);
     }
 
     private bool HandleGetIfShouldSuppressRemoveEditorHighlight()

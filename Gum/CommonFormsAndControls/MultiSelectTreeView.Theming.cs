@@ -179,6 +179,8 @@ public partial class MultiSelectTreeView
     }
     #endregion
 
+    public void SetExternalHotNode(TreeNode? node) => SetHotNode(node, null);
+
     private void SetHotNode(TreeNode? node, Point? mouse = null)
     {
         if (ReferenceEquals(_hotNode, node) && mouse == null) return;
