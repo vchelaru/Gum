@@ -9,7 +9,11 @@ Previous versions allowed locked items to be edited once selected, but they only
 
 ### Introduction
 
-The `Locked` property controls whether an instance can be clicked in the Editor tab, and whether any variables can be modified on the locked item.
+The `Locked` property controls whether an instance can be clicked in the Editor tab, and whether any variables can be modified on the locked item.&#x20;
+
+Locked items appear with a lock icon.
+
+<figure><img src="../../../.gitbook/assets/21_08 08 26.png" alt=""><figcaption><p>Locked instance with a lock icon</p></figcaption></figure>
 
 If this value is true, then the following is true:
 
