@@ -145,21 +145,6 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
         Categories.CollectionChanged += HandleCategoriesChanged;
         TypesToIgnore.CollectionChanged += (_, __) => PopulateCategories();
         MembersToIgnore.CollectionChanged += HandleMembersToIgnoreChanged;
-
-        AddHandler(Expander.CollapsedEvent, new RoutedEventHandler(OnExpanderCollapsed));
-        AddHandler(Expander.ExpandedEvent, new RoutedEventHandler(OnExpanderExpanded));
-    }
-
-    private void OnExpanderCollapsed(object sender, RoutedEventArgs e)
-    {
-        if (e.OriginalSource is Expander { DataContext: MemberCategory category })
-            category.IsExpanded = false;
-    }
-
-    private void OnExpanderExpanded(object sender, RoutedEventArgs e)
-    {
-        if (e.OriginalSource is Expander { DataContext: MemberCategory category })
-            category.IsExpanded = true;
     }
 
     private void HandleCategoriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -207,8 +192,6 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
             {
                 category.IsExpanded = wasExpanded;
             }
-            category.IsExpanded = false;
-
         }
 
         Unsubscribe(Categories);
