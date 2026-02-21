@@ -81,7 +81,7 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
         this.GetTreeNodeOver += HandleGetTreeNodeOver;
         this.GetSelectedNodes += HandleGetSelectedNodes;
 
-        this.VariableSet += HandleVariableSetForErrors;
+        this.VariableSet += HandleVariableSet;
         this.AfterUndo += HandleAfterUndo;
         this.InstanceDelete += HandleInstanceDelete;
         this.StateAdd += HandleStateAdd;
@@ -254,9 +254,14 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
         }
     }
 
-    private void HandleVariableSetForErrors(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
     {
         RefreshErrorIndicatorsForElement(element);
+
+        if(instance != null && variableName == nameof(instance.Locked))
+        {
+            _elementTreeViewManager.RefreshUi(instance);
+        }
     }
 
     private void HandleAfterUndo()

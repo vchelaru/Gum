@@ -265,7 +265,17 @@
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<Resource Include="Content\Icons\folder.png" />
+		<Resource Include="Content\Icons\transparent.png" />
+		<Resource Include="Content\Icons\redExclamation.png" />
+		<Resource Include="Content\Icons\state.png" />
+		<Resource Include="Content\Icons\InheritedInstance.png" />
 		<Resource Include="Content\Icons\UpdatedTreeViewIcons\instance_locked.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Component.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Instance.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\screen.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\StandardElement.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\behavior.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\folder.png" />
 		<Content Include="Content\Icons\Origins\Baseline.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
