@@ -145,6 +145,21 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
         Categories.CollectionChanged += HandleCategoriesChanged;
         TypesToIgnore.CollectionChanged += (_, __) => PopulateCategories();
         MembersToIgnore.CollectionChanged += HandleMembersToIgnoreChanged;
+
+        AddHandler(Expander.CollapsedEvent, new RoutedEventHandler(OnExpanderCollapsed));
+        AddHandler(Expander.ExpandedEvent, new RoutedEventHandler(OnExpanderExpanded));
+    }
+
+    private void OnExpanderCollapsed(object sender, RoutedEventArgs e)
+    {
+        if (e.OriginalSource is Expander { DataContext: MemberCategory category })
+            category.IsExpanded = false;
+    }
+
+    private void OnExpanderExpanded(object sender, RoutedEventArgs e)
+    {
+        if (e.OriginalSource is Expander { DataContext: MemberCategory category })
+            category.IsExpanded = true;
     }
 
     private void HandleCategoriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -175,11 +190,27 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
 
     /// <summary>
     /// Replaces all categories at once, firing a single Reset notification instead of one
-    /// notification per category. This is faster than calling Categories.Clear() followed
+    /// notification per category This is faster than calling Categories.Clear() followed
     /// by individual Categories.Add() calls when rebuilding the grid.
     /// </summary>
     public void SetCategories(IList<MemberCategory> newCategories)
     {
+        var expansionByName = new Dictionary<string, bool>();
+        foreach (var category in Categories)
+        {
+            expansionByName[category.Name] = category.IsExpanded;
+        }
+
+        foreach (var category in newCategories)
+        {
+            if (expansionByName.TryGetValue(category.Name, out bool wasExpanded))
+            {
+                category.IsExpanded = wasExpanded;
+            }
+            category.IsExpanded = false;
+
+        }
+
         Unsubscribe(Categories);
         Categories.ReplaceAll(newCategories);
         Subscribe((IList)newCategories);

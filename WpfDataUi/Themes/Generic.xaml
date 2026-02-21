@@ -31,7 +31,7 @@
     </DataTemplate>
 
     <DataTemplate x:Key="DataUi.MemberCategoryTemplate" DataType="{x:Type dataTypes:MemberCategory}">
-        <Expander Header="{Binding Name}" IsExpanded="True">
+        <Expander Header="{Binding Name}" IsExpanded="{Binding IsExpanded}">
             <ItemsControl AlternationCount="2" ItemsSource="{Binding Members}" />
         </Expander>
     </DataTemplate>
