@@ -42,6 +42,8 @@ namespace WpfDataUi.Controls
                 if (instanceMemberChanged)
                 {
                     this.RefreshAllContextMenus(force: true);
+                    // Clear stale green foreground from a previous pooled use.
+                    CheckBox.ClearValue(Control.ForegroundProperty);
                 }
 
                 Refresh();

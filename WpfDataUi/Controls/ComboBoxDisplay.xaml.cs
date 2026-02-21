@@ -50,6 +50,8 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
             if (instanceMemberChanged)
             {
                 this.RefreshAllContextMenus(force: true);
+                // Clear stale green foreground from a previous pooled use.
+                ComboBox.ClearValue(Control.ForegroundProperty);
             }
 
             Refresh();

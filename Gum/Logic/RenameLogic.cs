@@ -75,6 +75,8 @@ public class ElementRenameChanges
     public List<(ElementSave Container, InstanceSave Instance)> InstancesWithBaseTypeReference = new();
     // ContainedType variables whose value == oldName
     public List<(ElementSave Container, VariableSave Variable)> ContainedTypeVariableReferences = new();
+    // VariableReferences list entries whose right-hand side references oldName
+    public List<VariableReferenceChange> VariableReferenceChanges = new();
 }
 
 #endregion
@@ -334,19 +336,27 @@ public class RenameLogic : IRenameLogic
         var changes = new ElementRenameChanges();
         var project = _projectState.GumProjectSave;
 
+        string qualifiedOldName = elementSave switch
+        {
+            ScreenSave => $"Screens/{oldName}",
+            ComponentSave => $"Components/{oldName}",
+            StandardElementSave => $"Standards/{oldName}",
+            _ => oldName
+        };
+
         foreach (var screen in project.Screens)
         {
-            CollectChangesInElement(screen, oldName, changes);
+            CollectChangesInElement(screen, oldName, qualifiedOldName, changes);
         }
 
         foreach (var component in project.Components)
         {
-            CollectChangesInElement(component, oldName, changes);
+            CollectChangesInElement(component, oldName, qualifiedOldName, changes);
         }
 
         return changes;
 
-        static void CollectChangesInElement(ElementSave element, string oldName, ElementRenameChanges changes)
+        static void CollectChangesInElement(ElementSave element, string oldName, string qualifiedOldName, ElementRenameChanges changes)
         {
             if (element.BaseType == oldName)
             {
@@ -368,10 +378,38 @@ public class RenameLogic : IRenameLogic
                     changes.ContainedTypeVariableReferences.Add((element, variable));
                 }
             }
+
+            foreach (var state in element.AllStates)
+            {
+                foreach (var variableList in state.VariableLists)
+                {
+                    if (variableList.GetRootName() != "VariableReferences") continue;
+
+                    for (int i = 0; i < variableList.ValueAsIList.Count; i++)
+                    {
+                        var line = variableList.ValueAsIList[i];
+                        if (line is not string asString || asString.StartsWith("//") || !asString.Contains("="))
+                            continue;
+
+                        var right = asString.Substring(asString.IndexOf("=") + 1).Trim();
+
+                        if (right.StartsWith(qualifiedOldName + "."))
+                        {
+                            changes.VariableReferenceChanges.Add(new VariableReferenceChange
+                            {
+                                Container = element,
+                                VariableReferenceList = variableList,
+                                LineIndex = i,
+                                ChangedSide = SideOfEquals.Right
+                            });
+                        }
+                    }
+                }
+            }
         }
     }
 
-    private void ApplyElementRenameChanges(ElementRenameChanges changes, ElementSave elementSave)
+    internal void ApplyElementRenameChanges(ElementRenameChanges changes, ElementSave elementSave, string oldName)
     {
         var containersToSave = new HashSet<ElementSave>();
 
@@ -390,8 +428,44 @@ public class RenameLogic : IRenameLogic
         foreach (var (container, variable) in changes.ContainedTypeVariableReferences)
         {
             variable.Value = elementSave.Name;
-            // ContainedType changes are included in the container's save below
             containersToSave.Add(container);
+        }
+
+        string qualifiedOldName = elementSave switch
+        {
+            ScreenSave => $"Screens/{oldName}",
+            ComponentSave => $"Components/{oldName}",
+            StandardElementSave => $"Standards/{oldName}",
+            _ => oldName
+        };
+
+        string qualifiedNewName = elementSave switch
+        {
+            ScreenSave => $"Screens/{elementSave.Name}",
+            ComponentSave => $"Components/{elementSave.Name}",
+            StandardElementSave => $"Standards/{elementSave.Name}",
+            _ => elementSave.Name
+        };
+
+        foreach (var referenceChange in changes.VariableReferenceChanges)
+        {
+            var variableList = referenceChange.VariableReferenceList;
+            var oldLine = variableList.ValueAsIList[referenceChange.LineIndex]?.ToString();
+            if (oldLine == null) continue;
+
+            var equalIndex = oldLine.IndexOf("=");
+            if (equalIndex < 0) continue;
+
+            var left = oldLine.Substring(0, equalIndex).Trim();
+            var right = oldLine.Substring(equalIndex + 1).Trim();
+
+            if (right.StartsWith(qualifiedOldName + "."))
+            {
+                right = qualifiedNewName + right.Substring(qualifiedOldName.Length);
+            }
+
+            variableList.ValueAsIList[referenceChange.LineIndex] = $"{left} = {right}";
+            containersToSave.Add(referenceChange.Container);
         }
 
         foreach (var container in containersToSave)
@@ -509,7 +583,7 @@ public class RenameLogic : IRenameLogic
         if (instance == null)
         {
             var elementChanges = GetChangesForRenamedElement(elementSave, oldName);
-            ApplyElementRenameChanges(elementChanges, elementSave);
+            ApplyElementRenameChanges(elementChanges, elementSave, oldName);
         }
         if (instance != null)
         {

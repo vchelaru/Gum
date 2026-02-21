@@ -30,6 +30,13 @@ namespace WpfDataUi.Controls
                 {
                     _instanceMember.PropertyChanged += HandlePropertyChange;
                 }
+
+                if (instanceMemberChanged)
+                {
+                    // Clear stale green background from a previous pooled use.
+                    this.TextBox.ClearValue(TextBox.BackgroundProperty);
+                }
+
                 Refresh();
 
             }

@@ -46,6 +46,13 @@ public partial class ListBoxDisplay : UserControl, IDataUi
             {
                 _instanceMember.PropertyChanged += HandlePropertyChange;
             }
+
+            if (instanceMemberChanged)
+            {
+                // Clear stale green background from a previous pooled use.
+                this.ListBox.ClearValue(ListBox.BackgroundProperty);
+            }
+
             Refresh();
 
         }
