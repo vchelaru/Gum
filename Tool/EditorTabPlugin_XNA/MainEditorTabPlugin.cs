@@ -270,6 +270,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         this.IpsoSelected += HandleIpsoSelected;
         this.SetHighlightedIpso += HandleSetHighlightedElement;
+        _selectionManager.HighlightedIpsoChanged += HandleHighlightedIpsoChanged;
 
         this.ProjectLoad += HandleProjectLoad;
         this.ProjectPropertySet += HandleProjectPropertySet;
@@ -398,6 +399,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private void HandleSetHighlightedElement(IPositionedSizedObject? whatToHighlight)
     {
         _selectionManager.HighlightedIpso = whatToHighlight;
+    }
+
+    private void HandleHighlightedIpsoChanged(IPositionedSizedObject? ipso)
+    {
+        PluginManager.Self.HighlightTreeNode(ipso);
     }
 
     private void HandleStateDelete(StateSave save)

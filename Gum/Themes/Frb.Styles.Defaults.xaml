@@ -1609,6 +1609,14 @@
         <Setter Property="WrapPanelBorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
     </Style>
     <Style TargetType="{x:Type colorPicker:StandardColorPicker}">
+        <Setter Property="TextElement.FontSize" Value="12" />
+        <Setter Property="LayoutTransform">
+            <Setter.Value>
+                <ScaleTransform
+                    ScaleX="{Binding ScaleFactor, Source={StaticResource Scale}}"
+                    ScaleY="{Binding ScaleFactor, Source={StaticResource Scale}}" />
+            </Setter.Value>
+        </Setter>
         <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Background" Value="{DynamicResource Frb.Surface01}" />

@@ -20,6 +20,7 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using MaterialDesignThemes.Wpf;
+using RenderingLibrary;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -2158,6 +2159,44 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             PluginManager.Self.SetHighlightedIpso(whatToHighlight);
         }
+    }
+
+    internal void HighlightTreeNodeForIpso(IPositionedSizedObject? ipso)
+    {
+        if (ipso == null)
+        {
+            ObjectTreeView.SetExternalHotNode(null);
+            return;
+        }
+
+        TreeNode? treeNode = null;
+
+        if (ipso.Tag is InstanceSave instance)
+        {
+            TreeNode? containerNode = GetTreeNodeFor(_selectedState.SelectedElement);
+            if (containerNode == null)
+            {
+                var behavior = ObjectFinder.Self.GetBehaviorContainerOf(instance);
+                if (behavior != null)
+                {
+                    containerNode = GetTreeNodeFor(behavior);
+                }
+            }
+            if (containerNode == null && instance.ParentContainer != null)
+            {
+                containerNode = GetTreeNodeFor(instance.ParentContainer);
+            }
+            if (containerNode != null)
+            {
+                treeNode = GetTreeNodeFor(instance, containerNode);
+            }
+        }
+        else if (ipso.Tag is ElementSave element)
+        {
+            treeNode = GetTreeNodeFor(element);
+        }
+
+        ObjectTreeView.SetExternalHotNode(treeNode);
     }
 
     void IRecipient<ApplicationStartupMessage>.Receive(ApplicationStartupMessage message)
