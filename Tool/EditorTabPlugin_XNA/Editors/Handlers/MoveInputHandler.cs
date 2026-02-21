@@ -177,6 +177,9 @@ public class MoveInputHandler : InputHandlerBase
             // Instances selected
             foreach (InstanceSave instance in selectedInstances)
             {
+                if (instance.Locked)
+                    continue;
+
                 var xOrY = Context.GrabbedState.AxisMovedFurthestAlong;
                 var gue = Context.WireframeObjectManager.GetRepresentation(instance);
 
@@ -210,6 +213,9 @@ public class MoveInputHandler : InputHandlerBase
             {
                 foreach (var instance in Context.SelectedState.SelectedInstances)
                 {
+                    if (instance.Locked)
+                        continue;
+
                     Context.SelectedState.SelectedStateSave.SetValue(instance.Name + ".Y", Context.GrabbedState.InstancePositions[instance].StateY, "float");
                 }
             }
@@ -225,6 +231,9 @@ public class MoveInputHandler : InputHandlerBase
             {
                 foreach (var instance in Context.SelectedState.SelectedInstances)
                 {
+                    if (instance.Locked)
+                        continue;
+
                     Context.SelectedState.SelectedStateSave.SetValue(instance.Name + ".X", Context.GrabbedState.InstancePositions[instance].StateX, "float");
                 }
             }
@@ -271,7 +280,7 @@ public class MoveInputHandler : InputHandlerBase
             {
                 var instanceSave = gue.Tag as InstanceSave;
 
-                if (instanceSave != null && !Context.ElementCommands.ShouldSkipDraggingMovementOn(instanceSave))
+                if (instanceSave != null && !instanceSave.Locked && !Context.ElementCommands.ShouldSkipDraggingMovementOn(instanceSave))
                 {
                     GetDifferenceToUnit(gue, out float differenceToUnitX, out float differenceToUnitY,
                         out float differenceToUnitWidth, out float differenceToUnitHeight);

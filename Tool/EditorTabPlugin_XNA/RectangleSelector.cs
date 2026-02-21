@@ -212,6 +212,10 @@ public class RectangleSelector
             if (element.Tag is Gum.DataTypes.ScreenSave)
                 continue;
 
+            // Skip locked instances - they should not be selectable
+            if (element.Tag is Gum.DataTypes.InstanceSave { Locked: true })
+                continue;
+
             // Check if element bounds intersect with selection rectangle
             if (ElementIntersectsRectangle(element, left, top, right, bottom))
             {

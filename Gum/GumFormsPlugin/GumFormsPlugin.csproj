@@ -6,6 +6,8 @@
 		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 		<LangVersion>12.0</LangVersion>
 		<AnalysisLevel>none</AnalysisLevel>
+		<Nullable>enable</Nullable>
+
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

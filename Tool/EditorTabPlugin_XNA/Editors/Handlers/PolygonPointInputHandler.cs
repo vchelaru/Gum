@@ -81,9 +81,21 @@ public class PolygonPointInputHandler : InputHandlerBase
 
     public override bool HandlePush(float worldX, float worldY)
     {
-        Context.HasChangedAnythingSinceLastPush = false;
-
         var existingPointIndexOver = _pointNodesVisual.GetIndexOver(worldX, worldY);
+
+        if (Context.IsSelectionLocked())
+        {
+            // Consume the push if the cursor is over a vert so the rectangle selector
+            // doesn't activate, but leave _grabbedIndex null so nothing actually moves.
+            if (existingPointIndexOver != null)
+            {
+                IsActive = true;
+                return true;
+            }
+            return false;
+        }
+
+        Context.HasChangedAnythingSinceLastPush = false;
         var isAddPointSpriteVisible = _addPointSpriteVisual.IsPointOver(worldX, worldY);
 
         if (existingPointIndexOver != null)
@@ -142,7 +154,7 @@ public class PolygonPointInputHandler : InputHandlerBase
         _pointNodesVisual.GrabbedIndex = _grabbedIndex;
 
         // Disable add point sprite while dragging
-        _addPointSpriteVisual.IsEnabled = _grabbedIndex == null && !IsActive;
+        _addPointSpriteVisual.IsEnabled = _grabbedIndex == null && !IsActive && !Context.IsSelectionLocked();
 
         // Hide add point sprite when over existing point
         if (indexOver != null && _addPointSpriteVisual.IsEnabled)
@@ -169,6 +181,8 @@ public class PolygonPointInputHandler : InputHandlerBase
 
     public override bool TryHandleDelete()
     {
+        if (Context.IsSelectionLocked()) return false;
+
         if (_selectedIndex == null) return false;
 
         var selectedPolygon = SelectedLinePolygon;

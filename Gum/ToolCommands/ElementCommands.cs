@@ -278,7 +278,7 @@ public class ElementCommands : IElementCommands
 
             foreach (InstanceSave instance in selectedInstances)
             {
-                bool shouldSkip = ShouldSkipDraggingMovementOn(instance);
+                bool shouldSkip = instance.Locked || ShouldSkipDraggingMovementOn(instance);
 
                 if (!shouldSkip)
                 {
