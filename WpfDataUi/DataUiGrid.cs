@@ -180,20 +180,14 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
     /// </summary>
     public void SetCategories(IList<MemberCategory> newCategories)
     {
-        var expansionByName = new Dictionary<string, bool>();
-        foreach (var category in Categories)
+        var expansionStates = Categories.ToDictionary(x => x.Name, x => x.IsExpanded);
+        foreach (MemberCategory category in newCategories)
         {
-            expansionByName[category.Name] = category.IsExpanded;
-        }
-
-        foreach (var category in newCategories)
-        {
-            if (expansionByName.TryGetValue(category.Name, out bool wasExpanded))
+            if (expansionStates.TryGetValue(category.Name, out bool expanded))
             {
-                category.IsExpanded = wasExpanded;
+                category.IsExpanded = expanded;
             }
         }
-
         Unsubscribe(Categories);
         Categories.ReplaceAll(newCategories);
         Subscribe((IList)newCategories);
@@ -406,7 +400,7 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
 
     private void PopulateCategories()
     {
-        this.Categories.Clear();
+        //this.Categories.Clear();
 
         if (Instance != null)
         {
