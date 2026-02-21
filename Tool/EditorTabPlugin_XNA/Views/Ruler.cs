@@ -303,7 +303,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
             {
                 ShapeManager.Remove(line);
             }
-            // Do we want to remove this?
+            mRulerLines.Clear();
         }
 
         public void DestroyGuideLines()
@@ -320,35 +320,19 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
         {
             CreateRulerLine(0, 10, Color.LightGray);
 
-            for (int i = 1; i < 100; i++)
+            for (int i = 1; i < 1000; i++)
             {
                 float y = i * 10 * mZoomValue;
-                bool isLong = i % 5 == 0;
-                float length;
-                if (isLong)
-                {
-                    length = 8;
-                }
-                else
-                {
-                    length = 5;
-                }
+                bool isLong = i % 2 == 0;
+                float length = isLong ? 8 : 4;
 
                 CreateRulerLine(y, length, Color.LightGray);
             }
-            for (int i = 1; i < 100; i++)
+            for (int i = 1; i < 1000; i++)
             {
                 float y = -i * 10 * mZoomValue;
-                bool isLong = i % 5 == 0;
-                float length;
-                if (isLong)
-                {
-                    length = 8;
-                }
-                else
-                {
-                    length = 5;
-                }
+                bool isLong = i % 2 == 0;
+                float length = isLong ? 8 : 4;
 
                 CreateRulerLine(y, length, Color.LightGray);
             }
@@ -359,7 +343,6 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
             Line line = new Line(mManagers);
             line.X = 10 - length;
             line.Y = MathFunctions.RoundToInt(y) + .5f;
-
 
             line.RelativePoint = new Vector2(length, 0);
 
@@ -713,23 +696,6 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
         {
             int countOnEachSide = (mRulerLines.Count - 1) / 2;
 
-            for (int i = 0; i < mRulerLines.Count; i++)
-            {
-                if (i < countOnEachSide)
-                {
-                    mRulerLines[i].Color = Color.LightGray;
-                }
-                else if (i == countOnEachSide)
-                {
-                    mRulerLines[i].Color = Color.LightGray;
-                }
-                else
-                {
-                    mRulerLines[i].Color = Color.LightGray;
-                }
-            }
-
-
             if (RulerSide == RulerSide.Left)
             {
                 mRectangle.Width = 10;
@@ -737,12 +703,12 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
 
                 for (int i = 0; i < mRulerLines.Count; i++)
                 {
-                    float y = (countOnEachSide - i) * mZoomValue * 10;
+                    int ticksFromOrigin = countOnEachSide - i;
+                    float y = ticksFromOrigin * mZoomValue * 10;
                     mRulerLines[i].Y = y;
-                    float length = GetMethodForIndex(i);
+                    float length = (ticksFromOrigin % 2 == 0) ? 8 : 4;
 
                     mRulerLines[i].X = 10 - length;
-
                     mRulerLines[i].RelativePoint = new Vector2(length, 0);
                 }
             }
@@ -753,29 +719,17 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
 
                 for (int i = 0; i < mRulerLines.Count; i++)
                 {
-                    float x = (countOnEachSide - i) * mZoomValue * 10;
+                    int ticksFromOrigin = countOnEachSide - i;
+                    float x = ticksFromOrigin * mZoomValue * 10;
                     mRulerLines[i].X = x;
-                    float length = GetMethodForIndex(i);
+                    float length = (ticksFromOrigin % 2 == 0) ? 8 : 4;
 
                     mRulerLines[i].Y = 10 - length;
-
                     mRulerLines[i].RelativePoint = new Vector2(0, length);
                 }
             }
         }
 
-        private static float GetMethodForIndex(int i)
-        {
-            float length;
-            if (i % 2 == 1)
-            {
-                length = 8;
-            }
-            else
-            {
-                length = 4;
-            }
-            return length;
-        }
+
     }
 }
