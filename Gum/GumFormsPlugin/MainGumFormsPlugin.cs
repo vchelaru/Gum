@@ -27,7 +27,7 @@ internal class MainGumFormsPlugin : PluginBase
     public override string FriendlyName => "Gum Forms Plugin";
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 
-    System.Windows.Forms.ToolStripMenuItem _addFormsMenuItem;
+    System.Windows.Controls.MenuItem _addFormsMenuItem;
     private readonly FormsFileService _formsFileService;
     private readonly IImportLogic _importLogic;
 
@@ -52,7 +52,7 @@ internal class MainGumFormsPlugin : PluginBase
         // see if it already has forms
         var hasForms = GetIfProjectHasForms();
 
-        var parent = _addFormsMenuItem.GetCurrentParent();
+        var parent = _addFormsMenuItem.Parent as System.Windows.Controls.ItemsControl;
         if(hasForms)
         {
             if(parent != null)
@@ -77,7 +77,7 @@ internal class MainGumFormsPlugin : PluginBase
         return files.Values.Any(item => item.Extension != "png" && item.Extension != "gutx" && item.Exists());
     }
 
-    private void HandleAddFormsComponents(object? sender, EventArgs e)
+    private void HandleAddFormsComponents(object? sender, System.Windows.RoutedEventArgs e)
     {
         var projectState = Locator.GetRequiredService<IProjectState>();
         #region Early Out

@@ -2,7 +2,7 @@ using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.Hotkey.Views;
 using System;
 using System.ComponentModel.Composition;
-using System.Windows.Forms;
+using System.Windows.Controls;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 using Gum.Services;
 
@@ -13,7 +13,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
     {
         PluginTab pluginTab;
         HotkeyView hotkeyView;
-        ToolStripMenuItem menuItem;
+        MenuItem menuItem;
 
         public override void StartUp()
         {
@@ -30,16 +30,16 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
 
         private void HandleTabShown()
         {
-            menuItem.Text = "Hide Hotkeys";
+            menuItem.Header = "Hide Hotkeys";
         }
 
         private void HandleTabHidden()
         {
-            menuItem.Text = "View Hotkeys";
+            menuItem.Header = "View Hotkeys";
         }
 
 
-        private void HandleToggleTabVisibility(object? sender, EventArgs e)
+        private void HandleToggleTabVisibility(object? sender, System.Windows.RoutedEventArgs e)
         {
             pluginTab.IsVisible = !pluginTab.IsVisible;
         }

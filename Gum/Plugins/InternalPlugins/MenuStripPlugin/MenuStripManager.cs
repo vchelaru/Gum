@@ -1,215 +1,187 @@
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
+using System.Windows.Controls;
 using Gum.ToolStates;
 using Gum.DataTypes;
 using Gum.Wireframe;
 using Gum.Undo;
 using Gum.Gui.Forms;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-using CommunityToolkit.Mvvm.Messaging;
-using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.Dialogs;
 using Gum.ToolCommands;
-using Gum.Services;
 using Gum.Services.Dialogs;
-using Gum.Themes;
 
 namespace Gum.Managers
 {
-    public class MenuStripManager : IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>
+    public class MenuStripManager
     {
         #region Fields
 
-        private readonly IGuiCommands _guiCommands;
         private readonly ISelectedState _selectedState;
         private readonly IUndoManager _undoManager;
         private readonly IEditCommands _editCommands;
         private readonly IDialogService _dialogService;
         private readonly IFileCommands _fileCommands;
         private readonly ProjectCommands _projectCommands;
-        private readonly IMessenger _messenger;
+        private readonly IProjectManager _projectManager;
 
-        private MenuStrip _menuStrip;
+        private Menu _menu;
 
-        private ToolStripMenuItem fileToolStripMenuItem;
+        private MenuItem fileMenuItem;
+        private MenuItem editMenuItem;
+        private MenuItem viewMenuItem;
+        private MenuItem contentMenuItem;
+        private MenuItem helpMenuItem;
 
-        private ToolStripMenuItem editToolStripMenuItem;
-
-        private ToolStripMenuItem viewToolStripMenuItem;
-
-        private ToolStripMenuItem contentToolStripMenuItem;
-
-        private ToolStripMenuItem helpToolStripMenuItem;
-
-        private ToolStripMenuItem RemoveStateMenuItem;
-        private ToolStripMenuItem RemoveElementMenuItem;
-        private ToolStripMenuItem RemoveVariableMenuItem;
-        private ToolStripMenuItem aboutToolStripMenuItem;
-        private ToolStripMenuItem documentationToolStripMenuItem;
-        private ToolStripMenuItem saveAllToolStripMenuItem;
-        private ToolStripMenuItem newProjectToolStripMenuItem;
-        private ToolStripMenuItem findFileReferencesToolStripMenuItem;
-        private ToolStripMenuItem pluginsToolStripMenuItem;
-        private ToolStripMenuItem managePluginsToolStripMenuItem;
-        private ToolStripMenuItem undoMenuItem;
-        private ToolStripMenuItem redoMenuItem;
-
+        private MenuItem RemoveStateMenuItem;
+        private MenuItem RemoveElementMenuItem;
+        private MenuItem RemoveVariableMenuItem;
+        private MenuItem aboutMenuItem;
+        private MenuItem documentationMenuItem;
+        private MenuItem saveAllMenuItem;
+        private MenuItem newProjectMenuItem;
+        private MenuItem findFileReferencesMenuItem;
+        private MenuItem pluginsMenuItem;
+        private MenuItem managePluginsMenuItem;
+        private MenuItem undoMenuItem;
+        private MenuItem redoMenuItem;
 
         #endregion
 
-        public MenuStripManager(IGuiCommands guiCommands,
+        public MenuStripManager(
             ISelectedState selectedState,
             IUndoManager undoManager,
             IEditCommands editCommands,
             IDialogService dialogService,
             IFileCommands fileCommands,
             ProjectCommands projectCommands,
-            IMessenger messenger)
+            IProjectManager projectManager)
         {
-            _guiCommands = guiCommands;
             _selectedState = selectedState;
             _undoManager = undoManager;
             _editCommands = editCommands;
             _dialogService = dialogService;
             _fileCommands = fileCommands;
             _projectCommands = projectCommands;
-            _messenger = messenger;
-            messenger.RegisterAll(this);
+            _projectManager = projectManager;
         }
 
-        public MenuStrip CreateMenuStrip()
+        public void PopulateMenu(Menu menu)
         {
+            _menu = menu;
+
             // Load Recent handled in MainRecentFilesPlugin
 
             #region Local Functions
-            ToolStripMenuItem Add(ToolStripMenuItem parent, string text, Action clickEvent)
+            MenuItem Add(MenuItem parent, string text, Action clickEvent)
             {
-                var tsmi = new ToolStripMenuItem();
-                tsmi.Text = text;
+                var mi = new MenuItem();
+                mi.Header = text;
                 if (clickEvent != null)
                 {
-                    tsmi.Click += (not, used) => clickEvent();
+                    mi.Click += (not, used) => clickEvent();
                 }
-                parent.DropDownItems.Add(tsmi);
-                return tsmi;
+                parent.Items.Add(mi);
+                return mi;
             }
 
-            void AddSeparator(ToolStripMenuItem parent)
+            void AddSeparator(MenuItem parent)
             {
-                var separator = new System.Windows.Forms.ToolStripSeparator();
-                parent.DropDownItems.Add(separator);
+                parent.Items.Add(new Separator());
             }
             #endregion
 
-            this.RemoveElementMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.RemoveStateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.RemoveVariableMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.documentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.newProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.findFileReferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.managePluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.RemoveElementMenuItem = new MenuItem();
+            this.RemoveStateMenuItem = new MenuItem();
+            this.RemoveVariableMenuItem = new MenuItem();
+            this.aboutMenuItem = new MenuItem();
+            this.documentationMenuItem = new MenuItem();
+            this.saveAllMenuItem = new MenuItem();
+            this.newProjectMenuItem = new MenuItem();
+            this.contentMenuItem = new MenuItem();
+            this.findFileReferencesMenuItem = new MenuItem();
+            this.pluginsMenuItem = new MenuItem();
+            this.managePluginsMenuItem = new MenuItem();
 
-            this.editToolStripMenuItem = new ToolStripMenuItem();
-            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Text = "Edit";
+            this.editMenuItem = new MenuItem();
+            this.editMenuItem.Header = "Edit";
 
-            undoMenuItem = Add(editToolStripMenuItem, "Undo", _undoManager.PerformUndo);
-            undoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-            undoMenuItem.Enabled = false;
+            undoMenuItem = Add(editMenuItem, "Undo", _undoManager.PerformUndo);
+            undoMenuItem.InputGestureText = "Ctrl+Z";
+            undoMenuItem.IsEnabled = false;
 
-            redoMenuItem = Add(editToolStripMenuItem, "Redo", _undoManager.PerformRedo);
-            redoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
-            redoMenuItem.Enabled = false;
+            redoMenuItem = Add(editMenuItem, "Redo", _undoManager.PerformRedo);
+            redoMenuItem.InputGestureText = "Ctrl+Y";
+            redoMenuItem.IsEnabled = false;
 
             _undoManager.UndosChanged += (_, __) => UpdateUndoRedoEnabled();
 
-            AddSeparator(editToolStripMenuItem);
+            AddSeparator(editMenuItem);
 
-            var addToolStripMenuItem = Add(editToolStripMenuItem, "Add", null);
-            var removeToolStripMenuItem = Add(editToolStripMenuItem, "Remove", null);
+            var addMenuItem = Add(editMenuItem, "Add", null);
+            var removeMenuItem = Add(editMenuItem, "Remove", null);
 
+            removeMenuItem.Items.Add(this.RemoveElementMenuItem);
+            removeMenuItem.Items.Add(this.RemoveStateMenuItem);
+            removeMenuItem.Items.Add(this.RemoveVariableMenuItem);
 
-            // 
-            // removeToolStripMenuItem
-            // 
-            removeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.RemoveElementMenuItem,
-            this.RemoveStateMenuItem,
-            this.RemoveVariableMenuItem});
+            Add(addMenuItem, "Screen", () => _dialogService.Show<AddScreenDialogViewModel>());
+            Add(addMenuItem, "Component", () => _dialogService.Show<AddComponentDialogViewModel>());
+            Add(addMenuItem, "Instance", () => _dialogService.Show<AddInstanceDialogViewModel>());
+            Add(addMenuItem, "State", () => _dialogService.Show<AddStateDialogViewModel>());
 
-
-            Add(addToolStripMenuItem, "Screen", () => _dialogService.Show<AddScreenDialogViewModel>());
-            Add(addToolStripMenuItem, "Component", () => _dialogService.Show<AddComponentDialogViewModel>());
-            Add(addToolStripMenuItem, "Instance", () => _dialogService.Show<AddInstanceDialogViewModel>());
-            Add(addToolStripMenuItem, "State", () => _dialogService.Show<AddStateDialogViewModel>());
-
-            // 
+            //
             // RemoveElementMenuItem
-            // 
-            this.RemoveElementMenuItem.Name = "RemoveElementMenuItem";
-            this.RemoveElementMenuItem.Text = "Element";
+            //
+            this.RemoveElementMenuItem.Header = "Element";
             this.RemoveElementMenuItem.Click += RemoveElementClicked;
 
-            // 
+            //
             // RemoveStateMenuItem
-            // 
-            this.RemoveStateMenuItem.Name = "RemoveStateMenuItem";
-            this.RemoveStateMenuItem.Text = "State";
+            //
+            this.RemoveStateMenuItem.Header = "State";
             this.RemoveStateMenuItem.Click += RemoveStateOrCategoryClicked;
 
-            // 
+            //
             // RemoveVariableMenuItem
-            // 
-            this.RemoveVariableMenuItem.Name = "RemoveVariableMenuItem";
-            this.RemoveVariableMenuItem.Text = "Variable";
-            this.RemoveVariableMenuItem.Click += HanldeRemoveBehaviorVariableClicked;
+            //
+            this.RemoveVariableMenuItem.Header = "Variable";
+            this.RemoveVariableMenuItem.Click += HandleRemoveBehaviorVariableClicked;
 
 
-            // 
-            // newProjectToolStripMenuItem
-            // 
-            this.newProjectToolStripMenuItem.Name = "newProjectToolStripMenuItem";
-            this.newProjectToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
-            this.newProjectToolStripMenuItem.Text = "New Project";
-            this.newProjectToolStripMenuItem.Click += (not, used) =>
+            //
+            // newProjectMenuItem
+            //
+            this.newProjectMenuItem.Header = "New Project";
+            this.newProjectMenuItem.Click += (not, used) =>
             {
                 _fileCommands.NewProject();
                 _fileCommands.ForceSaveProject();
             };
 
-            // 
-            // pluginsToolStripMenuItem
-            // 
-            this.pluginsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.managePluginsToolStripMenuItem});
-            this.pluginsToolStripMenuItem.Name = "pluginsToolStripMenuItem";
-            this.pluginsToolStripMenuItem.Text = "Plugins";
-            // 
-            // managePluginsToolStripMenuItem
-            // 
-            this.managePluginsToolStripMenuItem.Name = "managePluginsToolStripMenuItem";
-            this.managePluginsToolStripMenuItem.Text = "Manage Plugins";
-            this.managePluginsToolStripMenuItem.Click += (not, used) =>
+            //
+            // pluginsMenuItem
+            //
+            this.pluginsMenuItem.Items.Add(this.managePluginsMenuItem);
+            this.pluginsMenuItem.Header = "Plugins";
+            //
+            // managePluginsMenuItem
+            //
+            this.managePluginsMenuItem.Header = "Manage Plugins";
+            this.managePluginsMenuItem.Click += (not, used) =>
             {
                 PluginsWindow pluginsWindow = new PluginsWindow();
                 pluginsWindow.Show();
             };
 
 
-            // 
-            // findFileReferencesToolStripMenuItem
-            // 
-            this.findFileReferencesToolStripMenuItem.Name = "findFileReferencesToolStripMenuItem";
-            this.findFileReferencesToolStripMenuItem.Text = "Find file references...";
-            this.findFileReferencesToolStripMenuItem.Click += (not, used) =>
+            //
+            // findFileReferencesMenuItem
+            //
+            this.findFileReferencesMenuItem.Header = "Find file references...";
+            this.findFileReferencesMenuItem.Click += (not, used) =>
             {
                 string message = "Enter entire or partial file name:";
                 string title = "Find file references";
@@ -237,20 +209,17 @@ namespace Gum.Managers
             };
 
 
-            // 
-            // contentToolStripMenuItem
-            // 
-            this.contentToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.findFileReferencesToolStripMenuItem});
-            this.contentToolStripMenuItem.Name = "contentToolStripMenuItem";
-            this.contentToolStripMenuItem.Text = "Content";
+            //
+            // contentMenuItem
+            //
+            this.contentMenuItem.Items.Add(this.findFileReferencesMenuItem);
+            this.contentMenuItem.Header = "Content";
 
-            // 
-            // saveAllToolStripMenuItem
-            // 
-            this.saveAllToolStripMenuItem.Name = "saveAllToolStripMenuItem";
-            this.saveAllToolStripMenuItem.Text = "Save All";
-            this.saveAllToolStripMenuItem.Click += (not, used) =>
+            //
+            // saveAllMenuItem
+            //
+            this.saveAllMenuItem.Header = "Save All";
+            this.saveAllMenuItem.Click += (not, used) =>
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
                 {
@@ -263,18 +232,20 @@ namespace Gum.Managers
                 }
             };
 
-            // 
-            // aboutToolStripMenuItem
-            // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Text = "About...";
-            this.aboutToolStripMenuItem.Click += (not, used) => _dialogService.ShowMessage("Gum version " + Application.ProductVersion, "About");
+            //
+            // aboutMenuItem
+            //
+            this.aboutMenuItem.Header = "About...";
+            this.aboutMenuItem.Click += (not, used) =>
+            {
+                var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown";
+                _dialogService.ShowMessage("Gum version " + version, "About");
+            };
 
             string documentationLink = "https://docs.flatredball.com/gum";
-            this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
-            this.documentationToolStripMenuItem.Text = $"View Docs ({documentationLink})";
-            this.documentationToolStripMenuItem.ToolTipText = "External link to Gum documentation";
-            this.documentationToolStripMenuItem.Click += (not, used) =>
+            this.documentationMenuItem.Header = $"View Docs ({documentationLink})";
+            this.documentationMenuItem.ToolTip = "External link to Gum documentation";
+            this.documentationMenuItem.Click += (not, used) =>
             {
                 System.Diagnostics.Process.Start(new ProcessStartInfo
                 {
@@ -283,34 +254,21 @@ namespace Gum.Managers
                 });
             };
 
-            this.viewToolStripMenuItem = new ToolStripMenuItem();
-            viewToolStripMenuItem.Text = "View";
-
-            //Add(viewToolStripMenuItem, "Hide Tools", () =>
-            //{
-            //    _guiCommands.HideTools();
-            //});
-
-            //Add(viewToolStripMenuItem, "Show Tools", () =>
-            //{
-            //    _guiCommands.ShowTools();
-            //});
+            this.viewMenuItem = new MenuItem();
+            viewMenuItem.Header = "View";
 
 
+            this.helpMenuItem = new MenuItem();
+            this.helpMenuItem.Items.Add(this.aboutMenuItem);
+            this.helpMenuItem.Items.Add(this.documentationMenuItem);
+            this.helpMenuItem.Header = "Help";
 
 
-            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                this.aboutToolStripMenuItem, this.documentationToolStripMenuItem});
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Text = "Help";
+            this.fileMenuItem = new MenuItem();
 
+            Add(fileMenuItem, "Load Project...", () => _projectManager.LoadProject());
 
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-
-            Add(fileToolStripMenuItem, "Load Project...", () => Locator.GetRequiredService<IProjectManager>().LoadProject());
-
-            Add(fileToolStripMenuItem, "Save Project", () =>
+            Add(fileMenuItem, "Save Project", () =>
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
                 {
@@ -323,54 +281,35 @@ namespace Gum.Managers
                 }
             });
 
-            Add(fileToolStripMenuItem, "Theming", () =>
+            Add(fileMenuItem, "Theming", () =>
             {
-                Locator.GetRequiredService<IDialogService>().Show<ThemingDialogViewModel>();
+                _dialogService.Show<ThemingDialogViewModel>();
             });
 
-            // 
-            // fileToolStripMenuItem
-            // 
-            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            //
+            // fileMenuItem
+            //
+            this.fileMenuItem.Items.Add(this.saveAllMenuItem);
+            this.fileMenuItem.Items.Add(this.newProjectMenuItem);
+            this.fileMenuItem.Header = "File";
 
-            this.saveAllToolStripMenuItem,
-            this.newProjectToolStripMenuItem});
-            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Text = "File";
-
-
-            this._menuStrip = new System.Windows.Forms.MenuStrip();
-            this._menuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _, "Frb.Colors.Background");
-
-            // 
-            // menuStrip1
-            // 
-            this._menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                this.fileToolStripMenuItem,
-                this.editToolStripMenuItem,
-                this.viewToolStripMenuItem,
-                this.contentToolStripMenuItem,
-                this.pluginsToolStripMenuItem,
-                this.helpToolStripMenuItem});
-            this._menuStrip.Location = new System.Drawing.Point(0, 0);
-            this._menuStrip.Name = "menuStrip1";
-            this._menuStrip.TabIndex = 0;
-            this._menuStrip.Text = "menuStrip1";
-
-
+            _menu.Items.Add(this.fileMenuItem);
+            _menu.Items.Add(this.editMenuItem);
+            _menu.Items.Add(this.viewMenuItem);
+            _menu.Items.Add(this.contentMenuItem);
+            _menu.Items.Add(this.pluginsMenuItem);
+            _menu.Items.Add(this.helpMenuItem);
 
             RefreshUI();
-            _menuStrip.Font = new Font("Segoe UI", DefaultFontSize);
-            return this._menuStrip;
         }
 
         private void UpdateUndoRedoEnabled()
         {
-            if (undoMenuItem != null) undoMenuItem.Enabled = _undoManager.CanUndo();
-            if (redoMenuItem != null) redoMenuItem.Enabled = _undoManager.CanRedo();
+            if (undoMenuItem != null) undoMenuItem.IsEnabled = _undoManager.CanUndo();
+            if (redoMenuItem != null) redoMenuItem.IsEnabled = _undoManager.CanRedo();
         }
 
-        private void HanldeRemoveBehaviorVariableClicked(object? sender, EventArgs e)
+        private void HandleRemoveBehaviorVariableClicked(object? sender, System.Windows.RoutedEventArgs e)
         {
             if(_selectedState.SelectedBehavior != null && _selectedState.SelectedBehaviorVariable != null)
             {
@@ -384,52 +323,52 @@ namespace Gum.Managers
         {
             if (_selectedState.SelectedStateSave != null && _selectedState.SelectedStateSave.Name != "Default")
             {
-                RemoveStateMenuItem.Text = "State " + _selectedState.SelectedStateSave.Name;
-                RemoveStateMenuItem.Enabled = true;
+                RemoveStateMenuItem.Header = "State " + _selectedState.SelectedStateSave.Name;
+                RemoveStateMenuItem.IsEnabled = true;
             }
             else if (_selectedState.SelectedStateCategorySave != null)
             {
-                RemoveStateMenuItem.Text = "Category " + _selectedState.SelectedStateCategorySave.Name;
-                RemoveStateMenuItem.Enabled = true;
+                RemoveStateMenuItem.Header = "Category " + _selectedState.SelectedStateCategorySave.Name;
+                RemoveStateMenuItem.IsEnabled = true;
             }
             else
             {
-                RemoveStateMenuItem.Text = "<no state selected>";
-                RemoveStateMenuItem.Enabled = false;
+                RemoveStateMenuItem.Header = "<no state selected>";
+                RemoveStateMenuItem.IsEnabled = false;
             }
 
             if (_selectedState.SelectedElement != null && !(_selectedState.SelectedElement is StandardElementSave))
             {
-                RemoveElementMenuItem.Text = _selectedState.SelectedElement.Name;
-                RemoveElementMenuItem.Enabled = true;
+                RemoveElementMenuItem.Header = _selectedState.SelectedElement.Name;
+                RemoveElementMenuItem.IsEnabled = true;
             }
             else
             {
-                RemoveElementMenuItem.Text = "<no element selected>";
-                RemoveElementMenuItem.Enabled = false;
+                RemoveElementMenuItem.Header = "<no element selected>";
+                RemoveElementMenuItem.IsEnabled = false;
             }
 
             if (_selectedState.SelectedBehaviorVariable != null)
             {
-                RemoveVariableMenuItem.Text = _selectedState.SelectedBehaviorVariable.ToString();
-                RemoveVariableMenuItem.Enabled = true;
+                RemoveVariableMenuItem.Header = _selectedState.SelectedBehaviorVariable.ToString();
+                RemoveVariableMenuItem.IsEnabled = true;
             }
             else
             {
-                RemoveVariableMenuItem.Text = "<no behavior variable selected>";
-                RemoveVariableMenuItem.Enabled = false;
+                RemoveVariableMenuItem.Header = "<no behavior variable selected>";
+                RemoveVariableMenuItem.IsEnabled = false;
             }
 
         }
 
 
-        private void RemoveElementClicked(object? sender, EventArgs e)
+        private void RemoveElementClicked(object? sender, System.Windows.RoutedEventArgs e)
         {
             _projectCommands.RemoveElement(_selectedState.SelectedElement);
             _selectedState.SelectedElement = null;
         }
 
-        private void RemoveStateOrCategoryClicked(object? sender, EventArgs e)
+        private void RemoveStateOrCategoryClicked(object? sender, System.Windows.RoutedEventArgs e)
         {
             if (_selectedState.SelectedStateSave != null)
             {
@@ -443,64 +382,43 @@ namespace Gum.Managers
             }
         }
 
-        const int DefaultFontSize = 9;
-
-
-        void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
-        {
-            float fontSize = (DefaultFontSize / 12f) * (float)message.Size;
-
-            _menuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out fontSize, "Frb.Colors.Background");
-            _menuStrip.Font = new System.Drawing.Font(_menuStrip.Font.FontFamily, fontSize);
-            _menuStrip.Invalidate();
-        }
-
-        public ToolStripMenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus)
+        public MenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus)
         {
             string menuName = menuAndSubmenus.Last();
 
-            ToolStripMenuItem menuItem = new ToolStripMenuItem(menuName);
+            var menuItem = new MenuItem { Header = menuName };
 
             string menuNameToAddTo = menuAndSubmenus.First();
 
             var menuToAddTo =
-                _menuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(
-                    item => item.Text == menuNameToAddTo);
-            //true);
+                _menu.Items.OfType<MenuItem>().FirstOrDefault(
+                    item => (string)item.Header == menuNameToAddTo);
 
             if (menuToAddTo == null)
             {
-                menuToAddTo = new ToolStripMenuItem(menuNameToAddTo);
+                menuToAddTo = new MenuItem { Header = menuNameToAddTo };
 
                 // Don't call Add - this will put the menu item after the "Help" menu item, which should be last
-                //MenuStrip.Items.Add(menuToAddTo);
-
-                int indexToInsertAt = _menuStrip.Items.Count - 1;
-                _menuStrip.Items.Insert(indexToInsertAt, menuToAddTo);
+                int indexToInsertAt = _menu.Items.Count - 1;
+                _menu.Items.Insert(indexToInsertAt, menuToAddTo);
             }
 
 
-            menuToAddTo.DropDownItems.Add(menuItem);
+            menuToAddTo.Items.Add(menuItem);
             return menuItem;
 
         }
 
-        public ToolStripMenuItem GetItem(string name)
+        public MenuItem GetItem(string name)
         {
-            foreach (ToolStripMenuItem item in _menuStrip.Items)
+            foreach (var item in _menu.Items.OfType<MenuItem>())
             {
-                if (item.Text == name)
+                if ((string)item.Header == name)
                 {
                     return item;
                 }
             }
             return null;
-        }
-
-        void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
-        {
-            _menuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _, "Frb.Colors.Background");
-            _menuStrip.Invalidate();
         }
     }
 }

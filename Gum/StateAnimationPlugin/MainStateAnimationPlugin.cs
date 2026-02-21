@@ -26,8 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
-using System.Windows.Forms.Integration;
+using System.Windows.Controls;
 
 
 namespace StateAnimationPlugin;
@@ -52,7 +51,7 @@ public class MainStateAnimationPlugin : PluginBase
 
     StateAnimationPlugin.Views.MainWindow? _mainWindow;
     private PluginTab? pluginTab;
-    private ToolStripMenuItem? menuItem;
+    private MenuItem? menuItem;
 
     #endregion
 
@@ -260,7 +259,7 @@ public class MainStateAnimationPlugin : PluginBase
 
     }
 
-    private void HandleToggleTabVisibility(object? sender, EventArgs e)
+    private void HandleToggleTabVisibility(object? sender, System.Windows.RoutedEventArgs e)
     {
         if(pluginTab != null)
         {
@@ -395,7 +394,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         if (menuItem != null)
         {
-            menuItem.Text = "Hide Animations";
+            menuItem.Header = "Hide Animations";
         }
     }
 
@@ -403,7 +402,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         if(menuItem != null)
         {
-            menuItem.Text = "View Animations";
+            menuItem.Header = "View Animations";
         }
     }
 

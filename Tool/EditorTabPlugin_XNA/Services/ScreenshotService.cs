@@ -7,8 +7,6 @@ using RenderingLibrary.Graphics;
 using System;
 using System.ComponentModel.Composition;
 using System.Security.Cryptography;
-using System.Windows.Forms;
-
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
 #pragma warning disable CA1001 // Types that own disposable fields should be disposable - this never gets disposed
@@ -28,12 +26,12 @@ internal class ScreenshotService
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
     }
 
-    public void InitializeMenuItem(ToolStripMenuItem item)
+    public void InitializeMenuItem(System.Windows.Controls.MenuItem item)
     {
         item.Click += HandleExportAsImageClicked;
     }
 
-    private void HandleExportAsImageClicked(object? sender, EventArgs e)
+    private void HandleExportAsImageClicked(object? sender, System.Windows.RoutedEventArgs e)
     {
         // Create OpenFileDialog 
         Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
