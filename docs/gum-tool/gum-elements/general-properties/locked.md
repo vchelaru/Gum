@@ -1,21 +1,28 @@
 # Locked
 
-### Introduction
-
-The `Locked` property controls whether an instance can be clicked in the preview window. If this value is true, then the instance cannot be clicked on directly, but must instead be selected through the **Project** tab.
-
-<figure><img src="../../../.gitbook/assets/05_09 56 30.gif" alt=""><figcaption><p><code>Locked</code> instances cannot be selected by clicking on them in the editor window</p></figcaption></figure>
-
-
-
 {% hint style="warning" %}
-The behavior of the Locked property will change in future versions of Gum as defined in this issue:\
+The behavior of the Locked property is changing for the February 2025 release of Gum as outlined in this issue:\
 [https://github.com/vchelaru/Gum/issues/273](https://github.com/vchelaru/Gum/issues/273)
+
+Previous versions allowed locked items to be edited once selected, but they only prevented selection in the Editor tab.
 {% endhint %}
 
-Once a locked object is selected it can still be edited normally, both in the **Variables** tab and in the **Editor** tab. Locking an instance prevents accidental selection in the Editor tab.
+### Introduction
 
-<figure><img src="../../../.gitbook/assets/05_09 57 33.gif" alt=""><figcaption></figcaption></figure>
+The `Locked` property controls whether an instance can be clicked in the Editor tab, and whether any variables can be modified on the locked item.&#x20;
+
+Locked items appear with a lock icon.
+
+<figure><img src="../../../.gitbook/assets/21_08 08 26.png" alt=""><figcaption><p>Locked instance with a lock icon</p></figcaption></figure>
+
+If this value is true, then the following is true:
+
+* Instance cannot be selected in the Editor tab
+* Instance variables are all disabled and cannot be edited in the Variables tab (except un-locking the instance)
+* Selected instances cannot be moved, resized, or rotated in the Editor tab
+* Polygons cannot have points modified, added, or deleted in the Editor tab
+
+<figure><img src="../../../.gitbook/assets/05_09 56 30.gif" alt=""><figcaption><p><code>Locked</code> instances cannot be selected by clicking on them in the editor window</p></figcaption></figure>
 
 {% hint style="info" %}
 The `Locked` property does not have any impact on the behavior of Gum objects at runtime, such as when running in FlatRedBall or MonoGame. This property only affects editor behavior.

@@ -40,6 +40,9 @@ public sealed class AppScale : DependencyObject
     public double IconButton { get => (double)GetValue(IconButtonProperty); private set => SetValue(IconButtonProperty, value); }
     public double ToggleDisplayIcon { get => (double)GetValue(ToggleDisplayIconProperty); private set => SetValue(ToggleDisplayIconProperty, value); }
 
+    // Scale ratio (1.0 at default, useful for LayoutTransform on imported controls)
+    public double ScaleFactor { get => (double)GetValue(ScaleFactorProperty); private set => SetValue(ScaleFactorProperty, value); }
+
     public static readonly DependencyProperty BodyProperty = DP(nameof(Body), BaseFontSizeDefault * BodyScale);
     public static readonly DependencyProperty CaptionProperty = DP(nameof(Caption), BaseFontSizeDefault * CaptionScale);
     public static readonly DependencyProperty H1Property = DP(nameof(H1), BaseFontSizeDefault * H1Scale);
@@ -48,6 +51,7 @@ public sealed class AppScale : DependencyObject
     public static readonly DependencyProperty IconInlineProperty = DP(nameof(IconInline), BaseFontSizeDefault * IconInlineScale);
     public static readonly DependencyProperty IconButtonProperty = DP(nameof(IconButton), BaseFontSizeDefault * IconButtonScale);
     public static readonly DependencyProperty ToggleDisplayIconProperty = DP(nameof(ToggleDisplayIcon), BaseFontSizeDefault * ToggleDisplayIconScale);
+    public static readonly DependencyProperty ScaleFactorProperty = DP(nameof(ScaleFactor), 1.0);
 
     static DependencyProperty DP(string name, double? defaultValue = 0d) =>
         DependencyProperty.Register(name, typeof(double), typeof(AppScale), new PropertyMetadata(defaultValue));
@@ -68,5 +72,7 @@ public sealed class AppScale : DependencyObject
         s.IconInline = b * IconInlineScale;   // inline with text
         s.IconButton = b * IconButtonScale;  // on icon-only or button icons
         s.ToggleDisplayIcon = b * ToggleDisplayIconScale; // large icon for toggle display
+
+        s.ScaleFactor = b / BaseFontSizeDefault;
     }
 }
