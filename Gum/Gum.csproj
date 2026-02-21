@@ -91,11 +91,6 @@
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<Resource Include="Plugins\InternalPlugins\TreeView\Content\behavior.png" />
-		<Resource Include="Plugins\InternalPlugins\TreeView\Content\Instance.png" />
-		<Resource Include="Plugins\InternalPlugins\TreeView\Content\Component.png" />
-		<Resource Include="Plugins\InternalPlugins\TreeView\Content\screen.png" />
-		<Resource Include="Plugins\InternalPlugins\TreeView\Content\StandardElement.png" />
 		<Resource Include="Content\Icons\Sizing\BottomSide.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
@@ -270,6 +265,7 @@
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<Resource Include="Content\Icons\folder.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\instance_locked.png" />
 		<Content Include="Content\Icons\Origins\Baseline.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>

@@ -154,6 +154,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public const int StateImageIndex = 7;
     public const int BehaviorImageIndex = 8;
     public const int DerivedInstanceImageIndex = 9;
+    public const int LockedInstanceImageIndex = 10;
 
     static ElementTreeViewManager mSelf;
 
@@ -1678,6 +1679,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             int desiredImageIndex = InstanceImageIndex;
             if (element == null || element.IsSourceFileMissing)
                 desiredImageIndex = ExclamationIndex;
+            else if (instance.Locked)
+                desiredImageIndex = LockedInstanceImageIndex;
 
             if(nodeForInstance.ImageIndex != desiredImageIndex)
             {
@@ -1739,7 +1742,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         bool validBaseType = ObjectFinder.Self.GetElementSave(instance.BaseType) != null;
 
         if (validBaseType || tolerateMissingTypes)
-            treeNode.ImageIndex = InstanceImageIndex;
+            treeNode.ImageIndex = instance.Locked ? LockedInstanceImageIndex : InstanceImageIndex;
         else
             treeNode.ImageIndex = ExclamationIndex;
 

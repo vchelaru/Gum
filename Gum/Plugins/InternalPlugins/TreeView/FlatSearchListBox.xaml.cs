@@ -45,6 +45,7 @@ namespace Gum.Plugins.InternalPlugins.TreeView
             {
                 ScreenSave => "Tv",
                 ComponentSave => "Shapes",
+                InstanceSave { Locked: true } => "LockClosed",
                 InstanceSave => "Cube",
                 BehaviorSave => "PuzzlePiece",
                 StandardElementSave => "BoxToolbox",

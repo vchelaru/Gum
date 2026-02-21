@@ -305,6 +305,8 @@ internal class ElementTreeViewCreator
 
         var size = new Size((int)(baseImageSize * scale), (int)(baseImageSize * scale));
 
+        InjectDynamicIcons();
+
         var keyedColors = GetCurrentColorMap();
         Application app = Application.Current;
         Color? defaultColor = null;
@@ -393,6 +395,23 @@ internal class ElementTreeViewCreator
             return dest;
         }
 
+        void InjectDynamicIcons()
+        {
+            TryInjectIcon("instance_locked.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/instance_locked.png");
+        }
+
+        void TryInjectIcon(string key, string packUri)
+        {
+            if (UnmodifiableImageList.Images.ContainsKey(key)) return;
+
+            var streamInfo = Application.GetResourceStream(new Uri(packUri));
+            if (streamInfo == null) return;
+
+            using var stream = streamInfo.Stream;
+            UnmodifiableImageList.Images.Add(key, Image.FromStream(stream));
+        }
+
         static Dictionary<string, Color> GetCurrentColorMap()
         {
             Application app = Application.Current;
@@ -414,6 +433,7 @@ internal class ElementTreeViewCreator
                 ["Folder.png"] = manilla,
                 ["Component.png"] = green,
                 ["Instance.png"] = blue,
+                ["instance_locked.png"] = blue,
                 ["Screen.png"] = red,
                 ["StandardElement.png"] = purple,
                 ["redExclamation.png"] = red,
