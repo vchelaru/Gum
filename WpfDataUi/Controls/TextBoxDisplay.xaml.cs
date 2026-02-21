@@ -59,6 +59,18 @@ namespace WpfDataUi.Controls
                     // received NotSupported doesn't stay disabled for the new member.
                     lastApplyValueResult = null;
                     this.RefreshAllContextMenus(force:true);
+
+                    // Reset any multiline state left over from a previous use of this
+                    // control (MakeMultiline sets explicit local values that survive
+                    // pooling; restore XAML-defined defaults so single-line members
+                    // are not displayed as a tall white box).
+                    ResetToSingleLine();
+
+                    // Clear stale green background that may remain from a previous
+                    // pooled use where InstanceMember.IsDefault was true. The deferred
+                    // BeginInvoke in RefreshBackgroundColor will set the correct value
+                    // once the control is in the visual tree.
+                    this.TextBox.ClearValue(TextBox.BackgroundProperty);
                 }
 
                 Refresh();
@@ -280,6 +292,19 @@ namespace WpfDataUi.Controls
             }
         }
 
+        private void ResetToSingleLine()
+        {
+            this.Label.VerticalAlignment = VerticalAlignment.Center;
+
+            this.TextBox.TextWrapping = TextWrapping.NoWrap;
+            this.TextBox.AcceptsReturn = false;
+            this.TextBox.VerticalContentAlignment = VerticalAlignment.Center;
+            this.TextBox.VerticalAlignment = VerticalAlignment.Center;
+            this.TextBox.Height = double.NaN; // Auto
+            this.TextBox.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            this.mTextBoxLogic.HandlesEnter = true;
+        }
+
         public void MakeMultiline()
         {
             this.Label.VerticalAlignment = VerticalAlignment.Top;
@@ -329,6 +354,12 @@ namespace WpfDataUi.Controls
                 if (IsDisplayedTypeNullable())
                 {
                     this.TextBox.IsEnabled = forceNullableEnable || valueOnInstance != null;
+                }
+                else
+                {
+                    // Reset a stale TextBox.IsEnabled that may have been left by a
+                    // previously-pooled nullable member whose value was null.
+                    this.TextBox.IsEnabled = true;
                 }
 
                 this.IsEnabled = true;

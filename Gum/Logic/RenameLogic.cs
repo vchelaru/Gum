@@ -65,6 +65,22 @@ public class VariableChangeResponse
 
 #endregion
 
+#region ElementRenameChanges Class
+
+public class ElementRenameChanges
+{
+    // Screens or components where BaseType == oldName
+    public List<ElementSave> ElementsWithBaseTypeReference = new();
+    // Instances in any element where BaseType == oldName
+    public List<(ElementSave Container, InstanceSave Instance)> InstancesWithBaseTypeReference = new();
+    // ContainedType variables whose value == oldName
+    public List<(ElementSave Container, VariableSave Variable)> ContainedTypeVariableReferences = new();
+    // VariableReferences list entries whose right-hand side references oldName
+    public List<VariableReferenceChange> VariableReferenceChanges = new();
+}
+
+#endregion
+
 public class RenameLogic : IRenameLogic
 {
     static bool isRenamingXmlFile;
@@ -315,6 +331,149 @@ public class RenameLogic : IRenameLogic
 
     #region Element
 
+    public ElementRenameChanges GetChangesForRenamedElement(ElementSave elementSave, string oldName)
+    {
+        var changes = new ElementRenameChanges();
+        var project = _projectState.GumProjectSave;
+
+        string qualifiedOldName = elementSave switch
+        {
+            ScreenSave => $"Screens/{oldName}",
+            ComponentSave => $"Components/{oldName}",
+            StandardElementSave => $"Standards/{oldName}",
+            _ => oldName
+        };
+
+        foreach (var screen in project.Screens)
+        {
+            CollectChangesInElement(screen, oldName, qualifiedOldName, changes);
+        }
+
+        foreach (var component in project.Components)
+        {
+            CollectChangesInElement(component, oldName, qualifiedOldName, changes);
+        }
+
+        return changes;
+
+        static void CollectChangesInElement(ElementSave element, string oldName, string qualifiedOldName, ElementRenameChanges changes)
+        {
+            if (element.BaseType == oldName)
+            {
+                changes.ElementsWithBaseTypeReference.Add(element);
+            }
+
+            foreach (var instance in element.Instances)
+            {
+                if (instance.BaseType == oldName)
+                {
+                    changes.InstancesWithBaseTypeReference.Add((element, instance));
+                }
+            }
+
+            foreach (var variable in element.DefaultState.Variables.Where(v => v.GetRootName() == "ContainedType"))
+            {
+                if (variable.Value as string == oldName)
+                {
+                    changes.ContainedTypeVariableReferences.Add((element, variable));
+                }
+            }
+
+            foreach (var state in element.AllStates)
+            {
+                foreach (var variableList in state.VariableLists)
+                {
+                    if (variableList.GetRootName() != "VariableReferences") continue;
+
+                    for (int i = 0; i < variableList.ValueAsIList.Count; i++)
+                    {
+                        var line = variableList.ValueAsIList[i];
+                        if (line is not string asString || asString.StartsWith("//") || !asString.Contains("="))
+                            continue;
+
+                        var right = asString.Substring(asString.IndexOf("=") + 1).Trim();
+
+                        if (right.StartsWith(qualifiedOldName + "."))
+                        {
+                            changes.VariableReferenceChanges.Add(new VariableReferenceChange
+                            {
+                                Container = element,
+                                VariableReferenceList = variableList,
+                                LineIndex = i,
+                                ChangedSide = SideOfEquals.Right
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    internal void ApplyElementRenameChanges(ElementRenameChanges changes, ElementSave elementSave, string oldName)
+    {
+        var containersToSave = new HashSet<ElementSave>();
+
+        foreach (var element in changes.ElementsWithBaseTypeReference)
+        {
+            element.BaseType = elementSave.Name;
+            containersToSave.Add(element);
+        }
+
+        foreach (var (container, instance) in changes.InstancesWithBaseTypeReference)
+        {
+            instance.BaseType = elementSave.Name;
+            containersToSave.Add(container);
+        }
+
+        foreach (var (container, variable) in changes.ContainedTypeVariableReferences)
+        {
+            variable.Value = elementSave.Name;
+            containersToSave.Add(container);
+        }
+
+        string qualifiedOldName = elementSave switch
+        {
+            ScreenSave => $"Screens/{oldName}",
+            ComponentSave => $"Components/{oldName}",
+            StandardElementSave => $"Standards/{oldName}",
+            _ => oldName
+        };
+
+        string qualifiedNewName = elementSave switch
+        {
+            ScreenSave => $"Screens/{elementSave.Name}",
+            ComponentSave => $"Components/{elementSave.Name}",
+            StandardElementSave => $"Standards/{elementSave.Name}",
+            _ => elementSave.Name
+        };
+
+        foreach (var referenceChange in changes.VariableReferenceChanges)
+        {
+            var variableList = referenceChange.VariableReferenceList;
+            var oldLine = variableList.ValueAsIList[referenceChange.LineIndex]?.ToString();
+            if (oldLine == null) continue;
+
+            var equalIndex = oldLine.IndexOf("=");
+            if (equalIndex < 0) continue;
+
+            var left = oldLine.Substring(0, equalIndex).Trim();
+            var right = oldLine.Substring(equalIndex + 1).Trim();
+
+            if (right.StartsWith(qualifiedOldName + "."))
+            {
+                right = qualifiedNewName + right.Substring(qualifiedOldName.Length);
+            }
+
+            variableList.ValueAsIList[referenceChange.LineIndex] = $"{left} = {right}";
+            containersToSave.Add(referenceChange.Container);
+        }
+
+        foreach (var container in containersToSave)
+        {
+            _fileCommands.TryAutoSaveElement(container);
+        }
+    }
+
     public GeneralResponse HandleRename(IInstanceContainer instanceContainer, InstanceSave? instance, string oldName, NameChangeAction action, bool askAboutRename = true)
     {
         GeneralResponse toReturn = new GeneralResponse();
@@ -423,72 +582,8 @@ public class RenameLogic : IRenameLogic
 
         if (instance == null)
         {
-            foreach (var screen in _projectState.GumProjectSave.Screens)
-            {
-                bool shouldSave = false;
-
-                if (screen.BaseType == oldName)
-                {
-                    screen.BaseType = elementSave.Name;
-                    shouldSave = true;
-                }
-
-                foreach (var instanceInScreen in screen.Instances)
-                {
-                    if (instanceInScreen.BaseType == oldName)
-                    {
-                        instanceInScreen.BaseType = elementSave.Name;
-                        shouldSave = true;
-                    }
-
-                }
-
-                foreach (var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "ContainedType"))
-                {
-                    if (variable.Value as string == oldName)
-                    {
-                        variable.Value = elementSave.Name;
-                    }
-                }
-
-                if (shouldSave)
-                {
-                    _fileCommands.TryAutoSaveElement(screen);
-                }
-            }
-
-            foreach (var component in _projectState.GumProjectSave.Components)
-            {
-                bool shouldSave = false;
-                if (component.BaseType == oldName)
-                {
-                    component.BaseType = elementSave.Name;
-                    shouldSave = true;
-                }
-
-                foreach (var instancesInElement in component.Instances)
-                {
-                    if (instancesInElement.BaseType == oldName)
-                    {
-                        instancesInElement.BaseType = elementSave.Name;
-                        shouldSave = true;
-                    }
-                }
-
-                foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "ContainedType"))
-                {
-                    if (variable.Value as string == oldName)
-                    {
-                        variable.Value = elementSave.Name;
-                    }
-                }
-
-                if (shouldSave)
-                {
-                    _fileCommands.TryAutoSaveElement(component);
-                }
-            }
-
+            var elementChanges = GetChangesForRenamedElement(elementSave, oldName);
+            ApplyElementRenameChanges(elementChanges, elementSave, oldName);
         }
         if (instance != null)
         {
