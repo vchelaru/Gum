@@ -69,6 +69,8 @@ public class SelectionManager : ISelectionManager
     List<GraphicalUiElement> mSelectedIpsos = new List<GraphicalUiElement>();
     IPositionedSizedObject? mHighlightedIpso;
 
+    public event Action<IPositionedSizedObject?>? HighlightedIpsoChanged;
+
     GraphicalOutline mGraphicalOutline;
 
 
@@ -166,6 +168,8 @@ public class SelectionManager : ISelectionManager
                 mHighlightedIpso = value;
 
                 mGraphicalOutline.HighlightedIpso = mHighlightedIpso as GraphicalUiElement;
+
+                HighlightedIpsoChanged?.Invoke(value);
             }
         }
     }
