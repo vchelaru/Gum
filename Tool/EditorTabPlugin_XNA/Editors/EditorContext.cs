@@ -116,6 +116,12 @@ public class EditorContext
     #region Helper Methods
 
     /// <summary>
+    /// Returns true if the currently selected instance is locked and should not be
+    /// editable in the editor (no handles, no drag/resize/rotate/nudge).
+    /// </summary>
+    public bool IsSelectionLocked() => SelectedState.SelectedInstance?.Locked == true;
+
+    /// <summary>
     /// Updates the aspect ratio based on the currently selected object.
     /// Call this on push when resizing might occur.
     /// </summary>
