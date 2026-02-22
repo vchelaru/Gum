@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.ToolStates;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
@@ -142,7 +143,64 @@ public class RenameLogic : IRenameLogic
 
             _pluginManager.StateRename(stateSave, oldName);
 
+            var elementSave = stateSave.ParentContainer;
+            if (elementSave != null)
+            {
+                ApplyVariableNameChangeFromStateRename(stateSave, oldName, elementSave, category);
+            }
+            else
+            {
+                var behavior = ObjectFinder.Self.GetStateContainerOf(stateSave) as BehaviorSave;
+                if (behavior != null)
+                {
+                    _fileCommands.TryAutoSaveBehavior(behavior);
+                }
+            }
+
             _fileCommands.TryAutoSaveCurrentElement();
+        }
+    }
+
+    private void ApplyVariableNameChangeFromStateRename(StateSave state, string oldName, ElementSave elementSave, StateSaveCategory category)
+    {
+        string variableName = "State";
+        if (category != null)
+        {
+            variableName = category.Name + "State";
+        }
+        List<DataTypes.InstanceSave> instances = new List<DataTypes.InstanceSave>();
+        ObjectFinder.Self.GetElementsReferencing(elementSave, foundInstances: instances);
+
+        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
+
+        foreach (var instance in instances)
+        {
+            var parentOfInstance = instance.ParentContainer;
+
+            var variableNameToLookFor = $"{instance.Name}.{variableName}";
+
+            var variablesToFix = parentOfInstance.AllStates
+                .SelectMany(item => item.Variables)
+                .Where(item => item.Name == variableNameToLookFor)
+                .Where(item => (string)item.Value == oldName)
+                .ToArray();
+
+            if (variablesToFix.Any())
+            {
+                foreach (var variable in variablesToFix)
+                {
+                    variable.Value = state.Name;
+                }
+                if (elementsToSave.Contains(parentOfInstance) == false)
+                {
+                    elementsToSave.Add(parentOfInstance);
+                }
+            }
+        }
+
+        foreach (var elementToSave in elementsToSave)
+        {
+            _fileCommands.TryAutoSaveElement(elementToSave);
         }
     }
 
@@ -222,6 +280,29 @@ public class RenameLogic : IRenameLogic
                 {
                     change.Variable.Name = $"{change.Variable.SourceObject}.{newName}State";
                 }
+            }
+        }
+
+        // Update variables within the owner element's own states whose type/name reference oldName + "State"
+        var ownerAsElementForSelfVars = owner as ElementSave;
+        if (ownerAsElementForSelfVars != null)
+        {
+            foreach (var state in ownerAsElementForSelfVars.AllStates)
+            {
+                var variablesToChange = state.Variables.Where(
+                    item => item.Type == oldName + "State");
+
+                foreach (var variable in variablesToChange)
+                {
+                    variable.Name = category.Name + "State";
+                    variable.Type = category.Name + "State";
+
+#if GUM
+                    variable.CustomTypeConverter =
+                        new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name);
+#endif
+                }
+                state.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
             }
         }
 

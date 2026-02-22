@@ -1,7 +1,9 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
@@ -276,6 +278,117 @@ public class RenameLogicTests : BaseTestClass
 
         changes.VariableReferenceChanges.ShouldBeEmpty();
     }
+
+    #region State rename
+
+    [Fact]
+    public void RenameState_UpdatesStateName()
+    {
+        var button = new ComponentSave { Name = "Button" };
+        var category = new StateSaveCategory { Name = "Visibility" };
+        var shownState = new StateSave { Name = "Shown", ParentContainer = button };
+        category.States.Add(shownState);
+        button.Categories.Add(category);
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        _project.Components.Add(button);
+
+        string? outValue = null;
+        _mocker.GetMock<INameVerifier>()
+            .Setup(x => x.IsStateNameValid(It.IsAny<string>(), It.IsAny<StateSaveCategory>(), It.IsAny<StateSave>(), out outValue))
+            .Returns(true);
+
+        _renameLogic.RenameState(shownState, category, "Visible");
+
+        shownState.Name.ShouldBe("Visible");
+    }
+
+    [Fact]
+    public void RenameState_UpdatesVariableValueInReferencingElement()
+    {
+        // Button has a "Visibility" category with state "Shown".
+        // A screen has an instance of Button with a variable "myButton.VisibilityState = Shown".
+        // After renaming "Shown" to "Visible", the variable value should update.
+        var button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        var visibilityCategory = new StateSaveCategory { Name = "Visibility" };
+        var shownState = new StateSave { Name = "Shown", ParentContainer = button };
+        visibilityCategory.States.Add(shownState);
+        button.Categories.Add(visibilityCategory);
+        _project.Components.Add(button);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        var screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        var instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        var stateVar = new VariableSave { Name = "myButton.VisibilityState", Value = "Shown" };
+        screenDefault.Variables.Add(stateVar);
+        _project.Screens.Add(screen);
+
+        string? outValue = null;
+        _mocker.GetMock<INameVerifier>()
+            .Setup(x => x.IsStateNameValid(It.IsAny<string>(), It.IsAny<StateSaveCategory>(), It.IsAny<StateSave>(), out outValue))
+            .Returns(true);
+
+        _renameLogic.RenameState(shownState, visibilityCategory, "Visible");
+
+        stateVar.Value.ShouldBe("Visible");
+    }
+
+    #endregion
+
+    #region Category rename
+
+    [Fact]
+    public void AskToRenameStateCategory_UpdatesCategoryName()
+    {
+        var button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        var category = new StateSaveCategory { Name = "Visibility" };
+        button.Categories.Add(category);
+        _project.Components.Add(button);
+
+        _mocker.GetMock<IDeleteLogic>()
+            .Setup(x => x.GetBehaviorsNeedingCategory(It.IsAny<StateSaveCategory>(), It.IsAny<ComponentSave>()))
+            .Returns(new List<BehaviorSave>());
+        _mocker.GetMock<IDialogService>()
+            .Setup(x => x.GetUserString(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<GetUserStringOptions>()))
+            .Returns("Appearance");
+
+        _renameLogic.AskToRenameStateCategory(category, button);
+
+        category.Name.ShouldBe("Appearance");
+    }
+
+    [Fact]
+    public void AskToRenameStateCategory_UpdatesVariableTypeInOwnerStates()
+    {
+        // Button has a "Visibility" category. Its default state has a variable of type
+        // "VisibilityState" (a self-referencing state variable). After renaming the
+        // category to "Appearance", the variable's Name and Type should update.
+        var button = new ComponentSave { Name = "Button" };
+        var defaultState = new StateSave { Name = "Default", ParentContainer = button };
+        var stateVar = new VariableSave { Name = "VisibilityState", Type = "VisibilityState" };
+        defaultState.Variables.Add(stateVar);
+        button.States.Add(defaultState);
+        var category = new StateSaveCategory { Name = "Visibility" };
+        button.Categories.Add(category);
+        _project.Components.Add(button);
+
+        _mocker.GetMock<IDeleteLogic>()
+            .Setup(x => x.GetBehaviorsNeedingCategory(It.IsAny<StateSaveCategory>(), It.IsAny<ComponentSave>()))
+            .Returns(new List<BehaviorSave>());
+        _mocker.GetMock<IDialogService>()
+            .Setup(x => x.GetUserString(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<GetUserStringOptions>()))
+            .Returns("Appearance");
+
+        _renameLogic.AskToRenameStateCategory(category, button);
+
+        stateVar.Type.ShouldBe("AppearanceState");
+        stateVar.Name.ShouldBe("AppearanceState");
+    }
+
+    #endregion
 
     [Fact]
     public void GetVariableChangesForRenamedVariable_VariableReferenceLeftSideOnInstance_IsDetected()
