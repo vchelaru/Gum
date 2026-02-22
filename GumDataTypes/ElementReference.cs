@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using ToolsUtilities;
 
 namespace Gum.DataTypes
@@ -82,7 +83,7 @@ namespace Gum.DataTypes
         //    return elementSave;
         //}
 
-        public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result, LinkLoadingPreference linkLoadingPreference = LinkLoadingPreference.PreferLinked) where T : ElementSave, new()
+        public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result, LinkLoadingPreference linkLoadingPreference = LinkLoadingPreference.PreferLinked, int projectVersion = 1) where T : ElementSave, new()
         {
             FilePath linkedName = null;
             FilePath containedReferenceName = null;
@@ -117,7 +118,7 @@ namespace Gum.DataTypes
 
             if (linkedName?.Exists() == true)
             {
-                T elementSave = FileManager.XmlDeserialize<T>(linkedName.FullPath);
+                T elementSave = DeserializeElement<T>(linkedName.FullPath, projectVersion);
                 return elementSave;
             }
 #if ANDROID || IOS
@@ -126,13 +127,13 @@ namespace Gum.DataTypes
             else if (  ((usesTitleContainer && containedReferenceName != null) ||  containedReferenceName.Exists()) && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
 #endif
             {
-
-                T elementSave = FileManager.XmlDeserialize<T>(
+                T elementSave = DeserializeElement<T>(
 #if ANDROID || IOS
-                    containedReferenceName.StandardizedCaseSensitive);
+                    containedReferenceName.StandardizedCaseSensitive,
 #else
-                    containedReferenceName.FullPath);
+                    containedReferenceName.FullPath,
 #endif
+                    projectVersion);
 
                 if (Name != elementSave.Name)
                 {
@@ -164,6 +165,32 @@ namespace Gum.DataTypes
 
                 return elementSave;
             }
+        }
+
+        private static T DeserializeElement<T>(string filePath, int projectVersion) where T : ElementSave, new()
+        {
+            if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
+            {
+                var (content, isCompact) = VariableSaveSerializer.ReadAndDetectFormat(filePath);
+                if (isCompact)
+                {
+                    // Transitional files saved before instance compaction have compact variables
+                    // but instances still as child elements — use the legacy-instances serializer.
+                    bool hasLegacyInstances = content.Contains("<Instance>");
+                    var serializer = hasLegacyInstances
+                        ? VariableSaveSerializer.GetLegacyInstancesCompactSerializer(typeof(T))
+                        : VariableSaveSerializer.GetCompactSerializer(typeof(T));
+                    using var reader = new StringReader(content);
+                    return (T)serializer.Deserialize(reader);
+                }
+                else
+                {
+                    using var reader = new StringReader(content);
+                    return FileManager.XmlDeserializeFromStream<T>(
+                        new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(content)));
+                }
+            }
+            return FileManager.XmlDeserialize<T>(filePath);
         }
 
         public override string ToString()
