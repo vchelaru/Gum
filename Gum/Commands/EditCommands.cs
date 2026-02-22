@@ -154,10 +154,18 @@ public class EditCommands : IEditCommands
             string message = "Enter new state name";
             string title = "Rename state";
             GetUserStringOptions options = new(){InitialValue = _selectedState.SelectedStateSave.Name};
+
+            var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+            var changes = _renameLogic.GetChangesForRenamedState(stateSave, stateSave.Name, stateContainer, category);
+
+            var changesDetails = changes.GetChangesDetails();
+            if (!string.IsNullOrEmpty(changesDetails))
+            {
+                message += "\n\n" + changesDetails;
+            }
+
             if (_dialogService.GetUserString(message, title, options) is { } result)
             {
-                var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
-
                 using var undoLock = _undoManager.RequestLock();
                 _renameLogic.RenameState(stateSave, category, result);
             }

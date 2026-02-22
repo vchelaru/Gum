@@ -138,7 +138,7 @@ public class EditVariableService : IEditVariableService
 
 
         var changes = _renameLogic.GetChangesForRenamedVariable(container, variable.Name, variable.ExposedAsName);
-        string changesDetails = GetChangesDetails(changes);
+        string changesDetails = changes.GetChangesDetails();
 
         if(!string.IsNullOrEmpty(changesDetails))
         {
@@ -151,53 +151,6 @@ public class EditVariableService : IEditVariableService
         {
             RenameExposedVariable(variable, result, container, changes);
         }
-    }
-
-    private static string GetChangesDetails(VariableChangeResponse changes)
-    {
-        var variableChanges = changes.VariableChanges;
-
-        var changesDetails = string.Empty;
-
-        if (variableChanges.Count > 0)
-        {
-            if (!string.IsNullOrEmpty(changesDetails))
-            {
-                changesDetails += "\n\n";
-            }
-            changesDetails += "This will also rename the following variables:";
-            foreach (var change in variableChanges)
-            {
-                var containerName = change.Container.ToString();
-                if (change.Container is ElementSave elementSave)
-                {
-                    containerName = elementSave.Name;
-                }
-                changesDetails += $"\n{change.Variable.Name} in {containerName}";
-            }
-        }
-        var variableReferenceChanges = changes.VariableReferenceChanges;
-        if (variableReferenceChanges.Count > 0)
-        {
-            if(!string.IsNullOrEmpty(changesDetails))
-            {
-                changesDetails += "\n\n";
-            }
-            changesDetails += "This will also modify the following variable references:";
-            foreach (var change in variableReferenceChanges)
-            {
-                // just in case something changes this on a separate thread, let's be safe:
-                try
-                {
-                    var line = change.VariableReferenceList.ValueAsIList[change.LineIndex];
-                    changesDetails += $"\n{line} in {change.Container.Name}";
-
-                }
-                catch { }
-            }
-        }
-
-        return changesDetails;
     }
 
     private void RenameExposedVariable(VariableSave variable, string newName, IStateContainer container, VariableChangeResponse changeResponse)
@@ -260,7 +213,7 @@ public class EditVariableService : IEditVariableService
         {
             var changes =
                 _renameLogic.GetChangesForRenamedVariable(container, variable.Name, variable.Name);
-            string changesDetails = GetChangesDetails(changes);
+            string changesDetails = changes.GetChangesDetails();
 
             vm.RenameType = RenameType.NormalName;
             vm.Variable = variable;

@@ -62,6 +62,41 @@ public class VariableChangeResponse
 {
     public List<VariableChange> VariableChanges = new List<VariableChange>();
     public List<VariableReferenceChange> VariableReferenceChanges = new List<VariableReferenceChange>();
+
+    public string GetChangesDetails()
+    {
+        var details = string.Empty;
+
+        if (VariableChanges.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "This will also rename the following variables:";
+            foreach (var change in VariableChanges)
+            {
+                var containerName = change.Container is ElementSave elementSave
+                    ? elementSave.Name
+                    : change.Container.ToString();
+                details += $"\n  {change.Variable.Name} in {containerName}";
+            }
+        }
+
+        if (VariableReferenceChanges.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "This will also modify the following variable references:";
+            foreach (var change in VariableReferenceChanges)
+            {
+                try
+                {
+                    var line = change.VariableReferenceList.ValueAsIList[change.LineIndex];
+                    details += $"\n  {line} in {change.Container.Name}";
+                }
+                catch { }
+            }
+        }
+
+        return details;
+    }
 }
 
 #endregion
@@ -88,6 +123,19 @@ public class StateRenameChanges
 {
     // Variables in referencing elements whose value == oldStateName and which need updating
     public List<(ElementSave Container, VariableSave Variable)> VariablesToUpdate = new();
+
+    public string GetChangesDetails()
+    {
+        if (VariablesToUpdate.Count == 0)
+            return string.Empty;
+
+        var details = "This will also update the following variables:";
+        foreach (var (container, variable) in VariablesToUpdate)
+        {
+            details += $"\n  {variable.Name} in {container.Name}";
+        }
+        return details;
+    }
 }
 
 #endregion
@@ -98,6 +146,22 @@ public class CategoryRenameChanges
 {
     // Variables in referencing elements/components whose Type matches the old category name
     public List<VariableChange> VariableChanges = new();
+
+    public string GetChangesDetails()
+    {
+        if (VariableChanges.Count == 0)
+            return string.Empty;
+
+        var details = "The following variables will be affected:";
+        foreach (var change in VariableChanges)
+        {
+            var containerDisplay = change.Container is ElementSave elementSave
+                ? elementSave.Name
+                : change.Container.ToString();
+            details += $"\n  {change.Variable.Name} in {containerDisplay}";
+        }
+        return details;
+    }
 }
 
 #endregion
@@ -253,19 +317,11 @@ public class RenameLogic : IRenameLogic
             string oldName = category.Name;
             var changes = GetChangesForRenamedCategory(elementSave, category, oldName);
 
-            if (changes.VariableChanges.Count > 0)
+            var changesDetails = changes.GetChangesDetails();
+            if (!string.IsNullOrEmpty(changesDetails))
             {
-                message += "\n\nThe following variables will be affected:";
-                foreach (var change in changes.VariableChanges)
-                {
-                    var containerDisplay = change.Container is ElementSave changeElementSave
-                        ? changeElementSave.Name
-                        : change.Container.ToString();
-
-                    message += $"\n  {change.Variable.Name} in {containerDisplay}";
-                }
+                message += "\n\n" + changesDetails;
             }
-
 
             if (_dialogService.GetUserString(message, title, options) is { } newName)
             {
