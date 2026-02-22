@@ -1316,13 +1316,17 @@ namespace ToolsUtilities
 
         public static void XmlSerialize(Type type, object objectToSerialize, string fileName)
         {
+            XmlSerialize(objectToSerialize, fileName, GetXmlSerializer(type));
+        }
+
+        public static void XmlSerialize(object objectToSerialize, string fileName, XmlSerializer serializer)
+        {
             // Make sure that the directory for the file exists
             string directory = FileManager.GetDirectory(fileName);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(FileManager.GetDirectory(fileName));
             }
-            XmlSerializer serializer = GetXmlSerializer(type);
 
             // for info on why we do this:
             // https://stackoverflow.com/questions/8515720/how-to-prevent-system-io-file-open-with-filemode-truncate-from-causing-a-file-ch
@@ -1341,9 +1345,7 @@ namespace ToolsUtilities
                     // for info on this, see
                     // http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
 
-
                     serializer.Serialize(writer, objectToSerialize, xmlNamespaces);
-
                 }
             }
         }
@@ -1351,6 +1353,32 @@ namespace ToolsUtilities
         public static void XmlSerialize<T>(T objectToSerialize, string fileName)
         {
             XmlSerialize(typeof(T), objectToSerialize, fileName);
+        }
+
+        public static T XmlDeserialize<T>(string fileName, XmlSerializer serializer)
+        {
+            if (IsMobile)
+            {
+                fileName = TryRemoveLeadingDotSlash(fileName);
+            }
+
+            using (Stream stream = GetStreamForFile(fileName))
+            {
+                try
+                {
+                    return XmlDeserializeFromStream<T>(stream, serializer);
+                }
+                catch (Exception e)
+                {
+                    throw new IOException("Could not deserialize the XML file"
+                        + Environment.NewLine + fileName, e);
+                }
+            }
+        }
+
+        public static T XmlDeserializeFromStream<T>(Stream stream, XmlSerializer serializer)
+        {
+            return (T)serializer.Deserialize(stream);
         }
 
 

@@ -294,7 +294,8 @@ public class FileCommands : IFileCommands
                     {
                         try
                         {
-                            elementSave.Save(fileName.FullPath);
+                            bool useCompact = _projectState.GumProjectSave?.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
+                            elementSave.Save(fileName.FullPath, useCompact);
                             succeeded = true;
                             break;
                         }
@@ -405,8 +406,9 @@ public class FileCommands : IFileCommands
                     {
                         try
                         {
-                            FileManager.XmlSerialize(behavior.GetType(), behavior, fileName);
-                            
+                            bool useCompact = _projectState.GumProjectSave?.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
+                            behavior.Save(fileName, useCompact);
+
                             succeeded = true;
                             break;
                         }

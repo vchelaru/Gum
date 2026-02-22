@@ -62,13 +62,13 @@ internal class DialogService : IDialogService
     private DialogWindow CreateDialogWindow(DialogViewModel dialogViewModel)
     {
         Window? owner = null;
-        if (Application.Current.MainWindow is { IsLoaded: true } mainWindow)
+        if (Application.Current.MainWindow is { IsVisible: true } mainWindow)
         {
-            owner = mainWindow; 
+            owner = mainWindow;
         }
         else
         {
-            _logger.LogWarning("Showing dialog before main window is loaded.");
+            _logger.LogWarning("Showing dialog before main window is visible.");
         }
 
         DialogWindow window = new()

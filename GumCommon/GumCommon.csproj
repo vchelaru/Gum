@@ -41,6 +41,7 @@
 		<Compile Include="..\GumDataTypes\CustomPropertySave.cs" Link="DataTypes\CustomPropertySave.cs" />
 		<Compile Include="..\GumDataTypes\DimensionUnitType.cs" Link="DataTypes\DimensionUnitType.cs" />
 		<Compile Include="..\GumDataTypes\ElementReference.cs" Link="DataTypes\ElementReference.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\VariableSaveSerializer.cs" Link="DataTypes\VariableSaveSerializer.cs" />
 		<Compile Include="..\GumDataTypes\ElementSave.cs" Link="DataTypes\ElementSave.cs" />
 		<Compile Include="..\GumDataTypes\EventSave.cs" Link="DataTypes\EventSave.cs" />
 		<Compile Include="..\GumDataTypes\GuideRectangle.cs" Link="DataTypes\GuideRectangle.cs" />
