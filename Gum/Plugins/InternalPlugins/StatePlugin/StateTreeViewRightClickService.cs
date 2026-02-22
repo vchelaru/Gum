@@ -355,7 +355,7 @@ public class StateTreeViewRightClickService
     {
         _editCommands.AskToRenameStateCategory(
             _selectedState.SelectedStateCategorySave,
-            _selectedState.SelectedElement);
+            _selectedState.SelectedStateContainer);
     }
 
     private void MoveToCategory(string categoryNameToMoveTo)

@@ -7,7 +7,7 @@
     xmlns:local="clr-namespace:Gum.Services.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mvvm="clr-namespace:Gum.Mvvm"
-    Width="300"
+    Width="450"
     d:DataContext="{d:DesignInstance Type={x:Type local:GetUserStringDialogBaseViewModel},
                                      IsDesignTimeCreatable=False}"
     local:Dialog.DialogTitle="{Binding Title}"

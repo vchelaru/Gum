@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.ToolStates;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
@@ -61,6 +62,41 @@ public class VariableChangeResponse
 {
     public List<VariableChange> VariableChanges = new List<VariableChange>();
     public List<VariableReferenceChange> VariableReferenceChanges = new List<VariableReferenceChange>();
+
+    public string GetChangesDetails()
+    {
+        var details = string.Empty;
+
+        if (VariableChanges.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "This will also rename the following variables:";
+            foreach (var change in VariableChanges)
+            {
+                var containerName = change.Container is ElementSave elementSave
+                    ? elementSave.Name
+                    : change.Container.ToString();
+                details += $"\n• {change.Variable.Name} in {containerName}";
+            }
+        }
+
+        if (VariableReferenceChanges.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "This will also modify the following variable references:";
+            foreach (var change in VariableReferenceChanges)
+            {
+                try
+                {
+                    var line = change.VariableReferenceList.ValueAsIList[change.LineIndex];
+                    details += $"\n• {line} in {change.Container.Name}";
+                }
+                catch { }
+            }
+        }
+
+        return details;
+    }
 }
 
 #endregion
@@ -77,6 +113,188 @@ public class ElementRenameChanges
     public List<(ElementSave Container, VariableSave Variable)> ContainedTypeVariableReferences = new();
     // VariableReferences list entries whose right-hand side references oldName
     public List<VariableReferenceChange> VariableReferenceChanges = new();
+
+    public string GetChangesDetails()
+    {
+        var details = string.Empty;
+
+        if (ElementsWithBaseTypeReference.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "The following elements will have their base type updated:";
+            foreach (var element in ElementsWithBaseTypeReference)
+            {
+                details += $"\n• {element.Name}";
+            }
+        }
+
+        if (InstancesWithBaseTypeReference.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "The following instances will have their base type updated:";
+            foreach (var (container, instance) in InstancesWithBaseTypeReference)
+            {
+                details += $"\n• {instance.Name} in {container.Name}";
+            }
+        }
+
+        if (ContainedTypeVariableReferences.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "The following ContainedType variables will be updated:";
+            foreach (var (container, variable) in ContainedTypeVariableReferences)
+            {
+                details += $"\n• {variable.Name} in {container.Name}";
+            }
+        }
+
+        if (VariableReferenceChanges.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "The following variable references will be updated:";
+            foreach (var change in VariableReferenceChanges)
+            {
+                try
+                {
+                    var line = change.VariableReferenceList.ValueAsIList[change.LineIndex];
+                    details += $"\n• {line} in {change.Container.Name}";
+                }
+                catch { }
+            }
+        }
+
+        return details;
+    }
+}
+
+#endregion
+
+#region InstanceRenameChanges Class
+
+public class InstanceRenameChanges
+{
+    // Variables across all states in the containing element that reference the instance by name
+    public List<(ElementSave Container, VariableSave Variable)> VariablesToRename = new();
+    // Events in the containing element whose source object matches the instance name
+    public List<EventSave> EventsToRename = new();
+    // Whether any DefaultChildContainer in the containing element equals the instance's old name
+    public bool DefaultChildContainerWillChange;
+    // Parent variable references in other elements that point through DefaultChildContainer
+    public List<(ElementSave Container, VariableSave Variable)> ParentVariablesInOtherElements = new();
+    // VariableReferences list entries that contain the instance name on the left or right side
+    public List<VariableReferenceChange> VariableReferenceChanges = new();
+
+    public string GetChangesDetails(bool includeVariablesWithinElement = true)
+    {
+        var details = string.Empty;
+
+        if (includeVariablesWithinElement && VariablesToRename.Count > 0)
+        {
+            details += "The following variables will be renamed:";
+            foreach (var (container, variable) in VariablesToRename)
+            {
+                details += $"\n• {variable.Name} in {container.Name}";
+            }
+        }
+
+        if (EventsToRename.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "The following events will be renamed:";
+            foreach (var evt in EventsToRename)
+            {
+                details += $"\n• {evt.Name}";
+            }
+        }
+
+        if (DefaultChildContainerWillChange)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "The DefaultChildContainer reference will be updated.";
+        }
+
+        if (ParentVariablesInOtherElements.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "The following Parent variables in other elements will be updated:";
+            foreach (var (container, variable) in ParentVariablesInOtherElements)
+            {
+                details += $"\n• {variable.Name} ({variable.Value}) in {container.Name}";
+            }
+        }
+
+        if (VariableReferenceChanges.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "The following variable references will be updated:";
+            foreach (var change in VariableReferenceChanges)
+            {
+                try
+                {
+                    var line = change.VariableReferenceList.ValueAsIList[change.LineIndex];
+                    details += $"\n• {line} in {change.Container.Name}";
+                }
+                catch { }
+            }
+        }
+
+        return details;
+    }
+}
+
+#endregion
+
+#region StateRenameChanges Class
+
+public class StateRenameChanges
+{
+    // Variables in referencing elements whose value == oldStateName and which need updating
+    public List<(ElementSave Container, VariableSave Variable)> VariablesToUpdate = new();
+
+    public string GetChangesDetails()
+    {
+        if (VariablesToUpdate.Count == 0)
+            return string.Empty;
+
+        var details = string.Empty;
+
+        if (VariablesToUpdate.Count > 0)
+        {
+            details += "This will also update the following variables:";
+            foreach (var (container, variable) in VariablesToUpdate)
+            {
+                details += $"\n• {variable.Name} in {container.Name}";
+            }
+        }
+
+        return details;
+    }
+}
+
+#endregion
+
+#region CategoryRenameChanges Class
+
+public class CategoryRenameChanges
+{
+    // Variables in referencing elements/components whose Type matches the old category name
+    public List<VariableChange> VariableChanges = new();
+
+    public string GetChangesDetails()
+    {
+        if (VariableChanges.Count == 0)
+            return string.Empty;
+
+        var details = "The following variables will be affected:";
+        foreach (var change in VariableChanges)
+        {
+            var containerDisplay = change.Container is ElementSave elementSave
+                ? elementSave.Name
+                : change.Container.ToString();
+            details += $"\n• {change.Variable.Name} in {containerDisplay}";
+        }
+        return details;
+    }
 }
 
 #endregion
@@ -121,7 +339,7 @@ public class RenameLogic : IRenameLogic
 
     #region StateSave
 
-    public void RenameState(StateSave stateSave, StateSaveCategory category, string newName)
+    public void RenameState(StateSave stateSave, StateSaveCategory category, string newName, bool applyRefactoringChanges = true)
     {
         if (!_nameVerifier.IsStateNameValid(newName, category, stateSave, out string whyNotValid))
         {
@@ -130,6 +348,11 @@ public class RenameLogic : IRenameLogic
         else
         {
             string oldName = stateSave.Name;
+
+            var container = ObjectFinder.Self.GetStateContainerOf(stateSave);
+            var stateChanges = applyRefactoringChanges
+                ? GetChangesForRenamedState(stateSave, oldName, container, category)
+                : new StateRenameChanges();
 
             stateSave.Name = newName;
             _guiCommands.RefreshStateTreeView();
@@ -142,7 +365,59 @@ public class RenameLogic : IRenameLogic
 
             _pluginManager.StateRename(stateSave, oldName);
 
-            _fileCommands.TryAutoSaveCurrentElement();
+            ApplyStateRenameChanges(stateChanges, stateSave);
+
+            _fileCommands.TryAutoSaveCurrentObject();
+        }
+    }
+
+    public StateRenameChanges GetChangesForRenamedState(
+        StateSave state, string oldName, IStateContainer? container, StateSaveCategory? category)
+    {
+        var changes = new StateRenameChanges();
+
+        string variableName = category != null ? category.Name + "State" : "State";
+
+        if (container is ElementSave elementSave)
+        {
+            List<InstanceSave> instances = new List<InstanceSave>();
+            ObjectFinder.Self.GetElementsReferencing(elementSave, foundInstances: instances);
+
+            foreach (var instance in instances)
+            {
+                var parentOfInstance = instance.ParentContainer;
+                var variableNameToLookFor = $"{instance.Name}.{variableName}";
+
+                if(parentOfInstance != null)
+                {
+                    var variablesToFix = parentOfInstance.AllStates
+                        .SelectMany(item => item.Variables)
+                        .Where(item => item.Name == variableNameToLookFor)
+                        .Where(item => (string?)item.Value == oldName);
+
+                    foreach (var variable in variablesToFix)
+                    {
+                        changes.VariablesToUpdate.Add((parentOfInstance, variable));
+                    }
+                }
+            }
+        }
+        return changes;
+    }
+
+    public void ApplyStateRenameChanges(StateRenameChanges changes, StateSave state)
+    {
+        var elementsToSave = new HashSet<ElementSave>();
+
+        foreach (var (container, variable) in changes.VariablesToUpdate)
+        {
+            variable.Value = state.Name;
+            elementsToSave.Add(container);
+        }
+
+        foreach (var elementToSave in elementsToSave)
+        {
+            _fileCommands.TryAutoSaveElement(elementToSave);
         }
     }
 
@@ -150,61 +425,74 @@ public class RenameLogic : IRenameLogic
 
     #region Category
 
-    public void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+    public void AskToRenameStateCategory(StateSaveCategory category, IStateContainer owner)
     {
-        // This category can only be renamed if no behaviors require it
-        var behaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
-
-        if (behaviorsNeedingCategory.Any())
+        if (owner is ElementSave elementSave)
         {
-            string message =
-                $"The category {category.Name} cannot be renamed because it is needed by the following behavior(s):";
+            // This category can only be renamed if no behaviors require it
+            var behaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
 
-            foreach (var behavior in behaviorsNeedingCategory)
+            if (behaviorsNeedingCategory.Any())
             {
-                message += "\n" + behavior.Name;
+                string message =
+                    $"The category {category.Name} cannot be renamed because it is needed by the following behavior(s):";
+
+                foreach (var behavior in behaviorsNeedingCategory)
+                {
+                    message += "\n" + behavior.Name;
+                }
+
+                _dialogService.ShowMessage(message);
+                return;
             }
 
-            _dialogService.ShowMessage(message);
+            string elemMessage = "Enter new category name";
+            string elemTitle = "New Category";
+
+            GetUserStringOptions elemOptions = new() { InitialValue = category.Name };
+            string elemOldName = category.Name;
+            var elemChanges = GetChangesForRenamedCategory(elementSave, category, elemOldName);
+
+            var elemChangesDetails = elemChanges.GetChangesDetails();
+            if (!string.IsNullOrEmpty(elemChangesDetails))
+            {
+                elemMessage += "\n\n" + elemChangesDetails;
+            }
+
+            if (_dialogService.GetUserString(elemMessage, elemTitle, elemOptions) is { } elemNewName)
+            {
+                ApplyCategoryRenameChanges(elemChanges, elementSave, category, elemOldName, elemNewName);
+            }
         }
-        else
+        else if (owner is BehaviorSave behaviorSave)
         {
-            string message = "Enter new category name";
+            string message = "Enter new category name\n\nNote: Renaming states/categories in behaviors does not update the components that use this behavior.";
             string title = "New Category";
+            string oldName = category.Name;
 
             GetUserStringOptions options = new() { InitialValue = category.Name };
-            string oldName = category.Name;
-            var changes = GetVariableChangesForCategoryRename(elementSave, category, oldName);
-
-            if (changes.Count > 0)
-            {
-                message += "\n\nThe following variables will be affected:";
-                foreach (var change in changes)
-                {
-                    var containerDisplay = change.Container is ElementSave changeElementSave
-                        ? changeElementSave.Name
-                        : change.Container.ToString();
-
-                    message += $"\n  {change.Variable.Name} in {containerDisplay}";
-                }
-            }
-
 
             if (_dialogService.GetUserString(message, title, options) is { } newName)
             {
-                RenameCategory(elementSave, category, oldName, newName, changes);
+                ApplyCategoryRenameChanges(new CategoryRenameChanges(), behaviorSave, category, oldName, newName);
             }
         }
     }
 
-    private void RenameCategory(IStateContainer owner, StateSaveCategory category, string oldName, string newName, List<VariableChange> variableChanges)
+    public void ApplyCategoryRenameChanges(CategoryRenameChanges categoryChanges, IStateContainer owner, StateSaveCategory category, string oldName, string newName)
     {
-        category.Name = newName;
+        // Gather self-referencing state variables in the owner element before mutating anything
+        var ownerAsElement = owner as ElementSave;
+        var selfVarsToUpdate = ownerAsElement?.AllStates
+            .SelectMany(state => state.Variables)
+            .Where(v => v.Type == oldName + "State")
+            .ToList();
 
+        category.Name = newName;
 
         HashSet<ElementSave> elementsWithChangedVariables = new HashSet<ElementSave>();
 
-        foreach (var change in variableChanges)
+        foreach (var change in categoryChanges.VariableChanges)
         {
             var containerElement = change.Container as ElementSave;
             if (containerElement != null)
@@ -222,6 +510,25 @@ public class RenameLogic : IRenameLogic
                 {
                     change.Variable.Name = $"{change.Variable.SourceObject}.{newName}State";
                 }
+            }
+        }
+
+        if (selfVarsToUpdate != null)
+        {
+            foreach (var variable in selfVarsToUpdate)
+            {
+                variable.Name = category.Name + "State";
+                variable.Type = category.Name + "State";
+
+#if GUM
+                variable.CustomTypeConverter =
+                    new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState);
+#endif
+            }
+
+            foreach (var state in ownerAsElement!.AllStates)
+            {
+                state.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
             }
         }
 
@@ -246,9 +553,9 @@ public class RenameLogic : IRenameLogic
         }
     }
 
-    private List<VariableChange> GetVariableChangesForCategoryRename(IStateContainer owner, StateSaveCategory category, string oldName)
+    public CategoryRenameChanges GetChangesForRenamedCategory(IStateContainer owner, StateSaveCategory category, string oldName)
     {
-        List<VariableChange> toReturn = new List<VariableChange>();
+        var changes = new CategoryRenameChanges();
 
         var project = _projectState.GumProjectSave;
 
@@ -261,7 +568,6 @@ public class RenameLogic : IRenameLogic
             inheritingElements.AddRange(ObjectFinder.Self.GetElementsInheritingFrom(ownerAsElement));
         }
 
-        // This currently only handles categories in elements, not behaviors
         foreach (var screen in project.Screens)
         {
             RenameReferencesInElement(category, oldName, inheritingElements, screen);
@@ -274,7 +580,7 @@ public class RenameLogic : IRenameLogic
 
         // Standards cannot include instances so no need to loop through them
 
-        return toReturn;
+        return changes;
 
         void RenameReferencesInElement(StateSaveCategory changedCategory, string oldName, ICollection<ElementSave> inheritingElements, ElementSave element)
         {
@@ -291,7 +597,7 @@ public class RenameLogic : IRenameLogic
                         {
                             if (inheritingElements.Contains(element))
                             {
-                                AddVariableToList(element, toReturn, state, variable);
+                                AddVariableToList(element, changes.VariableChanges, state, variable);
                             }
                         }
                         else
@@ -303,7 +609,7 @@ public class RenameLogic : IRenameLogic
                                 var instanceElement = ObjectFinder.Self.GetElementSave(instance);
                                 if (inheritingElements?.Contains(instanceElement) == true)
                                 {
-                                    AddVariableToList(element, toReturn, state, variable);
+                                    AddVariableToList(element, changes.VariableChanges, state, variable);
                                 }
                             }
                         }
@@ -324,6 +630,242 @@ public class RenameLogic : IRenameLogic
                     Variable = variable
                 });
             }
+        }
+    }
+
+    #endregion
+
+    #region Instance
+
+
+    public InstanceRenameChanges GetChangesForRenamedInstance(ElementSave containerElement, InstanceSave instance, string oldName)
+    {
+        var changes = new InstanceRenameChanges();
+
+        // Variables across all states that reference this instance by name
+        foreach (var state in containerElement.AllStates)
+        {
+            foreach (var variable in state.Variables)
+            {
+                if (variable.SourceObject == oldName)
+                {
+                    changes.VariablesToRename.Add((containerElement, variable));
+                }
+            }
+        }
+
+        // Events in the containing element
+        foreach (var evt in containerElement.Events)
+        {
+            if (evt.GetSourceObject() == oldName)
+            {
+                changes.EventsToRename.Add(evt);
+            }
+        }
+
+        // DefaultChildContainer in any state of the containing element
+        foreach (var state in containerElement.AllStates)
+        {
+            if (state.Variables.Any(v => v.Name == "DefaultChildContainer" && (string?)v.Value == oldName))
+            {
+                changes.DefaultChildContainerWillChange = true;
+                break;
+            }
+        }
+
+        // Parent variable references in other elements (only relevant when DefaultChildContainer changes)
+        if (changes.DefaultChildContainerWillChange)
+        {
+            var elementsReferencing = ObjectFinder.Self.GetElementsReferencing(containerElement);
+            foreach (var otherElement in elementsReferencing)
+            {
+                foreach (var state in otherElement.AllStates)
+                {
+                    foreach (var variable in state.Variables)
+                    {
+                        if (variable.GetRootName() == "Parent" && (variable.Value as string)?.Contains(".") == true)
+                        {
+                            var value = (string)variable.Value;
+                            var dotIndex = value.IndexOf(".");
+                            var valueBeforeDot = value.Substring(0, dotIndex);
+                            var valueAfterDot = value.Substring(dotIndex + 1);
+
+                            if (valueAfterDot == oldName)
+                            {
+                                var parentInstance = otherElement.GetInstance(valueBeforeDot);
+                                var parentInstanceElement = ObjectFinder.Self.GetElementSave(parentInstance);
+                                if (parentInstanceElement == containerElement)
+                                {
+                                    changes.ParentVariablesInOtherElements.Add((otherElement, variable));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // VariableReferences entries in the container element and inheriting elements that
+        // reference the instance name on the left or right side of the assignment
+        var relevantElements = new List<ElementSave> { containerElement };
+        relevantElements.AddRange(ObjectFinder.Self.GetElementsInheritingFrom(containerElement));
+
+        foreach (var element in relevantElements)
+        {
+            foreach (var state in element.AllStates)
+            {
+                foreach (var variableList in state.VariableLists)
+                {
+                    if (variableList.GetRootName() != "VariableReferences") continue;
+
+                    for (int i = 0; i < variableList.ValueAsIList.Count; i++)
+                    {
+                        var line = variableList.ValueAsIList[i];
+                        if (line is not string asString || asString.StartsWith("//") ||
+                            !asString.Contains("=") || !asString.Contains(oldName))
+                            continue;
+
+                        var equalIndex = asString.IndexOf("=");
+                        var leftSide = asString.Substring(0, equalIndex).Trim();
+                        var rightSide = asString.Substring(equalIndex + 1).Trim();
+
+                        // Strip optional state prefix from right side (e.g. "Highlighted:OldName.X")
+                        var rightForCheck = rightSide;
+                        var colonIndex = rightSide.IndexOf(":");
+                        if (colonIndex >= 0)
+                            rightForCheck = rightSide.Substring(colonIndex + 1);
+
+                        // Left side matches when the VariableReferences list is not owned by this
+                        // instance itself (SourceObject != oldName), and the left side starts with
+                        // "oldName." (i.e. it's an absolute reference within the element)
+                        bool matchesLeft = variableList.SourceObject != oldName &&
+                            leftSide.StartsWith(oldName + ".");
+
+                        bool matchesRight = rightForCheck.StartsWith(oldName + ".");
+
+                        if (matchesLeft || matchesRight)
+                        {
+                            changes.VariableReferenceChanges.Add(new VariableReferenceChange
+                            {
+                                Container = element,
+                                VariableReferenceList = variableList,
+                                LineIndex = i,
+                                ChangedSide = (matchesLeft && matchesRight) ? SideOfEquals.Both
+                                    : matchesLeft ? SideOfEquals.Left
+                                    : SideOfEquals.Right
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Search all other elements for cross-component qualified references
+        // e.g. "Width = Components/ComponentA.Sprite.Width" in ComponentB
+        var project = _projectState.GumProjectSave;
+        string? qualifiedElementPrefix = containerElement switch
+        {
+            ComponentSave => $"Components/{containerElement.Name}",
+            ScreenSave => $"Screens/{containerElement.Name}",
+            _ => null
+        };
+
+        if (qualifiedElementPrefix != null)
+        {
+            var qualifiedInstancePrefix = $"{qualifiedElementPrefix}.{oldName}.";
+
+            foreach (var element in project.AllElements)
+            {
+                if (relevantElements.Contains(element)) continue;
+
+                foreach (var state in element.AllStates)
+                {
+                    foreach (var variableList in state.VariableLists)
+                    {
+                        if (variableList.GetRootName() != "VariableReferences") continue;
+
+                        for (int i = 0; i < variableList.ValueAsIList.Count; i++)
+                        {
+                            var line = variableList.ValueAsIList[i];
+                            if (line is not string asString || asString.StartsWith("//") || !asString.Contains("="))
+                                continue;
+
+                            var equalIndex = asString.IndexOf("=");
+                            var rightSide = asString.Substring(equalIndex + 1).Trim();
+
+                            // Strip optional state prefix (e.g. "Highlighted:Components/...")
+                            var colonIndex = rightSide.IndexOf(":");
+                            var rightForCheck = colonIndex >= 0 ? rightSide.Substring(colonIndex + 1) : rightSide;
+
+                            if (rightForCheck.StartsWith(qualifiedInstancePrefix))
+                            {
+                                changes.VariableReferenceChanges.Add(new VariableReferenceChange
+                                {
+                                    Container = element,
+                                    VariableReferenceList = variableList,
+                                    LineIndex = i,
+                                    ChangedSide = SideOfEquals.Right
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return changes;
+    }
+
+    public void ApplyInstanceRenameChanges(InstanceRenameChanges changes, string newName, string oldName, HashSet<ElementSave> elementsToSave)
+    {
+        foreach (var referenceChange in changes.VariableReferenceChanges)
+        {
+            if (referenceChange.Container != null)
+                elementsToSave.Add(referenceChange.Container);
+
+            var variableList = referenceChange.VariableReferenceList;
+            var oldLine = variableList.ValueAsIList[referenceChange.LineIndex]?.ToString();
+            if (oldLine == null) continue;
+
+            var equalIndex = oldLine.IndexOf("=");
+            if (equalIndex < 0) continue;
+
+            var leftSide = oldLine.Substring(0, equalIndex).Trim();
+            var rightSide = oldLine.Substring(equalIndex + 1).Trim();
+
+            if (referenceChange.ChangedSide is SideOfEquals.Left or SideOfEquals.Both)
+            {
+                if (leftSide.StartsWith(oldName + "."))
+                    leftSide = newName + leftSide.Substring(oldName.Length);
+            }
+
+            if (referenceChange.ChangedSide is SideOfEquals.Right or SideOfEquals.Both)
+            {
+                // Preserve optional state prefix (e.g. "Highlighted:OldName.X")
+                var colonIndex = rightSide.IndexOf(":");
+                var statePrefix = colonIndex >= 0 ? rightSide.Substring(0, colonIndex + 1) : string.Empty;
+                var rightCore = colonIndex >= 0 ? rightSide.Substring(colonIndex + 1) : rightSide;
+
+                if (rightCore.StartsWith(oldName + "."))
+                {
+                    rightCore = newName + rightCore.Substring(oldName.Length);
+                }
+                else
+                {
+                    // Handle qualified cross-component reference: "Components/ComponentA/Sprite.Width"
+                    var qualifiedOldPattern = "." + oldName + ".";
+                    var patternIndex = rightCore.LastIndexOf(qualifiedOldPattern);
+                    if (patternIndex >= 0)
+                    {
+                        rightCore = rightCore.Substring(0, patternIndex + 1) + newName +
+                                    rightCore.Substring(patternIndex + 1 + oldName.Length);
+                    }
+                }
+
+                rightSide = statePrefix + rightCore;
+            }
+
+            variableList.ValueAsIList[referenceChange.LineIndex] = $"{leftSide} = {rightSide}";
         }
     }
 
@@ -409,7 +951,7 @@ public class RenameLogic : IRenameLogic
         }
     }
 
-    internal void ApplyElementRenameChanges(ElementRenameChanges changes, ElementSave elementSave, string oldName)
+    public void ApplyElementRenameChanges(ElementRenameChanges changes, ElementSave elementSave, string oldName)
     {
         var containersToSave = new HashSet<ElementSave>();
 
@@ -487,15 +1029,37 @@ public class RenameLogic : IRenameLogic
 
             shouldContinue = ValidateWithPopup(instanceContainer, instance, shouldContinue);
 
-
             var elementSave = instanceContainer as ElementSave;
-            shouldContinue = AskIfToRenameElement(oldName, askAboutRename, action, shouldContinue);
+
+            ElementRenameChanges? elementRenameChanges = null;
+            if (isRenamingXmlFile && elementSave != null)
+            {
+                elementRenameChanges = GetChangesForRenamedElement(elementSave, oldName);
+            }
+
+            shouldContinue = AskIfToRenameElement(oldName, askAboutRename, action, shouldContinue, elementRenameChanges);
+
+            InstanceRenameChanges? instanceRenameChanges = null;
+            if (!isRenamingXmlFile && elementSave != null && instance != null)
+            {
+                instanceRenameChanges = GetChangesForRenamedInstance(elementSave, instance, oldName);
+            }
+
+            shouldContinue = AskToRenameInstance(instance, oldName, askAboutRename, shouldContinue, instanceRenameChanges);
 
             if (shouldContinue)
             {
                 if (elementSave != null)
                 {
                     RenameAllReferencesTo(elementSave, instance, oldName);
+                }
+
+                if (instanceRenameChanges != null && instance != null)
+                {
+                    var elementsToSave = new HashSet<ElementSave>();
+                    ApplyInstanceRenameChanges(instanceRenameChanges, instance.Name, oldName, elementsToSave);
+                    foreach (var element in elementsToSave)
+                        _fileCommands.TryAutoSaveElement(element);
                 }
 
                 // Even though this gets called from the PropertyGrid methods which eventually
@@ -663,25 +1227,47 @@ public class RenameLogic : IRenameLogic
         }
     }
 
-    private bool AskIfToRenameElement(string oldName, bool askAboutRename, NameChangeAction action, bool shouldContinue)
+    private bool AskIfToRenameElement(string oldName, bool askAboutRename, NameChangeAction action, bool shouldContinue, ElementRenameChanges? elementRenameChanges = null)
     {
         if (shouldContinue && isRenamingXmlFile && askAboutRename)
         {
-            string moveOrRename;
-            if (action == NameChangeAction.Move)
-            {
-                moveOrRename = "move";
-            }
-            else
-            {
-                moveOrRename = "rename";
-            }
+            string moveOrRename = action == NameChangeAction.Move ? "move" : "rename";
 
             string message = $"Are you sure you want to {moveOrRename} {oldName}?\n\n" +
                 "This will change the file name for " + oldName + " which may break " +
                 "external references to this object.";
 
+            if (elementRenameChanges != null)
+            {
+                var changesDetails = elementRenameChanges.GetChangesDetails();
+                if (!string.IsNullOrEmpty(changesDetails))
+                {
+                    message += "\n\n" + changesDetails;
+                }
+            }
+
             shouldContinue = _dialogService.ShowYesNoMessage(message, "Rename Object and File?");
+        }
+
+        return shouldContinue;
+    }
+
+    private bool AskToRenameInstance(InstanceSave? instance, string oldName, bool askAboutRename, bool shouldContinue, InstanceRenameChanges? instanceRenameChanges)
+    {
+        if (shouldContinue && !isRenamingXmlFile && instance != null && askAboutRename)
+        {
+            string message = $"Are you sure you want to rename {oldName} to {instance.Name}?";
+
+            if (instanceRenameChanges != null)
+            {
+                var changesDetails = instanceRenameChanges.GetChangesDetails(includeVariablesWithinElement: false);
+                if (!string.IsNullOrEmpty(changesDetails))
+                {
+                    message += "\n\n" + changesDetails;
+                }
+            }
+
+            shouldContinue = _dialogService.ShowYesNoMessage(message, "Rename Instance?");
         }
 
         return shouldContinue;
@@ -752,7 +1338,7 @@ public class RenameLogic : IRenameLogic
 
     #region Variable
 
-    public VariableChangeResponse GetVariableChangesForRenamedVariable(IStateContainer owner, string oldFullName, string oldStrippedOrExposedName)
+    public VariableChangeResponse GetChangesForRenamedVariable(IStateContainer owner, string oldFullName, string oldStrippedOrExposedName)
     {
         List<VariableChange> variableChanges = new List<VariableChange>();
         List<VariableReferenceChange> variableReferenceChanges = new List<VariableReferenceChange>();
@@ -904,12 +1490,10 @@ public class RenameLogic : IRenameLogic
         };
     }
 
-    public void PropagateVariableRename(ElementSave parent, string variableFullName,
+    public void ApplyVariableRenameChanges(VariableChangeResponse changes,
         string oldStrippedOrExposedName, string newStrippedOrExposedName,
         HashSet<ElementSave> elementsNeedingSave)
     {
-        var changes = GetVariableChangesForRenamedVariable(parent, variableFullName, oldStrippedOrExposedName);
-
         foreach (var change in changes.VariableChanges)
         {
             if (change.Container is ElementSave element)

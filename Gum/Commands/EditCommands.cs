@@ -154,10 +154,23 @@ public class EditCommands : IEditCommands
             string message = "Enter new state name";
             string title = "Rename state";
             GetUserStringOptions options = new(){InitialValue = _selectedState.SelectedStateSave.Name};
+
+            var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+            var changes = _renameLogic.GetChangesForRenamedState(stateSave, stateSave.Name, stateContainer, category);
+
+            var changesDetails = changes.GetChangesDetails();
+
+            if (stateContainer is BehaviorSave)
+            {
+                message += "\n\nNote: Renaming states/categories in behaviors does not update the components that use this behavior.";
+            }
+            else if (!string.IsNullOrEmpty(changesDetails))
+            {
+                message += "\n\n" + changesDetails;
+            }
+
             if (_dialogService.GetUserString(message, title, options) is { } result)
             {
-                var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
-
                 using var undoLock = _undoManager.RequestLock();
                 _renameLogic.RenameState(stateSave, category, result);
             }
@@ -285,10 +298,10 @@ public class EditCommands : IEditCommands
     }
 
 
-    public void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+    public void AskToRenameStateCategory(StateSaveCategory category, IStateContainer owner)
     {
         using var undoLock = _undoManager.RequestLock();
-        _renameLogic.AskToRenameStateCategory(category, elementSave);
+        _renameLogic.AskToRenameStateCategory(category, owner);
     }
 
 

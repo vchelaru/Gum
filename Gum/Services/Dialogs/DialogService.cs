@@ -140,7 +140,7 @@ internal class DialogService : IDialogService
         };
         
         window.ShowDialog();
-        
+
         return affirmative ? vm.Value : null;
     }
 
