@@ -49,6 +49,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly INameVerifier _nameVerifier;
     private readonly CodeGenerator _codeGenerator;
     private readonly ParentSetLogic _parentSetLogic;
+    private readonly IFileCommands _fileCommands;
 
     PluginTab pluginTab = default!;
 
@@ -91,6 +92,7 @@ public class MainCodeOutputPlugin : PluginBase
             projectState);
 
         _messenger = Locator.GetRequiredService<IMessenger>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
 
         _parentSetLogic = new ParentSetLogic(_codeGenerator);
 
@@ -174,12 +176,12 @@ public class MainCodeOutputPlugin : PluginBase
             {
                 if(generatedFile?.Exists() == true)
                 {
-                    System.IO.File.Delete(generatedFile.FullPath);
+                    _fileCommands.MoveToRecycleBin(generatedFile);
                 }
 
                 if(customCodeFile?.Exists() == true)
                 {
-                    System.IO.File.Delete(customCodeFile.FullPath);
+                    _fileCommands.MoveToRecycleBin(customCodeFile);
                 }
             }
         }

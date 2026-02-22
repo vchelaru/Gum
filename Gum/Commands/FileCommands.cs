@@ -57,8 +57,13 @@ public class FileCommands : IFileCommands
 
     public FilePath? ProjectDirectory => FileManager.RelativeDirectory;
 
-    public void DeleteDirectory(FilePath directory) => 
+    public void DeleteDirectory(FilePath directory) =>
         FileManager.DeleteDirectory(directory.FullPath);
+
+    public void MoveToRecycleBin(FilePath filePath) =>
+        Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(filePath.FullPath,
+            Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
+            Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
 
     public string[] GetFiles(string path) => System.IO.Directory.GetFiles(path);
 
