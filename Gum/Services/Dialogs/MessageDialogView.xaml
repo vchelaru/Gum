@@ -5,7 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Gum.Services.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      Width="300"
+      Width="450"
     d:DataContext="{d:DesignInstance Type={x:Type local:MessageDialogViewModel},
                                      IsDesignTimeCreatable=False}"
     d:DesignHeight="300"

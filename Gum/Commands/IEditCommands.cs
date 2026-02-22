@@ -27,7 +27,7 @@ public interface IEditCommands
 
     void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer);
 
-    void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave);
+    void AskToRenameStateCategory(StateSaveCategory category, IStateContainer owner);
 
     #endregion
 

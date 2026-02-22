@@ -159,7 +159,16 @@ public class EditCommands : IEditCommands
             var changes = _renameLogic.GetChangesForRenamedState(stateSave, stateSave.Name, stateContainer, category);
 
             var changesDetails = changes.GetChangesDetails();
-            if (!string.IsNullOrEmpty(changesDetails))
+
+            if (stateContainer is BehaviorSave)
+            {
+                // For behaviors, make refactoring optional via a checkbox
+                options.HasRefactorCheckbox = true;
+                options.RefactorCheckboxLabel = "Also update referencing elements";
+                options.RefactorDetails = changesDetails;
+                options.IsRefactorChecked = !string.IsNullOrEmpty(changesDetails);
+            }
+            else if (!string.IsNullOrEmpty(changesDetails))
             {
                 message += "\n\n" + changesDetails;
             }
@@ -167,7 +176,8 @@ public class EditCommands : IEditCommands
             if (_dialogService.GetUserString(message, title, options) is { } result)
             {
                 using var undoLock = _undoManager.RequestLock();
-                _renameLogic.RenameState(stateSave, category, result);
+                bool applyRefactoring = !(stateContainer is BehaviorSave) || options.IsRefactorChecked;
+                _renameLogic.RenameState(stateSave, category, result, applyRefactoring);
             }
         }
     }
@@ -293,10 +303,10 @@ public class EditCommands : IEditCommands
     }
 
 
-    public void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+    public void AskToRenameStateCategory(StateSaveCategory category, IStateContainer owner)
     {
         using var undoLock = _undoManager.RequestLock();
-        _renameLogic.AskToRenameStateCategory(category, elementSave);
+        _renameLogic.AskToRenameStateCategory(category, owner);
     }
 
 
