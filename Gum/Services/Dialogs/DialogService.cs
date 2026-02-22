@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Interop;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
 namespace Gum.Services.Dialogs;
@@ -20,12 +20,10 @@ public interface IDialogService
 internal class DialogService : IDialogService
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger _logger;
-    
-    public DialogService(IServiceProvider serviceProvider, ILogger<DialogService> logger)
+
+    public DialogService(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
-        _logger = logger;       
     }
     
     public MessageDialogResult ShowMessage(string message, string? title = null, MessageDialogStyle? style = null)
@@ -62,13 +60,14 @@ internal class DialogService : IDialogService
     private DialogWindow CreateDialogWindow(DialogViewModel dialogViewModel)
     {
         Window? owner = null;
-        if (Application.Current.MainWindow is { IsVisible: true } mainWindow)
+        if (Application.Current.MainWindow is { } mainWindow)
         {
+            // EnsureHandle forces the Win32 HWND to be created if it doesn't exist yet.
+            // IsLoaded/IsVisible may be false during startup (before app.Run() processes
+            // the first render), but a valid HWND is all that's needed for ShowDialog()
+            // to disable the owner and enforce z-order.
+            new WindowInteropHelper(mainWindow).EnsureHandle();
             owner = mainWindow;
-        }
-        else
-        {
-            _logger.LogWarning("Showing dialog before main window is visible.");
         }
 
         DialogWindow window = new()
@@ -79,8 +78,18 @@ internal class DialogService : IDialogService
         if(owner != null)
         {
             window.Owner = owner;
-            window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            window.MaxHeight = owner.ActualHeight;
+            if (owner.ActualHeight > 0)
+            {
+                window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                window.MaxHeight = owner.ActualHeight;
+            }
+            else
+            {
+                // Owner exists but hasn't been laid out yet (e.g. dialog shown during startup).
+                // Still set Owner for z-order/modal behavior, but center on screen since
+                // CenterOwner and MaxHeight both require a valid ActualHeight.
+                window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
         }
         else
         {

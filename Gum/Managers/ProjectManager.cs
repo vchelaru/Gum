@@ -203,7 +203,7 @@ public class ProjectManager : IProjectManager
         {
             _dialogService.ShowMessage(
                 $"Could not load \"{fileName}\" because it was saved with a newer version of Gum " +
-                $"(file version {_gumProjectSave.Version}.\n\nGum supports up to version {GumProjectSave.NativeVersion}).\n\n" +
+                $" - version {_gumProjectSave.Version}.\n\nGum supports up to version {GumProjectSave.NativeVersion}.\n\n" +
                 $"Please update Gum to open this project.");
             _gumProjectSave = null;
         }
