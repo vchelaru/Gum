@@ -725,7 +725,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _scrollbarService.HandleXnaInitialized();
 
 
-        this._wireframeControl.Parent.Resize += (not, used) =>
+        this._wireframeControl.Parent.Resize += (_, _) =>
         {
             UpdateWireframeControlSizes();
             PluginManager.Self.HandleWireframeResized();

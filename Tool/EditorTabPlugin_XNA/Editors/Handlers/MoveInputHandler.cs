@@ -39,6 +39,18 @@ public class MoveInputHandler : InputHandlerBase
         return null;
     }
 
+    public override bool HandlePush(float worldX, float worldY)
+    {
+        // When multi-select key is held, don't claim the push.
+        // Shift+click on body should add to selection via the rectangle-selector fallback,
+        // not start a move operation.
+        if (Context.HotkeyManager.MultiSelect.IsPressedInControl())
+        {
+            return false;
+        }
+        return base.HandlePush(worldX, worldY);
+    }
+
     protected override void OnPush(float worldX, float worldY)
     {
         _hasGrabbed = Context.SelectionManager.HasSelection;
