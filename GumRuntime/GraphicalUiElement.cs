@@ -134,6 +134,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             return toReturn;
         }
     }
+    // Deferred font loading flag. Set to true when a font-related property is changed while
+    // layout is suspended (see UpdateToFontValues). Cleared once the actual font load runs.
+    // Two code paths consume this flag and perform the real load:
+    //   1. WireframeObjectManager calls RootGue.UpdateFontRecursive() after IsAllLayoutSuspended = false.
+    //   2. ResumeLayoutUpdateIfDirtyRecursive() calls UpdateFontRecursive() when instance-level
+    //      suspension is lifted via ResumeLayout(recursive: true).
+    // NOTE: the set-by-string path (SetProperty -> CustomSetPropertyOnRenderable.UpdateToFontValues)
+    // only defers for IsAllLayoutSuspended, not for IsLayoutSuspended. See the comments in
+    // CustomSetPropertyOnRenderable.UpdateToFontValues for why.
     bool isFontDirty = false;
     public bool IsFontDirty
     {
@@ -4583,7 +4592,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private bool ResumeLayoutUpdateIfDirtyRecursive()
     {
-
+        // mIsLayoutSuspended must be cleared BEFORE calling UpdateFontRecursive so that this
+        // element's isFontDirty check inside UpdateFontRecursive passes. Children are still
+        // suspended at this point; their suspension is cleared when we recurse below.
         mIsLayoutSuspended = false;
         UpdateFontRecursive();
 
@@ -6608,11 +6619,20 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 #endif
 
+    // Performs deferred font loads for any element in the tree where isFontDirty was set.
+    // Called from two places:
+    //   1. WireframeObjectManager, immediately after IsAllLayoutSuspended is set back to false.
+    //      At that point mIsLayoutSuspended is always false on every element (because ApplyState
+    //      skips SuspendLayout when IsAllLayoutSuspended is true), so the guard below always passes.
+    //   2. ResumeLayoutUpdateIfDirtyRecursive, which clears mIsLayoutSuspended on each element
+    //      before calling this, so the guard passes for that element but not yet for its children
+    //      (they are handled when recursion reaches them).
     public void UpdateFontRecursive()
     {
         if (this.mContainedObjectAsIpso is IText asIText && isFontDirty)
         {
-
+            // Don't load the font if this element is still individually suspended; it will
+            // be loaded when ResumeLayoutUpdateIfDirtyRecursive clears the flag for this node.
             if (!this.IsLayoutSuspended)
             {
                 UpdateFontFromProperties?.Invoke(asIText, this);
@@ -6636,8 +6656,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    // Called by font-related property setters (Font, FontSize, IsBold, IsItalic, etc.).
+    // When layout is suspended we defer the disk read by setting isFontDirty; the actual
+    // load happens later via UpdateFontRecursive().
+    // NOTE: properties set via the string-based SetProperty path go through the static
+    // CustomSetPropertyOnRenderable.UpdateToFontValues instead. That method only defers for
+    // IsAllLayoutSuspended (not IsLayoutSuspended) to avoid cascading parent layout calls
+    // inside ResumeLayoutUpdateIfDirtyRecursive. See comments there for details.
     public void UpdateToFontValues()
     {
+        if (IsAllLayoutSuspended || IsLayoutSuspended)
+        {
+            if (mContainedObjectAsIpso is IText)
+            {
+                isFontDirty = true;
+            }
+            return;
+        }
         if(this.mContainedObjectAsIpso is IText asText)
         {
             UpdateFontFromProperties?.Invoke(asText, this);

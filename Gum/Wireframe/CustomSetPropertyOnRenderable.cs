@@ -1168,29 +1168,43 @@ public class CustomSetPropertyOnRenderable
 
     public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
     {
-        // January 28, 2025
-        // If we early-out here,
-        // then the bitmap values
-        // never get assigned. This
-        // means that eventually when
-        // layout is resumed, bitmap values
-        // will get assigned. However, assigning
-        // bitmap values on a Text that has has Width
-        // or Height Units of Relative to Children, the
-        // parent then updates its parents layout. This causes
-        // tons of layout calls when resuming layout on a list box.
-        // Instead, we should assign fonts and mark font as dirty, then
-        // on resume only the parent layout needs to happen.
-        //if (graphicalUiElement.IsLayoutSuspended || GraphicalUiElement.IsAllLayoutSuspended)
-        //{
-        //    graphicalUiElement.IsFontDirty = true;
-        //}
-        // todo: This could make things faster, but it will require
-        // extra calls in generated code, or an "UpdateAll" method
-        //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
+        // Font deferred-loading system
+        //
+        // This method is the set-by-string path for font properties (Font, FontSize, IsBold, etc.)
+        // reached via SetProperty -> SetPropertyOnRenderable -> TrySetPropertyOnText.
+        // The direct-property-setter path goes through GraphicalUiElement.UpdateToFontValues() instead.
+        //
+        // KNOWN GAP: the two paths handle suspension differently:
+        //   - GUE.UpdateToFontValues() defers for BOTH IsAllLayoutSuspended and IsLayoutSuspended.
+        //   - This static method only defers for IsAllLayoutSuspended (see reason below).
+        //   This means that when fonts are set by string during ApplyState (which uses instance-level
+        //   SuspendLayout, not IsAllLayoutSuspended), those font loads still happen immediately.
+        //   Fixing that gap requires resolving the cascading-layout issue described below.
+        //
+        // January 28, 2025 - why we cannot simply early-return for IsLayoutSuspended:
+        // If we defer here, bitmap values are not assigned until layout is later resumed via
+        // ResumeLayoutUpdateIfDirtyRecursive. At that point mIsLayoutSuspended is already false,
+        // so when UpdateFontRecursive assigns the BitmapFont to a Text with Width or Height
+        // RelativeToChildren, it triggers UpdateLayout which cascades up through parents that have
+        // already completed their own layout pass. This causes redundant layout calls throughout
+        // a list box or any deeply nested stack. Solving this would require suppressing that
+        // UpdateLayout call inside UpdateToFontValues when called from UpdateFontRecursive, or
+        // performing a single top-down layout pass at the end rather than cascading bottom-up.
+        //
+        // IsAllLayoutSuspended is safe to defer because:
+        //   a) WireframeObjectManager calls RootGue.UpdateFontRecursive() before RootGue.UpdateLayout(),
+        //      so any per-element UpdateLayout calls triggered by font assignment are immediately
+        //      superseded by the full UpdateLayout pass.
+        //   b) mIsLayoutSuspended is always false during IsAllLayoutSuspended (ApplyState skips
+        //      SuspendLayout when the global flag is set), so there is no cascading risk.
+        if (GraphicalUiElement.IsAllLayoutSuspended)
+        {
+            graphicalUiElement.IsFontDirty = true;
+            return;
+        }
 
         // Residual properties could exist on a Text instance, so we need to
-        // tolerate a missing item and not crash. 
+        // tolerate a missing item and not crash.
 
 #if FRB
         // FRB doesn't yet have a TextRuntime, so we have to do this:
