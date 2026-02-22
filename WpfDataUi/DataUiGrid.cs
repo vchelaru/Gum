@@ -39,6 +39,8 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
             typeof(DataUiGrid),
             new PropertyMetadata(null, HandleInstanceChanged));
 
+    public bool IsAutoPopulateCategoriesEnabled { get; set; } = true;
+
     private static void HandleInstanceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var grid = (DataUiGrid)d;
@@ -47,7 +49,12 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
             oldNpc.PropertyChanged -= grid.HandleInstancePropertyChanged;
 
         grid._membersWithOptionalVisibility.Clear();
-        grid.PopulateCategories();
+
+        if(grid.IsAutoPopulateCategoriesEnabled)
+        {
+            grid.PopulateCategories();
+        }
+
 
         if (grid.Instance is INotifyPropertyChanged newNpc)
             newNpc.PropertyChanged += grid.HandleInstancePropertyChanged;
@@ -173,16 +180,34 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
         }
     }
 
+    static Dictionary<string, bool> _expansionStates = new();
     /// <summary>
     /// Replaces all categories at once, firing a single Reset notification instead of one
-    /// notification per category. This is faster than calling Categories.Clear() followed
+    /// notification per category This is faster than calling Categories.Clear() followed
     /// by individual Categories.Add() calls when rebuilding the grid.
     /// </summary>
     public void SetCategories(IList<MemberCategory> newCategories)
     {
+        StoreExpandedStates();
+
+        foreach (MemberCategory category in newCategories)
+        {
+            if (_expansionStates.TryGetValue(category.Name, out bool expanded))
+            {
+                category.IsExpanded = expanded;
+            }
+        }
         Unsubscribe(Categories);
         Categories.ReplaceAll(newCategories);
         Subscribe((IList)newCategories);
+    }
+
+    private void StoreExpandedStates()
+    {
+        foreach (var item in Categories)
+        {
+            _expansionStates[item.Name] = item.IsExpanded;
+        }
     }
 
     private void HandleCategoryMemberChanged(InstanceMember member)
@@ -392,6 +417,8 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
 
     private void PopulateCategories()
     {
+        StoreExpandedStates();
+
         this.Categories.Clear();
 
         if (Instance != null)
