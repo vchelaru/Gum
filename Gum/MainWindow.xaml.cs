@@ -46,7 +46,7 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         messenger.RegisterAll(this);
         
         InitializeComponent();
-        this.WinformsMenuHost.Child = menuStripManager.CreateMenuStrip();
+        menuStripManager.PopulateMenu(this.MainMenu);
 
         this.PreviewKeyDown += (_,e) => hotkeyManager.PreviewKeyDownAppWide(e);
         this.PreviewMouseDown += OnPreviewMouseDown;

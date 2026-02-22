@@ -70,10 +70,13 @@
               VerticalAlignment="Center"
               Source="{Binding IconSource}"
               Stretch="Uniform" />
-            <WindowsFormsHost
-              x:Name="WinformsMenuHost"
+            <Menu
+              x:Name="MainMenu"
               Grid.Column="1"
-              VerticalAlignment="Center" />
+              VerticalAlignment="Center"
+              Background="Transparent"
+              controlzex:NonClientControlProperties.HitTestResult="CLIENT"
+              controlzex:WindowChrome.IsHitTestVisibleInChrome="True" />
 
             <controls:TitleFilePathDisplay
               Grid.Column="3"

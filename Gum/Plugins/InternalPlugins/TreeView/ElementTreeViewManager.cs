@@ -1,6 +1,5 @@
 using CommonFormsAndControls;
 using CommunityToolkit.Mvvm.Messaging;
-using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.Controls;
 using Gum.DataTypes;
@@ -161,7 +160,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     // Forwarding properties for UI controls owned by _viewCreator
     internal MultiSelectTreeView ObjectTreeView => _viewCreator.ObjectTreeView;
-    private ContextMenuStrip mMenuStrip => _viewCreator.MenuStrip;
+    private System.Windows.Controls.ContextMenu _contextMenu => _viewCreator.ContextMenu;
     private FlatSearchListBox FlatList => _viewCreator.FlatList;
     private System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost => _viewCreator.TreeViewHost;
     private System.Windows.Controls.TextBox searchTextBox => _viewCreator.SearchTextBox;
@@ -176,6 +175,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     TreeNode mBehaviorsTreeNode;
     TreeNode? mLastHoveredNode;
     private DateTime? hoverStartTime;
+
     private Cursor AddCursor { get; }
 
 
@@ -587,12 +587,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             onMouseMove: (x, y) => HandleMouseOver(x, y),
             onFontChanged: (sender, _) =>
             {
-                if (sender is MultiSelectTreeView { Font: { Size: var fontSize } font })
+                if (sender is MultiSelectTreeView { Font: { Size: var fontSize } })
                 {
                     const float defaultFontSize = 9f;
                     _viewCreator.UpdateTreeviewIcons(fontSize / defaultFontSize);
-                    mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out var _);
-                    mMenuStrip.Font = font;
                 }
             },
             onDragOver: (sender, e) =>
@@ -674,9 +672,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         ObjectTreeView.AfterExpand += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
         ObjectTreeView.AfterCollapse += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
 
-        RefreshUi();
+        // When a WPF ContextMenu is open it captures the mouse, so right-clicking
+        // a different tree node just closes the popup and the click never reaches
+        // the WinForms TreeView.  This is a WinForms/WPF interop limitation --
+        // the first right-click closes the menu, and a second right-click opens
+        // the new one.  Properly fixing this requires migrating the TreeView to WPF.
 
-        InitializeMenuItems();
+        RefreshUi();
 
         static (int index, TreeNode target)? ProcessDrop(TreeNode? originalTarget, MultiSelectTreeView.DropKind kind)
         {
@@ -1952,6 +1954,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             OnSelect(ObjectTreeView.SelectedNode);
 
             PopulateMenuStrip();
+
+            if (_contextMenu.Items.Count > 0)
+            {
+                _contextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
+                _contextMenu.IsOpen = true;
+            }
         }
     }
 

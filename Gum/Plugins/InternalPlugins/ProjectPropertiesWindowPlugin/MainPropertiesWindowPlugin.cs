@@ -110,7 +110,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
         }
     }
 
-    private void HandlePropertiesClicked(object? sender, EventArgs e)
+    private void HandlePropertiesClicked(object? sender, System.Windows.RoutedEventArgs e)
     {
         try
         {
