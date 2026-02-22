@@ -34,6 +34,10 @@ public interface IRenameLogic
 
     GeneralResponse HandleRename(IInstanceContainer instanceContainer, InstanceSave? instance, string oldName, NameChangeAction action, bool askAboutRename = true);
 
+    InstanceRenameChanges GetChangesForRenamedInstance(ElementSave containerElement, InstanceSave instance, string oldName);
+
+    void ApplyInstanceRenameChanges(InstanceRenameChanges changes, string newName, string oldName, HashSet<ElementSave> elementsToSave);
+
     ElementRenameChanges GetChangesForRenamedElement(ElementSave elementSave, string oldName);
 
     void ApplyElementRenameChanges(ElementRenameChanges changes, ElementSave elementSave, string oldName);

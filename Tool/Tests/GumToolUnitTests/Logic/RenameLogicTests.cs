@@ -570,6 +570,184 @@ public class RenameLogicTests : BaseTestClass
 
     #endregion
 
+    #region Instance rename
+
+    [Fact]
+    public void GetChangesForRenamedInstance_VariableReferenceRightSide_SameElement_IsDetected()
+    {
+        // ComponentA has instances "ChildA" and "ChildB".
+        // ChildB.VariableReferences has entry "Width = ChildA.Width" — ChildA is on the right side.
+        // Renaming ChildA should detect this entry as a right-side change.
+        var componentA = new ComponentSave { Name = "ComponentA" };
+        var defaultState = new StateSave { Name = "Default", ParentContainer = componentA };
+        componentA.States.Add(defaultState);
+        var childA = new InstanceSave { Name = "ChildA", BaseType = "Sprite", ParentContainer = componentA };
+        var childB = new InstanceSave { Name = "ChildB", BaseType = "Sprite", ParentContainer = componentA };
+        componentA.Instances.Add(childA);
+        componentA.Instances.Add(childB);
+        var varRefList = new VariableListSave<string> { Type = "string", Name = "ChildB.VariableReferences" };
+        varRefList.Value.Add("Width = ChildA.Width");
+        defaultState.VariableLists.Add(varRefList);
+        _project.Components.Add(componentA);
+
+        var changes = _renameLogic.GetChangesForRenamedInstance(componentA, childA, "ChildA");
+
+        changes.VariableReferenceChanges.Count.ShouldBe(1);
+        changes.VariableReferenceChanges[0].Container.ShouldBe(componentA);
+        changes.VariableReferenceChanges[0].LineIndex.ShouldBe(0);
+        changes.VariableReferenceChanges[0].ChangedSide.ShouldBe(SideOfEquals.Right);
+    }
+
+    [Fact]
+    public void GetChangesForRenamedInstance_VariableReferenceRightSide_InInheritingElement_IsDetected()
+    {
+        // ComponentB has instance "ChildA".
+        // DerivedComponent inherits from ComponentB and has a VariableReferences entry
+        // "SomeVar = ChildA.Width". Renaming ChildA in ComponentB should detect the entry
+        // in DerivedComponent since it inherits the instance.
+        var componentB = new ComponentSave { Name = "ComponentB" };
+        componentB.States.Add(new StateSave { Name = "Default", ParentContainer = componentB });
+        var childA = new InstanceSave { Name = "ChildA", BaseType = "Sprite", ParentContainer = componentB };
+        componentB.Instances.Add(childA);
+        _project.Components.Add(componentB);
+
+        var derivedComponent = new ComponentSave { Name = "DerivedComponent", BaseType = "ComponentB" };
+        var derivedDefault = new StateSave { Name = "Default", ParentContainer = derivedComponent };
+        derivedComponent.States.Add(derivedDefault);
+        var varRefList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varRefList.Value.Add("SomeVar = ChildA.Width");
+        derivedDefault.VariableLists.Add(varRefList);
+        _project.Components.Add(derivedComponent);
+
+        var changes = _renameLogic.GetChangesForRenamedInstance(componentB, childA, "ChildA");
+
+        changes.VariableReferenceChanges.Count.ShouldBe(1);
+        changes.VariableReferenceChanges[0].Container.ShouldBe(derivedComponent);
+        changes.VariableReferenceChanges[0].LineIndex.ShouldBe(0);
+        changes.VariableReferenceChanges[0].ChangedSide.ShouldBe(SideOfEquals.Right);
+    }
+
+    [Fact]
+    public void GetChangesForRenamedInstance_SameInstanceNameInDifferentComponent_OnlyRenamedInstanceIsDetected()
+    {
+        // ComponentA has instance "Sprite" with a VariableReferences entry "Width = Sprite.Width".
+        // ComponentB also has instance "Sprite" with the same VariableReferences pattern.
+        // Renaming "Sprite" in ComponentA must only detect ComponentA's entry, not ComponentB's,
+        // because instance names are scoped to their containing element.
+        var componentA = new ComponentSave { Name = "ComponentA" };
+        var defaultStateA = new StateSave { Name = "Default", ParentContainer = componentA };
+        componentA.States.Add(defaultStateA);
+        var spriteA = new InstanceSave { Name = "Sprite", BaseType = "NineSlice", ParentContainer = componentA };
+        componentA.Instances.Add(spriteA);
+        var varRefListA = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varRefListA.Value.Add("Width = Sprite.Width");
+        defaultStateA.VariableLists.Add(varRefListA);
+        _project.Components.Add(componentA);
+
+        var componentB = new ComponentSave { Name = "ComponentB" };
+        var defaultStateB = new StateSave { Name = "Default", ParentContainer = componentB };
+        componentB.States.Add(defaultStateB);
+        var spriteB = new InstanceSave { Name = "Sprite", BaseType = "NineSlice", ParentContainer = componentB };
+        componentB.Instances.Add(spriteB);
+        var varRefListB = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varRefListB.Value.Add("Width = Sprite.Width");
+        defaultStateB.VariableLists.Add(varRefListB);
+        _project.Components.Add(componentB);
+
+        var changes = _renameLogic.GetChangesForRenamedInstance(componentA, spriteA, "Sprite");
+
+        changes.VariableReferenceChanges.Count.ShouldBe(1);
+        changes.VariableReferenceChanges[0].VariableReferenceList.ShouldBe(varRefListA);
+    }
+
+    [Fact]
+    public void GetChangesForRenamedInstance_VariableReferenceRightSide_CrossComponentQualifiedReference_IsDetected()
+    {
+        // ComponentA has instance "Sprite". ComponentB also has instance "Sprite", and its
+        // Sprite.VariableReferences contains "Width = Components/ComponentA/Sprite.Width" —
+        // a cross-component qualified reference to ComponentA's Sprite instance.
+        // Renaming "Sprite" in ComponentA should detect this reference in ComponentB so it
+        // can be updated to "Width = Components/ComponentA/SpriteRename.Width".
+        var componentA = new ComponentSave { Name = "ComponentA" };
+        componentA.States.Add(new StateSave { Name = "Default", ParentContainer = componentA });
+        var spriteA = new InstanceSave { Name = "Sprite", BaseType = "Sprite", ParentContainer = componentA };
+        componentA.Instances.Add(spriteA);
+        _project.Components.Add(componentA);
+
+        var componentB = new ComponentSave { Name = "ComponentB" };
+        var defaultStateB = new StateSave { Name = "Default", ParentContainer = componentB };
+        componentB.States.Add(defaultStateB);
+        var spriteB = new InstanceSave { Name = "Sprite", BaseType = "Sprite", ParentContainer = componentB };
+        componentB.Instances.Add(spriteB);
+        var varRefList = new VariableListSave<string> { Type = "string", Name = "Sprite.VariableReferences" };
+        varRefList.Value.Add("Width = Components/ComponentA/Sprite.Width");
+        defaultStateB.VariableLists.Add(varRefList);
+        _project.Components.Add(componentB);
+
+        var changes = _renameLogic.GetChangesForRenamedInstance(componentA, spriteA, "Sprite");
+
+        changes.VariableReferenceChanges.Count.ShouldBe(1);
+        changes.VariableReferenceChanges[0].Container.ShouldBe(componentB);
+        changes.VariableReferenceChanges[0].LineIndex.ShouldBe(0);
+        changes.VariableReferenceChanges[0].ChangedSide.ShouldBe(SideOfEquals.Right);
+    }
+
+    [Fact]
+    public void ApplyInstanceRenameChanges_VariableReferenceRightSide_IsUpdated()
+    {
+        // "Width = ChildA.Width" should become "Width = NewName.Width".
+        var componentA = new ComponentSave { Name = "ComponentA" };
+        var defaultState = new StateSave { Name = "Default", ParentContainer = componentA };
+        componentA.States.Add(defaultState);
+        _project.Components.Add(componentA);
+
+        var varRefList = new VariableListSave<string> { Type = "string", Name = "ChildB.VariableReferences" };
+        varRefList.Value.Add("Width = ChildA.Width");
+        defaultState.VariableLists.Add(varRefList);
+
+        var changes = new InstanceRenameChanges();
+        changes.VariableReferenceChanges.Add(new VariableReferenceChange
+        {
+            Container = componentA,
+            VariableReferenceList = varRefList,
+            LineIndex = 0,
+            ChangedSide = SideOfEquals.Right
+        });
+
+        _renameLogic.ApplyInstanceRenameChanges(changes, "NewName", "ChildA", new HashSet<ElementSave>());
+
+        varRefList.Value[0].ShouldBe("Width = NewName.Width");
+    }
+
+    [Fact]
+    public void ApplyInstanceRenameChanges_AddsContainerToElementsToSave()
+    {
+        var componentA = new ComponentSave { Name = "ComponentA" };
+        var defaultState = new StateSave { Name = "Default", ParentContainer = componentA };
+        componentA.States.Add(defaultState);
+        _project.Components.Add(componentA);
+
+        var varRefList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varRefList.Value.Add("Width = ChildA.Width");
+        defaultState.VariableLists.Add(varRefList);
+
+        var changes = new InstanceRenameChanges();
+        changes.VariableReferenceChanges.Add(new VariableReferenceChange
+        {
+            Container = componentA,
+            VariableReferenceList = varRefList,
+            LineIndex = 0,
+            ChangedSide = SideOfEquals.Right
+        });
+
+        var elementsToSave = new HashSet<ElementSave>();
+        _renameLogic.ApplyInstanceRenameChanges(changes, "NewName", "ChildA", elementsToSave);
+
+        elementsToSave.ShouldContain(componentA);
+    }
+
+    #endregion
+
     [Fact]
     public void GetChangesForRenamedVariable_VariableReferenceLeftSideOnInstance_IsDetected()
     {
