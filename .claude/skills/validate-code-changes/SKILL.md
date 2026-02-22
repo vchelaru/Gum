@@ -1,3 +1,9 @@
+---
+name: validate-code-changes
+description: Validate all code changes on the current branch. Spawns QA and refactoring agents in parallel to review for correctness, edge cases, code quality, and pattern adherence. Use when ready to review branch changes before merging.
+disable-model-invocation: true
+---
+
 Invoking product-manager agent for this task.
 
 You are coordinating a code validation review for the current branch. Your job is to spawn the **qa** and **refactoring-specialist** agents in parallel to validate all changes on this branch.

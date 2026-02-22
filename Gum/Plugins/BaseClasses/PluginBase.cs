@@ -293,11 +293,13 @@ public abstract class PluginBase : IPlugin
 
         MenuItem itemToAddTo = GetItem(container);
 
+#if DEBUG
         if (itemToAddTo == null)
         {
             throw new InvalidOperationException(
                 $"Could not find menu item '{container}'. Make sure the menu is populated before calling AddMenuItemTo.");
         }
+#endif
 
         if (preferredIndex == -1)
         {

@@ -29,24 +29,24 @@ namespace Gum.Managers
 
         private Menu _menu;
 
-        private MenuItem fileMenuItem;
-        private MenuItem editMenuItem;
-        private MenuItem viewMenuItem;
-        private MenuItem contentMenuItem;
-        private MenuItem helpMenuItem;
+        private MenuItem _fileMenuItem;
+        private MenuItem _editMenuItem;
+        private MenuItem _viewMenuItem;
+        private MenuItem _contentMenuItem;
+        private MenuItem _helpMenuItem;
 
-        private MenuItem removeStateMenuItem;
-        private MenuItem removeElementMenuItem;
-        private MenuItem removeVariableMenuItem;
-        private MenuItem aboutMenuItem;
-        private MenuItem documentationMenuItem;
-        private MenuItem saveAllMenuItem;
-        private MenuItem newProjectMenuItem;
-        private MenuItem findFileReferencesMenuItem;
-        private MenuItem pluginsMenuItem;
-        private MenuItem managePluginsMenuItem;
-        private MenuItem undoMenuItem;
-        private MenuItem redoMenuItem;
+        private MenuItem _removeStateMenuItem;
+        private MenuItem _removeElementMenuItem;
+        private MenuItem _removeVariableMenuItem;
+        private MenuItem _aboutMenuItem;
+        private MenuItem _documentationMenuItem;
+        private MenuItem _saveAllMenuItem;
+        private MenuItem _newProjectMenuItem;
+        private MenuItem _findFileReferencesMenuItem;
+        private MenuItem _pluginsMenuItem;
+        private MenuItem _managePluginsMenuItem;
+        private MenuItem _undoMenuItem;
+        private MenuItem _redoMenuItem;
 
         #endregion
 
@@ -94,81 +94,76 @@ namespace Gum.Managers
             }
             #endregion
 
-            this.removeElementMenuItem = new MenuItem();
-            this.removeStateMenuItem = new MenuItem();
-            this.removeVariableMenuItem = new MenuItem();
-            this.aboutMenuItem = new MenuItem();
-            this.documentationMenuItem = new MenuItem();
-            this.saveAllMenuItem = new MenuItem();
-            this.newProjectMenuItem = new MenuItem();
-            this.contentMenuItem = new MenuItem();
-            this.findFileReferencesMenuItem = new MenuItem();
-            this.pluginsMenuItem = new MenuItem();
-            this.managePluginsMenuItem = new MenuItem();
+            _removeElementMenuItem = new MenuItem();
+            _removeStateMenuItem = new MenuItem();
+            _removeVariableMenuItem = new MenuItem();
+            _aboutMenuItem = new MenuItem();
+            _documentationMenuItem = new MenuItem();
+            _saveAllMenuItem = new MenuItem();
+            _newProjectMenuItem = new MenuItem();
+            _contentMenuItem = new MenuItem();
+            _findFileReferencesMenuItem = new MenuItem();
+            _pluginsMenuItem = new MenuItem();
+            _managePluginsMenuItem = new MenuItem();
 
-            this.editMenuItem = new MenuItem();
-            this.editMenuItem.Header = "Edit";
+            _editMenuItem = new MenuItem();
+            _editMenuItem.Header = "Edit";
 
-            undoMenuItem = Add(editMenuItem, "Undo", _undoManager.PerformUndo);
             // InputGestureText is display-only in WPF; actual keyboard bindings
             // are handled by HotkeyManager.
-            undoMenuItem.InputGestureText = "Ctrl+Z";
-            undoMenuItem.IsEnabled = false;
+            _undoMenuItem = Add(_editMenuItem, "Undo", _undoManager.PerformUndo);
+            _undoMenuItem.InputGestureText = "Ctrl+Z";
+            _undoMenuItem.IsEnabled = false;
 
-            redoMenuItem = Add(editMenuItem, "Redo", _undoManager.PerformRedo);
-            // InputGestureText is display-only in WPF; actual keyboard bindings
-            // are handled by HotkeyManager.
-            redoMenuItem.InputGestureText = "Ctrl+Y";
-            redoMenuItem.IsEnabled = false;
+            _redoMenuItem = Add(_editMenuItem, "Redo", _undoManager.PerformRedo);
+            _redoMenuItem.InputGestureText = "Ctrl+Y";
+            _redoMenuItem.IsEnabled = false;
 
-            // Use a named method so we can guard against double-subscription
-            // if PopulateMenu is ever called more than once.
-            _undoManager.UndosChanged -= HandleUndosChanged;
             _undoManager.UndosChanged += HandleUndosChanged;
 
-            AddSeparator(editMenuItem);
+            AddSeparator(_editMenuItem);
 
-            var addMenuItem = Add(editMenuItem, "Add", null);
-            var removeMenuItem = Add(editMenuItem, "Remove", null);
+            var addMenuItem = Add(_editMenuItem, "Add", null);
+            var removeMenuItem = Add(_editMenuItem, "Remove", null);
 
-            removeMenuItem.Items.Add(this.removeElementMenuItem);
-            removeMenuItem.Items.Add(this.removeStateMenuItem);
-            removeMenuItem.Items.Add(this.removeVariableMenuItem);
+            removeMenuItem.Items.Add(_removeElementMenuItem);
+            removeMenuItem.Items.Add(_removeStateMenuItem);
+            removeMenuItem.Items.Add(_removeVariableMenuItem);
 
             Add(addMenuItem, "Screen", () => _dialogService.Show<AddScreenDialogViewModel>());
             Add(addMenuItem, "Component", () => _dialogService.Show<AddComponentDialogViewModel>());
             Add(addMenuItem, "Instance", () => _dialogService.Show<AddInstanceDialogViewModel>());
             Add(addMenuItem, "State", () => _dialogService.Show<AddStateDialogViewModel>());
 
-            this.removeElementMenuItem.Header = "Element";
-            this.removeElementMenuItem.Click += RemoveElementClicked;
+            _removeElementMenuItem.Header = "Element";
+            _removeElementMenuItem.Click += RemoveElementClicked;
 
-            this.removeStateMenuItem.Header = "State";
-            this.removeStateMenuItem.Click += RemoveStateOrCategoryClicked;
+            _removeStateMenuItem.Header = "State";
+            _removeStateMenuItem.Click += RemoveStateOrCategoryClicked;
 
-            this.removeVariableMenuItem.Header = "Variable";
-            this.removeVariableMenuItem.Click += HandleRemoveBehaviorVariableClicked;
+            _removeVariableMenuItem.Header = "Variable";
+            _removeVariableMenuItem.Click += HandleRemoveBehaviorVariableClicked;
 
 
-            this.newProjectMenuItem.Header = "New Project";
-            this.newProjectMenuItem.Click += (_, _) =>
+            _newProjectMenuItem.Header = "New Project";
+            _newProjectMenuItem.Click += (_, _) =>
             {
                 _fileCommands.NewProject();
                 _fileCommands.ForceSaveProject();
             };
 
-            this.pluginsMenuItem.Header = "Plugins";
-            this.pluginsMenuItem.Items.Add(this.managePluginsMenuItem);
-            this.managePluginsMenuItem.Header = "Manage Plugins";
-            this.managePluginsMenuItem.Click += (_, _) =>
+            _pluginsMenuItem.Header = "Plugins";
+            _pluginsMenuItem.Items.Add(_managePluginsMenuItem);
+            _managePluginsMenuItem.Header = "Manage Plugins";
+            _managePluginsMenuItem.Click += (_, _) =>
             {
                 PluginsWindow pluginsWindow = new PluginsWindow();
                 pluginsWindow.Show();
             };
 
 
-            this.findFileReferencesMenuItem.Header = "Find file references...";
-            this.findFileReferencesMenuItem.Click += (_, _) =>
+            _findFileReferencesMenuItem.Header = "Find file references...";
+            _findFileReferencesMenuItem.Click += (_, _) =>
             {
                 string message = "Enter entire or partial file name:";
                 string title = "Find file references";
@@ -196,11 +191,11 @@ namespace Gum.Managers
             };
 
 
-            this.contentMenuItem.Header = "Content";
-            this.contentMenuItem.Items.Add(this.findFileReferencesMenuItem);
+            _contentMenuItem.Header = "Content";
+            _contentMenuItem.Items.Add(_findFileReferencesMenuItem);
 
-            this.saveAllMenuItem.Header = "Save All";
-            this.saveAllMenuItem.Click += (_, _) =>
+            _saveAllMenuItem.Header = "Save All";
+            _saveAllMenuItem.Click += (_, _) =>
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
                 {
@@ -213,17 +208,17 @@ namespace Gum.Managers
                 }
             };
 
-            this.aboutMenuItem.Header = "About...";
-            this.aboutMenuItem.Click += (_, _) =>
+            _aboutMenuItem.Header = "About...";
+            _aboutMenuItem.Click += (_, _) =>
             {
                 var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown";
                 _dialogService.ShowMessage("Gum version " + version, "About");
             };
 
             string documentationLink = "https://docs.flatredball.com/gum";
-            this.documentationMenuItem.Header = $"View Docs ({documentationLink})";
-            this.documentationMenuItem.ToolTip = "External link to Gum documentation";
-            this.documentationMenuItem.Click += (_, _) =>
+            _documentationMenuItem.Header = $"View Docs ({documentationLink})";
+            _documentationMenuItem.ToolTip = "External link to Gum documentation";
+            _documentationMenuItem.Click += (_, _) =>
             {
                 System.Diagnostics.Process.Start(new ProcessStartInfo
                 {
@@ -232,22 +227,22 @@ namespace Gum.Managers
                 });
             };
 
-            this.viewMenuItem = new MenuItem();
-            viewMenuItem.Header = "View";
+            _viewMenuItem = new MenuItem();
+            _viewMenuItem.Header = "View";
 
 
-            this.helpMenuItem = new MenuItem();
-            this.helpMenuItem.Header = "Help";
-            this.helpMenuItem.Items.Add(this.aboutMenuItem);
-            this.helpMenuItem.Items.Add(this.documentationMenuItem);
+            _helpMenuItem = new MenuItem();
+            _helpMenuItem.Header = "Help";
+            _helpMenuItem.Items.Add(_aboutMenuItem);
+            _helpMenuItem.Items.Add(_documentationMenuItem);
 
 
-            this.fileMenuItem = new MenuItem();
-            this.fileMenuItem.Header = "File";
+            _fileMenuItem = new MenuItem();
+            _fileMenuItem.Header = "File";
 
-            Add(fileMenuItem, "Load Project...", () => _projectManager.LoadProject());
+            Add(_fileMenuItem, "Load Project...", () => _projectManager.LoadProject());
 
-            Add(fileMenuItem, "Save Project", () =>
+            Add(_fileMenuItem, "Save Project", () =>
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
                 {
@@ -260,20 +255,20 @@ namespace Gum.Managers
                 }
             });
 
-            Add(fileMenuItem, "Theming", () =>
+            Add(_fileMenuItem, "Theming", () =>
             {
                 _dialogService.Show<ThemingDialogViewModel>();
             });
 
-            this.fileMenuItem.Items.Add(this.saveAllMenuItem);
-            this.fileMenuItem.Items.Add(this.newProjectMenuItem);
+            _fileMenuItem.Items.Add(_saveAllMenuItem);
+            _fileMenuItem.Items.Add(_newProjectMenuItem);
 
-            _menu.Items.Add(this.fileMenuItem);
-            _menu.Items.Add(this.editMenuItem);
-            _menu.Items.Add(this.viewMenuItem);
-            _menu.Items.Add(this.contentMenuItem);
-            _menu.Items.Add(this.pluginsMenuItem);
-            _menu.Items.Add(this.helpMenuItem);
+            _menu.Items.Add(_fileMenuItem);
+            _menu.Items.Add(_editMenuItem);
+            _menu.Items.Add(_viewMenuItem);
+            _menu.Items.Add(_contentMenuItem);
+            _menu.Items.Add(_pluginsMenuItem);
+            _menu.Items.Add(_helpMenuItem);
 
             RefreshUI();
         }
@@ -285,13 +280,13 @@ namespace Gum.Managers
 
         private void UpdateUndoRedoEnabled()
         {
-            if (undoMenuItem?.Dispatcher.CheckAccess() == false)
+            if (_undoMenuItem?.Dispatcher.CheckAccess() == false)
             {
-                undoMenuItem.Dispatcher.BeginInvoke(UpdateUndoRedoEnabled);
+                _undoMenuItem.Dispatcher.BeginInvoke(UpdateUndoRedoEnabled);
                 return;
             }
-            if (undoMenuItem != null) undoMenuItem.IsEnabled = _undoManager.CanUndo();
-            if (redoMenuItem != null) redoMenuItem.IsEnabled = _undoManager.CanRedo();
+            if (_undoMenuItem != null) _undoMenuItem.IsEnabled = _undoManager.CanUndo();
+            if (_redoMenuItem != null) _redoMenuItem.IsEnabled = _undoManager.CanRedo();
         }
 
         private void HandleRemoveBehaviorVariableClicked(object? sender, System.Windows.RoutedEventArgs e)
@@ -308,40 +303,40 @@ namespace Gum.Managers
         {
             if (_selectedState.SelectedStateSave != null && _selectedState.SelectedStateSave.Name != "Default")
             {
-                removeStateMenuItem.Header = "State " + _selectedState.SelectedStateSave.Name;
-                removeStateMenuItem.IsEnabled = true;
+                _removeStateMenuItem.Header = "State " + _selectedState.SelectedStateSave.Name;
+                _removeStateMenuItem.IsEnabled = true;
             }
             else if (_selectedState.SelectedStateCategorySave != null)
             {
-                removeStateMenuItem.Header = "Category " + _selectedState.SelectedStateCategorySave.Name;
-                removeStateMenuItem.IsEnabled = true;
+                _removeStateMenuItem.Header = "Category " + _selectedState.SelectedStateCategorySave.Name;
+                _removeStateMenuItem.IsEnabled = true;
             }
             else
             {
-                removeStateMenuItem.Header = "<no state selected>";
-                removeStateMenuItem.IsEnabled = false;
+                _removeStateMenuItem.Header = "<no state selected>";
+                _removeStateMenuItem.IsEnabled = false;
             }
 
             if (_selectedState.SelectedElement != null && !(_selectedState.SelectedElement is StandardElementSave))
             {
-                removeElementMenuItem.Header = _selectedState.SelectedElement.Name;
-                removeElementMenuItem.IsEnabled = true;
+                _removeElementMenuItem.Header = _selectedState.SelectedElement.Name;
+                _removeElementMenuItem.IsEnabled = true;
             }
             else
             {
-                removeElementMenuItem.Header = "<no element selected>";
-                removeElementMenuItem.IsEnabled = false;
+                _removeElementMenuItem.Header = "<no element selected>";
+                _removeElementMenuItem.IsEnabled = false;
             }
 
             if (_selectedState.SelectedBehaviorVariable != null)
             {
-                removeVariableMenuItem.Header = _selectedState.SelectedBehaviorVariable.ToString();
-                removeVariableMenuItem.IsEnabled = true;
+                _removeVariableMenuItem.Header = _selectedState.SelectedBehaviorVariable.ToString();
+                _removeVariableMenuItem.IsEnabled = true;
             }
             else
             {
-                removeVariableMenuItem.Header = "<no behavior variable selected>";
-                removeVariableMenuItem.IsEnabled = false;
+                _removeVariableMenuItem.Header = "<no behavior variable selected>";
+                _removeVariableMenuItem.IsEnabled = false;
             }
 
         }
