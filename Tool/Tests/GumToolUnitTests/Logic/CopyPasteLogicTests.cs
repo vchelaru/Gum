@@ -1001,7 +1001,119 @@ public class CopyPasteLogicTests : BaseTestClass
 
     }
 
+    #region Cut + Paste Tests
+
+    [Fact]
+    public void OnCut_ThenPaste_InstanceWithChild_ShouldPreserveHierarchy()
+    {
+        /*
+         * Instance1
+         *   Child
+         *     Grandchild
+         *
+         * Cut Child (which includes Grandchild), paste without changing selection.
+         * Result should be:
+         * Instance1
+         *   Child <--- pasted
+         *     Grandchild <--- pasted
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave instance1 = screen.Instances[0];
+
+        InstanceSave child = AddChild("Child", "Instance1");
+        InstanceSave grandchild = AddChild("Grandchild", "Child");
+
+        SetupDeleteLogicMock();
+
+        SelectInstances(child);
+
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+
+        // After cut, the instances should be removed from the screen
+        screen.Instances.Count.ShouldBe(1, "Only Instance1 should remain after cut");
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(3);
+
+        screen.DefaultState.GetValue("Child.Parent").ShouldBe("Instance1");
+        screen.DefaultState.GetValue("Grandchild.Parent").ShouldBe("Child");
+
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
+
+    [Fact]
+    public void OnCut_ThenPaste_InstanceWithChild_IntoNewParent_ShouldPreserveInternalHierarchy()
+    {
+        /*
+         * Instance1
+         *   ChildA
+         *     GrandchildA
+         * TargetContainer
+         *
+         * Cut ChildA (which includes GrandchildA), select TargetContainer, paste.
+         * Result should be:
+         * Instance1
+         * TargetContainer
+         *   ChildA <--- pasted, re-parented to TargetContainer
+         *     GrandchildA <--- pasted, internal hierarchy preserved
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave instance1 = screen.Instances[0];
+
+        InstanceSave childA = AddChild("ChildA", "Instance1");
+        InstanceSave grandchildA = AddChild("GrandchildA", "ChildA");
+
+        InstanceSave targetContainer = AddChild("TargetContainer", "");
+
+        SetupDeleteLogicMock();
+
+        SelectInstances(childA);
+
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(2, "Only Instance1 and TargetContainer should remain after cut");
+
+        SelectInstances(targetContainer);
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(4);
+
+        screen.DefaultState.GetValue("ChildA.Parent").ShouldBe("TargetContainer");
+        screen.DefaultState.GetValue("GrandchildA.Parent").ShouldBe("ChildA");
+
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
+
+    #endregion
+
     #region Utilities
+
+    private void SetupDeleteLogicMock()
+    {
+        var deleteLogic = _mocker.GetMock<IDeleteLogic>();
+        deleteLogic
+            .Setup(x => x.RemoveInstance(It.IsAny<InstanceSave>(), It.IsAny<ElementSave>()))
+            .Callback((InstanceSave instanceToRemove, ElementSave element) =>
+            {
+                element.Instances.Remove(instanceToRemove);
+
+                // Simulate RemoveParentReferencesToInstance
+                foreach (var state in element.AllStates)
+                {
+                    state.Variables.RemoveAll(item => item.SourceObject == instanceToRemove.Name);
+                    state.VariableLists.RemoveAll(item => item.SourceObject == instanceToRemove.Name);
+
+                    state.Variables.RemoveAll(item =>
+                        item.GetRootName() == "Parent" && item.Value is string valueAsString &&
+                        (valueAsString == instanceToRemove.Name || valueAsString.StartsWith(instanceToRemove.Name + ".")));
+                }
+            });
+    }
+
 
     private ScreenSave CreateDefaultScreen()
     {
