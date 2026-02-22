@@ -251,17 +251,9 @@ public class StateRenameChanges
     // Variables in referencing elements whose value == oldStateName and which need updating
     public List<(ElementSave Container, VariableSave Variable)> VariablesToUpdate = new();
 
-    // States in implementing components (or derived components) that share the behavior state's
-    // name and category, and therefore need to be renamed to match the behavior's new state name.
-    public List<(ElementSave Element, StateSave State)> StatesToRename = new();
-
-    // Categories in implementing components that share the behavior category's name and therefore
-    // need to be renamed to match the behavior's new category name.
-    public List<(ElementSave Element, StateSaveCategory Category)> CategoriesToRename = new();
-
     public string GetChangesDetails()
     {
-        if (VariablesToUpdate.Count == 0 && StatesToRename.Count == 0 && CategoriesToRename.Count == 0)
+        if (VariablesToUpdate.Count == 0)
             return string.Empty;
 
         var details = string.Empty;
@@ -272,26 +264,6 @@ public class StateRenameChanges
             foreach (var (container, variable) in VariablesToUpdate)
             {
                 details += $"\n• {variable.Name} in {container.Name}";
-            }
-        }
-
-        if (StatesToRename.Count > 0)
-        {
-            if (details.Length > 0) details += "\n";
-            details += "This will also rename the following states:";
-            foreach (var (element, state) in StatesToRename)
-            {
-                details += $"\n• {state.Name} in {element.Name}";
-            }
-        }
-
-        if (CategoriesToRename.Count > 0)
-        {
-            if (details.Length > 0) details += "\n";
-            details += "This will also rename the following categories:";
-            foreach (var (element, cat) in CategoriesToRename)
-            {
-                details += $"\n• {cat.Name} in {element.Name}";
             }
         }
 
@@ -307,10 +279,6 @@ public class CategoryRenameChanges
 {
     // Variables in referencing elements/components whose Type matches the old category name
     public List<VariableChange> VariableChanges = new();
-
-    // Categories in implementing components that share the behavior category's name and therefore
-    // need to be renamed to match the behavior's new category name.
-    public List<(ElementSave Element, StateSaveCategory Category)> CategoriesToRename = new();
 
     public string GetChangesDetails()
     {
@@ -434,104 +402,7 @@ public class RenameLogic : IRenameLogic
                 }
             }
         }
-        else if (container is BehaviorSave behaviorSave)
-        {
-            var implementingComponents = ObjectFinder.Self.GetElementsReferencing(behaviorSave);
-
-            foreach (var component in implementingComponents)
-            {
-                // Check the component's own states for the behavior-state variable directly (no instance prefix).
-                var directVariablesToFix = component.AllStates
-                    .SelectMany(item => item.Variables)
-                    .Where(item => item.Name == variableName)
-                    .Where(item => (string?)item.Value == oldName);
-
-                foreach (var variable in directVariablesToFix)
-                {
-                    changes.VariablesToUpdate.Add((component, variable));
-                }
-
-                // Check whether this component has a matching state that should itself be renamed.
-                AddMatchingStateToRename(changes, component, category, oldName);
-
-                List<InstanceSave> instances = new List<InstanceSave>();
-                ObjectFinder.Self.GetElementsReferencing(component, foundInstances: instances);
-
-                foreach (var instance in instances)
-                {
-                    var parentOfInstance = instance.ParentContainer;
-                    var variableNameToLookFor = $"{instance.Name}.{variableName}";
-
-                    if (parentOfInstance != null)
-                    {
-                        var variablesToFix = parentOfInstance.AllStates
-                            .SelectMany(item => item.Variables)
-                            .Where(item => item.Name == variableNameToLookFor)
-                            .Where(item => (string?)item.Value == oldName);
-
-                        foreach (var variable in variablesToFix)
-                        {
-                            changes.VariablesToUpdate.Add((parentOfInstance, variable));
-                        }
-                    }
-                }
-            }
-
-            // Also check components that derive from an implementing component but don't explicitly
-            // reference the behavior. Their instances are already covered above via IsOfType in
-            // GetElementsReferencing; only their own direct states need checking here.
-            foreach (ComponentSave derivedComponent in _projectState.GumProjectSave.Components)
-            {
-                if (implementingComponents.Contains(derivedComponent))
-                {
-                    continue;
-                }
-
-                if (!implementingComponents.Any(impl => derivedComponent.IsOfType(impl.Name)))
-                {
-                    continue;
-                }
-
-                var directVariablesToFix = derivedComponent.AllStates
-                    .SelectMany(item => item.Variables)
-                    .Where(item => item.Name == variableName)
-                    .Where(item => (string?)item.Value == oldName);
-
-                foreach (var variable in directVariablesToFix)
-                {
-                    changes.VariablesToUpdate.Add((derivedComponent, variable));
-                }
-
-                AddMatchingStateToRename(changes, derivedComponent, category, oldName);
-            }
-        }
-
         return changes;
-    }
-
-    private static void AddMatchingStateToRename(StateRenameChanges changes, ElementSave element,
-        StateSaveCategory? category, string oldName)
-    {
-        if (category != null)
-        {
-            StateSaveCategory? matchingCategory = element.Categories.FirstOrDefault(c => c.Name == category.Name);
-            if (matchingCategory != null)
-            {
-                StateSave? matchingState = matchingCategory.States.FirstOrDefault(s => s.Name == oldName);
-                if (matchingState != null)
-                {
-                    changes.StatesToRename.Add((element, matchingState));
-                }
-            }
-        }
-        else
-        {
-            StateSave? matchingState = element.States.FirstOrDefault(s => s.Name == oldName);
-            if (matchingState != null)
-            {
-                changes.StatesToRename.Add((element, matchingState));
-            }
-        }
     }
 
     public void ApplyStateRenameChanges(StateRenameChanges changes, StateSave state)
@@ -542,12 +413,6 @@ public class RenameLogic : IRenameLogic
         {
             variable.Value = state.Name;
             elementsToSave.Add(container);
-        }
-
-        foreach (var (element, stateToRename) in changes.StatesToRename)
-        {
-            stateToRename.Name = state.Name;
-            elementsToSave.Add(element);
         }
 
         foreach (var elementToSave in elementsToSave)
@@ -601,26 +466,15 @@ public class RenameLogic : IRenameLogic
         }
         else if (owner is BehaviorSave behaviorSave)
         {
-            string message = "Enter new category name";
+            string message = "Enter new category name\n\nNote: Renaming states/categories in behaviors does not update the components that use this behavior.";
             string title = "New Category";
-
             string oldName = category.Name;
-            var changes = GetChangesForRenamedCategory(behaviorSave, category, oldName);
-            var changesDetails = changes.GetChangesDetails();
 
-            GetUserStringOptions options = new()
-            {
-                InitialValue = category.Name,
-                HasRefactorCheckbox = true,
-                RefactorCheckboxLabel = "Also update referencing elements",
-                RefactorDetails = changesDetails,
-                IsRefactorChecked = !string.IsNullOrEmpty(changesDetails)
-            };
+            GetUserStringOptions options = new() { InitialValue = category.Name };
 
             if (_dialogService.GetUserString(message, title, options) is { } newName)
             {
-                var changesToApply = options.IsRefactorChecked ? changes : new CategoryRenameChanges();
-                ApplyCategoryRenameChanges(changesToApply, behaviorSave, category, oldName, newName);
+                ApplyCategoryRenameChanges(new CategoryRenameChanges(), behaviorSave, category, oldName, newName);
             }
         }
     }
@@ -657,12 +511,6 @@ public class RenameLogic : IRenameLogic
                     change.Variable.Name = $"{change.Variable.SourceObject}.{newName}State";
                 }
             }
-        }
-
-        foreach (var (element, categoryToRename) in categoryChanges.CategoriesToRename)
-        {
-            categoryToRename.Name = newName;
-            elementsWithChangedVariables.Add(element);
         }
 
         if (selfVarsToUpdate != null)
@@ -718,15 +566,6 @@ public class RenameLogic : IRenameLogic
         {
             inheritingElements.Add(ownerAsElement);
             inheritingElements.AddRange(ObjectFinder.Self.GetElementsInheritingFrom(ownerAsElement));
-        }
-        else if (owner is BehaviorSave behaviorSave)
-        {
-            var implementingComponents = ObjectFinder.Self.GetElementsReferencing(behaviorSave);
-            foreach (var component in implementingComponents)
-            {
-                inheritingElements.Add(component);
-                inheritingElements.AddRange(ObjectFinder.Self.GetElementsInheritingFrom(component));
-            }
         }
 
         foreach (var screen in project.Screens)
