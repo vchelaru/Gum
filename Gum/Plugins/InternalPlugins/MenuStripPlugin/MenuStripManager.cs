@@ -92,7 +92,7 @@ namespace Gum.Managers
                 tsmi.Text = text;
                 if (clickEvent != null)
                 {
-                    tsmi.Click += (not, used) => clickEvent();
+                    tsmi.Click += (_, _) => clickEvent();
                 }
                 parent.DropDownItems.Add(tsmi);
                 return tsmi;
@@ -179,7 +179,7 @@ namespace Gum.Managers
             this.newProjectToolStripMenuItem.Name = "newProjectToolStripMenuItem";
             this.newProjectToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.newProjectToolStripMenuItem.Text = "New Project";
-            this.newProjectToolStripMenuItem.Click += (not, used) =>
+            this.newProjectToolStripMenuItem.Click += (_, _) =>
             {
                 _fileCommands.NewProject();
                 _fileCommands.ForceSaveProject();
@@ -197,7 +197,7 @@ namespace Gum.Managers
             // 
             this.managePluginsToolStripMenuItem.Name = "managePluginsToolStripMenuItem";
             this.managePluginsToolStripMenuItem.Text = "Manage Plugins";
-            this.managePluginsToolStripMenuItem.Click += (not, used) =>
+            this.managePluginsToolStripMenuItem.Click += (_, _) =>
             {
                 PluginsWindow pluginsWindow = new PluginsWindow();
                 pluginsWindow.Show();
@@ -209,7 +209,7 @@ namespace Gum.Managers
             // 
             this.findFileReferencesToolStripMenuItem.Name = "findFileReferencesToolStripMenuItem";
             this.findFileReferencesToolStripMenuItem.Text = "Find file references...";
-            this.findFileReferencesToolStripMenuItem.Click += (not, used) =>
+            this.findFileReferencesToolStripMenuItem.Click += (_, _) =>
             {
                 string message = "Enter entire or partial file name:";
                 string title = "Find file references";
@@ -250,7 +250,7 @@ namespace Gum.Managers
             // 
             this.saveAllToolStripMenuItem.Name = "saveAllToolStripMenuItem";
             this.saveAllToolStripMenuItem.Text = "Save All";
-            this.saveAllToolStripMenuItem.Click += (not, used) =>
+            this.saveAllToolStripMenuItem.Click += (_, _) =>
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
                 {
@@ -268,13 +268,13 @@ namespace Gum.Managers
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Text = "About...";
-            this.aboutToolStripMenuItem.Click += (not, used) => _dialogService.ShowMessage("Gum version " + Application.ProductVersion, "About");
+            this.aboutToolStripMenuItem.Click += (_, _) => _dialogService.ShowMessage("Gum version " + Application.ProductVersion, "About");
 
             string documentationLink = "https://docs.flatredball.com/gum";
             this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
             this.documentationToolStripMenuItem.Text = $"View Docs ({documentationLink})";
             this.documentationToolStripMenuItem.ToolTipText = "External link to Gum documentation";
-            this.documentationToolStripMenuItem.Click += (not, used) =>
+            this.documentationToolStripMenuItem.Click += (_, _) =>
             {
                 System.Diagnostics.Process.Start(new ProcessStartInfo
                 {

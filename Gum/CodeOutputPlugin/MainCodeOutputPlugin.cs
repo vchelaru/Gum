@@ -421,9 +421,9 @@ public class MainCodeOutputPlugin : PluginBase
     {
         control = new Views.CodeWindow(viewModel);
 
-        control.CodeOutputSettingsPropertyChanged += (not, used) => HandleCodeOutputPropertyChanged();
-        control.GenerateCodeClicked += (not, used) => HandleGenerateCodeButtonClicked();
-        control.GenerateAllCodeClicked += (not, used) => HandleGenerateAllCodeButtonClicked();
+        control.CodeOutputSettingsPropertyChanged += (_, _) => HandleCodeOutputPropertyChanged();
+        control.GenerateCodeClicked += (_, _) => HandleGenerateCodeButtonClicked();
+        control.GenerateAllCodeClicked += (_, _) => HandleGenerateAllCodeButtonClicked();
         viewModel.PropertyChanged += (sender, args) => HandleMainViewModelPropertyChanged(args.PropertyName);
 
         control.DataContext = viewModel;

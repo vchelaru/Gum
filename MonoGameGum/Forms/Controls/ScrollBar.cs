@@ -105,12 +105,12 @@ public class ScrollBar : RangeBase
 
         if(upButton != null)
         {
-            upButton.Push += (not, used) => this.Value -= this.SmallChange;
+            upButton.Push += (_, _) => this.Value -= this.SmallChange;
         }
 
         if(downButton != null)
         {
-            downButton.Push += (not, used) => this.Value += this.SmallChange;
+            downButton.Push += (_, _) => this.Value += this.SmallChange;
         }
 
         if(Track != null)

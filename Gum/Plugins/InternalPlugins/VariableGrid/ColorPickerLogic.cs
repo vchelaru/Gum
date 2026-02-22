@@ -134,9 +134,9 @@ public class ColorPickerLogic
                 instanceMember.IsReadOnly = variable.IsReadOnly || greenVariable.IsReadOnly || blueVariable.IsReadOnly;
                 instanceMember.SimulateValueChanged();
             }
-            redVariable.PropertyChanged += (not, used) => RefreshColorMember();
-            greenVariable.PropertyChanged += (not, used) => RefreshColorMember();
-            blueVariable.PropertyChanged += (not, used) => RefreshColorMember();
+            redVariable.PropertyChanged += (_, _) => RefreshColorMember();
+            greenVariable.PropertyChanged += (_, _) => RefreshColorMember();
+            blueVariable.PropertyChanged += (_, _) => RefreshColorMember();
 
             var indexToInsertAfter = Math.Max(category.Members.IndexOf(redVariable), Math.Max(category.Members.IndexOf(greenVariable), category.Members.IndexOf(blueVariable)));
             category.Members.Insert(indexToInsertAfter + 1, instanceMember);
