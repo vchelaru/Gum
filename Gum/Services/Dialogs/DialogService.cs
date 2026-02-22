@@ -141,11 +141,6 @@ internal class DialogService : IDialogService
         
         window.ShowDialog();
 
-        if (options != null && options.HasRefactorCheckbox)
-        {
-            options.IsRefactorChecked = vm.IsRefactorChecked;
-        }
-
         return affirmative ? vm.Value : null;
     }
 

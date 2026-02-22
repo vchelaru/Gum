@@ -162,11 +162,7 @@ public class EditCommands : IEditCommands
 
             if (stateContainer is BehaviorSave)
             {
-                // For behaviors, make refactoring optional via a checkbox
-                options.HasRefactorCheckbox = true;
-                options.RefactorCheckboxLabel = "Also update referencing elements";
-                options.RefactorDetails = changesDetails;
-                options.IsRefactorChecked = !string.IsNullOrEmpty(changesDetails);
+                message += "\n\nNote: Renaming states/categories in behaviors does not update the components that use this behavior.";
             }
             else if (!string.IsNullOrEmpty(changesDetails))
             {
@@ -176,8 +172,7 @@ public class EditCommands : IEditCommands
             if (_dialogService.GetUserString(message, title, options) is { } result)
             {
                 using var undoLock = _undoManager.RequestLock();
-                bool applyRefactoring = !(stateContainer is BehaviorSave) || options.IsRefactorChecked;
-                _renameLogic.RenameState(stateSave, category, result, applyRefactoring);
+                _renameLogic.RenameState(stateSave, category, result);
             }
         }
     }

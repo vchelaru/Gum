@@ -51,23 +51,11 @@ public sealed class GetUserStringDialogViewModel : GetUserStringDialogBaseViewMo
 {
     private Func<string?,string?>? Validator { get; }
 
-    public bool HasRefactorCheckbox { get; }
-    public string RefactorCheckboxLabel { get; }
-    public string? RefactorDetails { get; }
-    public bool IsRefactorChecked { get => Get<bool>(); set => Set(value); }
-
-    [DependsOn(nameof(IsRefactorChecked))]
-    public bool HasRefactorDetailsVisible => IsRefactorChecked && !string.IsNullOrEmpty(RefactorDetails);
-
     public GetUserStringDialogViewModel(GetUserStringOptions? options = null)
     {
         Value = options?.InitialValue;
         Validator = options?.Validator;
         PreSelect = options?.PreSelect ?? false;
-        HasRefactorCheckbox = options?.HasRefactorCheckbox ?? false;
-        RefactorCheckboxLabel = options?.RefactorCheckboxLabel ?? "Also update referencing elements";
-        RefactorDetails = options?.RefactorDetails;
-        IsRefactorChecked = options?.IsRefactorChecked ?? false;
     }
 
     protected override string? Validate(string? value) => Validator?.Invoke(value) ?? base.Validate(value);
@@ -78,12 +66,4 @@ public class GetUserStringOptions
     public Func<string?,string?>? Validator { get; set; }
     public string? InitialValue { get; set; }
     public bool PreSelect { get; set; }
-    public bool HasRefactorCheckbox { get; set; }
-    public string RefactorCheckboxLabel { get; set; } = "Also update referencing elements";
-    public string? RefactorDetails { get; set; }
-    /// <summary>
-    /// Set before showing the dialog to specify the default checked state.
-    /// After the dialog closes, read this to determine whether the user checked the checkbox.
-    /// </summary>
-    public bool IsRefactorChecked { get; set; }
 }

@@ -14,7 +14,6 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </UserControl.Resources>
     <StackPanel>
         <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
@@ -43,15 +42,5 @@
             Text="{Binding Error}"
             TextWrapping="Wrap"
             Visibility="{Binding Error, Converter={StaticResource NullToVisibilityConverter}}" />
-        <CheckBox
-            Margin="0,8,0,0"
-            Content="{Binding RefactorCheckboxLabel}"
-            IsChecked="{Binding IsRefactorChecked}"
-            Visibility="{Binding HasRefactorCheckbox, Converter={StaticResource BoolToVisibilityConverter}}" />
-        <TextBlock
-            Margin="16,4,0,0"
-            Text="{Binding RefactorDetails}"
-            TextWrapping="Wrap"
-            Visibility="{Binding HasRefactorDetailsVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
     </StackPanel>
 </UserControl>
