@@ -190,7 +190,9 @@ public class MoveInputHandler : InputHandlerBase
             foreach (InstanceSave instance in selectedInstances)
             {
                 if (instance.Locked)
+                {
                     continue;
+                }
 
                 var xOrY = Context.GrabbedState.AxisMovedFurthestAlong;
                 var gue = Context.WireframeObjectManager.GetRepresentation(instance);
@@ -226,7 +228,9 @@ public class MoveInputHandler : InputHandlerBase
                 foreach (var instance in Context.SelectedState.SelectedInstances)
                 {
                     if (instance.Locked)
+                    {
                         continue;
+                    }
 
                     Context.SelectedState.SelectedStateSave.SetValue(instance.Name + ".Y", Context.GrabbedState.InstancePositions[instance].StateY, "float");
                 }
@@ -244,7 +248,9 @@ public class MoveInputHandler : InputHandlerBase
                 foreach (var instance in Context.SelectedState.SelectedInstances)
                 {
                     if (instance.Locked)
+                    {
                         continue;
+                    }
 
                     Context.SelectedState.SelectedStateSave.SetValue(instance.Name + ".X", Context.GrabbedState.InstancePositions[instance].StateX, "float");
                 }
