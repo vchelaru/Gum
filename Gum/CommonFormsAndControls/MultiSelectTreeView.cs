@@ -1042,27 +1042,9 @@ namespace CommonFormsAndControls
 
         private void InitializeComponent()
         {
-            
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MultiSelectTreeView));
             this._elementTreeImages = new System.Windows.Forms.ImageList(this._components);
-            this.SuspendLayout();
-            // 
-            // ElementTreeImages
-            // 
-            this._elementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")!));
             this._elementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
-            this._elementTreeImages.Images.SetKeyName(0, "transparent.png");
-            this._elementTreeImages.Images.SetKeyName(1, "Folder.png");
-            this._elementTreeImages.Images.SetKeyName(2, "Component.png");
-            this._elementTreeImages.Images.SetKeyName(3, "Instance.png");
-            this._elementTreeImages.Images.SetKeyName(4, "Screen.png");
-            this._elementTreeImages.Images.SetKeyName(5, "StandardElement.png");
-            this._elementTreeImages.Images.SetKeyName(6, "redExclamation.png");
-            this._elementTreeImages.Images.SetKeyName(7, "state.png");
-            this._elementTreeImages.Images.SetKeyName(8, "behavior.png");
-            this._elementTreeImages.Images.SetKeyName(9, "InheritedInstance.png");
-            this.ResumeLayout(false);
-
+            this._elementTreeImages.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
         }
     }
 

@@ -155,6 +155,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public const int StateImageIndex = 7;
     public const int BehaviorImageIndex = 8;
     public const int DerivedInstanceImageIndex = 9;
+    public const int LockedInstanceImageIndex = 10;
 
     static ElementTreeViewManager mSelf;
 
@@ -165,12 +166,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost => _viewCreator.TreeViewHost;
     private System.Windows.Controls.TextBox searchTextBox => _viewCreator.SearchTextBox;
     private System.Windows.Controls.CheckBox deepSearchCheckBox => _viewCreator.DeepSearchCheckBox;
-
-    public ImageList unmodifiableImageList
-    {
-        get => _viewCreator.UnmodifiableImageList;
-        set => _viewCreator.UnmodifiableImageList = value;
-    }
 
     internal void UpdateCollapseButtonSizes(double baseFontSize) =>
         _viewCreator.UpdateCollapseButtonSizes(baseFontSize);
@@ -380,9 +375,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         return null;
     }
-
-
-
 
     public TreeNode GetTreeNodeFor(ScreenSave screenSave)
     {
@@ -1493,6 +1485,26 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
+    public void RefreshUi(InstanceSave instance)
+    {
+        var parentElement = instance.ParentContainer;
+        if (parentElement == null)
+        {
+            return;
+        }
+
+        var parentTreeNode = GetTreeNodeFor(parentElement);
+        if(parentTreeNode == null)
+        {
+            return;
+        }
+
+        var treeNode = GetTreeNodeFor(instance, parentTreeNode);
+        if(treeNode != null)
+        {
+            RefreshUi(treeNode);
+        }
+    }
     public void RefreshUi(TreeNode node)
     {
         if(node  == null)
@@ -1510,6 +1522,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             if(instanceSave.Name != node.Text)
             {
                 node.Text = instanceSave.Name;
+            }
+
+            var currentIndex = node.ImageIndex;
+            if (currentIndex == InstanceImageIndex || currentIndex == LockedInstanceImageIndex)
+            {
+                int desiredImageIndex = instanceSave.Locked ? LockedInstanceImageIndex : InstanceImageIndex;
+                if (currentIndex != desiredImageIndex)
+                {
+                    node.ImageIndex = desiredImageIndex;
+                }
             }
         }
         else if(node.Tag is BehaviorSave behavior)
@@ -1679,6 +1701,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             int desiredImageIndex = InstanceImageIndex;
             if (element == null || element.IsSourceFileMissing)
                 desiredImageIndex = ExclamationIndex;
+            else if (instance.Locked)
+                desiredImageIndex = LockedInstanceImageIndex;
 
             if(nodeForInstance.ImageIndex != desiredImageIndex)
             {
@@ -1740,7 +1764,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         bool validBaseType = ObjectFinder.Self.GetElementSave(instance.BaseType) != null;
 
         if (validBaseType || tolerateMissingTypes)
-            treeNode.ImageIndex = InstanceImageIndex;
+            treeNode.ImageIndex = instance.Locked ? LockedInstanceImageIndex : InstanceImageIndex;
         else
             treeNode.ImageIndex = ExclamationIndex;
 

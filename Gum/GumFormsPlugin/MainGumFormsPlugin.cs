@@ -27,7 +27,7 @@ internal class MainGumFormsPlugin : PluginBase
     public override string FriendlyName => "Gum Forms Plugin";
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 
-    System.Windows.Forms.ToolStripMenuItem _addFormsMenuItem;
+    System.Windows.Forms.ToolStripMenuItem _addFormsMenuItem = default!; // set in startup
     private readonly FormsFileService _formsFileService;
     private readonly IImportLogic _importLogic;
 

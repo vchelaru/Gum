@@ -53,6 +53,12 @@ public class ResizeHandlesVisual : EditorVisualBase
             return;
         }
 
+        if (Context.IsSelectionLocked())
+        {
+            Visible = false;
+            return;
+        }
+
         Visible = true;
         _resizeHandles.SetValuesFrom(selectedObjects);
         _resizeHandles.UpdateHandleSizes();

@@ -153,7 +153,7 @@ public class AddFormsViewModel : DialogViewModel
                 {
                     return item.Extension != "gumx";
                 })
-                .Select(item => item.RelativeTo(_projectState.ProjectDirectory))
+                .Select(item => item.RelativeTo(_projectState.ProjectDirectory!))
                 .ToList();
 
             var standardFiles = filesWhichWouldGetOverwritten.Where(item => item.EndsWith(".gutx")).ToList();
@@ -214,34 +214,37 @@ public class AddFormsViewModel : DialogViewModel
             {
                 // See if the states differ:
                 var potentiallyModifiedDefault = standardElement.DefaultState;
-                var actualDefault = StandardElementsManager.Self.GetDefaultStateFor(standardElementName).Clone();
-                actualDefault.Variables.Sort((a, b) => a.Name.CompareTo(b.Name));
-
-                // JSON comparison requires we have Newtonsoft, or requires running a newer version
-                // of .NET to have the JSON serailzier present. This isn't currently supported in Gum
-                // tool, so we need to use XML:
-                //var differ = JsonConvert.SerializeObject(potentiallyModifiedDefault) != JsonConvert.SerializeObject(actualDefault);
-                FileManager.XmlSerialize(potentiallyModifiedDefault, out string potentiallyModifiedSerialized);
-                FileManager.XmlSerialize(actualDefault, out string actualDefaultSerialized);
-                var differ = potentiallyModifiedSerialized != actualDefaultSerialized;
-
-                if (!differ)
+                var actualDefault = StandardElementsManager.Self.GetDefaultStateFor(standardElementName)?.Clone();
+                if(actualDefault != null)
                 {
-                    differ = standardElement.Categories.Count > 0;
-                }
-                if(!differ)
-                {
-                    toRemove.Add(standardFile);
-                }
+                    actualDefault.Variables.Sort((a, b) => a.Name.CompareTo(b.Name));
 
-                if(differ)
-                {
-                    // If it differs, we don't care if this isn't used anywhere so let's check
-                    var referencesToThis = ObjectFinder.Self.GetElementReferencesToThis(standardElement);
+                    // JSON comparison requires we have Newtonsoft, or requires running a newer version
+                    // of .NET to have the JSON serailzier present. This isn't currently supported in Gum
+                    // tool, so we need to use XML:
+                    //var differ = JsonConvert.SerializeObject(potentiallyModifiedDefault) != JsonConvert.SerializeObject(actualDefault);
+                    FileManager.XmlSerialize(potentiallyModifiedDefault, out string potentiallyModifiedSerialized);
+                    FileManager.XmlSerialize(actualDefault, out string actualDefaultSerialized);
+                    var differ = potentiallyModifiedSerialized != actualDefaultSerialized;
 
-                    if(referencesToThis.Count == 0)
+                    if (!differ)
+                    {
+                        differ = standardElement.Categories.Count > 0;
+                    }
+                    if(!differ)
                     {
                         toRemove.Add(standardFile);
+                    }
+
+                    if(differ)
+                    {
+                        // If it differs, we don't care if this isn't used anywhere so let's check
+                        var referencesToThis = ObjectFinder.Self.GetElementReferencesToThis(standardElement);
+
+                        if(referencesToThis.Count == 0)
+                        {
+                            toRemove.Add(standardFile);
+                        }
                     }
                 }
             }

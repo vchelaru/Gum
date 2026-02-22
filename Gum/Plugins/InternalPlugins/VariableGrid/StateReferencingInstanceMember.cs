@@ -71,6 +71,10 @@ public class StateReferencingInstanceMember : InstanceMember
     {
         get
         {
+            if (InstanceSave?.Locked == true && RootVariableName != "Locked")
+            {
+                return true;
+            }
             if (_isVariable)
             {
                 return _isReadOnlyFromDescriptor;

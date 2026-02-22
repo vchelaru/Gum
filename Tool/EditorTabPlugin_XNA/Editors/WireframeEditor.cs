@@ -274,6 +274,7 @@ public abstract class WireframeEditor
     public virtual System.Windows.Forms.Cursor GetWindowsCursorToShow(
         System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt)
     {
+        if (_context.IsSelectionLocked()) return defaultCursor;
         foreach (var handler in _inputHandlers.OrderByDescending(h => h.Priority))
         {
             var cursor = handler.GetCursorToShow(worldXAt, worldYAt);

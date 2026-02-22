@@ -55,6 +55,12 @@ public class RotationHandleVisual : EditorVisualBase
             return;
         }
 
+        if (Context.IsSelectionLocked())
+        {
+            Visible = false;
+            return;
+        }
+
         Visible = true;
         UpdateRotationHandlePosition();
     }
