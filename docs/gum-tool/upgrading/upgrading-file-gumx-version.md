@@ -35,6 +35,8 @@ The initial file version, which was used until February 2026.
 
 ## Version 2
 
+**Required Gum Tool Version**: February 2026
+
 This version uses XML Attributes to greatly reduce the size of XML files and to make manual editing and diffing of files easier.
 
 ✅No manual changes are needed to your project beyond changing the version number.
