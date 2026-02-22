@@ -165,6 +165,9 @@ public class ResizeInputHandler : InputHandlerBase
 
         foreach (InstanceSave save in Context.SelectedState.SelectedInstances)
         {
+            if (save.Locked)
+                continue;
+
             hasChangeOccurred |= ApplySizeChangeForInstance(
                 cursorXChange, cursorYChange, instanceSave: save, elementStack: elementStack);
         }

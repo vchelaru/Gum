@@ -128,10 +128,15 @@ public class ColorPickerLogic
 
             TryAddExposeColorVariableMenuItem(instance, instanceMember);
 
-            // so color updates
-            redVariable.PropertyChanged += (not, used) => instanceMember.SimulateValueChanged();
-            greenVariable.PropertyChanged += (not, used) => instanceMember.SimulateValueChanged();
-            blueVariable.PropertyChanged += (not, used) => instanceMember.SimulateValueChanged();
+            // so color updates (also re-evaluates IsReadOnly in case Locked changed)
+            void RefreshColorMember()
+            {
+                instanceMember.IsReadOnly = variable.IsReadOnly || greenVariable.IsReadOnly || blueVariable.IsReadOnly;
+                instanceMember.SimulateValueChanged();
+            }
+            redVariable.PropertyChanged += (not, used) => RefreshColorMember();
+            greenVariable.PropertyChanged += (not, used) => RefreshColorMember();
+            blueVariable.PropertyChanged += (not, used) => RefreshColorMember();
 
             var indexToInsertAfter = Math.Max(category.Members.IndexOf(redVariable), Math.Max(category.Members.IndexOf(greenVariable), category.Members.IndexOf(blueVariable)));
             category.Members.Insert(indexToInsertAfter + 1, instanceMember);

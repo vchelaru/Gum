@@ -467,12 +467,18 @@ public class HotkeyManager : IHotkeyManager
 
         if (nudgeX != 0 || nudgeY != 0)
         {
+            var instance = _selectedState.SelectedInstance;
+
+            if (instance?.Locked == true)
+            {
+                return false;
+            }
+
             if(!_isNudging)
             {
                 _isNudging = true;
                 _undoManager.RecordState();
             }
-            var instance = _selectedState.SelectedInstance;
 
             var element = _selectedState.SelectedElement;
 

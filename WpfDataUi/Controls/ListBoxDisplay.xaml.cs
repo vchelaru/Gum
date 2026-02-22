@@ -102,7 +102,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
             //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             //HintTextBlock.Text = InstanceMember?.DetailText;
             TrySetValueOnUi(InstanceMember?.Value);
-            //RefreshIsEnabled();
+            RefreshIsEnabled();
 
             SuppressSettingProperty = false;
         }
@@ -250,6 +250,12 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         return ApplyValueResult.Success;
     }
 
+    private void RefreshIsEnabled()
+    {
+        var isReadOnly = InstanceMember?.IsReadOnly == true;
+        NotEditingEntryStackPanel.IsEnabled = !isReadOnly;
+    }
+
     private void AddButtonClicked(object? sender, RoutedEventArgs e)
     {
         ShowTextBoxUi();
@@ -264,6 +270,9 @@ public partial class ListBoxDisplay : UserControl, IDataUi
 
     private void ListBox_KeyDown(object? sender, KeyEventArgs e)
     {
+        if (InstanceMember?.IsReadOnly == true)
+            return;
+
         var isCtrlDown =
             (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl));
 
@@ -467,6 +476,9 @@ public partial class ListBoxDisplay : UserControl, IDataUi
 
     private void ListBox_MouseDoubleClick(object? sender, MouseButtonEventArgs e)
     {
+        if (InstanceMember?.IsReadOnly == true)
+            return;
+
         IndexEditing = ((ListBox)sender).SelectedIndex;
         if(IndexEditing < 0)
         {

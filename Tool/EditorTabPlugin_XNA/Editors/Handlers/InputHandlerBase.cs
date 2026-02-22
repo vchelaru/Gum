@@ -26,6 +26,10 @@ public abstract class InputHandlerBase : IInputHandler
 
     public virtual bool HandlePush(float worldX, float worldY)
     {
+        if (Context.IsSelectionLocked())
+        {
+            return false;
+        }
         if (HasCursorOver(worldX, worldY))
         {
             IsActive = true;

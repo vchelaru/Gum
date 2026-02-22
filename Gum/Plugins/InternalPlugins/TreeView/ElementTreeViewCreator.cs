@@ -31,7 +31,7 @@ internal class ElementTreeViewCreator
 {
     #region Fields
 
-    private ImageList _originalImageList;
+    private Dictionary<string, Image> _originalImages = new();
 
     #endregion
 
@@ -45,18 +45,6 @@ internal class ElementTreeViewCreator
     internal System.Windows.Controls.CheckBox DeepSearchCheckBox { get; private set; } = null!;
     internal System.Windows.Controls.Button CollapseAllButton { get; private set; } = null!;
     internal System.Windows.Controls.Button CollapseToElementButton { get; private set; } = null!;
-
-    internal ImageList UnmodifiableImageList
-    {
-        get => CloneImageList(_originalImageList);
-        set
-        {
-            if (_originalImageList == null)
-            {
-                _originalImageList = value;
-            }
-        }
-    }
 
     #endregion
 
@@ -211,7 +199,6 @@ internal class ElementTreeViewCreator
         this.ObjectTreeView.HotTracking = true;
         this.ObjectTreeView.ImageIndex = 0;
         this.ObjectTreeView.ImageList = ObjectTreeView.ElementTreeImageList;
-        UnmodifiableImageList = ObjectTreeView.ElementTreeImageList;
         this.ObjectTreeView.Location = new System.Drawing.Point(0, 0);
         this.ObjectTreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
         this.ObjectTreeView.Name = "ObjectTreeView";
@@ -299,6 +286,8 @@ internal class ElementTreeViewCreator
 
         var size = new Size((int)(baseImageSize * scale), (int)(baseImageSize * scale));
 
+        InjectDynamicIcons();
+
         var keyedColors = GetCurrentColorMap();
         Application app = Application.Current;
         Color? defaultColor = null;
@@ -307,7 +296,7 @@ internal class ElementTreeViewCreator
             defaultColor = Color.FromArgb(dc.A, dc.R, dc.G, dc.B);
         }
 
-        ObjectTreeView.ImageList = BuildTintedImageList(UnmodifiableImageList, size, keyedColors, defaultColor ?? Color.White);
+        ObjectTreeView.ImageList = BuildTintedImageList(_originalImages, size, keyedColors, defaultColor ?? Color.White);
 
         // for some reason, after the .net upgrade, the indent doesn't auto-adjust to account
         // for the size of the images on first load, so we just force it here every time, despite
@@ -315,7 +304,7 @@ internal class ElementTreeViewCreator
         ObjectTreeView.Indent = (int)baseImageSize;
 
         ImageList BuildTintedImageList(
-            ImageList originalImageList,
+            Dictionary<string, Image> originalImages,
             Size newSize,
             IDictionary<string, Color>? perKeyColors,
             Color fallbackColor)
@@ -323,14 +312,13 @@ internal class ElementTreeViewCreator
             var outList = new ImageList
             {
                 ImageSize = newSize,
-                ColorDepth = originalImageList.ColorDepth // preserve
+                ColorDepth = ColorDepth.Depth32Bit
             };
 
-            foreach (var key in originalImageList.Images.Keys)
+            foreach (var kvp in originalImages)
             {
-                if (key == null) continue;
-
-                var src = originalImageList.Images[key]!;
+                var key = kvp.Key;
+                var src = kvp.Value;
 
                 // pick the color for this key (fallback if none specified)
                 var tint = (perKeyColors != null && perKeyColors.TryGetValue(key, out var c)) ? c : fallbackColor;
@@ -387,6 +375,43 @@ internal class ElementTreeViewCreator
             return dest;
         }
 
+        void InjectDynamicIcons()
+        {
+            TryInjectIcon("transparent.png",
+                "pack://application:,,,/Gum;component/Content/Icons/transparent.png");
+            TryInjectIcon("Folder.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/folder.png");
+            TryInjectIcon("Component.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Component.png");
+            TryInjectIcon("Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Instance.png");
+            TryInjectIcon("Screen.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/screen.png");
+            TryInjectIcon("StandardElement.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/StandardElement.png");
+            TryInjectIcon("redExclamation.png",
+                "pack://application:,,,/Gum;component/Content/Icons/redExclamation.png");
+            TryInjectIcon("state.png",
+                "pack://application:,,,/Gum;component/Content/Icons/state.png");
+            TryInjectIcon("behavior.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/behavior.png");
+            TryInjectIcon("InheritedInstance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/InheritedInstance.png");
+            TryInjectIcon("instance_locked.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/instance_locked.png");
+        }
+
+        void TryInjectIcon(string key, string packUri)
+        {
+            if (_originalImages.ContainsKey(key)) return;
+
+            var streamInfo = Application.GetResourceStream(new Uri(packUri));
+            if (streamInfo == null) return;
+
+            using var stream = streamInfo.Stream;
+            _originalImages[key] = Image.FromStream(stream);
+        }
+
         static Dictionary<string, Color> GetCurrentColorMap()
         {
             Application app = Application.Current;
@@ -408,6 +433,7 @@ internal class ElementTreeViewCreator
                 ["Folder.png"] = manilla,
                 ["Component.png"] = green,
                 ["Instance.png"] = blue,
+                ["instance_locked.png"] = blue,
                 ["Screen.png"] = red,
                 ["StandardElement.png"] = purple,
                 ["redExclamation.png"] = red,
@@ -415,26 +441,6 @@ internal class ElementTreeViewCreator
                 ["behavior.png"] = manilla,
             };
         }
-    }
-
-    private ImageList CloneImageList(ImageList original)
-    {
-        // Create a new ImageList with matching properties
-        ImageList copy = new ImageList
-        {
-            ImageSize = original.ImageSize,
-            ColorDepth = original.ColorDepth,
-            TransparentColor = original.TransparentColor
-        };
-
-        // Clone each image from the original list
-        for (int i = 0; i < original.Images.Count; i++)
-        {
-            var key = original.Images.Keys[i];
-            copy.Images.Add(key!, (Image)original.Images[i].Clone());
-        }
-
-        return copy;
     }
 
     private FlatSearchListBox CreateFlatSearchList(Action<SearchItemViewModel> onSearchNodeSelected)

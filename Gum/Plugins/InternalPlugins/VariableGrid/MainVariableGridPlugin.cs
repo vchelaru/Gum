@@ -117,7 +117,11 @@ public class MainVariableGridPlugin : InternalPlugin
 
     private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
     {
-        _propertyGridManager.RefreshEntireGrid(force: true);
+        _propertyGridManager.RefreshEntireGrid(
+            // When an instance is selected in a new component, the state and instance are both
+            // selected. Don't force it here because if so, it forces a double select on the instance
+            // which is raised after the state.
+            force: false);
     }
 
     private void MainVariableGridPlugin_ReactToStateSaveCategorySelected(StateSaveCategory? obj)

@@ -1,6 +1,9 @@
-# Gum Undo/Redo System Reference
+---
+name: undo-system
+description: Reference guide for Gum's undo/redo system. Load this when working on undo/redo behavior, the History tab, UndoManager, UndoPlugin, UndoSnapshot, or stale reference issues after undo.
+---
 
-You are being asked about Gum's undo/redo system. Use the following reference to answer accurately.
+# Gum Undo/Redo System Reference
 
 ## Overview
 
@@ -80,5 +83,3 @@ Consequence: after an undo, `_selectedState.SelectedInstance` may point to a sta
 | No persistence | History is cleared on project load or app close |
 | No element-deletion undo | Deleting an element removes its history permanently |
 | Behaviors not supported | Behavior changes are not reliably undoable |
-
-$ARGUMENTS

@@ -64,6 +64,12 @@ public class SelectionManager : ISelectionManager
 
     public WireframeEditor? WireframeEditor;
 
+    /// <summary>
+    /// Set on PrimaryPush when the push was on an already-selected locked instance body.
+    /// Used to prevent spurious deselection when the cursor is released outside the instance.
+    /// </summary>
+    private bool _lastPushWasOnLockedBody;
+
     private RectangleSelector? _rectangleSelector;
 
     List<GraphicalUiElement> mSelectedIpsos = new List<GraphicalUiElement>();
@@ -482,7 +488,11 @@ public class SelectionManager : ISelectionManager
                     {
                         if (IsOverBody && Cursor.PrimaryDown)
                         {
-                            cursorToSet = System.Windows.Forms.Cursors.SizeAll;
+                            var selectedIsLocked = _selectedState.SelectedInstance?.Locked == true;
+                            if (!selectedIsLocked)
+                            {
+                                cursorToSet = System.Windows.Forms.Cursors.SizeAll;
+                            }
                             representationOver = _wireframeObjectManager.GetSelectedRepresentation();
                         }
                         else
@@ -495,7 +505,11 @@ public class SelectionManager : ISelectionManager
 
                             if (representationOver != null)
                             {
-                                cursorToSet = System.Windows.Forms.Cursors.SizeAll;
+                                var isRepresentationLocked = (representationOver as GraphicalUiElement)?.Tag is InstanceSave lockedInst && lockedInst.Locked;
+                                if (!isRepresentationLocked)
+                                {
+                                    cursorToSet = System.Windows.Forms.Cursors.SizeAll;
+                                }
                                 IsOverBody = true;
                             }
                             else
@@ -935,6 +949,13 @@ public class SelectionManager : ISelectionManager
             // select B first, then handlers operate on B (not A)
             // ───────────────────────────────────────────────────────────
 
+            // Track if this push was on a locked body so we can prevent
+            // spurious deselection when the cursor is released outside it.
+            if (cursor.PrimaryPush)
+            {
+                _lastPushWasOnLockedBody = _selectedState.SelectedInstance?.Locked == true && IsOverBody;
+            }
+
             // PHASE 1: QUERY - What's under the cursor?
             var inputContext = DetermineInputContext(worldX, worldY, cursor);
 
@@ -1160,8 +1181,10 @@ public class SelectionManager : ISelectionManager
             _rectangleSelector.HandleRelease();
 
             // If rectangle selector was never activated (simple click, no drag),
-            // fall back to normal click selection to handle deselection
-            if (!wasActive)
+            // fall back to normal click selection to handle deselection.
+            // Skip the fallback if the push was on a locked body — releasing
+            // outside the locked instance should not deselect it.
+            if (!wasActive && !_lastPushWasOnLockedBody)
             {
                 ProcessNormalClickSelection(context, worldX, worldY);
             }

@@ -123,7 +123,7 @@ public class ElementSaveDisplayer
         if (instanceSave != null)
         {
             propertyList.Add(new PropertyData("Locked", typeof(bool), new Attribute[0], null, "", !isDefault, false, null,
-                ToolTipText: "When locked, the instance cannot be selected in the editor by clicking on it."));
+                ToolTipText: "When locked, the instance cannot be selected in the editor by clicking on it, and variable editing is disabled."));
 
             if (instanceOwner is ComponentSave)
             {

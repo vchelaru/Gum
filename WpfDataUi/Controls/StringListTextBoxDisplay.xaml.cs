@@ -81,7 +81,7 @@ namespace WpfDataUi.Controls
                 //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
                 //HintTextBlock.Text = InstanceMember?.DetailText;
                 TrySetValueOnUi(InstanceMember?.Value);
-                //RefreshIsEnabled();
+                RefreshIsEnabled();
 
                 SuppressSettingProperty = false;
             }
@@ -149,6 +149,18 @@ namespace WpfDataUi.Controls
                 //ListBox.ItemsSource = value as IEnumerable;
             }
             return ApplyValueResult.Success;
+        }
+
+        private void RefreshIsEnabled()
+        {
+            if (InstanceMember?.IsReadOnly == true)
+            {
+                this.IsEnabled = false;
+            }
+            else
+            {
+                this.IsEnabled = true;
+            }
         }
 
         private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)

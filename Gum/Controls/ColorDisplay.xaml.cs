@@ -37,8 +37,6 @@ namespace Gum.Controls.DataUi
             {
                 bool valueChanged = mInstanceMember != value;
 
-                mInstanceMember = value;
-
                 if (mInstanceMember != null && valueChanged)
                 {
                     mInstanceMember.PropertyChanged -= HandlePropertyChange;
