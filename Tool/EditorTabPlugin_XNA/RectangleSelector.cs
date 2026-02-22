@@ -29,6 +29,7 @@ public class RectangleSelector
 
     private bool _isActive;
     private bool _hasMovedEnough;
+    private bool _hasValidPush;
     private float _startX;
     private float _startY;
     private float _currentX;
@@ -82,10 +83,14 @@ public class RectangleSelector
         _currentY = worldY;
         _isAdditive = _hotkeyManager.MultiSelect.IsPressedInControl();
         _hasMovedEnough = false;
+        _hasValidPush = true;
     }
 
     public void HandleDrag(bool isHandlerActive = false)
     {
+        // Don't activate if there was no valid in-window push to start this drag
+        if (!_hasValidPush) return;
+
         // Don't activate if any input handler is active (resize, rotate, polygon points, etc.)
         if (isHandlerActive) return;
 
@@ -153,6 +158,7 @@ public class RectangleSelector
 
         _isActive = false;
         _hasMovedEnough = false;
+        _hasValidPush = false;
     }
 
     public void Update(bool isHandlerActive = false)

@@ -1166,7 +1166,10 @@ public class SelectionManager : ISelectionManager
 
         if (cursor.PrimaryPush)
         {
-            _rectangleSelector.HandlePush(worldX, worldY);
+            if (cursor.IsInWindow)
+            {
+                _rectangleSelector.HandlePush(worldX, worldY);
+            }
         }
         else if (cursor.PrimaryDown)
         {
