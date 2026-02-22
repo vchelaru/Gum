@@ -594,7 +594,7 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
                         var innerUiElement =
                             itemsInExpander.ItemContainerGenerator.ContainerFromIndex(j) as ContentPresenter;
 
-                        if (VisualTreeHelper.GetChildrenCount(innerUiElement) > 0 && VisualTreeHelper.GetChild(innerUiElement, 0) is SingleDataUiContainer singleDataUiContainer)
+                        if (innerUiElement != null && VisualTreeHelper.GetChildrenCount(innerUiElement) > 0 && VisualTreeHelper.GetChild(innerUiElement, 0) is SingleDataUiContainer singleDataUiContainer)
                         {
                             (singleDataUiContainer.UserControl as IDataUi)?.Refresh();
                             handledByRefresh = true;

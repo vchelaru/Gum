@@ -98,16 +98,13 @@ public class DeleteVariableService : IDeleteVariableService
             return GeneralResponse.UnsuccessfulWith($"The variable {variable} is not contained in {stateContainer}");
         }
 
-        var renames = _renameLogic.GetVariableChangesForRenamedVariable(stateContainer, variable.Name, variable.GetRootName());
+        var renames = _renameLogic.GetChangesForRenamedVariable(stateContainer, variable.Name, variable.GetRootName());
 
-        if (renames.VariableReferenceChanges.Count > 0)
+        var changesDetails = renames.GetChangesDetails();
+        if (!string.IsNullOrEmpty(changesDetails))
         {
-            string message = $"Cannot delete variable {variable} because it is referenced by:\n\n";
-            foreach(var item in renames.VariableReferenceChanges)
-            {
-                message += $"{item.VariableReferenceList.ValueAsIList[item.LineIndex]} in {item.VariableReferenceList.Name} ({item.Container})\n";
-            }
-            return GeneralResponse.UnsuccessfulWith(message);
+            return GeneralResponse.UnsuccessfulWith(
+                $"Cannot delete variable {variable.Name} because it is referenced by other elements.\n\n{changesDetails}");
         }
 
         return GeneralResponse.SuccessfulResponse;

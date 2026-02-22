@@ -609,7 +609,7 @@ public class ElementCommands : IElementCommands
                 Value = null
 #if GUM
 ,
-                CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name)
+                CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState)
 #endif
             });
 

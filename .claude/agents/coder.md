@@ -20,7 +20,7 @@ In either case, your job is to produce a focused code change that implements the
 
 # After editing
 
-Ask if you want the user to build or if you should build for them. If you build, read and fix any errors until it builds successfully. If the build fails, read the errors and fix them — do not leave broken code. Output: changed files + brief why. Focus on correctness and brevity over cleverness.
+Do NOT build or run tests automatically. The user will do this themselves. Output: changed files + brief why. Focus on correctness and brevity over cleverness.
 
 Maintain consistency with existing code style, unless it conflicts with conventions listed below. In that case, explain which you chose and why. Always search for usages before renaming or changing a public API. Can create new files when implementing new features.
 
@@ -54,3 +54,6 @@ The Gum repository is organized into several key areas:
 * Avoid using singletons, even if a singleton is used elsewhere in the codebase. Instead, use dependency injection or other patterns to manage shared state. If the singleton is used in the codebase, then try to move the .Self call as high as it will go, usually to the plugin level.
 * **Always create interfaces for services, managers, and helpers**: When creating any new service, manager, or helper class, MUST create a matching interface (I[ClassName]). Use the interface type in all constructor parameters, fields, and references. This ensures loose coupling, testability, and consistency with existing Gum patterns.
 * **Register services in Builder.cs only if used app-wide**: Only register services in Builder.cs (via `services.AddSingleton<>()`) if they are used throughout the application by multiple plugins or core systems. Plugin-specific services should NOT be registered in Builder.cs. Instead, plugins should instantiate their own services directly, injecting any required app-level dependencies from DI into the plugin-specific service constructor. Example: `IUserProjectSettingsManager` is app-wide (registered in Builder), but `TreeViewStateService` is plugin-specific (instantiated in MainTreeViewPlugin).
+* Alwasy have if-statements use braces, even for single-line bodies. This improves readability and reduces the chance of bugs when modifying code later.
+* Do not use `(not, used)` in lamdbas, even if you see it elsewhere in the code. Instead use `(_,_)`.
+* **Unit tests: always use explicit types, not `var`**. Every local variable declaration in a unit test method must use the concrete type (e.g., `ComponentSave button = new ComponentSave { ... }`, not `var button = new ComponentSave { ... }`).

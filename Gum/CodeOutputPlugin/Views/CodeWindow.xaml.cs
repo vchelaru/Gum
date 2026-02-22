@@ -77,7 +77,7 @@ public partial class CodeWindow : UserControl
 
         this.DataContext = viewModel;
 
-        DataGrid.PropertyChange += (not, used) => CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
+        DataGrid.PropertyChange += (_, _) => CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
 
         FullRefreshDataGrid();
     }

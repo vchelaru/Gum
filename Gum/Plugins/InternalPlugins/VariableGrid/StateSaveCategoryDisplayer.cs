@@ -63,7 +63,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
                     instanceMember.Name = commonMember;
                     instanceMember.CustomGetTypeEvent += (member) => typeof(string);
                     instanceMember.CustomGetEvent += (member) => commonMember;
-                    instanceMember.CustomSetEvent += (not, used) =>
+                    instanceMember.CustomSetEvent += (_, _) =>
                     {
                         _variableInCategoryPropagationLogic
                             .AskRemoveVariableFromAllStatesInCategory(commonMember, stateCategory);

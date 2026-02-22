@@ -180,11 +180,11 @@ public class WireframeControl : GraphicsDeviceControl
             MouseMove += _cameraController.HandleMouseMove;
             MouseWheel += _cameraController.HandleMouseWheel;
 
-            MouseEnter += (not, used) =>
+            MouseEnter += (_, _) =>
             {
                 mouseHasEntered = true;
             };
-            MouseLeave += (not, used) =>
+            MouseLeave += (_, _) =>
             {
                 mouseHasEntered = false;
             };

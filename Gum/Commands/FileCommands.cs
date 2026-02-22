@@ -57,8 +57,13 @@ public class FileCommands : IFileCommands
 
     public FilePath? ProjectDirectory => FileManager.RelativeDirectory;
 
-    public void DeleteDirectory(FilePath directory) => 
+    public void DeleteDirectory(FilePath directory) =>
         FileManager.DeleteDirectory(directory.FullPath);
+
+    public void MoveToRecycleBin(FilePath filePath) =>
+        Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(filePath.FullPath,
+            Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
+            Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
 
     public string[] GetFiles(string path) => System.IO.Directory.GetFiles(path);
 
@@ -294,7 +299,8 @@ public class FileCommands : IFileCommands
                     {
                         try
                         {
-                            elementSave.Save(fileName.FullPath);
+                            bool useCompact = _projectState.GumProjectSave?.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
+                            elementSave.Save(fileName.FullPath, useCompact);
                             succeeded = true;
                             break;
                         }
@@ -405,8 +411,9 @@ public class FileCommands : IFileCommands
                     {
                         try
                         {
-                            FileManager.XmlSerialize(behavior.GetType(), behavior, fileName);
-                            
+                            bool useCompact = _projectState.GumProjectSave?.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
+                            behavior.Save(fileName, useCompact);
+
                             succeeded = true;
                             break;
                         }

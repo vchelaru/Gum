@@ -903,7 +903,7 @@ public class SelectionManager : ISelectionManager
         public bool IsOverHandle;           // Is cursor over a handle (resize, rotate, polygon point)?
         public bool IsHandlerCurrentlyActive; // Is a handler already active (mid-drag)?
         public bool IsOverElementBody;      // Is cursor over an element's body?
-        public bool IsShiftHeld;           // Is shift key held (multi-select)?
+        public bool IsMultiSelectHeld;      // Is the multi-select key held?
         public IRenderableIpso? ElementUnderCursor; // What element is under cursor (if any)?
         public float WorldX;               // World X coordinate
         public float WorldY;               // World Y coordinate
@@ -1049,7 +1049,7 @@ public class SelectionManager : ISelectionManager
         context.IsOverElementBody = IsOverBody;
 
         // Check modifiers
-        context.IsShiftHeld = _hotkeyManager.MultiSelect.IsPressedInControl();
+        context.IsMultiSelectHeld = _hotkeyManager.MultiSelect.IsPressedInControl();
 
         // Find what element is under cursor (for normal selection)
         if (!context.IsOverHandle)
@@ -1101,7 +1101,7 @@ public class SelectionManager : ISelectionManager
         // If user just clicks without dragging, it will return early and
         // we'll handle it in ProcessRectangleSelection as a fallback.
         // ═══════════════════════════════════════════════════════════════
-        if (context.IsShiftHeld || (!context.IsOverElementBody && !context.IsOverHandle))
+        if (context.IsMultiSelectHeld || (!context.IsOverElementBody && !context.IsOverHandle))
         {
             return InputDecision.RectangleSelection;
         }
@@ -1166,7 +1166,10 @@ public class SelectionManager : ISelectionManager
 
         if (cursor.PrimaryPush)
         {
-            _rectangleSelector.HandlePush(worldX, worldY);
+            if (cursor.IsInWindow)
+            {
+                _rectangleSelector.HandlePush(worldX, worldY);
+            }
         }
         else if (cursor.PrimaryDown)
         {

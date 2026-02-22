@@ -16,6 +16,13 @@ public interface IFileCommands
 
     void DeleteDirectory(FilePath filePath);
 
+    /// <summary>
+    /// Moves a file to the recycle bin rather than permanently deleting it.
+    /// Currently uses Microsoft.VisualBasic.FileIO (Windows-only). If Gum ever
+    /// moves to a cross-platform UI, update the implementation here.
+    /// </summary>
+    void MoveToRecycleBin(FilePath filePath);
+
     string[] GetFiles(string path);
 
     string[] GetFiles(string path, string searchPattern, SearchOption searchOption);

@@ -27,6 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\IStateContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\NamedRectangle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\ScreenSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Serialization\VariableSaveSerializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\StandardElementSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\UnitConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\IVariableFinder.cs" />

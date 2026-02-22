@@ -274,9 +274,8 @@ public class UndoManagerTests : BaseTestClass
         _undoManager.RecordUndo();
         _undoManager.PerformUndo();
 
-        _renameLogic.Verify(x => x.PropagateVariableRename(
-            componentA,
-            "instanceX.Color",
+        _renameLogic.Verify(x => x.ApplyVariableRenameChanges(
+            It.IsAny<VariableChangeResponse>(),
             "ButtonBgColor",
             "ButtonColor",
             It.IsAny<HashSet<ElementSave>>()),
@@ -304,9 +303,8 @@ public class UndoManagerTests : BaseTestClass
         _undoManager.RecordUndo();
         _undoManager.PerformUndo();
 
-        _renameLogic.Verify(x => x.PropagateVariableRename(
-            componentA,
-            "NewName",
+        _renameLogic.Verify(x => x.ApplyVariableRenameChanges(
+            It.IsAny<VariableChangeResponse>(),
             "NewName",
             "OldName",
             It.IsAny<HashSet<ElementSave>>()),

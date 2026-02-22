@@ -1702,9 +1702,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             int desiredImageIndex = InstanceImageIndex;
             if (element == null || element.IsSourceFileMissing)
+            {
                 desiredImageIndex = ExclamationIndex;
+            }
             else if (instance.Locked)
+            {
                 desiredImageIndex = LockedInstanceImageIndex;
+            }
 
             if(nodeForInstance.ImageIndex != desiredImageIndex)
             {

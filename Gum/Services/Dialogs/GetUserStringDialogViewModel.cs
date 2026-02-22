@@ -50,13 +50,14 @@ public abstract class GetUserStringDialogBaseViewModel : DialogViewModel
 public sealed class GetUserStringDialogViewModel : GetUserStringDialogBaseViewModel
 {
     private Func<string?,string?>? Validator { get; }
+
     public GetUserStringDialogViewModel(GetUserStringOptions? options = null)
     {
         Value = options?.InitialValue;
         Validator = options?.Validator;
         PreSelect = options?.PreSelect ?? false;
     }
-    
+
     protected override string? Validate(string? value) => Validator?.Invoke(value) ?? base.Validate(value);
 }
 

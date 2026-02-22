@@ -45,10 +45,10 @@ namespace Gum.Wireframe
         LineRectangle[] mHandles = new LineRectangle[8];
         LineRectangle[] mInnerHandles = new LineRectangle[8];
 
-
-
-        OriginDisplay originDisplay;
-
+        readonly List<OriginDisplay> _originDisplays = new List<OriginDisplay>();
+        Layer _layer;
+        Color _color;
+        bool _originDisplaysVisible = true;
 
         const float WidthAtNoZoom = 12;
 
@@ -110,7 +110,11 @@ namespace Gum.Wireframe
                     mInnerHandles[i].Visible = value;
                 }
 
-                originDisplay.Visible = value && ShowOrigin;
+                _originDisplaysVisible = value;
+                foreach (var display in _originDisplays)
+                {
+                    display.Visible = value && ShowOrigin;
+                }
             }
         }
 
@@ -142,8 +146,8 @@ namespace Gum.Wireframe
                 ShapeManager.Self.Add(mInnerHandles[i], layer);
             }
 
-            originDisplay = new OriginDisplay(layer);
-            originDisplay.SetColor(color);
+            _layer = layer;
+            _color = color;
             Visible = true;
             UpdateToProperties();
         }
@@ -156,7 +160,11 @@ namespace Gum.Wireframe
                 ShapeManager.Self.Remove(mInnerHandles[i]);
             }
 
-            originDisplay.Destroy();
+            foreach (var display in _originDisplays)
+            {
+                display.Destroy();
+            }
+            _originDisplays.Clear();
         }
 
         public ResizeSide GetSideOver(float x, float y)
@@ -188,15 +196,16 @@ namespace Gum.Wireframe
 
             this.mRotation = ipso.GetAbsoluteRotation();
 
-            if (ipso is GraphicalUiElement)
+            if (ipso is GraphicalUiElement asGue)
             {
-                var asGue = ipso as GraphicalUiElement;
-
-                originDisplay.SetOriginXPosition(asGue);
-
-                originDisplay.UpdateTo(asGue);
+                AdjustOriginDisplayCount(1);
+                _originDisplays[0].SetOriginXPosition(asGue);
+                _originDisplays[0].UpdateTo(asGue);
             }
-
+            else
+            {
+                AdjustOriginDisplayCount(0);
+            }
 
             UpdateToProperties();
         }
@@ -234,11 +243,12 @@ namespace Gum.Wireframe
                 mWidth = maxX - minX;
                 mHeight = maxY - minY;
 
-                if (first is GraphicalUiElement)
+                var gues = ipsoList.OfType<GraphicalUiElement>().ToList();
+                AdjustOriginDisplayCount(gues.Count);
+                for (int i = 0; i < gues.Count; i++)
                 {
-                    var asGue = first as GraphicalUiElement;
-
-                    originDisplay.SetOriginXPosition(asGue);
+                    _originDisplays[i].SetOriginXPosition(gues[i]);
+                    _originDisplays[i].UpdateTo(gues[i]);
                 }
             }
 
@@ -257,6 +267,23 @@ namespace Gum.Wireframe
             {
                 innerHandle.Width = (WidthAtNoZoom-2) / Renderer.Self.Camera.Zoom;
                 innerHandle.Height = (WidthAtNoZoom-2) / Renderer.Self.Camera.Zoom;
+            }
+        }
+
+        private void AdjustOriginDisplayCount(int count)
+        {
+            while (_originDisplays.Count > count)
+            {
+                _originDisplays[_originDisplays.Count - 1].Destroy();
+                _originDisplays.RemoveAt(_originDisplays.Count - 1);
+            }
+
+            while (_originDisplays.Count < count)
+            {
+                var display = new OriginDisplay(_layer);
+                display.SetColor(_color);
+                display.Visible = _originDisplaysVisible && ShowOrigin;
+                _originDisplays.Add(display);
             }
         }
 

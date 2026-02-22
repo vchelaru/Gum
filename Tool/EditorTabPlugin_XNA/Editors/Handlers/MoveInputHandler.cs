@@ -39,6 +39,18 @@ public class MoveInputHandler : InputHandlerBase
         return null;
     }
 
+    public override bool HandlePush(float worldX, float worldY)
+    {
+        // When multi-select key is held, don't claim the push.
+        // Shift+click on body should add to selection via the rectangle-selector fallback,
+        // not start a move operation.
+        if (Context.HotkeyManager.MultiSelect.IsPressedInControl())
+        {
+            return false;
+        }
+        return base.HandlePush(worldX, worldY);
+    }
+
     protected override void OnPush(float worldX, float worldY)
     {
         _hasGrabbed = Context.SelectionManager.HasSelection;
@@ -178,7 +190,9 @@ public class MoveInputHandler : InputHandlerBase
             foreach (InstanceSave instance in selectedInstances)
             {
                 if (instance.Locked)
+                {
                     continue;
+                }
 
                 var xOrY = Context.GrabbedState.AxisMovedFurthestAlong;
                 var gue = Context.WireframeObjectManager.GetRepresentation(instance);
@@ -214,7 +228,9 @@ public class MoveInputHandler : InputHandlerBase
                 foreach (var instance in Context.SelectedState.SelectedInstances)
                 {
                     if (instance.Locked)
+                    {
                         continue;
+                    }
 
                     Context.SelectedState.SelectedStateSave.SetValue(instance.Name + ".Y", Context.GrabbedState.InstancePositions[instance].StateY, "float");
                 }
@@ -232,7 +248,9 @@ public class MoveInputHandler : InputHandlerBase
                 foreach (var instance in Context.SelectedState.SelectedInstances)
                 {
                     if (instance.Locked)
+                    {
                         continue;
+                    }
 
                     Context.SelectedState.SelectedStateSave.SetValue(instance.Name + ".X", Context.GrabbedState.InstancePositions[instance].StateX, "float");
                 }
