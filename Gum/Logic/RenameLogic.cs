@@ -82,6 +82,26 @@ public class ElementRenameChanges
 
 #endregion
 
+#region StateRenameChanges Class
+
+public class StateRenameChanges
+{
+    // Variables in referencing elements whose value == oldStateName and which need updating
+    public List<(ElementSave Container, VariableSave Variable)> VariablesToUpdate = new();
+}
+
+#endregion
+
+#region CategoryRenameChanges Class
+
+public class CategoryRenameChanges
+{
+    // Variables in referencing elements/components whose Type matches the old category name
+    public List<VariableChange> VariableChanges = new();
+}
+
+#endregion
+
 public class RenameLogic : IRenameLogic
 {
     static bool isRenamingXmlFile;
@@ -132,6 +152,9 @@ public class RenameLogic : IRenameLogic
         {
             string oldName = stateSave.Name;
 
+            var container = ObjectFinder.Self.GetStateContainerOf(stateSave);
+            var stateChanges = GetChangesForRenamedState(stateSave, oldName, container, category);
+
             stateSave.Name = newName;
             _guiCommands.RefreshStateTreeView();
             // I don't think we need to save the project when renaming a state:
@@ -143,59 +166,55 @@ public class RenameLogic : IRenameLogic
 
             _pluginManager.StateRename(stateSave, oldName);
 
-            var elementSave = stateSave.ParentContainer;
-            if (elementSave != null)
-            {
-                ApplyVariableNameChangeFromStateRename(stateSave, oldName, elementSave, category);
-            }
-            else
-            {
-                var behavior = ObjectFinder.Self.GetStateContainerOf(stateSave) as BehaviorSave;
-                if (behavior != null)
-                {
-                    _fileCommands.TryAutoSaveBehavior(behavior);
-                }
-            }
+            ApplyStateRenameChanges(stateChanges, stateSave);
 
-            _fileCommands.TryAutoSaveCurrentElement();
+            _fileCommands.TryAutoSaveCurrentObject();
         }
     }
 
-    private void ApplyVariableNameChangeFromStateRename(StateSave state, string oldName, ElementSave elementSave, StateSaveCategory category)
+    public StateRenameChanges GetChangesForRenamedState(
+        StateSave state, string oldName, IStateContainer? container, StateSaveCategory? category)
     {
-        string variableName = "State";
-        if (category != null)
+        var changes = new StateRenameChanges();
+
+        if (container is ElementSave elementSave)
         {
-            variableName = category.Name + "State";
-        }
-        List<DataTypes.InstanceSave> instances = new List<DataTypes.InstanceSave>();
-        ObjectFinder.Self.GetElementsReferencing(elementSave, foundInstances: instances);
+            string variableName = category != null ? category.Name + "State" : "State";
 
-        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
+            List<InstanceSave> instances = new List<InstanceSave>();
+            ObjectFinder.Self.GetElementsReferencing(elementSave, foundInstances: instances);
 
-        foreach (var instance in instances)
-        {
-            var parentOfInstance = instance.ParentContainer;
-
-            var variableNameToLookFor = $"{instance.Name}.{variableName}";
-
-            var variablesToFix = parentOfInstance.AllStates
-                .SelectMany(item => item.Variables)
-                .Where(item => item.Name == variableNameToLookFor)
-                .Where(item => (string)item.Value == oldName)
-                .ToArray();
-
-            if (variablesToFix.Any())
+            foreach (var instance in instances)
             {
-                foreach (var variable in variablesToFix)
+                var parentOfInstance = instance.ParentContainer;
+                var variableNameToLookFor = $"{instance.Name}.{variableName}";
+
+                if(parentOfInstance != null)
                 {
-                    variable.Value = state.Name;
-                }
-                if (elementsToSave.Contains(parentOfInstance) == false)
-                {
-                    elementsToSave.Add(parentOfInstance);
+                    var variablesToFix = parentOfInstance.AllStates
+                        .SelectMany(item => item.Variables)
+                        .Where(item => item.Name == variableNameToLookFor)
+                        .Where(item => (string?)item.Value == oldName);
+
+                    foreach (var variable in variablesToFix)
+                    {
+                        changes.VariablesToUpdate.Add((parentOfInstance, variable));
+                    }
                 }
             }
+        }
+
+        return changes;
+    }
+
+    internal void ApplyStateRenameChanges(StateRenameChanges changes, StateSave state)
+    {
+        var elementsToSave = new HashSet<ElementSave>();
+
+        foreach (var (container, variable) in changes.VariablesToUpdate)
+        {
+            variable.Value = state.Name;
+            elementsToSave.Add(container);
         }
 
         foreach (var elementToSave in elementsToSave)
@@ -234,10 +253,10 @@ public class RenameLogic : IRenameLogic
             string oldName = category.Name;
             var changes = GetVariableChangesForCategoryRename(elementSave, category, oldName);
 
-            if (changes.Count > 0)
+            if (changes.VariableChanges.Count > 0)
             {
                 message += "\n\nThe following variables will be affected:";
-                foreach (var change in changes)
+                foreach (var change in changes.VariableChanges)
                 {
                     var containerDisplay = change.Container is ElementSave changeElementSave
                         ? changeElementSave.Name
@@ -255,14 +274,20 @@ public class RenameLogic : IRenameLogic
         }
     }
 
-    private void RenameCategory(IStateContainer owner, StateSaveCategory category, string oldName, string newName, List<VariableChange> variableChanges)
+    private void RenameCategory(IStateContainer owner, StateSaveCategory category, string oldName, string newName, CategoryRenameChanges categoryChanges)
     {
-        category.Name = newName;
+        // Gather self-referencing state variables in the owner element before mutating anything
+        var ownerAsElement = owner as ElementSave;
+        var selfVarsToUpdate = ownerAsElement?.AllStates
+            .SelectMany(state => state.Variables)
+            .Where(v => v.Type == oldName + "State")
+            .ToList();
 
+        category.Name = newName;
 
         HashSet<ElementSave> elementsWithChangedVariables = new HashSet<ElementSave>();
 
-        foreach (var change in variableChanges)
+        foreach (var change in categoryChanges.VariableChanges)
         {
             var containerElement = change.Container as ElementSave;
             if (containerElement != null)
@@ -283,25 +308,21 @@ public class RenameLogic : IRenameLogic
             }
         }
 
-        // Update variables within the owner element's own states whose type/name reference oldName + "State"
-        var ownerAsElementForSelfVars = owner as ElementSave;
-        if (ownerAsElementForSelfVars != null)
+        if (selfVarsToUpdate != null)
         {
-            foreach (var state in ownerAsElementForSelfVars.AllStates)
+            foreach (var variable in selfVarsToUpdate)
             {
-                var variablesToChange = state.Variables.Where(
-                    item => item.Type == oldName + "State");
-
-                foreach (var variable in variablesToChange)
-                {
-                    variable.Name = category.Name + "State";
-                    variable.Type = category.Name + "State";
+                variable.Name = category.Name + "State";
+                variable.Type = category.Name + "State";
 
 #if GUM
-                    variable.CustomTypeConverter =
-                        new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name);
+                variable.CustomTypeConverter =
+                    new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState);
 #endif
-                }
+            }
+
+            foreach (var state in ownerAsElement!.AllStates)
+            {
                 state.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
             }
         }
@@ -327,9 +348,9 @@ public class RenameLogic : IRenameLogic
         }
     }
 
-    private List<VariableChange> GetVariableChangesForCategoryRename(IStateContainer owner, StateSaveCategory category, string oldName)
+    public CategoryRenameChanges GetVariableChangesForCategoryRename(IStateContainer owner, StateSaveCategory category, string oldName)
     {
-        List<VariableChange> toReturn = new List<VariableChange>();
+        var changes = new CategoryRenameChanges();
 
         var project = _projectState.GumProjectSave;
 
@@ -355,7 +376,7 @@ public class RenameLogic : IRenameLogic
 
         // Standards cannot include instances so no need to loop through them
 
-        return toReturn;
+        return changes;
 
         void RenameReferencesInElement(StateSaveCategory changedCategory, string oldName, ICollection<ElementSave> inheritingElements, ElementSave element)
         {
@@ -372,7 +393,7 @@ public class RenameLogic : IRenameLogic
                         {
                             if (inheritingElements.Contains(element))
                             {
-                                AddVariableToList(element, toReturn, state, variable);
+                                AddVariableToList(element, changes.VariableChanges, state, variable);
                             }
                         }
                         else
@@ -384,7 +405,7 @@ public class RenameLogic : IRenameLogic
                                 var instanceElement = ObjectFinder.Self.GetElementSave(instance);
                                 if (inheritingElements?.Contains(instanceElement) == true)
                                 {
-                                    AddVariableToList(element, toReturn, state, variable);
+                                    AddVariableToList(element, changes.VariableChanges, state, variable);
                                 }
                             }
                         }

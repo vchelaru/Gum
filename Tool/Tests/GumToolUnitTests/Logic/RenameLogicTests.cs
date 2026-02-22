@@ -335,9 +335,189 @@ public class RenameLogicTests : BaseTestClass
         stateVar.Value.ShouldBe("Visible");
     }
 
+    [Fact]
+    public void GetChangesForRenamedState_MatchingVariable_IsDetected()
+    {
+        var button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        var visibilityCategory = new StateSaveCategory { Name = "Visibility" };
+        var shownState = new StateSave { Name = "Shown", ParentContainer = button };
+        visibilityCategory.States.Add(shownState);
+        button.Categories.Add(visibilityCategory);
+        _project.Components.Add(button);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        var screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        var instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        var stateVar = new VariableSave { Name = "myButton.VisibilityState", Value = "Shown" };
+        screenDefault.Variables.Add(stateVar);
+        _project.Screens.Add(screen);
+
+        var changes = _renameLogic.GetChangesForRenamedState(shownState, "Shown", button, visibilityCategory);
+
+        changes.VariablesToUpdate.Count.ShouldBe(1);
+        changes.VariablesToUpdate[0].Container.ShouldBe(screen);
+        changes.VariablesToUpdate[0].Variable.ShouldBe(stateVar);
+    }
+
+    [Fact]
+    public void GetChangesForRenamedState_NonMatchingValue_IsNotDetected()
+    {
+        var button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        var visibilityCategory = new StateSaveCategory { Name = "Visibility" };
+        var shownState = new StateSave { Name = "Shown", ParentContainer = button };
+        visibilityCategory.States.Add(shownState);
+        button.Categories.Add(visibilityCategory);
+        _project.Components.Add(button);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        var screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        var instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        // Value is "Hidden", not "Shown" — should not match
+        screenDefault.Variables.Add(new VariableSave { Name = "myButton.VisibilityState", Value = "Hidden" });
+        _project.Screens.Add(screen);
+
+        var changes = _renameLogic.GetChangesForRenamedState(shownState, "Shown", button, visibilityCategory);
+
+        changes.VariablesToUpdate.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetChangesForRenamedState_NullCategory_UsesPlainStateVariableName()
+    {
+        // State not in a category — variable name should be "instanceName.State", not "instanceName.CategoryState"
+        var button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        var activeState = new StateSave { Name = "Active", ParentContainer = button };
+        button.States.Add(activeState);
+        _project.Components.Add(button);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        var screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        var instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        var stateVar = new VariableSave { Name = "myButton.State", Value = "Active" };
+        screenDefault.Variables.Add(stateVar);
+        _project.Screens.Add(screen);
+
+        var changes = _renameLogic.GetChangesForRenamedState(activeState, "Active", button, category: null);
+
+        changes.VariablesToUpdate.Count.ShouldBe(1);
+        changes.VariablesToUpdate[0].Variable.ShouldBe(stateVar);
+    }
+
+    [Fact]
+    public void ApplyStateRenameChanges_UpdatesVariableValue()
+    {
+        var button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        _project.Components.Add(button);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        _project.Screens.Add(screen);
+
+        var stateVar = new VariableSave { Name = "myButton.VisibilityState", Value = "Shown" };
+        var renamedState = new StateSave { Name = "Visible", ParentContainer = button };
+
+        var changes = new StateRenameChanges();
+        changes.VariablesToUpdate.Add((screen, stateVar));
+
+        _renameLogic.ApplyStateRenameChanges(changes, renamedState);
+
+        stateVar.Value.ShouldBe("Visible");
+    }
+
     #endregion
 
     #region Category rename
+
+    [Fact]
+    public void GetVariableChangesForCategoryRename_InstanceWithMatchingType_IsDetected()
+    {
+        // Button has a "Visibility" category.
+        // A screen has an instance of Button with a variable of Type "Visibility" (the category name).
+        // GetVariableChangesForCategoryRename should detect this variable.
+        var button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        var visibilityCategory = new StateSaveCategory { Name = "Visibility" };
+        button.Categories.Add(visibilityCategory);
+        _project.Components.Add(button);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        var screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        var instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        var stateVar = new VariableSave { Name = "myButton.VisibilityState", Type = "Visibility" };
+        screenDefault.Variables.Add(stateVar);
+        _project.Screens.Add(screen);
+
+        var changes = _renameLogic.GetVariableChangesForCategoryRename(button, visibilityCategory, "Visibility");
+
+        changes.VariableChanges.Count.ShouldBe(1);
+        changes.VariableChanges[0].Variable.ShouldBe(stateVar);
+    }
+
+    [Fact]
+    public void GetVariableChangesForCategoryRename_NonMatchingType_IsNotDetected()
+    {
+        var button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        var visibilityCategory = new StateSaveCategory { Name = "Visibility" };
+        button.Categories.Add(visibilityCategory);
+        _project.Components.Add(button);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        var screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        var instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        // Type is "Appearance" not "Visibility" — should not match
+        screenDefault.Variables.Add(new VariableSave { Name = "myButton.AppearanceState", Type = "Appearance" });
+        _project.Screens.Add(screen);
+
+        var changes = _renameLogic.GetVariableChangesForCategoryRename(button, visibilityCategory, "Visibility");
+
+        changes.VariableChanges.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetVariableChangesForCategoryRename_InheritedElement_IsDetected()
+    {
+        // Button has a "Visibility" category. ButtonChild inherits from Button.
+        // A screen has an instance of ButtonChild with a variable of Type "Visibility".
+        // Since ButtonChild is in Button's inheritance chain, the variable should be detected.
+        var button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        var visibilityCategory = new StateSaveCategory { Name = "Visibility" };
+        button.Categories.Add(visibilityCategory);
+        _project.Components.Add(button);
+
+        var buttonChild = new ComponentSave { Name = "ButtonChild", BaseType = "Button" };
+        buttonChild.States.Add(new StateSave { Name = "Default", ParentContainer = buttonChild });
+        _project.Components.Add(buttonChild);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        var screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        var instance = new InstanceSave { Name = "myButton", BaseType = "ButtonChild", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        var stateVar = new VariableSave { Name = "myButton.VisibilityState", Type = "Visibility" };
+        screenDefault.Variables.Add(stateVar);
+        _project.Screens.Add(screen);
+
+        var changes = _renameLogic.GetVariableChangesForCategoryRename(button, visibilityCategory, "Visibility");
+
+        changes.VariableChanges.Count.ShouldBe(1);
+        changes.VariableChanges[0].Variable.ShouldBe(stateVar);
+    }
 
     [Fact]
     public void AskToRenameStateCategory_UpdatesCategoryName()

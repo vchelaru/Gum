@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.Managers;
-using Gum.Services;
 using Gum.ToolStates;
 
 namespace Gum.PropertyGridHelpers.Converters
@@ -60,10 +59,10 @@ namespace Gum.PropertyGridHelpers.Converters
             }
         }
 
-        public AvailableStatesConverter(string category)
+        public AvailableStatesConverter(string category, ISelectedState selectedState)
         {
             CategoryName = category;
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _selectedState = selectedState;
         }
 
 

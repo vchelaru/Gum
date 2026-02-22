@@ -35,7 +35,7 @@ public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerG
             new AvailableContainedTypeConverter();
 
         defaultStates["Component"].Variables
-            .Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null) });
+            .Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null, Locator.GetRequiredService<ISelectedState>()) });
 
         foreach (var state in StandardElementsManager.Self.DefaultStates.Values)
         {
@@ -125,7 +125,7 @@ public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerG
             else if (variable.Type == "State" && variable.Name == "State")
             {
                 variable.Category = "States and Visibility";
-                variable.CustomTypeConverter = new AvailableStatesConverter(null);
+                variable.CustomTypeConverter = new AvailableStatesConverter(null, Locator.GetRequiredService<ISelectedState>());
             }
             else if (variable.Name == "Red" ||
                 variable.Name == "Green" ||
@@ -175,7 +175,7 @@ public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerG
 
             if (foundVariable != null)
             {
-                foundVariable.CustomTypeConverter = new AvailableStatesConverter(stateSaveCategory.Name);
+                foundVariable.CustomTypeConverter = new AvailableStatesConverter(stateSaveCategory.Name, Locator.GetRequiredService<ISelectedState>());
             }
         }
     }

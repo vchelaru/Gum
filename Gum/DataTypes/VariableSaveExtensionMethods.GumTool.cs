@@ -1,6 +1,8 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.PropertyGridHelpers.Converters;
+using Gum.Services;
+using Gum.ToolStates;
 using Gum.Reflection;
 using System;
 using System.Collections.Generic;
@@ -127,7 +129,7 @@ namespace Gum.DataTypes
                     categoryName = category.Name;
                 }
 
-                AvailableStatesConverter converter = new AvailableStatesConverter(categoryName);
+                AvailableStatesConverter converter = new AvailableStatesConverter(categoryName, Locator.GetRequiredService<ISelectedState>());
                 converter.ElementSave = categoryContainer;
                 return converter;
             }
