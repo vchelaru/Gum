@@ -207,7 +207,7 @@ public class RenameLogic : IRenameLogic
         return changes;
     }
 
-    internal void ApplyStateRenameChanges(StateRenameChanges changes, StateSave state)
+    public void ApplyStateRenameChanges(StateRenameChanges changes, StateSave state)
     {
         var elementsToSave = new HashSet<ElementSave>();
 
@@ -251,7 +251,7 @@ public class RenameLogic : IRenameLogic
 
             GetUserStringOptions options = new() { InitialValue = category.Name };
             string oldName = category.Name;
-            var changes = GetVariableChangesForCategoryRename(elementSave, category, oldName);
+            var changes = GetChangesForRenamedCategory(elementSave, category, oldName);
 
             if (changes.VariableChanges.Count > 0)
             {
@@ -269,12 +269,12 @@ public class RenameLogic : IRenameLogic
 
             if (_dialogService.GetUserString(message, title, options) is { } newName)
             {
-                RenameCategory(elementSave, category, oldName, newName, changes);
+                ApplyCategoryRenameChanges(changes, elementSave, category, oldName, newName);
             }
         }
     }
 
-    private void RenameCategory(IStateContainer owner, StateSaveCategory category, string oldName, string newName, CategoryRenameChanges categoryChanges)
+    public void ApplyCategoryRenameChanges(CategoryRenameChanges categoryChanges, IStateContainer owner, StateSaveCategory category, string oldName, string newName)
     {
         // Gather self-referencing state variables in the owner element before mutating anything
         var ownerAsElement = owner as ElementSave;
@@ -348,7 +348,7 @@ public class RenameLogic : IRenameLogic
         }
     }
 
-    public CategoryRenameChanges GetVariableChangesForCategoryRename(IStateContainer owner, StateSaveCategory category, string oldName)
+    public CategoryRenameChanges GetChangesForRenamedCategory(IStateContainer owner, StateSaveCategory category, string oldName)
     {
         var changes = new CategoryRenameChanges();
 
@@ -511,7 +511,7 @@ public class RenameLogic : IRenameLogic
         }
     }
 
-    internal void ApplyElementRenameChanges(ElementRenameChanges changes, ElementSave elementSave, string oldName)
+    public void ApplyElementRenameChanges(ElementRenameChanges changes, ElementSave elementSave, string oldName)
     {
         var containersToSave = new HashSet<ElementSave>();
 
@@ -854,7 +854,7 @@ public class RenameLogic : IRenameLogic
 
     #region Variable
 
-    public VariableChangeResponse GetVariableChangesForRenamedVariable(IStateContainer owner, string oldFullName, string oldStrippedOrExposedName)
+    public VariableChangeResponse GetChangesForRenamedVariable(IStateContainer owner, string oldFullName, string oldStrippedOrExposedName)
     {
         List<VariableChange> variableChanges = new List<VariableChange>();
         List<VariableReferenceChange> variableReferenceChanges = new List<VariableReferenceChange>();
@@ -1006,12 +1006,10 @@ public class RenameLogic : IRenameLogic
         };
     }
 
-    public void PropagateVariableRename(ElementSave parent, string variableFullName,
+    public void ApplyVariableRenameChanges(VariableChangeResponse changes,
         string oldStrippedOrExposedName, string newStrippedOrExposedName,
         HashSet<ElementSave> elementsNeedingSave)
     {
-        var changes = GetVariableChangesForRenamedVariable(parent, variableFullName, oldStrippedOrExposedName);
-
         foreach (var change in changes.VariableChanges)
         {
             if (change.Container is ElementSave element)

@@ -137,7 +137,7 @@ public class EditVariableService : IEditVariableService
 
 
 
-        var changes = _renameLogic.GetVariableChangesForRenamedVariable(container, variable.Name, variable.ExposedAsName);
+        var changes = _renameLogic.GetChangesForRenamedVariable(container, variable.Name, variable.ExposedAsName);
         string changesDetails = GetChangesDetails(changes);
 
         if(!string.IsNullOrEmpty(changesDetails))
@@ -259,7 +259,7 @@ public class EditVariableService : IEditVariableService
         _dialogService.Show<AddVariableViewModel>(vm =>
         {
             var changes =
-                _renameLogic.GetVariableChangesForRenamedVariable(container, variable.Name, variable.Name);
+                _renameLogic.GetChangesForRenamedVariable(container, variable.Name, variable.Name);
             string changesDetails = GetChangesDetails(changes);
 
             vm.RenameType = RenameType.NormalName;

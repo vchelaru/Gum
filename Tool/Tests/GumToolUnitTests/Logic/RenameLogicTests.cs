@@ -439,11 +439,11 @@ public class RenameLogicTests : BaseTestClass
     #region Category rename
 
     [Fact]
-    public void GetVariableChangesForCategoryRename_InstanceWithMatchingType_IsDetected()
+    public void GetChangesForRenamedCategory_InstanceWithMatchingType_IsDetected()
     {
         // Button has a "Visibility" category.
         // A screen has an instance of Button with a variable of Type "Visibility" (the category name).
-        // GetVariableChangesForCategoryRename should detect this variable.
+        // GetChangesForRenamedCategory should detect this variable.
         var button = new ComponentSave { Name = "Button" };
         button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
         var visibilityCategory = new StateSaveCategory { Name = "Visibility" };
@@ -459,14 +459,14 @@ public class RenameLogicTests : BaseTestClass
         screenDefault.Variables.Add(stateVar);
         _project.Screens.Add(screen);
 
-        var changes = _renameLogic.GetVariableChangesForCategoryRename(button, visibilityCategory, "Visibility");
+        var changes = _renameLogic.GetChangesForRenamedCategory(button, visibilityCategory, "Visibility");
 
         changes.VariableChanges.Count.ShouldBe(1);
         changes.VariableChanges[0].Variable.ShouldBe(stateVar);
     }
 
     [Fact]
-    public void GetVariableChangesForCategoryRename_NonMatchingType_IsNotDetected()
+    public void GetChangesForRenamedCategory_NonMatchingType_IsNotDetected()
     {
         var button = new ComponentSave { Name = "Button" };
         button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
@@ -483,13 +483,13 @@ public class RenameLogicTests : BaseTestClass
         screenDefault.Variables.Add(new VariableSave { Name = "myButton.AppearanceState", Type = "Appearance" });
         _project.Screens.Add(screen);
 
-        var changes = _renameLogic.GetVariableChangesForCategoryRename(button, visibilityCategory, "Visibility");
+        var changes = _renameLogic.GetChangesForRenamedCategory(button, visibilityCategory, "Visibility");
 
         changes.VariableChanges.ShouldBeEmpty();
     }
 
     [Fact]
-    public void GetVariableChangesForCategoryRename_InheritedElement_IsDetected()
+    public void GetChangesForRenamedCategory_InheritedElement_IsDetected()
     {
         // Button has a "Visibility" category. ButtonChild inherits from Button.
         // A screen has an instance of ButtonChild with a variable of Type "Visibility".
@@ -513,7 +513,7 @@ public class RenameLogicTests : BaseTestClass
         screenDefault.Variables.Add(stateVar);
         _project.Screens.Add(screen);
 
-        var changes = _renameLogic.GetVariableChangesForCategoryRename(button, visibilityCategory, "Visibility");
+        var changes = _renameLogic.GetChangesForRenamedCategory(button, visibilityCategory, "Visibility");
 
         changes.VariableChanges.Count.ShouldBe(1);
         changes.VariableChanges[0].Variable.ShouldBe(stateVar);
@@ -571,7 +571,7 @@ public class RenameLogicTests : BaseTestClass
     #endregion
 
     [Fact]
-    public void GetVariableChangesForRenamedVariable_VariableReferenceLeftSideOnInstance_IsDetected()
+    public void GetChangesForRenamedVariable_VariableReferenceLeftSideOnInstance_IsDetected()
     {
         // ComponentA has a variable MyVar.
         // ComponentB has instance myA of type ComponentA with a VariableReferences entry
@@ -592,7 +592,7 @@ public class RenameLogicTests : BaseTestClass
         defaultStateB.VariableLists.Add(varRefList);
         _project.Components.Add(componentB);
 
-        var result = _renameLogic.GetVariableChangesForRenamedVariable(
+        var result = _renameLogic.GetChangesForRenamedVariable(
             componentA,
             oldFullName: "MyVar",
             oldStrippedOrExposedName: "MyVar");
@@ -602,7 +602,7 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void GetVariableChangesForRenamedVariable_VariableReferenceLeftSideOnInstance_OnlyDetectedForMatchingComponent()
+    public void GetChangesForRenamedVariable_VariableReferenceLeftSideOnInstance_OnlyDetectedForMatchingComponent()
     {
         // ComponentA and ComponentB both have a variable named BeforeRename.
         // ComponentC has one instance of each, both with a VariableReferences entry "BeforeRename = SomeVariable".
@@ -634,7 +634,7 @@ public class RenameLogicTests : BaseTestClass
 
         _project.Components.Add(componentC);
 
-        var result = _renameLogic.GetVariableChangesForRenamedVariable(
+        var result = _renameLogic.GetChangesForRenamedVariable(
             componentA,
             oldFullName: "BeforeRename",
             oldStrippedOrExposedName: "BeforeRename");
@@ -644,7 +644,7 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void GetVariableChangesForRenamedVariable_VariableReferenceRightSideOnQualifiedName_OnlyDetectedForMatchingComponent()
+    public void GetChangesForRenamedVariable_VariableReferenceRightSideOnQualifiedName_OnlyDetectedForMatchingComponent()
     {
         // ComponentA and ComponentB both have a variable named BeforeRename.
         // ComponentC has a VariableReferences list with two entries using qualified names:
@@ -669,7 +669,7 @@ public class RenameLogicTests : BaseTestClass
 
         _project.Components.Add(componentC);
 
-        var result = _renameLogic.GetVariableChangesForRenamedVariable(
+        var result = _renameLogic.GetChangesForRenamedVariable(
             componentA,
             oldFullName: "BeforeRename",
             oldStrippedOrExposedName: "BeforeRename");
@@ -681,7 +681,7 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void GetVariableChangesForRenamedVariable_VariableReferenceRightSideOnSelf_IsDetected()
+    public void GetChangesForRenamedVariable_VariableReferenceRightSideOnSelf_IsDetected()
     {
         // ComponentA has a VariableReferences entry where MyVar appears on the right side:
         // "SomeOtherVar = MyVar". Renaming MyVar in ComponentA should detect this.
@@ -694,7 +694,7 @@ public class RenameLogicTests : BaseTestClass
         defaultStateA.VariableLists.Add(varRefList);
         _project.Components.Add(componentA);
 
-        var result = _renameLogic.GetVariableChangesForRenamedVariable(
+        var result = _renameLogic.GetChangesForRenamedVariable(
             componentA,
             oldFullName: "MyVar",
             oldStrippedOrExposedName: "MyVar");
@@ -704,7 +704,7 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void PropagateVariableRename_InstanceVariableRename_PreservesValue()
+    public void ApplyVariableRenameChanges_InstanceVariableRename_PreservesValue()
     {
         var button = new ComponentSave { Name = "Button" };
         button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
@@ -718,19 +718,15 @@ public class RenameLogicTests : BaseTestClass
         screen.DefaultState.Variables.Add(instanceVar);
         _project.Screens.Add(screen);
 
-        _renameLogic.PropagateVariableRename(
-            button,
-            variableFullName: "Color",
-            oldStrippedOrExposedName: "Color",
-            newStrippedOrExposedName: "BackgroundColor",
-            elementsNeedingSave: new HashSet<ElementSave>());
+        var changes = _renameLogic.GetChangesForRenamedVariable(button, "Color", "Color");
+        _renameLogic.ApplyVariableRenameChanges(changes, "Color", "BackgroundColor", new HashSet<ElementSave>());
 
         instanceVar.Name.ShouldBe("myButton.BackgroundColor");
         instanceVar.Value.ShouldBe("Red");
     }
 
     [Fact]
-    public void PropagateVariableRename_ExposedVariableRenameInInheritingComponent_PreservesNameAndValue()
+    public void ApplyVariableRenameChanges_ExposedVariableRenameInInheritingComponent_PreservesNameAndValue()
     {
         // Button exposes an internal variable as "ButtonColor".
         // ButtonChild inherits from Button and re-exposes the same variable with the same alias.
@@ -751,12 +747,8 @@ public class RenameLogicTests : BaseTestClass
         buttonChild.DefaultState.Variables.Add(childVar);
         _project.Components.Add(buttonChild);
 
-        _renameLogic.PropagateVariableRename(
-            button,
-            variableFullName: "InnerSprite.Color",
-            oldStrippedOrExposedName: "ButtonColor",
-            newStrippedOrExposedName: "BgColor",
-            elementsNeedingSave: new HashSet<ElementSave>());
+        var changes = _renameLogic.GetChangesForRenamedVariable(button, "InnerSprite.Color", "ButtonColor");
+        _renameLogic.ApplyVariableRenameChanges(changes, "ButtonColor", "BgColor", new HashSet<ElementSave>());
 
         childVar.ExposedAsName.ShouldBe("BgColor");
         childVar.Name.ShouldBe("InnerSprite.Color");
@@ -764,7 +756,7 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void PropagateVariableRename_InstanceVariableRename_AddsElementToNeedingSave()
+    public void ApplyVariableRenameChanges_InstanceVariableRename_AddsElementToNeedingSave()
     {
         var button = new ComponentSave { Name = "Button" };
         button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
@@ -778,12 +770,8 @@ public class RenameLogicTests : BaseTestClass
         _project.Screens.Add(screen);
 
         var elementsNeedingSave = new HashSet<ElementSave>();
-        _renameLogic.PropagateVariableRename(
-            button,
-            variableFullName: "Color",
-            oldStrippedOrExposedName: "Color",
-            newStrippedOrExposedName: "BackgroundColor",
-            elementsNeedingSave: elementsNeedingSave);
+        var changes = _renameLogic.GetChangesForRenamedVariable(button, "Color", "Color");
+        _renameLogic.ApplyVariableRenameChanges(changes, "Color", "BackgroundColor", elementsNeedingSave);
 
         elementsNeedingSave.ShouldContain(screen);
     }

@@ -896,7 +896,8 @@ public class UndoManager : IUndoManager
                     previousExposedNames.TryGetValue(variable.Name, out var previousExposedAsName) &&
                     previousExposedAsName != variable.ExposedAsName)
                 {
-                    _renameLogic.PropagateVariableRename(parent, variable.Name, previousExposedAsName, variable.ExposedAsName, elementsNeedingSave);
+                    var varChanges = _renameLogic.GetChangesForRenamedVariable(parent, variable.Name, previousExposedAsName);
+                    _renameLogic.ApplyVariableRenameChanges(varChanges, previousExposedAsName, variable.ExposedAsName, elementsNeedingSave);
                 }
             }
         }
@@ -920,7 +921,8 @@ public class UndoManager : IUndoManager
             var matchingAppeared = appearedCustomVars.FirstOrDefault(a => a.Type == disappeared.Type);
             if (matchingAppeared == default) continue;
             appearedCustomVars.Remove(matchingAppeared);
-            _renameLogic.PropagateVariableRename(parent, disappeared.Name, disappeared.Name, matchingAppeared.Name, elementsNeedingSave);
+            var varChanges = _renameLogic.GetChangesForRenamedVariable(parent, disappeared.Name, disappeared.Name);
+            _renameLogic.ApplyVariableRenameChanges(varChanges, disappeared.Name, matchingAppeared.Name, elementsNeedingSave);
         }
 
         foreach (var element in elementsNeedingSave)

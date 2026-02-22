@@ -98,7 +98,7 @@ public class DeleteVariableService : IDeleteVariableService
             return GeneralResponse.UnsuccessfulWith($"The variable {variable} is not contained in {stateContainer}");
         }
 
-        var renames = _renameLogic.GetVariableChangesForRenamedVariable(stateContainer, variable.Name, variable.GetRootName());
+        var renames = _renameLogic.GetChangesForRenamedVariable(stateContainer, variable.Name, variable.GetRootName());
 
         if (renames.VariableReferenceChanges.Count > 0)
         {

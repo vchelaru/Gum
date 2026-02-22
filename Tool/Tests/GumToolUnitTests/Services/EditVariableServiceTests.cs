@@ -37,7 +37,7 @@ public class EditVariableServiceTests : BaseTestClass
         _fileCommands = new Mock<IFileCommands>();
 
         _renameLogic
-            .Setup(x => x.GetVariableChangesForRenamedVariable(
+            .Setup(x => x.GetChangesForRenamedVariable(
                 It.IsAny<IStateContainer>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(new VariableChangeResponse());
 

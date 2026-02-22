@@ -203,7 +203,7 @@ internal class ExposeVariableService : IExposeVariableService
 
         //var fullVariableName = instanceSave.Name + "." + rootVariableName;
 
-        //var renames = _renameLogic.GetVariableChangesForRenamedVariable(selectedElement, fullVariableName, rootVariableName);
+        //var renames = _renameLogic.GetChangesForRenamedVariable(selectedElement, fullVariableName, rootVariableName);
 
         //var variableReferences = renames.VariableReferenceChanges
         //    .Where(item => item.Container == selectedElement && item.ChangedSide == SideOfEquals.Left)
@@ -245,7 +245,7 @@ internal class ExposeVariableService : IExposeVariableService
 
     private GeneralResponse GetIfCanUnexposeVariable(VariableSave variableSave, ElementSave elementSave)
     {
-        var renames = _renameLogic.GetVariableChangesForRenamedVariable(elementSave, variableSave.Name, variableSave.ExposedAsName);
+        var renames = _renameLogic.GetChangesForRenamedVariable(elementSave, variableSave.Name, variableSave.ExposedAsName);
 
         if (renames.VariableReferenceChanges.Count > 0)
         {
