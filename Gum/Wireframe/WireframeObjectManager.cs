@@ -211,13 +211,15 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
                 if(RootGue != null)
                 {
+                    // Font properties are set via SetProperty strings during SetVariablesRecursively
+                    // above. While IsAllLayoutSuspended was true those calls deferred the actual
+                    // disk read and set IsFontDirty on each text element instead of loading fonts
+                    // N times per element. UpdateFontRecursive performs the single deferred load
+                    // now that all properties are at their final values.
                     RootGue.UpdateFontRecursive();
                     RootGue.UpdateLayout();
 
                     gueManager.Add(RootGue);
-                    // what about fonts?
-                    // We recreate missing fonts on startup, so do we need to bother here?
-                    // I'm not sure, but if we do we would call:
                     //FontManager.Self.CreateAllMissingFontFiles(ObjectFinder.Self.GumProjectSave);
 
 
