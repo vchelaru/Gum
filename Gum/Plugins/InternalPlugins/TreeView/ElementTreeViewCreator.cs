@@ -1,5 +1,4 @@
 using CommonFormsAndControls;
-using FlatRedBall.Glue.Themes;
 using Gum.Controls;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
@@ -39,7 +38,7 @@ internal class ElementTreeViewCreator
     #region Properties
 
     internal MultiSelectTreeView ObjectTreeView { get; private set; } = null!;
-    internal ContextMenuStrip MenuStrip { get; private set; } = null!;
+    internal System.Windows.Controls.ContextMenu ContextMenu { get; private set; } = null!;
     internal FlatSearchListBox FlatList { get; private set; } = null!;
     internal System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost { get; private set; } = null!;
     internal System.Windows.Controls.TextBox SearchTextBox { get; private set; } = null!;
@@ -107,7 +106,7 @@ internal class ElementTreeViewCreator
             onMouseClick, onMouseMove, onFontChanged, onDragOver, onDragDrop,
             onQueryContinueDrag, onValidateSortingDrop, onNodeSortingDropped, onGiveFeedback);
 
-        CreateContextMenuStrip();
+        CreateContextMenu();
 
         var grid = new Grid();
         grid.Margin = new Thickness(4);
@@ -140,6 +139,11 @@ internal class ElementTreeViewCreator
 
         TreeViewHost.Child = scrollContainer;
         TreeViewHost.Margin = new Thickness(0, 4, 0, 0);
+        TreeViewHost.ContextMenu = ContextMenu;
+        TreeViewHost.ContextMenuOpening += (_, args) =>
+        {
+            if (ContextMenu.Items.Count == 0) args.Handled = true;
+        };
 
         Grid.SetRow(TreeViewHost, 3);
         grid.Children.Add(TreeViewHost);
@@ -243,13 +247,9 @@ internal class ElementTreeViewCreator
         ObjectTreeView.GiveFeedback += onGiveFeedback;
     }
 
-    private void CreateContextMenuStrip()
+    private void CreateContextMenu()
     {
-        this.MenuStrip = new System.Windows.Forms.ContextMenuStrip();
-        this.MenuStrip.Name = "ElementMenuStrip";
-        this.MenuStrip.Size = new System.Drawing.Size(61, 4);
-        this.MenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
-        this.ObjectTreeView.ContextMenuStrip = this.MenuStrip;
+        this.ContextMenu = new System.Windows.Controls.ContextMenu();
     }
 
     internal void ApplyThemeColors()
@@ -260,10 +260,9 @@ internal class ElementTreeViewCreator
         {
             Color foregroundColor = Color.FromArgb(fg.A, fg.R, fg.G, fg.B);
             Color fieldColor = Color.FromArgb(field.A, field.R, field.G, field.B);
-            this.ObjectTreeView.ForeColor = MenuStrip.ForeColor = foregroundColor;
-            this.ObjectTreeView.BackColor = MenuStrip.BackColor = fieldColor;
+            this.ObjectTreeView.ForeColor = foregroundColor;
+            this.ObjectTreeView.BackColor = fieldColor;
             this.ObjectTreeView.LineColor = ObjectTreeView.BackColor;
-            this.MenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
             this.TreeViewHost.Background = bgBrush;
             (TreeViewHost.Child as ThemedScrollContainer)!.BackColor = fieldColor;
 

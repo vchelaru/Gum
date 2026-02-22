@@ -76,7 +76,7 @@
           <TransformGroup>
             <ScaleTransform />
             <SkewTransform />
-            <RotateTransform Angle="{Binding Path=NegativeAngle}" />
+            <RotateTransform Angle="{Binding Path=NegativeAngle, TargetNullValue=0}" />
             <TranslateTransform />
           </TransformGroup>
         </Line.RenderTransform>

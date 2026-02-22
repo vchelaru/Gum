@@ -141,7 +141,7 @@ namespace WpfDataUi.DataTypes
         {
             foreach(var innerMember in InstanceMembers)
             {
-                innerMember.SetValueError(obj);
+                innerMember.SetValueError?.Invoke(obj);
             }
         }
     }

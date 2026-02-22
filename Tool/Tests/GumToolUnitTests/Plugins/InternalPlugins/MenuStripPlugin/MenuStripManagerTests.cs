@@ -101,10 +101,10 @@ public class MenuStripManagerTests : BaseTestClass
             var editMenu = (MenuItem)menu.Items[1];
             var removeMenu = editMenu.Items
                 .OfType<MenuItem>()
-                .First(mi => (string)mi.Header == "Remove");
+                .First(mi => mi.Header as string == "Remove");
             var stateItem = removeMenu.Items
                 .OfType<MenuItem>()
-                .First(mi => ((string)mi.Header).StartsWith("State"));
+                .First(mi => (mi.Header as string).StartsWith("State"));
 
             stateItem.Header.ShouldBe("State Running");
             stateItem.IsEnabled.ShouldBeTrue();
@@ -132,7 +132,7 @@ public class MenuStripManagerTests : BaseTestClass
             result.Header.ShouldBe("Properties");
             var editMenu = (MenuItem)menu.Items[1];
             editMenu.Items.OfType<MenuItem>()
-                .ShouldContain(mi => (string)mi.Header == "Properties");
+                .ShouldContain(mi => mi.Header as string == "Properties");
         });
     }
 
@@ -168,10 +168,10 @@ public class MenuStripManagerTests : BaseTestClass
             var editMenu = (MenuItem)menu.Items[1];
             var removeMenu = editMenu.Items
                 .OfType<MenuItem>()
-                .First(mi => (string)mi.Header == "Remove");
+                .First(mi => mi.Header as string == "Remove");
             var elementItem = removeMenu.Items
                 .OfType<MenuItem>()
-                .First(mi => (string)mi.Header == "MyButton");
+                .First(mi => mi.Header as string == "MyButton");
 
             elementItem.IsEnabled.ShouldBeTrue();
 
@@ -196,6 +196,43 @@ public class MenuStripManagerTests : BaseTestClass
             var result = _menuStripManager.GetItem("Nonexistent");
 
             result.ShouldBeNull();
+        });
+    }
+
+    [Theory]
+    [InlineData("File")]
+    [InlineData("Edit")]
+    [InlineData("View")]
+    [InlineData("Content")]
+    [InlineData("Plugins")]
+    [InlineData("Help")]
+    public void GetItem_ReturnsItem_ForExistingTopLevelMenus(string menuName)
+    {
+        RunOnSta(() =>
+        {
+            var menu = new Menu();
+            _menuStripManager.PopulateMenu(menu);
+
+            var result = _menuStripManager.GetItem(menuName);
+
+            result.ShouldNotBeNull();
+            (result.Header as string).ShouldBe(menuName);
+        });
+    }
+
+    [Fact]
+    public void PopulateMenu_CalledTwice_DoesNotDuplicateItems()
+    {
+        RunOnSta(() =>
+        {
+            var menu = new Menu();
+            _menuStripManager.PopulateMenu(menu);
+            var countAfterFirst = menu.Items.Count;
+
+            _menuStripManager.PopulateMenu(menu);
+            var countAfterSecond = menu.Items.Count;
+
+            countAfterSecond.ShouldBe(countAfterFirst);
         });
     }
 }

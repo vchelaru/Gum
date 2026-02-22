@@ -276,7 +276,7 @@ public abstract class PluginBase : IPlugin
         {
             MenuItem childMenuItem = parentItem.Items
                 .OfType<MenuItem>()
-                .FirstOrDefault(item => (string)item.Header == childText);
+                .FirstOrDefault(item => item.Header as string == childText);
 
             return childMenuItem;
         }
@@ -292,6 +292,12 @@ public abstract class PluginBase : IPlugin
             menuItem.Click += eventHandler;
 
         MenuItem itemToAddTo = GetItem(container);
+
+        if (itemToAddTo == null)
+        {
+            throw new InvalidOperationException(
+                $"Could not find menu item '{container}'. Make sure the menu is populated before calling AddMenuItemTo.");
+        }
 
         if (preferredIndex == -1)
         {

@@ -319,6 +319,10 @@ public class WireframeControl : GraphicsDeviceControl
     /// </summary>
     public void UpdateCanvasBoundsToProject()
     {
+        if (_projectManager == null)
+        {
+            return;
+        }
 
         var gumProject = _projectManager.GumProjectSave;
         if (mCanvasBounds != null && gumProject != null)

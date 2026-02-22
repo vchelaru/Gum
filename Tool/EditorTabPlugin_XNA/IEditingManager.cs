@@ -1,8 +1,8 @@
-using System.Windows.Forms;
+using System.Windows.Controls;
 
 namespace Gum.Wireframe;
 
 public interface IEditingManager
 {
-    ContextMenuStrip? ContextMenuStrip { get; }
+    ContextMenu? ContextMenu { get; }
 }

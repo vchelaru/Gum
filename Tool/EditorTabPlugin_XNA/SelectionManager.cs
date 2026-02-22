@@ -442,7 +442,7 @@ public class SelectionManager : ISelectionManager
 
             IPositionedSizedObject representationOver = null;
 
-            if (_editingManager.ContextMenuStrip?.Visible == true)
+            if (_editingManager.ContextMenu?.IsOpen == true)
             {
                 // do nothing!
             }
@@ -1195,7 +1195,7 @@ public class SelectionManager : ISelectionManager
         WireframeEditor?.UpdateHover(worldX, worldY);
 
         // Process input only when no context menu is visible
-        if (_editingManager.ContextMenuStrip?.Visible != true)
+        if (_editingManager.ContextMenu?.IsOpen != true)
         {
             ProcessInputForSelection();
         }

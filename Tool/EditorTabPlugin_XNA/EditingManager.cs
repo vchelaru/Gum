@@ -47,9 +47,9 @@ public partial class EditingManager : IEditingManager
     }
     #region Methods
 
-    public void Initialize(System.Windows.Forms.ContextMenuStrip contextMenuStrip)
+    public void Initialize(System.Windows.Controls.ContextMenu contextMenu)
     {
-        RightClickInitialize(contextMenuStrip);
+        RightClickInitialize(contextMenu);
     }
 
 

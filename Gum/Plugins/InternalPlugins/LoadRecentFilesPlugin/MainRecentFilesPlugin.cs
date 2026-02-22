@@ -48,7 +48,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                 string name = GetDisplayedNameForGumxFilePath(filePath);
 
                 var mi = new MenuItem { Header = name };
-                mi.Click += (not, used) => _fileCommands.LoadProject(filePath.FullPath);
+                mi.Click += (_, _) => _fileCommands.LoadProject(filePath.FullPath);
                 recentFilesMenuItem.Items.Add(mi);
             }
 
@@ -67,7 +67,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                     string name = GetDisplayedNameForGumxFilePath(filePath);
 
                     var mi = new MenuItem { Header = name };
-                    mi.Click += (not, used) => _fileCommands.LoadProject(filePath.FullPath);
+                    mi.Click += (_, _) => _fileCommands.LoadProject(filePath.FullPath);
                     recentFilesMenuItem.Items.Add(mi);
                 }
 
