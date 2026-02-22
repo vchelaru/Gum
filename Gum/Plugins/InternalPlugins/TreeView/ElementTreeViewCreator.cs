@@ -465,7 +465,7 @@ internal class ElementTreeViewCreator
         SearchTextBox.SetValue(HintAssist.HintProperty, "Search...");
         SearchTextBox.SetValue(HintAssist.IsFloatingProperty, false);
         SearchTextBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-        SearchTextBox.TextChanged += (not, used) => onFilterTextChanged(SearchTextBox.Text);
+        SearchTextBox.TextChanged += (_, _) => onFilterTextChanged(SearchTextBox.Text);
         SearchTextBox.PreviewKeyDown += (sender, args) =>
         {
             bool isCtrlDown = WpfInput.Keyboard.IsKeyDown(WpfInput.Key.LeftCtrl) || WpfInput.Keyboard.IsKeyDown(WpfInput.Key.RightCtrl);

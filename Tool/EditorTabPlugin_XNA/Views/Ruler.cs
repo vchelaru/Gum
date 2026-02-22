@@ -40,7 +40,6 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
         SystemManagers mManagers;
         Cursor mCursor;
         private readonly LayerService _layerService;
-        Keyboard mKeyboard;
 
         SolidRectangle mRectangle;
         List<Line> mRulerLines = new List<Line>();

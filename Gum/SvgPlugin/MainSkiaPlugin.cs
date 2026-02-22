@@ -113,7 +113,7 @@ namespace SkiaPlugin
         private void AddMenuItems()
         {
             var item = this.AddMenuItem(new List<string>() { "Plugins", "Add Skia Standard Elements" });
-            item.Click += (not, used) =>
+            item.Click += (_, _) =>
             {
                 var projectState = Locator.GetRequiredService<IProjectState>();
                 if(projectState.NeedsToSaveProject)

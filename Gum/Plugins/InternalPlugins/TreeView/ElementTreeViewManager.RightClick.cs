@@ -242,7 +242,7 @@ public partial class ElementTreeViewManager
                 var deleteText = _selectedState.SelectedInstances.Count() > 1
                     ? $"Delete {_selectedState.SelectedInstances.Count()} instances"
                     : $"Delete {_selectedState.SelectedInstance.Name}";
-                mMenuStrip.Items.Add(deleteText, null, (not, used) => _editCommands.DeleteSelection());
+                mMenuStrip.Items.Add(deleteText, null, (_, _) => _editCommands.DeleteSelection());
 
 
 
@@ -263,7 +263,7 @@ public partial class ElementTreeViewManager
                         {
                             mMenuStrip.Items.Add($"Add {_selectedState.SelectedInstance.Name} to base {containerBase}",
                                 null,
-                                (not, used) => HandleMoveToBase(_selectedState.SelectedInstances, _selectedState.SelectedElement, containerBase));
+                                (_, _) => HandleMoveToBase(_selectedState.SelectedInstances, _selectedState.SelectedElement, containerBase));
                         }
                     }
 

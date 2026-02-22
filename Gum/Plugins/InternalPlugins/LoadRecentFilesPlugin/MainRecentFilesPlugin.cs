@@ -50,7 +50,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                 recentFilesMenuItem.DropDownItems.Add(
                     name,
                     null,
-                    (not, used) => _fileCommands.LoadProject(filePath.FullPath));
+                    (_, _) => _fileCommands.LoadProject(filePath.FullPath));
             }
 
             var nonFavorites = recentFiles.Where(item => !item.IsFavorite).ToArray();
@@ -70,7 +70,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                     recentFilesMenuItem.DropDownItems.Add(
                         name, 
                         null, 
-                        (not, used) => _fileCommands.LoadProject(filePath.FullPath));
+                        (_, _) => _fileCommands.LoadProject(filePath.FullPath));
                 }
 
 

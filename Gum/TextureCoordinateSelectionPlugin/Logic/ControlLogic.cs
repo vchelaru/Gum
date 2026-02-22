@@ -137,7 +137,7 @@ public class TextureCoordinateDisplayController : IDisposable
         //_guiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
         var pluginTab = _tabManager.AddControl(mainControl, "Texture Coordinates", TabLocation.RightBottom);
-        innerControl.DoubleClick += (not, used) =>
+        innerControl.DoubleClick += (_, _) =>
             HandleRegionDoubleClicked(innerControl);
 
         availableZoomLevels = innerControl.AvailableZoomLevels;
