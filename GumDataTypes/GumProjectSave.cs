@@ -75,9 +75,23 @@ public class GumProjectSave
 {
     public enum GumxVersions
     {
+        /// <summary>
+        /// The initial version of the .gumx format.
+        /// </summary>
         InitialVersion = 1,
 
+        /// <summary>
+        /// Element references (screen, component, standard element, behavior) store their Name as an XML
+        /// attribute instead of a child element, producing a more compact file format.
+        /// </summary>
+        AttributeVersion = 2,
     }
+
+    /// <summary>
+    /// The highest <see cref="GumxVersions"/> value that this version of the Gum tool supports.
+    /// When a new <see cref="GumxVersions"/> value is added, update this constant to match.
+    /// </summary>
+    public const int NativeVersion = (int)GumxVersions.AttributeVersion;
 
     #region Fields
 
@@ -305,6 +319,8 @@ public class GumProjectSave
         ComponentReferences = new List<ElementReference>();
         StandardElementReferences = new List<ElementReference>();
         BehaviorReferences = new List<BehaviorReference>();
+
+        Version = (int)GumxVersions.AttributeVersion;
     }
 
     public static GumProjectSave Load(string fileName)
@@ -371,7 +387,17 @@ public class GumProjectSave
         {
             using (var stream = FileManager.GetStreamForFile(fileName))
             {
-                gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
+                using var reader = new StreamReader(stream);
+                string streamContent = reader.ReadToEnd();
+                bool isCompact = IsGumxCompactFormat(streamContent);
+                var deserializer = isCompact
+                    ? VariableSaveSerializer.GetGumProjectCompactSerializer()
+                    : FileManager.GetXmlSerializer(typeof(GumProjectSave));
+                gps = (GumProjectSave)deserializer.Deserialize(new StringReader(streamContent));
+                if (!isCompact && !streamContent.Contains("<Version>"))
+                {
+                    gps.Version = (int)GumxVersions.InitialVersion;
+                }
             }
         }
         else
@@ -383,7 +409,16 @@ public class GumProjectSave
             }
             try
             {
-                gps = FileManager.XmlDeserialize<GumProjectSave>(fileName);
+                string fileContent = File.ReadAllText(fileName);
+                bool isCompact = IsGumxCompactFormat(fileContent);
+                var deserializer = isCompact
+                    ? VariableSaveSerializer.GetGumProjectCompactSerializer()
+                    : FileManager.GetXmlSerializer(typeof(GumProjectSave));
+                gps = (GumProjectSave)deserializer.Deserialize(new StringReader(fileContent));
+                if (!isCompact && !fileContent.Contains("<Version>"))
+                {
+                    gps.Version = (int)GumxVersions.InitialVersion;
+                }
             }
             catch (FileNotFoundException)
             {
@@ -487,10 +522,11 @@ public class GumProjectSave
 
         foreach (ElementReference reference in ScreenReferences)
         {
+            reference.ElementType = ElementType.Screen;
             ScreenSave? toAdd = null;
             try
             {
-                toAdd = reference.ToElementSave<ScreenSave>(projectRootDirectory, ScreenExtension, result);
+                toAdd = reference.ToElementSave<ScreenSave>(projectRootDirectory, ScreenExtension, result, projectVersion: this.Version);
             }
             catch (Exception e)
             {
@@ -504,11 +540,12 @@ public class GumProjectSave
 
         foreach (ElementReference reference in ComponentReferences)
         {
+            reference.ElementType = ElementType.Component;
             ComponentSave? toAdd = null;
 
             try
             {
-                toAdd = reference.ToElementSave<ComponentSave>(projectRootDirectory, ComponentExtension, result);
+                toAdd = reference.ToElementSave<ComponentSave>(projectRootDirectory, ComponentExtension, result, projectVersion: this.Version);
             }
             catch (Exception e)
             {
@@ -522,10 +559,11 @@ public class GumProjectSave
 
         foreach (ElementReference reference in StandardElementReferences)
         {
+            reference.ElementType = ElementType.Standard;
             StandardElementSave? toAdd = null;
             try
             {
-                toAdd = reference.ToElementSave<StandardElementSave>(projectRootDirectory, StandardExtension, result);
+                toAdd = reference.ToElementSave<StandardElementSave>(projectRootDirectory, StandardExtension, result, projectVersion: this.Version);
             }
             catch (Exception e)
             {
@@ -545,7 +583,7 @@ public class GumProjectSave
 
                 try
                 {
-                    toAdd = reference.ToBehaviorSave(projectRootDirectory);
+                    toAdd = reference.ToBehaviorSave(projectRootDirectory, projectVersion: this.Version);
                 }
                 catch (Exception e)
                 {
@@ -568,7 +606,7 @@ public class GumProjectSave
 
         var matchingReference = BehaviorReferences.FirstOrDefault(item => item.Name == behavior.Name);
 
-        var newBehaviorSave = matchingReference?.ToBehaviorSave(projectRootDirectory);
+        var newBehaviorSave = matchingReference?.ToBehaviorSave(projectRootDirectory, projectVersion: this.Version);
 
         if (newBehaviorSave != null)
         {
@@ -588,7 +626,7 @@ public class GumProjectSave
             var matchingReference = ScreenReferences.FirstOrDefault(item => item.Name == element.Name);
 
             ScreenSave? newScreen = matchingReference?.ToElementSave<ScreenSave>(
-                projectRootDirectory, GumProjectSave.ScreenExtension, gumLoadResult);
+                projectRootDirectory, GumProjectSave.ScreenExtension, gumLoadResult, projectVersion: this.Version);
 
             if (newScreen != null)
             {
@@ -604,7 +642,7 @@ public class GumProjectSave
             var matchingReference = ComponentReferences.FirstOrDefault(item => item.Name == element.Name);
 
             ComponentSave newComonent = matchingReference?.ToElementSave<ComponentSave>(
-                projectRootDirectory, GumProjectSave.ComponentExtension, gumLoadResult);
+                projectRootDirectory, GumProjectSave.ComponentExtension, gumLoadResult, projectVersion: this.Version);
 
             if (newComonent != null)
             {
@@ -617,7 +655,7 @@ public class GumProjectSave
             var matchingReference = StandardElementReferences.FirstOrDefault(item => item.Name == element.Name);
 
             StandardElementSave newStandardElement = matchingReference?.ToElementSave<StandardElementSave>(
-                projectRootDirectory, GumProjectSave.StandardExtension, gumLoadResult);
+                projectRootDirectory, GumProjectSave.StandardExtension, gumLoadResult, projectVersion: this.Version);
 
             if (newStandardElement != null)
             {
@@ -627,31 +665,43 @@ public class GumProjectSave
         }
     }
 
+    private static bool IsGumxCompactFormat(string content)
+    {
+        // v2 files store Name as an XML attribute, e.g. <ScreenReference Name="...">.
+        // This matches ScreenReference, ComponentReference, StandardElementReference, and BehaviorReference.
+        // v1 files have no attributes on the reference element — Name is a child element instead.
+        // If a file has no references at all, either deserializer produces the same result.
+        return content.Contains("Reference Name=");
+    }
+
     public void Save(string fileName, bool saveElements)
     {
-        FileManager.XmlSerialize(this, fileName);
+        var projectSerializer = Version >= (int)GumxVersions.AttributeVersion
+            ? VariableSaveSerializer.GetGumProjectCompactSerializer()
+            : FileManager.GetXmlSerializer(typeof(GumProjectSave));
+        FileManager.XmlSerialize(this, fileName, projectSerializer);
 
         if (saveElements)
         {
+            bool useCompact = Version >= (int)GumxVersions.AttributeVersion;
             string directory = FileManager.GetDirectory(fileName);
 
             foreach (var screenSave in Screens)
             {
-                screenSave.Save(directory + ElementReference.ScreenSubfolder + "/" + screenSave.Name + "." + ScreenExtension);
+                screenSave.Save(directory + ElementReference.ScreenSubfolder + "/" + screenSave.Name + "." + ScreenExtension, useCompact);
             }
             foreach (var componentSave in Components)
             {
-                componentSave.Save(directory + ElementReference.ComponentSubfolder + "/" + componentSave.Name + "." + ComponentExtension);
+                componentSave.Save(directory + ElementReference.ComponentSubfolder + "/" + componentSave.Name + "." + ComponentExtension, useCompact);
             }
-            SaveStandardElements(directory);
+            SaveStandardElements(directory, useCompact);
         }
     }
 
-    public void SaveStandardElements(string directory)
+    public void SaveStandardElements(string directory, bool useCompact = false)
     {
         foreach (var standardElement in StandardElements)
         {
-
 
             const int maxNumberOfTries = 6;
             const int msBetweenSaves = 100;
@@ -664,7 +714,7 @@ public class GumProjectSave
             {
                 try
                 {
-                    standardElement.Save(directory + ElementReference.StandardSubfolder + "/" + standardElement.Name + "." + StandardExtension);
+                    standardElement.Save(directory + ElementReference.StandardSubfolder + "/" + standardElement.Name + "." + StandardExtension, useCompact);
 
                     succeeded = true;
                     break;

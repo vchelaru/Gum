@@ -122,6 +122,10 @@ public class ObjectFinder : IObjectFinder
                 foreach (var screen in gumProject.Screens)
                 {
                     var name = screen.Name;
+                    if(name == null)
+                    {
+                        throw new InvalidOperationException("The Gum project includes a screen with a null name");
+                    }
                     cachedDictionary[name] = screen;
                 }
 

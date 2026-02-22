@@ -199,6 +199,15 @@ public class ProjectManager : IProjectManager
 
         _gumProjectSave = GumProjectSave.Load(fileName.FullPath, out result);
 
+        if (_gumProjectSave != null && _gumProjectSave.Version > GumProjectSave.NativeVersion)
+        {
+            _dialogService.ShowMessage(
+                $"Could not load \"{fileName}\" because it was saved with a newer version of Gum " +
+                $" - version {_gumProjectSave.Version}.\n\nGum supports up to version {GumProjectSave.NativeVersion}.\n\n" +
+                $"Please update Gum to open this project.");
+            _gumProjectSave = null;
+        }
+
         string errors = result.ErrorMessage;
 
         if (!string.IsNullOrEmpty(errors))
@@ -274,6 +283,15 @@ public class ProjectManager : IProjectManager
                 wasModified = true;
             }
             PluginManager.Self.ProjectLoad(_gumProjectSave);
+
+            if (_gumProjectSave.Version < (int)GumProjectSave.GumxVersions.AttributeVersion)
+            {
+                // TODO: Replace placeholder URL with actual docs URL once available
+                _guiCommands.PrintOutput(
+                    $"This project is using legacy version {_gumProjectSave.Version}. " +
+                    $"The current version is {(int)GumProjectSave.GumxVersions.AttributeVersion}. " +
+                    $"For upgrading, see https://docs.flatredball.com/gum/gum-tool/upgrading/upgrading-file-gumx-version");
+            }
 
             _standardElementsManagerGumTool.RefreshStateVariablesThroughPlugins();
 

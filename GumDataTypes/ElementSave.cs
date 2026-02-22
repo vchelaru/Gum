@@ -179,9 +179,17 @@ namespace Gum.DataTypes
             return null;
         }
 
-        public void Save(string fileName)
+        public void Save(string fileName, bool useCompactFormat = false)
         {
-            FileManager.XmlSerialize(this.GetType(), this, fileName);
+            if (useCompactFormat)
+            {
+                var serializer = VariableSaveSerializer.GetCompactSerializer(this.GetType());
+                FileManager.XmlSerialize(this, fileName, serializer);
+            }
+            else
+            {
+                FileManager.XmlSerialize(this.GetType(), this, fileName);
+            }
         }
 
 
