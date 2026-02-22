@@ -139,11 +139,6 @@ internal class ElementTreeViewCreator
 
         TreeViewHost.Child = scrollContainer;
         TreeViewHost.Margin = new Thickness(0, 4, 0, 0);
-        TreeViewHost.ContextMenu = ContextMenu;
-        TreeViewHost.ContextMenuOpening += (_, args) =>
-        {
-            if (ContextMenu.Items.Count == 0) args.Handled = true;
-        };
 
         Grid.SetRow(TreeViewHost, 3);
         grid.Children.Add(TreeViewHost);

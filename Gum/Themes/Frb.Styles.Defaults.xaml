@@ -1018,8 +1018,6 @@
     <ControlTemplate x:Key="{x:Static MenuItem.SubmenuItemTemplateKey}" TargetType="{x:Type MenuItem}">
         <Border
             Name="Border"
-            BorderBrush="Transparent"
-            BorderThickness="1"
             SnapsToDevicePixels="True">
             <Grid Background="Transparent">
                 <Grid.ColumnDefinitions>
@@ -1062,7 +1060,7 @@
                 <TextBlock
                     x:Name="InputGestureText"
                     Grid.Column="2"
-                    Margin="5,2,0,2"
+                    Margin="5,2,10,2"
                     DockPanel.Dock="Right"
                     Text="{TemplateBinding InputGestureText}" />
             </Grid>
@@ -1080,7 +1078,6 @@
             </Trigger>
             <Trigger Property="IsHighlighted" Value="true">
                 <Setter TargetName="Border" Property="Background" Value="{DynamicResource Frb.Brushes.Primary.Transparent}" />
-                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="false">
                 <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}" />
@@ -1092,8 +1089,6 @@
     <ControlTemplate x:Key="{x:Static MenuItem.SubmenuHeaderTemplateKey}" TargetType="{x:Type MenuItem}">
         <Border
             Name="Border"
-            BorderBrush="Transparent"
-            BorderThickness="1"
             SnapsToDevicePixels="True">
             <Grid Background="Transparent">
                 <Grid.ColumnDefinitions>
@@ -1117,7 +1112,7 @@
                 <TextBlock
                     x:Name="InputGestureText"
                     Grid.Column="2"
-                    Margin="5,2,2,2"
+                    Margin="5,2,10,2"
                     DockPanel.Dock="Right"
                     Text="{TemplateBinding InputGestureText}" />
                 <md:PackIcon
@@ -1138,7 +1133,7 @@
                     Placement="Right"
                     PopupAnimation="Slide">
                     <Border
-                        Padding="0,0,5,5"
+                        Padding="0,0,6,6"
                         Background="Transparent">
                         <Grid>
                             <!--  Background + shadow  -->
@@ -1174,7 +1169,6 @@
             </Trigger>
             <Trigger Property="IsHighlighted" Value="true">
                 <Setter TargetName="Border" Property="Background" Value="{DynamicResource Frb.Brushes.Primary.Transparent}" />
-                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
             </Trigger>
             <Trigger SourceName="Popup" Property="Popup.AllowsTransparency" Value="True">
                 <Setter TargetName="SubmenuBorder" Property="CornerRadius" Value="4" />
@@ -1215,33 +1209,42 @@
                         IsOpen="{TemplateBinding IsSubmenuOpen}"
                         Placement="Bottom"
                         PopupAnimation="Slide">
-                        <Grid>
-                            <Border
-                                Name="SubmenuBorder"
-                                Background="{DynamicResource Frb.Surface01}"
-                                BorderBrush="{DynamicResource Frb.Brushes.Primary}"
-                                BorderThickness="1"
-                                SnapsToDevicePixels="True">
-                                <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
-                            </Border>
-                            <!--  Cutout: erases the top border under the header for a connected look.
-                                  The outer Grid sizes to the header width; the Rectangle is inset 1px
-                                  on each side so it doesn't eat into the green border corners.  -->
-                            <Grid
-                                Name="TopBorderPatchContainer"
-                                Width="{Binding ElementName=Border, Path=ActualWidth}"
-                                Height="1"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                Visibility="Collapsed"
-                                SnapsToDevicePixels="True">
-                                <Rectangle
-                                    Name="TopBorderPatch"
-                                    Margin="1,0,1,0"
-                                    Fill="{DynamicResource Frb.Surface01}"
-                                    SnapsToDevicePixels="True" />
+                        <Border Padding="0,0,6,6" Background="Transparent">
+                            <Grid>
+                                <Border
+                                    Name="SubmenuBorder"
+                                    Background="{DynamicResource Frb.Surface01}"
+                                    BorderBrush="{DynamicResource Frb.Brushes.Primary}"
+                                    BorderThickness="1"
+                                    SnapsToDevicePixels="True">
+                                    <Border.Effect>
+                                        <DropShadowEffect
+                                            BlurRadius="4"
+                                            Opacity="0.5"
+                                            ShadowDepth="2"
+                                            Color="Black" />
+                                    </Border.Effect>
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                </Border>
+                                <!--  Cutout: erases the top border under the header for a connected look.
+                                      The outer Grid sizes to the header width; the Rectangle is inset 1px
+                                      on each side so it doesn't eat into the green border corners.  -->
+                                <Grid
+                                    Name="TopBorderPatchContainer"
+                                    Width="{Binding ElementName=Border, Path=ActualWidth}"
+                                    Height="1"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    Visibility="Collapsed"
+                                    SnapsToDevicePixels="True">
+                                    <Rectangle
+                                        Name="TopBorderPatch"
+                                        Margin="1,0,1,0"
+                                        Fill="{DynamicResource Frb.Surface01}"
+                                        SnapsToDevicePixels="True" />
+                                </Grid>
                             </Grid>
-                        </Grid>
+                        </Border>
                     </Popup>
                 </Grid>
                 <ControlTemplate.Triggers>
@@ -1249,7 +1252,7 @@
                         <Setter TargetName="Border" Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
                     </Trigger>
                     <Trigger SourceName="Popup" Property="Popup.AllowsTransparency" Value="True">
-                        <Setter TargetName="SubmenuBorder" Property="Padding" Value="0,3,0,3" />
+                        <Setter TargetName="SubmenuBorder" Property="Padding" Value="0" />
                     </Trigger>
                     <Trigger Property="IsSubmenuOpen" Value="True">
                         <Setter TargetName="Border" Property="Background" Value="{DynamicResource Frb.Surface01}" />
@@ -1288,29 +1291,52 @@
         </Style.Resources>
     </Style>
 
+    <!--  Menu separator  -->
+    <Style TargetType="{x:Type Separator}">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Margin" Value="4,2,4,2" />
+        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Primary}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Separator}">
+                    <Border
+                        Height="{TemplateBinding Height}"
+                        Margin="{TemplateBinding Margin}"
+                        Background="{TemplateBinding Background}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!--  Outer menu  -->
     <Style TargetType="{x:Type ContextMenu}">
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-        <Setter Property="HasDropShadow" Value="True" />
         <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ContextMenu}">
-
-                    <!--  Here is where you change the border thickness to zero on the menu  -->
-                    <Border
-                        x:Name="Border"
-                        Padding="4"
-                        Background="{DynamicResource Frb.Surface01}"
-                        BorderBrush="{DynamicResource Frb.Brushes.Contrast03}"
-                        BorderThickness="1"
-                        CornerRadius="2">
-                        <StackPanel
-                            ClipToBounds="True"
-                            IsItemsHost="True"
-                            Orientation="Vertical" />
+                    <Border Padding="0,0,6,6" Background="Transparent">
+                        <Border
+                            x:Name="Border"
+                            Padding="4"
+                            Background="{DynamicResource Frb.Surface01}"
+                            BorderBrush="{DynamicResource Frb.Brushes.Primary}"
+                            BorderThickness="1"
+                            CornerRadius="2">
+                            <Border.Effect>
+                                <DropShadowEffect
+                                    BlurRadius="4"
+                                    Opacity="0.5"
+                                    ShadowDepth="2"
+                                    Color="Black" />
+                            </Border.Effect>
+                            <StackPanel
+                                ClipToBounds="True"
+                                IsItemsHost="True"
+                                Orientation="Vertical" />
+                        </Border>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>

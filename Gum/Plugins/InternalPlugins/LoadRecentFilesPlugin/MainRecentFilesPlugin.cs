@@ -52,13 +52,17 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                 recentFilesMenuItem.Items.Add(mi);
             }
 
+            var hasFavorites = recentFiles.Any(item => item.IsFavorite);
             var nonFavorites = recentFiles.Where(item => !item.IsFavorite).ToArray();
 
             var hasNonFavorites = nonFavorites.Length > 0;
 
             if (hasNonFavorites)
             {
-                recentFilesMenuItem.Items.Add(new Separator());
+                if (hasFavorites)
+                {
+                    recentFilesMenuItem.Items.Add(new Separator());
+                }
 
                 foreach (var item in nonFavorites.Take(5))
                 {
@@ -74,6 +78,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
             }
 
+            recentFilesMenuItem.Items.Add(new Separator());
             var moreItem = new MenuItem { Header = "More..." };
             moreItem.Click += HandleLoadRecentClicked;
             recentFilesMenuItem.Items.Add(moreItem);
@@ -153,6 +158,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                     }
                 }
                 _fileCommands.SaveGeneralSettings();
+                RefreshMenuItems();
             }
 
         }

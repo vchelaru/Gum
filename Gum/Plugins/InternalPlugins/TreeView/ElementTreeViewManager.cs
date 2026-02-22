@@ -180,6 +180,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     TreeNode mBehaviorsTreeNode;
     TreeNode? mLastHoveredNode;
     private DateTime? hoverStartTime;
+
     private Cursor AddCursor { get; }
 
 
@@ -678,6 +679,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         ObjectTreeView.AfterExpand += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
         ObjectTreeView.AfterCollapse += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
+
+        // When a WPF ContextMenu is open it captures the mouse, so right-clicking
+        // a different tree node just closes the popup and the click never reaches
+        // the WinForms TreeView.  This is a WinForms/WPF interop limitation --
+        // the first right-click closes the menu, and a second right-click opens
+        // the new one.  Properly fixing this requires migrating the TreeView to WPF.
 
         RefreshUi();
 
