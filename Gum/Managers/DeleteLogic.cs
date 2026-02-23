@@ -262,7 +262,7 @@ public class DeleteLogic : IDeleteLogic
                     ? instanceSave.Name
                     : item.ToString() ?? "";
                 // I tried a tab, but the spacing was too big
-                optionsWindow.Message += $"  �{itemDisplay}\n";
+                optionsWindow.Message += $"  •{itemDisplay}\n";
             }
 
         }
