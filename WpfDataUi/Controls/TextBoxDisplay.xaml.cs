@@ -292,7 +292,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void ResetToSingleLine()
+        protected virtual void ResetToSingleLine()
         {
             this.Label.VerticalAlignment = VerticalAlignment.Center;
 
