@@ -1961,6 +1961,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if (_contextMenu.Items.Count > 0)
             {
+                _contextMenu.PlacementTarget = TreeViewHost;
                 _contextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
                 _contextMenu.IsOpen = true;
             }
