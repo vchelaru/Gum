@@ -628,6 +628,38 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void GetChangesForRenamedInstance_ParentVariableInOtherElement_IsDetected()
+    {
+        // ContainerComponent has a child instance "BeforeRename".
+        // TestScreen has an instance of ContainerComponent ("componentInstance") and another
+        // container ("OtherContainer") whose Parent is "componentInstance.BeforeRename".
+        // Renaming "BeforeRename" in ContainerComponent should detect the Parent variable in
+        // TestScreen even when the component does not have a DefaultChildContainer set.
+        var containerComponent = new ComponentSave { Name = "ContainerComponent" };
+        containerComponent.States.Add(new StateSave { Name = "Default", ParentContainer = containerComponent });
+        var beforeRenameInstance = new InstanceSave { Name = "BeforeRename", BaseType = "Container", ParentContainer = containerComponent };
+        containerComponent.Instances.Add(beforeRenameInstance);
+        _project.Components.Add(containerComponent);
+
+        var screen = new ScreenSave { Name = "TestScreen" };
+        var screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        var componentInstance = new InstanceSave { Name = "componentInstance", BaseType = "ContainerComponent", ParentContainer = screen };
+        screen.Instances.Add(componentInstance);
+        var otherContainer = new InstanceSave { Name = "OtherContainer", BaseType = "Container", ParentContainer = screen };
+        screen.Instances.Add(otherContainer);
+        var parentVar = new VariableSave { Name = "OtherContainer.Parent", Value = "componentInstance.BeforeRename" };
+        screenDefault.Variables.Add(parentVar);
+        _project.Screens.Add(screen);
+
+        var changes = _renameLogic.GetChangesForRenamedInstance(containerComponent, beforeRenameInstance, "BeforeRename");
+
+        changes.ParentVariablesInOtherElements.Count.ShouldBe(1);
+        changes.ParentVariablesInOtherElements[0].Container.ShouldBe(screen);
+        changes.ParentVariablesInOtherElements[0].Variable.ShouldBe(parentVar);
+    }
+
+    [Fact]
     public void GetChangesForRenamedInstance_SameInstanceNameInDifferentComponent_OnlyRenamedInstanceIsDetected()
     {
         // ComponentA has instance "Sprite" with a VariableReferences entry "Width = Sprite.Width".
@@ -717,6 +749,27 @@ public class RenameLogicTests : BaseTestClass
         _renameLogic.ApplyInstanceRenameChanges(changes, "NewName", "ChildA", new HashSet<ElementSave>());
 
         varRefList.Value[0].ShouldBe("Width = NewName.Width");
+    }
+
+    [Fact]
+    public void ApplyInstanceRenameChanges_ParentVariableInOtherElement_IsUpdated()
+    {
+        // An InstanceRenameChanges with a ParentVariablesInOtherElements entry whose value is
+        // "componentInstance.BeforeRename" should have that value updated to
+        // "componentInstance.AfterRename" after applying the changes.
+        var screen = new ScreenSave { Name = "TestScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        _project.Screens.Add(screen);
+
+        var parentVar = new VariableSave { Name = "OtherContainer.Parent", Value = "componentInstance.BeforeRename" };
+        screen.DefaultState.Variables.Add(parentVar);
+
+        var changes = new InstanceRenameChanges();
+        changes.ParentVariablesInOtherElements.Add((screen, parentVar));
+
+        _renameLogic.ApplyInstanceRenameChanges(changes, "AfterRename", "BeforeRename", new HashSet<ElementSave>());
+
+        parentVar.Value.ShouldBe("componentInstance.AfterRename");
     }
 
     [Fact]
