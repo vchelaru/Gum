@@ -1,7 +1,5 @@
 ---
-name: bump-nuget-version
-description: Bump the NuGet package versions for all 9 Gum library projects. Queries NuGet to check if a version exists for today, then sets the new version to YYYY.M.D.V where V increments from the latest published version today (or starts at 1). Creates a release branch, commits the changes, pushes, and opens a PR. Run this before triggering the nuget release workflow.
-disable-model-invocation: true
+description: Bump the NuGet package versions for all 9 Gum library projects. Queries NuGet to check if a version exists for today, then sets the new version to YYYY.M.D.V where V increments from the latest published version today (or starts at 1). Creates a release branch, commits the changes, pushes, and opens a PR.
 ---
 
 Invoking coder agent to bump NuGet package versions and open a release PR.
