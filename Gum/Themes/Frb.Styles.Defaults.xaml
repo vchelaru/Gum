@@ -1521,7 +1521,7 @@
                     <Expander
                         Header="{Binding}"
                         HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
-            IsExpanded="{Binding IsExpanded}">
+                        IsExpanded="{Binding IsExpanded}">
                         <ItemsControl AlternationCount="2" ItemsSource="{Binding Members}" />
                     </Expander>
                 </DataTemplate>
@@ -1543,7 +1543,7 @@
                         md:ExpanderAssist.HeaderBackground="{Binding HeaderColor}"
                         Header="{Binding}"
                         HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
-            IsExpanded="{Binding IsExpanded}">
+                        IsExpanded="{Binding IsExpanded}">
 
                         <ItemsControl
                             AlternationCount="2"
@@ -1612,9 +1612,7 @@
         <Setter Property="TextElement.FontSize" Value="12" />
         <Setter Property="LayoutTransform">
             <Setter.Value>
-                <ScaleTransform
-                    ScaleX="{Binding ScaleFactor, Source={StaticResource Scale}}"
-                    ScaleY="{Binding ScaleFactor, Source={StaticResource Scale}}" />
+                <ScaleTransform ScaleX="{Binding ScaleFactor, Source={StaticResource Scale}}" ScaleY="{Binding ScaleFactor, Source={StaticResource Scale}}" />
             </Setter.Value>
         </Setter>
         <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border}" />
