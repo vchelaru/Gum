@@ -60,13 +60,13 @@ namespace Gum.Wireframe
 
             mTopConnectorLine = new Line(null);
             mTopConnectorLine.Name = "Origin Top Connector";
-            mTopConnectorLine.Color = Color.FromArgb(127, 255, 255, 255);
+            mTopConnectorLine.Color = Color.FromArgb(127, 0, 128, 0); // transparent green, matches Y axis
             mTopConnectorLine.IsDotted = true;
             ShapeManager.Self.Add(mTopConnectorLine, layer);
 
             mLeftConnectorLine = new Line(null);
             mLeftConnectorLine.Name = "Origin Left Connector";
-            mLeftConnectorLine.Color = Color.FromArgb(127, 255, 255, 255);
+            mLeftConnectorLine.Color = Color.FromArgb(127, 255, 0, 0); // transparent red, matches X axis
             mLeftConnectorLine.IsDotted = true;
             ShapeManager.Self.Add(mLeftConnectorLine, layer);
 
