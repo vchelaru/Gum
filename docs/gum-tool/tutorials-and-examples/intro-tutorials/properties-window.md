@@ -20,7 +20,7 @@ Gum provides a flexible positioning system. The position of an element is a resu
 
 By default all instances are positioned by their top-left corner. For example, setting the Text instance's `X` and `Y` to 0 aligned its top-left position to the top-left of the screen (which is identified by a dotted line.
 
-<figure><img src="../../../.gitbook/assets/02_21 01 30.gif" alt=""><figcaption><p>Setting X and Y to 0 positions the instance at the top-left of the screen</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/23_04 56 02.png" alt=""><figcaption><p>Setting X and Y to 0 positions the instance at the top-left of the screen</p></figcaption></figure>
 
 We can change the origin of the Text object by setting its `X Origin` and `Y Origin` values. Notice that if `X Origin` is set to `Center` then the Text object is positioned by its center:
 

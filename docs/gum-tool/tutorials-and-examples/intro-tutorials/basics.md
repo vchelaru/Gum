@@ -8,7 +8,7 @@ This page walks you through the basics of using the _Gum UI tool,_ which we'll r
 
 ## Gum Elements
 
-Gum separates its elements into three categories: Screens, Components, and Standard. Behaviors are an advanced topic that we'll skip for these tutorials.&#x20;
+Gum separates its elements into three categories: Screens, Components, and Standard. Behaviors are an advanced topic that we'll skip for these tutorials.
 
 <figure><img src="../../../.gitbook/assets/image (15) (1).png" alt=""><figcaption><p>Screens, Components, and Standard folders</p></figcaption></figure>
 
@@ -68,7 +68,7 @@ Instances of standard and component elements can be added to screens and compone
 3. Drag the Text item onto the Editor tab
 4.  Release the mouse button. A new text instance appears in your screen.
 
-    <figure><img src="../../../.gitbook/assets/02_20 51 44.gif" alt=""><figcaption><p>Adding a Text instance to the MainMenu screen in the Editor tab</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/23_04 41 54.gif" alt=""><figcaption><p>Adding a Text instance to the MainMenu screen in the Editor tab</p></figcaption></figure>
 
 Alternatively, you can also drag+drop a standard element into a screen in the tree view.
 
@@ -82,13 +82,13 @@ If an element is dropped in the Editor window, it appears at the location where 
 
 Once an instance is a part of a screen or component it can be edited visually in the preview window. The selected instance has eight (8) handles surrounding it. These are called the _resize handles_ and can be used to change the selected instance's width and height.
 
-<figure><img src="../../../.gitbook/assets/image (60).png" alt=""><figcaption><p>A selected Text instance with resize handles</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/23_04 53 48.png" alt=""><figcaption><p>A selected Text instance with resize handles</p></figcaption></figure>
 
 In the case of the Text object, the resize handles are used to control how the text object performs line wrapping.
 
 You can use the resize handles to resize the instance, or you can simply push the mouse button and drag inside the instance to change its position. Notice that an object's outline is displayed when the cursor is hovering over the instance.
 
-<figure><img src="../../../.gitbook/assets/03_09 10 50.gif" alt=""><figcaption><p>Moving and resizing a Text object.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/23_04 54 40.gif" alt=""><figcaption><p>Moving and resizing a Text object.</p></figcaption></figure>
 
 ### Conclusion
 
