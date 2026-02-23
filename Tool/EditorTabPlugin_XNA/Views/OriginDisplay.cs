@@ -20,6 +20,9 @@ namespace Gum.Wireframe
         Line mXOriginLine; // red, horizontal
         Line mYOriginLine; // green, vertical
 
+        Line mTopConnectorLine;  // dotted, closes the top of the offset box
+        Line mLeftConnectorLine; // dotted, closes the left of the offset box
+
         public bool Visible
         {
             get => mXOriginLine.Visible;
@@ -29,6 +32,8 @@ namespace Gum.Wireframe
                 mXLine2.Visible = value;
                 mXOriginLine.Visible = value;
                 mYOriginLine.Visible = value;
+                mTopConnectorLine.Visible = value;
+                mLeftConnectorLine.Visible = value;
             }
         }
 
@@ -53,6 +58,18 @@ namespace Gum.Wireframe
             mYOriginLine.Color = Color.Green;
             ShapeManager.Self.Add(mYOriginLine, layer);
 
+            mTopConnectorLine = new Line(null);
+            mTopConnectorLine.Name = "Origin Top Connector";
+            mTopConnectorLine.Color = Color.FromArgb(127, 0, 128, 0); // transparent green, matches Y axis
+            mTopConnectorLine.IsDotted = true;
+            ShapeManager.Self.Add(mTopConnectorLine, layer);
+
+            mLeftConnectorLine = new Line(null);
+            mLeftConnectorLine.Name = "Origin Left Connector";
+            mLeftConnectorLine.Color = Color.FromArgb(127, 255, 0, 0); // transparent red, matches X axis
+            mLeftConnectorLine.IsDotted = true;
+            ShapeManager.Self.Add(mLeftConnectorLine, layer);
+
         }
 
         public void Destroy()
@@ -61,6 +78,8 @@ namespace Gum.Wireframe
             ShapeManager.Self.Remove(mXLine2);
             ShapeManager.Self.Remove(mXOriginLine);
             ShapeManager.Self.Remove(mYOriginLine);
+            ShapeManager.Self.Remove(mTopConnectorLine);
+            ShapeManager.Self.Remove(mLeftConnectorLine);
         }
 
         public void UpdateTo(GraphicalUiElement asGue)
@@ -173,6 +192,18 @@ namespace Gum.Wireframe
             mXOriginLine.Y = selectedObjectY;
             mXOriginLine.RelativePoint.X = selectedObjectX - startX;
             mXOriginLine.RelativePoint.Y = 0;
+
+            // Dotted top connector: from parent origin horizontally to top of Y-axis line
+            mTopConnectorLine.X = startX;
+            mTopConnectorLine.Y = startY;
+            mTopConnectorLine.RelativePoint.X = selectedObjectX - startX;
+            mTopConnectorLine.RelativePoint.Y = 0;
+
+            // Dotted left connector: from parent origin vertically down to start of X-axis line
+            mLeftConnectorLine.X = startX;
+            mLeftConnectorLine.Y = startY;
+            mLeftConnectorLine.RelativePoint.X = 0;
+            mLeftConnectorLine.RelativePoint.Y = selectedObjectY - startY;
         }
 
         public void SetColor(Color color)
