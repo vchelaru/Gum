@@ -70,7 +70,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
-    CopyType mCopyType;
+    CopyType _copyType;
 
     /// <summary>
     /// Keeps track of whether the user has copied, moved selection, then pasted.
@@ -162,7 +162,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
     private void StoreCopiedObject(CopyType copyType, ISelectedState selectedState)
     {
-        mCopyType = copyType;
+        _copyType = copyType;
         CopiedData.CopiedElement = null;
         CopiedData.CopiedInstancesRecursive.Clear();
         CopiedData.CopiedStates.Clear();
@@ -340,7 +340,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     public void OnPaste(CopyType copyType, TopOrRecursive topOrRecursive = TopOrRecursive.Recursive)
     {
         ////////////////////Early Out
-        if (mCopyType != copyType)
+        if (_copyType != copyType)
         {
             return;
         }
@@ -348,7 +348,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         using var undoLock = _undoManager.RequestLock();
 
         // To make sure we didn't copy one type and paste another
-        if (mCopyType == CopyType.InstanceOrElement)
+        if (_copyType == CopyType.InstanceOrElement)
         {
             if (CopiedData.CopiedElement != null)
             {
@@ -362,7 +362,7 @@ public class CopyPasteLogic : ICopyPasteLogic
                 PasteCopiedInstanceSaves(topOrRecursive);
             }
         }
-        else if (mCopyType == CopyType.State && CopiedData.CopiedStates?.Count > 0)
+        else if (_copyType == CopyType.State && CopiedData.CopiedStates?.Count > 0)
         {
             PastedCopiedState();
         }
@@ -847,12 +847,17 @@ public class CopyPasteLogic : ICopyPasteLogic
                     if (isParentOfPastedInstanceAlsoAPastedInstance)
                     {
                         // this is a parent and it may be attached to a copy, so update the value
-                        newParentName = oldNewNameDictionary[desiredParentNameWithoutSubItem];
+                        var remappedName = oldNewNameDictionary[desiredParentNameWithoutSubItem];
                         if (desiredParentName.Contains("."))
                         {
-                            newParentName += desiredParentName.Substring(desiredParentName.IndexOf("."));
+                            remappedName += desiredParentName.Substring(desiredParentName.IndexOf("."));
                         }
-                        
+                        // Don't remap if it would create a self-reference (e.g. pasting into
+                        // a previously-pasted instance that shares the same source name)
+                        if (remappedName != newInstance.Name)
+                        {
+                            newParentName = remappedName;
+                        }
                     }
 
                     if(!string.IsNullOrEmpty(newParentName))

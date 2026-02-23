@@ -31,7 +31,7 @@ public class CopyPasteLogicTests : BaseTestClass
 
     StateSave selectedStateSave = new();
     ComponentSave selectedComponent = new();
-
+    List<InstanceSave> _currentSelectedInstances = new();
 
     private readonly AutoMocker _mocker;
     public CopyPasteLogicTests()
@@ -47,6 +47,17 @@ public class CopyPasteLogicTests : BaseTestClass
         _selectedState = _mocker.GetMock<ISelectedState>();
         _elementCommands = _mocker.GetMock<IElementCommands>();
 
+        // Mock the SelectedInstances setter so paste operations update selection state
+        _selectedState
+            .SetupSet(x => x.SelectedInstances = It.IsAny<IEnumerable<InstanceSave>>())
+            .Callback((IEnumerable<InstanceSave> newInstances) =>
+            {
+                _currentSelectedInstances = newInstances?.ToList() ?? new List<InstanceSave>();
+                _selectedState
+                    .Setup(x => x.SelectedInstance)
+                    .Returns(_currentSelectedInstances.FirstOrDefault());
+                _messenger.Send(new SelectionChangedMessage());
+            });
 
         selectedStateSave.Name = "CopiedState";
         selectedComponent.BaseType = "Sprite";
@@ -1088,6 +1099,370 @@ public class CopyPasteLogicTests : BaseTestClass
         InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
+    [Fact]
+    public void OnCut_ThenPasteMultipleTimes_NoSelectionChange_ShouldPreserveHierarchy()
+    {
+        /*
+         * Instance1
+         *   Child
+         *     Grandchild
+         *
+         * Cut Child (includes Grandchild), paste twice without changing selection.
+         * After second paste:
+         * Instance1
+         *   Child
+         *     Grandchild
+         *   Child1
+         *     Grandchild1
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave instance1 = screen.Instances[0];
+
+        InstanceSave child = AddChild("Child", "Instance1");
+        InstanceSave grandchild = AddChild("Grandchild", "Child");
+
+        SetupDeleteLogicMock();
+
+        SelectInstances(child);
+
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(1, "Only Instance1 should remain after cut");
+
+        // First paste
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(3);
+        screen.DefaultState.GetValue("Child.Parent").ShouldBe("Instance1");
+        screen.DefaultState.GetValue("Grandchild.Parent").ShouldBe("Child");
+
+        // Second paste
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(5);
+        screen.DefaultState.GetValue("Child1.Parent").ShouldBe("Instance1");
+        screen.DefaultState.GetValue("Grandchild1.Parent").ShouldBe("Child1");
+
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
+
+    [Fact]
+    public void OnCut_ThenPasteMultipleTimes_IntoNewParent_ShouldPreserveInternalHierarchy()
+    {
+        /*
+         * Instance1
+         *   ChildA
+         *     GrandchildA
+         * TargetContainer
+         *
+         * Cut ChildA (includes GrandchildA), select TargetContainer, paste twice.
+         * After second paste:
+         * Instance1
+         * TargetContainer
+         *   ChildA
+         *     GrandchildA
+         *   ChildA1
+         *     GrandchildA1
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave instance1 = screen.Instances[0];
+
+        InstanceSave childA = AddChild("ChildA", "Instance1");
+        InstanceSave grandchildA = AddChild("GrandchildA", "ChildA");
+        InstanceSave targetContainer = AddChild("TargetContainer", "");
+
+        SetupDeleteLogicMock();
+
+        SelectInstances(childA);
+
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(2, "Only Instance1 and TargetContainer should remain after cut");
+
+        SelectInstances(targetContainer);
+
+        // First paste
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(4);
+        screen.DefaultState.GetValue("ChildA.Parent").ShouldBe("TargetContainer");
+        screen.DefaultState.GetValue("GrandchildA.Parent").ShouldBe("ChildA");
+
+        // Second paste
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(6);
+        screen.DefaultState.GetValue("ChildA1.Parent").ShouldBe("TargetContainer");
+        screen.DefaultState.GetValue("GrandchildA1.Parent").ShouldBe("ChildA1");
+
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
+
+    [Fact]
+    public void OnCut_ThenPaste_ThenChangeSelection_ThenPaste_ShouldRespectNewSelection()
+    {
+        /*
+         * Instance1
+         *   Child
+         *     Grandchild
+         * TargetContainer
+         *
+         * Cut Child (includes Grandchild), paste without selection change (restores under Instance1),
+         * then select TargetContainer, paste again.
+         * Final result:
+         * Instance1
+         *   Child
+         *     Grandchild
+         * TargetContainer
+         *   Child1
+         *     Grandchild1
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave instance1 = screen.Instances[0];
+
+        InstanceSave child = AddChild("Child", "Instance1");
+        InstanceSave grandchild = AddChild("Grandchild", "Child");
+        InstanceSave targetContainer = AddChild("TargetContainer", "");
+
+        SetupDeleteLogicMock();
+
+        SelectInstances(child);
+
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+
+        // First paste (no selection change) - restores under Instance1
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(4);
+        screen.DefaultState.GetValue("Child.Parent").ShouldBe("Instance1");
+        screen.DefaultState.GetValue("Grandchild.Parent").ShouldBe("Child");
+
+        // Change selection to TargetContainer
+        SelectInstances(targetContainer);
+
+        // Second paste - should go under TargetContainer
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(6);
+        screen.DefaultState.GetValue("Child1.Parent").ShouldBe("TargetContainer");
+        screen.DefaultState.GetValue("Grandchild1.Parent").ShouldBe("Child1");
+
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
+
+    [Fact]
+    public void OnCut_ThenPasteMultipleTimes_DeepHierarchy_ShouldPreserveAllLevels()
+    {
+        /*
+         * Instance1
+         *   Child
+         *     Grandchild
+         *       GreatGrandchild
+         *
+         * Cut Child (includes all descendants), paste twice.
+         * After second paste:
+         * Instance1
+         *   Child
+         *     Grandchild
+         *       GreatGrandchild
+         *   Child1
+         *     Grandchild1
+         *       GreatGrandchild1
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave instance1 = screen.Instances[0];
+
+        InstanceSave child = AddChild("Child", "Instance1");
+        InstanceSave grandchild = AddChild("Grandchild", "Child");
+        InstanceSave greatGrandchild = AddChild("GreatGrandchild", "Grandchild");
+
+        SetupDeleteLogicMock();
+
+        SelectInstances(child);
+
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(1, "Only Instance1 should remain after cut");
+
+        // First paste
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(4);
+        screen.DefaultState.GetValue("Child.Parent").ShouldBe("Instance1");
+        screen.DefaultState.GetValue("Grandchild.Parent").ShouldBe("Child");
+        screen.DefaultState.GetValue("GreatGrandchild.Parent").ShouldBe("Grandchild");
+
+        // Second paste
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(7);
+        screen.DefaultState.GetValue("Child1.Parent").ShouldBe("Instance1");
+        screen.DefaultState.GetValue("Grandchild1.Parent").ShouldBe("Child1");
+        screen.DefaultState.GetValue("GreatGrandchild1.Parent").ShouldBe("Grandchild1");
+
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
+
+    [Fact]
+    public void OnCut_SingleInstance_ThenPasteMultipleTimes_ShouldWorkCorrectly()
+    {
+        /*
+         * Instance1
+         *   Child
+         *
+         * Cut Child (no sub-hierarchy), paste three times.
+         * Result:
+         * Instance1
+         *   Child
+         *   Child1
+         *   Child2
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave instance1 = screen.Instances[0];
+
+        InstanceSave child = AddChild("Child", "Instance1");
+
+        SetupDeleteLogicMock();
+
+        SelectInstances(child);
+
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(1);
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+        screen.Instances.Count.ShouldBe(2);
+        screen.DefaultState.GetValue("Child.Parent").ShouldBe("Instance1");
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+        screen.Instances.Count.ShouldBe(3);
+        screen.DefaultState.GetValue("Child1.Parent").ShouldBe("Instance1");
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+        screen.Instances.Count.ShouldBe(4);
+        screen.DefaultState.GetValue("Child2.Parent").ShouldBe("Instance1");
+
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
+
+    [Fact]
+    public void OnCut_ThenPasteTwice_IntoSameContainer_ShouldNotCreateSelfReference()
+    {
+        /*
+         * Cut ContainerInstance (with children) from cont2, select cont2, paste twice.
+         * The second paste should NOT create any self-referencing parent.
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave cont2 = screen.Instances[0];
+        cont2.Name = "cont2";
+
+        InstanceSave containerInstance = AddChild("ContainerInstance", "cont2");
+        InstanceSave coloredRect = AddChild("ColoredRectangleInstance", "ContainerInstance");
+        InstanceSave coloredRect1 = AddChild("ColoredRectangleInstance1", "ContainerInstance");
+
+        SetupDeleteLogicMock();
+
+        SelectInstances(containerInstance);
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(1, "Only cont2 should remain after cut");
+
+        SelectInstances(cont2);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(4, "cont2 + ContainerInstance + 2 children");
+        screen.DefaultState.GetValue("ContainerInstance.Parent").ShouldBe("cont2");
+
+        // Paste again into cont2 (re-select cont2)
+        SelectInstances(cont2);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(7, "cont2 + 2 sets of ContainerInstance + children");
+
+        // Verify no self-referencing parents exist
+        foreach (var variable in screen.DefaultState.Variables)
+        {
+            if (variable.GetRootName() == "Parent" && variable.Value is string parentValue)
+            {
+                var instanceName = variable.SourceObject;
+                parentValue.ShouldNotBe(instanceName,
+                    $"Instance '{instanceName}' has self-referencing parent: {instanceName}.Parent = {parentValue}");
+            }
+        }
+
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
+
+    [Fact]
+    public void OnCut_ThenPaste_ThenPasteIntoFirstPasteResult_ShouldNotCreateSelfReference()
+    {
+        /*
+         * Reproduces the exact user bug scenario (issue #2240 edge case):
+         * 1. Cut ContainerInstance (with children) from cont2
+         * 2. Select cont2, paste → creates ContainerInstance under cont2
+         * 3. Select the just-pasted ContainerInstance
+         * 4. Paste again → should create ContainerInstance3 under ContainerInstance
+         *    NOT ContainerInstance3.Parent = ContainerInstance3 (self-reference!)
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave cont2 = screen.Instances[0];
+        cont2.Name = "cont2";
+
+        InstanceSave containerInstance = AddChild("ContainerInstance", "cont2");
+        InstanceSave coloredRect = AddChild("ColoredRectangleInstance", "ContainerInstance");
+
+        SetupDeleteLogicMock();
+
+        // Cut ContainerInstance (with child)
+        SelectInstances(containerInstance);
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(1, "Only cont2 should remain after cut");
+
+        // First paste: select cont2, paste
+        SelectInstances(cont2);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(3, "cont2 + ContainerInstance + ColoredRectangleInstance");
+        screen.DefaultState.GetValue("ContainerInstance.Parent").ShouldBe("cont2");
+        screen.DefaultState.GetValue("ColoredRectangleInstance.Parent").ShouldBe("ContainerInstance");
+
+        // Second paste: select the just-pasted ContainerInstance and paste INTO it
+        var pastedContainerInstance = screen.Instances.First(i => i.Name == "ContainerInstance");
+        SelectInstances(pastedContainerInstance);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        // Should have created new copies under ContainerInstance
+        screen.Instances.Count.ShouldBe(5, "cont2 + ContainerInstance + ColoredRectangleInstance + 2 new copies");
+
+        // Verify no self-referencing parents exist
+        foreach (var variable in screen.DefaultState.Variables)
+        {
+            if (variable.GetRootName() == "Parent" && variable.Value is string parentValue)
+            {
+                var instanceName = variable.SourceObject;
+                parentValue.ShouldNotBe(instanceName,
+                    $"Instance '{instanceName}' has self-referencing parent: {instanceName}.Parent = {parentValue}");
+            }
+        }
+
+        // The new ContainerInstance copy should be parented to ContainerInstance (the selected target), not to itself
+        var newContainerCopy = screen.Instances.FirstOrDefault(i =>
+            i.Name != "cont2" && i.Name != "ContainerInstance" && i.Name.StartsWith("ContainerInstance"));
+        newContainerCopy.ShouldNotBeNull("Should have a renamed copy of ContainerInstance");
+        screen.DefaultState.GetValue($"{newContainerCopy.Name}.Parent").ShouldBe("ContainerInstance",
+            "The second paste's container should be parented to the selected ContainerInstance, not itself");
+
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
+
     #endregion
 
     #region Utilities
@@ -1151,19 +1526,20 @@ public class CopyPasteLogicTests : BaseTestClass
 
     private void SelectInstances(params InstanceSave[] instances)
     {
+        _currentSelectedInstances = new List<InstanceSave>(instances);
+
         _selectedState
             .Setup(x => x.SelectedInstance)
             .Returns(instances.First());
         _selectedState
             .Setup(x => x.SelectedInstances)
-            .Returns(instances);
+            .Returns(() => _currentSelectedInstances);
 
         var firstInstance = instances.First();
         var parentElement = firstInstance.ParentContainer!;
         _selectedState.Setup(x => x.SelectedElement).Returns(parentElement);
         _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { parentElement });
         _selectedState.Setup(x => x.SelectedStateSave).Returns(parentElement.DefaultState);
-
 
         _messenger.Send(new SelectionChangedMessage { /* properties */ });
     }
