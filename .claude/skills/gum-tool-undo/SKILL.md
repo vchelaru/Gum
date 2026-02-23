@@ -1,5 +1,5 @@
 ---
-name: undo-system
+name: gum-tool-undo
 description: Reference guide for Gum's undo/redo system. Load this when working on undo/redo behavior, the History tab, UndoManager, UndoPlugin, UndoSnapshot, or stale reference issues after undo.
 ---
 
