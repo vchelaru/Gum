@@ -673,8 +673,9 @@ public class RenameLogic : IRenameLogic
             }
         }
 
-        // Parent variable references in other elements (only relevant when DefaultChildContainer changes)
-        if (changes.DefaultChildContainerWillChange)
+        // Parent variable references in other elements that point to this instance by name.
+        // This must run unconditionally — a Parent variable can reference any child instance
+        // directly, not only via DefaultChildContainer.
         {
             var elementsReferencing = ObjectFinder.Self.GetElementsReferencing(containerElement);
             foreach (var otherElement in elementsReferencing)
@@ -818,6 +819,19 @@ public class RenameLogic : IRenameLogic
 
     public void ApplyInstanceRenameChanges(InstanceRenameChanges changes, string newName, string oldName, HashSet<ElementSave> elementsToSave)
     {
+        foreach (var (container, variable) in changes.ParentVariablesInOtherElements)
+        {
+            if (variable.Value is string value)
+            {
+                var dotIndex = value.IndexOf(".");
+                if (dotIndex >= 0 && value.Substring(dotIndex + 1) == oldName)
+                {
+                    variable.Value = value.Substring(0, dotIndex + 1) + newName;
+                    elementsToSave.Add(container);
+                }
+            }
+        }
+
         foreach (var referenceChange in changes.VariableReferenceChanges)
         {
             if (referenceChange.Container != null)
@@ -1256,18 +1270,15 @@ public class RenameLogic : IRenameLogic
     {
         if (shouldContinue && !isRenamingXmlFile && instance != null && askAboutRename)
         {
-            string message = $"Are you sure you want to rename {oldName} to {instance.Name}?";
+            var changesDetails = instanceRenameChanges?.GetChangesDetails(includeVariablesWithinElement: false);
 
-            if (instanceRenameChanges != null)
+            // Only confirm if the rename has ripple effects outside the element itself.
+            // Pure renames with no external impact don't need user confirmation.
+            if (!string.IsNullOrEmpty(changesDetails))
             {
-                var changesDetails = instanceRenameChanges.GetChangesDetails(includeVariablesWithinElement: false);
-                if (!string.IsNullOrEmpty(changesDetails))
-                {
-                    message += "\n\n" + changesDetails;
-                }
+                string message = $"Are you sure you want to rename {oldName} to {instance.Name}?\n\n{changesDetails}";
+                shouldContinue = _dialogService.ShowYesNoMessage(message, "Rename Instance?");
             }
-
-            shouldContinue = _dialogService.ShowYesNoMessage(message, "Rename Instance?");
         }
 
         return shouldContinue;
