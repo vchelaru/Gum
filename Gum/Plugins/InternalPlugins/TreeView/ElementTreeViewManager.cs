@@ -158,6 +158,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     static ElementTreeViewManager mSelf;
 
+    // Part of the phantom right-click workaround. Subscribed in Initialize(),
+    // checked in ObjectTreeView_MouseClick(). See comments at both sites.
+    private MouseButtons _lastMouseDownButton;
+
     // Forwarding properties for UI controls owned by _viewCreator
     internal MultiSelectTreeView ObjectTreeView => _viewCreator.ObjectTreeView;
     private System.Windows.Controls.ContextMenu _contextMenu => _viewCreator.ContextMenu;
@@ -669,6 +673,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         _tabManager.AddControl(grid, "Project", TabLocation.Left);
 
+        // Workaround for WinForms/WPF interop phantom right-click bug:
+        // When a WPF ContextMenu popup dismisses, WinForms never receives the
+        // right-button MouseUp. This corrupts WinForms' internal state, causing
+        // subsequent left-clicks to generate MouseClick events with e.Button=Right
+        // (and no corresponding MouseDown). We track the real button from MouseDown
+        // and reset on MouseUp so ObjectTreeView_MouseClick can distinguish real
+        // right-clicks from phantom ones. See _lastMouseDownButton field and
+        // ObjectTreeView_MouseClick for the other half of this fix.
+        ObjectTreeView.MouseDown += (_, e) => _lastMouseDownButton = e.Button;
+        ObjectTreeView.MouseUp += (_, _) => _lastMouseDownButton = MouseButtons.None;
         ObjectTreeView.AfterExpand += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
         ObjectTreeView.AfterCollapse += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
 
@@ -1954,7 +1968,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     // WinForms TreeView. Properly fixing this requires migrating the TreeView to WPF.
     private void ObjectTreeView_MouseClick(object? sender, MouseEventArgs e)
     {
-        if (e.Button == MouseButtons.Right)
+        // Use _lastMouseDownButton instead of e.Button — see field comment for details.
+        if (_lastMouseDownButton == MouseButtons.Right)
         {
             OnSelect(ObjectTreeView.SelectedNode);
 
