@@ -14,7 +14,6 @@ using System.Windows.Media;
 using System.Windows.Shell;
 using System.Windows.Threading;
 using ControlzEx;
-using RoutedEventArgs = System.Windows.RoutedEventArgs;
 
 namespace Gum;
 #region TabLocation Enum
@@ -95,17 +94,17 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         Close();
     }
 
-    private void OnMinimizeButtonClick(object? sender, RoutedEventArgs e)
+    private void OnMinimizeButtonClick(object? sender, System.Windows.RoutedEventArgs e)
     {
         this.WindowState = WindowState.Minimized;
     }
 
-    private void OnMaximizeButtonClick(object? sender, RoutedEventArgs e)
+    private void OnMaximizeButtonClick(object? sender, System.Windows.RoutedEventArgs e)
     {
         this.WindowState = this.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
     }
 
-    private void OnCloseButtonClick(object? sender, RoutedEventArgs e)
+    private void OnCloseButtonClick(object? sender, System.Windows.RoutedEventArgs e)
     {
         Locator.GetRequiredService<IMessenger>().Send(new CloseMainWindowMessage());
     }

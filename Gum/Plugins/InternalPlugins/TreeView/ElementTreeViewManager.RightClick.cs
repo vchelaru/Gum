@@ -157,7 +157,7 @@ public partial class ElementTreeViewManager
     #endregion
 
 
-    public void PopulateMenuStrip()
+    public void PopulateContextMenu()
     {
         _contextMenu.Items.Clear();
 

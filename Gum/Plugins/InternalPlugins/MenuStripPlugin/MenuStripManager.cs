@@ -278,6 +278,7 @@ namespace Gum.Managers
             UpdateUndoRedoEnabled();
         }
 
+        // UndosChanged can fire from background threads; marshal to the UI thread for WPF controls.
         private void UpdateUndoRedoEnabled()
         {
             if (_undoMenuItem?.Dispatcher.CheckAccess() == false)
