@@ -23,7 +23,6 @@ public class RightClickViewModel
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
-    ContextMenuItemViewModel? _moveInFrontOf;
 
     public RightClickViewModel(
         ISelectedState selectedState,
@@ -66,12 +65,9 @@ public class RightClickViewModel
             Action = () => _reorderLogic.MoveSelectedInstanceForward()
         });
 
-        _moveInFrontOf = new ContextMenuItemViewModel
-        {
-            Text = "Move In Front Of"
-        };
-        PopulateMoveInFrontOfChildren(_moveInFrontOf);
-        items.Add(_moveInFrontOf);
+        var moveInFrontOf = new ContextMenuItemViewModel { Text = "Move In Front Of" };
+        PopulateMoveInFrontOfChildren(moveInFrontOf);
+        items.Add(moveInFrontOf);
 
         items.Add(new ContextMenuItemViewModel
         {
