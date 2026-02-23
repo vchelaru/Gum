@@ -1,5 +1,5 @@
 ---
-name: selection-system
+name: gum-tool-selection
 description: Reference guide for Gum's editor selection system. Load this when working on click/drag selection, the rectangle/marquee selector, input handlers (move, resize, rotate, polygon points), the IsActive flag, locked instance behavior, or SelectionManager coordination.
 ---
 
@@ -30,13 +30,11 @@ Mouse drag  → OnDrag()          → only meaningful when IsActive; applies tra
 Mouse up    → OnRelease()       → cleans up; resets IsActive to false
 ```
 
-`HandlePush` returns `bool`:
-- `true` — this handler claims the gesture; `IsActive` becomes `true`
-- `false` — this handler passes; another handler or the rectangle selector may act
+`HandlePush` returns `bool`: `true` means this handler claims the gesture and sets `IsActive = true`; `false` passes to the next handler or the rectangle selector.
 
 ### `IsActive` Flag
 
-`IsActive = true` signals that a handler owns the current drag gesture. It is the critical signal used to suppress the rectangle selector (see below). It must be set to `true` in `HandlePush` when claiming a gesture, and reset to `false` in `OnRelease`.
+`IsActive = true` signals that a handler owns the current drag gesture. It suppresses the rectangle selector — `SelectionManager` passes `isHandlerActive = true` to `RectangleSelector.HandleDrag`, which returns immediately. Must be set in `HandlePush` when claiming a gesture and reset in `OnRelease`.
 
 The base class `HandlePush` automatically checks `Context.IsSelectionLocked()` and returns `false` if locked. Handlers that **override** `HandlePush` must replicate or explicitly call this check.
 
@@ -44,43 +42,13 @@ The base class `HandlePush` automatically checks `Context.IsSelectionLocked()` a
 
 **File:** `Tool/EditorTabPlugin_XNA/RectangleSelector.cs`
 
-The rectangle selector activates on drag when **no handler is active** and the cursor is **not over the element body** (or Shift is held for additive selection).
+The rectangle selector activates on drag when no handler is active and the cursor is not over the element body (or Shift is held for additive selection), after a minimum drag distance is exceeded. `SelectionManager` passes `isHandlerActive` based on whether any handler's `IsActive` is `true`.
 
-### Activation Condition (in `HandleDrag`)
-
-```csharp
-public void HandleDrag(bool isHandlerActive = false)
-{
-    if (isHandlerActive) return;  // suppressed when any handler owns the gesture
-
-    bool shouldActivate = multiSelectKeyHeld || !_selectionManager.IsOverBody;
-    if (!shouldActivate) return;
-
-    // ... activates after MinimumDragDistance is exceeded
-}
-```
-
-`isHandlerActive` is passed by `SelectionManager` based on whether any handler's `IsActive` is `true`. The rectangle selector also receives this flag in `Update()` to control visual visibility.
-
-### What It Selects
-
-`GetElementsInRectangle()` finds all visible elements whose bounds intersect the drag rectangle. It skips:
-- `ScreenSave` elements (screens can't be rectangle-selected)
-- `InstanceSave` elements where `Locked == true`
-
-On release, it either replaces the selection or toggles elements additively (Shift held).
+`GetElementsInRectangle()` finds visible elements whose bounds intersect the drag rectangle, skipping `ScreenSave` elements and instances where `Locked == true`. On release, it either replaces the selection or toggles additively (Shift held).
 
 ## Locking (`InstanceSave.Locked`)
 
-### Key Property and Helper
-
-```csharp
-// GumDataTypes/InstanceSave.cs
-public bool Locked { get; set; }
-
-// Tool/EditorTabPlugin_XNA/Editors/EditorContext.cs
-public bool IsSelectionLocked() => SelectedState.SelectedInstance?.Locked == true;
-```
+`InstanceSave.Locked` is defined in `GumDataTypes/InstanceSave.cs`. The helper `EditorContext.IsSelectionLocked()` (in `Tool/EditorTabPlugin_XNA/Editors/EditorContext.cs`) returns `true` when the selected instance is locked.
 
 ### Where Locking Is Enforced
 
@@ -101,36 +69,19 @@ public bool IsSelectionLocked() => SelectedState.SelectedInstance?.Locked == tru
 
 ### Locked + IsActive Interaction (Critical)
 
-When a locked instance is selected and the cursor is over one of its **polygon verts**, the following must happen in `HandlePush`:
-
-1. Detect cursor is over a vert (`GetIndexOver` returns non-null)
-2. Set `IsActive = true` — this suppresses the rectangle selector
-3. Do **not** set `_grabbedIndex` — this ensures `OnDrag` is a no-op
-4. Return `true` — consume the push
-
-Without step 2, the rectangle selector activates on drag because `isHandlerActive` is `false` and the cursor over a vert is typically not "over body".
+When a locked instance is selected and the cursor is over one of its polygon verts, `PolygonPointInputHandler.HandlePush` must: detect the vert, set `IsActive = true` (to suppress the rectangle selector), but not set `_grabbedIndex` (so `OnDrag` is a no-op), and return `true` to consume the push. Without setting `IsActive`, the rectangle selector activates on drag because the cursor over a vert is typically not "over body".
 
 ### Locked Selection Display
 
-When a locked instance is selected in the standard (non-polygon) editor, `LockedSelectionVisual` draws a dashed bounding rectangle using the same line color as resize handles. This replaces the resize handles that would normally appear. The outline is shown **regardless of the instance's `Visible` property**, so the user can always locate a locked object selected from the tree view.
-
-`LockedSelectionVisual` is registered in `StandardWireframeEditor` and integrates with the standard `IEditorVisual` lifecycle (`UpdateToSelection` / `Update` / `Destroy`). It is not used in `PolygonWireframeEditor` because polygon point nodes already provide a visual for locked polygon selections.
+`LockedSelectionVisual` draws a dashed bounding rectangle for a locked selected instance, replacing the resize handles that would normally appear. It shows regardless of the instance's `Visible` property. Registered in `StandardWireframeEditor`; not used in `PolygonWireframeEditor`.
 
 ### Locked Instances Are Still Tree-Selectable
 
-Locked instances cannot be selected by clicking on the canvas or by the rectangle selector, but **can always be selected via the tree view**. This is intentional — tree view selection is the only way for users to select a locked instance so they can unlock it.
-
-Multi-selection (via tree view) of mixed locked/unlocked instances is supported. Transforms (move/resize) apply only to the unlocked members of the selection; locked members stay put.
+Locked instances cannot be canvas-clicked or rectangle-selected, but **can always be selected via the tree view** — the only way to select a locked instance to unlock it. Multi-selection of mixed locked/unlocked is supported; transforms apply only to unlocked members.
 
 ## `_lastPushWasOnLockedBody`
 
-Tracked in `SelectionManager.ProcessInputForSelection()`:
-
-```csharp
-_lastPushWasOnLockedBody = _selectedState.SelectedInstance?.Locked == true && IsOverBody;
-```
-
-Used in `ProcessRectangleSelection()` to prevent deselection when the user releases the mouse over a locked instance body without dragging. Without this, clicking on a locked body would deselect it.
+Tracked in `SelectionManager.ProcessInputForSelection()` — set to `true` when the selected instance is locked and the cursor is over the body. Used in `ProcessRectangleSelection()` to prevent deselection when the user releases the mouse over a locked body without dragging.
 
 ## Key Files Summary
 

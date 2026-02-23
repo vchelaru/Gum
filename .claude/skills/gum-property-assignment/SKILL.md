@@ -1,5 +1,5 @@
 ---
-name: property-assignment
+name: gum-property-assignment
 description: Reference guide for how Gum applies variables and sets properties on renderables. Load this when working on ApplyState, SetProperty, SetVariablesRecursively, CustomSetPropertyOnRenderable, font loading, IsAllLayoutSuspended, or isFontDirty.
 ---
 
