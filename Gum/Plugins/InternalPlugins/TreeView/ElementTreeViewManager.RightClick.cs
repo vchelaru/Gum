@@ -380,7 +380,16 @@ public partial class ElementTreeViewManager
         }
 
         // Add child menu items for each type
-        var types = new[] { "Sprite", "Text", "NineSlice", "ColoredRectangle", "Container" };
+        var types = new[] {
+            "Circle",
+            "ColoredRectangle",
+            "Container",
+            "NineSlice",
+            "Polygon",
+            "Rectangle",
+            "Sprite",
+            "Text"
+        };
 
         foreach (var type in types)
         {

@@ -202,6 +202,8 @@ namespace Gum.Managers
                 _dialogService.ShowMessage("Gum version " + version, "About");
             };
 
+
+
             string documentationLink = "https://docs.flatredball.com/gum";
             _documentationMenuItem.Header = $"View Docs ({documentationLink})";
             _documentationMenuItem.ToolTip = "External link to Gum documentation";
