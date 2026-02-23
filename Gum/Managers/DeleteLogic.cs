@@ -1,4 +1,3 @@
-using CommonFormsAndControls.Forms;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -100,9 +99,9 @@ public class DeleteLogic : IDeleteLogic
                     var siblings = selectedInstance.GetSiblingsIncludingThis();
                     var parentInstance = selectedInstance.GetParentInstance();
 
-                    // This will delete all references to this, meaning, all 
-                    // instances attached to the deleted object will be detached, 
-                    // but we don't want that, we want to only do that if the user wants to do it, which 
+                    // This will delete all references to this, meaning, all
+                    // instances attached to the deleted object will be detached,
+                    // but we don't want that, we want to only do that if the user wants to do it, which
                     // will be handled in a plugin
                     //Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
                     var instanceName = selectedInstance.Name;
@@ -259,11 +258,11 @@ public class DeleteLogic : IDeleteLogic
         {
             if(item != null)
             {
-                string itemDisplay = item is InstanceSave instanceSave 
-                    ? instanceSave.Name 
+                string itemDisplay = item is InstanceSave instanceSave
+                    ? instanceSave.Name
                     : item.ToString() ?? "";
                 // I tried a tab, but the spacing was too big
-                optionsWindow.Message += $"  •{itemDisplay}\n";
+                optionsWindow.Message += $"  â€¢{itemDisplay}\n";
             }
 
         }

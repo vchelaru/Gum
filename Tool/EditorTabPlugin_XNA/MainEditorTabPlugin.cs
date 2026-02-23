@@ -1,5 +1,4 @@
-﻿using CommonFormsAndControls.Forms;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
 using EditorTabPlugin_XNA.Views;

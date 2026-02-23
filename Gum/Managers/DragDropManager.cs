@@ -1,5 +1,4 @@
 using CommonFormsAndControls;
-using CommonFormsAndControls.Forms;
 using Gum.Commands;
 using Gum.Converters;
 using Gum.DataTypes;
@@ -168,7 +167,7 @@ public class DragDropManager : IDragDropManager
                 // Since the user dropped on another instance, let's try to parent it:
                 HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer, targetTreeNode, index);
 
-                // HandleDroppingInstanceOnTarget internally calls 
+                // HandleDroppingInstanceOnTarget internally calls
                 // _wireframeObjectManager.RefreshAll, but since
                 // the Parent is set in HandleDroppedElementInElement,
                 // then HandleDroppingInstanceOnTarget does not report the
@@ -409,7 +408,7 @@ public class DragDropManager : IDragDropManager
         // which is not currently selected. We need it to be selected for
         // undos to record properly, so let's select it first:
         _selectedState.SelectedComponent = targetComponent;
-        
+
         using var undoLock = _undoManager.RequestLock();
 
 
@@ -489,7 +488,7 @@ public class DragDropManager : IDragDropManager
 
                 var newInstances = _copyPasteLogic.PasteInstanceSaves(instances,
                     stateWithVariablesForOriginalInstance,
-                    targetElementSave, 
+                    targetElementSave,
                     targetInstanceSave,
                     forcedSelectedState);
 
@@ -560,7 +559,7 @@ public class DragDropManager : IDragDropManager
                 {
                     var instanceParent = targetElementSave.DefaultState.GetVariableRecursive(instance.Name + ".Parent")?.Value;
 
-                    if (instanceParent is string instanceParentAsString && 
+                    if (instanceParent is string instanceParentAsString &&
                         (instanceParentAsString == parentName || instanceParentAsString?.StartsWith($"{parentName}.") == true))
                     {
                         siblings.Add(instance);
@@ -615,7 +614,7 @@ public class DragDropManager : IDragDropManager
 
             var oldValue = stateToAssignOn.GetValue(variableName) as string;
             stateToAssignOn.SetValue(variableName, parentName, "string");
-            
+
 
             _setVariableLogic.PropertyValueChanged("Parent", oldValue, dragDroppedInstance, targetElementSave?.DefaultState);
             targetTreeNode?.Expand();
@@ -801,10 +800,10 @@ public class DragDropManager : IDragDropManager
 
     public void OnNodeObjectDroppedInWireframe(object draggedObject)
     {
-        ElementSave? draggedAsElementSave = draggedObject as ElementSave;                    
+        ElementSave? draggedAsElementSave = draggedObject as ElementSave;
         ElementSave? target = _wireframeObjectManager.ElementShowing;
 
-        // Depending on how fast the user clicks the UI may think they dragged an instance rather than 
+        // Depending on how fast the user clicks the UI may think they dragged an instance rather than
         // an element, so let's protect against that with this null check.
         if (draggedAsElementSave != null && target is not null)
         {
@@ -874,7 +873,7 @@ public class DragDropManager : IDragDropManager
 
             containerWidth = runtime.Width;
             containerHeight = runtime.Height;
-            
+
         }
         else
         {

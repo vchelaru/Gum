@@ -5,7 +5,6 @@ using Gum.ToolStates;
 using Gum.DataTypes;
 using Gum.Wireframe;
 using Gum.Undo;
-using Gum.Gui.Forms;
 using System.Diagnostics;
 using System.Linq;
 using Gum.Commands;
@@ -157,8 +156,7 @@ namespace Gum.Managers
             _managePluginsMenuItem.Header = "Manage Plugins";
             _managePluginsMenuItem.Click += (_, _) =>
             {
-                PluginsWindow pluginsWindow = new PluginsWindow();
-                pluginsWindow.Show();
+                _dialogService.Show<PluginsDialogViewModel>();
             };
 
 
@@ -195,18 +193,7 @@ namespace Gum.Managers
             _contentMenuItem.Items.Add(_findFileReferencesMenuItem);
 
             _saveAllMenuItem.Header = "Save All";
-            _saveAllMenuItem.Click += (_, _) =>
-            {
-                if (ObjectFinder.Self.GumProjectSave == null)
-                {
-                    _dialogService.ShowMessage("There is no project loaded.  Either load a project or create a new project before saving");
-                }
-                else
-                {
-                    // Don't do an auto save, force it!
-                    _fileCommands.ForceSaveProject(true);
-                }
-            };
+            _saveAllMenuItem.Click += (_, _) => SaveProject(saveAll: true);
 
             _aboutMenuItem.Header = "About...";
             _aboutMenuItem.Click += (_, _) =>
@@ -214,6 +201,8 @@ namespace Gum.Managers
                 var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown";
                 _dialogService.ShowMessage("Gum version " + version, "About");
             };
+
+
 
             string documentationLink = "https://docs.flatredball.com/gum";
             _documentationMenuItem.Header = $"View Docs ({documentationLink})";
@@ -242,18 +231,7 @@ namespace Gum.Managers
 
             Add(_fileMenuItem, "Load Project...", () => _projectManager.LoadProject());
 
-            Add(_fileMenuItem, "Save Project", () =>
-            {
-                if (ObjectFinder.Self.GumProjectSave == null)
-                {
-                    _dialogService.ShowMessage("There is no project loaded.  Either load a project or create a new project before saving");
-                }
-                else
-                {
-                    // Don't do an auto save, force it!
-                    _fileCommands.ForceSaveProject();
-                }
-            });
+            Add(_fileMenuItem, "Save Project", () => SaveProject(saveAll: false));
 
             Add(_fileMenuItem, "Theming", () =>
             {
@@ -297,6 +275,19 @@ namespace Gum.Managers
                 _editCommands.RemoveBehaviorVariable(
                     _selectedState.SelectedBehavior,
                     _selectedState.SelectedBehaviorVariable);
+            }
+        }
+
+        private void SaveProject(bool saveAll)
+        {
+            if (ObjectFinder.Self.GumProjectSave == null)
+            {
+                _dialogService.ShowMessage("There is no project loaded.  Either load a project or create a new project before saving");
+            }
+            else
+            {
+                // Don't do an auto save, force it!
+                _fileCommands.ForceSaveProject(saveAll);
             }
         }
 

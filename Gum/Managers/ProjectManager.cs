@@ -1,4 +1,3 @@
-﻿using CommonFormsAndControls.Forms;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.CommandLine;
 using Gum.Commands;
@@ -40,7 +39,7 @@ public class ProjectManager : IProjectManager
     static ProjectManager mSelf;
 
     bool mHaveErrorsOccurredLoadingProject = false;
-    
+
     private ISelectedState _selectedState;
     private IElementCommands _elementCommands;
     private IDialogService _dialogService;
@@ -380,7 +379,7 @@ public class ProjectManager : IProjectManager
                     {
                         if(variable.Name.EndsWith(oldName))
                         {
-                            var newName = variable.Name.Substring(0, variable.Name.Length - oldName.Length) + 
+                            var newName = variable.Name.Substring(0, variable.Name.Length - oldName.Length) +
                                 oldName.Replace(" ", "");
                             variable.Name = newName;
                             didChange = true;
@@ -472,7 +471,7 @@ public class ProjectManager : IProjectManager
     }
 
     /// <summary>
-    /// Fixes slashes in all references, component names, and instance references. 
+    /// Fixes slashes in all references, component names, and instance references.
     /// </summary>
     /// <param name="gumProjectSave">The project for which to fix slashes.</param>
     /// <returns>Whether any changes were made.</returns>
@@ -862,7 +861,7 @@ public class ProjectManager : IProjectManager
             }
 
             if(result == DialogResult.OK)
-            { 
+            {
                 GumProjectSave.FullFileName = openFileDialog.FileName;
                 var filePath = new FilePath(openFileDialog.FileName);
                 PluginManager.Self.ProjectLocationSet(filePath);

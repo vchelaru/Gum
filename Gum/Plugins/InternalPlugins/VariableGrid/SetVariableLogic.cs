@@ -12,7 +12,6 @@ using System.Windows.Forms;
 using Gum.RenderingLibrary;
 using Gum.Converters;
 using RenderingLibrary.Content;
-using CommonFormsAndControls.Forms;
 using ToolsUtilities;
 using RenderingLibrary.Graphics;
 using Gum.Logic;
@@ -114,7 +113,7 @@ public class SetVariableLogic : ISetVariableLogic
 
 
     // added instance property so we can change values even if a tree view is selected
-    public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object? oldValue, 
+    public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object? oldValue,
         InstanceSave instance, StateSave stateContainingVariable, bool refresh = true, bool recordUndo = true,
         bool trySave = true)
     {
@@ -142,8 +141,8 @@ public class SetVariableLogic : ISetVariableLogic
             // --or--
             // the user hasn't selected a behavior.
             // case we should look to the instance and get its container:
-            instanceContainer = 
-                (IInstanceContainer)ObjectFinder.Self.GetElementContainerOf(instance) ?? 
+            instanceContainer =
+                (IInstanceContainer)ObjectFinder.Self.GetElementContainerOf(instance) ??
                 ObjectFinder.Self.GetBehaviorContainerOf(instance);
         }
         if(stateContainingVariable == null && instanceContainer is ElementSave containerElement)
@@ -226,7 +225,7 @@ public class SetVariableLogic : ISetVariableLogic
 
             // This used to only check if values have changed. However, this can cause problems
             // because an intermediary value may change the value, then it gets a full commit. On
-            // the full commit it doesn't save, so we need to save if this is true. 
+            // the full commit it doesn't save, so we need to save if this is true.
             // Update July 22, 2025
             // Plugins may make modifications
             // to the element, so save *after*
@@ -483,7 +482,7 @@ public class SetVariableLogic : ISetVariableLogic
                 float outY = 0;
 
                 bool isWidthOrHeight = false;
-                
+
                 object unitTypeAsObject = _elementCommands.GetCurrentValueForVariable(changedMember, _selectedState.SelectedInstance);
                 GeneralUnitType unitType = UnitConverter.ConvertToGeneralUnit(unitTypeAsObject);
 
@@ -717,7 +716,7 @@ public class SetVariableLogic : ISetVariableLogic
 
         // Ask the user what to do - make it relative?
         string message = "The file\n" + value + "\nis not relative to the project.  What would you like to do?";
-        
+
         DialogChoices<string> choices = new()
         {
             ["reference-current"] = "Reference the file in its current location",
@@ -725,7 +724,7 @@ public class SetVariableLogic : ISetVariableLogic
         };
 
         string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
-        
+
         if (result == "copy-relative")
         {
             string directory = FileManager.GetDirectory(_projectState.GumProjectSave.FullFileName);
