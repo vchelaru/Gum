@@ -5,6 +5,7 @@ using Gum.Services;
 using Gum.ToolStates;
 using System;
 using System.ComponentModel.Composition;
+using System.Windows;
 using System.Threading.Tasks;
 using Gum.Services.Dialogs;
 using System.Diagnostics;
@@ -65,7 +66,7 @@ public class MainFontPlugin : InternalPlugin
             _projectState.GumProjectSave);
     }
 
-    private void HandleClearFontCache(object? sender, EventArgs e)
+    private void HandleClearFontCache(object? sender, System.Windows.RoutedEventArgs e)
     {
         try
         {
@@ -77,7 +78,7 @@ public class MainFontPlugin : InternalPlugin
         }
     }
 
-    private void HandleViewFontCache(object? sender, EventArgs e)
+    private void HandleViewFontCache(object? sender, System.Windows.RoutedEventArgs e)
     {
         if(!System.IO.Directory.Exists(_fontManager.AbsoluteFontCacheFolder))
         {

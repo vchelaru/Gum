@@ -8,18 +8,18 @@ using Gum.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
+using System.Windows.Controls;
 
 namespace Gum.Wireframe;
 
 public partial class EditingManager
 {
     private RightClickViewModel _viewModel;
-    ContextMenuStrip mContextMenuStrip;
+    ContextMenu _contextMenu;
 
-    public ContextMenuStrip ContextMenuStrip => mContextMenuStrip;
+    public ContextMenu ContextMenu => _contextMenu;
 
-    private void RightClickInitialize(ContextMenuStrip contextMenuStrip)
+    private void RightClickInitialize(ContextMenu contextMenu)
     {
         _viewModel = new RightClickViewModel(
             _selectedState,
@@ -30,32 +30,25 @@ public partial class EditingManager
             _setVariableLogic,
             _circularReferenceManager,
             _favoriteComponentManager);
-        mContextMenuStrip = contextMenuStrip;
-
-        contextMenuStrip.VisibleChanged += HandleVisibleChange;
-    }
-
-    private void HandleVisibleChange(object? sender, EventArgs e)
-    {
-        _viewModel.HandleVisibilityChanged();
+        _contextMenu = contextMenu;
     }
 
 
     public void OnRightClick()
     {
-        RefreshContextMenuStrip();
+        RefreshContextMenu();
     }
 
-    public void RefreshContextMenuStrip()
+    public void RefreshContextMenu()
     {
         /////////////Early Out////////////////////
-        if (mContextMenuStrip == null)
+        if (_contextMenu == null)
         {
             return;
         }
         ///////////End Early Out//////////////////
 
-        mContextMenuStrip.Items.Clear();
+        _contextMenu.Items.Clear();
 
         if (_selectedState.SelectedInstance != null)
         {
@@ -63,31 +56,30 @@ public partial class EditingManager
 
             foreach(var item in menuItems)
             {
-                var toolStripItem = ToToolStripItem(item);
-                mContextMenuStrip.Items.Add(toolStripItem);
+                _contextMenu.Items.Add(ToMenuItem(item));
             }
         }
     }
 
-    private static ToolStripItem ToToolStripItem(ContextMenuItemViewModel item)
+    private static Control ToMenuItem(ContextMenuItemViewModel item)
     {
         if (item.IsSeparator)
         {
-            return new ToolStripSeparator();
+            return new Separator();
         }
 
-        var toolStripItem = new ToolStripMenuItem(item.Text);
+        var menuItem = new MenuItem { Header = item.Text };
 
         if (item.Action != null)
         {
-            toolStripItem.Click += (_, _) => item.Action();
+            menuItem.Click += (_, _) => item.Action();
         }
 
         foreach (var child in item.Children)
         {
-            toolStripItem.DropDownItems.Add(ToToolStripItem(child));
+            menuItem.Items.Add(ToMenuItem(child));
         }
 
-        return toolStripItem;
+        return menuItem;
     }
 }

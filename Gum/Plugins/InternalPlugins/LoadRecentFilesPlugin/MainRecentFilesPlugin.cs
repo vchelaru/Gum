@@ -7,7 +7,7 @@ using Gum.Services;
 using System;
 using System.ComponentModel.Composition;
 using System.Linq;
-using System.Windows.Forms;
+using System.Windows.Controls;
 using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
@@ -15,7 +15,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
     [Export(typeof(PluginBase))]
     internal class MainRecentFilesPlugin : InternalPlugin
     {
-        ToolStripMenuItem recentFilesMenuItem;
+        MenuItem recentFilesMenuItem;
         public override void StartUp()
         {
             recentFilesMenuItem = this.AddMenuItemTo("Load Recent", null, "File", preferredIndex: 2);
@@ -35,7 +35,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
             var recentFiles = Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile?.RecentProjects;
 
 
-            recentFilesMenuItem.DropDownItems.Clear();
+            recentFilesMenuItem.Items.Clear();
 
             if(recentFiles == null)
             {
@@ -47,19 +47,22 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                 var filePath = item.FilePath;
                 string name = GetDisplayedNameForGumxFilePath(filePath);
 
-                recentFilesMenuItem.DropDownItems.Add(
-                    name,
-                    null,
-                    (_, _) => _fileCommands.LoadProject(filePath.FullPath));
+                var mi = new MenuItem { Header = name };
+                mi.Click += (_, _) => _fileCommands.LoadProject(filePath.FullPath);
+                recentFilesMenuItem.Items.Add(mi);
             }
 
+            var hasFavorites = recentFiles.Any(item => item.IsFavorite);
             var nonFavorites = recentFiles.Where(item => !item.IsFavorite).ToArray();
 
             var hasNonFavorites = nonFavorites.Length > 0;
 
             if (hasNonFavorites)
             {
-                recentFilesMenuItem.DropDownItems.Add("-");
+                if (hasFavorites)
+                {
+                    recentFilesMenuItem.Items.Add(new Separator());
+                }
 
                 foreach (var item in nonFavorites.Take(5))
                 {
@@ -67,16 +70,18 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
                     string name = GetDisplayedNameForGumxFilePath(filePath);
 
-                    recentFilesMenuItem.DropDownItems.Add(
-                        name, 
-                        null, 
-                        (_, _) => _fileCommands.LoadProject(filePath.FullPath));
+                    var mi = new MenuItem { Header = name };
+                    mi.Click += (_, _) => _fileCommands.LoadProject(filePath.FullPath);
+                    recentFilesMenuItem.Items.Add(mi);
                 }
 
 
             }
 
-            recentFilesMenuItem.DropDownItems.Add("More...", null, HandleLoadRecentClicked);
+            recentFilesMenuItem.Items.Add(new Separator());
+            var moreItem = new MenuItem { Header = "More..." };
+            moreItem.Click += HandleLoadRecentClicked;
+            recentFilesMenuItem.Items.Add(moreItem);
         }
 
         private static string GetDisplayedNameForGumxFilePath(FilePath filePath)
@@ -112,7 +117,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
             return name;
         }
 
-        private async void HandleLoadRecentClicked(object? sender, EventArgs e)
+        private async void HandleLoadRecentClicked(object? sender, System.Windows.RoutedEventArgs e)
         {
             var viewModel = new LoadRecentViewModel();
             var recentFiles = Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile.RecentProjects;
@@ -153,6 +158,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                     }
                 }
                 _fileCommands.SaveGeneralSettings();
+                RefreshMenuItems();
             }
 
         }

@@ -10,7 +10,6 @@ using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 
 namespace Gum.ViewModels;
 
@@ -244,11 +243,4 @@ public class RightClickViewModel
         return parentName;
     }
 
-    public void HandleVisibilityChanged()
-    {
-        if(_moveInFrontOf != null)
-        {
-            PopulateMoveInFrontOfChildren(_moveInFrontOf);
-        }
-    }
 }

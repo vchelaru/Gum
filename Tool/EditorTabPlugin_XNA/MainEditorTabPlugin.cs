@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
 using EditorTabPlugin_XNA.Views;
-using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -136,7 +135,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     System.Windows.Forms.Panel gumEditorPanel;
     private LayerService _layerService;
-    private ContextMenuStrip _wireframeContextMenuStrip;
+    private System.Windows.Controls.ContextMenu _wireframeContextMenu;
     private EditingManager _editingManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
@@ -520,9 +519,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
-        _wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out var fontSize);
-        _wireframeContextMenuStrip.Font = new Font("Segoe UI", fontSize);
-
         _editorControls?.UpdateButtonSizes(message.Size);
     }
 
@@ -685,7 +681,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
     {
         _wireframeObjectManager.RefreshAll(forceLayout: false);
-        _editingManager.RefreshContextMenuStrip();
+        _editingManager.RefreshContextMenu();
         _selectionManager.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();
         _selectionManager.Refresh();
     }
@@ -718,7 +714,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
             _wireframeControl.TopRuler,
             _wireframeControl.LeftRuler);
 
-        _editingManager.Initialize(_wireframeContextMenuStrip);
+        _editingManager.Initialize(_wireframeContextMenu);
 
         _backgroundManager.Initialize(_wireframeControl.SystemManagers);
 
@@ -1000,13 +996,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     void HandleWireframeInitialized()
     {
-        ContextMenuStrip wireframeContextMenuStrip;
-
-        wireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip();
-        wireframeContextMenuStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
-        wireframeContextMenuStrip.Name = "WireframeContextMenuStrip";
-        wireframeContextMenuStrip.Size = new System.Drawing.Size(61, 4);
-        wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _, "Frb.Colors.Background");
+        _wireframeContextMenu = new System.Windows.Controls.ContextMenu();
 
         gumEditorPanel = new ();
         gumEditorPanel.Dock = DockStyle.Fill;
@@ -1014,8 +1004,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         // 2025-01-02 UI Scale update
         // WireFrameControl needs to be added to the gumEditorPanel first
         // Otherwise, the combobox will be drawn ontop of the top yellow ruler
-        CreateWireframeControl(wireframeContextMenuStrip);
-        _wireframeContextMenuStrip = wireframeContextMenuStrip;
+        CreateWireframeControl();
 
         System.Windows.Controls.Grid wpfGrid = new();
         wpfGrid.RowDefinitions.Add(new () { Height = GridLength.Auto});
@@ -1044,12 +1033,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     }
 
-    private void CreateWireframeControl(System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip)
+    private void CreateWireframeControl()
     {
         this._wireframeControl = new WireframeControl();
         this._wireframeControl.AllowDrop = true;
         this._wireframeControl.Dock = DockStyle.Fill;
-        this._wireframeControl.ContextMenuStrip = WireframeContextMenuStrip;
         this._wireframeControl.Cursor = System.Windows.Forms.Cursors.Default;
         this._wireframeControl.DesiredFramesPerSecond = 30F;
         this._wireframeControl.Name = "wireframeControl1";
@@ -1081,6 +1069,12 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         if (e.Button == MouseButtons.Right)
         {
             _editingManager.OnRightClick();
+
+            if (_wireframeContextMenu.Items.Count > 0)
+            {
+                _wireframeContextMenu.Placement = PlacementMode.MousePoint;
+                _wireframeContextMenu.IsOpen = true;
+            }
         }
     }
 
@@ -1088,7 +1082,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     {
         this._wireframeControl.BackgroundColor = ToXna(settings.CheckerA);
         this._wireframeControl.SetGuideColors(settings.GuideLine, settings.GuideText);
-        _wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
         static Microsoft.Xna.Framework.Color ToXna(Color color) => new Microsoft.Xna.Framework.Color(color.R, color.G, color.B, color.A);
     }
 

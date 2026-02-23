@@ -1,6 +1,5 @@
 using CommonFormsAndControls;
 using CommunityToolkit.Mvvm.Messaging;
-using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.Controls;
 using Gum.DataTypes;
@@ -159,9 +158,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     static ElementTreeViewManager mSelf;
 
+    // Part of the phantom right-click workaround. Subscribed in Initialize(),
+    // checked in ObjectTreeView_MouseClick(). See comments at both sites.
+    private MouseButtons _lastMouseDownButton;
+
     // Forwarding properties for UI controls owned by _viewCreator
     internal MultiSelectTreeView ObjectTreeView => _viewCreator.ObjectTreeView;
-    private ContextMenuStrip mMenuStrip => _viewCreator.MenuStrip;
+    private System.Windows.Controls.ContextMenu _contextMenu => _viewCreator.ContextMenu;
     private FlatSearchListBox FlatList => _viewCreator.FlatList;
     private System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost => _viewCreator.TreeViewHost;
     private System.Windows.Controls.TextBox searchTextBox => _viewCreator.SearchTextBox;
@@ -176,6 +179,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     TreeNode mBehaviorsTreeNode;
     TreeNode? mLastHoveredNode;
     private DateTime? hoverStartTime;
+
     private Cursor AddCursor { get; }
 
 
@@ -587,12 +591,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             onMouseMove: (x, y) => HandleMouseOver(x, y),
             onFontChanged: (sender, _) =>
             {
-                if (sender is MultiSelectTreeView { Font: { Size: var fontSize } font })
+                if (sender is MultiSelectTreeView { Font: { Size: var fontSize } })
                 {
                     const float defaultFontSize = 9f;
                     _viewCreator.UpdateTreeviewIcons(fontSize / defaultFontSize);
-                    mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out var _);
-                    mMenuStrip.Font = font;
                 }
             },
             onDragOver: (sender, e) =>
@@ -671,12 +673,20 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         _tabManager.AddControl(grid, "Project", TabLocation.Left);
 
+        // Workaround for WinForms/WPF interop phantom right-click bug:
+        // When a WPF ContextMenu popup dismisses, WinForms never receives the
+        // right-button MouseUp. This corrupts WinForms' internal state, causing
+        // subsequent left-clicks to generate MouseClick events with e.Button=Right
+        // (and no corresponding MouseDown). We track the real button from MouseDown
+        // and reset on MouseUp so ObjectTreeView_MouseClick can distinguish real
+        // right-clicks from phantom ones. See _lastMouseDownButton field and
+        // ObjectTreeView_MouseClick for the other half of this fix.
+        ObjectTreeView.MouseDown += (_, e) => _lastMouseDownButton = e.Button;
+        ObjectTreeView.MouseUp += (_, _) => _lastMouseDownButton = MouseButtons.None;
         ObjectTreeView.AfterExpand += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
         ObjectTreeView.AfterCollapse += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
 
         RefreshUi();
-
-        InitializeMenuItems();
 
         static (int index, TreeNode target)? ProcessDrop(TreeNode? originalTarget, MultiSelectTreeView.DropKind kind)
         {
@@ -1949,13 +1959,28 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         OnSelect(ObjectTreeView.SelectedNode);
     }
 
+    // Known issue: WinForms and WPF don't play nice with right-clicks. After
+    // right-clicking to open a context menu, if you immediately right-click a
+    // different node, the context menu just closes. The old (and wanted) behavior
+    // is that it would open a new context menu at the new right-click location.
+    // This happens because the WPF ContextMenu popup captures the mouse, so the
+    // second right-click is consumed by the popup dismiss and never reaches the
+    // WinForms TreeView. Properly fixing this requires migrating the TreeView to WPF.
     private void ObjectTreeView_MouseClick(object? sender, MouseEventArgs e)
     {
-        if (e.Button == MouseButtons.Right)
+        // Use _lastMouseDownButton instead of e.Button — see field comment for details.
+        if (_lastMouseDownButton == MouseButtons.Right)
         {
             OnSelect(ObjectTreeView.SelectedNode);
 
-            PopulateMenuStrip();
+            PopulateContextMenu();
+
+            if (_contextMenu.Items.Count > 0)
+            {
+                _contextMenu.PlacementTarget = TreeViewHost;
+                _contextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
+                _contextMenu.IsOpen = true;
+            }
         }
     }
 
