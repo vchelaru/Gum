@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace ImportFromGumxPlugin.Views;
 
@@ -48,7 +49,7 @@ public partial class ImportFromGumxView : UserControl
         InitializeComponent();
     }
 
-    private void OnBrowseClick(object sender, RoutedEventArgs e)
+    private async void OnBrowseClick(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFileDialog
         {
@@ -59,6 +60,19 @@ public partial class ImportFromGumxView : UserControl
         if (dialog.ShowDialog() == true && DataContext is ImportFromGumxViewModel vm)
         {
             vm.SourcePath = dialog.FileName;
+            if (vm.LoadPreviewCommand.CanExecute(null))
+            {
+                await vm.LoadPreviewCommand.ExecuteAsync(null);
+            }
+        }
+    }
+
+    private async void OnSourcePathKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && DataContext is ImportFromGumxViewModel vm
+            && vm.LoadPreviewCommand.CanExecute(null))
+        {
+            await vm.LoadPreviewCommand.ExecuteAsync(null);
         }
     }
 

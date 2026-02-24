@@ -88,9 +88,9 @@ public class ImportPreviewItemViewModel : ViewModel
     /// Human-readable reason this item is auto-included, e.g. "used by Controls/Button".
     /// Shown as a tooltip in the UI.
     /// </summary>
-    public string AutoIncludedReason
+    public string? AutoIncludedReason
     {
-        get => Get<string>() ?? string.Empty;
+        get => Get<string>();
         set => Set(value);
     }
 

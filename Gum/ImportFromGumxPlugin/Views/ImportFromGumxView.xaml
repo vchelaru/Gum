@@ -8,15 +8,16 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     dialogs:Dialog.DialogTitle="Import from .gumx"
     MinWidth="500"
+    MinHeight="450"
     mc:Ignorable="d">
 
     <UserControl.Resources>
         <!-- Style for auto-included (indeterminate) checkboxes -->
         <Style x:Key="ImportItemCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
             <Style.Triggers>
                 <Trigger Property="IsChecked" Value="{x:Null}">
-                    <Setter Property="Foreground" Value="Gray" />
-                    <Setter Property="ToolTip" Value="Auto-included as a dependency" />
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -24,60 +25,49 @@
 
     <StackPanel Margin="8">
 
-        <!-- ═══ Phase 1 — Source & Preview ═══ -->
-        <GroupBox Header="Source">
-            <StackPanel Margin="4">
-                <!-- Source type radio buttons -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <RadioButton Content="Local File" IsChecked="{Binding IsLocalFile}" Margin="0,0,12,0" />
-                    <RadioButton Content="URL" IsChecked="{Binding IsUrl}" />
-                </StackPanel>
+        <!-- ═══ Source input ═══ -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+            <RadioButton Content="Local File" IsChecked="{Binding IsLocalFile}" Margin="0,0,12,0" />
+            <RadioButton Content="URL" IsChecked="{Binding IsUrl}" />
+        </StackPanel>
 
-                <!-- Path / URL input row -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+        <!-- Path / URL input row -->
+        <Grid Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
-                    <TextBox
-                        Grid.Column="0"
-                        Margin="0,0,4,0"
-                        Text="{Binding SourcePath, UpdateSourceTrigger=PropertyChanged}"
-                        VerticalContentAlignment="Center" />
+            <TextBox
+                Grid.Column="0"
+                Margin="0,0,4,0"
+                Text="{Binding SourcePath, UpdateSourceTrigger=PropertyChanged}"
+                KeyDown="OnSourcePathKeyDown"
+                VerticalContentAlignment="Center" />
 
-                    <Button
-                        x:Name="BrowseButton"
-                        Grid.Column="1"
-                        Content="Browse..."
-                        Padding="8,2"
-                        Click="OnBrowseClick"
-                        IsEnabled="{Binding IsLocalFile}" />
-                </Grid>
+            <Button
+                x:Name="BrowseButton"
+                Grid.Column="1"
+                Content="Browse..."
+                Padding="8,2"
+                Click="OnBrowseClick"
+                IsEnabled="{Binding IsLocalFile}" />
+        </Grid>
 
-                <!-- Error message -->
-                <TextBlock
-                    Foreground="Red"
-                    Text="{Binding ErrorMessage}"
-                    Visibility="{Binding ErrorMessage, Converter={x:Static local:NullToVisibilityConverter.Instance}}"
-                    Margin="0,4,0,0"
-                    TextWrapping="Wrap" />
+        <!-- Error message -->
+        <TextBlock
+            Foreground="Red"
+            Text="{Binding ErrorMessage}"
+            Visibility="{Binding ErrorMessage, Converter={x:Static local:NullToVisibilityConverter.Instance}}"
+            Margin="0,0,0,2"
+            TextWrapping="Wrap" />
 
-                <!-- Load Preview button -->
-                <Button
-                    Content="Load Preview"
-                    HorizontalAlignment="Right"
-                    Margin="0,8,0,0"
-                    Padding="12,4"
-                    Command="{Binding LoadPreviewCommand}" />
-
-                <!-- Loading indicator -->
-                <TextBlock
-                    Text="Loading..."
-                    HorizontalAlignment="Right"
-                    Visibility="{Binding IsLoading, Converter={x:Static local:BoolToVisibilityConverter.Instance}}" />
-            </StackPanel>
-        </GroupBox>
+        <!-- Loading indicator -->
+        <TextBlock
+            Text="Loading..."
+            FontStyle="Italic"
+            Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+            Visibility="{Binding IsLoading, Converter={x:Static local:BoolToVisibilityConverter.Instance}}" />
 
         <!-- ═══ Phase 2 — Selection & Import ═══ -->
         <GroupBox
@@ -111,13 +101,14 @@
                                 ToolTip="{Binding AutoIncludedReason}"
                                 Indeterminate="OnCheckBoxIndeterminate">
 
-                                <TextBlock>
-                                    <Run Text="{Binding Name, Mode=OneWay}" />
-                                    <Run Text=" " />
-                                    <Run Text="{Binding ElementType, Mode=OneWay}"
-                                         Foreground="Gray"
-                                         FontStyle="Italic" />
-                                </TextBlock>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name, Mode=OneWay}" />
+                                    <TextBlock
+                                        Text="{Binding ElementType, Mode=OneWay}"
+                                        FontStyle="Italic"
+                                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                        Margin="4,0,0,0" />
+                                </StackPanel>
                             </CheckBox>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
