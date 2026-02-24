@@ -11,6 +11,7 @@ using Gum.ToolStates;
 using ImportFromGumxPlugin.Services;
 using ImportFromGumxPlugin.ViewModels;
 using System.ComponentModel.Composition;
+using System.Windows;
 
 namespace ImportFromGumxPlugin;
 
@@ -47,6 +48,16 @@ internal class MainImportFromGumxPlugin : PluginBase
             importService,
             projectState);
 
-        _dialogService.Show(viewModel);
+        var window = new Gum.Services.Dialogs.DialogWindow
+        {
+            DataContext = viewModel,
+            Owner = Application.Current.MainWindow,
+            UseExplicitSize = true,
+            Width = 600,
+            Height = 650,
+            SizeToContent = SizeToContent.Manual
+        };
+        viewModel.RequestClose += (_, _) => window.Close();
+        window.ShowDialog();
     }
 }

@@ -35,7 +35,7 @@
                   HorizontalContentAlignment="Stretch"
                   VerticalContentAlignment="Stretch"
                   HorizontalScrollBarVisibility="Disabled"
-                  VerticalScrollBarVisibility="Auto">
+                  VerticalScrollBarVisibility="Disabled">
                   <Grid>
                     <ContentPresenter x:Name="DialogPresenter" />
                   </Grid>

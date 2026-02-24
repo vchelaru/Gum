@@ -113,6 +113,7 @@ public class ImportFromGumxViewModel : DialogViewModel
     public ObservableCollection<ImportPreviewItemViewModel> Items { get; } = new();
 
     public AsyncRelayCommand LoadPreviewCommand { get; }
+    public RelayCommand SelectAllComponentsCommand { get; }
 
     public ImportFromGumxViewModel(
         GumxSourceService sourceService,
@@ -129,6 +130,7 @@ public class ImportFromGumxViewModel : DialogViewModel
         SourceType = SourceType.LocalFile;
 
         LoadPreviewCommand = new AsyncRelayCommand(ExecuteLoadPreviewAsync, CanExecuteLoadPreview);
+        SelectAllComponentsCommand = new RelayCommand(ExecuteSelectAllComponents);
     }
 
     public override bool CanExecuteAffirmative() => IsPreviewLoaded && !IsLoading;
@@ -155,6 +157,20 @@ public class ImportFromGumxViewModel : DialogViewModel
             ErrorMessage = $"Import failed: {ex.Message}";
             IsLoading = false;
         }
+    }
+
+    private void ExecuteSelectAllComponents()
+    {
+        foreach (var item in Items)
+        {
+            if (item.ElementType == ElementItemType.Component || item.ElementType == ElementItemType.Screen)
+            {
+                item.PropertyChanged -= OnItemPropertyChanged;
+                item.InclusionState = InclusionState.Explicit;
+                item.PropertyChanged += OnItemPropertyChanged;
+            }
+        }
+        RecomputeTransitiveDependencies();
     }
 
     private bool CanExecuteLoadPreview() => !IsLoading && !string.IsNullOrWhiteSpace(SourcePath);
@@ -207,7 +223,7 @@ public class ImportFromGumxViewModel : DialogViewModel
     {
         Items.Clear();
 
-        // Components (shown in Direct section)
+        // Components first — most commonly imported
         foreach (var component in project.Components.OrderBy(c => c.Name))
         {
             var item = new ImportPreviewItemViewModel
@@ -220,7 +236,7 @@ public class ImportFromGumxViewModel : DialogViewModel
             Items.Add(item);
         }
 
-        // Screens (shown in Direct section)
+        // Screens
         foreach (var screen in project.Screens.OrderBy(s => s.Name))
         {
             var item = new ImportPreviewItemViewModel
