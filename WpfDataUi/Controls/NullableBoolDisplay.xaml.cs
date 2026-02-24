@@ -90,8 +90,22 @@ namespace WpfDataUi.Controls
 
             GroupBox.Header = InstanceMember?.DisplayName ?? InstanceMember?.Name;
 
+            RefreshIsEnabled();
+
             SuppressSettingProperty = false;
 
+        }
+
+        private void RefreshIsEnabled()
+        {
+            if (InstanceMember?.IsReadOnly == true)
+            {
+                this.IsEnabled = false;
+            }
+            else
+            {
+                this.IsEnabled = true;
+            }
         }
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)

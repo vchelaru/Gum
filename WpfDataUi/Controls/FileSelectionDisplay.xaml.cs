@@ -14,7 +14,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 {
     #region Fields
 
-    TextBoxDisplayLogic mTextBoxLogic;
+    TextBoxDisplayLogic _textBoxLogic;
 
     InstanceMember? _instanceMember;
 
@@ -30,7 +30,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         }
         set
         {
-            mTextBoxLogic.InstanceMember = value;
+            _textBoxLogic.InstanceMember = value;
 
             bool instanceMemberChanged = _instanceMember != value;
             if (_instanceMember != null && instanceMemberChanged)
@@ -48,11 +48,6 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
             {
                 this.RefreshAllContextMenus(force: true);
             }
-            //if (mInstanceMember != null)
-            //{
-            //    mInstanceMember.DebugInformation = "TextBoxDisplay " + mInstanceMember.Name;
-            //}
-
 
             Refresh();
         }
@@ -80,8 +75,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
     {
         InitializeComponent();
 
-
-        mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
+        _textBoxLogic = new TextBoxDisplayLogic(this, TextBox);
 
         RefreshAllContextMenus();
     }
@@ -92,7 +86,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 
         SuppressSettingProperty = true;
 
-        mTextBoxLogic.RefreshDisplay(out object _);
+        _textBoxLogic.RefreshDisplay(out object _);
 
         HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
         HintTextBlock.Text = InstanceMember?.DetailText;
@@ -101,6 +95,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 
         RefreshAllContextMenus();
         RefreshViewInExplorerButton();
+        RefreshIsEnabled();
 
         SuppressSettingProperty = false;
     }
@@ -108,6 +103,18 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
     private void RefreshViewInExplorerButton()
     {
         ViewInExplorerButton.IsEnabled = !string.IsNullOrEmpty(InstanceMember.Value as string);
+    }
+
+    private void RefreshIsEnabled()
+    {
+        if (InstanceMember?.IsReadOnly == true)
+        {
+            this.IsEnabled = false;
+        }
+        else
+        {
+            this.IsEnabled = true;
+        }
     }
 
     private void RefreshAllContextMenus(bool force = false)
@@ -132,7 +139,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 
     public ApplyValueResult TryGetValueOnUi(out object value)
     {
-        return mTextBoxLogic.TryGetValueOnUi(out value);
+        return _textBoxLogic.TryGetValueOnUi(out value);
     }
 
     private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
@@ -140,16 +147,15 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         if (e.PropertyName == "Value")
         {
             this.Refresh();
-
         }
     }
 
 
     private void TextBox_LostFocus_1(object? sender, RoutedEventArgs e)
     {
-        if (this.TextBox.Text != mTextBoxLogic.TextAtStartOfEditing)
+        if (this.TextBox.Text != _textBoxLogic.TextAtStartOfEditing)
         {
-            var result = mTextBoxLogic.TryApplyToInstance();
+            var result = _textBoxLogic.TryApplyToInstance();
 
             if (result == ApplyValueResult.NotSupported)
             {
@@ -171,7 +177,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
             if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
             {
                 this.TextBox.Text = fbd.SelectedPath;
-                mTextBoxLogic.TryApplyToInstance();
+                _textBoxLogic.TryApplyToInstance();
             }
         }
         else
@@ -186,9 +192,8 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
             {
                 string file = fileDialog.FileName;
                 this.TextBox.Text = file;
-                mTextBoxLogic.TryApplyToInstance();
+                _textBoxLogic.TryApplyToInstance();
             }
-
         }
     }
 
@@ -203,7 +208,6 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
                 fileToOpen = RemoveDotDotSlash(
                     FolderRelativeTo + fileToOpen)
                     .Replace("/", "\\");
-
 
             }
 
@@ -249,5 +253,4 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
     }
 
     #endregion
-
 }
