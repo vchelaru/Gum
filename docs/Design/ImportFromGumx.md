@@ -248,10 +248,11 @@ Style the indeterminate state distinctly:
 
 **Before:** ~100+ embedded resources compiled into the plugin `.dll`
 
-**After:** Files ship on disk with the tool:
+**After:** Files ship on disk with the tool (kept at original path to avoid breaking other
+projects that reference these files as embedded resources or by path):
 ```
-{AppDir}/Content/DefaultFormsGumProject/
-    DefaultFormsGumProject.gumx
+{AppDir}/Content/FormsGumProject/
+    GumProject.gumx
     Components/Controls/Button.gucx
     Components/Controls/CheckBox.gucx
     ...
@@ -271,7 +272,7 @@ Replace the embedded resource enumeration with a path lookup:
 ```csharp
 string GetFormsGumxPath() =>
     Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
-        "Content", "DefaultFormsGumProject", "DefaultFormsGumProject.gumx");
+        "Content", "FormsGumProject", "GumProject.gumx");
 ```
 
 Then use `GumxSourceService.LoadProjectAsync(path)` to load the project.
@@ -287,15 +288,17 @@ Then use `GumxSourceService.LoadProjectAsync(path)` to load the project.
 
 ## Implementation Phases
 
-### Phase 1 — Core import (this sprint)
+### Phase 1 — Core import ✅ Complete
 
-- [ ] `GumxSourceService` (local + URL loading, GitHub URL normalization)
-- [ ] `GumxDependencyResolver` (transitive closure, standards diff)
-- [ ] `GumxImportService` (topological import, calls `IImportLogic`)
-- [ ] `ImportPreviewItemViewModel` with three-state checkbox logic
-- [ ] `ImportFromGumxViewModel` and `ImportFromGumxView`
-- [ ] `ImportFromGumxPlugin` (menu entry)
-- [ ] `GumFormsPlugin` migration (remove embedded resources, load from local path)
+- [x] `GumxSourceService` (local + URL loading, GitHub URL normalization)
+- [x] `GumxDependencyResolver` (transitive closure, standards diff)
+- [x] `GumxImportService` (topological import, calls `IImportLogic`)
+- [x] `ImportPreviewItemViewModel` with three-state checkbox logic
+- [x] `ImportFromGumxViewModel` and `ImportFromGumxView`
+- [x] `ImportFromGumxPlugin` (menu entry)
+- [x] `GumFormsPlugin` migration (remove embedded resources, load from local path)
+
+**Pending:** Manual testing
 
 ### Phase 2 — Assets (follow-up)
 

@@ -39,7 +39,11 @@ public class ImportFromGumxViewModel : DialogViewModel
     public string SourcePath
     {
         get => Get<string>() ?? string.Empty;
-        set => Set(value);
+        set
+        {
+            Set(value);
+            LoadPreviewCommand?.NotifyCanExecuteChanged();
+        }
     }
 
     public SourceType SourceType
