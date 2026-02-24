@@ -45,6 +45,7 @@ public class SetVariableLogic : ISetVariableLogic
         {"BaseType",                                               VariableRefreshType.FullGridRefresh   },
         {"IsRenderTarget",                                         VariableRefreshType.FullGridRefresh   },
         {"TextOverflowVerticalMode",                               VariableRefreshType.FullGridRefresh   },
+        {"Locked",                                                 VariableRefreshType.FullGridRefresh   },
         // These are handled in the SubtextLogic
         //{"XUnits",                                                 VariableRefreshType.FullGridRefresh   },
         //{ "YUnits",                                                 VariableRefreshType.FullGridRefresh }

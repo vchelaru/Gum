@@ -90,6 +90,23 @@ public class RightClickViewModel
 
         items.Add(AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'"));
 
+        items.Add(new ContextMenuItemViewModel { IsSeparator = true });
+
+        var instance = _selectedState.SelectedInstance;
+        items.Add(new ContextMenuItemViewModel
+        {
+            Text = instance.Locked ? $"Unlock {instance.Name}" : $"Lock {instance.Name}",
+            Action = () =>
+            {
+                var element = _selectedState.SelectedElement;
+                if (element == null) return;
+
+                var oldValue = instance.Locked;
+                instance.Locked = !oldValue;
+                _setVariableLogic.PropertyValueChanged("Locked", oldValue, instance, element.DefaultState);
+            }
+        });
+
         return items;
     }
 
