@@ -107,10 +107,11 @@
                 BorderThickness="1"
                 BorderBrush="{DynamicResource Frb.Brushes.Border}"
                 Padding="4">
-                <!-- Row 0: ListBox fills available space; Row 1: subfolder pinned to bottom -->
+                <!-- Row 0: ListBox fills available space; Row 1: asset warning; Row 2: subfolder pinned to bottom -->
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
@@ -151,8 +152,17 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
 
+                    <!-- Asset warning (shown after import if files could not be copied) -->
+                    <TextBlock
+                        Grid.Row="1"
+                        Text="{Binding WarningMessage}"
+                        Visibility="{Binding WarningMessage, Converter={x:Static local:NullToVisibilityConverter.Instance}}"
+                        Foreground="{DynamicResource Frb.Brushes.Error}"
+                        TextWrapping="Wrap"
+                        Margin="0,6,0,0" />
+
                     <!-- Destination subfolder -->
-                    <Grid Grid.Row="1" Margin="0,8,0,0">
+                    <Grid Grid.Row="2" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />

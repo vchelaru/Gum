@@ -36,6 +36,12 @@ public class ImportFromGumxViewModel : DialogViewModel
     /// </summary>
     private string _sourceBase = string.Empty;
 
+    /// <summary>
+    /// True after a successful import. When true, clicking the affirmative button closes
+    /// the dialog (allows the user to read any post-import warnings first).
+    /// </summary>
+    private bool _isImportComplete;
+
     public string SourcePath
     {
         get => Get<string>() ?? string.Empty;
@@ -108,6 +114,16 @@ public class ImportFromGumxViewModel : DialogViewModel
     }
 
     /// <summary>
+    /// Warning shown after a successful import when some referenced asset files
+    /// could not be found in the source and were not copied.
+    /// </summary>
+    public string? WarningMessage
+    {
+        get => Get<string>();
+        set => Set(value);
+    }
+
+    /// <summary>
     /// Flat list of all importable items (components, screens, behaviors, standards).
     /// </summary>
     public ObservableCollection<ImportPreviewItemViewModel> Items { get; } = new();
@@ -136,25 +152,54 @@ public class ImportFromGumxViewModel : DialogViewModel
     public override bool CanExecuteAffirmative() => IsPreviewLoaded && !IsLoading;
 
     /// <summary>
-    /// Called when the user clicks Import. Builds selections and calls GumxImportService.
+    /// Called when the user clicks Import (or Close after a completed import).
     /// Uses async void to remain compatible with the base class's synchronous RelayCommand
     /// while keeping the dialog open during the import.
     /// </summary>
     public override async void OnAffirmative()
     {
+        // Second click after a successful import — just close the dialog.
+        if (_isImportComplete)
+        {
+            base.OnAffirmative();
+            return;
+        }
+
         if (_sourceProject == null) return;
 
         IsLoading = true;
         ErrorMessage = null;
+        WarningMessage = null;
         try
         {
             var selections = BuildSelections();
-            await _importService.ImportAsync(selections, _sourceProject, _sourceBase, DestinationSubfolder);
-            base.OnAffirmative(); // Close dialog on success
+            var result = await _importService.ImportAsync(
+                selections, _sourceProject, _sourceBase, DestinationSubfolder);
+
+            _isImportComplete = true;
+
+            if (result.MissingAssets.Count > 0)
+            {
+                // Stay open so the user can read the warning before dismissing.
+                AffirmativeText = "Close";
+                string assetList = string.Join(", ", result.MissingAssets.Take(5));
+                if (result.MissingAssets.Count > 5)
+                    assetList += $" (and {result.MissingAssets.Count - 5} more)";
+                WarningMessage =
+                    $"{result.MissingAssets.Count} asset file(s) could not be found in the source " +
+                    $"and were not copied: {assetList}";
+            }
+            else
+            {
+                base.OnAffirmative(); // Close dialog immediately — no warnings to show
+            }
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Import failed: {ex.Message}";
+        }
+        finally
+        {
             IsLoading = false;
         }
     }

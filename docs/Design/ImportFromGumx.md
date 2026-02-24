@@ -288,19 +288,44 @@ Then use `GumxSourceService.LoadProjectAsync(path)` to load the project.
 
 ## Implementation Phases
 
-### Phase 1 — Core import ✅ Complete
+### Phase 1 — Core import
 
-- [x] `GumxSourceService` (local + URL loading, GitHub URL normalization)
-- [x] `GumxDependencyResolver` (transitive closure, standards diff)
-- [x] `GumxImportService` (topological import, calls `IImportLogic`)
-- [x] `ImportPreviewItemViewModel` with three-state checkbox logic
-- [x] `ImportFromGumxViewModel` and `ImportFromGumxView`
-- [x] `ImportFromGumxPlugin` (menu entry)
-- [x] `GumFormsPlugin` migration (remove embedded resources, load from local path)
+#### Done
 
-**Pending:** Manual testing
+- [x] `GumxSourceService` (local + URL loading, GitHub URL normalization, per-element HTTP fetch)
+- [x] `GumxDependencyResolver` (transitive closure, standards diff vs. destination)
+- [x] `GumxImportService` (topological import order, file write + name remapping, calls `IImportLogic`)
+- [x] `ImportPreviewItemViewModel` with three-state checkbox and auto-include tooltip
+- [x] `ImportFromGumxViewModel` with `LoadPreviewCommand`, `SelectAllComponentsCommand`, `OnAffirmative`
+- [x] `ImportFromGumxView` — two-phase UI, ListBox scrolls in constrained window
+- [x] `ImportFromGumxPlugin` — menu entry **Content → Import from .gumx...**
+- [x] `GumFormsPlugin` migration — `FormsFileService` loads from `{AppDir}/Content/FormsGumProject/` on disk; no embedded resources
+
+#### Deviations from original design
+
+- No explicit **Load Preview** button. Instead: Browse auto-triggers the preview load; typing a
+  path and pressing **Enter** also triggers it. This is equivalent in practice.
+- Standards section has no visual separator (`─── Standards  ⚠ will overwrite existing ───`).
+  Standards appear in the same flat list below behaviors, distinguished only by the `ElementType`
+  label. Could be added as a future polish item.
+
+#### Still needed before shipping
+
+- [ ] **Manual end-to-end test** — open the dialog, point at a local `.gumx`, verify components
+  appear, select some, import, confirm files land on disk and Gum registers them in the project
+- [ ] **URL path test** — repeat the above with a raw GitHub URL
+- [ ] **GumFormsPlugin smoke test** — verify the Forms files ship at
+  `{AppDir}/Content/FormsGumProject/` after a normal build and that Add Forms still works
+- [ ] **Overwrite behavior** — verify importing a component that already exists in the destination
+  overwrites correctly without duplicating the project reference
+- [ ] **Name-remapping correctness** — verify `BaseType` references inside imported XML are
+  rewritten to the subfolder-prefixed name so instances resolve after import
 
 ### Phase 2 — Assets (follow-up)
 
-- [ ] Download/copy asset files (`.png`, font files) referenced by imported components
-- [ ] Show asset dependency warnings in the dialog
+- [x] Download/copy asset files (`.png`) referenced by imported components
+  - `GumxSourceService.FetchBinaryAsync` handles local and URL sources
+  - `GumxImportService` scans all imported elements for image path variables (extension-based), copies each once, skips existing files
+  - After import, any missing assets are shown in the dialog with a warning; the button changes to **Close**
+- [ ] Copy font files referenced by imported components
+- [ ] Show asset dependency warnings in the dialog _before_ import (pre-flight check)

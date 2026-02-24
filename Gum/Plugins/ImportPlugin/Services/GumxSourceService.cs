@@ -90,6 +90,31 @@ public class GumxSourceService
         }
     }
 
+    /// <summary>
+    /// Fetches the raw bytes of an asset file (e.g., .png) relative to the source base.
+    /// Returns null if the file cannot be found or downloaded.
+    /// </summary>
+    public async Task<byte[]?> FetchBinaryAsync(string relativePath, string sourceBase)
+    {
+        if (IsUrl(sourceBase))
+        {
+            var url = sourceBase.TrimEnd('/') + "/" + relativePath.Replace('\\', '/');
+            try
+            {
+                return await _httpClient.GetByteArrayAsync(url);
+            }
+            catch (HttpRequestException)
+            {
+                return null;
+            }
+        }
+        else
+        {
+            var path = Path.Combine(sourceBase, relativePath);
+            return File.Exists(path) ? await File.ReadAllBytesAsync(path) : null;
+        }
+    }
+
     private static bool IsUrl(string pathOrUrl)
     {
         return pathOrUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)

@@ -14,6 +14,15 @@ using ToolsUtilities;
 namespace ImportFromGumxPlugin.Services;
 
 /// <summary>
+/// Outcome of an import operation, including which asset files were copied or could not be found.
+/// </summary>
+public class ImportResult
+{
+    public List<string> CopiedAssets { get; } = new();
+    public List<string> MissingAssets { get; } = new();
+}
+
+/// <summary>
 /// The user's explicit selections from the import preview dialog.
 /// </summary>
 public class ImportSelections
@@ -48,11 +57,14 @@ public class GumxImportService
         _sourceService = sourceService;
     }
 
+    private static readonly HashSet<string> _imageExtensions =
+        new(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga" };
+
     /// <summary>
     /// Imports all selections from the source project into the destination.
-    /// Import order: standards → transitive components (topological) → behaviors → direct components → screens → save/reload.
+    /// Import order: standards → transitive components (topological) → behaviors → direct components → screens → assets → save/reload.
     /// </summary>
-    public async Task ImportAsync(
+    public async Task<ImportResult> ImportAsync(
         ImportSelections selections,
         GumProjectSave source,
         string sourceBase,
@@ -94,12 +106,91 @@ public class GumxImportService
             await WriteAndImportScreenAsync(screen, source, sourceBase, projectDir, nameMap);
         }
 
-        // 6. Save project then reload (standards take effect only after reload)
+        // 6. Copy referenced image assets
+        var result = new ImportResult();
+        var allImportedElements = selections.Standards
+            .Cast<ElementSave>()
+            .Concat(selections.TransitiveComponents)
+            .Concat(selections.DirectComponents)
+            .Concat(selections.DirectScreens);
+        var imagePaths = CollectReferencedImagePaths(allImportedElements);
+        await CopyReferencedAssetsAsync(imagePaths, sourceBase, projectDir, result);
+
+        // 7. Save project then reload (standards take effect only after reload)
         var fileName = _projectState.GumProjectSave.FullFileName;
         bool wasSaved = _fileCommands.TryAutoSaveProject();
         if (wasSaved)
         {
             _fileCommands.LoadProject(fileName);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Scans all states of each element for VariableSave entries whose value looks like
+    /// an image file path (known image extension). Returns each unique path once.
+    /// </summary>
+    private static List<string> CollectReferencedImagePaths(IEnumerable<ElementSave> elements)
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var result = new List<string>();
+        foreach (var element in elements)
+        {
+            foreach (var state in element.AllStates)
+            {
+                foreach (var variable in state.Variables)
+                {
+                    if (variable.Value is string stringValue && !string.IsNullOrEmpty(stringValue))
+                    {
+                        if (_imageExtensions.Contains(Path.GetExtension(stringValue))
+                            && seen.Add(stringValue))
+                        {
+                            result.Add(stringValue);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Copies each asset file from the source base to the destination project directory,
+    /// preserving the relative path. Skips files already present. Records copied and missing paths.
+    /// </summary>
+    private async Task CopyReferencedAssetsAsync(
+        IEnumerable<string> assetRelativePaths,
+        string sourceBase,
+        string projectDir,
+        ImportResult result)
+    {
+        foreach (var relativePath in assetRelativePaths)
+        {
+            string normalizedRelative = relativePath
+                .Replace('/', Path.DirectorySeparatorChar)
+                .Replace('\\', Path.DirectorySeparatorChar);
+            string destPath = Path.Combine(projectDir, normalizedRelative);
+
+            if (File.Exists(destPath))
+            {
+                result.CopiedAssets.Add(relativePath);
+                continue;
+            }
+
+            byte[]? bytes = await _sourceService.FetchBinaryAsync(
+                relativePath.Replace('\\', '/'), sourceBase);
+
+            if (bytes != null)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+                await File.WriteAllBytesAsync(destPath, bytes);
+                result.CopiedAssets.Add(relativePath);
+            }
+            else
+            {
+                result.MissingAssets.Add(relativePath);
+            }
         }
     }
 
