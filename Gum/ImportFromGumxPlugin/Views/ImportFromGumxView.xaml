@@ -1,0 +1,148 @@
+<UserControl
+    x:Class="ImportFromGumxPlugin.Views.ImportFromGumxView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:Gum.Services.Dialogs;assembly=Gum"
+    xmlns:local="clr-namespace:ImportFromGumxPlugin.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    dialogs:Dialog.DialogTitle="Import from .gumx"
+    MinWidth="500"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <!-- Style for auto-included (indeterminate) checkboxes -->
+        <Style x:Key="ImportItemCheckBoxStyle" TargetType="CheckBox">
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="{x:Null}">
+                    <Setter Property="Foreground" Value="Gray" />
+                    <Setter Property="ToolTip" Value="Auto-included as a dependency" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Margin="8">
+
+        <!-- ═══ Phase 1 — Source & Preview ═══ -->
+        <GroupBox Header="Source">
+            <StackPanel Margin="4">
+                <!-- Source type radio buttons -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <RadioButton Content="Local File" IsChecked="{Binding IsLocalFile}" Margin="0,0,12,0" />
+                    <RadioButton Content="URL" IsChecked="{Binding IsUrl}" />
+                </StackPanel>
+
+                <!-- Path / URL input row -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox
+                        Grid.Column="0"
+                        Margin="0,0,4,0"
+                        Text="{Binding SourcePath, UpdateSourceTrigger=PropertyChanged}"
+                        VerticalContentAlignment="Center" />
+
+                    <Button
+                        x:Name="BrowseButton"
+                        Grid.Column="1"
+                        Content="Browse..."
+                        Padding="8,2"
+                        Click="OnBrowseClick"
+                        IsEnabled="{Binding IsLocalFile}" />
+                </Grid>
+
+                <!-- Error message -->
+                <TextBlock
+                    Foreground="Red"
+                    Text="{Binding ErrorMessage}"
+                    Visibility="{Binding ErrorMessage, Converter={x:Static local:NullToVisibilityConverter.Instance}}"
+                    Margin="0,4,0,0"
+                    TextWrapping="Wrap" />
+
+                <!-- Load Preview button -->
+                <Button
+                    Content="Load Preview"
+                    HorizontalAlignment="Right"
+                    Margin="0,8,0,0"
+                    Padding="12,4"
+                    Command="{Binding LoadPreviewCommand}" />
+
+                <!-- Loading indicator -->
+                <TextBlock
+                    Text="Loading..."
+                    HorizontalAlignment="Right"
+                    Visibility="{Binding IsLoading, Converter={x:Static local:BoolToVisibilityConverter.Instance}}" />
+            </StackPanel>
+        </GroupBox>
+
+        <!-- ═══ Phase 2 — Selection & Import ═══ -->
+        <GroupBox
+            Header="Select items to import"
+            Margin="0,8,0,0"
+            Visibility="{Binding IsPreviewLoaded, Converter={x:Static local:BoolToVisibilityConverter.Instance}}">
+
+            <StackPanel Margin="4">
+                <!-- Item list -->
+                <ListBox
+                    ItemsSource="{Binding Items}"
+                    SelectionMode="Single"
+                    MaxHeight="350"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto"
+                    BorderThickness="1"
+                    BorderBrush="Gray">
+
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="2,1" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox
+                                IsThreeState="True"
+                                IsChecked="{Binding IsChecked}"
+                                Style="{StaticResource ImportItemCheckBoxStyle}"
+                                ToolTip="{Binding AutoIncludedReason}"
+                                Indeterminate="OnCheckBoxIndeterminate">
+
+                                <TextBlock>
+                                    <Run Text="{Binding Name, Mode=OneWay}" />
+                                    <Run Text=" " />
+                                    <Run Text="{Binding ElementType, Mode=OneWay}"
+                                         Foreground="Gray"
+                                         FontStyle="Italic" />
+                                </TextBlock>
+                            </CheckBox>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Destination subfolder -->
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Text="Destination subfolder:"
+                        VerticalAlignment="Center"
+                        Margin="0,0,8,0" />
+
+                    <TextBox
+                        Grid.Column="1"
+                        Text="{Binding DestinationSubfolder, UpdateSourceTrigger=PropertyChanged}"
+                        VerticalContentAlignment="Center" />
+                </Grid>
+            </StackPanel>
+        </GroupBox>
+
+    </StackPanel>
+</UserControl>

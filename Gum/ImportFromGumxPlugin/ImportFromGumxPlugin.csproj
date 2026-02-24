@@ -4,40 +4,53 @@
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+		<EnableDefaultPageItems>false</EnableDefaultPageItems>
 		<LangVersion>12.0</LangVersion>
 		<AnalysisLevel>none</AnalysisLevel>
 		<Nullable>enable</Nullable>
-
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	  <DebugSymbols>true</DebugSymbols>
-	  <DebugType>full</DebugType>
-	  <Optimize>false</Optimize>
-	  <OutputPath>bin\Debug\</OutputPath>
-	  <DefineConstants>DEBUG;TRACE</DefineConstants>
-	  <ErrorReport>prompt</ErrorReport>
-	  <WarningLevel>4</WarningLevel>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<OutputPath>bin\Debug\</OutputPath>
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <DebugType>pdbonly</DebugType>
-	  <Optimize>true</Optimize>
-	  <OutputPath>bin\Release\</OutputPath>
-	  <DefineConstants>TRACE</DefineConstants>
-	  <ErrorReport>prompt</ErrorReport>
-	  <WarningLevel>4</WarningLevel>
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<OutputPath>bin\Release\</OutputPath>
+		<DefineConstants>TRACE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Reference Include="System.ComponentModel.Composition" />
 	</ItemGroup>
 	<ItemGroup>
-		<Compile Include="MainGumFormsPlugin.cs" />
-		<Compile Include="Properties\AssemblyInfo.cs" />
-		<Compile Include="Services\FormsFileService.cs" />
-		<Compile Include="ViewModels\AddFormsViewModel.cs" />
-		<Compile Include="Views\AddFormsWindow.xaml.cs" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="MainImportFromGumxPlugin.cs" />
+		<Compile Include="Properties\AssemblyInfo.cs" />
+		<Compile Include="Services\GumxDependencyResolver.cs" />
+		<Compile Include="Services\GumxImportService.cs" />
+		<Compile Include="ViewModels\ImportFromGumxViewModel.cs" />
+		<Compile Include="ViewModels\ImportPreviewItemViewModel.cs" />
+		<Compile Include="Views\ImportFromGumxView.xaml.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Page Include="Views\ImportFromGumxView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj">
 			<Project>{8c80ba7b-1cba-4579-9382-d9dc6c365070}</Project>
@@ -60,7 +73,8 @@
 			<Name>XnaAndWinforms</Name>
 		</ProjectReference>
 	</ItemGroup>
+
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="echo Copying plugin to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;&#xD;&#xA;echo Copying FormsGumProject content to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Content\FormsGumProject\&quot;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Content\FormsGumProject&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Content\FormsGumProject\&quot;&#xD;&#xA;xcopy /E /Y /I &quot;$(MSBuildProjectDirectory)\Content\FormsGumProject\*&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Content\FormsGumProject\&quot;" />
+		<Exec Command="echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
 	</Target>
 </Project>

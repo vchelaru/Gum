@@ -1,68 +1,82 @@
-﻿using Gum.Services;
+using Gum.Services;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace GumFormsPlugin.Services;
+
 public class FormsFileService
 {
-    // for now, we make this false, we can add screens later:
-    //bool saveScreens = false;
+    private const string FormsProjectSubfolder = "Content/FormsGumProject";
+    private const string FormsGumxName = "GumProject.gumx";
 
+    /// <summary>
+    /// Returns the path to the GumProject.gumx file shipped with the tool.
+    /// </summary>
+    public string GetFormsGumxPath() =>
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FormsProjectSubfolder, FormsGumxName)
+            .Replace('\\', '/');
+
+    /// <summary>
+    /// Returns the base directory of the FormsGumProject files.
+    /// </summary>
+    public string GetFormsProjectDirectory() =>
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FormsProjectSubfolder)
+            .Replace('\\', '/') + "/";
+
+    /// <summary>
+    /// Returns a mapping of source file paths (in the FormsGumProject) to destination
+    /// file paths (in the user's Gum project directory).
+    /// Extensions skipped: .gumx, .gumfcs, .ganx (animation files, deferred), .codsj
+    /// </summary>
     public Dictionary<string, FilePath> GetSourceDestinations(bool isIncludeDemoScreenGum)
     {
         var projectState = Locator.GetRequiredService<IProjectState>();
         var destinationFolder = projectState.ProjectDirectory;
 
-        Dictionary<string, FilePath> sourceDestinations = new Dictionary<string, FilePath>();
+        var sourceDestinations = new Dictionary<string, FilePath>();
 
-        //////////////////////Early Out////////////////////////////////////
         if (string.IsNullOrEmpty(destinationFolder)) return sourceDestinations;
-        ////////////////////End Early Out//////////////////////////////////
 
-        var assembly = GetType().Assembly;
+        string formsDir = GetFormsProjectDirectory();
 
-        var resourceNames = assembly.GetManifestResourceNames();
+        if (!Directory.Exists(formsDir)) return sourceDestinations;
 
-        const string resourcePrefix =
-            "GumFormsPlugin.Content.FormsGumProject.";
+        var allFiles = Directory.GetFiles(formsDir, "*.*", SearchOption.AllDirectories);
 
-        var resourcesToSave = resourceNames.Where(item =>
-            item.StartsWith(resourcePrefix));
-
-        foreach (var resourceName in resourcesToSave)
+        foreach (var sourceFile in allFiles)
         {
-            var extension = FileManager.GetExtension(resourceName);
+            var extension = FileManager.GetExtension(sourceFile);
 
-            if (extension == "gusx")
-            {
-                var shouldInclude = resourceName.Contains("DemoScreenGum.gusx") && isIncludeDemoScreenGum;
-
-                if (!shouldInclude)
-                {
-                    continue;
-                }
-            }
-            if (extension == "gumx" || extension == "gumfcs")
+            // Skip files that are not content or not relevant to import
+            if (extension is "gumx" or "gumfcs" or "ganx" or "codsj")
             {
                 continue;
             }
 
-            var stripped = resourceName.Substring(resourcePrefix.Length);
+            // Only include the demo screen if requested
+            if (extension == "gusx")
+            {
+                bool isDemoScreen = sourceFile.Contains("DemoScreenGum.gusx");
+                if (!isDemoScreen || !isIncludeDemoScreenGum)
+                {
+                    continue;
+                }
+            }
 
-            var name = FileManager.RemoveExtension(stripped).Replace(".", "/")
-                + "." + extension;
+            // Compute the relative path from the forms project directory
+            string relativePath = sourceFile
+                .Replace('\\', '/')
+                .Substring(formsDir.Length)
+                .TrimStart('/');
 
-            var absoluteDestination = destinationFolder + name;
-
-            sourceDestinations.Add(resourceName, absoluteDestination);
+            string absoluteDestination = destinationFolder + relativePath;
+            sourceDestinations.Add(sourceFile, absoluteDestination);
         }
 
         return sourceDestinations;
     }
-
 }
