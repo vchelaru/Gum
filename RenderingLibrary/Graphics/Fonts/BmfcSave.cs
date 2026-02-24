@@ -134,7 +134,7 @@ public class BmfcSave
         return builder.ToString();
     }
 
-    private static List<int> ParseCharRanges(string charsStr)
+    internal static List<int> ParseCharRanges(string charsStr)
     {
         var allChars = new List<int>();
         var ranges = charsStr.Split(',', StringSplitOptions.RemoveEmptyEntries);
