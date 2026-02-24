@@ -12,13 +12,7 @@
 
     <UserControl.Resources>
         <Style x:Key="ImportItemCheckBoxStyle" TargetType="CheckBox"
-               BasedOn="{StaticResource {x:Type CheckBox}}">
-            <Style.Triggers>
-                <Trigger Property="IsChecked" Value="{x:Null}">
-                    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+               BasedOn="{StaticResource {x:Type CheckBox}}" />
     </UserControl.Resources>
 
     <!-- Row 0: source inputs (fixed height); Row 1: item list (fills remaining) -->
@@ -130,20 +124,12 @@
                         <TreeView.ItemTemplate>
                             <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                 <CheckBox
-                                    IsThreeState="True"
-                                    IsChecked="{Binding IsChecked}"
+                                    IsChecked="{Binding IsChecked, Mode=OneWay, TargetNullValue={x:Null}}"
                                     Style="{StaticResource ImportItemCheckBoxStyle}"
-                                    ToolTip="{Binding AutoIncludedReason}"
-                                    Indeterminate="OnCheckBoxIndeterminate">
+                                    Loaded="OnCheckBoxLoaded"
+                                    Click="OnCheckBoxClick">
 
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding DisplayName, Mode=OneWay}" />
-                                        <TextBlock
-                                            Text="{Binding ElementType, Mode=OneWay}"
-                                            FontStyle="Italic"
-                                            Margin="4,0,0,0"
-                                            Visibility="{Binding IsLeaf, Converter={x:Static local:BoolToVisibilityConverter.Instance}}" />
-                                    </StackPanel>
+                                    <TextBlock Text="{Binding DisplayName, Mode=OneWay}" />
                                 </CheckBox>
                             </HierarchicalDataTemplate>
                         </TreeView.ItemTemplate>

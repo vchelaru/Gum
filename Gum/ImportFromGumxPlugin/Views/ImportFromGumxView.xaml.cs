@@ -77,16 +77,26 @@ public partial class ImportFromGumxView : UserControl
     }
 
     /// <summary>
-    /// Prevents the user from cycling into the indeterminate state via clicking.
-    /// When a checked item is clicked, WPF would set IsChecked = null (indeterminate),
-    /// but we intercept and force it to false instead.
-    /// This handler fires only on user interaction, not when the VM programmatically sets IsChecked = null.
+    /// Ensures the CheckBox displays the correct initial state. Uses SetCurrentValue so the
+    /// OneWay binding remains active for future VM property changes.
     /// </summary>
-    private void OnCheckBoxIndeterminate(object sender, RoutedEventArgs e)
+    private void OnCheckBoxLoaded(object sender, RoutedEventArgs e)
     {
-        if (sender is CheckBox checkBox)
+        if (sender is CheckBox cb && cb.DataContext is ImportTreeNodeViewModel vm)
+            cb.SetCurrentValue(CheckBox.IsCheckedProperty, vm.IsChecked);
+    }
+
+    /// <summary>
+    /// Drives all VM updates from user clicks. The IsChecked binding is Mode=OneWay, so WPF
+    /// never writes back through the binding. With IsThreeState=false (the default), WPF's
+    /// built-in toggle is !IsChecked.GetValueOrDefault(), which naturally maps:
+    ///   unchecked (false) → true,  checked (true) → false,  indeterminate (null) → true.
+    /// </summary>
+    private void OnCheckBoxClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is CheckBox checkBox && checkBox.DataContext is ImportTreeNodeViewModel vm)
         {
-            checkBox.IsChecked = false;
+            vm.IsChecked = checkBox.IsChecked;
         }
     }
 }

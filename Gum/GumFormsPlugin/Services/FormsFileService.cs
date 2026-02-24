@@ -62,7 +62,8 @@ public class FormsFileService
             }
 
             // Skip files that are not content or not relevant to import
-            if (extension is "gumx" or "gumfcs" or "ganx" or "codsj" or "bmfc" or "fnt")
+            if (extension is "gumx" or "gumfcs" or 
+                "ganx" or "codsj" or "bmfc" or "fnt" or "exe")
             {
                 continue;
             }

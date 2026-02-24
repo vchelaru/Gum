@@ -17,12 +17,6 @@ public class ImportTreeNodeViewModel : ViewModel
     public ElementItemType? ElementType { get; }
     public ObservableCollection<ImportTreeNodeViewModel> Children { get; }
 
-    public string? AutoIncludedReason
-    {
-        get => Get<string>();
-        set => Set(value);
-    }
-
     public InclusionState InclusionState
     {
         get => _inclusionState;
@@ -43,12 +37,7 @@ public class ImportTreeNodeViewModel : ViewModel
         {
             if (!IsFolder)
             {
-                return _inclusionState switch
-                {
-                    InclusionState.Explicit => true,
-                    InclusionState.AutoIncluded => null,
-                    _ => false
-                };
+                return _inclusionState == InclusionState.Explicit;
             }
 
             if (Children.Count == 0)

@@ -11,6 +11,5 @@ public enum ElementItemType
 public enum InclusionState
 {
     NotIncluded,
-    AutoIncluded,
     Explicit
 }

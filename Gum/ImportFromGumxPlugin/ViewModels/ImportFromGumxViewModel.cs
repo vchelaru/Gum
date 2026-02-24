@@ -31,7 +31,10 @@ public class ImportFromGumxViewModel : DialogViewModel
     private bool _isImportComplete;
 
     private readonly List<ImportTreeNodeViewModel> _allLeafItems = new List<ImportTreeNodeViewModel>();
+    private readonly HashSet<string> _autoAddedComponentNames = new HashSet<string>();
+    private ImportTreeNodeViewModel? _behaviorsGroupNode;
     private ImportTreeNodeViewModel? _standardsGroupNode;
+    private bool _recomputeQueued = false;
 
     public string SourcePath
     {
@@ -175,6 +178,7 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     private void ExecuteSelectAllComponents()
     {
+        _autoAddedComponentNames.Clear();
         foreach (ImportTreeNodeViewModel item in _allLeafItems)
         {
             if (item.ElementType == ElementItemType.Component || item.ElementType == ElementItemType.Screen)
@@ -242,7 +246,9 @@ public class ImportFromGumxViewModel : DialogViewModel
         foreach (ImportTreeNodeViewModel leaf in _allLeafItems)
             leaf.PropertyChanged -= OnItemPropertyChanged;
         _allLeafItems.Clear();
+        _autoAddedComponentNames.Clear();
         RootNodes.Clear();
+        _behaviorsGroupNode = null;
         _standardsGroupNode = null;
 
         // Components group
@@ -273,7 +279,17 @@ public class ImportFromGumxViewModel : DialogViewModel
         BuildTree(screenLeaves, screensGroup.Children);
         RootNodes.Add(screensGroup);
 
-        // Standards group — behaviors are inserted before this node in RecomputeTransitiveDependencies
+        // Behaviors group
+        _behaviorsGroupNode = new ImportTreeNodeViewModel("Behaviors", "Behaviors");
+        foreach (var behavior in project.Behaviors.OrderBy(b => b.Name))
+        {
+            var leaf = new ImportTreeNodeViewModel(behavior.Name, behavior.Name, ElementItemType.Behavior);
+            _allLeafItems.Add(leaf);
+            _behaviorsGroupNode.Children.Add(leaf);
+        }
+        RootNodes.Add(_behaviorsGroupNode);
+
+        // Standards group
         _standardsGroupNode = new ImportTreeNodeViewModel("Standards", "Standards");
         foreach (var standard in project.StandardElements.OrderBy(s => s.Name))
         {
@@ -291,9 +307,19 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     private void OnItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ImportTreeNodeViewModel.InclusionState))
+        if (e.PropertyName == nameof(ImportTreeNodeViewModel.InclusionState) && !_recomputeQueued)
         {
-            RecomputeTransitiveDependencies();
+            // User directly changed a component — remove it from auto-added tracking so it isn't reset
+            if (sender is ImportTreeNodeViewModel vm && vm.ElementType == ElementItemType.Component)
+            {
+                _autoAddedComponentNames.Remove(vm.FullName);
+            }
+            _recomputeQueued = true;
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
+            {
+                _recomputeQueued = false;
+                RecomputeTransitiveDependencies();
+            });
         }
     }
 
@@ -301,6 +327,20 @@ public class ImportFromGumxViewModel : DialogViewModel
     {
         if (_sourceProject == null) { return; }
 
+        // Reset components that were auto-added in the previous pass
+        foreach (var name in _autoAddedComponentNames)
+        {
+            var item = _allLeafItems.FirstOrDefault(i => i.ElementType == ElementItemType.Component && i.FullName == name);
+            if (item != null)
+            {
+                item.PropertyChanged -= OnItemPropertyChanged;
+                item.InclusionState = InclusionState.NotIncluded;
+                item.PropertyChanged += OnItemPropertyChanged;
+            }
+        }
+        _autoAddedComponentNames.Clear();
+
+        // Find user-explicitly checked components and screens
         var directComponents = _allLeafItems
             .Where(i => i.ElementType == ElementItemType.Component && i.InclusionState == InclusionState.Explicit)
             .Select(i => _sourceProject.Components.FirstOrDefault(c => c.Name == i.FullName))
@@ -316,83 +356,43 @@ public class ImportFromGumxViewModel : DialogViewModel
             .ToList();
 
         var directSelected = directComponents.Concat(directScreens).ToList();
-
         var destination = _projectState.GumProjectSave;
         var deps = _dependencyResolver.ComputeTransitive(directSelected, _sourceProject, destination);
 
-        var autoComponentNames = new HashSet<string>(deps.TransitiveComponents.Select(c => c.Name));
-
-        foreach (ImportTreeNodeViewModel item in _allLeafItems)
+        // Auto-check transitive components (deps of selected elements not directly selected)
+        foreach (var comp in deps.TransitiveComponents)
         {
-            if (item.InclusionState == InclusionState.AutoIncluded)
+            var item = _allLeafItems.FirstOrDefault(i => i.ElementType == ElementItemType.Component && i.FullName == comp.Name);
+            if (item != null && item.InclusionState == InclusionState.NotIncluded)
             {
                 item.PropertyChanged -= OnItemPropertyChanged;
-                item.InclusionState = InclusionState.NotIncluded;
-                item.AutoIncludedReason = string.Empty;
+                item.InclusionState = InclusionState.Explicit;
                 item.PropertyChanged += OnItemPropertyChanged;
+                _autoAddedComponentNames.Add(item.FullName);
             }
         }
 
-        foreach (ImportTreeNodeViewModel item in _allLeafItems.Where(i => i.ElementType == ElementItemType.Component))
+        // Auto-check required behaviors, uncheck others
+        var requiredBehaviorNames = new HashSet<string>(deps.Behaviors.Select(b => b.Name));
+        foreach (ImportTreeNodeViewModel item in _allLeafItems.Where(i => i.ElementType == ElementItemType.Behavior))
         {
-            if (autoComponentNames.Contains(item.FullName) && item.InclusionState == InclusionState.NotIncluded)
-            {
-                item.PropertyChanged -= OnItemPropertyChanged;
-                item.InclusionState = InclusionState.AutoIncluded;
-                item.AutoIncludedReason = BuildAutoIncludeReason(item.FullName, directSelected, _sourceProject);
-                item.PropertyChanged += OnItemPropertyChanged;
-            }
-        }
-
-        var existingBehaviorItems = _allLeafItems
-            .Where(i => i.ElementType == ElementItemType.Behavior)
-            .ToList();
-        foreach (ImportTreeNodeViewModel b in existingBehaviorItems)
-        {
-            b.PropertyChanged -= OnItemPropertyChanged;
-            _allLeafItems.Remove(b);
-            RootNodes.Remove(b);
-        }
-
-        int insertAt = _standardsGroupNode != null ? RootNodes.IndexOf(_standardsGroupNode) : RootNodes.Count;
-
-        foreach (var behavior in deps.Behaviors.OrderBy(b => b.Name))
-        {
-            ImportTreeNodeViewModel item = new ImportTreeNodeViewModel(behavior.Name, behavior.Name, ElementItemType.Behavior);
-            item.InclusionState = InclusionState.AutoIncluded;
-            item.AutoIncludedReason = "required by a selected component";
+            item.PropertyChanged -= OnItemPropertyChanged;
+            item.InclusionState = requiredBehaviorNames.Contains(item.FullName)
+                ? InclusionState.Explicit
+                : InclusionState.NotIncluded;
             item.PropertyChanged += OnItemPropertyChanged;
-            _allLeafItems.Add(item);
-            RootNodes.Insert(insertAt++, item);
         }
 
+        // Auto-check differing standards, uncheck others
         var differingStandardNames = new HashSet<string>(deps.DifferingStandards.Select(s => s.Name));
         foreach (ImportTreeNodeViewModel item in _allLeafItems.Where(i => i.ElementType == ElementItemType.Standard))
         {
-            if (item.InclusionState != InclusionState.Explicit)
-            {
-                item.PropertyChanged -= OnItemPropertyChanged;
-                item.InclusionState = differingStandardNames.Contains(item.FullName)
-                    ? InclusionState.Explicit
-                    : InclusionState.NotIncluded;
-                item.PropertyChanged += OnItemPropertyChanged;
-            }
+            item.PropertyChanged -= OnItemPropertyChanged;
+            item.InclusionState = differingStandardNames.Contains(item.FullName)
+                ? InclusionState.Explicit
+                : InclusionState.NotIncluded;
+            item.PropertyChanged += OnItemPropertyChanged;
         }
-    }
-
-    private static string BuildAutoIncludeReason(
-        string componentName,
-        IList<ElementSave> directSelected,
-        GumProjectSave source)
-    {
-        foreach (var element in directSelected)
-        {
-            if (element.Instances.Any(i => i.BaseType == componentName))
-            {
-                return $"used by {element.Name}";
-            }
-        }
-        return "used by a selected component";
     }
 
     private ImportSelections BuildSelections()
@@ -407,8 +407,11 @@ public class ImportFromGumxViewModel : DialogViewModel
         var behaviorsByName = _sourceProject.Behaviors.ToDictionary(b => b.Name);
         var standardsByName = _sourceProject.StandardElements.ToDictionary(s => s.Name);
 
+        // User-directly-checked components (not auto-added by the dependency resolver)
         var directComponents = _allLeafItems
-            .Where(i => i.ElementType == ElementItemType.Component && i.InclusionState == InclusionState.Explicit)
+            .Where(i => i.ElementType == ElementItemType.Component
+                        && i.InclusionState == InclusionState.Explicit
+                        && !_autoAddedComponentNames.Contains(i.FullName))
             .Select(i => componentsByName.TryGetValue(i.FullName, out var c) ? c : null)
             .Where(c => c != null)
             .Cast<ComponentSave>()
@@ -421,24 +424,22 @@ public class ImportFromGumxViewModel : DialogViewModel
             .Cast<ScreenSave>()
             .ToList();
 
-        var transitiveComponents = _allLeafItems
-            .Where(i => i.ElementType == ElementItemType.Component && i.InclusionState == InclusionState.AutoIncluded)
-            .Select(i => componentsByName.TryGetValue(i.FullName, out var c) ? c : null)
-            .Where(c => c != null)
-            .Cast<ComponentSave>()
+        // Re-run the resolver on user-direct elements to get topologically-sorted transitive components
+        var directElements = directComponents.Cast<ElementSave>()
+            .Concat(directScreens.Cast<ElementSave>())
             .ToList();
+        var destination = _projectState.GumProjectSave;
+        var deps = _dependencyResolver.ComputeTransitive(directElements, _sourceProject, destination);
 
         var behaviors = _allLeafItems
-            .Where(i => i.ElementType == ElementItemType.Behavior
-                        && (i.InclusionState == InclusionState.AutoIncluded || i.InclusionState == InclusionState.Explicit))
+            .Where(i => i.ElementType == ElementItemType.Behavior && i.InclusionState == InclusionState.Explicit)
             .Select(i => behaviorsByName.TryGetValue(i.FullName, out var b) ? b : null)
             .Where(b => b != null)
             .Cast<BehaviorSave>()
             .ToList();
 
         var standards = _allLeafItems
-            .Where(i => i.ElementType == ElementItemType.Standard
-                        && (i.InclusionState == InclusionState.Explicit || i.InclusionState == InclusionState.AutoIncluded))
+            .Where(i => i.ElementType == ElementItemType.Standard && i.InclusionState == InclusionState.Explicit)
             .Select(i => standardsByName.TryGetValue(i.FullName, out var s) ? s : null)
             .Where(s => s != null)
             .Cast<StandardElementSave>()
@@ -448,7 +449,7 @@ public class ImportFromGumxViewModel : DialogViewModel
         {
             DirectComponents = directComponents,
             DirectScreens = directScreens,
-            TransitiveComponents = transitiveComponents,
+            TransitiveComponents = deps.TransitiveComponents,
             Behaviors = behaviors,
             Standards = standards
         };

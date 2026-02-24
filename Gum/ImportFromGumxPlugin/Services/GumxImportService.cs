@@ -57,8 +57,8 @@ public class GumxImportService
         _sourceService = sourceService;
     }
 
-    private static readonly HashSet<string> _imageExtensions =
-        new(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga" };
+    private static readonly HashSet<string> _assetExtensions =
+        new(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".achx", ".ttf", ".otf", ".fnt" };
 
     /// <summary>
     /// Imports all selections from the source project into the destination.
@@ -106,17 +106,23 @@ public class GumxImportService
             await WriteAndImportScreenAsync(screen, source, sourceBase, projectDir, nameMap);
         }
 
-        // 6. Copy referenced image assets
+        // 6. Copy referenced asset files (images, animation chains, fonts)
         var result = new ImportResult();
         var allImportedElements = selections.Standards
             .Cast<ElementSave>()
             .Concat(selections.TransitiveComponents)
             .Concat(selections.DirectComponents)
             .Concat(selections.DirectScreens);
-        var imagePaths = CollectReferencedImagePaths(allImportedElements);
-        await CopyReferencedAssetsAsync(imagePaths, sourceBase, projectDir, result);
+        var assetPaths = CollectReferencedAssetPaths(allImportedElements);
+        await CopyReferencedAssetsAsync(assetPaths, sourceBase, projectDir, result);
 
-        // 7. Save project then reload (standards take effect only after reload)
+        // 7. Copy sibling .ganx (state animation) files for each imported element
+        var allComponents = selections.TransitiveComponents.Cast<ElementSave>()
+            .Concat(selections.DirectComponents);
+        await CopyGanxFilesAsync(allComponents, "Components", nameMap, sourceBase, projectDir);
+        await CopyGanxFilesAsync(selections.DirectScreens.Cast<ElementSave>(), "Screens", nameMap, sourceBase, projectDir);
+
+        // 8. Save project then reload (standards take effect only after reload)
         var fileName = _projectState.GumProjectSave.FullFileName;
         bool wasSaved = _fileCommands.TryAutoSaveProject();
         if (wasSaved)
@@ -129,9 +135,10 @@ public class GumxImportService
 
     /// <summary>
     /// Scans all states of each element for VariableSave entries whose value looks like
-    /// an image file path (known image extension). Returns each unique path once.
+    /// an asset file path (known extension). Excludes paths inside a FontCache folder.
+    /// Returns each unique path once.
     /// </summary>
-    private static List<string> CollectReferencedImagePaths(IEnumerable<ElementSave> elements)
+    private static List<string> CollectReferencedAssetPaths(IEnumerable<ElementSave> elements)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var result = new List<string>();
@@ -143,7 +150,8 @@ public class GumxImportService
                 {
                     if (variable.Value is string stringValue && !string.IsNullOrEmpty(stringValue))
                     {
-                        if (_imageExtensions.Contains(Path.GetExtension(stringValue))
+                        if (_assetExtensions.Contains(Path.GetExtension(stringValue))
+                            && !IsFontCachePath(stringValue)
                             && seen.Add(stringValue))
                         {
                             result.Add(stringValue);
@@ -154,6 +162,10 @@ public class GumxImportService
         }
         return result;
     }
+
+    private static bool IsFontCachePath(string relativePath) =>
+        relativePath.IndexOf("FontCache/", StringComparison.OrdinalIgnoreCase) >= 0
+        || relativePath.IndexOf("FontCache\\", StringComparison.OrdinalIgnoreCase) >= 0;
 
     /// <summary>
     /// Copies each asset file from the source base to the destination project directory,
@@ -190,6 +202,36 @@ public class GumxImportService
             else
             {
                 result.MissingAssets.Add(relativePath);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Copies the sibling .ganx (state animation) file for each element, if one exists in the source.
+    /// The naming convention is {elementName}Animations.ganx, located in the same subfolder
+    /// as the element file (e.g. Components/Controls/ButtonAnimations.ganx).
+    /// Silently skips elements that have no .ganx file.
+    /// </summary>
+    private async Task CopyGanxFilesAsync(
+        IEnumerable<ElementSave> elements,
+        string elementSubfolder,
+        Dictionary<string, string> nameMap,
+        string sourceBase,
+        string projectDir)
+    {
+        foreach (var element in elements)
+        {
+            string sourceName = element.Name;
+            string destName = nameMap.TryGetValue(sourceName, out var mapped) ? mapped : sourceName;
+
+            string relativeSourcePath = $"{elementSubfolder}/{sourceName}Animations.ganx";
+            string destPath = Path.Combine(projectDir, elementSubfolder, $"{destName}Animations.ganx");
+
+            byte[]? bytes = await _sourceService.FetchBinaryAsync(relativeSourcePath, sourceBase);
+            if (bytes != null)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+                await File.WriteAllBytesAsync(destPath, bytes);
             }
         }
     }
