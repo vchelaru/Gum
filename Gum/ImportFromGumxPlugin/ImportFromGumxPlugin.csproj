@@ -42,6 +42,7 @@
 		<Compile Include="Services\GumxImportService.cs" />
 		<Compile Include="ViewModels\ImportFromGumxViewModel.cs" />
 		<Compile Include="ViewModels\ImportPreviewItemViewModel.cs" />
+		<Compile Include="ViewModels\ImportTreeNodeViewModel.cs" />
 		<Compile Include="Views\ImportFromGumxView.xaml.cs" />
 	</ItemGroup>
 

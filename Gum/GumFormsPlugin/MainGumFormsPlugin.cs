@@ -74,12 +74,21 @@ internal class MainGumFormsPlugin : PluginBase
     {
         var files = _formsFileService.GetSourceDestinations(false);
 
-        return files.Values.Any(item => item.Extension != "png" && item.Extension != "gutx" && item.Exists());
+        var firstMatch = files.Values
+            .FirstOrDefault(item => 
+                item.Extension != "png" && 
+                item.Extension != "gutx" &&
+                item.Extension != "fnt" && 
+                item.Extension != "bmfc" &&
+                item.Exists());
+
+        return firstMatch != null;
     }
 
     private void HandleAddFormsComponents(object? sender, System.Windows.RoutedEventArgs e)
     {
         var projectState = Locator.GetRequiredService<IProjectState>();
+
         #region Early Out
 
         if (projectState.NeedsToSaveProject)

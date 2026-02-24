@@ -115,23 +115,20 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <ListBox
+                    <TreeView
                         Grid.Row="0"
-                        ItemsSource="{Binding Items}"
-                        SelectionMode="Single"
+                        ItemsSource="{Binding RootNodes}"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource Frb.Brushes.Border}">
+                        BorderThickness="0">
 
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Setter Property="Padding" Value="2,1" />
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="TreeViewItem">
+                                <Setter Property="IsExpanded" Value="True" />
                             </Style>
-                        </ListBox.ItemContainerStyle>
+                        </TreeView.ItemContainerStyle>
 
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                 <CheckBox
                                     IsThreeState="True"
                                     IsChecked="{Binding IsChecked}"
@@ -140,17 +137,17 @@
                                     Indeterminate="OnCheckBoxIndeterminate">
 
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name, Mode=OneWay}" />
+                                        <TextBlock Text="{Binding DisplayName, Mode=OneWay}" />
                                         <TextBlock
                                             Text="{Binding ElementType, Mode=OneWay}"
                                             FontStyle="Italic"
-                                            Foreground="{DynamicResource Frb.Brushes.Foreground.Subtle}"
-                                            Margin="4,0,0,0" />
+                                            Margin="4,0,0,0"
+                                            Visibility="{Binding IsLeaf, Converter={x:Static local:BoolToVisibilityConverter.Instance}}" />
                                     </StackPanel>
                                 </CheckBox>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
 
                     <!-- Asset warning (shown after import if files could not be copied) -->
                     <TextBlock

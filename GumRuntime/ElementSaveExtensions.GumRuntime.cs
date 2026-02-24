@@ -10,6 +10,8 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.ComponentModel;
 using System.Text;
+using Gum.Collections;
+
 
 #if !FRB
 using Gum.StateAnimation.Runtime;
@@ -161,6 +163,9 @@ namespace GumRuntime
                     {
                         toReturn = TryCreateStrongTypeForElement(baseElement, fullInstantiation, genericType);
                     }
+                    // If it has a base type, but we can't resolve it, it's an error.
+                    // We can still create something useful to avoid falling apart here:
+                    toReturn = new GraphicalUiElement(new InvisibleRenderable());
                 }
             }
 

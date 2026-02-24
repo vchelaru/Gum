@@ -47,12 +47,22 @@ public class FormsFileService
 
         var allFiles = Directory.GetFiles(formsDir, "*.*", SearchOption.AllDirectories);
 
+        // Compute the canonical path of the root-level FontCache folder once, outside the loop
+        string fontCachePath = new DirectoryInfo(Path.Combine(formsDir, "FontCache")).FullName
+            + Path.DirectorySeparatorChar;
+
         foreach (var sourceFile in allFiles)
         {
             var extension = FileManager.GetExtension(sourceFile);
 
+            // Skip font cache — fonts are regenerated locally and should not be copied
+            if (new FileInfo(sourceFile).FullName.StartsWith(fontCachePath, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             // Skip files that are not content or not relevant to import
-            if (extension is "gumx" or "gumfcs" or "ganx" or "codsj")
+            if (extension is "gumx" or "gumfcs" or "ganx" or "codsj" or "bmfc" or "fnt")
             {
                 continue;
             }

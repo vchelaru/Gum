@@ -26,21 +26,12 @@ public class ImportFromGumxViewModel : DialogViewModel
     private readonly GumxImportService _importService;
     private readonly IProjectState _projectState;
 
-    /// <summary>
-    /// The loaded source project; null until LoadPreviewCommand succeeds.
-    /// </summary>
     private GumProjectSave? _sourceProject;
-
-    /// <summary>
-    /// The base path or URL for fetching element files relative to the source .gumx.
-    /// </summary>
     private string _sourceBase = string.Empty;
-
-    /// <summary>
-    /// True after a successful import. When true, clicking the affirmative button closes
-    /// the dialog (allows the user to read any post-import warnings first).
-    /// </summary>
     private bool _isImportComplete;
+
+    private readonly List<ImportTreeNodeViewModel> _allLeafItems = new List<ImportTreeNodeViewModel>();
+    private ImportTreeNodeViewModel? _standardsGroupNode;
 
     public string SourcePath
     {
@@ -61,13 +52,13 @@ public class ImportFromGumxViewModel : DialogViewModel
     public bool IsLocalFile
     {
         get => SourceType == SourceType.LocalFile;
-        set { if (value) SourceType = SourceType.LocalFile; }
+        set { if (value) { SourceType = SourceType.LocalFile; } }
     }
 
     public bool IsUrl
     {
         get => SourceType == SourceType.Url;
-        set { if (value) SourceType = SourceType.Url; }
+        set { if (value) { SourceType = SourceType.Url; } }
     }
 
     public string DestinationSubfolder
@@ -76,10 +67,6 @@ public class ImportFromGumxViewModel : DialogViewModel
         set => Set(value);
     }
 
-    /// <summary>
-    /// True once LoadPreviewCommand has successfully loaded the source project.
-    /// Controls visibility of Phase 2 (selection panel).
-    /// </summary>
     public bool IsPreviewLoaded
     {
         get => Get<bool>();
@@ -90,9 +77,6 @@ public class ImportFromGumxViewModel : DialogViewModel
         }
     }
 
-    /// <summary>
-    /// True while a background operation (load or import) is running.
-    /// </summary>
     public bool IsLoading
     {
         get => Get<bool>();
@@ -104,29 +88,19 @@ public class ImportFromGumxViewModel : DialogViewModel
         }
     }
 
-    /// <summary>
-    /// Error message to display in the UI, if any.
-    /// </summary>
     public string? ErrorMessage
     {
         get => Get<string>();
         set => Set(value);
     }
 
-    /// <summary>
-    /// Warning shown after a successful import when some referenced asset files
-    /// could not be found in the source and were not copied.
-    /// </summary>
     public string? WarningMessage
     {
         get => Get<string>();
         set => Set(value);
     }
 
-    /// <summary>
-    /// Flat list of all importable items (components, screens, behaviors, standards).
-    /// </summary>
-    public ObservableCollection<ImportPreviewItemViewModel> Items { get; } = new();
+    public ObservableCollection<ImportTreeNodeViewModel> RootNodes { get; } = new ObservableCollection<ImportTreeNodeViewModel>();
 
     public AsyncRelayCommand LoadPreviewCommand { get; }
     public RelayCommand SelectAllComponentsCommand { get; }
@@ -151,21 +125,15 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     public override bool CanExecuteAffirmative() => IsPreviewLoaded && !IsLoading;
 
-    /// <summary>
-    /// Called when the user clicks Import (or Close after a completed import).
-    /// Uses async void to remain compatible with the base class's synchronous RelayCommand
-    /// while keeping the dialog open during the import.
-    /// </summary>
     public override async void OnAffirmative()
     {
-        // Second click after a successful import — just close the dialog.
         if (_isImportComplete)
         {
             base.OnAffirmative();
             return;
         }
 
-        if (_sourceProject == null) return;
+        if (_sourceProject == null) { return; }
 
         IsLoading = true;
         ErrorMessage = null;
@@ -180,18 +148,19 @@ public class ImportFromGumxViewModel : DialogViewModel
 
             if (result.MissingAssets.Count > 0)
             {
-                // Stay open so the user can read the warning before dismissing.
                 AffirmativeText = "Close";
                 string assetList = string.Join(", ", result.MissingAssets.Take(5));
                 if (result.MissingAssets.Count > 5)
+                {
                     assetList += $" (and {result.MissingAssets.Count - 5} more)";
+                }
                 WarningMessage =
                     $"{result.MissingAssets.Count} asset file(s) could not be found in the source " +
                     $"and were not copied: {assetList}";
             }
             else
             {
-                base.OnAffirmative(); // Close dialog immediately — no warnings to show
+                base.OnAffirmative();
             }
         }
         catch (Exception ex)
@@ -206,7 +175,7 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     private void ExecuteSelectAllComponents()
     {
-        foreach (var item in Items)
+        foreach (ImportTreeNodeViewModel item in _allLeafItems)
         {
             if (item.ElementType == ElementItemType.Component || item.ElementType == ElementItemType.Screen)
             {
@@ -222,12 +191,17 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     private async Task ExecuteLoadPreviewAsync()
     {
-        if (string.IsNullOrWhiteSpace(SourcePath)) return;
+        if (string.IsNullOrWhiteSpace(SourcePath)) { return; }
 
         IsLoading = true;
         IsPreviewLoaded = false;
         ErrorMessage = null;
-        Items.Clear();
+        foreach (ImportTreeNodeViewModel leaf in _allLeafItems)
+        {
+            leaf.PropertyChanged -= OnItemPropertyChanged;
+        }
+        _allLeafItems.Clear();
+        RootNodes.Clear();
         _sourceProject = null;
 
         try
@@ -244,7 +218,6 @@ public class ImportFromGumxViewModel : DialogViewModel
             _sourceProject = project;
             _sourceBase = _sourceService.GetSourceBase(pathOrUrl);
 
-            // Default destination subfolder to the source project's filename without extension
             if (string.IsNullOrWhiteSpace(DestinationSubfolder))
             {
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(pathOrUrl.TrimEnd('/'));
@@ -266,56 +239,59 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     private void PopulateItems(GumProjectSave project)
     {
-        Items.Clear();
+        foreach (ImportTreeNodeViewModel leaf in _allLeafItems)
+            leaf.PropertyChanged -= OnItemPropertyChanged;
+        _allLeafItems.Clear();
+        RootNodes.Clear();
+        _standardsGroupNode = null;
 
-        // Components first — most commonly imported
+        // Components group
+        var componentsGroup = new ImportTreeNodeViewModel("Components", "Components");
+        var componentLeaves = new List<ImportTreeNodeViewModel>();
         foreach (var component in project.Components.OrderBy(c => c.Name))
         {
-            var item = new ImportPreviewItemViewModel
-            {
-                Name = component.Name,
-                ElementType = ElementItemType.Component,
-                InclusionState = InclusionState.NotIncluded
-            };
-            item.PropertyChanged += OnItemPropertyChanged;
-            Items.Add(item);
+            int lastSlash = component.Name.LastIndexOf('/');
+            string displayName = lastSlash < 0 ? component.Name : component.Name[(lastSlash + 1)..];
+            var leaf = new ImportTreeNodeViewModel(displayName, component.Name, ElementItemType.Component);
+            _allLeafItems.Add(leaf);
+            componentLeaves.Add(leaf);
         }
+        BuildTree(componentLeaves, componentsGroup.Children);
+        RootNodes.Add(componentsGroup);
 
-        // Screens
+        // Screens group
+        var screensGroup = new ImportTreeNodeViewModel("Screens", "Screens");
+        var screenLeaves = new List<ImportTreeNodeViewModel>();
         foreach (var screen in project.Screens.OrderBy(s => s.Name))
         {
-            var item = new ImportPreviewItemViewModel
-            {
-                Name = screen.Name,
-                ElementType = ElementItemType.Screen,
-                InclusionState = InclusionState.NotIncluded
-            };
-            item.PropertyChanged += OnItemPropertyChanged;
-            Items.Add(item);
+            int lastSlash = screen.Name.LastIndexOf('/');
+            string displayName = lastSlash < 0 ? screen.Name : screen.Name[(lastSlash + 1)..];
+            var leaf = new ImportTreeNodeViewModel(displayName, screen.Name, ElementItemType.Screen);
+            _allLeafItems.Add(leaf);
+            screenLeaves.Add(leaf);
         }
+        BuildTree(screenLeaves, screensGroup.Children);
+        RootNodes.Add(screensGroup);
 
-        // Standards (shown in a separate section at the bottom)
-        var destination = _projectState.GumProjectSave;
+        // Standards group — behaviors are inserted before this node in RecomputeTransitiveDependencies
+        _standardsGroupNode = new ImportTreeNodeViewModel("Standards", "Standards");
         foreach (var standard in project.StandardElements.OrderBy(s => s.Name))
         {
-            var item = new ImportPreviewItemViewModel
-            {
-                Name = standard.Name,
-                ElementType = ElementItemType.Standard,
-                InclusionState = InclusionState.NotIncluded
-            };
-            item.PropertyChanged += OnItemPropertyChanged;
-            Items.Add(item);
+            var leaf = new ImportTreeNodeViewModel(standard.Name, standard.Name, ElementItemType.Standard);
+            _allLeafItems.Add(leaf);
+            _standardsGroupNode.Children.Add(leaf);
         }
+        RootNodes.Add(_standardsGroupNode);
 
-        // Behaviors do not appear directly — they appear as transitive items only.
-        // Recompute transitive dependencies after populating.
+        foreach (ImportTreeNodeViewModel leaf in _allLeafItems)
+            leaf.PropertyChanged += OnItemPropertyChanged;
+
         RecomputeTransitiveDependencies();
     }
 
     private void OnItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ImportPreviewItemViewModel.InclusionState))
+        if (e.PropertyName == nameof(ImportTreeNodeViewModel.InclusionState))
         {
             RecomputeTransitiveDependencies();
         }
@@ -323,19 +299,18 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     private void RecomputeTransitiveDependencies()
     {
-        if (_sourceProject == null) return;
+        if (_sourceProject == null) { return; }
 
-        // Gather directly-selected elements (Explicit state only)
-        var directComponents = Items
+        var directComponents = _allLeafItems
             .Where(i => i.ElementType == ElementItemType.Component && i.InclusionState == InclusionState.Explicit)
-            .Select(i => _sourceProject.Components.FirstOrDefault(c => c.Name == i.Name))
+            .Select(i => _sourceProject.Components.FirstOrDefault(c => c.Name == i.FullName))
             .Where(c => c != null)
             .Cast<ElementSave>()
             .ToList();
 
-        var directScreens = Items
+        var directScreens = _allLeafItems
             .Where(i => i.ElementType == ElementItemType.Screen && i.InclusionState == InclusionState.Explicit)
-            .Select(i => _sourceProject.Screens.FirstOrDefault(s => s.Name == i.Name))
+            .Select(i => _sourceProject.Screens.FirstOrDefault(s => s.Name == i.FullName))
             .Where(s => s != null)
             .Cast<ElementSave>()
             .ToList();
@@ -345,12 +320,9 @@ public class ImportFromGumxViewModel : DialogViewModel
         var destination = _projectState.GumProjectSave;
         var deps = _dependencyResolver.ComputeTransitive(directSelected, _sourceProject, destination);
 
-        // Build a set of auto-included component names
         var autoComponentNames = new HashSet<string>(deps.TransitiveComponents.Select(c => c.Name));
-        var behaviorNames = new HashSet<string>(deps.Behaviors.Select(b => b.Name));
 
-        // Reset all AutoIncluded items to NotIncluded first (unless they're Explicit)
-        foreach (var item in Items)
+        foreach (ImportTreeNodeViewModel item in _allLeafItems)
         {
             if (item.InclusionState == InclusionState.AutoIncluded)
             {
@@ -361,53 +333,46 @@ public class ImportFromGumxViewModel : DialogViewModel
             }
         }
 
-        // Mark transitive components as AutoIncluded
-        foreach (var item in Items.Where(i => i.ElementType == ElementItemType.Component))
+        foreach (ImportTreeNodeViewModel item in _allLeafItems.Where(i => i.ElementType == ElementItemType.Component))
         {
-            if (autoComponentNames.Contains(item.Name) && item.InclusionState == InclusionState.NotIncluded)
+            if (autoComponentNames.Contains(item.FullName) && item.InclusionState == InclusionState.NotIncluded)
             {
                 item.PropertyChanged -= OnItemPropertyChanged;
                 item.InclusionState = InclusionState.AutoIncluded;
-                item.AutoIncludedReason = BuildAutoIncludeReason(item.Name, directSelected, _sourceProject);
+                item.AutoIncludedReason = BuildAutoIncludeReason(item.FullName, directSelected, _sourceProject);
                 item.PropertyChanged += OnItemPropertyChanged;
             }
         }
 
-        // Remove existing behavior items and re-add based on current deps
-        var existingBehaviorItems = Items
+        var existingBehaviorItems = _allLeafItems
             .Where(i => i.ElementType == ElementItemType.Behavior)
             .ToList();
-        foreach (var b in existingBehaviorItems)
+        foreach (ImportTreeNodeViewModel b in existingBehaviorItems)
         {
             b.PropertyChanged -= OnItemPropertyChanged;
-            Items.Remove(b);
+            _allLeafItems.Remove(b);
+            RootNodes.Remove(b);
         }
 
-        // Find the insertion index: before the first Standard item
-        int standardIndex = Items.IndexOf(Items.FirstOrDefault(i => i.ElementType == ElementItemType.Standard)!);
-        int insertAt = standardIndex >= 0 ? standardIndex : Items.Count;
+        int insertAt = _standardsGroupNode != null ? RootNodes.IndexOf(_standardsGroupNode) : RootNodes.Count;
 
         foreach (var behavior in deps.Behaviors.OrderBy(b => b.Name))
         {
-            var item = new ImportPreviewItemViewModel
-            {
-                Name = behavior.Name,
-                ElementType = ElementItemType.Behavior,
-                InclusionState = InclusionState.AutoIncluded,
-                AutoIncludedReason = "required by a selected component"
-            };
+            ImportTreeNodeViewModel item = new ImportTreeNodeViewModel(behavior.Name, behavior.Name, ElementItemType.Behavior);
+            item.InclusionState = InclusionState.AutoIncluded;
+            item.AutoIncludedReason = "required by a selected component";
             item.PropertyChanged += OnItemPropertyChanged;
-            Items.Insert(insertAt++, item);
+            _allLeafItems.Add(item);
+            RootNodes.Insert(insertAt++, item);
         }
 
-        // Update standards: ☑ if referenced and differing, ☐ otherwise
         var differingStandardNames = new HashSet<string>(deps.DifferingStandards.Select(s => s.Name));
-        foreach (var item in Items.Where(i => i.ElementType == ElementItemType.Standard))
+        foreach (ImportTreeNodeViewModel item in _allLeafItems.Where(i => i.ElementType == ElementItemType.Standard))
         {
             if (item.InclusionState != InclusionState.Explicit)
             {
                 item.PropertyChanged -= OnItemPropertyChanged;
-                item.InclusionState = differingStandardNames.Contains(item.Name)
+                item.InclusionState = differingStandardNames.Contains(item.FullName)
                     ? InclusionState.Explicit
                     : InclusionState.NotIncluded;
                 item.PropertyChanged += OnItemPropertyChanged;
@@ -420,7 +385,6 @@ public class ImportFromGumxViewModel : DialogViewModel
         IList<ElementSave> directSelected,
         GumProjectSave source)
     {
-        // Find which directly selected element first references this component
         foreach (var element in directSelected)
         {
             if (element.Instances.Any(i => i.BaseType == componentName))
@@ -443,39 +407,39 @@ public class ImportFromGumxViewModel : DialogViewModel
         var behaviorsByName = _sourceProject.Behaviors.ToDictionary(b => b.Name);
         var standardsByName = _sourceProject.StandardElements.ToDictionary(s => s.Name);
 
-        var directComponents = Items
+        var directComponents = _allLeafItems
             .Where(i => i.ElementType == ElementItemType.Component && i.InclusionState == InclusionState.Explicit)
-            .Select(i => componentsByName.TryGetValue(i.Name, out var c) ? c : null)
+            .Select(i => componentsByName.TryGetValue(i.FullName, out var c) ? c : null)
             .Where(c => c != null)
             .Cast<ComponentSave>()
             .ToList();
 
-        var directScreens = Items
+        var directScreens = _allLeafItems
             .Where(i => i.ElementType == ElementItemType.Screen && i.InclusionState == InclusionState.Explicit)
-            .Select(i => screensByName.TryGetValue(i.Name, out var s) ? s : null)
+            .Select(i => screensByName.TryGetValue(i.FullName, out var s) ? s : null)
             .Where(s => s != null)
             .Cast<ScreenSave>()
             .ToList();
 
-        var transitiveComponents = Items
+        var transitiveComponents = _allLeafItems
             .Where(i => i.ElementType == ElementItemType.Component && i.InclusionState == InclusionState.AutoIncluded)
-            .Select(i => componentsByName.TryGetValue(i.Name, out var c) ? c : null)
+            .Select(i => componentsByName.TryGetValue(i.FullName, out var c) ? c : null)
             .Where(c => c != null)
             .Cast<ComponentSave>()
             .ToList();
 
-        var behaviors = Items
+        var behaviors = _allLeafItems
             .Where(i => i.ElementType == ElementItemType.Behavior
                         && (i.InclusionState == InclusionState.AutoIncluded || i.InclusionState == InclusionState.Explicit))
-            .Select(i => behaviorsByName.TryGetValue(i.Name, out var b) ? b : null)
+            .Select(i => behaviorsByName.TryGetValue(i.FullName, out var b) ? b : null)
             .Where(b => b != null)
             .Cast<BehaviorSave>()
             .ToList();
 
-        var standards = Items
+        var standards = _allLeafItems
             .Where(i => i.ElementType == ElementItemType.Standard
                         && (i.InclusionState == InclusionState.Explicit || i.InclusionState == InclusionState.AutoIncluded))
-            .Select(i => standardsByName.TryGetValue(i.Name, out var s) ? s : null)
+            .Select(i => standardsByName.TryGetValue(i.FullName, out var s) ? s : null)
             .Where(s => s != null)
             .Cast<StandardElementSave>()
             .ToList();
@@ -488,5 +452,51 @@ public class ImportFromGumxViewModel : DialogViewModel
             Behaviors = behaviors,
             Standards = standards
         };
+    }
+
+    private static void BuildTree(List<ImportTreeNodeViewModel> leaves, ObservableCollection<ImportTreeNodeViewModel> rootNodes)
+    {
+        var foldersByPath = new Dictionary<string, ImportTreeNodeViewModel>(StringComparer.OrdinalIgnoreCase);
+        foreach (ImportTreeNodeViewModel leaf in leaves)
+        {
+            int lastSlash = leaf.FullName.LastIndexOf('/');
+            if (lastSlash < 0)
+            {
+                rootNodes.Add(leaf);
+            }
+            else
+            {
+                ImportTreeNodeViewModel folder = EnsureFolder(rootNodes, foldersByPath, leaf.FullName[..lastSlash]);
+                folder.Children.Add(leaf);
+            }
+        }
+    }
+
+    private static ImportTreeNodeViewModel EnsureFolder(
+        ObservableCollection<ImportTreeNodeViewModel> rootNodes,
+        Dictionary<string, ImportTreeNodeViewModel> foldersByPath,
+        string folderPath)
+    {
+        if (foldersByPath.TryGetValue(folderPath, out ImportTreeNodeViewModel? existing))
+        {
+            return existing;
+        }
+
+        int lastSlash = folderPath.LastIndexOf('/');
+        string displayName = lastSlash < 0 ? folderPath : folderPath[(lastSlash + 1)..];
+        ImportTreeNodeViewModel folder = new ImportTreeNodeViewModel(displayName, folderPath);
+        foldersByPath[folderPath] = folder;
+
+        if (lastSlash < 0)
+        {
+            rootNodes.Add(folder);
+        }
+        else
+        {
+            ImportTreeNodeViewModel parent = EnsureFolder(rootNodes, foldersByPath, folderPath[..lastSlash]);
+            parent.Children.Add(folder);
+        }
+
+        return folder;
     }
 }
