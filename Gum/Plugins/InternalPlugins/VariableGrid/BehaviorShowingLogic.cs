@@ -16,7 +16,7 @@ internal static class BehaviorShowingLogic
     {
         List<MemberCategory> toReturn = new List<MemberCategory>();
 
-        var category = new MemberCategory();
+        var category = new MemberCategory("Behavior Properties");
         toReturn.Add(category);
 
         var defaultImplementationMember = AddMemberFor<string>(nameof(BehaviorSave.DefaultImplementation),
