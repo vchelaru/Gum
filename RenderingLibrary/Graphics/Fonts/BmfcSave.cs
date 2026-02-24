@@ -137,7 +137,7 @@ public class BmfcSave
     private static List<int> ParseCharRanges(string charsStr)
     {
         var allChars = new List<int>();
-        var ranges = charsStr.Split([','], StringSplitOptions.RemoveEmptyEntries);
+        var ranges = charsStr.Split(',', StringSplitOptions.RemoveEmptyEntries);
         foreach(var part in ranges)
         {
             if(part.Contains('-'))
