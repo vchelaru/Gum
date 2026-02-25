@@ -42,7 +42,7 @@ public class ImportLogic : IImportLogic
         ScreenSave? screenSave = null;
         if (shouldAdd)
         {
-            screenSave = FileManager.XmlDeserialize<ScreenSave>(filePath.FullPath);
+            screenSave = ElementReference.DeserializeElement<ScreenSave>(filePath.FullPath, GumProjectSave.NativeVersion);
 
             var isDuplicate = ObjectFinder.Self.GetElementSave(screenSave.Name) != null;
 
@@ -84,7 +84,7 @@ public class ImportLogic : IImportLogic
         ComponentSave? componentSave = null;
         if (shouldAdd)
         {
-            componentSave = FileManager.XmlDeserialize<ComponentSave>(filePath.FullPath);
+            componentSave = ElementReference.DeserializeElement<ComponentSave>(filePath.FullPath, GumProjectSave.NativeVersion);
 
             var isDuplicate = ObjectFinder.Self.GetElementSave(componentSave.Name) != null;
 
@@ -203,7 +203,7 @@ public class ImportLogic : IImportLogic
         {
             string strippedName = filePath.RemoveExtension().FileNameNoPath;
 
-            var behaviorSave = FileManager.XmlDeserialize<BehaviorSave>(filePath.FullPath);
+            var behaviorSave = BehaviorReference.DeserializeBehavior(filePath.FullPath, GumProjectSave.NativeVersion);
 
             var behaviorReferences = _projectManager.GumProjectSave.BehaviorReferences;
             behaviorReferences.Add(new BehaviorReference { Name = behaviorSave.Name });
