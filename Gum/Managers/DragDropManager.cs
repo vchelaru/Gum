@@ -757,18 +757,22 @@ public class DragDropManager : IDragDropManager
             return false;
         }
 
-        // Component folders must target component folder hierarchy
-        if (isDraggedComponentsFolder &&
-            !targetTreeNode.IsComponentsFolderTreeNode() &&
-            !targetTreeNode.IsTopComponentContainerTreeNode())
+        // Target must be in the same folder hierarchy as the source
+        bool isTargetInSameHierarchy;
+        if (isDraggedComponentsFolder)
+        {
+            isTargetInSameHierarchy = targetTreeNode.IsComponentsFolderTreeNode() || targetTreeNode.IsTopComponentContainerTreeNode();
+        }
+        else if (isDraggedScreensFolder)
+        {
+            isTargetInSameHierarchy = targetTreeNode.IsScreensFolderTreeNode() || targetTreeNode.IsTopScreenContainerTreeNode();
+        }
+        else
         {
             return false;
         }
 
-        // Screen folders must target screen folder hierarchy
-        if (isDraggedScreensFolder &&
-            !targetTreeNode.IsScreensFolderTreeNode() &&
-            !targetTreeNode.IsTopScreenContainerTreeNode())
+        if (!isTargetInSameHierarchy)
         {
             return false;
         }
@@ -845,52 +849,26 @@ public class DragDropManager : IDragDropManager
         string projectFolder =
             FileManager.GetDirectory(_projectManager.GumProjectSave.FullFileName);
 
+        string subfolder;
+        IEnumerable<ElementSave> elements;
+
         if (draggedFolderNode.IsComponentsFolderTreeNode())
         {
-            string root = projectFolder + ElementReference.ComponentSubfolder + "/";
-            string oldRel = FileManager.MakeRelative(
-                oldFullPath.FullPath, root, preserveCase: true).Replace("\\", "/");
-            string newRel = FileManager.MakeRelative(
-                newFullPath, root, preserveCase: true).Replace("\\", "/");
-
-            foreach (var component in _projectState.GumProjectSave.Components.ToArray())
-            {
-                if (component.Name.Replace("\\", "/")
-                    .StartsWith(oldRel, StringComparison.OrdinalIgnoreCase))
-                {
-                    string oldName = component.Name;
-                    component.Name = (newRel
-                        + component.Name.Substring(oldRel.Length)).Replace("\\", "/");
-                    _renameLogic.HandleRename(component, (InstanceSave?)null,
-                        oldName, NameChangeAction.Move, askAboutRename: false);
-                }
-            }
+            subfolder = ElementReference.ComponentSubfolder;
+            elements = _projectState.GumProjectSave.Components;
         }
         else if (draggedFolderNode.IsScreensFolderTreeNode())
         {
-            string root = projectFolder + ElementReference.ScreenSubfolder + "/";
-            string oldRel = FileManager.MakeRelative(
-                oldFullPath.FullPath, root, preserveCase: true).Replace("\\", "/");
-            string newRel = FileManager.MakeRelative(
-                newFullPath, root, preserveCase: true).Replace("\\", "/");
-
-            foreach (var screen in _projectState.GumProjectSave.Screens.ToArray())
-            {
-                if (screen.Name.Replace("\\", "/")
-                    .StartsWith(oldRel, StringComparison.OrdinalIgnoreCase))
-                {
-                    string oldName = screen.Name;
-                    screen.Name = (newRel
-                        + screen.Name.Substring(oldRel.Length)).Replace("\\", "/");
-                    _renameLogic.HandleRename(screen, (InstanceSave?)null,
-                        oldName, NameChangeAction.Move, askAboutRename: false);
-                }
-            }
+            subfolder = ElementReference.ScreenSubfolder;
+            elements = _projectState.GumProjectSave.Screens;
         }
         else
         {
             return;
         }
+
+        MoveElementsToFolder(elements, projectFolder + subfolder + "/",
+            oldFullPath.FullPath, newFullPath);
 
         try
         {
@@ -903,6 +881,28 @@ public class DragDropManager : IDragDropManager
         }
 
         _guiCommands.RefreshElementTreeView();
+    }
+
+    private void MoveElementsToFolder(IEnumerable<ElementSave> elements,
+        string root, string oldFullPath, string newFullPath)
+    {
+        string oldRel = FileManager.MakeRelative(oldFullPath, root, preserveCase: true)
+            .Replace("\\", "/");
+        string newRel = FileManager.MakeRelative(newFullPath, root, preserveCase: true)
+            .Replace("\\", "/");
+
+        foreach (var element in elements.ToArray())
+        {
+            if (element.Name.Replace("\\", "/")
+                .StartsWith(oldRel, StringComparison.OrdinalIgnoreCase))
+            {
+                string oldName = element.Name;
+                element.Name = (newRel + element.Name.Substring(oldRel.Length))
+                    .Replace("\\", "/");
+                _renameLogic.HandleRename(element, (InstanceSave?)null,
+                    oldName, NameChangeAction.Move, askAboutRename: false);
+            }
+        }
     }
 
     public void OnFilesDroppedInTreeView(string[] files)
