@@ -36,6 +36,11 @@ public enum VariableRefreshType
 
 public class SetVariableLogic : ISetVariableLogic
 {
+    /// <summary>
+    /// Variables with a FullGridRefresh cause the entire variable tab to be rebuilt
+    /// sine changing them may add or remove other variables. Variables with a FullGridValueRefresh
+    /// have a slight performane cost when set.
+    /// </summary>
     Dictionary<string, VariableRefreshType> VariablesRequiringRefresh = new ()
     {
         {"Parent",                                                 VariableRefreshType.FullGridRefresh   },
@@ -45,7 +50,6 @@ public class SetVariableLogic : ISetVariableLogic
         {"BaseType",                                               VariableRefreshType.FullGridRefresh   },
         {"IsRenderTarget",                                         VariableRefreshType.FullGridRefresh   },
         {"TextOverflowVerticalMode",                               VariableRefreshType.FullGridRefresh   },
-        {"Locked",                                                 VariableRefreshType.FullGridRefresh   },
         // These are handled in the SubtextLogic
         //{"XUnits",                                                 VariableRefreshType.FullGridRefresh   },
         //{ "YUnits",                                                 VariableRefreshType.FullGridRefresh }
