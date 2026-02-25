@@ -90,7 +90,7 @@ public class ImportLogic : IImportLogic
 
             if(isDuplicate)
             {
-                _dialogService.ShowMessage($"This project already a component named {componentSave.Name} in this project");
+                _dialogService.ShowMessage($"This project already contains a component named {componentSave.Name}");
                 shouldAdd = false;
             }
         }
