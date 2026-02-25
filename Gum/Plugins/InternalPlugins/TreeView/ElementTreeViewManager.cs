@@ -66,7 +66,7 @@ class ExpandedState
         foreach(TreeNode subNode in treeNode.Nodes)
         {
             // we only care about directory nodes, as only those are going to be recorded.
-            if (subNode.Nodes.Count > 0 && subNode.Tag == null)
+            if (subNode.Nodes.Count > 0 && subNode.Tag is FolderType)
             {
                 // record this bad boy:
                 Record(subNode);
@@ -265,7 +265,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         while(treeNode != null)
         {
-            if (treeNode.Tag != null)
+            if (treeNode.Tag != null && treeNode.Tag is not FolderType)
             {
                 Select(treeNode);
                 break;
@@ -786,10 +786,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
 
             // add folders to the screens, entities, and standard elements
-            AddAndRemoveFolderNodesFromFileSystem(mStandardElementsTreeNode.GetFullFilePath()!.FullPath, mStandardElementsTreeNode.Nodes);
-            AddAndRemoveFolderNodesFromFileSystem(mScreensTreeNode.GetFullFilePath()!.FullPath, mScreensTreeNode.Nodes);
-            AddAndRemoveFolderNodesFromFileSystem(mComponentsTreeNode.GetFullFilePath()!.FullPath, mComponentsTreeNode.Nodes);
-            AddAndRemoveFolderNodesFromFileSystem(mBehaviorsTreeNode.GetFullFilePath()!.FullPath, mBehaviorsTreeNode.Nodes);
+            AddAndRemoveFolderNodesFromFileSystem(mStandardElementsTreeNode.GetFullFilePath()!.FullPath, mStandardElementsTreeNode.Nodes, FolderType.Standard);
+            AddAndRemoveFolderNodesFromFileSystem(mScreensTreeNode.GetFullFilePath()!.FullPath, mScreensTreeNode.Nodes, FolderType.Screens);
+            AddAndRemoveFolderNodesFromFileSystem(mComponentsTreeNode.GetFullFilePath()!.FullPath, mComponentsTreeNode.Nodes, FolderType.Components);
+            AddAndRemoveFolderNodesFromFileSystem(mBehaviorsTreeNode.GetFullFilePath()!.FullPath, mBehaviorsTreeNode.Nodes, FolderType.Behaviors);
 
 
             AddNeededButMissingFromFileSystemFolderNodes();
@@ -860,13 +860,21 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 }
                 treeNode = parentNode.Nodes.Add(treeNodeText);
                 treeNode.ImageIndex = ExclamationIndex;
+                // Inherit the parent's folder type (Components, Screens, etc.)
+                // so this node knows which hierarchy it belongs to
+                if (parentNode.Tag is FolderType parentFolderType)
+                {
+                    treeNode.Tag = parentFolderType;
+                }
             }
         }
 
         return treeNode!;
     }
 
-    private void AddAndRemoveFolderNodesFromFileSystem(string currentDirectory, TreeNodeCollection nodesToAddTo)
+    // folderType is passed explicitly even though it could be inferred from the parent node's Tag,
+    // to avoid assumptions about the parent always being a tagged folder node.
+    private void AddAndRemoveFolderNodesFromFileSystem(string currentDirectory, TreeNodeCollection nodesToAddTo, FolderType folderType)
     {
         // todo: removes
         var directories = Directory.EnumerateDirectories(currentDirectory).ToArray();
@@ -879,8 +887,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 existingTreeNode = nodesToAddTo.Add(FileManager.RemovePath(directory));
                 existingTreeNode.ImageIndex = FolderImageIndex;
+                existingTreeNode.Tag = folderType;
             }
-            AddAndRemoveFolderNodesFromFileSystem(directory, existingTreeNode.Nodes);
+            AddAndRemoveFolderNodesFromFileSystem(directory, existingTreeNode.Nodes, folderType);
         }
 
         for(int i = nodesToAddTo.Count - 1; i > -1; i--)
@@ -900,8 +909,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 }
             }
 
-            // only remove nodes if they are directory nodes (aka they have a null tag)
-            if (!found && node.Tag == null)
+            // only remove nodes if they are directory nodes
+            if (!found && node.Tag is FolderType)
             {
                 nodesToAddTo.RemoveAt(i);
             }               
@@ -1045,7 +1054,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         for (int i = mStandardElementsTreeNode.Nodes.Count - 1; i > -1; i-- )
         {
             // Do we want to support folders here?
-            StandardElementSave? standardElement = mStandardElementsTreeNode.Nodes[i].Tag as StandardElementSave;
+            var nodeTag = mStandardElementsTreeNode.Nodes[i].Tag;
+            if (nodeTag is FolderType)
+            {
+                continue;
+            }
+            StandardElementSave? standardElement = nodeTag as StandardElementSave;
 
             if (standardElement == null || !gumProject.StandardElements.Contains(standardElement) || !ShouldShow(standardElement))
             {
@@ -1176,18 +1190,22 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         if (mScreensTreeNode == null)
         {
             mScreensTreeNode = new TreeNode("Screens");
+            mScreensTreeNode.Tag = FolderType.Screens;
             mScreensTreeNode.ImageIndex = FolderImageIndex;
             ObjectTreeView.Nodes.Add(mScreensTreeNode);
 
             mComponentsTreeNode = new TreeNode("Components");
+            mComponentsTreeNode.Tag = FolderType.Components;
             mComponentsTreeNode.ImageIndex = FolderImageIndex;
             ObjectTreeView.Nodes.Add(mComponentsTreeNode);
 
             mStandardElementsTreeNode = new TreeNode("Standard");
+            mStandardElementsTreeNode.Tag = FolderType.Standard;
             mStandardElementsTreeNode.ImageIndex = FolderImageIndex;
             ObjectTreeView.Nodes.Add(mStandardElementsTreeNode);
 
             mBehaviorsTreeNode = new TreeNode("Behaviors");
+            mBehaviorsTreeNode.Tag = FolderType.Behaviors;
             mBehaviorsTreeNode.ImageIndex = FolderImageIndex;
             ObjectTreeView.Nodes.Add(mBehaviorsTreeNode);
         }
@@ -1630,6 +1648,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // Let's be smart about removal...
         foreach(TreeNode instanceNode in allTreeNodesRecursively)
         {
+            if (instanceNode.Tag is FolderType)
+            {
+                continue;
+            }
             var instance = instanceNode.Tag as InstanceSave;
 
             if(instance == null || !allInstances.Contains(instance))
@@ -1738,6 +1760,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // Remove nodes that no longer have a corresponding instance
         foreach (TreeNode instanceNode in node.Nodes.Cast<TreeNode>().ToList())
         {
+            if (instanceNode.Tag is FolderType)
+            {
+                continue;
+            }
             var instance = instanceNode.Tag as InstanceSave;
             if (instance == null || !allInstances.Contains(instance))
             {
@@ -1862,7 +1888,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         try
         {
             IsInUiInitiatedSelection = true;
-            if (selectedObject == null)
+            if (selectedObject == null || selectedObject is FolderType)
             {
                 _selectedState.SelectedElement = null;
                 _selectedState.SelectedBehavior = null;
@@ -2010,7 +2036,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         //RefreshUi();
 
-        if (!string.IsNullOrEmpty(filterText) && SelectedNode?.Tag == null)
+        if (!string.IsNullOrEmpty(filterText) && SelectedNode?.Tag is FolderType)
         {
             //SelectFirstElement();
         }
@@ -2161,7 +2187,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         ElementSave? element = null;
         InstanceSave? instance = null;
 
-        if(objectOver != null && objectOver.Tag != null)
+        if(objectOver != null && objectOver.Tag != null && objectOver.Tag is not FolderType)
         {
             if(objectOver.Tag is ElementSave)
             {
@@ -2316,7 +2342,7 @@ public static class TreeNodeExtensionMethods
     /// </remarks>
     public static bool IsTopElementContainerTreeNode(this TreeNode treeNode)
     {
-        return treeNode.Tag == null && treeNode.Parent == null;
+        return treeNode.Tag is FolderType && treeNode.Parent == null;
     }
 
     /// <summary>
@@ -2530,7 +2556,7 @@ public static class TreeNodeExtensionMethods
     /// </remarks>
     public static bool IsScreensFolderTreeNode(this TreeNode treeNode)
     {
-        return treeNode.Tag == null &&
+        return treeNode.Tag is FolderType &&
             treeNode.Parent != null &&
             (treeNode.Parent.IsScreensFolderTreeNode() ||
             // If the parent is the top screen container and this has no tag, then this is a folder:
@@ -2666,7 +2692,7 @@ public static class TreeNodeExtensionMethods
     /// </remarks>
     public static bool IsComponentsFolderTreeNode(this TreeNode treeNode)
     {
-        return treeNode.Tag == null &&
+        return treeNode.Tag is FolderType &&
             treeNode.Parent != null &&
             (treeNode.Parent.IsComponentsFolderTreeNode() ||
             // If the parent is the top component container and this has no tag, then this is a folder:

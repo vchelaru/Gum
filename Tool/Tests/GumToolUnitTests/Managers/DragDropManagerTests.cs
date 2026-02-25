@@ -216,9 +216,9 @@ public class DragDropManagerTests : BaseTestClass
         destinationComponent.States.Add(new());
         destinationComponent.Instances.Add(new InstanceSave() { Name = "Instance1" });
 
-        // Folder node (Tag = null) - simulates a folder in the tree view
+        // Folder node - simulates a folder in the tree view
         Mock<ITreeNode> folderNode = new Mock<ITreeNode>();
-        folderNode.Setup(x => x.Tag).Returns((object)null);
+        folderNode.Setup(x => x.Tag).Returns(FolderType.Components);
 
         // Instance node
         Mock<ITreeNode> instanceNode = new Mock<ITreeNode>();
@@ -254,7 +254,7 @@ public class DragDropManagerTests : BaseTestClass
     {
         // Arrange
         Mock<ITreeNode> draggedNode = new Mock<ITreeNode>();
-        draggedNode.Setup(x => x.Tag).Returns((object)null);
+        draggedNode.Setup(x => x.Tag).Returns(FolderType.Components);
 
         // Act
         var result = _dragDropManager.ValidateNodeSorting(
@@ -267,13 +267,13 @@ public class DragDropManagerTests : BaseTestClass
     [Fact]
     public void ValidateNodeSorting_FolderNodeWithNullTag_DoesNotThrow()
     {
-        // Arrange - folder node has Tag=null, unlike element/instance nodes
+        // Arrange - folder node has FolderType, unlike element/instance nodes
         Mock<ITreeNode> folderNode = new Mock<ITreeNode>();
-        folderNode.Setup(x => x.Tag).Returns((object)null);
+        folderNode.Setup(x => x.Tag).Returns(FolderType.Components);
         folderNode.Setup(x => x.GetFullFilePath()).Returns(new FilePath("C:\\test\\folder\\"));
 
         Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
-        targetNode.Setup(x => x.Tag).Returns((object)null);
+        targetNode.Setup(x => x.Tag).Returns(FolderType.Components);
         targetNode.Setup(x => x.GetFullFilePath()).Returns(new FilePath("C:\\test\\other\\"));
 
         // Act - should not throw; returns false because mocked ITreeNode
@@ -288,12 +288,12 @@ public class DragDropManagerTests : BaseTestClass
     [Fact]
     public void OnNodeSortingDropped_OnlyFolderNodes_DoesNotThrow()
     {
-        // Arrange - only folder nodes (Tag=null), no tagged nodes
+        // Arrange - only folder nodes, no element/instance nodes
         Mock<ITreeNode> folderNode = new Mock<ITreeNode>();
-        folderNode.Setup(x => x.Tag).Returns((object)null);
+        folderNode.Setup(x => x.Tag).Returns(FolderType.Components);
 
         Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
-        targetNode.Setup(x => x.Tag).Returns((object)null);
+        targetNode.Setup(x => x.Tag).Returns(FolderType.Components);
 
         List<ITreeNode> draggedNodes = new() { folderNode.Object };
 

@@ -645,7 +645,7 @@ public class DragDropManager : IDragDropManager
         var draggedObject = draggedNode.Tag;
         var target = targetTreeNode.Tag;
 
-        if (draggedObject == null)
+        if (draggedObject is FolderType)
         {
             return ValidateFolderDrop(draggedNode, targetTreeNode);
         }
@@ -804,7 +804,7 @@ public class DragDropManager : IDragDropManager
         // Sort so that folders come first (they restructure the tree),
         // then InstanceSaves by descending index (so insertion order is preserved).
         var sortedNodes = draggedNodes
-            .OrderBy(n => n.Tag == null ? 0 : 1)
+            .OrderBy(n => n.Tag is FolderType ? 0 : 1)
             .ThenByDescending(n => n.Tag is InstanceSave instance
                 ? instance.ParentContainer?.Instances.IndexOf(instance) ?? int.MinValue
                 : int.MinValue)
@@ -921,7 +921,7 @@ public class DragDropManager : IDragDropManager
         {
             object targetTag = treeNodeDroppedOn.Tag;
 
-            if (draggedObject == null)
+            if (draggedObject is FolderType)
             {
                 HandleDroppedFolder(draggedNode, treeNodeDroppedOn);
             }

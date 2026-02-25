@@ -1,4 +1,5 @@
 using CommonFormsAndControls;
+using Gum.DataTypes;
 using Gum.Controls;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
@@ -621,7 +622,7 @@ internal class ElementTreeViewCreator
         {
             // If this node has a Tag, it's an element (Screen, Component, Behavior, Instance)
             // so we should collapse it
-            if (node.Tag != null)
+            if (node.Tag != null && node.Tag is not FolderType)
             {
                 node.Collapse();
             }
