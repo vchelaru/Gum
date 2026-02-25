@@ -257,6 +257,14 @@ public class GumxDependencyResolver
 
     private static bool StandardsDiffer(StandardElementSave source, StandardElementSave destination)
     {
+        // Compare categories — forms controls add state categories (e.g., TextColor)
+        // to standard elements. If the source has categories the destination doesn't,
+        // the standard must be imported.
+        var sourceCategoryNames = source.Categories.Select(c => c.Name).OrderBy(n => n);
+        var destCategoryNames = destination.Categories.Select(c => c.Name).OrderBy(n => n);
+        if (!sourceCategoryNames.SequenceEqual(destCategoryNames)) return true;
+
+        // Compare default states
         var sourceDefault = source.DefaultState;
         var destDefault = destination.DefaultState;
 

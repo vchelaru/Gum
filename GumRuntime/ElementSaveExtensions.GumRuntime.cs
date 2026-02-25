@@ -165,7 +165,7 @@ namespace GumRuntime
                     }
                     // If it has a base type, but we can't resolve it, it's an error.
                     // We can still create something useful to avoid falling apart here:
-                    toReturn = new GraphicalUiElement(new InvisibleRenderable());
+                    toReturn = toReturn ?? new GraphicalUiElement(new InvisibleRenderable());
                 }
             }
 
