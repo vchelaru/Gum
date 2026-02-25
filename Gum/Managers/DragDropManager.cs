@@ -635,22 +635,19 @@ public class DragDropManager : IDragDropManager
     {
         if (targetNode == null) return false;
 
-        var toReturn = draggedNodes.All(item => ValidateDrop(item.Tag, targetNode, item));
+        var toReturn = draggedNodes.All(item => ValidateDrop(item, targetNode));
 
         return toReturn;
     }
 
-    bool ValidateDrop(object draggedObject, ITreeNode targetTreeNode, ITreeNode? draggedNode = null)
+    bool ValidateDrop(ITreeNode draggedNode, ITreeNode targetTreeNode)
     {
+        var draggedObject = draggedNode.Tag;
         var target = targetTreeNode.Tag;
 
         if (draggedObject == null)
         {
-            if (draggedNode != null)
-            {
-                return ValidateFolderDrop(draggedNode, targetTreeNode);
-            }
-            return false;
+            return ValidateFolderDrop(draggedNode, targetTreeNode);
         }
 
         if(target is StandardElementSave)
@@ -804,26 +801,20 @@ public class DragDropManager : IDragDropManager
 
     public void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
     {
-        var folderNodes = draggedNodes.Where(n => n.Tag == null).ToList();
-        var taggedNodes = draggedNodes
-            .Where(n => n.Tag != null)
-            .OrderByDescending(n => n.Tag is InstanceSave instance
+        // Sort so that folders come first (they restructure the tree),
+        // then InstanceSaves by descending index (so insertion order is preserved).
+        var sortedNodes = draggedNodes
+            .OrderBy(n => n.Tag == null ? 0 : 1)
+            .ThenByDescending(n => n.Tag is InstanceSave instance
                 ? instance.ParentContainer?.Instances.IndexOf(instance) ?? int.MinValue
                 : int.MinValue)
             .ToList();
 
         using var undoLock = _undoManager.RequestLock();
 
-        // Handle folder drops first (they restructure the tree)
-        foreach (var folderNode in folderNodes)
+        foreach (var node in sortedNodes)
         {
-            HandleDroppedFolder(folderNode, targetNode);
-        }
-
-        // Handle element/instance/behavior drops
-        foreach (var node in taggedNodes)
-        {
-            HandleDroppedItemOnTreeView(node.Tag, targetNode, index);
+            HandleDroppedItemOnTreeView(node, targetNode, index);
         }
     }
 
@@ -922,14 +913,19 @@ public class DragDropManager : IDragDropManager
         }
     }
 
-    private void HandleDroppedItemOnTreeView(object draggedObject, ITreeNode treeNodeDroppedOn, int index)
+    private void HandleDroppedItemOnTreeView(ITreeNode draggedNode, ITreeNode treeNodeDroppedOn, int index)
     {
+        var draggedObject = draggedNode.Tag;
         Console.WriteLine($"Dropping{draggedObject} on {treeNodeDroppedOn}");
         if (treeNodeDroppedOn != null)
         {
             object targetTag = treeNodeDroppedOn.Tag;
 
-            if (draggedObject is ElementSave)
+            if (draggedObject == null)
+            {
+                HandleDroppedFolder(draggedNode, treeNodeDroppedOn);
+            }
+            else if (draggedObject is ElementSave)
             {
                 HandleDroppedElementSave(draggedObject, treeNodeDroppedOn, targetTag, treeNodeDroppedOn, index);
             }
