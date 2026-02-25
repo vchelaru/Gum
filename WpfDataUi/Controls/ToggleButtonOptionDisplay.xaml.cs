@@ -330,18 +330,13 @@ namespace WpfDataUi.Controls
 
         private void RefreshIsEnabled()
         {
-            //if (lastApplyValueResult == ApplyValueResult.NotSupported)
-            //{
-            //    this.IsEnabled = false;
-            //}
-            //else 
             if (InstanceMember?.IsReadOnly == true)
             {
-                ButtonWrapPanel.IsEnabled = false;
+                this.IsEnabled = false;
             }
             else
             {
-                ButtonWrapPanel.IsEnabled = true;
+                this.IsEnabled = true;
             }
         }
 

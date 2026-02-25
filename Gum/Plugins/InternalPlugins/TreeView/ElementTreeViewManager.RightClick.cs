@@ -179,12 +179,17 @@ public partial class ElementTreeViewManager
 
                 AddSeparator();
 
-                var deleteText = _selectedState.SelectedInstances.Count() > 1
-                    ? $"Delete {_selectedState.SelectedInstances.Count()} instances"
+                var instances = _selectedState.SelectedInstances.ToList();
+                var allLocked = instances.All(i => i.Locked);
+                var lockText = instances.Count > 1
+                    ? (allLocked ? $"Unlock {instances.Count} instances" : $"Lock {instances.Count} instances")
+                    : (allLocked ? $"Unlock {_selectedState.SelectedInstance.Name}" : $"Lock {_selectedState.SelectedInstance.Name}");
+                AddMenuItem(lockText, HandleToggleLock);
+
+                var deleteText = instances.Count > 1
+                    ? $"Delete {instances.Count} instances"
                     : $"Delete {_selectedState.SelectedInstance.Name}";
                 AddMenuItem(deleteText, () => _editCommands.DeleteSelection());
-
-
 
                 if (containerElement != null)
                 {
@@ -226,12 +231,16 @@ public partial class ElementTreeViewManager
 
                 AddCreateInstanceMenuItems("Add object to " + _selectedState.SelectedElement!.Name);
 
-                AddMenuItem("Force Save Object", HandleForceSaveObject);
-
                 var duplicateText = _selectedState.SelectedScreen != null
                     ? $"Duplicate {_selectedState.SelectedScreen.Name}"
                     : $"Duplicate {_selectedState.SelectedComponent!.Name}";
                 AddMenuItem(duplicateText, HandleDuplicateElement);
+
+                AddSeparator();
+
+                AddMenuItem("Delete " + _selectedState.SelectedElement.ToString(), HandleDeleteObject);
+
+                AddSeparator();
 
                 AddCopyMenuItems();
                 AddCutMenuItems();
@@ -239,13 +248,11 @@ public partial class ElementTreeViewManager
 
                 AddSeparator();
 
-                AddMenuItem("Delete " + _selectedState.SelectedElement.ToString(), HandleDeleteObject);
+                AddMenuItem("Force Save Object", HandleForceSaveObject);
 
                 // Add favorite toggle for components only
                 if (_selectedState.SelectedComponent != null)
                 {
-                    AddSeparator();
-
                     var isFavorite = _favoriteComponentManager.IsFavorite(_selectedState.SelectedComponent);
                     var favoriteText = isFavorite ? "Remove from Favorites" : "Add to Favorites";
                     AddMenuItem(favoriteText, HandleToggleFavorite);
@@ -458,6 +465,30 @@ public partial class ElementTreeViewManager
             new List<DataTypes.Variables.StateSave> { derivedElement.DefaultState.Clone() },
             baseElement,
             null);
+    }
+
+    private void HandleToggleLock()
+    {
+        var instances = _selectedState.SelectedInstances.ToList();
+        var element = _selectedState.SelectedElement;
+        if (element == null || instances.Count == 0) return;
+
+        var shouldLock = instances.Any(i => !i.Locked);
+
+        using var undoLock = _undoManager.RequestLock();
+
+        for (int i = 0; i < instances.Count; i++)
+        {
+            var instance = instances[i];
+            if (instance.Locked != shouldLock)
+            {
+                var oldValue = instance.Locked;
+                instance.Locked = shouldLock;
+                var isLast = i == instances.Count - 1;
+                _setVariableLogic.PropertyValueChanged("Locked", oldValue, instance, element.DefaultState,
+                    refresh: isLast, trySave: isLast);
+            }
+        }
     }
 
     private void HandleToggleFavorite()

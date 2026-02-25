@@ -107,17 +107,15 @@ public class ElementSaveDisplayer
     {
         var currentState = _selectedState.SelectedStateSave;
         bool isDefault = currentState == _selectedState.SelectedElement.DefaultState;
-        if (instanceSave?.DefinedByBase == true)
-        {
-            isDefault = false;
-        }
+
+        bool isDefinedByBase = instanceSave?.DefinedByBase == true;
 
         var effectiveElementSave = instanceSave == null ? instanceOwner : instanceSave.GetBaseElementSave();
 
         bool isCustomType = (effectiveElementSave is StandardElementSave) == false;
         if (isCustomType || instanceSave != null)
         {
-            AddNameAndBaseTypeProperties(propertyList, instanceOwner, instanceSave, isReadOnly: isDefault == false);
+            AddNameAndBaseTypeProperties(propertyList, instanceOwner, instanceSave, isReadOnly: isDefault == false || isDefinedByBase);
         }
 
         if (instanceSave != null)

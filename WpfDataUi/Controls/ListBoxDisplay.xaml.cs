@@ -252,8 +252,14 @@ public partial class ListBoxDisplay : UserControl, IDataUi
 
     private void RefreshIsEnabled()
     {
-        var isReadOnly = InstanceMember?.IsReadOnly == true;
-        NotEditingEntryStackPanel.IsEnabled = !isReadOnly;
+        if (InstanceMember?.IsReadOnly == true)
+        {
+            this.IsEnabled = false;
+        }
+        else
+        {
+            this.IsEnabled = true;
+        }
     }
 
     private void AddButtonClicked(object? sender, RoutedEventArgs e)
