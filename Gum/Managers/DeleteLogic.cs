@@ -268,6 +268,13 @@ public class DeleteLogic : IDeleteLogic
 
         if (result != true) return;
 
+        // Cache behavior parents before removal (GetBehaviorContainerOf won't find them after)
+        var affectedBehaviorParents = deletableInstances
+            .Select(i => ObjectFinder.Self.GetBehaviorContainerOf(i))
+            .Where(b => b != null && !behaviors.Contains(b))
+            .Distinct()
+            .ToList();
+
         // 1. Remove instances (skip if parent element/behavior is also being deleted)
         foreach (var instance in deletableInstances)
         {
@@ -278,16 +285,12 @@ public class DeleteLogic : IDeleteLogic
             {
                 parentElement.Instances.Remove(instance);
                 parentElement.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
-
-                foreach (var state in parentElement.AllStates)
-                {
-                    state.Variables.RemoveAll(v => v.SourceObject == instance.Name);
-                    state.VariableLists.RemoveAll(v => v.SourceObject == instance.Name);
-                }
+                RemoveParentReferencesToInstance(instance, parentElement);
             }
-            else if (parentBehavior != null && !behaviors.Contains(parentBehavior))
+            else if (parentBehavior != null && !behaviors.Contains(parentBehavior)
+                && instance is BehaviorInstanceSave behaviorInstance)
             {
-                parentBehavior.RequiredInstances.Remove(instance as BehaviorInstanceSave);
+                parentBehavior.RequiredInstances.Remove(behaviorInstance);
             }
         }
 
@@ -306,19 +309,27 @@ public class DeleteLogic : IDeleteLogic
         // 4. Notify plugins (handles XML file deletion, children deletion, etc.)
         PluginManager.Self.DeleteConfirm(optionsWindow, combinedArray);
 
-        // 5. Refresh and save for instance parents that were not themselves deleted
+        // 5. Clear selection to avoid stale references
+        _selectedState.SelectedElement = null;
+
+        // 6. Refresh and save for instance parents that were not themselves deleted
         if (deletableInstances.Count > 0)
         {
-            var affectedParents = deletableInstances
+            var affectedElementParents = deletableInstances
                 .Select(i => i.ParentContainer)
                 .Where(e => e != null && !elements.Contains(e))
                 .Distinct()
                 .ToList();
 
-            foreach (var parent in affectedParents)
+            foreach (var parent in affectedElementParents)
             {
                 _fileCommands.TryAutoSaveElement(parent);
                 _guiCommands.RefreshElementTreeView(parent);
+            }
+
+            foreach (var behavior in affectedBehaviorParents)
+            {
+                _fileCommands.TryAutoSaveBehavior(behavior);
             }
 
             _wireframeObjectManager.RefreshAll(true);
