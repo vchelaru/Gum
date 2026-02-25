@@ -54,6 +54,19 @@ public class Dialog : ContentControl
         return (object?) element.GetValue(AuxiliaryActionsProperty);
     }
 
+    public static readonly DependencyProperty ScrollContentProperty = DependencyProperty.RegisterAttached(
+        "ScrollContent", typeof(bool), typeof(Dialog), new PropertyMetadata(true));
+
+    public static void SetScrollContent(DependencyObject element, bool value)
+    {
+        element.SetValue(ScrollContentProperty, value);
+    }
+
+    public static bool GetScrollContent(DependencyObject element)
+    {
+        return (bool) element.GetValue(ScrollContentProperty);
+    }
+
     public Dialog()
     {
         ContentTemplateSelector = new DialogTemplateSelector();
@@ -70,6 +83,7 @@ public class Dialog : ContentControl
                 Bind(DialogTitleProperty);
                 Bind(ActionsProperty);
                 Bind(AuxiliaryActionsProperty);
+                Bind(ScrollContentProperty);
             }
 
             void Bind(DependencyProperty source)

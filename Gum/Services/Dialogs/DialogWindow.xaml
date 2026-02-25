@@ -30,12 +30,13 @@
                   <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <ScrollViewer
+                  x:Name="ContentScrollViewer"
                   Grid.Row="0"
                   VerticalAlignment="Stretch"
                   HorizontalContentAlignment="Stretch"
                   VerticalContentAlignment="Stretch"
                   HorizontalScrollBarVisibility="Disabled"
-                  VerticalScrollBarVisibility="Disabled">
+                  VerticalScrollBarVisibility="Auto">
                   <Grid>
                     <ContentPresenter x:Name="DialogPresenter" />
                   </Grid>
@@ -49,6 +50,9 @@
             </Border>
 
             <ControlTemplate.Triggers>
+              <Trigger Property="local:Dialog.ScrollContent" Value="False">
+                <Setter TargetName="ContentScrollViewer" Property="VerticalScrollBarVisibility" Value="Disabled" />
+              </Trigger>
               <Trigger Property="local:Dialog.Actions" Value="{x:Null}">
                 <Setter TargetName="ActionsPresenter" Property="Content" Value="{Binding}" />
                 <Setter TargetName="ActionsPresenter" Property="ContentTemplate">

@@ -27,6 +27,8 @@ public class ImportLogicTests : BaseTestClass
         gumProject.FullFileName = Path.Combine(_testDirectory, "TestProject.gumx");
         ObjectFinder.Self.GumProjectSave = gumProject;
 
+        StandardElementsManager.Self.Initialize();
+
         _mocker.GetMock<IProjectManager>()
             .Setup(x => x.GumProjectSave)
             .Returns(gumProject);

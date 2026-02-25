@@ -27,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Gum\CodeOutputPlugin\CodeOutputPlugin.csproj" />
     <ProjectReference Include="..\..\..\Gum\Gum.csproj" />
+    <ProjectReference Include="..\..\..\Gum\ImportFromGumxPlugin\ImportFromGumxPlugin.csproj" />
     <ProjectReference Include="..\..\..\Gum\TextureCoordinateSelectionPlugin\TextureCoordinateSelectionPlugin.csproj" />
     <ProjectReference Include="..\..\EditorTabPlugin_XNA\EditorTabPlugin_XNA.csproj" />
   </ItemGroup>
