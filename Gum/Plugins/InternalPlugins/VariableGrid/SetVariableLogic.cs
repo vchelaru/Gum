@@ -50,6 +50,8 @@ public class SetVariableLogic : ISetVariableLogic
         {"BaseType",                                               VariableRefreshType.FullGridRefresh   },
         {"IsRenderTarget",                                         VariableRefreshType.FullGridRefresh   },
         {"TextOverflowVerticalMode",                               VariableRefreshType.FullGridRefresh   },
+        // Refreshing on locked causes the grid to refresh. This is a way to update it when selecting Locked from right-click
+        {"Locked",                                                  VariableRefreshType.FullGridRefresh   },
         // These are handled in the SubtextLogic
         //{"XUnits",                                                 VariableRefreshType.FullGridRefresh   },
         //{ "YUnits",                                                 VariableRefreshType.FullGridRefresh }
