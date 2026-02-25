@@ -163,9 +163,30 @@ public partial class ElementTreeViewManager
 
         if (SelectedNode != null)
         {
+            // Check for mixed-type selections by reading directly from tree view
+            var allSelectedTags = _selectedState.SelectedTreeNodes
+                .Select(n => n.Tag)
+                .Where(t => t != null)
+                .ToList();
+
+            var elementsFromTree = allSelectedTags.OfType<ElementSave>()
+                .Where(e => e is not StandardElementSave).ToList();
+            var behaviorsFromTree = allSelectedTags.OfType<BehaviorSave>().ToList();
+            var instancesFromTree = allSelectedTags.OfType<InstanceSave>().ToList();
+
+            int typesPresent = (elementsFromTree.Count > 0 ? 1 : 0)
+                + (behaviorsFromTree.Count > 0 ? 1 : 0)
+                + (instancesFromTree.Count > 0 ? 1 : 0);
+
+            if (typesPresent > 1)
+            {
+                int totalCount = elementsFromTree.Count + behaviorsFromTree.Count + instancesFromTree.Count;
+                AddMenuItem($"Delete {totalCount} items", HandleDeleteObject);
+            }
+
             #region InstanceSave
             // InstanceSave selected
-            if (_selectedState.SelectedInstance != null)
+            else if (_selectedState.SelectedInstance != null)
             {
                 var containerElement = _selectedState.SelectedElement;
                 AddMenuItem("Go to definition", HandleGoToDefinition);
@@ -238,7 +259,24 @@ public partial class ElementTreeViewManager
 
                 AddSeparator();
 
-                AddMenuItem("Delete " + _selectedState.SelectedElement.ToString(), HandleDeleteObject);
+                var selectedElements = _selectedState.SelectedElements.ToList();
+                string elementDeleteText;
+                if (selectedElements.Count > 1)
+                {
+                    bool allScreens = selectedElements.All(e => e is ScreenSave);
+                    bool allComponents = selectedElements.All(e => e is ComponentSave);
+                    if (allScreens)
+                        elementDeleteText = $"Delete {selectedElements.Count} Screens";
+                    else if (allComponents)
+                        elementDeleteText = $"Delete {selectedElements.Count} Components";
+                    else
+                        elementDeleteText = $"Delete {selectedElements.Count} elements";
+                }
+                else
+                {
+                    elementDeleteText = "Delete " + _selectedState.SelectedElement.ToString();
+                }
+                AddMenuItem(elementDeleteText, HandleDeleteObject);
 
                 AddSeparator();
 
@@ -267,7 +305,11 @@ public partial class ElementTreeViewManager
             {
                 AddMenuItem("View in explorer", HandleViewInExplorer);
                 AddSeparator();
-                AddMenuItem("Delete " + _selectedState.SelectedBehavior.ToString(), HandleDeleteObject);
+                var selectedBehaviors = _selectedState.SelectedBehaviors.ToList();
+                var behaviorDeleteText = selectedBehaviors.Count > 1
+                    ? $"Delete {selectedBehaviors.Count} Behaviors"
+                    : "Delete " + _selectedState.SelectedBehavior.ToString();
+                AddMenuItem(behaviorDeleteText, HandleDeleteObject);
             }
 
             #endregion

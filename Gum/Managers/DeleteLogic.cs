@@ -65,6 +65,29 @@ public class DeleteLogic : IDeleteLogic
 
     private void DoDeletingLogic()
     {
+        // Check for mixed-type selections (e.g., instance + behavior, component + behavior)
+        // by reading directly from the tree view's selected nodes. SelectedState enforces
+        // mutual exclusion between elements, behaviors, and instances, so we bypass it here.
+        var allSelectedTags = _selectedState.SelectedTreeNodes
+            .Select(n => n.Tag)
+            .Where(t => t != null)
+            .ToList();
+
+        var elementsFromTree = allSelectedTags.OfType<ElementSave>()
+            .Where(e => e is not StandardElementSave).ToList();
+        var behaviorsFromTree = allSelectedTags.OfType<BehaviorSave>().ToList();
+        var instancesFromTree = allSelectedTags.OfType<InstanceSave>().ToList();
+
+        int typesPresent = (elementsFromTree.Count > 0 ? 1 : 0)
+            + (behaviorsFromTree.Count > 0 ? 1 : 0)
+            + (instancesFromTree.Count > 0 ? 1 : 0);
+
+        if (typesPresent > 1)
+        {
+            HandleMixedTypeDeletion(elementsFromTree, behaviorsFromTree, instancesFromTree);
+            return;
+        }
+
         Array objectsDeleted = null;
         DeleteOptionsWindow optionsWindow = null;
 
@@ -214,6 +237,91 @@ public class DeleteLogic : IDeleteLogic
         if (shouldDelete)
         {
             PluginManager.Self.DeleteConfirm(optionsWindow, objectsDeleted);
+        }
+    }
+
+    private void HandleMixedTypeDeletion(
+        List<ElementSave> elements,
+        List<BehaviorSave> behaviors,
+        List<InstanceSave> instances)
+    {
+        // Filter out DefinedByBase instances
+        var deletableInstances = instances.Where(i => !i.DefinedByBase).ToList();
+
+        var combinedList = new List<object>();
+        combinedList.AddRange(elements);
+        combinedList.AddRange(behaviors);
+        combinedList.AddRange(deletableInstances);
+
+        if (combinedList.Count == 0)
+        {
+            if (instances.Count > 0)
+            {
+                _dialogService.ShowMessage(
+                    "All selected instances are defined in a base object, so cannot be deleted");
+            }
+            return;
+        }
+
+        var combinedArray = combinedList.ToArray();
+        var result = ShowDeleteDialog(combinedArray, out var optionsWindow);
+
+        if (result != true) return;
+
+        // 1. Remove instances (skip if parent element/behavior is also being deleted)
+        foreach (var instance in deletableInstances)
+        {
+            var parentElement = instance.ParentContainer;
+            var parentBehavior = ObjectFinder.Self.GetBehaviorContainerOf(instance);
+
+            if (parentElement != null && !elements.Contains(parentElement))
+            {
+                parentElement.Instances.Remove(instance);
+                parentElement.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
+
+                foreach (var state in parentElement.AllStates)
+                {
+                    state.Variables.RemoveAll(v => v.SourceObject == instance.Name);
+                    state.VariableLists.RemoveAll(v => v.SourceObject == instance.Name);
+                }
+            }
+            else if (parentBehavior != null && !behaviors.Contains(parentBehavior))
+            {
+                parentBehavior.RequiredInstances.Remove(instance as BehaviorInstanceSave);
+            }
+        }
+
+        // 2. Remove elements
+        foreach (var element in elements)
+        {
+            _projectCommands.RemoveElement(element);
+        }
+
+        // 3. Remove behaviors
+        foreach (var behavior in behaviors)
+        {
+            _projectCommands.RemoveBehavior(behavior);
+        }
+
+        // 4. Notify plugins (handles XML file deletion, children deletion, etc.)
+        PluginManager.Self.DeleteConfirm(optionsWindow, combinedArray);
+
+        // 5. Refresh and save for instance parents that were not themselves deleted
+        if (deletableInstances.Count > 0)
+        {
+            var affectedParents = deletableInstances
+                .Select(i => i.ParentContainer)
+                .Where(e => e != null && !elements.Contains(e))
+                .Distinct()
+                .ToList();
+
+            foreach (var parent in affectedParents)
+            {
+                _fileCommands.TryAutoSaveElement(parent);
+                _guiCommands.RefreshElementTreeView(parent);
+            }
+
+            _wireframeObjectManager.RefreshAll(true);
         }
     }
 
