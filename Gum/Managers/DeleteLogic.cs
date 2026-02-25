@@ -401,14 +401,14 @@ public class DeleteLogic : IDeleteLogic
 
     private void AskToDeleteInstances(IEnumerable<InstanceSave> instances)
     {
-        var deletableInstances = instances.Where(item => item.DefinedByBase == false).ToArray();
-        var instancesFromBase = instances.Except(deletableInstances).ToArray();
+        var deletableInstances = instances.Where(item => item.DefinedByBase == false).ToList();
+        var instancesFromBase = instances.Except(deletableInstances).ToList();
 
-        if (instancesFromBase.Any())
+        if (instancesFromBase.Count > 0)
         {
             // Show warning about instances from base
             string message;
-            if (deletableInstances.Any())
+            if (deletableInstances.Count > 0)
             {
                 // has both
                 message = "The following instances will be deleted:";
@@ -436,77 +436,90 @@ public class DeleteLogic : IDeleteLogic
             _dialogService.ShowMessage(message);
         }
 
-        if (deletableInstances.Any())
+        if (deletableInstances.Count > 0)
         {
-            DeleteOptionsWindow optionsWindow = null;
-            var result = ShowDeleteDialog(deletableInstances, out optionsWindow);
+            var deletableArray = deletableInstances.ToArray();
+            var result = ShowDeleteDialog(deletableArray, out var optionsWindow);
 
             if (result == true)
             {
-                ElementSave selectedElement = _selectedState.SelectedElement;
+                var affectedParents = new HashSet<ElementSave>();
 
-                // Just in case the argument is a reference to the selected instances:
-                var instancesToRemove = deletableInstances.ToList();
-
-                // Remove instances from collection and their owned variables,
-                // but DO NOT remove parent references yet - let the plugin handle that
-                foreach (var instance in instancesToRemove)
+                // Remove instances from their respective parent containers
+                // (instances may belong to different elements when multi-selecting across components)
+                foreach (var instance in deletableInstances)
                 {
-                    selectedElement.Instances.Remove(instance);
-                    selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
-                }
-
-                // Remove variables owned by the instances
-                foreach (var state in selectedElement.AllStates)
-                {
-                    foreach (var instance in instancesToRemove)
+                    var parentElement = instance.ParentContainer;
+                    if (parentElement != null)
                     {
-                        state.Variables.RemoveAll(item => item.SourceObject == instance.Name);
-                        state.VariableLists.RemoveAll(item => item.SourceObject == instance.Name);
+                        parentElement.Instances.Remove(instance);
+                        parentElement.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
+                        RemoveParentReferencesToInstance(instance, parentElement);
+                        affectedParents.Add(parentElement);
                     }
                 }
 
-                // Let plugin handle children deletion (this will call RemoveParentReferencesToInstance as needed)
-                PluginManager.Self.DeleteConfirm(optionsWindow, deletableInstances);
+                // Let plugin handle children deletion
+                PluginManager.Self.DeleteConfirm(optionsWindow, deletableArray);
 
                 // Clear selection
                 var newSelection = _selectedState.SelectedInstances.ToList()
-                    .Except(instancesToRemove);
+                    .Except(deletableInstances);
                 _selectedState.SelectedInstances = newSelection;
 
-                // Then refresh and save
-                RefreshAndSaveAfterInstanceRemoval(selectedElement, null);
+                // Save and refresh tree for each affected parent
+                foreach (var parent in affectedParents)
+                {
+                    SaveElementAfterInstanceRemoval(parent);
+                }
+
+                _selectedState.SelectedInstance = null;
+                RefreshAll();
             }
         }
     }
 
     private void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
     {
+        SaveElementAfterInstanceRemoval(selectedElement);
+        SaveBehaviorAfterInstanceRemoval(behavior);
+        PickSelectedInstanceAfterInstanceRemoval(selectedElement, behavior);
+        RefreshAll();
+    }
+
+    private void SaveBehaviorAfterInstanceRemoval(BehaviorSave behavior)
+    {
+        if (behavior != null)
+        {
+            _fileCommands.TryAutoSaveBehavior(behavior);
+            _guiCommands.RefreshElementTreeView(behavior);
+        }
+    }
+
+    private void SaveElementAfterInstanceRemoval(ElementSave selectedElement)
+    {
         if (selectedElement != null)
         {
             _fileCommands.TryAutoSaveElement(selectedElement);
+            _guiCommands.RefreshElementTreeView(selectedElement);
         }
-        else if (behavior != null)
-        {
-            _fileCommands.TryAutoSaveBehavior(behavior);
-        }
+    }
 
-        ElementSave elementToReselect = selectedElement;
-        BehaviorSave behaviorToReselect = behavior;
-
-
+    private void PickSelectedInstanceAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
+    {
         _selectedState.SelectedInstance = null;
         if (selectedElement != null)
         {
-            _selectedState.SelectedElement = elementToReselect;
-            _guiCommands.RefreshElementTreeView(selectedElement);
+            _selectedState.SelectedElement = selectedElement;
         }
         else if (behavior != null)
         {
-            _selectedState.SelectedBehavior = behaviorToReselect;
-            _guiCommands.RefreshElementTreeView(behavior);
+            _selectedState.SelectedBehavior = behavior;
         }
+    }
 
+    private void RefreshAll()
+    {
         _wireframeObjectManager.RefreshAll(true);
     }
 
