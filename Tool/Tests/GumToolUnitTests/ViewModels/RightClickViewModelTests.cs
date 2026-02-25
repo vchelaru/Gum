@@ -177,6 +177,77 @@ public class RightClickViewModelTests
     }
 
     [Fact]
+    public void GetMenuItems_ShouldShowLockText_WhenInstanceIsUnlocked()
+    {
+        var element = CreateElementWithInstances("InstanceA");
+        var instance = element.Instances[0];
+        instance.Locked = false;
+
+        _selectedState.Setup(x => x.SelectedInstance).Returns(instance);
+        _selectedState.Setup(x => x.SelectedElement).Returns(element);
+
+        var result = _sut.GetMenuItems();
+
+        var lockItem = result.First(i => i.Text.StartsWith("Lock ") || i.Text.StartsWith("Unlock "));
+        lockItem.Text.ShouldBe("Lock InstanceA");
+        lockItem.Action.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetMenuItems_ShouldShowUnlockText_WhenInstanceIsLocked()
+    {
+        var element = CreateElementWithInstances("InstanceA");
+        var instance = element.Instances[0];
+        instance.Locked = true;
+
+        _selectedState.Setup(x => x.SelectedInstance).Returns(instance);
+        _selectedState.Setup(x => x.SelectedElement).Returns(element);
+
+        var result = _sut.GetMenuItems();
+
+        var lockItem = result.First(i => i.Text.StartsWith("Lock ") || i.Text.StartsWith("Unlock "));
+        lockItem.Text.ShouldBe("Unlock InstanceA");
+    }
+
+    [Fact]
+    public void GetMenuItems_LockAction_ShouldLockInstance_WhenUnlocked()
+    {
+        var element = CreateElementWithInstances("InstanceA");
+        var instance = element.Instances[0];
+        instance.Locked = false;
+
+        _selectedState.Setup(x => x.SelectedInstance).Returns(instance);
+        _selectedState.Setup(x => x.SelectedElement).Returns(element);
+
+        var result = _sut.GetMenuItems();
+        var lockItem = result.First(i => i.Text.StartsWith("Lock "));
+        lockItem.Action!.Invoke();
+
+        instance.Locked.ShouldBeTrue();
+        _setVariableLogic.Verify(x => x.PropertyValueChanged(
+            "Locked", false, instance, element.DefaultState, true, true, true), Times.Once);
+    }
+
+    [Fact]
+    public void GetMenuItems_LockAction_ShouldUnlockInstance_WhenLocked()
+    {
+        var element = CreateElementWithInstances("InstanceA");
+        var instance = element.Instances[0];
+        instance.Locked = true;
+
+        _selectedState.Setup(x => x.SelectedInstance).Returns(instance);
+        _selectedState.Setup(x => x.SelectedElement).Returns(element);
+
+        var result = _sut.GetMenuItems();
+        var lockItem = result.First(i => i.Text.StartsWith("Unlock "));
+        lockItem.Action!.Invoke();
+
+        instance.Locked.ShouldBeFalse();
+        _setVariableLogic.Verify(x => x.PropertyValueChanged(
+            "Locked", true, instance, element.DefaultState, true, true, true), Times.Once);
+    }
+
+    [Fact]
     public void GetEffectiveParentNameFor_ShouldReturnNull_WhenNoParentVariable()
     {
         var element = CreateElementWithInstances("InstanceA");
