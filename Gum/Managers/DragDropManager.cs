@@ -20,6 +20,7 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Windows.Forms;
@@ -634,16 +635,23 @@ public class DragDropManager : IDragDropManager
     {
         if (targetNode == null) return false;
 
-        var toReturn = draggedNodes.All(item => ValidateDrop(item.Tag, targetNode));
+        var toReturn = draggedNodes.All(item => ValidateDrop(item.Tag, targetNode, item));
 
         return toReturn;
     }
 
-    bool ValidateDrop(object draggedObject, ITreeNode targetTreeNode)
+    bool ValidateDrop(object draggedObject, ITreeNode targetTreeNode, ITreeNode? draggedNode = null)
     {
         var target = targetTreeNode.Tag;
 
-        if (draggedObject == null) return false;
+        if (draggedObject == null)
+        {
+            if (draggedNode != null)
+            {
+                return ValidateFolderDrop(draggedNode, targetTreeNode);
+            }
+            return false;
+        }
 
         if(target is StandardElementSave)
         {
@@ -738,25 +746,163 @@ public class DragDropManager : IDragDropManager
         return false;
     }
 
+    private bool ValidateFolderDrop(ITreeNode draggedFolderNode, ITreeNode targetTreeNode)
+    {
+        bool isDraggedComponentsFolder = draggedFolderNode.IsComponentsFolderTreeNode();
+        bool isDraggedScreensFolder = draggedFolderNode.IsScreensFolderTreeNode();
+
+        // Only component and screen subfolders can be dragged
+        if (!isDraggedComponentsFolder && !isDraggedScreensFolder)
+        {
+            return false;
+        }
+
+        // Component folders must target component folder hierarchy
+        if (isDraggedComponentsFolder &&
+            !targetTreeNode.IsComponentsFolderTreeNode() &&
+            !targetTreeNode.IsTopComponentContainerTreeNode())
+        {
+            return false;
+        }
+
+        // Screen folders must target screen folder hierarchy
+        if (isDraggedScreensFolder &&
+            !targetTreeNode.IsScreensFolderTreeNode() &&
+            !targetTreeNode.IsTopScreenContainerTreeNode())
+        {
+            return false;
+        }
+
+        var draggedPath = draggedFolderNode.GetFullFilePath();
+        var targetPath = targetTreeNode.GetFullFilePath();
+
+        // Cannot drop onto itself
+        if (draggedPath == targetPath)
+        {
+            return false;
+        }
+
+        // Cannot drop into a descendant of itself (circular move)
+        if (targetPath.FullPath.StartsWith(draggedPath.FullPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // Cannot drop into current parent (no-op)
+        var parentPath = draggedFolderNode.Parent?.GetFullFilePath();
+        if (parentPath != null && targetPath == parentPath)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     public void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
     {
-        // Sort InstanceSaves by descending index in their parent container so that,
-        // as each item is inserted at the target position, the final relative order
-        // matches the original order. Non-InstanceSave objects sort last.
-        var tags = draggedNodes
+        var folderNodes = draggedNodes.Where(n => n.Tag == null).ToList();
+        var taggedNodes = draggedNodes
             .Where(n => n.Tag != null)
-            .Select(n => n.Tag)
-            .OrderByDescending(tag => tag is InstanceSave instance
+            .OrderByDescending(n => n.Tag is InstanceSave instance
                 ? instance.ParentContainer?.Instances.IndexOf(instance) ?? int.MinValue
                 : int.MinValue)
             .ToList();
 
         using var undoLock = _undoManager.RequestLock();
 
-        foreach (object draggedObject in tags)
+        // Handle folder drops first (they restructure the tree)
+        foreach (var folderNode in folderNodes)
         {
-            HandleDroppedItemOnTreeView(draggedObject, targetNode, index);
+            HandleDroppedFolder(folderNode, targetNode);
         }
+
+        // Handle element/instance/behavior drops
+        foreach (var node in taggedNodes)
+        {
+            HandleDroppedItemOnTreeView(node.Tag, targetNode, index);
+        }
+    }
+
+    private void HandleDroppedFolder(ITreeNode draggedFolderNode, ITreeNode targetNode)
+    {
+        var oldFullPath = draggedFolderNode.GetFullFilePath();
+        var targetFullPath = targetNode.GetFullFilePath();
+        if (oldFullPath == null || targetFullPath == null)
+        {
+            return;
+        }
+
+        string folderName = draggedFolderNode.Text;
+        string newFullPath = targetFullPath.FullPath + folderName + "\\";
+
+        if (Directory.Exists(newFullPath))
+        {
+            _dialogService.ShowMessage(
+                $"A folder named '{folderName}' already exists at the destination.");
+            return;
+        }
+
+        string projectFolder =
+            FileManager.GetDirectory(_projectManager.GumProjectSave.FullFileName);
+
+        if (draggedFolderNode.IsComponentsFolderTreeNode())
+        {
+            string root = projectFolder + ElementReference.ComponentSubfolder + "/";
+            string oldRel = FileManager.MakeRelative(
+                oldFullPath.FullPath, root, preserveCase: true).Replace("\\", "/");
+            string newRel = FileManager.MakeRelative(
+                newFullPath, root, preserveCase: true).Replace("\\", "/");
+
+            foreach (var component in _projectState.GumProjectSave.Components.ToArray())
+            {
+                if (component.Name.Replace("\\", "/")
+                    .StartsWith(oldRel, StringComparison.OrdinalIgnoreCase))
+                {
+                    string oldName = component.Name;
+                    component.Name = (newRel
+                        + component.Name.Substring(oldRel.Length)).Replace("\\", "/");
+                    _renameLogic.HandleRename(component, (InstanceSave?)null,
+                        oldName, NameChangeAction.Move, askAboutRename: false);
+                }
+            }
+        }
+        else if (draggedFolderNode.IsScreensFolderTreeNode())
+        {
+            string root = projectFolder + ElementReference.ScreenSubfolder + "/";
+            string oldRel = FileManager.MakeRelative(
+                oldFullPath.FullPath, root, preserveCase: true).Replace("\\", "/");
+            string newRel = FileManager.MakeRelative(
+                newFullPath, root, preserveCase: true).Replace("\\", "/");
+
+            foreach (var screen in _projectState.GumProjectSave.Screens.ToArray())
+            {
+                if (screen.Name.Replace("\\", "/")
+                    .StartsWith(oldRel, StringComparison.OrdinalIgnoreCase))
+                {
+                    string oldName = screen.Name;
+                    screen.Name = (newRel
+                        + screen.Name.Substring(oldRel.Length)).Replace("\\", "/");
+                    _renameLogic.HandleRename(screen, (InstanceSave?)null,
+                        oldName, NameChangeAction.Move, askAboutRename: false);
+                }
+            }
+        }
+        else
+        {
+            return;
+        }
+
+        try
+        {
+            _fileCommands.MoveDirectory(oldFullPath.FullPath, newFullPath);
+        }
+        catch (Exception e)
+        {
+            _dialogService.ShowMessage($"Could not move the folder. Additional information:\n{e}");
+            return;
+        }
+
+        _guiCommands.RefreshElementTreeView();
     }
 
     public void OnFilesDroppedInTreeView(string[] files)
