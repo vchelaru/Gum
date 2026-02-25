@@ -10,6 +10,44 @@ public class GumxDependencyResolverTests
     private readonly GumxDependencyResolver _resolver = new();
 
     [Fact]
+    public void ComputeTransitive_ChainedInheritance_ReturnsLeavesFirstOrder()
+    {
+        // A inherits B inherits C — topological order should be C, B
+        var compC = Component("C");
+        var compB = Component("B");
+        compB.BaseType = "C";
+        var compA = Component("A");
+        compA.BaseType = "B";
+
+        var source = CreateProject(compA, compB, compC);
+        var destination = new GumProjectSave();
+
+        var result = _resolver.ComputeTransitive(
+            new[] { compA }, source, destination);
+
+        result.TransitiveComponents.Count.ShouldBe(2);
+        result.TransitiveComponents[0].Name.ShouldBe("C");
+        result.TransitiveComponents[1].Name.ShouldBe("B");
+    }
+
+    [Fact]
+    public void ComputeTransitive_ComponentInheritingFromAnother_IncludesBaseAsTransitive()
+    {
+        var baseComp = Component("BaseButton");
+        var derived = Component("FancyButton");
+        derived.BaseType = "BaseButton";
+
+        var source = CreateProject(derived, baseComp);
+        var destination = new GumProjectSave();
+
+        var result = _resolver.ComputeTransitive(
+            new[] { derived }, source, destination);
+
+        result.TransitiveComponents.Count.ShouldBe(1);
+        result.TransitiveComponents[0].Name.ShouldBe("BaseButton");
+    }
+
+    [Fact]
     public void ComputeTransitive_ComponentWithDependency_IncludesDependencyAsTransitive()
     {
         var source = CreateProject(
@@ -37,6 +75,27 @@ public class GumxDependencyResolverTests
             new[] { source.Components[0] }, source, destination);
 
         result.TransitiveComponents.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ComputeTransitive_MixedInheritanceAndComposition_IncludesBoth()
+    {
+        // A inherits Base and has an instance of Widget — both should be transitive
+        var baseComp = Component("Base");
+        var widget = Component("Widget");
+        var compA = Component("A", instance: ("w", "Widget"));
+        compA.BaseType = "Base";
+
+        var source = CreateProject(compA, baseComp, widget);
+        var destination = new GumProjectSave();
+
+        var result = _resolver.ComputeTransitive(
+            new[] { compA }, source, destination);
+
+        result.TransitiveComponents.Count.ShouldBe(2);
+        var names = result.TransitiveComponents.Select(c => c.Name).ToList();
+        names.ShouldContain("Base");
+        names.ShouldContain("Widget");
     }
 
     [Fact]
