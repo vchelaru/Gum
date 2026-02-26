@@ -347,6 +347,29 @@ public class HotkeyManager : IHotkeyManager
         }
     }
 
+    /// <summary>
+    /// Handles Alt+Arrow reorder shortcuts from a WPF PreviewKeyDown event.
+    /// Required because the WPF Menu control intercepts Alt key events before
+    /// they reach WinForms controls hosted in WindowsFormsHost.
+    /// TODO: Remove once the element treeview is migrated to WPF.
+    /// </summary>
+    public bool HandleReorderPreview(System.Windows.Input.KeyEventArgs e)
+    {
+        if(ReorderUp.IsPressed(e))
+        {
+            _reorderLogic.MoveSelectedInstanceBackward();
+            e.Handled = true;
+            return true;
+        }
+        if(ReorderDown.IsPressed(e))
+        {
+            _reorderLogic.MoveSelectedInstanceForward();
+            e.Handled = true;
+            return true;
+        }
+        return false;
+    }
+
     void HandleDelete(KeyEventArgs e)
     {
         if (Delete.IsPressed(e))

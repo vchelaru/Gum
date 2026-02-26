@@ -41,6 +41,7 @@ public interface IHotkeyManager
     KeyCombination Rename { get; }
 
     bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e, bool enableEntireAppZoom = true);
+    bool HandleReorderPreview(System.Windows.Input.KeyEventArgs e);
     void HandleKeyDownElementTreeView(System.Windows.Forms.KeyEventArgs e);
     void HandleEditorKeyDown(System.Windows.Forms.KeyEventArgs e);
     void HandleKeyUpWireframe(System.Windows.Forms.KeyEventArgs e);

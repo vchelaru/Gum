@@ -686,6 +686,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         ObjectTreeView.AfterExpand += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
         ObjectTreeView.AfterCollapse += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
 
+        // The WPF Menu control intercepts Alt key events before they reach WinForms
+        // controls in WindowsFormsHost, so Alt+Arrow reorder shortcuts must be handled
+        // at the WPF tunnel level. TODO: Remove once the treeview is migrated to WPF.
+        TreeViewHost.PreviewKeyDown += (_, e) => _hotkeyManager.HandleReorderPreview(e);
+
         RefreshUi();
 
         static (int index, TreeNode target)? ProcessDrop(TreeNode? originalTarget, MultiSelectTreeView.DropKind kind)
