@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -94,6 +96,63 @@ public class DeleteLogicMultiSelectTests : BaseTestClass
         screen.DefaultState.Variables
             .Where(v => v.Value is string s && s.StartsWith("Parent."))
             .ShouldBeEmpty("Dotted parent references should be removed");
+    }
+
+    [Fact]
+    public void GetFolderDeletionBlocker_EmptyFolder_ReturnsNull()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "GumTest_" + Guid.NewGuid());
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            DeleteLogic.GetFolderDeletionBlocker(tempDir).ShouldBeNull();
+        }
+        finally
+        {
+            Directory.Delete(tempDir);
+        }
+    }
+
+    [Fact]
+    public void GetFolderDeletionBlocker_FolderWithFiles_ReturnsBlocker()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "GumTest_" + Guid.NewGuid());
+        Directory.CreateDirectory(tempDir);
+        File.WriteAllText(Path.Combine(tempDir, "test.txt"), "");
+        try
+        {
+            var result = DeleteLogic.GetFolderDeletionBlocker(tempDir);
+            result.ShouldNotBeNull();
+            result.ShouldBe("contains a file");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void GetFolderDeletionBlocker_FolderWithSubdirectories_ReturnsBlocker()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "GumTest_" + Guid.NewGuid());
+        Directory.CreateDirectory(Path.Combine(tempDir, "subfolder"));
+        try
+        {
+            var result = DeleteLogic.GetFolderDeletionBlocker(tempDir);
+            result.ShouldNotBeNull();
+            result.ShouldBe("contains a folder");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void GetFolderDeletionBlocker_NonExistentFolder_ReturnsNull()
+    {
+        var fakePath = Path.Combine(Path.GetTempPath(), "GumTest_DoesNotExist_" + Guid.NewGuid());
+        DeleteLogic.GetFolderDeletionBlocker(fakePath).ShouldBeNull();
     }
 
     private ScreenSave CreateScreenWithInstances(params string[] instanceNames)
