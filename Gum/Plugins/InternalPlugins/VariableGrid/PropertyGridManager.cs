@@ -162,8 +162,6 @@ public partial class PropertyGridManager
         mainControl.DataContext = VariableViewModel;
         mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
         mainControl.AddVariableClicked += HandleAddVariable;
-
-        InitializeRightClickMenu();
     }
 
     private void HandleBehaviorVariableSelected(object? sender, EventArgs e)

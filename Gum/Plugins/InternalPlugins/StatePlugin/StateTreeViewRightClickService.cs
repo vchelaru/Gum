@@ -30,7 +30,7 @@ public class StateTreeViewRightClickService
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
 
-    System.Windows.Controls.ContextMenu _menuStrip;
+    System.Windows.Controls.ContextMenu _contextMenu;
 
     public StateTreeViewRightClickService(ISelectedState selectedState, 
         IElementCommands elementCommands, 
@@ -47,20 +47,20 @@ public class StateTreeViewRightClickService
         _fileCommands = fileCommands;
     }
 
-    public void SetMenuStrip(System.Windows.Controls.ContextMenu menuStrip, FrameworkElement contextMenuOwner)
+    public void SetContextMenu(System.Windows.Controls.ContextMenu contextMenu, FrameworkElement contextMenuOwner)
     {
         contextMenuOwner.ContextMenuOpening += (_, args) =>
         {
-            if (_menuStrip.Items.Count == 0)
+            if (_contextMenu.Items.Count == 0)
             {
                 args.Handled = true;
             }
         };
 
-        _menuStrip = menuStrip;
-        _menuStrip.ContextMenuOpening += (s, e) =>
+        _contextMenu = contextMenu;
+        _contextMenu.ContextMenuOpening += (s, e) =>
         {
-            if (_menuStrip.Items.Count == 0)
+            if (_contextMenu.Items.Count == 0)
             {
                 e.Handled = true; // Prevent the menu from opening
             }
@@ -69,9 +69,9 @@ public class StateTreeViewRightClickService
 
     #region Add to menu
 
-    internal void PopulateMenuStrip()
+    internal void PopulateContextMenu()
     {
-        ClearMenuStrip();
+        ClearContextMenu();
 
         if (_selectedState.SelectedStateContainer != null)
         {
@@ -134,12 +134,12 @@ public class StateTreeViewRightClickService
 
     private void AddSplitter()
     {
-        _menuStrip.Items.Add(new System.Windows.Controls.Separator());
+        _contextMenu.Items.Add(new System.Windows.Controls.Separator());
     }
 
-    private void ClearMenuStrip()
+    private void ClearContextMenu()
     {
-        _menuStrip.Items.Clear();
+        _contextMenu.Items.Clear();
     }
 
     private void MoveUpClick()
@@ -186,7 +186,7 @@ public class StateTreeViewRightClickService
 
                 _fileCommands.TryAutoSaveCurrentObject();
 
-                PopulateMenuStrip();
+                PopulateContextMenu();
             }
         }
     }
@@ -281,7 +281,7 @@ public class StateTreeViewRightClickService
     private void AddChildMenuItem(string parent, string text, Action clickAction, string shortcut = null)
     {
         System.Windows.Controls.MenuItem menuItem = CreateNewToolStripMenuItem(text, clickAction, shortcut);
-        var parentItem = _menuStrip.Items.FirstOrDefault(item => item is System.Windows.Controls.MenuItem itemMenu && itemMenu.Header.ToString() == parent)
+        var parentItem = _contextMenu.Items.FirstOrDefault(item => item is System.Windows.Controls.MenuItem itemMenu && itemMenu.Header.ToString() == parent)
             as System.Windows.Controls.MenuItem;
         parentItem.Items.Add(menuItem);
     }
@@ -289,7 +289,7 @@ public class StateTreeViewRightClickService
     private void AddMenuItem(string text, Action clickAction, string shortcut = null)
     {
         System.Windows.Controls.MenuItem menuItem = CreateNewToolStripMenuItem(text, clickAction, shortcut);
-        _menuStrip.Items.Add(menuItem);
+        _contextMenu.Items.Add(menuItem);
     }
 
     private static System.Windows.Controls.MenuItem CreateNewToolStripMenuItem(string text, Action clickAction, string shortcut)
