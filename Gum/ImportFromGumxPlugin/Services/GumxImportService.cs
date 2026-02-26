@@ -21,6 +21,8 @@ public class ImportResult
     public List<string> CopiedAssets { get; } = new();
     /// <summary>Elements that were not imported because one or more of their required asset files could not be found.</summary>
     public List<string> SkippedElements { get; } = new();
+    /// <summary>Elements whose destination files already exist. When non-empty the import was cancelled.</summary>
+    public List<string> ConflictingElements { get; } = new();
 }
 
 /// <summary>
@@ -76,6 +78,14 @@ public class GumxImportService
 
         var result = new ImportResult();
         var nameMap = BuildNameMap(selections, destinationSubfolder);
+
+        // Cancel early if any destination files already exist
+        var conflicts = FindConflictingElements(selections, nameMap, projectDir);
+        if (conflicts.Count > 0)
+        {
+            result.ConflictingElements.AddRange(conflicts);
+            return result;
+        }
 
         // Pre-fetch all assets for all candidate elements in parallel, so we can gate each
         // element's import on whether its required assets are actually available.
@@ -245,6 +255,39 @@ public class GumxImportService
                 await File.WriteAllBytesAsync(destPath, bytes);
             }
         }
+    }
+
+    private static List<string> FindConflictingElements(
+        ImportSelections selections,
+        Dictionary<string, string> nameMap,
+        string projectDir)
+    {
+        var conflicts = new List<string>();
+
+        foreach (var component in selections.TransitiveComponents.Concat(selections.DirectComponents))
+        {
+            string destName = nameMap.TryGetValue(component.Name, out var mapped) ? mapped : component.Name;
+            string destPath = Path.Combine(projectDir, "Components", $"{destName}.{GumProjectSave.ComponentExtension}");
+            if (File.Exists(destPath))
+                conflicts.Add(destName);
+        }
+
+        foreach (var screen in selections.DirectScreens)
+        {
+            string destName = nameMap.TryGetValue(screen.Name, out var mapped) ? mapped : screen.Name;
+            string destPath = Path.Combine(projectDir, "Screens", $"{destName}.{GumProjectSave.ScreenExtension}");
+            if (File.Exists(destPath))
+                conflicts.Add(destName);
+        }
+
+        foreach (var behavior in selections.Behaviors)
+        {
+            string destPath = Path.Combine(projectDir, "Behaviors", $"{behavior.Name}.{BehaviorReference.Extension}");
+            if (File.Exists(destPath))
+                conflicts.Add(behavior.Name);
+        }
+
+        return conflicts;
     }
 
     private static Dictionary<string, string> BuildNameMap(

@@ -189,7 +189,18 @@ public class ImportFromGumxViewModel : DialogViewModel
 
             _isImportComplete = true;
 
-            if (result.SkippedElements.Count > 0)
+            if (result.ConflictingElements.Count > 0)
+            {
+                string elementList = string.Join(", ", result.ConflictingElements.Take(5));
+                if (result.ConflictingElements.Count > 5)
+                {
+                    elementList += $" (and {result.ConflictingElements.Count - 5} more)";
+                }
+                ErrorMessage =
+                    $"Import cancelled: {result.ConflictingElements.Count} element(s) already exist " +
+                    $"in this project: {elementList}";
+            }
+            else if (result.SkippedElements.Count > 0)
             {
                 AffirmativeText = "Close";
                 string elementList = string.Join(", ", result.SkippedElements.Take(5));
