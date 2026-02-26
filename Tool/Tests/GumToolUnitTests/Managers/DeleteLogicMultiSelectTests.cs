@@ -155,6 +155,42 @@ public class DeleteLogicMultiSelectTests : BaseTestClass
         DeleteLogic.GetFolderDeletionBlocker(fakePath).ShouldBeNull();
     }
 
+    [Fact]
+    public void GetFolderDeletionBlocker_MultipleFiles_ReturnsPluralBlocker()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "GumTest_" + Guid.NewGuid());
+        Directory.CreateDirectory(tempDir);
+        File.WriteAllText(Path.Combine(tempDir, "a.txt"), "");
+        File.WriteAllText(Path.Combine(tempDir, "b.txt"), "");
+        try
+        {
+            var result = DeleteLogic.GetFolderDeletionBlocker(tempDir);
+            result.ShouldBe("contains 2 files");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void GetFolderDeletionBlocker_FilesAndSubdirectories_ReturnsCombinedBlocker()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "GumTest_" + Guid.NewGuid());
+        Directory.CreateDirectory(tempDir);
+        File.WriteAllText(Path.Combine(tempDir, "a.txt"), "");
+        Directory.CreateDirectory(Path.Combine(tempDir, "subfolder"));
+        try
+        {
+            var result = DeleteLogic.GetFolderDeletionBlocker(tempDir);
+            result.ShouldBe("contains a file and a folder");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
     private ScreenSave CreateScreenWithInstances(params string[] instanceNames)
     {
         var screen = new ScreenSave();

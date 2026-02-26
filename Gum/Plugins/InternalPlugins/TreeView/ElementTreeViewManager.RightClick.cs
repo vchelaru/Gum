@@ -36,6 +36,18 @@ public partial class ElementTreeViewManager
 
     private void AddSeparator() => _contextMenu.Items.Add(new Separator());
 
+    private void AddFolderMenuItems()
+    {
+        var folderCount = _selectedState.SelectedTreeNodes
+            .Count(n => n.IsScreensFolderTreeNode() || n.IsComponentsFolderTreeNode());
+        var deleteText = folderCount > 1 ? $"Delete {folderCount} Folders" : "Delete Folder";
+        AddMenuItem(deleteText, HandleDeleteFolder);
+        if (folderCount == 1)
+        {
+            AddMenuItem("Rename Folder", HandleRenameFolder);
+        }
+    }
+
     #endregion
 
     #region Event handlers
@@ -340,14 +352,7 @@ public partial class ElementTreeViewManager
 
                 if (SelectedNode.IsScreensFolderTreeNode())
                 {
-                    var folderCount = _selectedState.SelectedTreeNodes
-                        .Count(n => n.IsScreensFolderTreeNode() || n.IsComponentsFolderTreeNode());
-                    var deleteText = folderCount > 1 ? $"Delete {folderCount} Folders" : "Delete Folder";
-                    AddMenuItem(deleteText, HandleDeleteFolder);
-                    if (folderCount == 1)
-                    {
-                        AddMenuItem("Rename Folder", HandleRenameFolder);
-                    }
+                    AddFolderMenuItems();
                 }
             }
 
@@ -364,14 +369,7 @@ public partial class ElementTreeViewManager
 
                 if (SelectedNode.IsComponentsFolderTreeNode())
                 {
-                    var folderCount = _selectedState.SelectedTreeNodes
-                        .Count(n => n.IsScreensFolderTreeNode() || n.IsComponentsFolderTreeNode());
-                    var deleteText = folderCount > 1 ? $"Delete {folderCount} Folders" : "Delete Folder";
-                    AddMenuItem(deleteText, HandleDeleteFolder);
-                    if (folderCount == 1)
-                    {
-                        AddMenuItem("Rename Folder", HandleRenameFolder);
-                    }
+                    AddFolderMenuItems();
                 }
             }
 
