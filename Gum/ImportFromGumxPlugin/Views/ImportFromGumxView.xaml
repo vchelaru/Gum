@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:Gum.Services.Dialogs;assembly=Gum"
-    xmlns:local="clr-namespace:ImportFromGumxPlugin.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     dialogs:Dialog.DialogTitle="Import from .gumx"
     dialogs:Dialog.ScrollContent="False"
@@ -50,21 +49,21 @@
                     Content="Browse..."
                     Padding="8,2"
                     Click="OnBrowseClick"
-                    IsEnabled="{Binding IsLocalFile}" />
+                    Visibility="{Binding BrowseButtonVisibility}" />
             </Grid>
 
             <TextBlock
                 Foreground="{DynamicResource Frb.Brushes.Error}"
                 Text="{Binding ErrorMessage}"
-                Visibility="{Binding ErrorMessage, Converter={x:Static local:NullToVisibilityConverter.Instance}}"
+                Visibility="{Binding ErrorMessageVisibility}"
                 Margin="0,0,0,2"
                 TextWrapping="Wrap" />
 
             <TextBlock
-                Text="Loading..."
+                Text="{Binding LoadingStatus}"
                 FontStyle="Italic"
                 Foreground="{DynamicResource Frb.Brushes.Foreground.Subtle}"
-                Visibility="{Binding IsLoading, Converter={x:Static local:BoolToVisibilityConverter.Instance}}" />
+                Visibility="{Binding LoadingStatusVisibility}" />
 
         </StackPanel>
 
@@ -74,7 +73,7 @@
         <Grid
             Grid.Row="1"
             Margin="0,8,0,0"
-            Visibility="{Binding IsPreviewLoaded, Converter={x:Static local:BoolToVisibilityConverter.Instance}}">
+            Visibility="{Binding PreviewVisibility}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -140,7 +139,7 @@
                     <TextBlock
                         Grid.Row="1"
                         Text="{Binding WarningMessage}"
-                        Visibility="{Binding WarningMessage, Converter={x:Static local:NullToVisibilityConverter.Instance}}"
+                        Visibility="{Binding WarningMessageVisibility}"
                         Foreground="{DynamicResource Frb.Brushes.Error}"
                         TextWrapping="Wrap"
                         Margin="0,6,0,0" />

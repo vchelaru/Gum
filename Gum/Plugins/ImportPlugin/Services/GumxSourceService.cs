@@ -2,8 +2,10 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -18,12 +20,12 @@ public class GumxSourceService
     /// For local paths, uses GumProjectSave.Load directly.
     /// For URLs, fetches the .gumx and all referenced element files over HTTP.
     /// </summary>
-    public async Task<GumProjectSave?> LoadProjectAsync(string pathOrUrl)
+    public async Task<GumProjectSave?> LoadProjectAsync(string pathOrUrl, IProgress<(int loaded, int total)>? progress = null)
     {
         if (IsUrl(pathOrUrl))
         {
             pathOrUrl = NormalizeGitHubUrl(pathOrUrl);
-            return await LoadProjectFromUrlAsync(pathOrUrl);
+            return await LoadProjectFromUrlAsync(pathOrUrl, progress);
         }
         else
         {
@@ -121,7 +123,7 @@ public class GumxSourceService
             || pathOrUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
     }
 
-    private async Task<GumProjectSave?> LoadProjectFromUrlAsync(string url)
+    private async Task<GumProjectSave?> LoadProjectFromUrlAsync(string url, IProgress<(int loaded, int total)>? progress = null)
     {
         string content;
         try
@@ -154,92 +156,111 @@ public class GumxSourceService
         int lastSlash = url.LastIndexOf('/');
         string baseUrl = lastSlash >= 0 ? url[..(lastSlash + 1)] : url;
 
-        // Populate element lists from references by fetching element files over HTTP
-        await PopulateScreensFromReferencesAsync(gps, baseUrl);
-        await PopulateComponentsFromReferencesAsync(gps, baseUrl);
-        await PopulateStandardsFromReferencesAsync(gps, baseUrl);
-        await PopulateBehaviorsFromReferencesAsync(gps, baseUrl);
+        // Set up progress reporting
+        int total = gps.ScreenReferences.Count
+            + gps.ComponentReferences.Count
+            + gps.StandardElementReferences.Count
+            + (gps.BehaviorReferences?.Count ?? 0);
+        int[] loaded = { 0 };
+        Action? onFileLoaded = progress != null
+            ? () => progress.Report((Interlocked.Increment(ref loaded[0]), total))
+            : null;
+
+        // Populate element lists from references by fetching element files over HTTP in parallel
+        await Task.WhenAll(
+            PopulateScreensFromReferencesAsync(gps, baseUrl, onFileLoaded),
+            PopulateComponentsFromReferencesAsync(gps, baseUrl, onFileLoaded),
+            PopulateStandardsFromReferencesAsync(gps, baseUrl, onFileLoaded),
+            PopulateBehaviorsFromReferencesAsync(gps, baseUrl, onFileLoaded));
 
         return gps;
     }
 
-    private async Task PopulateScreensFromReferencesAsync(GumProjectSave gps, string baseUrl)
+    private async Task PopulateScreensFromReferencesAsync(GumProjectSave gps, string baseUrl, Action? onFileLoaded = null)
     {
         gps.Screens.Clear();
-        foreach (var reference in gps.ScreenReferences)
+        var tasks = gps.ScreenReferences.Select(async reference =>
         {
             reference.ElementType = ElementType.Screen;
             string relativePath = $"Screens/{reference.Name}.{GumProjectSave.ScreenExtension}";
             var elementText = await FetchElementTextAsync(relativePath, baseUrl);
-            if (elementText != null)
-            {
-                var screen = DeserializeElementFromText<ScreenSave>(elementText, gps.Version);
-                if (screen != null)
-                {
-                    screen.Name = reference.Name;
-                    gps.Screens.Add(screen);
-                }
-            }
+            onFileLoaded?.Invoke();
+            if (elementText == null) return null;
+            var screen = DeserializeElementFromText<ScreenSave>(elementText, gps.Version);
+            if (screen != null) screen.Name = reference.Name;
+            return screen;
+        }).ToList();
+
+        foreach (var screen in await Task.WhenAll(tasks))
+        {
+            if (screen != null)
+                gps.Screens.Add(screen);
         }
     }
 
-    private async Task PopulateComponentsFromReferencesAsync(GumProjectSave gps, string baseUrl)
+    private async Task PopulateComponentsFromReferencesAsync(GumProjectSave gps, string baseUrl, Action? onFileLoaded = null)
     {
         gps.Components.Clear();
-        foreach (var reference in gps.ComponentReferences)
+        var tasks = gps.ComponentReferences.Select(async reference =>
         {
             reference.ElementType = ElementType.Component;
             string relativePath = $"Components/{reference.Name}.{GumProjectSave.ComponentExtension}";
             var elementText = await FetchElementTextAsync(relativePath, baseUrl);
-            if (elementText != null)
-            {
-                var component = DeserializeElementFromText<ComponentSave>(elementText, gps.Version);
-                if (component != null)
-                {
-                    component.Name = reference.Name;
-                    gps.Components.Add(component);
-                }
-            }
+            onFileLoaded?.Invoke();
+            if (elementText == null) return null;
+            var component = DeserializeElementFromText<ComponentSave>(elementText, gps.Version);
+            if (component != null) component.Name = reference.Name;
+            return component;
+        }).ToList();
+
+        foreach (var component in await Task.WhenAll(tasks))
+        {
+            if (component != null)
+                gps.Components.Add(component);
         }
     }
 
-    private async Task PopulateStandardsFromReferencesAsync(GumProjectSave gps, string baseUrl)
+    private async Task PopulateStandardsFromReferencesAsync(GumProjectSave gps, string baseUrl, Action? onFileLoaded = null)
     {
         gps.StandardElements.Clear();
-        foreach (var reference in gps.StandardElementReferences)
+        var tasks = gps.StandardElementReferences.Select(async reference =>
         {
             reference.ElementType = ElementType.Standard;
             string relativePath = $"Standards/{reference.Name}.{GumProjectSave.StandardExtension}";
             var elementText = await FetchElementTextAsync(relativePath, baseUrl);
-            if (elementText != null)
-            {
-                var standard = DeserializeElementFromText<StandardElementSave>(elementText, gps.Version);
-                if (standard != null)
-                {
-                    standard.Name = reference.Name;
-                    gps.StandardElements.Add(standard);
-                }
-            }
+            onFileLoaded?.Invoke();
+            if (elementText == null) return null;
+            var standard = DeserializeElementFromText<StandardElementSave>(elementText, gps.Version);
+            if (standard != null) standard.Name = reference.Name;
+            return standard;
+        }).ToList();
+
+        foreach (var standard in await Task.WhenAll(tasks))
+        {
+            if (standard != null)
+                gps.StandardElements.Add(standard);
         }
     }
 
-    private async Task PopulateBehaviorsFromReferencesAsync(GumProjectSave gps, string baseUrl)
+    private async Task PopulateBehaviorsFromReferencesAsync(GumProjectSave gps, string baseUrl, Action? onFileLoaded = null)
     {
         gps.Behaviors.Clear();
         if (gps.BehaviorReferences == null) return;
-        foreach (var reference in gps.BehaviorReferences)
+        var tasks = gps.BehaviorReferences.Select(async reference =>
         {
             string relativePath = $"Behaviors/{reference.Name}.{BehaviorReference.Extension}";
             var elementText = await FetchElementTextAsync(relativePath, baseUrl);
-            if (elementText != null)
-            {
-                var behavior = DeserializeBehaviorFromText(elementText, gps.Version);
-                if (behavior != null)
-                {
-                    behavior.Name = reference.Name;
-                    gps.Behaviors.Add(behavior);
-                }
-            }
+            onFileLoaded?.Invoke();
+            if (elementText == null) return null;
+            var behavior = DeserializeBehaviorFromText(elementText, gps.Version);
+            if (behavior != null) behavior.Name = reference.Name;
+            return behavior;
+        }).ToList();
+
+        foreach (var behavior in await Task.WhenAll(tasks))
+        {
+            if (behavior != null)
+                gps.Behaviors.Add(behavior);
         }
     }
 

@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.Mvvm;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -10,6 +11,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace ImportFromGumxPlugin.ViewModels;
 
@@ -49,20 +51,32 @@ public class ImportFromGumxViewModel : DialogViewModel
     public SourceType SourceType
     {
         get => Get<SourceType>();
-        set => Set(value);
+        set
+        {
+            if (Set(value))
+            {
+                ClearPreview();
+            }
+        }
     }
 
+    [DependsOn(nameof(SourceType))]
     public bool IsLocalFile
     {
         get => SourceType == SourceType.LocalFile;
         set { if (value) { SourceType = SourceType.LocalFile; } }
     }
 
+    [DependsOn(nameof(SourceType))]
     public bool IsUrl
     {
         get => SourceType == SourceType.Url;
         set { if (value) { SourceType = SourceType.Url; } }
     }
+
+    [DependsOn(nameof(IsLocalFile))]
+    public Visibility BrowseButtonVisibility =>
+        IsLocalFile ? Visibility.Visible : Visibility.Collapsed;
 
     public string DestinationSubfolder
     {
@@ -80,6 +94,10 @@ public class ImportFromGumxViewModel : DialogViewModel
         }
     }
 
+    [DependsOn(nameof(IsPreviewLoaded))]
+    public Visibility PreviewVisibility =>
+        IsPreviewLoaded ? Visibility.Visible : Visibility.Collapsed;
+
     public bool IsLoading
     {
         get => Get<bool>();
@@ -91,17 +109,35 @@ public class ImportFromGumxViewModel : DialogViewModel
         }
     }
 
+    public string? LoadingStatus
+    {
+        get => Get<string>();
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(LoadingStatus))]
+    public Visibility LoadingStatusVisibility =>
+        string.IsNullOrEmpty(LoadingStatus) ? Visibility.Collapsed : Visibility.Visible;
+
     public string? ErrorMessage
     {
         get => Get<string>();
         set => Set(value);
     }
 
+    [DependsOn(nameof(ErrorMessage))]
+    public Visibility ErrorMessageVisibility =>
+        string.IsNullOrEmpty(ErrorMessage) ? Visibility.Collapsed : Visibility.Visible;
+
     public string? WarningMessage
     {
         get => Get<string>();
         set => Set(value);
     }
+
+    [DependsOn(nameof(WarningMessage))]
+    public Visibility WarningMessageVisibility =>
+        string.IsNullOrEmpty(WarningMessage) ? Visibility.Collapsed : Visibility.Visible;
 
     public ObservableCollection<ImportTreeNodeViewModel> RootNodes { get; } = new ObservableCollection<ImportTreeNodeViewModel>();
 
@@ -193,13 +229,11 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     private bool CanExecuteLoadPreview() => !IsLoading && !string.IsNullOrWhiteSpace(SourcePath);
 
-    private async Task ExecuteLoadPreviewAsync()
+    private void ClearPreview()
     {
-        if (string.IsNullOrWhiteSpace(SourcePath)) { return; }
-
-        IsLoading = true;
         IsPreviewLoaded = false;
         ErrorMessage = null;
+        LoadingStatus = null;
         foreach (ImportTreeNodeViewModel leaf in _allLeafItems)
         {
             leaf.PropertyChanged -= OnItemPropertyChanged;
@@ -207,11 +241,38 @@ public class ImportFromGumxViewModel : DialogViewModel
         _allLeafItems.Clear();
         RootNodes.Clear();
         _sourceProject = null;
+    }
+
+    private async Task ExecuteLoadPreviewAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SourcePath)) { return; }
+
+        IsLoading = true;
+        ClearPreview();
 
         try
         {
             string pathOrUrl = SourcePath.Trim();
-            var project = await _sourceService.LoadProjectAsync(pathOrUrl);
+
+            if (SourceType == SourceType.LocalFile && IsSameFileAsCurrentProject(pathOrUrl))
+            {
+                ErrorMessage = "The selected file is the currently open project. Please choose a different .gumx file to import from.";
+                return;
+            }
+
+            IProgress<(int loaded, int total)>? progress = null;
+            if (SourceType == SourceType.Url)
+            {
+                LoadingStatus = "Loading...";
+                progress = new Progress<(int loaded, int total)>(p =>
+                    LoadingStatus = $"Loading file {p.loaded} of {p.total}...");
+            }
+            else
+            {
+                LoadingStatus = "Loading...";
+            }
+
+            var project = await _sourceService.LoadProjectAsync(pathOrUrl, progress);
 
             if (project == null)
             {
@@ -238,6 +299,24 @@ public class ImportFromGumxViewModel : DialogViewModel
         finally
         {
             IsLoading = false;
+            LoadingStatus = null;
+        }
+    }
+
+    private bool IsSameFileAsCurrentProject(string path)
+    {
+        var currentFile = _projectState.GumProjectSave?.FullFileName;
+        if (string.IsNullOrEmpty(currentFile)) return false;
+
+        try
+        {
+            var fullSource = System.IO.Path.GetFullPath(path);
+            var fullCurrent = System.IO.Path.GetFullPath(currentFile);
+            return string.Equals(fullSource, fullCurrent, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
         }
     }
 
