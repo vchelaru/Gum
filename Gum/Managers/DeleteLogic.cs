@@ -382,7 +382,7 @@ public class DeleteLogic : IDeleteLogic
             if (item != null)
             {
                 // I tried a tab, but the spacing was too big
-                optionsWindow.Message += $"  - {GetItemDisplayName(item, duplicateNames)}\n";
+                optionsWindow.Message += $"  • {GetItemDisplayName(item, duplicateNames)}\n";
             }
         }
 
@@ -391,7 +391,7 @@ public class DeleteLogic : IDeleteLogic
             optionsWindow.Message += "\nThe following will NOT be deleted (defined in base):";
             foreach (var instance in instancesFromBase)
             {
-                optionsWindow.Message += $"\n  - {instance.Name}";
+                optionsWindow.Message += $"\n  • {instance.Name}";
             }
             optionsWindow.Message += "\n";
         }
@@ -948,7 +948,7 @@ public class DeleteLogic : IDeleteLogic
             message += "Can be deleted:\n";
             foreach (var (node, _) in deletable)
             {
-                message += $"  - {node.Text}\n";
+                message += $"  • {node.Text}\n";
             }
             message += "\n";
         }
@@ -956,7 +956,7 @@ public class DeleteLogic : IDeleteLogic
         message += "Cannot be deleted:\n";
         foreach (var (node, reason) in blocked)
         {
-            message += $"  - {node.Text} - {reason}\n";
+            message += $"  • {node.Text} - {reason}\n";
         }
         return message;
     }
@@ -972,7 +972,7 @@ public class DeleteLogic : IDeleteLogic
         string message = "Delete " + deletable.Count + " folders?\n";
         foreach (var (node, _) in deletable)
         {
-            message += $"  - {node.Text}\n";
+            message += $"  • {node.Text}\n";
         }
         return message;
     }
