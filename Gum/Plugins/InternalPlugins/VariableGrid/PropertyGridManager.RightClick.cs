@@ -9,10 +9,6 @@ namespace Gum.Managers
     public partial class PropertyGridManager
 	{
         
-        private void InitializeRightClickMenu()
-        {
-        }
-
         void HandleFileFromProjectSelect(object? sender, EventArgs args)
         {
             ToolStripMenuItem menuItem = sender as ToolStripMenuItem;
