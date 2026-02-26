@@ -19,6 +19,21 @@ public class ErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetErrorsFor_ShouldReportError_WhenComponentHasInvalidBaseType()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave component = new ComponentSave { Name = "DerivedComponent", BaseType = "NonExistentBase" };
+        project.Components.Add(component);
+
+        ErrorViewModel[] errors = _sut.GetErrorsFor(component, project);
+
+        errors.Length.ShouldBe(1);
+        errors[0].Message.ShouldContain("NonExistentBase");
+    }
+
+    [Fact]
     public void GetErrorsFor_ShouldReportError_WhenComponentInstanceHasInvalidBaseType()
     {
         var project = new GumProjectSave();

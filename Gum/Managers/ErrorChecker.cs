@@ -37,6 +37,7 @@ public class ErrorChecker : IErrorChecker
                 {
                     list.AddRange(GetBehaviorErrorsFor(asComponent, project));
                 }
+                list.AddRange(GetMissingElementBaseTypeErrorFor(element));
                 list.AddRange(GetMissingBaseTypeErrorsFor(element));
 
                 list.AddRange(GetParentErrorsFor(element));
@@ -242,6 +243,29 @@ public class ErrorChecker : IErrorChecker
                         }
                     }
                 }
+            }
+        }
+
+        return toReturn;
+    }
+
+    #endregion
+
+    #region Element BaseType Errors
+
+    List<ErrorViewModel> GetMissingElementBaseTypeErrorFor(ElementSave elementSave)
+    {
+        var toReturn = new List<ErrorViewModel>();
+
+        if (!string.IsNullOrEmpty(elementSave.BaseType))
+        {
+            var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+            if (baseElement == null)
+            {
+                toReturn.Add(new ErrorViewModel
+                {
+                    Message = $"{elementSave.Name} has a base type of {elementSave.BaseType} which does not exist"
+                });
             }
         }
 

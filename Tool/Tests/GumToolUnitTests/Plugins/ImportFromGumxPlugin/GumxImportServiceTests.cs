@@ -11,6 +11,7 @@ using Shouldly;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace GumToolUnitTests.Plugins.ImportFromGumxPlugin;
@@ -91,7 +92,7 @@ public class GumxImportServiceTests : IDisposable
     // ── conflict detection ────────────────────────────────────────────────
 
     [Fact]
-    public void ImportAsync_ComponentConflict_ReturnsConflictingNameAndWritesNothing()
+    public async Task ImportAsync_ComponentConflict_ReturnsConflictingNameAndWritesNothing()
     {
         // Arrange
         string componentName = "MyButton";
@@ -106,11 +107,11 @@ public class GumxImportServiceTests : IDisposable
 
         WriteSourceComponent(componentName);
 
-        var component = ComponentNoAssets(componentName);
-        var source    = SourceProject();
+        ComponentSave component = ComponentNoAssets(componentName);
+        GumProjectSave source   = SourceProject();
         source.Components.Add(component);
 
-        var selections = new ImportSelections
+        ImportSelections selections = new ImportSelections
         {
             DirectComponents    = new() { component },
             TransitiveComponents = new(),
@@ -120,7 +121,7 @@ public class GumxImportServiceTests : IDisposable
         };
 
         // Act
-        var result = _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "").GetAwaiter().GetResult();
+        ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
 
         // Assert
         result.ConflictingElements.ShouldContain(conflictingName);
@@ -129,17 +130,17 @@ public class GumxImportServiceTests : IDisposable
     }
 
     [Fact]
-    public void ImportAsync_NoConflicts_ConflictingElementsIsEmpty()
+    public async Task ImportAsync_NoConflicts_ConflictingElementsIsEmpty()
     {
         // Arrange — no pre-existing destination files
         string componentName = "CleanButton";
         WriteSourceComponent(componentName);
 
-        var component = ComponentNoAssets(componentName);
-        var source    = SourceProject();
+        ComponentSave component = ComponentNoAssets(componentName);
+        GumProjectSave source   = SourceProject();
         source.Components.Add(component);
 
-        var selections = new ImportSelections
+        ImportSelections selections = new ImportSelections
         {
             DirectComponents     = new() { component },
             TransitiveComponents = new(),
@@ -149,14 +150,14 @@ public class GumxImportServiceTests : IDisposable
         };
 
         // Act
-        var result = _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "").GetAwaiter().GetResult();
+        ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
 
         // Assert
         result.ConflictingElements.ShouldBeEmpty();
     }
 
     [Fact]
-    public void ImportAsync_ScreenConflict_ReturnsConflictingScreenName()
+    public async Task ImportAsync_ScreenConflict_ReturnsConflictingScreenName()
     {
         // Arrange
         string screenName = "GameScreen";
@@ -169,11 +170,11 @@ public class GumxImportServiceTests : IDisposable
 
         WriteSourceScreen(screenName);
 
-        var screen = ScreenNoAssets(screenName);
-        var source = SourceProject();
+        ScreenSave screen      = ScreenNoAssets(screenName);
+        GumProjectSave source  = SourceProject();
         source.Screens.Add(screen);
 
-        var selections = new ImportSelections
+        ImportSelections selections = new ImportSelections
         {
             DirectComponents     = new(),
             TransitiveComponents = new(),
@@ -183,7 +184,7 @@ public class GumxImportServiceTests : IDisposable
         };
 
         // Act
-        var result = _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "").GetAwaiter().GetResult();
+        ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
 
         // Assert
         result.ConflictingElements.ShouldContain(screenName);
@@ -191,7 +192,7 @@ public class GumxImportServiceTests : IDisposable
     }
 
     [Fact]
-    public void ImportAsync_StandardConflict_StandardIsNotFlaggedAsConflict()
+    public async Task ImportAsync_StandardConflict_StandardIsNotFlaggedAsConflict()
     {
         // Arrange — standards are intentionally overwritten, never flagged as conflicts
         string standardName = "Text";
@@ -210,15 +211,15 @@ public class GumxImportServiceTests : IDisposable
             Path.Combine(srcStandardsDir, $"{standardName}.{GumProjectSave.StandardExtension}"),
             $"<StandardElementSave><Name>{standardName}</Name></StandardElementSave>");
 
-        var standard = new StandardElementSave
+        StandardElementSave standard = new StandardElementSave
         {
             Name   = standardName,
             States = new() { new StateSave { Name = "Default", Variables = new() } }
         };
-        var source = SourceProject();
+        GumProjectSave source = SourceProject();
         source.StandardElements.Add(standard);
 
-        var selections = new ImportSelections
+        ImportSelections selections = new ImportSelections
         {
             DirectComponents     = new(),
             TransitiveComponents = new(),
@@ -228,7 +229,7 @@ public class GumxImportServiceTests : IDisposable
         };
 
         // Act
-        var result = _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "").GetAwaiter().GetResult();
+        ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
 
         // Assert
         result.ConflictingElements.ShouldBeEmpty();
@@ -237,7 +238,7 @@ public class GumxImportServiceTests : IDisposable
     // ── asset gating ──────────────────────────────────────────────────────
 
     [Fact]
-    public void ImportAsync_AssetMissing_ElementIsSkippedAndNotWritten()
+    public async Task ImportAsync_AssetMissing_ElementIsSkippedAndNotWritten()
     {
         // Arrange
         string componentName  = "SpriteButton";
@@ -246,11 +247,11 @@ public class GumxImportServiceTests : IDisposable
         WriteSourceComponent(componentName);
         // Deliberately do NOT create the asset file in _sourceDir
 
-        var component = ComponentWithAsset(componentName, missingAsset);
-        var source    = SourceProject();
+        ComponentSave component = ComponentWithAsset(componentName, missingAsset);
+        GumProjectSave source   = SourceProject();
         source.Components.Add(component);
 
-        var selections = new ImportSelections
+        ImportSelections selections = new ImportSelections
         {
             DirectComponents     = new() { component },
             TransitiveComponents = new(),
@@ -260,7 +261,7 @@ public class GumxImportServiceTests : IDisposable
         };
 
         // Act
-        var result = _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "").GetAwaiter().GetResult();
+        ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
 
         // Assert
         result.SkippedElements.ShouldContain(componentName);
@@ -269,7 +270,7 @@ public class GumxImportServiceTests : IDisposable
     }
 
     [Fact]
-    public void ImportAsync_AssetPresent_ElementIsImportedAndNotSkipped()
+    public async Task ImportAsync_AssetPresent_ElementIsImportedAndNotSkipped()
     {
         // Arrange
         string componentName  = "SpriteButton";
@@ -282,11 +283,11 @@ public class GumxImportServiceTests : IDisposable
         Directory.CreateDirectory(assetDir);
         File.WriteAllBytes(Path.Combine(assetDir, "button.png"), new byte[] { 1, 2, 3 });
 
-        var component = ComponentWithAsset(componentName, assetRelPath);
-        var source    = SourceProject();
+        ComponentSave component = ComponentWithAsset(componentName, assetRelPath);
+        GumProjectSave source   = SourceProject();
         source.Components.Add(component);
 
-        var selections = new ImportSelections
+        ImportSelections selections = new ImportSelections
         {
             DirectComponents     = new() { component },
             TransitiveComponents = new(),
@@ -296,7 +297,7 @@ public class GumxImportServiceTests : IDisposable
         };
 
         // Act
-        var result = _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "").GetAwaiter().GetResult();
+        ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
 
         // Assert
         result.SkippedElements.ShouldBeEmpty();
@@ -312,19 +313,19 @@ public class GumxImportServiceTests : IDisposable
         public List<string> ImportedScreenPaths    { get; } = new();
         public List<string> ImportedBehaviorPaths  { get; } = new();
 
-        public ComponentSave? ImportComponent(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
+        public ComponentSave? ImportComponent(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
         {
             ImportedComponentPaths.Add(filePath.FullPath);
             return new ComponentSave();
         }
 
-        public ScreenSave? ImportScreen(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
+        public ScreenSave? ImportScreen(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
         {
             ImportedScreenPaths.Add(filePath.FullPath);
             return new ScreenSave();
         }
 
-        public BehaviorSave ImportBehavior(FilePath filePath, string desiredDirectory = null, bool saveProject = false)
+        public BehaviorSave ImportBehavior(FilePath filePath, string? desiredDirectory = null, bool saveProject = false)
         {
             ImportedBehaviorPaths.Add(filePath.FullPath);
             return new BehaviorSave();

@@ -3,7 +3,6 @@ using Gum.Managers;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Services.Dialogs;
-using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
@@ -21,7 +20,6 @@ public class MenuStripManagerTests : BaseTestClass
     private readonly Mock<IDialogService> _dialogService;
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IProjectManager> _projectManager;
-    private readonly AutoMocker _autoMocker;
     private readonly MenuStripManager _menuStripManager;
 
     public MenuStripManagerTests()
@@ -33,17 +31,12 @@ public class MenuStripManagerTests : BaseTestClass
         _fileCommands = new Mock<IFileCommands>();
         _projectManager = new Mock<IProjectManager>();
 
-        // ProjectCommands is a concrete class; use AutoMocker to create it
-        _autoMocker = new AutoMocker();
-        var projectCommands = _autoMocker.CreateInstance<ProjectCommands>();
-
         _menuStripManager = new MenuStripManager(
             _selectedState.Object,
             _undoManager.Object,
             _editCommands.Object,
             _dialogService.Object,
             _fileCommands.Object,
-            projectCommands,
             _projectManager.Object
         );
     }

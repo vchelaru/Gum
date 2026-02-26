@@ -60,7 +60,8 @@ public class ElementSaveDisplayer
         bool IsAssignedByReference,
         string Subtext,
         string? DisplayName = null,
-        string? ToolTipText = null);
+        string? ToolTipText = null,
+        Dictionary<string, object>? PropertiesToSetOnDisplayer = null);
 
     #endregion
 
@@ -72,7 +73,7 @@ public class ElementSaveDisplayer
     {
         _subtextLogic = subtextLogic;
         _selectedState = selectedState;
-        _undoManager = undoManager;;
+        _undoManager = undoManager;
         _typeManager = typeManager;
         _variableSaveLogic = new VariableSaveLogic();
         _categorySortAndColorLogic = new CategorySortAndColorLogic();
@@ -583,6 +584,14 @@ public class ElementSaveDisplayer
 
         srim.ToolTipText = propertyData.ToolTipText;
 
+        if (propertyData.PropertiesToSetOnDisplayer != null)
+        {
+            foreach (var kvp in propertyData.PropertiesToSetOnDisplayer)
+            {
+                srim.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
+            }
+        }
+
         // moved to internal
         //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
         SetSubtext(stateSave, propertyData.Subtext, srim, variableName);
@@ -891,7 +900,8 @@ public class ElementSaveDisplayer
         {
             var baseTypeConverter = new AvailableBaseTypeConverter(instanceOwner, instance);
             // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
-            pdc.Add(new PropertyData("BaseType", typeof(string), new Attribute[0], baseTypeConverter, "", isReadOnly, false, null));
+            pdc.Add(new PropertyData("BaseType", typeof(string), new Attribute[0], baseTypeConverter, "", isReadOnly, false, null,
+                PropertiesToSetOnDisplayer: new Dictionary<string, object> { [nameof(ComboBoxDisplay.IsEditable)] = true }));
         }
     }
 

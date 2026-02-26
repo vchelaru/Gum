@@ -54,8 +54,7 @@ public partial class ElementTreeViewManager
 
     void HandleDeleteObject()
     {
-        using var undoLock = _undoManager.RequestLock();
-        _deleteLogic.HandleDeleteCommand();
+        _editCommands.DeleteSelection();
     }
 
     void HandleDuplicateElement()

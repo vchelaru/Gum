@@ -3,11 +3,10 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Gui.Windows;
+using Gum.Logic;
 using Gum.Plugins;
-using Gum.Responses;
 using Gum.Services;
 using Gum.Services.Dialogs;
-using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
@@ -23,26 +22,25 @@ namespace Gum.Managers;
 
 public class DeleteLogic : IDeleteLogic
 {
-    private readonly ProjectCommands _projectCommands;
     private readonly ISelectedState _selectedState;
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectManager _projectManager;
+    private readonly IReferenceFinder _referenceFinder;
 
     public DeleteLogic(
-        ProjectCommands projectCommands,
         ISelectedState selectedState,
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        PluginManager pluginManager,
+        IPluginManager pluginManager,
         IWireframeObjectManager wireframeObjectManager,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        IReferenceFinder referenceFinder)
     {
-        _projectCommands = projectCommands;
         _selectedState = selectedState;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
@@ -50,12 +48,13 @@ public class DeleteLogic : IDeleteLogic
         _pluginManager = pluginManager;
         _wireframeObjectManager = wireframeObjectManager;
         _projectManager = projectManager;
+        _referenceFinder = referenceFinder;
     }
 
 
     public void HandleDeleteCommand()
     {
-        var handled = PluginManager.Self.TryHandleDelete();
+        var handled = _pluginManager.TryHandleDelete();
         if (!handled)
         {
             DoDeletingLogic();
@@ -94,8 +93,8 @@ public class DeleteLogic : IDeleteLogic
             return;
         }
 
-        Array objectsDeleted = null;
-        DeleteOptionsWindow optionsWindow = null;
+        Array? objectsDeleted = null;
+        DeleteOptionsWindow? optionsWindow = null;
 
         var selectedElements = _selectedState.SelectedElements;
         var selectedInstance = _selectedState.SelectedInstance;
@@ -141,7 +140,7 @@ public class DeleteLogic : IDeleteLogic
 
 
 
-                    PluginManager.Self.InstanceDelete(selectedElement, selectedInstance);
+                    _pluginManager.InstanceDelete(selectedElement, selectedInstance);
 
                     var deletedSelection = _selectedState.SelectedInstance == selectedInstance;
 
@@ -187,7 +186,7 @@ public class DeleteLogic : IDeleteLogic
 
                     foreach (var item in array)
                     {
-                        _projectCommands.RemoveElement(item);
+                        RemoveElement(item);
                     }
                     _selectedState.SelectedElement = null;
                 }
@@ -206,7 +205,7 @@ public class DeleteLogic : IDeleteLogic
                 {
                     // We need to remove the reference
                     var behavior = item;
-                    _projectCommands.RemoveBehavior(behavior);
+                    RemoveBehavior(behavior);
 
                 }
             }
@@ -225,14 +224,14 @@ public class DeleteLogic : IDeleteLogic
 
         if (shouldDelete)
         {
-            PluginManager.Self.DeleteConfirm(optionsWindow, objectsDeleted);
+            _pluginManager.DeleteConfirm(optionsWindow, objectsDeleted);
         }
     }
 
     private void HandleMixedTypeDeletion(
-        List<ElementSave> elements = null,
-        List<BehaviorSave> behaviors = null,
-        List<InstanceSave> instances = null)
+        List<ElementSave>? elements = null,
+        List<BehaviorSave>? behaviors = null,
+        List<InstanceSave>? instances = null)
     {
         elements ??= new List<ElementSave>();
         behaviors ??= new List<BehaviorSave>();
@@ -290,17 +289,17 @@ public class DeleteLogic : IDeleteLogic
         // 2. Remove elements
         foreach (var element in elements)
         {
-            _projectCommands.RemoveElement(element);
+            RemoveElement(element);
         }
 
         // 3. Remove behaviors
         foreach (var behavior in behaviors)
         {
-            _projectCommands.RemoveBehavior(behavior);
+            RemoveBehavior(behavior);
         }
 
         // 4. Notify plugins (handles XML file deletion, children deletion, etc.)
-        PluginManager.Self.DeleteConfirm(optionsWindow, combinedArray);
+        _pluginManager.DeleteConfirm(optionsWindow, combinedArray);
 
         // 5. Update selection to avoid stale references
         if (elements.Count > 0)
@@ -337,7 +336,7 @@ public class DeleteLogic : IDeleteLogic
     }
 
     bool? ShowDeleteDialog(Array objectsToDelete, out DeleteOptionsWindow optionsWindow,
-        List<InstanceSave> instancesFromBase = null)
+        List<InstanceSave>? instancesFromBase = null)
     {
 
         string titleText;
@@ -382,7 +381,7 @@ public class DeleteLogic : IDeleteLogic
             if (item != null)
             {
                 // I tried a tab, but the spacing was too big
-                optionsWindow.Message += $"  • {GetItemDisplayName(item, duplicateNames)}\n";
+                optionsWindow.Message += $"  â€¢ {GetItemDisplayName(item, duplicateNames)}\n";
             }
         }
 
@@ -391,9 +390,29 @@ public class DeleteLogic : IDeleteLogic
             optionsWindow.Message += "\nThe following will NOT be deleted (defined in base):";
             foreach (var instance in instancesFromBase)
             {
-                optionsWindow.Message += $"\n  • {instance.Name}";
+                optionsWindow.Message += $"\n  â€¢ {instance.Name}";
             }
             optionsWindow.Message += "\n";
+        }
+
+        var elementItems = objectsToDelete.OfType<ElementSave>().ToList();
+        bool multipleElements = elementItems.Count > 1;
+        foreach (var element in elementItems)
+        {
+            ElementRenameChanges impactChanges = _referenceFinder.GetReferencesToElement(element, element.Name);
+            string impactDetails = impactChanges.GetDeleteImpactDetails();
+            if (!string.IsNullOrEmpty(impactDetails))
+            {
+                optionsWindow.Message += "\n";
+                if (multipleElements)
+                {
+                    optionsWindow.Message += $"\nImpact of deleting {element.Name}:\n{impactDetails}";
+                }
+                else
+                {
+                    optionsWindow.Message += $"\n{impactDetails}";
+                }
+            }
         }
 
         optionsWindow.ObjectsToDelete = objectsToDelete;
@@ -401,7 +420,7 @@ public class DeleteLogic : IDeleteLogic
         // do this in Loaded so it has height
         //_guiCommands.MoveToCursor(optionsWindow);
 
-        PluginManager.Self.ShowDeleteDialog(optionsWindow, objectsToDelete);
+        _pluginManager.ShowDeleteDialog(optionsWindow, objectsToDelete);
 
         var result = optionsWindow.ShowDialog();
 
@@ -447,7 +466,7 @@ public class DeleteLogic : IDeleteLogic
         return item.ToString() ?? "";
     }
 
-    private void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
+    private void RefreshAndSaveAfterInstanceRemoval(ElementSave? selectedElement, BehaviorSave? behavior)
     {
         SaveElementAfterInstanceRemoval(selectedElement);
         SaveBehaviorAfterInstanceRemoval(behavior);
@@ -455,7 +474,7 @@ public class DeleteLogic : IDeleteLogic
         RefreshAll();
     }
 
-    private void SaveBehaviorAfterInstanceRemoval(BehaviorSave behavior)
+    private void SaveBehaviorAfterInstanceRemoval(BehaviorSave? behavior)
     {
         if (behavior != null)
         {
@@ -464,7 +483,7 @@ public class DeleteLogic : IDeleteLogic
         }
     }
 
-    private void SaveElementAfterInstanceRemoval(ElementSave selectedElement)
+    private void SaveElementAfterInstanceRemoval(ElementSave? selectedElement)
     {
         if (selectedElement != null)
         {
@@ -473,7 +492,7 @@ public class DeleteLogic : IDeleteLogic
         }
     }
 
-    private void PickSelectedInstanceAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
+    private void PickSelectedInstanceAfterInstanceRemoval(ElementSave? selectedElement, BehaviorSave? behavior)
     {
         _selectedState.SelectedInstance = null;
         if (selectedElement != null)
@@ -500,62 +519,11 @@ public class DeleteLogic : IDeleteLogic
 
     public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
     {
-        var deleteResponse = new DeleteResponse();
-        deleteResponse.ShouldDelete = true;
-        deleteResponse.ShouldShowMessage = false;
-
-        // This category can only be removed if no behaviors require it
-        var behaviorsNeedingCategory = GetBehaviorsNeedingCategory(category, stateCategoryListContainer as ComponentSave);
-
-        if (behaviorsNeedingCategory.Any())
-        {
-            deleteResponse.ShouldDelete = false;
-            deleteResponse.ShouldShowMessage = true;
-
-            string message =
-                $"The category {category.Name} cannot be removed because it is needed by the following behavior(s):";
-
-            foreach (var behavior in behaviorsNeedingCategory)
-            {
-                message += "\n" + behavior.Name;
-            }
-
-            deleteResponse.Message = message;
-        }
-
-
-        if (deleteResponse.ShouldDelete)
-        {
-            deleteResponse = PluginManager.Self.GetDeleteStateCategoryResponse(category, stateCategoryListContainer);
-        }
-
-        if (deleteResponse.ShouldDelete == false)
-        {
-            if (deleteResponse.ShouldShowMessage)
-            {
-                _dialogService.ShowMessage(deleteResponse.Message, "Delete Category");
-            }
-        }
-        else
-        {
-            var response = _dialogService.ShowYesNoMessage($"Are you sure you want to delete the category {category.Name}?", "Delete category?");
-
-            if (response)
-            {
-                Remove(category);
-            }
-
-        }
-    }
-
-    private void Remove(StateSaveCategory category)
-    {
-        var stateCategoryListContainer =
-            _selectedState.SelectedStateContainer;
+        var stateCategoryListContainerToUse = _selectedState.SelectedStateContainer;
 
         var isRemovingSelectedCategory = _selectedState.SelectedStateCategorySave == category;
 
-        stateCategoryListContainer.Categories.Remove(category);
+        stateCategoryListContainerToUse.Categories.Remove(category);
 
         if (_selectedState.SelectedElement != null)
         {
@@ -567,8 +535,6 @@ public class DeleteLogic : IDeleteLogic
                 {
                     var variable = state.Variables[i];
 
-                    // Modern Gum now has the type match the state
-                    //if(variable.Type == category.Name + "State")
                     if (variable.Type == category.Name)
                     {
                         state.Variables.RemoveAt(i);
@@ -621,10 +587,10 @@ public class DeleteLogic : IDeleteLogic
         _guiCommands.RefreshVariables();
         _wireframeObjectManager.RefreshAll(true);
 
-        PluginManager.Self.CategoryDelete(category);
+        _pluginManager.CategoryDelete(category);
     }
 
-    public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave)
+    public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave? componentSave)
     {
         List<BehaviorSave> behaviors = new List<BehaviorSave>();
 
@@ -648,107 +614,49 @@ public class DeleteLogic : IDeleteLogic
 
     public void Remove(StateSave stateSave)
     {
-        bool shouldProgress = TryAskForRemovalConfirmation(stateSave, _selectedState.SelectedElement);
-        if (shouldProgress)
+        var stateCategory = _selectedState.SelectedStateCategorySave;
+        var shouldSelectAfterRemoval = stateSave == _selectedState.SelectedStateSave;
+        int index = stateCategory?.States.IndexOf(stateSave) ?? -1;
+
+        RemoveState(stateSave, _selectedState.SelectedStateContainer);
+        _pluginManager.StateDelete(stateSave);
+
+        _guiCommands.RefreshVariables();
+        _wireframeObjectManager.RefreshAll(true);
+
+        if (shouldSelectAfterRemoval)
         {
-            var stateCategory = _selectedState.SelectedStateCategorySave;
-            var shouldSelectAfterRemoval = stateSave == _selectedState.SelectedStateSave;
-            int index = stateCategory?.States.IndexOf(stateSave) ?? -1;
-
-            RemoveState(stateSave, _selectedState.SelectedStateContainer);
-            PluginManager.Self.StateDelete(stateSave);
-
-            _guiCommands.RefreshVariables();
-            _wireframeObjectManager.RefreshAll(true);
-
-            if (shouldSelectAfterRemoval)
+            int? newIndex = null;
+            if (index != -1)
             {
-                int? newIndex = null;
-                if (index != -1)
+                if (index < stateCategory.States.Count)
                 {
-                    if (index < stateCategory.States.Count)
-                    {
-                        newIndex = index;
-                    }
-                    else if (stateCategory.States.Count > 0)
-                    {
-                        newIndex = stateCategory.States.Count - 1;
-                    }
+                    newIndex = index;
                 }
-
-                if (newIndex == null && stateCategory != null)
+                else if (stateCategory.States.Count > 0)
                 {
-                    _selectedState.SelectedStateCategorySave = stateCategory;
-                    _selectedState.SelectedStateSave = null;
-                }
-                else if (newIndex != null)
-                {
-                    _selectedState.SelectedStateSave = stateCategory.States[newIndex.Value];
-                }
-                else if (_selectedState.SelectedElement != null)
-                {
-                    _selectedState.SelectedStateSave = _selectedState.SelectedElement.DefaultState;
-                }
-                else
-                {
-                    _selectedState.SelectedStateSave = null;
+                    newIndex = stateCategory.States.Count - 1;
                 }
             }
-        }
-    }
 
-
-    private bool TryAskForRemovalConfirmation(StateSave stateSave, ElementSave elementSave)
-    {
-        bool shouldContinue = true;
-        // See if the element is used anywhere
-
-        List<InstanceSave> foundInstances = new List<InstanceSave>();
-
-        if (elementSave != null)
-        {
-            ObjectFinder.Self.GetElementsReferencing(elementSave, null, foundInstances);
-        }
-
-        foreach (var instance in foundInstances)
-        {
-            // We don't want to go recursively, just top level because
-            // I *think* that the lists will include copies of the instances
-            // recursively
-            ElementSave parent = instance.ParentContainer;
-
-            string variableToLookFor = instance.Name + ".State";
-
-            // loop through all of the states to see if any of the parents' states
-            // reference the state that is being removed.
-            foreach (var stateInContainer in parent.AllStates)
+            if (newIndex == null && stateCategory != null)
             {
-                var foundVariable = stateInContainer.Variables.FirstOrDefault(item => item.Name == variableToLookFor);
-
-                if (foundVariable != null && foundVariable.Value == stateSave.Name)
-                {
-                    string message = "The state " + stateSave.Name + " is used in the element " +
-                        elementSave + " in its state " + stateInContainer + ".\n  What would you like to do?";
-
-                    DialogChoices<string> choices = new()
-                    {
-                        ["do-nothing"] = "Do nothing - project may be in an invalid state",
-                        ["make-default"] = "Change variable to default"
-                    };
-
-                    string? result = _dialogService.ShowChoices(message, choices);
-
-                    // eventually will want to add a cancel option
-
-                    if (result == "make-default")
-                    {
-                        foundVariable.Value = "Default";
-                    }
-                }
+                _selectedState.SelectedStateCategorySave = stateCategory;
+                _selectedState.SelectedStateSave = null;
+            }
+            else if (newIndex != null)
+            {
+                _selectedState.SelectedStateSave = stateCategory.States[newIndex.Value];
+            }
+            else if (_selectedState.SelectedElement != null)
+            {
+                _selectedState.SelectedStateSave = _selectedState.SelectedElement.DefaultState;
+            }
+            else
+            {
+                _selectedState.SelectedStateSave = null;
             }
         }
-
-        return shouldContinue;
     }
 
     /// <summary>
@@ -847,6 +755,81 @@ public class DeleteLogic : IDeleteLogic
         }
     }
 
+    public void RemoveElement(ElementSave element)
+    {
+        var gps = _projectManager.GumProjectSave;
+        var name = element.Name;
+        var removed = false;
+
+        if (element is ScreenSave asScreenSave)
+        {
+            RemoveElementReferencesFromList(name, gps.ScreenReferences);
+            gps.Screens.Remove(asScreenSave);
+            removed = true;
+        }
+        else if (element is ComponentSave asComponentSave)
+        {
+            RemoveElementReferencesFromList(name, gps.ComponentReferences);
+            gps.Components.Remove(asComponentSave);
+            removed = true;
+        }
+
+        if (removed)
+        {
+            if (_selectedState.SelectedElements.Contains(element))
+            {
+                _selectedState.SelectedElement = null;
+            }
+            _pluginManager.ElementDelete(element);
+            _fileCommands.TryAutoSaveProject();
+        }
+    }
+
+    private static void RemoveElementReferencesFromList(string name, List<ElementReference> references)
+    {
+        for (int i = 0; i < references.Count; i++)
+        {
+            if (references[i].Name == name)
+            {
+                references.RemoveAt(i);
+                break;
+            }
+        }
+    }
+
+    public void RemoveBehavior(BehaviorSave behavior)
+    {
+        var behaviorName = behavior.Name;
+        var gps = _projectManager.GumProjectSave;
+
+        gps.BehaviorReferences.RemoveAll(item => item.Name == behaviorName);
+        gps.Behaviors.Remove(behavior);
+
+        var elementsReferencingBehavior = new List<ElementSave>();
+        foreach (var element in ObjectFinder.Self.GumProjectSave.AllElements)
+        {
+            var matchingBehavior = element.Behaviors.FirstOrDefault(item => item.BehaviorName == behaviorName);
+            if (matchingBehavior != null)
+            {
+                element.Behaviors.Remove(matchingBehavior);
+                elementsReferencingBehavior.Add(element);
+            }
+        }
+
+        _selectedState.SelectedBehavior = null;
+
+        _pluginManager.BehaviorDeleted(behavior);
+
+        _guiCommands.RefreshStateTreeView();
+        _guiCommands.RefreshVariables();
+
+        _fileCommands.TryAutoSaveProject();
+        foreach (var element in elementsReferencingBehavior)
+        {
+            _fileCommands.TryAutoSaveElement(element);
+        }
+    }
+
     private void DeleteFolder(ITreeNode treeNode)
     {
         DeleteFolders(new List<ITreeNode> { treeNode });
@@ -912,7 +895,7 @@ public class DeleteLogic : IDeleteLogic
         foreach (var node in folderNodes)
         {
             string fullPath = node.GetFullFilePath().FullPath;
-            string blocker = GetFolderDeletionBlocker(fullPath);
+            string? blocker = GetFolderDeletionBlocker(fullPath);
 
             if (blocker != null)
             {
@@ -948,7 +931,7 @@ public class DeleteLogic : IDeleteLogic
             message += "Can be deleted:\n";
             foreach (var (node, _) in deletable)
             {
-                message += $"  • {node.Text}\n";
+                message += $"  â€¢ {node.Text}\n";
             }
             message += "\n";
         }
@@ -956,7 +939,7 @@ public class DeleteLogic : IDeleteLogic
         message += "Cannot be deleted:\n";
         foreach (var (node, reason) in blocked)
         {
-            message += $"  • {node.Text} - {reason}\n";
+            message += $"  â€¢ {node.Text} - {reason}\n";
         }
         return message;
     }
@@ -972,7 +955,7 @@ public class DeleteLogic : IDeleteLogic
         string message = "Delete " + deletable.Count + " folders?\n";
         foreach (var (node, _) in deletable)
         {
-            message += $"  • {node.Text}\n";
+            message += $"  â€¢ {node.Text}\n";
         }
         return message;
     }
@@ -981,7 +964,7 @@ public class DeleteLogic : IDeleteLogic
     /// Returns null if the folder can be deleted (empty or doesn't exist on disk),
     /// or a reason string describing why it cannot be deleted.
     /// </summary>
-    internal static string GetFolderDeletionBlocker(string fullPath)
+    internal static string? GetFolderDeletionBlocker(string fullPath)
     {
         if (!System.IO.Directory.Exists(fullPath))
         {
@@ -996,7 +979,7 @@ public class DeleteLogic : IDeleteLogic
             return null;
         }
 
-        string filePart = null;
+        string? filePart = null;
         if (fileCount == 1)
         {
             filePart = "a file";
@@ -1006,7 +989,7 @@ public class DeleteLogic : IDeleteLogic
             filePart = fileCount + " files";
         }
 
-        string folderPart = null;
+        string? folderPart = null;
         if (folderCount == 1)
         {
             folderPart = "a folder";

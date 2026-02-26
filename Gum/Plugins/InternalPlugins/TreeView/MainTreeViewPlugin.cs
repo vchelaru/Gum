@@ -176,6 +176,7 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     private void HandleElementAdd(ElementSave save)
     {
         _elementTreeViewManager.RefreshUi();
+        RefreshErrorIndicatorsForAllElements();
     }
 
     private void HandleBehaviorCreated(BehaviorSave save)
@@ -186,6 +187,7 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     private void HandleElementDeleted(ElementSave save)
     {
         _elementTreeViewManager.RefreshUi();
+        RefreshErrorIndicatorsForAllElements();
     }
 
     private void HandleBehaviorSelected(BehaviorSave save)
