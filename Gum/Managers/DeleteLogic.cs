@@ -65,6 +65,29 @@ public class DeleteLogic : IDeleteLogic
 
     private void DoDeletingLogic()
     {
+        // Check for mixed-type selections (e.g., instance + behavior, component + behavior)
+        // by reading directly from the tree view's selected nodes. SelectedState enforces
+        // mutual exclusion between elements, behaviors, and instances, so we bypass it here.
+        var allSelectedTags = _selectedState.SelectedTreeNodes
+            .Select(n => n.Tag)
+            .Where(t => t != null)
+            .ToList();
+
+        var elementsFromTree = allSelectedTags.OfType<ElementSave>()
+            .Where(e => e is not StandardElementSave).ToList();
+        var behaviorsFromTree = allSelectedTags.OfType<BehaviorSave>().ToList();
+        var instancesFromTree = allSelectedTags.OfType<InstanceSave>().ToList();
+
+        int typesPresent = (elementsFromTree.Count > 0 ? 1 : 0)
+            + (behaviorsFromTree.Count > 0 ? 1 : 0)
+            + (instancesFromTree.Count > 0 ? 1 : 0);
+
+        if (typesPresent > 1)
+        {
+            HandleMixedTypeDeletion(elementsFromTree, behaviorsFromTree, instancesFromTree);
+            return;
+        }
+
         Array objectsDeleted = null;
         DeleteOptionsWindow optionsWindow = null;
 
@@ -76,7 +99,8 @@ public class DeleteLogic : IDeleteLogic
 
         if (_selectedState.SelectedInstances.Count() > 1)
         {
-            AskToDeleteInstances(_selectedState.SelectedInstances);
+            HandleMixedTypeDeletion(
+                instances: _selectedState.SelectedInstances.ToList());
         }
         else if (selectedInstance != null)
         {
@@ -85,7 +109,7 @@ public class DeleteLogic : IDeleteLogic
 
             if (selectedInstance.DefinedByBase)
             {
-                _dialogService.ShowMessage($"The instance {selectedInstance.Name} cannot be deleted becuase it is defined in a base object.");
+                _dialogService.ShowMessage($"The instance {selectedInstance.Name} cannot be deleted because it is defined in a base object.");
             }
             else
             {
@@ -99,31 +123,14 @@ public class DeleteLogic : IDeleteLogic
                     var siblings = selectedInstance.GetSiblingsIncludingThis();
                     var parentInstance = selectedInstance.GetParentInstance();
 
-                    // This will delete all references to this, meaning, all
-                    // instances attached to the deleted object will be detached,
-                    // but we don't want that, we want to only do that if the user wants to do it, which
-                    // will be handled in a plugin
-                    //Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
-                    var instanceName = selectedInstance.Name;
                     var selectedElement = selectedElements.FirstOrDefault();
                     if (selectedElement != null)
                     {
-                        selectedElement.Instances.Remove(selectedInstance);
-                        selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instanceName);
+                        RemoveInstanceFromElement(selectedInstance, selectedElement);
                     }
                     else if (selectedBehavior != null)
                     {
                         selectedBehavior.RequiredInstances.Remove(selectedInstance as BehaviorInstanceSave);
-                    }
-
-                    // March 17, 2019
-                    // Let's also delete
-                    // any variables referencing
-                    // this object
-                    foreach (var state in selectedStateContainer.AllStates)
-                    {
-                        state.Variables.RemoveAll(item => item.SourceObject == instanceName);
-                        state.VariableLists.RemoveAll(item => item.SourceObject == instanceName);
                     }
 
 
@@ -217,14 +224,114 @@ public class DeleteLogic : IDeleteLogic
         }
     }
 
-    //bool? ShowDeleteMultiple(Array array)
-    //{
-    //    if(array.Length == 1)
-    //    {
-    //        ShowDeleteDialog(array[0]);
-    //    }
-    //}
-    bool? ShowDeleteDialog(Array objectsToDelete, out DeleteOptionsWindow optionsWindow)
+    private void HandleMixedTypeDeletion(
+        List<ElementSave> elements = null,
+        List<BehaviorSave> behaviors = null,
+        List<InstanceSave> instances = null)
+    {
+        elements ??= new List<ElementSave>();
+        behaviors ??= new List<BehaviorSave>();
+        instances ??= new List<InstanceSave>();
+
+        // Filter out DefinedByBase instances
+        var deletableInstances = instances.Where(i => !i.DefinedByBase).ToList();
+        var instancesFromBase = instances.Except(deletableInstances).ToList();
+
+        var combinedList = new List<object>();
+        combinedList.AddRange(elements);
+        combinedList.AddRange(behaviors);
+        combinedList.AddRange(deletableInstances);
+
+        if (combinedList.Count == 0)
+        {
+            if (instances.Count > 0)
+            {
+                _dialogService.ShowMessage(
+                    "All selected instances are defined in a base object, so cannot be deleted");
+            }
+            return;
+        }
+
+        var combinedArray = combinedList.ToArray();
+        var result = ShowDeleteDialog(combinedArray, out var optionsWindow, instancesFromBase);
+
+        if (result != true) return;
+
+        // Cache behavior parents before removal (GetBehaviorContainerOf won't find them after)
+        var affectedBehaviorParents = deletableInstances
+            .Select(i => ObjectFinder.Self.GetBehaviorContainerOf(i))
+            .Where(b => b != null && !behaviors.Contains(b))
+            .Distinct()
+            .ToList();
+
+        // 1. Remove instances (skip if parent element/behavior is also being deleted)
+        foreach (var instance in deletableInstances)
+        {
+            var parentElement = instance.ParentContainer;
+            var parentBehavior = ObjectFinder.Self.GetBehaviorContainerOf(instance);
+
+            if (parentElement != null && !elements.Contains(parentElement))
+            {
+                RemoveInstanceFromElement(instance, parentElement);
+            }
+            else if (parentBehavior != null && !behaviors.Contains(parentBehavior)
+                && instance is BehaviorInstanceSave behaviorInstance)
+            {
+                parentBehavior.RequiredInstances.Remove(behaviorInstance);
+            }
+        }
+
+        // 2. Remove elements
+        foreach (var element in elements)
+        {
+            _projectCommands.RemoveElement(element);
+        }
+
+        // 3. Remove behaviors
+        foreach (var behavior in behaviors)
+        {
+            _projectCommands.RemoveBehavior(behavior);
+        }
+
+        // 4. Notify plugins (handles XML file deletion, children deletion, etc.)
+        PluginManager.Self.DeleteConfirm(optionsWindow, combinedArray);
+
+        // 5. Update selection to avoid stale references
+        if (elements.Count > 0)
+        {
+            _selectedState.SelectedElement = null;
+        }
+        if (deletableInstances.Count > 0)
+        {
+            DeselectInstances(deletableInstances);
+            _selectedState.SelectedInstance = null;
+        }
+
+        // 6. Refresh and save for instance parents that were not themselves deleted
+        if (deletableInstances.Count > 0)
+        {
+            var affectedElementParents = deletableInstances
+                .Select(i => i.ParentContainer)
+                .Where(e => e != null && !elements.Contains(e))
+                .Distinct()
+                .ToList();
+
+            foreach (var parent in affectedElementParents)
+            {
+                SaveElementAfterInstanceRemoval(parent);
+            }
+
+            foreach (var behavior in affectedBehaviorParents)
+            {
+                SaveBehaviorAfterInstanceRemoval(behavior);
+            }
+        }
+
+        _wireframeObjectManager.RefreshAll(true);
+    }
+
+    bool? ShowDeleteDialog(Array objectsToDelete, out DeleteOptionsWindow optionsWindow,
+        List<InstanceSave> instancesFromBase = null)
     {
 
         string titleText;
@@ -254,17 +361,33 @@ public class DeleteLogic : IDeleteLogic
         optionsWindow = new DeleteOptionsWindow();
         optionsWindow.Title = titleText;
         optionsWindow.Message = "Are you sure you want to delete:\n";
+
+        // Collect the short name of every item, then find which names appear more than once
+        var names = new List<string>();
         foreach (var item in objectsToDelete)
         {
-            if(item != null)
-            {
-                string itemDisplay = item is InstanceSave instanceSave
-                    ? instanceSave.Name
-                    : item.ToString() ?? "";
-                // I tried a tab, but the spacing was too big
-                optionsWindow.Message += $"  •{itemDisplay}\n";
-            }
+            if (item != null) names.Add(GetShortName(item));
+        }
+        var duplicateNames = new HashSet<string>(
+            names.GroupBy(n => n).Where(g => g.Count() > 1).Select(g => g.Key));
 
+        foreach (var item in objectsToDelete)
+        {
+            if (item != null)
+            {
+                // I tried a tab, but the spacing was too big
+                optionsWindow.Message += $"  •{GetItemDisplayName(item, duplicateNames)}\n";
+            }
+        }
+
+        if (instancesFromBase != null && instancesFromBase.Count > 0)
+        {
+            optionsWindow.Message += "\nThe following will NOT be deleted (defined in base):";
+            foreach (var instance in instancesFromBase)
+            {
+                optionsWindow.Message += $"\n  •{instance.Name}";
+            }
+            optionsWindow.Message += "\n";
         }
 
         optionsWindow.ObjectsToDelete = objectsToDelete;
@@ -280,114 +403,92 @@ public class DeleteLogic : IDeleteLogic
         return result;
     }
 
-    private void AskToDeleteInstances(IEnumerable<InstanceSave> instances)
+    private static string GetShortName(object item)
     {
-        var deletableInstances = instances.Where(item => item.DefinedByBase == false).ToArray();
-        var instancesFromBase = instances.Except(deletableInstances).ToArray();
+        if (item is InstanceSave instance) return instance.Name;
+        if (item is ElementSave element) return element.Name;
+        if (item is BehaviorSave behavior) return behavior.Name;
+        return item.ToString() ?? "";
+    }
 
-        if (instancesFromBase.Any())
+    private static string GetItemDisplayName(object item, HashSet<string> duplicateNames)
+    {
+        if (item is InstanceSave instanceSave)
         {
-            // Show warning about instances from base
-            string message;
-            if (deletableInstances.Any())
+            if (duplicateNames.Contains(instanceSave.Name))
             {
-                // has both
-                message = "The following instances will be deleted:";
-                foreach (var instance in deletableInstances)
-                {
-                    message += "\n" + instance.Name;
-                }
-
-                message += "\n\nThe following instances will NOT be deleted because they are defined in a base object:";
-                foreach (var instance in instancesFromBase)
-                {
-                    message += "\n" + instance.Name;
-                }
+                var parent = instanceSave.ParentContainer;
+                var typePrefix = parent is ScreenSave ? "Screens" : "Components";
+                return $"{typePrefix}/{parent?.Name}/{instanceSave.Name}";
             }
-            else
-            {
-                // only from base
-                message = "All selected instances are defined in a base object, so cannot be deleted";
-                _dialogService.ShowMessage(message);
-                return;
-            }
-
-            // Show the message as part of the delete dialog by appending to the dialog later
-            // For now, show the warning separately if there are mixed instances
-            _dialogService.ShowMessage(message);
+            return instanceSave.Name;
         }
-
-        if (deletableInstances.Any())
+        if (item is ScreenSave screenSave)
         {
-            DeleteOptionsWindow optionsWindow = null;
-            var result = ShowDeleteDialog(deletableInstances, out optionsWindow);
-
-            if (result == true)
-            {
-                ElementSave selectedElement = _selectedState.SelectedElement;
-
-                // Just in case the argument is a reference to the selected instances:
-                var instancesToRemove = deletableInstances.ToList();
-
-                // Remove instances from collection and their owned variables,
-                // but DO NOT remove parent references yet - let the plugin handle that
-                foreach (var instance in instancesToRemove)
-                {
-                    selectedElement.Instances.Remove(instance);
-                    selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
-                }
-
-                // Remove variables owned by the instances
-                foreach (var state in selectedElement.AllStates)
-                {
-                    foreach (var instance in instancesToRemove)
-                    {
-                        state.Variables.RemoveAll(item => item.SourceObject == instance.Name);
-                        state.VariableLists.RemoveAll(item => item.SourceObject == instance.Name);
-                    }
-                }
-
-                // Let plugin handle children deletion (this will call RemoveParentReferencesToInstance as needed)
-                PluginManager.Self.DeleteConfirm(optionsWindow, deletableInstances);
-
-                // Clear selection
-                var newSelection = _selectedState.SelectedInstances.ToList()
-                    .Except(instancesToRemove);
-                _selectedState.SelectedInstances = newSelection;
-
-                // Then refresh and save
-                RefreshAndSaveAfterInstanceRemoval(selectedElement, null);
-            }
+            return duplicateNames.Contains(screenSave.Name)
+                ? $"Screens/{screenSave.Name}" : screenSave.Name;
         }
+        if (item is ElementSave elementSave)
+        {
+            return duplicateNames.Contains(elementSave.Name)
+                ? $"Components/{elementSave.Name}" : elementSave.Name;
+        }
+        if (item is BehaviorSave behaviorSave)
+        {
+            return duplicateNames.Contains(behaviorSave.Name)
+                ? $"Behaviors/{behaviorSave.Name}" : behaviorSave.Name;
+        }
+        return item.ToString() ?? "";
     }
 
     private void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
     {
+        SaveElementAfterInstanceRemoval(selectedElement);
+        SaveBehaviorAfterInstanceRemoval(behavior);
+        PickSelectedInstanceAfterInstanceRemoval(selectedElement, behavior);
+        RefreshAll();
+    }
+
+    private void SaveBehaviorAfterInstanceRemoval(BehaviorSave behavior)
+    {
+        if (behavior != null)
+        {
+            _fileCommands.TryAutoSaveBehavior(behavior);
+            _guiCommands.RefreshElementTreeView(behavior);
+        }
+    }
+
+    private void SaveElementAfterInstanceRemoval(ElementSave selectedElement)
+    {
         if (selectedElement != null)
         {
             _fileCommands.TryAutoSaveElement(selectedElement);
+            _guiCommands.RefreshElementTreeView(selectedElement);
         }
-        else if (behavior != null)
-        {
-            _fileCommands.TryAutoSaveBehavior(behavior);
-        }
+    }
 
-        ElementSave elementToReselect = selectedElement;
-        BehaviorSave behaviorToReselect = behavior;
-
-
+    private void PickSelectedInstanceAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
+    {
         _selectedState.SelectedInstance = null;
         if (selectedElement != null)
         {
-            _selectedState.SelectedElement = elementToReselect;
-            _guiCommands.RefreshElementTreeView(selectedElement);
+            _selectedState.SelectedElement = selectedElement;
         }
         else if (behavior != null)
         {
-            _selectedState.SelectedBehavior = behaviorToReselect;
-            _guiCommands.RefreshElementTreeView(behavior);
+            _selectedState.SelectedBehavior = behavior;
         }
+    }
 
+    private void DeselectInstances(IEnumerable<InstanceSave> instancesToDeselect)
+    {
+        var newSelection = _selectedState.SelectedInstances.ToList()
+            .Except(instancesToDeselect);
+        _selectedState.SelectedInstances = newSelection;
+    }
+
+    private void RefreshAll()
+    {
         _wireframeObjectManager.RefreshAll(true);
     }
 
@@ -657,12 +758,7 @@ public class DeleteLogic : IDeleteLogic
             throw new Exception("Could not find the instance " + instanceToRemove.Name + " in " + elementToRemoveFrom.Name);
         }
 
-        elementToRemoveFrom.Instances.Remove(instanceToRemove);
-
-        RemoveParentReferencesToInstance(instanceToRemove, elementToRemoveFrom);
-
-        elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instanceToRemove.Name);
-
+        RemoveInstanceFromElement(instanceToRemove, elementToRemoveFrom);
 
         _pluginManager.InstanceDelete(elementToRemoveFrom, instanceToRemove);
 
@@ -670,6 +766,13 @@ public class DeleteLogic : IDeleteLogic
         {
             _selectedState.SelectedInstance = null;
         }
+    }
+
+    private void RemoveInstanceFromElement(InstanceSave instance, ElementSave element)
+    {
+        element.Instances.Remove(instance);
+        element.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
+        RemoveParentReferencesToInstance(instance, element);
     }
 
     public void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
@@ -709,17 +812,13 @@ public class DeleteLogic : IDeleteLogic
     {
         foreach (var instance in instances)
         {
-            elementToRemoveFrom.Instances.Remove(instance);
-            RemoveParentReferencesToInstance(instance, elementToRemoveFrom);
-            elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
+            RemoveInstanceFromElement(instance, elementToRemoveFrom);
         }
 
 
         _pluginManager.InstancesDelete(elementToRemoveFrom, instances.ToArray());
 
-        var newSelection = _selectedState.SelectedInstances.ToList()
-            .Except(instances);
-        _selectedState.SelectedInstances = newSelection;
+        DeselectInstances(instances);
     }
 
     public void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom)
