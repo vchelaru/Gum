@@ -118,7 +118,7 @@ public class MainStatePlugin : InternalPlugin
             _hotkeyManager, 
             _selectedState,
             _copyPasteLogic);
-        _stateTreeViewRightClickService.SetMenuStrip(stateTreeView.TreeViewContextMenu, stateTreeView);
+        _stateTreeViewRightClickService.SetContextMenu(stateTreeView.TreeViewContextMenu, stateTreeView);
         
         newPluginTab = _tabManager.AddControl(stateTreeView, "States", TabLocation.CenterTop);
     }
@@ -129,13 +129,13 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory)
     {
-        _stateTreeViewRightClickService.PopulateMenuStrip();
+        _stateTreeViewRightClickService.PopulateContextMenu();
         stateTreeViewModel.RefreshTo(_selectedState.SelectedStateContainer, _selectedState, _objectFinder);
     }
 
     private void HandleElementSelected(ElementSave? save)
     {
-        _stateTreeViewRightClickService.PopulateMenuStrip();
+        _stateTreeViewRightClickService.PopulateContextMenu();
         HandleRefreshStateTreeView();
         RefreshTabHeaders();
     }
@@ -148,12 +148,12 @@ public class MainStatePlugin : InternalPlugin
         // a different container such as going from a component
         // to a selected instance in a behavior. In that case we
         // still want to refresh the menu items.
-        _stateTreeViewRightClickService.PopulateMenuStrip();
+        _stateTreeViewRightClickService.PopulateContextMenu();
     }
 
     private void HandleBehaviorSelected(BehaviorSave? behavior)
     {
-        _stateTreeViewRightClickService.PopulateMenuStrip();
+        _stateTreeViewRightClickService.PopulateContextMenu();
         HandleRefreshStateTreeView();
     }
 
@@ -175,13 +175,13 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleStateDelete(StateSave save)
     {
-        _stateTreeViewRightClickService.PopulateMenuStrip();
+        _stateTreeViewRightClickService.PopulateContextMenu();
         stateTreeViewModel.RefreshTo(_selectedState.SelectedStateContainer, _selectedState, _objectFinder);
     }
 
     private void HandleStateSelected(StateSave? state)
     {
-        _stateTreeViewRightClickService.PopulateMenuStrip();
+        _stateTreeViewRightClickService.PopulateContextMenu();
         stateTreeViewModel.SetSelectedState(state);
         var currentCategory = _selectedState.SelectedStateCategorySave;
         var currentState = _selectedState.SelectedStateSave;
@@ -201,7 +201,7 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleStateSaveCategorySelected(StateSaveCategory? stateSaveCategory)
     {
-        _stateTreeViewRightClickService.PopulateMenuStrip();
+        _stateTreeViewRightClickService.PopulateContextMenu();
         stateTreeViewModel.SetSelectedStateSaveCategory(stateSaveCategory);
     }
 
@@ -218,7 +218,7 @@ public class MainStatePlugin : InternalPlugin
             _selectedState.SelectedElement == null)
         {
 
-            _stateTreeViewRightClickService.PopulateMenuStrip();
+            _stateTreeViewRightClickService.PopulateContextMenu();
             HandleRefreshStateTreeView();
         }
     }

@@ -73,7 +73,7 @@ public class StateTreeViewModel : ViewModel
             {
                 _selectedState.SelectedStateSave = stateVm.Data;
                 // No need to do this, we have events that do this for us:
-                //_stateTreeViewRightClickService.PopulateMenuStrip();
+                //_stateTreeViewRightClickService.PopulateContextMenu();
             }
             else if(sender is CategoryViewModel categoryVm && categoryVm.IsSelected)
             {
@@ -85,7 +85,7 @@ public class StateTreeViewModel : ViewModel
                 }
                 _selectedState.SelectedStateCategorySave = categoryVm.Data;
                 // I don't think we need to do this anymore because we can rely on the plugin to respond to events
-                //_stateTreeViewRightClickService.PopulateMenuStrip();
+                //_stateTreeViewRightClickService.PopulateContextMenu();
             }
         }
         
@@ -385,14 +385,14 @@ public class StateTreeViewModel : ViewModel
         var stateVm = Categories.SelectMany(item => item.States).FirstOrDefault(item => item.Data == state);
 
         stateVm?.ForceRefreshTitle();
-        _stateTreeViewRightClickService.PopulateMenuStrip();
+        _stateTreeViewRightClickService.PopulateContextMenu();
     }
 
     internal void HandleRename(StateSaveCategory category)
     {
         var categoryVm = Categories.FirstOrDefault(item => item.Data == category);
         categoryVm?.ForceRefreshTitle();
-        _stateTreeViewRightClickService.PopulateMenuStrip();
+        _stateTreeViewRightClickService.PopulateContextMenu();
     }
 
     #endregion
