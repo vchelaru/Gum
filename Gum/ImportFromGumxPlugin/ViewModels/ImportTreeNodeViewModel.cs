@@ -50,7 +50,7 @@ public class ImportTreeNodeViewModel : ViewModel
             {
                 if (child.IsChecked != first)
                 {
-                    return null;
+                    return false;
                 }
             }
             return first;

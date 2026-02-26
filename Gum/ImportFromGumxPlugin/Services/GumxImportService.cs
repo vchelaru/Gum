@@ -19,7 +19,8 @@ namespace ImportFromGumxPlugin.Services;
 public class ImportResult
 {
     public List<string> CopiedAssets { get; } = new();
-    public List<string> MissingAssets { get; } = new();
+    /// <summary>Elements that were not imported because one or more of their required asset files could not be found.</summary>
+    public List<string> SkippedElements { get; } = new();
 }
 
 /// <summary>
@@ -73,62 +74,77 @@ public class GumxImportService
         string projectDir = _projectState.ProjectDirectory
             ?? throw new InvalidOperationException("No project is loaded");
 
-        // Build name-mapping from source names to destination names (with subfolder prefix if any)
+        var result = new ImportResult();
         var nameMap = BuildNameMap(selections, destinationSubfolder);
 
-        // 1. Standards — write to disk; they are picked up on project reload
-        foreach (var standard in selections.Standards)
-        {
-            await WriteAndImportStandardAsync(standard, source, sourceBase, projectDir);
-        }
-
-        // 2. Transitive components — topological order (already sorted by GumxDependencyResolver)
-        foreach (var component in selections.TransitiveComponents)
-        {
-            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap);
-        }
-
-        // 3. Behaviors
-        foreach (var behavior in selections.Behaviors)
-        {
-            await WriteAndImportBehaviorAsync(behavior, source, sourceBase, projectDir);
-        }
-
-        // 4. Direct components
-        foreach (var component in selections.DirectComponents)
-        {
-            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap);
-        }
-
-        // 5. Screens
-        foreach (var screen in selections.DirectScreens)
-        {
-            await WriteAndImportScreenAsync(screen, source, sourceBase, projectDir, nameMap);
-        }
-
-        // 6. Copy referenced asset files (images, animation chains, fonts)
-        var result = new ImportResult();
-        var allImportedElements = selections.Standards
-            .Cast<ElementSave>()
+        // Pre-fetch all assets for all candidate elements in parallel, so we can gate each
+        // element's import on whether its required assets are actually available.
+        var allCandidateElements = selections.Standards.Cast<ElementSave>()
             .Concat(selections.TransitiveComponents)
             .Concat(selections.DirectComponents)
-            .Concat(selections.DirectScreens);
-        var assetPaths = CollectReferencedAssetPaths(allImportedElements);
-        await CopyReferencedAssetsAsync(assetPaths, sourceBase, projectDir, result);
+            .Concat(selections.DirectScreens)
+            .ToList();
+
+        var assetsByElement = allCandidateElements.ToDictionary(
+            e => e,
+            e => CollectReferencedAssetPaths(new[] { e }));
+
+        var allAssetPaths = assetsByElement.Values
+            .SelectMany(p => p)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var fetchTasks = allAssetPaths
+            .Select(async p => (path: p, bytes: await _sourceService.FetchBinaryAsync(p.Replace('\\', '/'), sourceBase)))
+            .ToList();
+        var assetCache = (await Task.WhenAll(fetchTasks))
+            .ToDictionary(t => t.path, t => t.bytes, StringComparer.OrdinalIgnoreCase);
+
+        var skippedElements = allCandidateElements
+            .Where(e => assetsByElement[e].Any(p => assetCache.TryGetValue(p, out var b) ? b == null : false))
+            .ToHashSet();
+
+        foreach (var element in skippedElements)
+            result.SkippedElements.Add(element.Name);
+
+        // 1. Standards
+        foreach (var standard in selections.Standards.Where(s => !skippedElements.Contains(s)))
+            await WriteAndImportStandardAsync(standard, source, sourceBase, projectDir);
+
+        // 2. Transitive components — topological order (already sorted by GumxDependencyResolver)
+        foreach (var component in selections.TransitiveComponents.Where(c => !skippedElements.Contains(c)))
+            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap);
+
+        // 3. Behaviors (no asset dependencies)
+        foreach (var behavior in selections.Behaviors)
+            await WriteAndImportBehaviorAsync(behavior, source, sourceBase, projectDir);
+
+        // 4. Direct components
+        foreach (var component in selections.DirectComponents.Where(c => !skippedElements.Contains(c)))
+            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap);
+
+        // 5. Screens
+        foreach (var screen in selections.DirectScreens.Where(s => !skippedElements.Contains(s)))
+            await WriteAndImportScreenAsync(screen, source, sourceBase, projectDir, nameMap);
+
+        // 6. Write pre-fetched asset files to disk for imported elements
+        var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
+        await CopyCachedAssetsAsync(importedElements, assetCache, projectDir, result);
 
         // 7. Copy sibling .ganx (state animation) files for each imported element
         var allComponents = selections.TransitiveComponents.Cast<ElementSave>()
-            .Concat(selections.DirectComponents);
+            .Concat(selections.DirectComponents)
+            .Where(e => !skippedElements.Contains(e));
         await CopyGanxFilesAsync(allComponents, "Components", nameMap, sourceBase, projectDir);
-        await CopyGanxFilesAsync(selections.DirectScreens.Cast<ElementSave>(), "Screens", nameMap, sourceBase, projectDir);
+        await CopyGanxFilesAsync(
+            selections.DirectScreens.Cast<ElementSave>().Where(e => !skippedElements.Contains(e)),
+            "Screens", nameMap, sourceBase, projectDir);
 
         // 8. Save project then reload (standards take effect only after reload)
         var fileName = _projectState.GumProjectSave.FullFileName;
         bool wasSaved = _fileCommands.TryAutoSaveProject();
         if (wasSaved)
-        {
             _fileCommands.LoadProject(fileName);
-        }
 
         return result;
     }
@@ -168,21 +184,23 @@ public class GumxImportService
         || relativePath.IndexOf("FontCache\\", StringComparison.OrdinalIgnoreCase) >= 0;
 
     /// <summary>
-    /// Copies each asset file from the source base to the destination project directory,
-    /// preserving the relative path. Skips files already present. Records copied and missing paths.
+    /// Writes pre-fetched asset bytes to disk for each imported element.
+    /// Assets were already fetched and cached before import; elements with missing assets
+    /// were excluded from importedElements, so every path here should have cached bytes.
     /// </summary>
-    private async Task CopyReferencedAssetsAsync(
-        IEnumerable<string> assetRelativePaths,
-        string sourceBase,
+    private async Task CopyCachedAssetsAsync(
+        IEnumerable<ElementSave> importedElements,
+        Dictionary<string, byte[]?> assetCache,
         string projectDir,
         ImportResult result)
     {
-        foreach (var relativePath in assetRelativePaths)
+        var assetPaths = CollectReferencedAssetPaths(importedElements);
+        foreach (var relativePath in assetPaths)
         {
-            string normalizedRelative = relativePath
+            string normalized = relativePath
                 .Replace('/', Path.DirectorySeparatorChar)
                 .Replace('\\', Path.DirectorySeparatorChar);
-            string destPath = Path.Combine(projectDir, normalizedRelative);
+            string destPath = Path.Combine(projectDir, normalized);
 
             if (File.Exists(destPath))
             {
@@ -190,18 +208,11 @@ public class GumxImportService
                 continue;
             }
 
-            byte[]? bytes = await _sourceService.FetchBinaryAsync(
-                relativePath.Replace('\\', '/'), sourceBase);
-
-            if (bytes != null)
+            if (assetCache.TryGetValue(relativePath, out var bytes) && bytes != null)
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
                 await File.WriteAllBytesAsync(destPath, bytes);
                 result.CopiedAssets.Add(relativePath);
-            }
-            else
-            {
-                result.MissingAssets.Add(relativePath);
             }
         }
     }

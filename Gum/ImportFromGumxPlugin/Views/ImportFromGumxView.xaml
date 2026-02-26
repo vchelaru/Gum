@@ -79,22 +79,11 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="0,0,0,4">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    Grid.Column="0"
-                    Text="Select items to import"
-                    FontWeight="SemiBold"
-                    VerticalAlignment="Center" />
-                <Button
-                    Grid.Column="1"
-                    Content="Select All Components"
-                    Padding="8,2"
-                    Command="{Binding SelectAllComponentsCommand}" />
-            </Grid>
+            <TextBlock
+                Grid.Row="0"
+                Margin="0,0,0,4"
+                Text="Select items to import"
+                FontWeight="SemiBold" />
 
             <Border
                 Grid.Row="1"
@@ -124,7 +113,7 @@
                         <TreeView.ItemTemplate>
                             <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                 <CheckBox
-                                    IsChecked="{Binding IsChecked, Mode=OneWay, TargetNullValue={x:Null}}"
+                                    IsChecked="{Binding IsChecked, Mode=OneWay}"
                                     Style="{StaticResource ImportItemCheckBoxStyle}"
                                     Loaded="OnCheckBoxLoaded"
                                     Click="OnCheckBoxClick">

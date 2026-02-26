@@ -142,7 +142,6 @@ public class ImportFromGumxViewModel : DialogViewModel
     public ObservableCollection<ImportTreeNodeViewModel> RootNodes { get; } = new ObservableCollection<ImportTreeNodeViewModel>();
 
     public AsyncRelayCommand LoadPreviewCommand { get; }
-    public RelayCommand SelectAllComponentsCommand { get; }
 
     public ImportFromGumxViewModel(
         GumxSourceService sourceService,
@@ -159,7 +158,6 @@ public class ImportFromGumxViewModel : DialogViewModel
         SourceType = SourceType.LocalFile;
 
         LoadPreviewCommand = new AsyncRelayCommand(ExecuteLoadPreviewAsync, CanExecuteLoadPreview);
-        SelectAllComponentsCommand = new RelayCommand(ExecuteSelectAllComponents);
     }
 
     public override bool CanExecuteAffirmative() => IsPreviewLoaded && !IsLoading;
@@ -174,6 +172,12 @@ public class ImportFromGumxViewModel : DialogViewModel
 
         if (_sourceProject == null) { return; }
 
+        if (!_allLeafItems.Any(i => i.InclusionState == InclusionState.Explicit))
+        {
+            WarningMessage = "Please select at least one item to import.";
+            return;
+        }
+
         IsLoading = true;
         ErrorMessage = null;
         WarningMessage = null;
@@ -185,17 +189,17 @@ public class ImportFromGumxViewModel : DialogViewModel
 
             _isImportComplete = true;
 
-            if (result.MissingAssets.Count > 0)
+            if (result.SkippedElements.Count > 0)
             {
                 AffirmativeText = "Close";
-                string assetList = string.Join(", ", result.MissingAssets.Take(5));
-                if (result.MissingAssets.Count > 5)
+                string elementList = string.Join(", ", result.SkippedElements.Take(5));
+                if (result.SkippedElements.Count > 5)
                 {
-                    assetList += $" (and {result.MissingAssets.Count - 5} more)";
+                    elementList += $" (and {result.SkippedElements.Count - 5} more)";
                 }
                 WarningMessage =
-                    $"{result.MissingAssets.Count} asset file(s) could not be found in the source " +
-                    $"and were not copied: {assetList}";
+                    $"{result.SkippedElements.Count} element(s) were not imported because required " +
+                    $"asset files could not be found: {elementList}";
             }
             else
             {
@@ -210,21 +214,6 @@ public class ImportFromGumxViewModel : DialogViewModel
         {
             IsLoading = false;
         }
-    }
-
-    private void ExecuteSelectAllComponents()
-    {
-        _autoAddedComponentNames.Clear();
-        foreach (ImportTreeNodeViewModel item in _allLeafItems)
-        {
-            if (item.ElementType == ElementItemType.Component || item.ElementType == ElementItemType.Screen)
-            {
-                item.PropertyChanged -= OnItemPropertyChanged;
-                item.InclusionState = InclusionState.Explicit;
-                item.PropertyChanged += OnItemPropertyChanged;
-            }
-        }
-        RecomputeTransitiveDependencies();
     }
 
     private bool CanExecuteLoadPreview() => !IsLoading && !string.IsNullOrWhiteSpace(SourcePath);
