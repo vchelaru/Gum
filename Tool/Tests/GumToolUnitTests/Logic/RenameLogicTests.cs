@@ -54,12 +54,12 @@ public class RenameLogicTests : BaseTestClass
     public void ApplyElementRenameChanges_ElementBaseType_IsUpdated()
     {
         // After apply, an element whose BaseType matched oldName should be updated to the new name.
-        var button = new ComponentSave { Name = "ButtonNew" };
+        ComponentSave button = new ComponentSave { Name = "ButtonNew" };
 
-        var screen = new ScreenSave { Name = "TestScreen", BaseType = "Button" };
+        ScreenSave screen = new ScreenSave { Name = "TestScreen", BaseType = "Button" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
 
-        var changes = new ElementRenameChanges();
+        ElementRenameChanges changes = new ElementRenameChanges();
         changes.ElementsWithBaseTypeReference.Add(screen);
 
         _renameLogic.ApplyElementRenameChanges(changes, button, oldName: "Button");
@@ -71,14 +71,14 @@ public class RenameLogicTests : BaseTestClass
     public void ApplyElementRenameChanges_InstanceBaseType_IsUpdated()
     {
         // After apply, an instance whose BaseType matched oldName should be updated to the new name.
-        var button = new ComponentSave { Name = "ButtonNew" };
+        ComponentSave button = new ComponentSave { Name = "ButtonNew" };
 
-        var screen = new ScreenSave { Name = "TestScreen" };
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
-        var instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
+        InstanceSave instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
         screen.Instances.Add(instance);
 
-        var changes = new ElementRenameChanges();
+        ElementRenameChanges changes = new ElementRenameChanges();
         changes.InstancesWithBaseTypeReference.Add((screen, instance));
 
         _renameLogic.ApplyElementRenameChanges(changes, button, oldName: "Button");
@@ -91,16 +91,16 @@ public class RenameLogicTests : BaseTestClass
     {
         // After apply, a VariableReferences list entry whose right side referenced
         // "Components/Button.SomeProperty" should be rewritten with the new element name.
-        var button = new ComponentSave { Name = "ButtonNew" };
+        ComponentSave button = new ComponentSave { Name = "ButtonNew" };
 
-        var screen = new ScreenSave { Name = "TestScreen" };
-        var defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
         screen.States.Add(defaultState);
-        var varRefList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        VariableListSave<string> varRefList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
         varRefList.Value.Add("SomeVar = Components/Button.SomeProperty");
         defaultState.VariableLists.Add(varRefList);
 
-        var changes = new ElementRenameChanges();
+        ElementRenameChanges changes = new ElementRenameChanges();
         changes.VariableReferenceChanges.Add(new VariableReferenceChange
         {
             Container = screen,

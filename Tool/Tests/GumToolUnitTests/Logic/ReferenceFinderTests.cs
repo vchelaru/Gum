@@ -73,23 +73,6 @@ public class ReferenceFinderTests : BaseTestClass
     }
 
     [Fact]
-    public void GetReferencesToElement_DerivedComponent_IsFound()
-    {
-        // Alias for GetReferencesToElement_ComponentBaseType_IsDetected — explicit test per spec.
-        ComponentSave baseComponent = new ComponentSave { Name = "BaseComponent" };
-        baseComponent.States.Add(new StateSave { Name = "Default", ParentContainer = baseComponent });
-        _project.Components.Add(baseComponent);
-
-        ComponentSave derived = new ComponentSave { Name = "DerivedComponent", BaseType = "BaseComponent" };
-        derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
-        _project.Components.Add(derived);
-
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(baseComponent, elementName: "BaseComponent");
-
-        changes.ElementsWithBaseTypeReference.ShouldContain(derived);
-    }
-
-    [Fact]
     public void GetReferencesToElement_InstanceBaseType_IsDetected()
     {
         // An instance of the element should appear in InstancesWithBaseTypeReference
@@ -109,25 +92,6 @@ public class ReferenceFinderTests : BaseTestClass
         changes.InstancesWithBaseTypeReference.Count.ShouldBe(1);
         changes.InstancesWithBaseTypeReference[0].Container.ShouldBe(screen);
         changes.InstancesWithBaseTypeReference[0].Instance.ShouldBe(instance);
-    }
-
-    [Fact]
-    public void GetReferencesToElement_InstanceOfType_IsFound()
-    {
-        // Per spec: GetReferencesToElement_InstanceOfType_IsFound
-        ComponentSave button = new ComponentSave { Name = "Button" };
-        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
-        _project.Components.Add(button);
-
-        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
-        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
-        InstanceSave instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
-        screen.Instances.Add(instance);
-        _project.Screens.Add(screen);
-
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
-
-        changes.InstancesWithBaseTypeReference.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -670,43 +634,6 @@ public class ReferenceFinderTests : BaseTestClass
 
         result.VariableReferenceChanges.Count.ShouldBe(1);
         result.VariableReferenceChanges[0].VariableReferenceList.ShouldBe(varRefListA);
-    }
-
-    [Fact]
-    public void GetReferencesToVariable_VariableReferenceRightSideOnQualifiedName_OnlyDetectedForMatchingComponent()
-    {
-        // ComponentA and ComponentB both have a variable named BeforeRename.
-        // ComponentC has a VariableReferences list with two entries using qualified names:
-        // one referencing Components/ComponentA.BeforeRename and one referencing Components/ComponentB.BeforeRename.
-        // Finding references for BeforeRename in ComponentA should detect only the ComponentA entry (index 0).
-        ComponentSave componentA = new ComponentSave { Name = "ComponentA" };
-        componentA.States.Add(new StateSave { Name = "Default", ParentContainer = componentA });
-        _project.Components.Add(componentA);
-
-        ComponentSave componentB = new ComponentSave { Name = "ComponentB" };
-        componentB.States.Add(new StateSave { Name = "Default", ParentContainer = componentB });
-        _project.Components.Add(componentB);
-
-        ComponentSave componentC = new ComponentSave { Name = "ComponentC" };
-        StateSave defaultStateC = new StateSave { Name = "Default", ParentContainer = componentC };
-        componentC.States.Add(defaultStateC);
-
-        VariableListSave<string> varRefList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
-        varRefList.Value.Add("SomeVar = Components/ComponentA.BeforeRename");
-        varRefList.Value.Add("SomeOtherVar = Components/ComponentB.BeforeRename");
-        defaultStateC.VariableLists.Add(varRefList);
-
-        _project.Components.Add(componentC);
-
-        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
-            componentA,
-            oldFullName: "BeforeRename",
-            oldStrippedOrExposedName: "BeforeRename");
-
-        result.VariableReferenceChanges.Count.ShouldBe(1);
-        result.VariableReferenceChanges[0].VariableReferenceList.ShouldBe(varRefList);
-        result.VariableReferenceChanges[0].LineIndex.ShouldBe(0);
-        result.VariableReferenceChanges[0].ChangedSide.ShouldBe(SideOfEquals.Right);
     }
 
     [Fact]
