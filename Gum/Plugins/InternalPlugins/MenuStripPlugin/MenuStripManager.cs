@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Linq;
 using Gum.Commands;
 using Gum.Dialogs;
-using Gum.ToolCommands;
 using Gum.Services.Dialogs;
 
 namespace Gum.Managers
@@ -23,7 +22,7 @@ namespace Gum.Managers
         private readonly IEditCommands _editCommands;
         private readonly IDialogService _dialogService;
         private readonly IFileCommands _fileCommands;
-        private readonly ProjectCommands _projectCommands;
+        private readonly IDeleteLogic _deleteLogic;
         private readonly IProjectManager _projectManager;
 
         private Menu _menu;
@@ -55,7 +54,7 @@ namespace Gum.Managers
             IEditCommands editCommands,
             IDialogService dialogService,
             IFileCommands fileCommands,
-            ProjectCommands projectCommands,
+            IDeleteLogic deleteLogic,
             IProjectManager projectManager)
         {
             _selectedState = selectedState;
@@ -63,7 +62,7 @@ namespace Gum.Managers
             _editCommands = editCommands;
             _dialogService = dialogService;
             _fileCommands = fileCommands;
-            _projectCommands = projectCommands;
+            _deleteLogic = deleteLogic;
             _projectManager = projectManager;
         }
 
@@ -336,8 +335,7 @@ namespace Gum.Managers
 
         private void RemoveElementClicked(object? sender, System.Windows.RoutedEventArgs e)
         {
-            _projectCommands.RemoveElement(_selectedState.SelectedElement);
-            _selectedState.SelectedElement = null;
+            _deleteLogic.RemoveElement(_selectedState.SelectedElement);
         }
 
         private void RemoveStateOrCategoryClicked(object? sender, System.Windows.RoutedEventArgs e)

@@ -527,7 +527,7 @@ public class PluginManager : IPluginManager
         return response;
     }
 
-    internal DeleteResponse GetDeleteStateCategoryResponse(StateSaveCategory stateSaveCategory, IStateContainer element)
+    public DeleteResponse GetDeleteStateCategoryResponse(StateSaveCategory stateSaveCategory, IStateContainer element)
     {
         DeleteResponse response = new DeleteResponse();
         response.ShouldDelete = true;

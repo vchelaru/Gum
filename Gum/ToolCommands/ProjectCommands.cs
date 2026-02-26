@@ -1,17 +1,9 @@
-﻿using System.Collections.Generic;
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.Managers;
-using Gum.DataTypes.Behaviors;
 using Gum.ToolStates;
-using ToolsUtilities;
-using CommonFormsAndControls;
-using System.Windows.Forms;
-using System.Windows.Controls;
-using Gum.DataTypes.Variables;
-using Gum.Plugins;
-using System.Linq;
 using Gum.Commands;
 using Gum.Services;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.ToolCommands;
@@ -80,96 +72,9 @@ public class ProjectCommands
 
     #region Element (Screen/Component/Standard)
 
-    internal void RemoveElement(ElementSave element)
-    {
-        GumProjectSave gps = _projectManager.GumProjectSave;
-        string name = element.Name;
-        var removed = false;
-        if (element is ScreenSave asScreenSave)
-        {
-            RemoveElementReferencesFromList(name, gps.ScreenReferences);
-            gps.Screens.Remove(asScreenSave);
-            removed = true;
-        }
-        else if (element is ComponentSave asComponentSave)
-        {
-            RemoveElementReferencesFromList(name, gps.ComponentReferences);
-            gps.Components.Remove(asComponentSave);
-            removed = true;
-
-        }
-
-        if(removed)
-        {
-            if(_selectedState.SelectedElements.Contains(element))
-            {
-                _selectedState.SelectedElement = null;
-            }
-            Plugins.PluginManager.Self.ElementDelete(element);
-            _fileCommands.TryAutoSaveProject();
-        }
-    }
-
-    private static void RemoveElementReferencesFromList(string name, List<ElementReference> references)
-    {
-        for (int i = 0; i < references.Count; i++)
-        {
-            ElementReference reference = references[i];
-
-            if (reference.Name == name)
-            {
-                references.RemoveAt(i);
-                break;
-            }
-        }
-    }
-
     #endregion
 
     #region Behaviors
-
-    public void RemoveBehavior(BehaviorSave behavior)
-    {
-        string behaviorName = behavior.Name;
-
-        GumProjectSave gps = _projectManager.GumProjectSave;
-        List<BehaviorReference> references = gps.BehaviorReferences;
-
-        references.RemoveAll(item => item.Name == behavior.Name);
-
-        gps.Behaviors.Remove(behavior);
-
-        List<ElementSave> elementsReferencingBehavior = new List<ElementSave>();
-
-        foreach (var element in ObjectFinder.Self.GumProjectSave.AllElements)
-        {
-            var matchingBehavior = element.Behaviors.FirstOrDefault(item =>
-                item.BehaviorName == behaviorName);
-
-            if (matchingBehavior != null)
-            {
-                element.Behaviors.Remove(matchingBehavior);
-                elementsReferencingBehavior.Add(element);
-            }
-        }
-
-        _selectedState.SelectedBehavior = null;
-
-        PluginManager.Self.BehaviorDeleted(behavior);
-
-        _guiCommands.RefreshStateTreeView();
-        _guiCommands.RefreshVariables();
-        // I don't think we have to refresh the wireframe since nothing is being shown
-        //Wireframe.WireframeObjectManager.Self.RefreshAll(true);
-
-        _fileCommands.TryAutoSaveProject();
-
-        foreach (var element in elementsReferencingBehavior)
-        {
-            _fileCommands.TryAutoSaveElement(element);
-        }
-    }
-
 
     #endregion
 

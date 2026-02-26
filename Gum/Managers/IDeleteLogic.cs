@@ -9,6 +9,8 @@ namespace Gum.Managers;
 public interface IDeleteLogic
 {
     void HandleDeleteCommand();
+    void RemoveElement(ElementSave element);
+    void RemoveBehavior(BehaviorSave behavior);
     void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer);
     List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave);
     void Remove(StateSave stateSave);
