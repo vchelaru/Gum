@@ -35,7 +35,7 @@ namespace Gum.DataTypes.Behaviors
             }
         }
 
-        private static BehaviorSave DeserializeBehavior(string filePath, int projectVersion)
+        public static BehaviorSave DeserializeBehavior(string filePath, int projectVersion)
         {
             if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
             {

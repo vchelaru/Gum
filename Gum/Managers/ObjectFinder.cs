@@ -623,7 +623,7 @@ public class ObjectFinder : IObjectFinder
 
     #region Get Elements by inheritance
 
-    public StandardElementSave GetRootStandardElementSave(ElementSave elementSave)
+    public StandardElementSave? GetRootStandardElementSave(ElementSave? elementSave)
     {
         if (elementSave == null)
         {
@@ -636,7 +636,7 @@ public class ObjectFinder : IObjectFinder
 
             return ObjectFinder.Self.GetElementSave("Screen") as StandardElementSave;
         }
-        while (!(elementSave is StandardElementSave) && !string.IsNullOrEmpty(elementSave.BaseType))
+        while (!(elementSave is StandardElementSave) && !string.IsNullOrEmpty(elementSave?.BaseType))
         {
             elementSave = GetElementSave(elementSave.BaseType);
         }
@@ -644,7 +644,7 @@ public class ObjectFinder : IObjectFinder
         return elementSave as StandardElementSave;
     }
 
-    public StandardElementSave GetRootStandardElementSave(InstanceSave instanceSave)
+    public StandardElementSave? GetRootStandardElementSave(InstanceSave instanceSave)
     {
         return GetRootStandardElementSave(instanceSave.GetBaseElementSave());
     }

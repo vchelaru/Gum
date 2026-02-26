@@ -1,0 +1,159 @@
+<UserControl
+    x:Class="ImportFromGumxPlugin.Views.ImportFromGumxView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:Gum.Services.Dialogs;assembly=Gum"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    dialogs:Dialog.DialogTitle="Import from .gumx"
+    dialogs:Dialog.ScrollContent="False"
+    MinWidth="500"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <Style x:Key="ImportItemCheckBoxStyle" TargetType="CheckBox"
+               BasedOn="{StaticResource {x:Type CheckBox}}" />
+    </UserControl.Resources>
+
+    <!-- Row 0: source inputs (fixed height); Row 1: item list (fills remaining) -->
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ Source input ═══ -->
+        <StackPanel Grid.Row="0">
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                <RadioButton Content="Local File" IsChecked="{Binding IsLocalFile}" Margin="0,0,12,0" />
+                <RadioButton Content="URL" IsChecked="{Binding IsUrl}" />
+            </StackPanel>
+
+            <Grid Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox
+                    Grid.Column="0"
+                    Margin="0,0,4,0"
+                    Text="{Binding SourcePath, UpdateSourceTrigger=PropertyChanged}"
+                    KeyDown="OnSourcePathKeyDown"
+                    VerticalContentAlignment="Center" />
+
+                <Button
+                    x:Name="BrowseButton"
+                    Grid.Column="1"
+                    Content="Browse..."
+                    Padding="8,2"
+                    Click="OnBrowseClick"
+                    Visibility="{Binding BrowseButtonVisibility}" />
+            </Grid>
+
+            <TextBlock
+                Foreground="{DynamicResource Frb.Brushes.Error}"
+                Text="{Binding ErrorMessage}"
+                Visibility="{Binding ErrorMessageVisibility}"
+                Margin="0,0,0,2"
+                TextWrapping="Wrap" />
+
+            <TextBlock
+                Text="{Binding LoadingStatus}"
+                FontStyle="Italic"
+                Foreground="{DynamicResource Frb.Brushes.Foreground.Subtle}"
+                Visibility="{Binding LoadingStatusVisibility}" />
+
+        </StackPanel>
+
+        <!-- ═══ Phase 2 — fills remaining height ═══ -->
+        <!-- Grid replaces GroupBox: GroupBox's default template uses Height="Auto" for its content
+             row which passes infinite height to children, preventing the ListBox from scrolling. -->
+        <Grid
+            Grid.Row="1"
+            Margin="0,8,0,0"
+            Visibility="{Binding PreviewVisibility}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock
+                Grid.Row="0"
+                Margin="0,0,0,4"
+                Text="Select items to import"
+                FontWeight="SemiBold" />
+
+            <Border
+                Grid.Row="1"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource Frb.Brushes.Border}"
+                Padding="4">
+                <!-- Row 0: ListBox fills available space; Row 1: asset warning; Row 2: subfolder pinned to bottom -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TreeView
+                        Grid.Row="0"
+                        ItemsSource="{Binding RootNodes}"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        BorderThickness="0">
+
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="TreeViewItem">
+                                <Setter Property="IsExpanded" Value="True" />
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                <CheckBox
+                                    IsChecked="{Binding IsChecked, Mode=OneWay}"
+                                    Style="{StaticResource ImportItemCheckBoxStyle}"
+                                    Loaded="OnCheckBoxLoaded"
+                                    Click="OnCheckBoxClick">
+
+                                    <TextBlock Text="{Binding DisplayName, Mode=OneWay}" />
+                                </CheckBox>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+
+                    <!-- Asset warning (shown after import if files could not be copied) -->
+                    <TextBlock
+                        Grid.Row="1"
+                        Text="{Binding WarningMessage}"
+                        Visibility="{Binding WarningMessageVisibility}"
+                        Foreground="{DynamicResource Frb.Brushes.Error}"
+                        TextWrapping="Wrap"
+                        Margin="0,6,0,0" />
+
+                    <!-- Destination subfolder -->
+                    <Grid Grid.Row="2" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="Destination subfolder:"
+                            VerticalAlignment="Center"
+                            Margin="0,0,8,0" />
+
+                        <TextBox
+                            Grid.Column="1"
+                            Text="{Binding DestinationSubfolder, UpdateSourceTrigger=PropertyChanged}"
+                            VerticalContentAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+    </Grid>
+</UserControl>

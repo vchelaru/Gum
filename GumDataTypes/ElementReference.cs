@@ -167,7 +167,7 @@ namespace Gum.DataTypes
             }
         }
 
-        private static T DeserializeElement<T>(string filePath, int projectVersion) where T : ElementSave, new()
+        public static T DeserializeElement<T>(string filePath, int projectVersion) where T : ElementSave, new()
         {
             if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
             {

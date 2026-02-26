@@ -56,11 +56,13 @@
           <Border Grid.Row="1" Padding="12">
             <Grid Height="Auto" Margin="3">
               <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
               </Grid.RowDefinitions>
-              <TextBlock x:Name="LabelInstance">Are you sure you want to delete {0}?</TextBlock>
+              <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <TextBlock x:Name="LabelInstance">Are you sure you want to delete {0}?</TextBlock>
+              </ScrollViewer>
               <StackPanel x:Name="StackPanelInstance" Grid.Row="1" />
               <StackPanel
                 Grid.Row="2"

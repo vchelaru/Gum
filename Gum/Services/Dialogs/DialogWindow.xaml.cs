@@ -11,6 +11,14 @@ namespace Gum.Services.Dialogs;
 
 public partial class DialogWindow : WindowChromeWindow
 {
+    /// <summary>
+    /// When true, the window keeps its explicit Width/Height and does not reset
+    /// SizeToContent to WidthAndHeight on load. Use this for dialogs whose content
+    /// contains a fill-height layout (e.g. a ListBox in a star row) that must
+    /// receive a finite measure constraint to scroll correctly.
+    /// </summary>
+    public bool UseExplicitSize { get; set; }
+
     public DialogWindow()
     {
         InitializeComponent();
@@ -23,7 +31,10 @@ public partial class DialogWindow : WindowChromeWindow
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
         var mainWindow = Application.Current.MainWindow;
-        SizeToContent = SizeToContent.WidthAndHeight;
+        if (!UseExplicitSize)
+        {
+            SizeToContent = SizeToContent.WidthAndHeight;
+        }
         if(mainWindow != null)
         {
             Left = mainWindow.Left + ((mainWindow.ActualWidth / 2) - Width / 2);

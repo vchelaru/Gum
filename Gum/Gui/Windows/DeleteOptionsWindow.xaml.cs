@@ -31,6 +31,11 @@ namespace Gum.Gui.Windows
         {
             this.Owner = Application.Current.MainWindow;
             InitializeComponent();
+
+            if (Owner?.ActualHeight > 0)
+            {
+                MaxHeight = Owner.ActualHeight;
+            }
         }
 
         private void YesButtonClick(object? sender, RoutedEventArgs e)

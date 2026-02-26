@@ -1,5 +1,6 @@
 ﻿using Gum.ToolStates;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Gum.Plugins.ImportPlugin.Manager;
 using ToolsUtilities;
@@ -98,25 +99,19 @@ public class AddFormsViewModel : DialogViewModel
 
     private void SaveFilesToDestination(Dictionary<string, FilePath> sourceDestinations)
     {
-        var assembly = GetType().Assembly;
         foreach (var kvp in sourceDestinations)
         {
-            var source = kvp.Key;
+            var sourcePath = kvp.Key;
             var destination = kvp.Value;
 
             var extension = destination.Extension;
 
-            // don't save the project, we don't want to overwrite it because that would wipe existing
+            // don't save the project file — overwriting it would wipe existing
             // projects which may have screens or other components referenced.
+            if (extension == "gumx") continue;
 
-            var isGumx = extension == "gumx";
-
-            var shouldSave = isGumx == false;
-
-            if (shouldSave)
-            {
-                FileManager.SaveEmbeddedResource(assembly, kvp.Key, kvp.Value.FullPath);
-            }
+            Directory.CreateDirectory(Path.GetDirectoryName(destination.FullPath)!);
+            File.Copy(sourcePath, destination.FullPath, overwrite: true);
         }
     }
 
