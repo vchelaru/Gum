@@ -36,6 +36,18 @@ public partial class ElementTreeViewManager
 
     private void AddSeparator() => _contextMenu.Items.Add(new Separator());
 
+    private void AddFolderMenuItems()
+    {
+        var folderCount = _selectedState.SelectedTreeNodes
+            .Count(n => n.IsScreensFolderTreeNode() || n.IsComponentsFolderTreeNode());
+        var deleteText = folderCount > 1 ? $"Delete {folderCount} Folders" : "Delete Folder";
+        AddMenuItem(deleteText, HandleDeleteFolder);
+        if (folderCount == 1)
+        {
+            AddMenuItem("Rename Folder", HandleRenameFolder);
+        }
+    }
+
     #endregion
 
     #region Event handlers
@@ -146,11 +158,13 @@ public partial class ElementTreeViewManager
 
     void HandleDeleteFolder()
     {
-        var treeNode = _selectedState.SelectedTreeNode;
+        var folderNodes = _selectedState.SelectedTreeNodes
+            .Where(n => n.IsScreensFolderTreeNode() || n.IsComponentsFolderTreeNode())
+            .ToList();
 
-        if (treeNode != null)
+        if (folderNodes.Count > 0)
         {
-            _deleteLogic.DeleteFolder(treeNode);
+            _deleteLogic.DeleteFolders(folderNodes);
         }
     }
 
@@ -338,8 +352,7 @@ public partial class ElementTreeViewManager
 
                 if (SelectedNode.IsScreensFolderTreeNode())
                 {
-                    AddMenuItem("Delete Folder", HandleDeleteFolder);
-                    AddMenuItem("Rename Folder", HandleRenameFolder);
+                    AddFolderMenuItems();
                 }
             }
 
@@ -356,9 +369,7 @@ public partial class ElementTreeViewManager
 
                 if (SelectedNode.IsComponentsFolderTreeNode())
                 {
-                    AddMenuItem("Delete Folder", HandleDeleteFolder);
-                    AddMenuItem("Rename Folder", HandleRenameFolder);
-
+                    AddFolderMenuItems();
                 }
             }
 

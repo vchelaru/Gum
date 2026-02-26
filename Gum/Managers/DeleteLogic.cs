@@ -78,6 +78,12 @@ public class DeleteLogic : IDeleteLogic
         var behaviorsFromTree = allSelectedTags.OfType<BehaviorSave>().ToList();
         var instancesFromTree = allSelectedTags.OfType<InstanceSave>().ToList();
 
+        // Folder nodes have Tag == null so they are not in allSelectedTags.
+        // Extract them separately for multi-folder delete support.
+        var folderNodes = _selectedState.SelectedTreeNodes
+            .Where(n => n.IsScreensFolderTreeNode() || n.IsComponentsFolderTreeNode())
+            .ToList();
+
         int typesPresent = (elementsFromTree.Count > 0 ? 1 : 0)
             + (behaviorsFromTree.Count > 0 ? 1 : 0)
             + (instancesFromTree.Count > 0 ? 1 : 0);
@@ -109,7 +115,7 @@ public class DeleteLogic : IDeleteLogic
 
             if (selectedInstance.DefinedByBase)
             {
-                _dialogService.ShowMessage($"The instance {selectedInstance.Name} cannot be deleted because it is defined in a base object.");
+                _dialogService.ShowMessage($"The instance {selectedInstance.Name} cannot be deleted because it is defined in a base object.", "Delete Instance");
             }
             else
             {
@@ -205,10 +211,9 @@ public class DeleteLogic : IDeleteLogic
                 }
             }
         }
-        else if(_selectedState.SelectedTreeNode?.IsScreensFolderTreeNode() == true ||
-            _selectedState.SelectedTreeNode?.IsComponentsFolderTreeNode() == true)
+        else if (folderNodes.Count > 0)
         {
-            DeleteFolder(_selectedState.SelectedTreeNode);
+            DeleteFolders(folderNodes);
         }
 
         var shouldDelete = objectsDeleted?.Length > 0;
@@ -247,7 +252,8 @@ public class DeleteLogic : IDeleteLogic
             if (instances.Count > 0)
             {
                 _dialogService.ShowMessage(
-                    "All selected instances are defined in a base object, so cannot be deleted");
+                    "All selected instances are defined in a base object, so cannot be deleted",
+                    "Delete Instances");
             }
             return;
         }
@@ -376,7 +382,7 @@ public class DeleteLogic : IDeleteLogic
             if (item != null)
             {
                 // I tried a tab, but the spacing was too big
-                optionsWindow.Message += $"  â€¢{GetItemDisplayName(item, duplicateNames)}\n";
+                optionsWindow.Message += $"  • {GetItemDisplayName(item, duplicateNames)}\n";
             }
         }
 
@@ -385,7 +391,7 @@ public class DeleteLogic : IDeleteLogic
             optionsWindow.Message += "\nThe following will NOT be deleted (defined in base):";
             foreach (var instance in instancesFromBase)
             {
-                optionsWindow.Message += $"\n  â€¢{instance.Name}";
+                optionsWindow.Message += $"\n  • {instance.Name}";
             }
             optionsWindow.Message += "\n";
         }
@@ -527,7 +533,7 @@ public class DeleteLogic : IDeleteLogic
         {
             if (deleteResponse.ShouldShowMessage)
             {
-                _dialogService.ShowMessage(deleteResponse.Message);
+                _dialogService.ShowMessage(deleteResponse.Message, "Delete Category");
             }
         }
         else
@@ -841,52 +847,186 @@ public class DeleteLogic : IDeleteLogic
         }
     }
 
-    public void DeleteFolder(ITreeNode treeNode)
+    private void DeleteFolder(ITreeNode treeNode)
     {
-        string fullFile = treeNode.GetFullFilePath().FullPath;
+        DeleteFolders(new List<ITreeNode> { treeNode });
+    }
 
-        // Initially we won't allow deleting of the entire
-        // folder because the user may have to make decisions
-        // about what to do with Screens or Components contained
-        // in the folder.
+    public void DeleteFolders(List<ITreeNode> folderNodes)
+    {
+        if (folderNodes.Count == 0) return;
 
-        if (!System.IO.Directory.Exists(fullFile))
+        var (deletable, blocked, needsRefresh) = ClassifyFolders(folderNodes);
+
+        // If any folder is blocked, show error and abort the entire operation
+        if (blocked.Count > 0)
         {
-            // It doesn't exist, so let's just refresh the UI for this and it will go away
-            _guiCommands.RefreshElementTreeView();
+            string blockedTitle = folderNodes.Count == 1 ? "Delete Folder" : "Delete Folders";
+            _dialogService.ShowMessage(BuildBlockedMessage(folderNodes, deletable, blocked), blockedTitle);
+            return;
         }
-        else
+
+        // All folders are deletable (or non-existent). Confirm with user.
+        if (deletable.Count > 0)
         {
-            string[] files = System.IO.Directory.GetFiles(fullFile);
-            string[] directories = System.IO.Directory.GetDirectories(fullFile);
+            string title = deletable.Count == 1 ? "Delete Folder" : "Delete Folders";
+            bool result = _dialogService.ShowYesNoMessage(
+                BuildConfirmationMessage(deletable), title);
 
-            if (files != null && files.Length > 0)
+            if (result)
             {
-                _dialogService.ShowMessage("Cannot delete this folder, it currently contains " + files.Length + " files.");
-            }
-            else if (directories != null && directories.Length > 0)
-            {
-                _dialogService.ShowMessage("Cannot delete this folder, it currently contains " + directories.Length + " directories.");
-            }
-
-            else
-            {
-                bool result = _dialogService.ShowYesNoMessage("Delete folder " + treeNode.Text + "?", "Delete");
-
-                if (result)
+                foreach (var (node, fullPath) in deletable)
                 {
                     try
                     {
-                        FileManager.DeleteDirectory(fullFile);
-                        _guiCommands.RefreshElementTreeView();
+                        FileManager.DeleteDirectory(fullPath);
                     }
                     catch (Exception exception)
                     {
-                        _guiCommands.PrintOutput($"Exception attempting to delete folder:\n{exception}");
-                        _dialogService.ShowMessage("Could not delete folder\nSee the output tab for more info");
+                        _guiCommands.PrintOutput(
+                            $"Exception attempting to delete folder {node.Text}:\n{exception}");
+                        _dialogService.ShowMessage(
+                            "Could not delete folder " + node.Text
+                            + "\nSee the output tab for more info",
+                            "Delete Folder");
                     }
                 }
+                needsRefresh = true;
             }
+        }
+
+        if (needsRefresh)
+        {
+            _guiCommands.RefreshElementTreeView();
+        }
+    }
+
+    private static (List<(ITreeNode node, string fullPath)> deletable,
+        List<(ITreeNode node, string reason)> blocked,
+        bool needsRefresh) ClassifyFolders(List<ITreeNode> folderNodes)
+    {
+        var deletable = new List<(ITreeNode node, string fullPath)>();
+        var blocked = new List<(ITreeNode node, string reason)>();
+        bool needsRefresh = false;
+
+        foreach (var node in folderNodes)
+        {
+            string fullPath = node.GetFullFilePath().FullPath;
+            string blocker = GetFolderDeletionBlocker(fullPath);
+
+            if (blocker != null)
+            {
+                blocked.Add((node, blocker));
+            }
+            else if (!System.IO.Directory.Exists(fullPath))
+            {
+                // Stale node - doesn't exist on disk, will be cleaned up by tree refresh
+                needsRefresh = true;
+            }
+            else
+            {
+                deletable.Add((node, fullPath));
+            }
+        }
+
+        return (deletable, blocked, needsRefresh);
+    }
+
+    private static string BuildBlockedMessage(
+        List<ITreeNode> folderNodes,
+        List<(ITreeNode node, string fullPath)> deletable,
+        List<(ITreeNode node, string reason)> blocked)
+    {
+        if (folderNodes.Count == 1)
+        {
+            return "Cannot delete this folder, it currently " + blocked[0].reason + ".";
+        }
+
+        string message = "";
+        if (deletable.Count > 0)
+        {
+            message += "Can be deleted:\n";
+            foreach (var (node, _) in deletable)
+            {
+                message += $"  • {node.Text}\n";
+            }
+            message += "\n";
+        }
+
+        message += "Cannot be deleted:\n";
+        foreach (var (node, reason) in blocked)
+        {
+            message += $"  • {node.Text} - {reason}\n";
+        }
+        return message;
+    }
+
+    private static string BuildConfirmationMessage(
+        List<(ITreeNode node, string fullPath)> deletable)
+    {
+        if (deletable.Count == 1)
+        {
+            return "Delete folder " + deletable[0].node.Text + "?";
+        }
+
+        string message = "Delete " + deletable.Count + " folders?\n";
+        foreach (var (node, _) in deletable)
+        {
+            message += $"  • {node.Text}\n";
+        }
+        return message;
+    }
+
+    /// <summary>
+    /// Returns null if the folder can be deleted (empty or doesn't exist on disk),
+    /// or a reason string describing why it cannot be deleted.
+    /// </summary>
+    internal static string GetFolderDeletionBlocker(string fullPath)
+    {
+        if (!System.IO.Directory.Exists(fullPath))
+        {
+            return null;
+        }
+
+        int fileCount = System.IO.Directory.GetFiles(fullPath).Length;
+        int folderCount = System.IO.Directory.GetDirectories(fullPath).Length;
+
+        if (fileCount == 0 && folderCount == 0)
+        {
+            return null;
+        }
+
+        string filePart = null;
+        if (fileCount == 1)
+        {
+            filePart = "a file";
+        }
+        else if (fileCount > 1)
+        {
+            filePart = fileCount + " files";
+        }
+
+        string folderPart = null;
+        if (folderCount == 1)
+        {
+            folderPart = "a folder";
+        }
+        else if (folderCount > 1)
+        {
+            folderPart = folderCount + " folders";
+        }
+
+        if (filePart != null && folderPart != null)
+        {
+            return "contains " + filePart + " and " + folderPart;
+        }
+        else if (filePart != null)
+        {
+            return "contains " + filePart;
+        }
+        else
+        {
+            return "contains " + folderPart;
         }
     }
 }

@@ -16,5 +16,5 @@ public interface IDeleteLogic
     void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
     void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom);
     void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom);
-    void DeleteFolder(ITreeNode treeNode);
+    void DeleteFolders(List<ITreeNode> folderNodes);
 }
