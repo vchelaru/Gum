@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Gui.Windows;
+using Gum.Logic;
 using Gum.Plugins;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -28,6 +29,7 @@ public class DeleteLogic : IDeleteLogic
     private readonly IPluginManager _pluginManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectManager _projectManager;
+    private readonly IReferenceFinder _referenceFinder;
 
     public DeleteLogic(
         ISelectedState selectedState,
@@ -36,7 +38,8 @@ public class DeleteLogic : IDeleteLogic
         IFileCommands fileCommands,
         IPluginManager pluginManager,
         IWireframeObjectManager wireframeObjectManager,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        IReferenceFinder referenceFinder)
     {
         _selectedState = selectedState;
         _dialogService = dialogService;
@@ -45,6 +48,7 @@ public class DeleteLogic : IDeleteLogic
         _pluginManager = pluginManager;
         _wireframeObjectManager = wireframeObjectManager;
         _projectManager = projectManager;
+        _referenceFinder = referenceFinder;
     }
 
 
@@ -389,6 +393,26 @@ public class DeleteLogic : IDeleteLogic
                 optionsWindow.Message += $"\n  • {instance.Name}";
             }
             optionsWindow.Message += "\n";
+        }
+
+        var elementItems = objectsToDelete.OfType<ElementSave>().ToList();
+        bool multipleElements = elementItems.Count > 1;
+        foreach (var element in elementItems)
+        {
+            ElementRenameChanges impactChanges = _referenceFinder.GetReferencesToElement(element, element.Name);
+            string impactDetails = impactChanges.GetDeleteImpactDetails();
+            if (!string.IsNullOrEmpty(impactDetails))
+            {
+                optionsWindow.Message += "\n";
+                if (multipleElements)
+                {
+                    optionsWindow.Message += $"\nImpact of deleting {element.Name}:\n{impactDetails}";
+                }
+                else
+                {
+                    optionsWindow.Message += $"\n{impactDetails}";
+                }
+            }
         }
 
         optionsWindow.ObjectsToDelete = objectsToDelete;

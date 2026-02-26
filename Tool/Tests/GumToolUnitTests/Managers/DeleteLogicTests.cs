@@ -6,6 +6,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Services;
@@ -30,6 +31,7 @@ public class DeleteLogicTests : BaseTestClass
     private readonly Mock<IPluginManager> _pluginManager;
     private readonly Mock<IWireframeObjectManager> _wireframeObjectManager;
     private readonly Mock<IProjectManager> _projectManager;
+    private readonly Mock<IReferenceFinder> _referenceFinder;
     private readonly GumProjectSave _gumProject;
 
     public DeleteLogicTests()
@@ -42,6 +44,11 @@ public class DeleteLogicTests : BaseTestClass
         _pluginManager = _mocker.GetMock<IPluginManager>();
         _wireframeObjectManager = _mocker.GetMock<IWireframeObjectManager>();
         _projectManager = _mocker.GetMock<IProjectManager>();
+        _referenceFinder = _mocker.GetMock<IReferenceFinder>();
+
+        _referenceFinder
+            .Setup(r => r.GetReferencesToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(new ElementRenameChanges());
 
         _deleteLogic = new DeleteLogic(
             _selectedState.Object,
@@ -50,12 +57,12 @@ public class DeleteLogicTests : BaseTestClass
             _fileCommands.Object,
             _pluginManager.Object,
             _wireframeObjectManager.Object,
-            _projectManager.Object);
+            _projectManager.Object,
+            _referenceFinder.Object);
 
         _gumProject = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave = _gumProject;
         _projectManager.Setup(m => m.GumProjectSave).Returns(_gumProject);
-
     }
 
     [Fact]
@@ -245,6 +252,66 @@ public class DeleteLogicTests : BaseTestClass
         screen.DefaultState.Variables
             .Where(v => v.Value is string s && s.StartsWith("Parent."))
             .ShouldBeEmpty("Dotted parent references should be removed");
+    }
+
+    [Fact]
+    public void GetDeleteImpactDetails_ElementWithDerivedComponents_ImpactDetailsContainsWarning()
+    {
+        // Arrange: ComponentA is the base type. ComponentB inherits from ComponentA.
+        // When GetReferencesToElement is called for ComponentA, it should return a change
+        // set that contains ComponentB in ElementsWithBaseTypeReference.
+        // GetDeleteImpactDetails() on that result should contain a warning about ComponentB.
+        ComponentSave componentA = new ComponentSave { Name = "ComponentA" };
+        componentA.States.Add(new StateSave { Name = "Default", ParentContainer = componentA });
+
+        ComponentSave componentB = new ComponentSave { Name = "ComponentB", BaseType = "ComponentA" };
+        componentB.States.Add(new StateSave { Name = "Default", ParentContainer = componentB });
+
+        ElementRenameChanges impactChanges = new ElementRenameChanges();
+        impactChanges.ElementsWithBaseTypeReference.Add(componentB);
+
+        _referenceFinder
+            .Setup(r => r.GetReferencesToElement(componentA, componentA.Name))
+            .Returns(impactChanges);
+
+        string impactDetails = impactChanges.GetDeleteImpactDetails();
+
+        impactDetails.ShouldNotBeNullOrEmpty();
+        impactDetails.ShouldContain("ComponentB");
+        impactDetails.ShouldContain("lose their base type");
+    }
+
+    [Fact]
+    public void GetDeleteImpactDetails_ElementWithInstancesOfType_ImpactDetailsContainsWarning()
+    {
+        // Arrange: a screen has an instance of ComponentA.
+        // Deleting ComponentA should warn about that instance becoming invalid.
+        ComponentSave componentA = new ComponentSave { Name = "ComponentA" };
+        componentA.States.Add(new StateSave { Name = "Default", ParentContainer = componentA });
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        InstanceSave instance = new InstanceSave { Name = "myComponent", BaseType = "ComponentA", ParentContainer = screen };
+        screen.Instances.Add(instance);
+
+        ElementRenameChanges impactChanges = new ElementRenameChanges();
+        impactChanges.InstancesWithBaseTypeReference.Add((screen, instance));
+
+        string impactDetails = impactChanges.GetDeleteImpactDetails();
+
+        impactDetails.ShouldNotBeNullOrEmpty();
+        impactDetails.ShouldContain("myComponent");
+        impactDetails.ShouldContain("lose their type and become invalid");
+    }
+
+    [Fact]
+    public void GetDeleteImpactDetails_NoReferences_ReturnsEmpty()
+    {
+        ElementRenameChanges impactChanges = new ElementRenameChanges();
+
+        string impactDetails = impactChanges.GetDeleteImpactDetails();
+
+        impactDetails.ShouldBeNullOrEmpty();
     }
 
     private ScreenSave CreateScreenWithInstances(params string[] instanceNames)
