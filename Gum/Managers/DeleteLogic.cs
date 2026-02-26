@@ -4,7 +4,6 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Gui.Windows;
 using Gum.Plugins;
-using Gum.Responses;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -496,150 +495,11 @@ public class DeleteLogic : IDeleteLogic
 
     public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
     {
-        var deleteResponse = new DeleteResponse();
-        deleteResponse.ShouldDelete = true;
-        deleteResponse.ShouldShowMessage = false;
-
-        // This category can only be removed if no behaviors require it
-        var behaviorsNeedingCategory = GetBehaviorsNeedingCategory(category, stateCategoryListContainer as ComponentSave);
-
-        if (behaviorsNeedingCategory.Any())
-        {
-            deleteResponse.ShouldDelete = false;
-            deleteResponse.ShouldShowMessage = true;
-
-            string message =
-                $"The category {category.Name} cannot be removed because it is needed by the following behavior(s):";
-
-            foreach (var behavior in behaviorsNeedingCategory)
-            {
-                message += "\n" + behavior.Name;
-            }
-
-            deleteResponse.Message = message;
-        }
-
-
-        if (deleteResponse.ShouldDelete)
-        {
-            deleteResponse = _pluginManager.GetDeleteStateCategoryResponse(category, stateCategoryListContainer);
-        }
-
-        if (deleteResponse.ShouldDelete == false)
-        {
-            if (deleteResponse.ShouldShowMessage)
-            {
-                _dialogService.ShowMessage(deleteResponse.Message, "Delete Category");
-            }
-        }
-        else
-        {
-            var response = _dialogService.ShowYesNoMessage($"Are you sure you want to delete the category {category.Name}?", "Delete category?");
-
-            if (response)
-            {
-                Remove(category);
-            }
-
-        }
-    }
-
-    public void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer)
-    {
-        var deleteResponse = new DeleteResponse();
-        deleteResponse.ShouldDelete = true;
-        deleteResponse.ShouldShowMessage = false;
-
-        var behaviorsNeedingState = GetBehaviorsNeedingState(stateSave);
-
-        if (behaviorsNeedingState.Any())
-        {
-            deleteResponse.ShouldDelete = false;
-            deleteResponse.ShouldShowMessage = true;
-            string message =
-                $"The state {stateSave.Name} cannot be removed because it is needed by the following behavior(s):";
-
-            foreach (var behavior in behaviorsNeedingState)
-            {
-                message += "\n" + behavior.Name;
-            }
-
-            deleteResponse.Message = message;
-        }
-
-        if (deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
-        {
-            deleteResponse.ShouldDelete = false;
-            deleteResponse.Message = "This state cannot be removed because it is the default state.";
-            deleteResponse.ShouldShowMessage = false;
-        }
-
-        if (deleteResponse.ShouldDelete)
-        {
-            deleteResponse = _pluginManager.GetDeleteStateResponse(stateSave, stateContainer);
-        }
-
-        if (deleteResponse.ShouldDelete == false)
-        {
-            if (deleteResponse.ShouldShowMessage)
-            {
-                _dialogService.ShowMessage(deleteResponse.Message);
-            }
-        }
-        else
-        {
-            if (_dialogService.ShowYesNoMessage($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?"))
-            {
-                Remove(stateSave);
-            }
-        }
-    }
-
-    private List<BehaviorSave> GetBehaviorsNeedingState(StateSave stateSave)
-    {
-        List<BehaviorSave> toReturn = new List<BehaviorSave>();
-
-        var element = stateSave.ParentContainer ?? _selectedState.SelectedElement;
-        var componentSave = element as ComponentSave;
-
-        if (element != null)
-        {
-            bool isUncategorized = element.States.Contains(stateSave);
-            StateSaveCategory? elementCategory = null;
-
-            if (!isUncategorized)
-            {
-                elementCategory = element.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
-            }
-
-            if (elementCategory != null)
-            {
-                var allBehaviorsNeedingCategory = GetBehaviorsNeedingCategory(elementCategory, componentSave);
-
-                foreach (var behavior in allBehaviorsNeedingCategory)
-                {
-                    var behaviorCategory = behavior.Categories.First(item => item.Name == elementCategory.Name);
-                    bool isStateReferencedInCategory = behaviorCategory.States.Any(item => item.Name == stateSave.Name);
-
-                    if (isStateReferencedInCategory)
-                    {
-                        toReturn.Add(behavior);
-                    }
-                }
-            }
-        }
-
-        return toReturn;
-    }
-
-    private void Remove(StateSaveCategory category)
-    {
-        var stateCategoryListContainer =
-            _selectedState.SelectedStateContainer;
+        var stateCategoryListContainerToUse = _selectedState.SelectedStateContainer;
 
         var isRemovingSelectedCategory = _selectedState.SelectedStateCategorySave == category;
 
-        stateCategoryListContainer.Categories.Remove(category);
+        stateCategoryListContainerToUse.Categories.Remove(category);
 
         if (_selectedState.SelectedElement != null)
         {
@@ -651,8 +511,6 @@ public class DeleteLogic : IDeleteLogic
                 {
                     var variable = state.Variables[i];
 
-                    // Modern Gum now has the type match the state
-                    //if(variable.Type == category.Name + "State")
                     if (variable.Type == category.Name)
                     {
                         state.Variables.RemoveAt(i);
@@ -732,107 +590,49 @@ public class DeleteLogic : IDeleteLogic
 
     public void Remove(StateSave stateSave)
     {
-        bool shouldProgress = TryAskForRemovalConfirmation(stateSave, _selectedState.SelectedElement);
-        if (shouldProgress)
+        var stateCategory = _selectedState.SelectedStateCategorySave;
+        var shouldSelectAfterRemoval = stateSave == _selectedState.SelectedStateSave;
+        int index = stateCategory?.States.IndexOf(stateSave) ?? -1;
+
+        RemoveState(stateSave, _selectedState.SelectedStateContainer);
+        _pluginManager.StateDelete(stateSave);
+
+        _guiCommands.RefreshVariables();
+        _wireframeObjectManager.RefreshAll(true);
+
+        if (shouldSelectAfterRemoval)
         {
-            var stateCategory = _selectedState.SelectedStateCategorySave;
-            var shouldSelectAfterRemoval = stateSave == _selectedState.SelectedStateSave;
-            int index = stateCategory?.States.IndexOf(stateSave) ?? -1;
-
-            RemoveState(stateSave, _selectedState.SelectedStateContainer);
-            _pluginManager.StateDelete(stateSave);
-
-            _guiCommands.RefreshVariables();
-            _wireframeObjectManager.RefreshAll(true);
-
-            if (shouldSelectAfterRemoval)
+            int? newIndex = null;
+            if (index != -1)
             {
-                int? newIndex = null;
-                if (index != -1)
+                if (index < stateCategory.States.Count)
                 {
-                    if (index < stateCategory.States.Count)
-                    {
-                        newIndex = index;
-                    }
-                    else if (stateCategory.States.Count > 0)
-                    {
-                        newIndex = stateCategory.States.Count - 1;
-                    }
+                    newIndex = index;
                 }
-
-                if (newIndex == null && stateCategory != null)
+                else if (stateCategory.States.Count > 0)
                 {
-                    _selectedState.SelectedStateCategorySave = stateCategory;
-                    _selectedState.SelectedStateSave = null;
-                }
-                else if (newIndex != null)
-                {
-                    _selectedState.SelectedStateSave = stateCategory.States[newIndex.Value];
-                }
-                else if (_selectedState.SelectedElement != null)
-                {
-                    _selectedState.SelectedStateSave = _selectedState.SelectedElement.DefaultState;
-                }
-                else
-                {
-                    _selectedState.SelectedStateSave = null;
+                    newIndex = stateCategory.States.Count - 1;
                 }
             }
-        }
-    }
 
-
-    private bool TryAskForRemovalConfirmation(StateSave stateSave, ElementSave? elementSave)
-    {
-        bool shouldContinue = true;
-        // See if the element is used anywhere
-
-        List<InstanceSave> foundInstances = new List<InstanceSave>();
-
-        if (elementSave != null)
-        {
-            ObjectFinder.Self.GetElementsReferencing(elementSave, null, foundInstances);
-        }
-
-        foreach (var instance in foundInstances)
-        {
-            // We don't want to go recursively, just top level because
-            // I *think* that the lists will include copies of the instances
-            // recursively
-            ElementSave parent = instance.ParentContainer;
-
-            string variableToLookFor = instance.Name + ".State";
-
-            // loop through all of the states to see if any of the parents' states
-            // reference the state that is being removed.
-            foreach (var stateInContainer in parent.AllStates)
+            if (newIndex == null && stateCategory != null)
             {
-                var foundVariable = stateInContainer.Variables.FirstOrDefault(item => item.Name == variableToLookFor);
-
-                if (foundVariable != null && foundVariable.Value == stateSave.Name)
-                {
-                    string message = "The state " + stateSave.Name + " is used in the element " +
-                        elementSave + " in its state " + stateInContainer + ".\n  What would you like to do?";
-
-                    DialogChoices<string> choices = new()
-                    {
-                        ["do-nothing"] = "Do nothing - project may be in an invalid state",
-                        ["make-default"] = "Change variable to default"
-                    };
-
-                    string? result = _dialogService.ShowChoices(message, choices);
-
-                    // eventually will want to add a cancel option
-
-                    if (result == "make-default")
-                    {
-                        foundVariable.Value = "Default";
-                    }
-                }
+                _selectedState.SelectedStateCategorySave = stateCategory;
+                _selectedState.SelectedStateSave = null;
+            }
+            else if (newIndex != null)
+            {
+                _selectedState.SelectedStateSave = stateCategory.States[newIndex.Value];
+            }
+            else if (_selectedState.SelectedElement != null)
+            {
+                _selectedState.SelectedStateSave = _selectedState.SelectedElement.DefaultState;
+            }
+            else
+            {
+                _selectedState.SelectedStateSave = null;
             }
         }
-
-        return shouldContinue;
     }
 
     /// <summary>

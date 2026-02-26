@@ -23,7 +23,7 @@ public class HotkeyManagerTests : BaseTestClass
     private readonly Mock<IUiSettingsService> _uiSettingsService;
     private readonly Mock<ICopyPasteLogic> _copyPasteLogic;
     private readonly Mock<IUndoManager> _undoManager;
-    private readonly Mock<IDeleteLogic> _deleteLogic;
+    private readonly Mock<IEditCommands> _editCommands;
     private readonly Mock<IReorderLogic> _reorderLogic;
     private readonly HotkeyManager _hotkeyManager;
 
@@ -38,7 +38,7 @@ public class HotkeyManagerTests : BaseTestClass
         _uiSettingsService = new Mock<IUiSettingsService>();
         _copyPasteLogic = new Mock<ICopyPasteLogic>();
         _undoManager = new Mock<IUndoManager>();
-        _deleteLogic = new Mock<IDeleteLogic>();
+        _editCommands = new Mock<IEditCommands>();
         _reorderLogic = new Mock<IReorderLogic>();
 
         _hotkeyManager = new HotkeyManager(
@@ -51,7 +51,7 @@ public class HotkeyManagerTests : BaseTestClass
             _uiSettingsService.Object,
             _copyPasteLogic.Object,
             _undoManager.Object,
-            _deleteLogic.Object,
+            _editCommands.Object,
             _reorderLogic.Object
         );
     }

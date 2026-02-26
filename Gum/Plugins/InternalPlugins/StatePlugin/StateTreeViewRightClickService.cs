@@ -237,7 +237,7 @@ public class StateTreeViewRightClickService
 
     public void DeleteCategoryClick()
     {
-        _editCommands.RemoveStateCategory(
+        _editCommands.AskToDeleteStateCategory(
             _selectedState.SelectedStateCategorySave,
             _selectedState.SelectedStateContainer);
     }

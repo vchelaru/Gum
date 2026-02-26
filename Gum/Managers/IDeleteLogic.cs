@@ -12,12 +12,11 @@ public interface IDeleteLogic
     void RemoveElement(ElementSave element);
     void RemoveBehavior(BehaviorSave behavior);
     void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer);
-    List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave);
+    List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave? componentSave);
     void Remove(StateSave stateSave);
     void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
     void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
     void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom);
     void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom);
     void DeleteFolders(List<ITreeNode> folderNodes);
-    void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer);
 }

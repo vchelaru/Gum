@@ -208,12 +208,12 @@ public class HotkeyManager : IHotkeyManager
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IUndoManager _undoManager;
-    private readonly IDeleteLogic _deleteLogic;
+    private readonly IEditCommands _editCommands;
     private readonly IReorderLogic _reorderLogic;
 
 
-    public HotkeyManager(IGuiCommands guiCommands, 
-        ISelectedState selectedState, 
+    public HotkeyManager(IGuiCommands guiCommands,
+        ISelectedState selectedState,
         IElementCommands elementCommands,
         IDialogService dialogService,
         IFileCommands fileCommands,
@@ -221,7 +221,7 @@ public class HotkeyManager : IHotkeyManager
         IUiSettingsService uiSettingsService,
         ICopyPasteLogic copyPasteLogic,
         IUndoManager undoManager,
-        IDeleteLogic deleteLogic,
+        IEditCommands editCommands,
         IReorderLogic reorderLogic)
     {
         _copyPasteLogic = copyPasteLogic;
@@ -233,7 +233,7 @@ public class HotkeyManager : IHotkeyManager
         _setVariableLogic = setVariableLogic;
         _uiSettingsService = uiSettingsService;
         _undoManager = undoManager;
-        _deleteLogic = deleteLogic;
+        _editCommands = editCommands;
         _reorderLogic = reorderLogic;
     }
 
@@ -351,8 +351,7 @@ public class HotkeyManager : IHotkeyManager
     {
         if (Delete.IsPressed(e))
         {
-            using var undoLock = _undoManager.RequestLock();
-            _deleteLogic.HandleDeleteCommand();
+            _editCommands.DeleteSelection();
 
             e.Handled = true;
             e.SuppressKeyPress = true;

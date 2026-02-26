@@ -19,7 +19,6 @@ public class MenuStripManagerTests : BaseTestClass
     private readonly Mock<IEditCommands> _editCommands;
     private readonly Mock<IDialogService> _dialogService;
     private readonly Mock<IFileCommands> _fileCommands;
-    private readonly Mock<IDeleteLogic> _deleteLogic;
     private readonly Mock<IProjectManager> _projectManager;
     private readonly MenuStripManager _menuStripManager;
 
@@ -30,7 +29,6 @@ public class MenuStripManagerTests : BaseTestClass
         _editCommands = new Mock<IEditCommands>();
         _dialogService = new Mock<IDialogService>();
         _fileCommands = new Mock<IFileCommands>();
-        _deleteLogic = new Mock<IDeleteLogic>();
         _projectManager = new Mock<IProjectManager>();
 
         _menuStripManager = new MenuStripManager(
@@ -39,7 +37,6 @@ public class MenuStripManagerTests : BaseTestClass
             _editCommands.Object,
             _dialogService.Object,
             _fileCommands.Object,
-            _deleteLogic.Object,
             _projectManager.Object
         );
     }

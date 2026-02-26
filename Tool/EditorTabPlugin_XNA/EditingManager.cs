@@ -45,7 +45,6 @@ public partial class EditingManager : IEditingManager
         _circularReferenceManager = Locator.GetRequiredService<ICircularReferenceManager>();
         _favoriteComponentManager = Locator.GetRequiredService<IFavoriteComponentManager>();
     }
-    #region Methods
 
     public void Initialize(System.Windows.Controls.ContextMenu contextMenu)
     {
@@ -60,6 +59,4 @@ public partial class EditingManager : IEditingManager
     }
 
 
-
-    #endregion
 }

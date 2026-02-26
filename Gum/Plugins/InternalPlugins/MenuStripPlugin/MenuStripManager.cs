@@ -22,7 +22,6 @@ namespace Gum.Managers
         private readonly IEditCommands _editCommands;
         private readonly IDialogService _dialogService;
         private readonly IFileCommands _fileCommands;
-        private readonly IDeleteLogic _deleteLogic;
         private readonly IProjectManager _projectManager;
 
         private Menu _menu;
@@ -54,7 +53,6 @@ namespace Gum.Managers
             IEditCommands editCommands,
             IDialogService dialogService,
             IFileCommands fileCommands,
-            IDeleteLogic deleteLogic,
             IProjectManager projectManager)
         {
             _selectedState = selectedState;
@@ -62,7 +60,6 @@ namespace Gum.Managers
             _editCommands = editCommands;
             _dialogService = dialogService;
             _fileCommands = fileCommands;
-            _deleteLogic = deleteLogic;
             _projectManager = projectManager;
         }
 
@@ -335,7 +332,7 @@ namespace Gum.Managers
 
         private void RemoveElementClicked(object? sender, System.Windows.RoutedEventArgs e)
         {
-            _deleteLogic.RemoveElement(_selectedState.SelectedElement);
+            _editCommands.DeleteSelection();
         }
 
         private void RemoveStateOrCategoryClicked(object? sender, System.Windows.RoutedEventArgs e)
@@ -347,7 +344,7 @@ namespace Gum.Managers
             }
             else if (_selectedState.SelectedStateCategorySave != null)
             {
-                _editCommands.RemoveStateCategory(
+                _editCommands.AskToDeleteStateCategory(
                     _selectedState.SelectedStateCategorySave, _selectedState.SelectedStateContainer);
             }
         }

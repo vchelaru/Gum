@@ -11,6 +11,7 @@ using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
+using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,6 +26,11 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Commands;
 
+/// <summary>
+/// Implementation of IEditCommands. See the IEditCommands interface summary
+/// for an explanation of the two delete patterns (AskTo* vs DeleteSelection)
+/// and when to use each one.
+/// </summary>
 public class EditCommands : IEditCommands
 {
     private readonly ISelectedState _selectedState;
@@ -78,8 +84,96 @@ public class EditCommands : IEditCommands
 
     public void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer)
     {
-        using var undoLock = _undoManager.RequestLock();
-        _deleteLogic.AskToDeleteState(stateSave, stateContainer);
+        var deleteResponse = new DeleteResponse();
+        deleteResponse.ShouldDelete = true;
+        deleteResponse.ShouldShowMessage = false;
+
+        var behaviorsNeedingState = GetBehaviorsNeedingState(stateSave);
+
+        if (behaviorsNeedingState.Any())
+        {
+            deleteResponse.ShouldDelete = false;
+            deleteResponse.ShouldShowMessage = true;
+            string message =
+                $"The state {stateSave.Name} cannot be removed because it is needed by the following behavior(s):";
+
+            foreach (var behavior in behaviorsNeedingState)
+            {
+                message += "\n" + behavior.Name;
+            }
+
+            deleteResponse.Message = message;
+        }
+
+        if (deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
+        {
+            deleteResponse.ShouldDelete = false;
+            deleteResponse.Message = "This state cannot be removed because it is the default state.";
+            deleteResponse.ShouldShowMessage = false;
+        }
+
+        if (deleteResponse.ShouldDelete)
+        {
+            deleteResponse = _pluginManager.GetDeleteStateResponse(stateSave, stateContainer);
+        }
+
+        if (deleteResponse.ShouldDelete == false)
+        {
+            if (deleteResponse.ShouldShowMessage)
+            {
+                _dialogService.ShowMessage(deleteResponse.Message);
+            }
+        }
+        else
+        {
+            if (_dialogService.ShowYesNoMessage($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?"))
+            {
+                AskToResolveStateReferences(stateSave);
+                using var undoLock = _undoManager.RequestLock();
+                _deleteLogic.Remove(stateSave);
+            }
+        }
+    }
+
+    private void AskToResolveStateReferences(StateSave stateSave)
+    {
+        var elementSave = _selectedState.SelectedElement;
+        List<InstanceSave> foundInstances = new List<InstanceSave>();
+
+        if (elementSave != null)
+        {
+            ObjectFinder.Self.GetElementsReferencing(elementSave, null, foundInstances);
+        }
+
+        foreach (var instance in foundInstances)
+        {
+            ElementSave parent = instance.ParentContainer;
+            string variableToLookFor = instance.Name + ".State";
+
+            foreach (var stateInContainer in parent.AllStates)
+            {
+                var foundVariable = stateInContainer.Variables.FirstOrDefault(item => item.Name == variableToLookFor);
+
+                if (foundVariable != null && foundVariable.Value == stateSave.Name)
+                {
+                    string message = "The state " + stateSave.Name + " is used in the element " +
+                        elementSave + " in its state " + stateInContainer + ".\n  What would you like to do?";
+
+                    DialogChoices<string> choices = new()
+                    {
+                        ["do-nothing"] = "Do nothing - project may be in an invalid state",
+                        ["make-default"] = "Change variable to default"
+                    };
+
+                    string? result = _dialogService.ShowChoices(message, choices);
+
+                    if (result == "make-default")
+                    {
+                        foundVariable.Value = "Default";
+                    }
+                }
+            }
+        }
     }
 
     public void AskToRenameState(StateSave stateSave, IStateContainer stateContainer)
@@ -240,10 +334,50 @@ public class EditCommands : IEditCommands
         }
     }
 
-    public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
+    public void AskToDeleteStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
     {
-        using var undoLock = _undoManager.RequestLock();
-        _deleteLogic.RemoveStateCategory(category, stateCategoryListContainer);
+        var deleteResponse = new DeleteResponse();
+        deleteResponse.ShouldDelete = true;
+        deleteResponse.ShouldShowMessage = false;
+
+        var behaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(category, stateCategoryListContainer as ComponentSave);
+
+        if (behaviorsNeedingCategory.Any())
+        {
+            deleteResponse.ShouldDelete = false;
+            deleteResponse.ShouldShowMessage = true;
+
+            string message =
+                $"The category {category.Name} cannot be removed because it is needed by the following behavior(s):";
+
+            foreach (var behavior in behaviorsNeedingCategory)
+            {
+                message += "\n" + behavior.Name;
+            }
+
+            deleteResponse.Message = message;
+        }
+
+        if (deleteResponse.ShouldDelete)
+        {
+            deleteResponse = _pluginManager.GetDeleteStateCategoryResponse(category, stateCategoryListContainer);
+        }
+
+        if (deleteResponse.ShouldDelete == false)
+        {
+            if (deleteResponse.ShouldShowMessage)
+            {
+                _dialogService.ShowMessage(deleteResponse.Message, "Delete Category");
+            }
+        }
+        else
+        {
+            if (_dialogService.ShowYesNoMessage($"Are you sure you want to delete the category {category.Name}?", "Delete category?"))
+            {
+                using var undoLock = _undoManager.RequestLock();
+                _deleteLogic.RemoveStateCategory(category, stateCategoryListContainer);
+            }
+        }
     }
 
 
