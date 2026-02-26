@@ -1016,6 +1016,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         WindowsFormsHost host = new WindowsFormsHost();
         host.Child = gumEditorPanel;
 
+        // The WPF Menu control intercepts Alt key events before they reach WinForms
+        // controls in WindowsFormsHost, so Alt+Arrow reorder shortcuts must be handled
+        // at the WPF tunnel level. TODO: Remove once the editor is migrated to WPF.
+        host.PreviewKeyDown += (_, e) => _hotkeyManager.HandleReorderPreview(e);
+
         wpfGrid.Children.Add(host);
         Grid.SetRow(host, 1);
 
