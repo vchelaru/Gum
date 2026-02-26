@@ -19,4 +19,5 @@ public interface IDeleteLogic
     void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom);
     void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom);
     void DeleteFolders(List<ITreeNode> folderNodes);
+    void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer);
 }

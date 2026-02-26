@@ -78,59 +78,8 @@ public class EditCommands : IEditCommands
 
     public void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer)
     {
-        var deleteResponse = new DeleteResponse();
-        deleteResponse.ShouldDelete = true;
-        deleteResponse.ShouldShowMessage = false;
-
-        var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
-
-        if (behaviorNeedingState.Any())
-        {
-            deleteResponse.ShouldDelete = false;
-            deleteResponse.ShouldShowMessage = true;
-            string message =
-                $"The state {stateSave.Name} cannot be removed because it is needed by the following behavior(s):";
-
-            foreach (var behavior in behaviorNeedingState)
-            {
-                message += "\n" + behavior.Name;
-            }
-
-            deleteResponse.Message = message;
-
-        }
-
-        if (deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
-        {
-            string message =
-                "This state cannot be removed because it is the default state.";
-
-            deleteResponse.ShouldDelete = false;
-            deleteResponse.Message = message;
-            deleteResponse.ShouldShowMessage = false;
-        }
-
-        if (deleteResponse.ShouldDelete)
-        {
-            deleteResponse = _pluginManager.GetDeleteStateResponse(stateSave, stateContainer);
-        }
-
-
-        if (deleteResponse.ShouldDelete == false)
-        {
-            if (deleteResponse.ShouldShowMessage)
-            {
-                _dialogService.ShowMessage(deleteResponse.Message);
-            }
-        }
-        else
-        {
-            if (_dialogService.ShowYesNoMessage($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?"))
-            {
-                using var undoLock = _undoManager.RequestLock();
-                _deleteLogic.Remove(stateSave);
-            }
-        }
+        using var undoLock = _undoManager.RequestLock();
+        _deleteLogic.AskToDeleteState(stateSave, stateContainer);
     }
 
     public void AskToRenameState(StateSave stateSave, IStateContainer stateContainer)

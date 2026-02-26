@@ -31,7 +31,7 @@ public class ImportLogic : IImportLogic
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
     }
 
-    public ScreenSave? ImportScreen(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
+    public ScreenSave? ImportScreen(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
     {
         string screensOrComponents = "Screens";
         var elementReferences = _projectManager.GumProjectSave.ScreenReferences;
@@ -73,7 +73,7 @@ public class ImportLogic : IImportLogic
     }
 
 
-    public ComponentSave? ImportComponent(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
+    public ComponentSave? ImportComponent(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
     {
         string screensOrComponents = "Components";
         var elementReferences = _projectManager.GumProjectSave.ComponentReferences;
@@ -128,7 +128,7 @@ public class ImportLogic : IImportLogic
         _fileCommands.TryAutoSaveElement(screenSave);
     }
 
-    private bool DetermineIfShouldAdd(ref FilePath filePath, ref string desiredDirectory, string screensOrComponents)
+    private bool DetermineIfShouldAdd(ref FilePath filePath, ref string? desiredDirectory, string screensOrComponents)
     {
         var shouldAdd = true;
         desiredDirectory = desiredDirectory ?? FileManager.GetDirectory(
@@ -164,7 +164,7 @@ public class ImportLogic : IImportLogic
     }
 
 
-    public BehaviorSave ImportBehavior(FilePath filePath, string desiredDirectory = null, bool saveProject = false)
+    public BehaviorSave ImportBehavior(FilePath filePath, string? desiredDirectory = null, bool saveProject = false)
     {
         var shouldAdd = true;
 
@@ -197,7 +197,7 @@ public class ImportLogic : IImportLogic
             }
         }
 
-        BehaviorSave toReturn = null;
+        BehaviorSave? toReturn = null;
 
         if (shouldAdd)
         {

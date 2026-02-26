@@ -90,8 +90,8 @@ public class DeleteLogic : IDeleteLogic
             return;
         }
 
-        Array objectsDeleted = null;
-        DeleteOptionsWindow optionsWindow = null;
+        Array? objectsDeleted = null;
+        DeleteOptionsWindow? optionsWindow = null;
 
         var selectedElements = _selectedState.SelectedElements;
         var selectedInstance = _selectedState.SelectedInstance;
@@ -226,9 +226,9 @@ public class DeleteLogic : IDeleteLogic
     }
 
     private void HandleMixedTypeDeletion(
-        List<ElementSave> elements = null,
-        List<BehaviorSave> behaviors = null,
-        List<InstanceSave> instances = null)
+        List<ElementSave>? elements = null,
+        List<BehaviorSave>? behaviors = null,
+        List<InstanceSave>? instances = null)
     {
         elements ??= new List<ElementSave>();
         behaviors ??= new List<BehaviorSave>();
@@ -333,7 +333,7 @@ public class DeleteLogic : IDeleteLogic
     }
 
     bool? ShowDeleteDialog(Array objectsToDelete, out DeleteOptionsWindow optionsWindow,
-        List<InstanceSave> instancesFromBase = null)
+        List<InstanceSave>? instancesFromBase = null)
     {
 
         string titleText;
@@ -443,7 +443,7 @@ public class DeleteLogic : IDeleteLogic
         return item.ToString() ?? "";
     }
 
-    private void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
+    private void RefreshAndSaveAfterInstanceRemoval(ElementSave? selectedElement, BehaviorSave? behavior)
     {
         SaveElementAfterInstanceRemoval(selectedElement);
         SaveBehaviorAfterInstanceRemoval(behavior);
@@ -451,7 +451,7 @@ public class DeleteLogic : IDeleteLogic
         RefreshAll();
     }
 
-    private void SaveBehaviorAfterInstanceRemoval(BehaviorSave behavior)
+    private void SaveBehaviorAfterInstanceRemoval(BehaviorSave? behavior)
     {
         if (behavior != null)
         {
@@ -460,7 +460,7 @@ public class DeleteLogic : IDeleteLogic
         }
     }
 
-    private void SaveElementAfterInstanceRemoval(ElementSave selectedElement)
+    private void SaveElementAfterInstanceRemoval(ElementSave? selectedElement)
     {
         if (selectedElement != null)
         {
@@ -469,7 +469,7 @@ public class DeleteLogic : IDeleteLogic
         }
     }
 
-    private void PickSelectedInstanceAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
+    private void PickSelectedInstanceAfterInstanceRemoval(ElementSave? selectedElement, BehaviorSave? behavior)
     {
         _selectedState.SelectedInstance = null;
         if (selectedElement != null)
@@ -542,6 +542,94 @@ public class DeleteLogic : IDeleteLogic
             }
 
         }
+    }
+
+    public void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer)
+    {
+        var deleteResponse = new DeleteResponse();
+        deleteResponse.ShouldDelete = true;
+        deleteResponse.ShouldShowMessage = false;
+
+        var behaviorsNeedingState = GetBehaviorsNeedingState(stateSave);
+
+        if (behaviorsNeedingState.Any())
+        {
+            deleteResponse.ShouldDelete = false;
+            deleteResponse.ShouldShowMessage = true;
+            string message =
+                $"The state {stateSave.Name} cannot be removed because it is needed by the following behavior(s):";
+
+            foreach (var behavior in behaviorsNeedingState)
+            {
+                message += "\n" + behavior.Name;
+            }
+
+            deleteResponse.Message = message;
+        }
+
+        if (deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
+        {
+            deleteResponse.ShouldDelete = false;
+            deleteResponse.Message = "This state cannot be removed because it is the default state.";
+            deleteResponse.ShouldShowMessage = false;
+        }
+
+        if (deleteResponse.ShouldDelete)
+        {
+            deleteResponse = _pluginManager.GetDeleteStateResponse(stateSave, stateContainer);
+        }
+
+        if (deleteResponse.ShouldDelete == false)
+        {
+            if (deleteResponse.ShouldShowMessage)
+            {
+                _dialogService.ShowMessage(deleteResponse.Message);
+            }
+        }
+        else
+        {
+            if (_dialogService.ShowYesNoMessage($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?"))
+            {
+                Remove(stateSave);
+            }
+        }
+    }
+
+    private List<BehaviorSave> GetBehaviorsNeedingState(StateSave stateSave)
+    {
+        List<BehaviorSave> toReturn = new List<BehaviorSave>();
+
+        var element = stateSave.ParentContainer ?? _selectedState.SelectedElement;
+        var componentSave = element as ComponentSave;
+
+        if (element != null)
+        {
+            bool isUncategorized = element.States.Contains(stateSave);
+            StateSaveCategory? elementCategory = null;
+
+            if (!isUncategorized)
+            {
+                elementCategory = element.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+            }
+
+            if (elementCategory != null)
+            {
+                var allBehaviorsNeedingCategory = GetBehaviorsNeedingCategory(elementCategory, componentSave);
+
+                foreach (var behavior in allBehaviorsNeedingCategory)
+                {
+                    var behaviorCategory = behavior.Categories.First(item => item.Name == elementCategory.Name);
+                    bool isStateReferencedInCategory = behaviorCategory.States.Any(item => item.Name == stateSave.Name);
+
+                    if (isStateReferencedInCategory)
+                    {
+                        toReturn.Add(behavior);
+                    }
+                }
+            }
+        }
+
+        return toReturn;
     }
 
     private void Remove(StateSaveCategory category)
@@ -620,7 +708,7 @@ public class DeleteLogic : IDeleteLogic
         _pluginManager.CategoryDelete(category);
     }
 
-    public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave)
+    public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave? componentSave)
     {
         List<BehaviorSave> behaviors = new List<BehaviorSave>();
 
@@ -694,7 +782,7 @@ public class DeleteLogic : IDeleteLogic
     }
 
 
-    private bool TryAskForRemovalConfirmation(StateSave stateSave, ElementSave elementSave)
+    private bool TryAskForRemovalConfirmation(StateSave stateSave, ElementSave? elementSave)
     {
         bool shouldContinue = true;
         // See if the element is used anywhere
@@ -983,7 +1071,7 @@ public class DeleteLogic : IDeleteLogic
         foreach (var node in folderNodes)
         {
             string fullPath = node.GetFullFilePath().FullPath;
-            string blocker = GetFolderDeletionBlocker(fullPath);
+            string? blocker = GetFolderDeletionBlocker(fullPath);
 
             if (blocker != null)
             {
@@ -1052,7 +1140,7 @@ public class DeleteLogic : IDeleteLogic
     /// Returns null if the folder can be deleted (empty or doesn't exist on disk),
     /// or a reason string describing why it cannot be deleted.
     /// </summary>
-    internal static string GetFolderDeletionBlocker(string fullPath)
+    internal static string? GetFolderDeletionBlocker(string fullPath)
     {
         if (!System.IO.Directory.Exists(fullPath))
         {
@@ -1067,7 +1155,7 @@ public class DeleteLogic : IDeleteLogic
             return null;
         }
 
-        string filePart = null;
+        string? filePart = null;
         if (fileCount == 1)
         {
             filePart = "a file";
@@ -1077,7 +1165,7 @@ public class DeleteLogic : IDeleteLogic
             filePart = fileCount + " files";
         }
 
-        string folderPart = null;
+        string? folderPart = null;
         if (folderCount == 1)
         {
             folderPart = "a folder";

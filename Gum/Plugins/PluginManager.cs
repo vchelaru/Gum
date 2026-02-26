@@ -488,7 +488,7 @@ public class PluginManager : IPluginManager
         return toReturn;
     }
 
-    internal DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element)
+    public DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element)
     {
         DeleteResponse response = new DeleteResponse();
         response.ShouldDelete = true;
