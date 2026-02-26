@@ -45,24 +45,36 @@ internal class MainGumFormsPlugin : PluginBase
             this.AddMenuItemTo("Add Forms Components", HandleAddFormsComponents, "Content");
 
         this.ProjectLoad += HandleProjectLoaded;
+        this.AfterProjectSave += HandleProjectSave;
+    }
+
+    private void HandleProjectSave(GumProjectSave save)
+    {
+        RefreshAddFormsMenuPresence(save);
     }
 
     private void HandleProjectLoaded(GumProjectSave save)
     {
-        // see if it already has forms
-        var hasForms = GetIfProjectHasForms();
+        RefreshAddFormsMenuPresence(save);
+    }
+
+    private void RefreshAddFormsMenuPresence(GumProjectSave save)
+    {
+        // A newly created project has no FullFileName yet, so it cannot have forms.
+        // Checking the save parameter directly avoids any stale state in projectState.
+        var hasForms = !string.IsNullOrEmpty(save?.FullFileName) && GetIfProjectHasForms();
 
         var parent = _addFormsMenuItem.Parent as System.Windows.Controls.ItemsControl;
-        if(hasForms)
+        if (hasForms)
         {
-            if(parent != null)
+            if (parent != null)
             {
                 parent.Items.Remove(_addFormsMenuItem);
             }
         }
         else
         {
-            if(parent == null)
+            if (parent == null)
             {
                 _addFormsMenuItem =
                     this.AddMenuItemTo("Add Forms Components", HandleAddFormsComponents, "Content");
