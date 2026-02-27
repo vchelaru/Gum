@@ -203,7 +203,11 @@ public class ImportLogic : IImportLogic
         {
             string strippedName = filePath.RemoveExtension().FileNameNoPath;
 
-            var behaviorSave = BehaviorReference.DeserializeBehavior(filePath.FullPath, GumProjectSave.NativeVersion);
+            var (_, isCompact) = VariableSaveSerializer.ReadAndDetectFormat(filePath.FullPath);
+            int behaviorVersion = isCompact
+                ? (int)GumProjectSave.GumxVersions.AttributeVersion
+                : (int)GumProjectSave.GumxVersions.InitialVersion;
+            var behaviorSave = BehaviorReference.DeserializeBehavior(filePath.FullPath, behaviorVersion);
 
             var behaviorReferences = _projectManager.GumProjectSave.BehaviorReferences;
             behaviorReferences.Add(new BehaviorReference { Name = behaviorSave.Name });
