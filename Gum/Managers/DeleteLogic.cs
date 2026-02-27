@@ -128,6 +128,12 @@ public class DeleteLogic : IDeleteLogic
                     var siblings = selectedInstance.GetSiblingsIncludingThis();
                     var parentInstance = selectedInstance.GetParentInstance();
 
+                    // Fire DeleteConfirm before removal so plugins can still find
+                    // children via parent reference variables (e.g. "Child.Parent = thisInstance").
+                    // RemoveInstanceFromElement destroys those references, breaking GetChildrenOf.
+                    _pluginManager.DeleteConfirm(optionsWindow, objectsDeleted);
+                    objectsDeleted = null; // prevent double-firing at the end of DoDeletingLogic
+
                     var selectedElement = selectedElements.FirstOrDefault();
                     if (selectedElement != null)
                     {
@@ -269,7 +275,12 @@ public class DeleteLogic : IDeleteLogic
             .Distinct()
             .ToList();
 
-        // 1. Remove instances (skip if parent element/behavior is also being deleted)
+        // 1. Notify plugins before removal so they can still find children via
+        //    parent reference variables (e.g. "Child.Parent = thisInstance").
+        //    RemoveInstanceFromElement destroys those references, breaking GetChildrenOf.
+        _pluginManager.DeleteConfirm(optionsWindow, combinedArray);
+
+        // 2. Remove instances (skip if parent element/behavior is also being deleted)
         foreach (var instance in deletableInstances)
         {
             var parentElement = instance.ParentContainer;
@@ -286,20 +297,17 @@ public class DeleteLogic : IDeleteLogic
             }
         }
 
-        // 2. Remove elements
+        // 3. Remove elements
         foreach (var element in elements)
         {
             RemoveElement(element);
         }
 
-        // 3. Remove behaviors
+        // 4. Remove behaviors
         foreach (var behavior in behaviors)
         {
             RemoveBehavior(behavior);
         }
-
-        // 4. Notify plugins (handles XML file deletion, children deletion, etc.)
-        _pluginManager.DeleteConfirm(optionsWindow, combinedArray);
 
         // 5. Update selection to avoid stale references
         if (elements.Count > 0)
