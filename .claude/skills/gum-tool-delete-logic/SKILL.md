@@ -50,6 +50,10 @@ All delete actions funnel through `IEditCommands`:
 
 Do not call `IDeleteLogic` methods directly from UI code — always go through `IEditCommands`.
 
+## Testability
+
+`ShowDeleteDialog` creates a WPF `DeleteOptionsWindow` and calls `ShowDialog()` — it cannot be unit-tested directly. The `internal BuildDeleteDialogMessage(Array, List<InstanceSave>?)` method on `DeleteLogic` is the testable seam for asserting dialog message content (`InternalsVisibleTo("GumToolUnitTests")` is already configured).
+
 ## Key Files
 
 | File | Purpose |
@@ -58,6 +62,7 @@ Do not call `IDeleteLogic` methods directly from UI code — always go through `
 | `Gum/Commands/EditCommands.cs` | Implementation; AskTo* dialog logic lives here |
 | `Gum/Managers/IDeleteLogic.cs` | Interface for pure data-mutation operations |
 | `Gum/Managers/DeleteLogic.cs` | Data mutation + DeleteOptionsWindow orchestration |
+| `Gum/Logic/RenameLogic.cs` | `ElementRenameChanges` class; `GetDeleteImpactDetails()` and `ExcludeContainersBeingDeleted()` used to build impact warnings in the delete dialog |
 | `Gum/Plugins/InternalPlugins/Delete/DeleteObjectPlugin.cs` | Contributes "Delete XML?" and "Delete children?" to DeleteOptionsWindow |
 | `Gum/Plugins/InternalPlugins/StatePlugin/StateTreeViewRightClickService.cs` | State/category right-click menu; calls AskTo* methods |
 | `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.RightClick.cs` | Element tree right-click; calls DeleteSelection |

@@ -218,7 +218,7 @@ public class DragDropManagerTests : BaseTestClass
 
         // Folder node (Tag = null) - simulates a folder in the tree view
         Mock<ITreeNode> folderNode = new Mock<ITreeNode>();
-        folderNode.Setup(x => x.Tag).Returns((object)null);
+        folderNode.Setup(x => x.Tag).Returns((object?)null);
 
         // Instance node
         Mock<ITreeNode> instanceNode = new Mock<ITreeNode>();
@@ -254,7 +254,7 @@ public class DragDropManagerTests : BaseTestClass
     {
         // Arrange
         Mock<ITreeNode> draggedNode = new Mock<ITreeNode>();
-        draggedNode.Setup(x => x.Tag).Returns((object)null);
+        draggedNode.Setup(x => x.Tag).Returns((object?)null);
 
         // Act
         var result = _dragDropManager.ValidateNodeSorting(
@@ -269,11 +269,11 @@ public class DragDropManagerTests : BaseTestClass
     {
         // Arrange - folder node has Tag=null, unlike element/instance nodes
         Mock<ITreeNode> folderNode = new Mock<ITreeNode>();
-        folderNode.Setup(x => x.Tag).Returns((object)null);
+        folderNode.Setup(x => x.Tag).Returns((object?)null);
         folderNode.Setup(x => x.GetFullFilePath()).Returns(new FilePath("C:\\test\\folder\\"));
 
         Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
-        targetNode.Setup(x => x.Tag).Returns((object)null);
+        targetNode.Setup(x => x.Tag).Returns((object?)null);
         targetNode.Setup(x => x.GetFullFilePath()).Returns(new FilePath("C:\\test\\other\\"));
 
         // Act - should not throw; returns false because mocked ITreeNode
@@ -290,10 +290,10 @@ public class DragDropManagerTests : BaseTestClass
     {
         // Arrange - only folder nodes (Tag=null), no tagged nodes
         Mock<ITreeNode> folderNode = new Mock<ITreeNode>();
-        folderNode.Setup(x => x.Tag).Returns((object)null);
+        folderNode.Setup(x => x.Tag).Returns((object?)null);
 
         Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
-        targetNode.Setup(x => x.Tag).Returns((object)null);
+        targetNode.Setup(x => x.Tag).Returns((object?)null);
 
         List<ITreeNode> draggedNodes = new() { folderNode.Object };
 
