@@ -5,6 +5,7 @@ using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Timers;
@@ -39,6 +40,8 @@ public class MainFileWatchPlugin : InternalPlugin
         _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
         _fileWatchLogic = Locator.GetRequiredService<FileWatchLogic>();
 
+        viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+
         pluginTab = _tabManager.AddControl(control, "File Watch", TabLocation.RightBottom);
         pluginTab.Hide();
 
@@ -55,6 +58,14 @@ public class MainFileWatchPlugin : InternalPlugin
         refreshDisplayTimer.Start(TimeSpan.FromMilliseconds(millisecondsTimerFrequency));
 
         AssignEvents();
+    }
+
+    private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(FileWatchViewModel.PrintFileChangesToOutput))
+        {
+            _fileWatchManager.PrintFileChangesToOutput = viewModel.PrintFileChangesToOutput;
+        }
     }
 
     private void AssignEvents()
@@ -146,7 +157,7 @@ public class MainFileWatchPlugin : InternalPlugin
             viewModel.WatchFolderInformation = "File watching is disabled";
         }
 
-        viewModel.NumberOfFilesToFlush = _fileWatchManager.ChangedFilesWaitingForFlush.Count.ToString();
+        viewModel.NumberOfFilesToFlush = _fileWatchManager.ChangedFilesWaitingForFlush.Count().ToString();
 
         if (_fileWatchManager.TimeToNextFlush.TotalSeconds <= 0)
         {

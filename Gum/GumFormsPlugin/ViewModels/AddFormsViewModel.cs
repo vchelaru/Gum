@@ -9,6 +9,7 @@ using Gum.Managers;
 using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Logic.FileWatch;
 
 namespace GumFormsPlugin.ViewModels;
 
@@ -21,6 +22,7 @@ public class AddFormsViewModel : DialogViewModel
     private readonly IFileCommands _fileCommands;
     private readonly IImportLogic _importLogic;
     private readonly IProjectState _projectState;
+    private readonly IFileWatchManager _fileWatchManager;
 
     public bool IsIncludeDemoScreenGum
     {
@@ -34,13 +36,15 @@ public class AddFormsViewModel : DialogViewModel
         IDialogService dialogService,
         IFileCommands fileCommands,
         IImportLogic importLogic,
-        IProjectState projectState)
+        IProjectState projectState,
+        IFileWatchManager fileWatchManager)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;
         _fileCommands = fileCommands;
         _importLogic = importLogic;
         _projectState = projectState;
+        _fileWatchManager = fileWatchManager;
     }
 
     public override void OnAffirmative()
@@ -110,7 +114,12 @@ public class AddFormsViewModel : DialogViewModel
             // projects which may have screens or other components referenced.
             if (extension == "gumx") continue;
 
-            Directory.CreateDirectory(Path.GetDirectoryName(destination.FullPath)!);
+
+            var directory = Path.GetDirectoryName(destination.FullPath)!;
+
+            _fileWatchManager.IgnoreNextChangeUntil(directory);
+            _fileWatchManager.IgnoreNextChangeUntil(destination.FullPath);
+            Directory.CreateDirectory(directory);
             File.Copy(sourcePath, destination.FullPath, overwrite: true);
         }
     }
