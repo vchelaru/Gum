@@ -1,9 +1,12 @@
-﻿using Gum.Commands;
+﻿#if GUM
+using Gum.Commands;
+using Gum.Logic.FileWatch;
+using Microsoft.VisualBasic.ApplicationServices;
+#endif
+
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.Logic.FileWatch;
 using Gum.Managers;
-using Microsoft.VisualBasic.ApplicationServices;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -38,13 +41,33 @@ public class FontManager
         new (8192, 8192)
     };
 
+#if GUM
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IFileWatchManager _fileWatchManager;
 
     public string AbsoluteFontCacheFolder => _fileCommands.ProjectDirectory + "FontCache/";
+#endif
+
+
+    void IgnoreNextChangeUntil(FilePath filePath)
+#if GUM
+        =>_fileWatchManager.IgnoreNextChangeUntil(filePath);
+#else
+    { }
+#endif
+
+
+    FilePath ProjectDirectory =>
+#if GUM
+        _fileCommands.ProjectDirectory;
+#else
+        FileManager.RelativeDirectory;
+#endif
+
     string BmFontExeNoPath => "Gum.Libraries.bmfont.exe";
 
+#if GUM
     public FontManager(IGuiCommands guiCommands,
         IFileCommands fileCommands,
         IFileWatchManager fileWatchManager)
@@ -54,11 +77,11 @@ public class FontManager
         _fileWatchManager = fileWatchManager;
     }
 
-
     public void DeleteFontCacheFolder()
     {
         _fileCommands.DeleteDirectory(AbsoluteFontCacheFolder);
     }
+#endif
 
     public async Task CreateAllMissingFontFiles(GumProjectSave project, bool forceRecreate = false)
     {
@@ -104,6 +127,7 @@ public class FontManager
             }
         }
 
+#if GUM
         if (bitmapFonts.Count == 0)
         {
             _guiCommands.PrintOutput("No fonts to create");
@@ -112,10 +136,14 @@ public class FontManager
         {
             _guiCommands.PrintOutput($"Checking {bitmapFonts.Count} font files...");
         }
+#endif
+
         int countCreated = 0;
         var start = DateTime.Now;
 
+#if GUM
         var window = _guiCommands.ShowSpinner();
+#endif
 
         var parallelOptions = new ParallelOptions();
         parallelOptions.MaxDegreeOfParallelism = 16;
@@ -140,7 +168,8 @@ public class FontManager
 
         await Task.WhenAll(tasks);
 
-        window.Hide();
+#if GUM
+        window?.Hide();
 
         var end = DateTime.Now;
         var time = end - start;
@@ -148,6 +177,7 @@ public class FontManager
         {
             _guiCommands.PrintOutput($"Created {countCreated} font files(s) in {time.TotalSeconds} seconds");
         }
+#endif
     }
 
     internal void ReactToFontValueSet(InstanceSave instance, GumProjectSave gumProject, StateSave stateSave, StateSave forcedValues)
@@ -223,10 +253,15 @@ public class FontManager
     private async Task<GeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner, bool createTask,
         bool iterativelyDetermineSize)
     {
+#if GUM
+        Action<string> printOutput = _guiCommands.PrintOutput;
+#else
+        Action<string> printOutput = (message) => { };
+#endif
 
         if(force || GetFilePath(bmfcSave, null).Exists() == false)
         {
-           await AssignEstimatedNeededSizeOn(bmfcSave, iterativelyDetermineSize, _guiCommands.PrintOutput);
+           await AssignEstimatedNeededSizeOn(bmfcSave, iterativelyDetermineSize, printOutput);
         }
 
         var response = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner, createTask, null);
@@ -237,11 +272,11 @@ public class FontManager
 
             if(!string.IsNullOrEmpty(response.Message))
             {
-                _guiCommands.PrintOutput($"{prefix}" + response.Message);
+                printOutput($"{prefix}" + response.Message);
             }
             else
             {
-                _guiCommands.PrintOutput($"{prefix}Unknown error.");
+                printOutput($"{prefix}Unknown error.");
             }
         }
 
@@ -378,7 +413,7 @@ public class FontManager
 
         FilePath desiredFntFile = destinationDirectory != null
             ? destinationDirectory + fntFileName
-            : _fileCommands.ProjectDirectory + fntFileName;
+            : ProjectDirectory + fntFileName;
 
         return desiredFntFile;
     }
@@ -390,12 +425,14 @@ public class FontManager
 
         var toReturn = OptionallyAttemptedGeneralResponse.SuccessfulWithoutAttempt;
 
+#if GUM
         if(_fileCommands.ProjectDirectory == null)
         {
             return OptionallyAttemptedGeneralResponse.UnsuccessfulWith("Project directory is null, has the project been saved?");
         }
 
         Window? spinner = null;
+#endif
 
         try
         {
@@ -403,7 +440,9 @@ public class FontManager
             {
                 if (showSpinner)
                 {
+#if GUM
                     spinner = _guiCommands.ShowSpinner();
+#endif
                 }
 
 
@@ -412,8 +451,8 @@ public class FontManager
                 System.Console.WriteLine("Saving: " + bmfcFileToSave);
 
                 // arbitrary wait time
-                _fileWatchManager.IgnoreNextChangeUntil(bmfcFileToSave);
-                _fileWatchManager.IgnoreNextChangeUntil(desiredFntFile);
+                IgnoreNextChangeUntil(bmfcFileToSave);
+                IgnoreNextChangeUntil(desiredFntFile);
 
                 var pngFileNameBase = desiredFntFile.RemoveExtension();
 
@@ -422,11 +461,11 @@ public class FontManager
                 for (int i = 0; i < pagesToIgnore; i++)
                 {
                     var pngWithNumber = $"{pngFileNameBase}_{i}.png";
-                    _fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
+                    IgnoreNextChangeUntil(pngWithNumber);
                     
                     // numbers can be 00 or 0
                     pngWithNumber = $"{pngFileNameBase}_{i:00}.png";
-                    _fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
+                    IgnoreNextChangeUntil(pngWithNumber);
                 }
 
                 bmfcSave.Save(bmfcFileToSave);
@@ -453,7 +492,10 @@ public class FontManager
 
                 var filenameAndArgs = $"{info.FileName} {info.Arguments}";
                 System.Diagnostics.Debug.WriteLine($"Running: {filenameAndArgs}");
+
+#if GUM
                 _guiCommands.PrintOutput(filenameAndArgs);
+#endif
 
                 // This is okay on .NET 8 because it doesn't use the shell - it's a direct exe call
                 Process? process = Process.Start(info);
@@ -490,7 +532,9 @@ public class FontManager
         }
         finally
         {
+#if GUM
             spinner?.Hide();
+#endif
         }
 
         return toReturn;
@@ -519,12 +563,15 @@ public class FontManager
         FilePath bmFontExeLocation = BmFontExeLocation;
         if (!bmFontExeLocation.Exists())
         {
+#if GUM
             _fileCommands.SaveEmbeddedResource(
                 assemblyContainingBitmapFontGenerator,
                 BmFontExeNoPath,
                 bmFontExeLocation.FullPath);
-
-        }
+#else
+                FileManager.SaveEmbeddedResource(assemblyContainingBitmapFontGenerator, BmFontExeNoPath, bmFontExeLocation.FullPath);
+#endif
+}
     }
 
     async Task<int> WaitForExitAsync(Process process, CancellationToken cancellationToken = default)

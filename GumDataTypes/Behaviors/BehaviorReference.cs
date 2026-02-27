@@ -39,10 +39,10 @@ namespace Gum.DataTypes.Behaviors
         {
             if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
             {
-                var (content, isCompact) = VariableSaveSerializer.ReadAndDetectFormat(filePath);
+                var (content, isCompact) = GumFileSerializer.ReadAndDetectFormat(filePath);
                 if (isCompact)
                 {
-                    var compactSerializer = VariableSaveSerializer.GetCompactSerializer(typeof(BehaviorSave));
+                    var compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
                     using var reader = new StringReader(content);
                     return (BehaviorSave)compactSerializer.Deserialize(reader);
                 }

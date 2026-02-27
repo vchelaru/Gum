@@ -9,7 +9,7 @@ using Xunit;
 
 namespace MonoGameGum.Tests.DataTypes;
 
-public class VariableSaveSerializationTests
+public class GumFileSerializerTests
 {
     [Fact]
     public void DeserializeBehaviorSave_CompactFormat_LoadsVariables()
@@ -17,10 +17,10 @@ public class VariableSaveSerializationTests
         BehaviorSave original = new BehaviorSave();
         original.RequiredVariables.Variables.Add(new VariableSave { Type = "float", Name = "X", Value = 51f, SetsValue = true });
 
-        XmlSerializer compactSerializer = VariableSaveSerializer.GetCompactSerializer(typeof(BehaviorSave));
+        XmlSerializer compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
         string xml = SerializeToString(compactSerializer, original);
 
-        BehaviorSave? result = VariableSaveSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
 
         result.ShouldNotBeNull();
         result.RequiredVariables.Variables.Count.ShouldBe(1);
@@ -37,7 +37,7 @@ public class VariableSaveSerializationTests
 
         FileManager.XmlSerialize(original, out string xml);
 
-        BehaviorSave? result = VariableSaveSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
 
         result.ShouldNotBeNull();
         result.RequiredVariables.Variables.Count.ShouldBe(1);
@@ -54,10 +54,10 @@ public class VariableSaveSerializationTests
         state.Variables.Add(new VariableSave { Type = "float", Name = "X", Value = 51f, SetsValue = true });
         original.States.Add(state);
 
-        XmlSerializer compactSerializer = VariableSaveSerializer.GetCompactSerializer(typeof(ScreenSave));
+        XmlSerializer compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(ScreenSave));
         string xml = SerializeToString(compactSerializer, original);
 
-        ScreenSave? result = VariableSaveSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 2);
+        ScreenSave? result = GumFileSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 2);
 
         result.ShouldNotBeNull();
         result.DefaultState.ShouldNotBeNull();
@@ -77,7 +77,7 @@ public class VariableSaveSerializationTests
 
         FileManager.XmlSerialize(original, out string xml);
 
-        ScreenSave? result = VariableSaveSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 1);
+        ScreenSave? result = GumFileSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 1);
 
         result.ShouldNotBeNull();
         result.DefaultState.ShouldNotBeNull();
@@ -97,7 +97,7 @@ public class VariableSaveSerializationTests
 
         FileManager.XmlSerialize(original, out string xml);
 
-        ScreenSave? result = VariableSaveSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 2);
+        ScreenSave? result = GumFileSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 2);
 
         result.ShouldNotBeNull();
         result.DefaultState.ShouldNotBeNull();
@@ -124,7 +124,7 @@ public class VariableSaveSerializationTests
             </ScreenSave>
             """;
 
-        ScreenSave? result = VariableSaveSerializer.DeserializeElementSave<ScreenSave>(mixedXml, projectVersion: 2);
+        ScreenSave? result = GumFileSerializer.DeserializeElementSave<ScreenSave>(mixedXml, projectVersion: 2);
 
         result.ShouldNotBeNull();
         result.Instances.Count.ShouldBe(1);
@@ -137,7 +137,7 @@ public class VariableSaveSerializationTests
     {
         const string xml = "<ScreenSave />";
 
-        ScreenSave? result = VariableSaveSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 2);
+        ScreenSave? result = GumFileSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 2);
 
         result.ShouldNotBeNull();
         result.States.ShouldBeEmpty();
@@ -150,7 +150,7 @@ public class VariableSaveSerializationTests
         var screen = new ScreenSave();
         screen.Instances.Add(new InstanceSave { Name = "Background", BaseType = "Sprite", DefinedByBase = false });
 
-        var serializer = VariableSaveSerializer.GetCompactSerializer(typeof(ScreenSave));
+        var serializer = GumFileSerializer.GetCompactSerializer(typeof(ScreenSave));
         string xml = SerializeToString(serializer, screen);
 
         xml.ShouldNotContain("DefinedByBase");
@@ -162,7 +162,7 @@ public class VariableSaveSerializationTests
         var screen = new ScreenSave();
         screen.Instances.Add(new InstanceSave { Name = "Background", BaseType = "Sprite" });
 
-        var serializer = VariableSaveSerializer.GetCompactSerializer(typeof(ScreenSave));
+        var serializer = GumFileSerializer.GetCompactSerializer(typeof(ScreenSave));
         string xml = SerializeToString(serializer, screen);
 
         xml.ShouldContain("Name=\"Background\"");
@@ -182,7 +182,7 @@ public class VariableSaveSerializationTests
             }
         };
 
-        var serializer = VariableSaveSerializer.GetCompactSerializer(typeof(StateSave));
+        var serializer = GumFileSerializer.GetCompactSerializer(typeof(StateSave));
         string xml = SerializeToString(serializer, state);
 
         xml.ShouldContain("Type=\"float\"");
@@ -210,7 +210,7 @@ public class VariableSaveSerializationTests
             }
         };
 
-        var serializer = VariableSaveSerializer.GetCompactSerializer(typeof(StateSave));
+        var serializer = GumFileSerializer.GetCompactSerializer(typeof(StateSave));
         string xml = SerializeToString(serializer, original);
 
         StateSave result;
@@ -240,7 +240,7 @@ public class VariableSaveSerializationTests
             }
         };
 
-        var serializer = VariableSaveSerializer.GetCompactSerializer(typeof(StateSave));
+        var serializer = GumFileSerializer.GetCompactSerializer(typeof(StateSave));
         string xml = SerializeToString(serializer, state);
 
         xml.ShouldContain("<Value");
@@ -256,7 +256,7 @@ public class VariableSaveSerializationTests
             </ScreenSave>
             """;
 
-        var serializer = VariableSaveSerializer.GetCompactSerializer(typeof(ScreenSave));
+        var serializer = GumFileSerializer.GetCompactSerializer(typeof(ScreenSave));
         ScreenSave screen;
         using (var reader = new StringReader(v2Xml))
         {
@@ -308,7 +308,7 @@ public class VariableSaveSerializationTests
             </ScreenSave>
             """;
 
-        var serializer = VariableSaveSerializer.GetLegacyInstancesCompactSerializer(typeof(ScreenSave));
+        var serializer = GumFileSerializer.GetLegacyInstancesCompactSerializer(typeof(ScreenSave));
         ScreenSave screen;
         using (var reader = new StringReader(mixedXml))
         {

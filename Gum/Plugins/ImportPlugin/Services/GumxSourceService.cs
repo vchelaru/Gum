@@ -140,7 +140,7 @@ public class GumxSourceService
         {
             bool isCompact = GumProjectSave.IsGumxCompactFormat(content);
             var deserializer = isCompact
-                ? VariableSaveSerializer.GetGumProjectCompactSerializer()
+                ? GumFileSerializer.GetGumProjectCompactSerializer()
                 : FileManager.GetXmlSerializer(typeof(GumProjectSave));
             gps = (GumProjectSave)deserializer.Deserialize(new StringReader(content));
         }
@@ -267,7 +267,7 @@ public class GumxSourceService
     {
         try
         {
-            return VariableSaveSerializer.DeserializeElementSave<T>(content, projectVersion);
+            return GumFileSerializer.DeserializeElementSave<T>(content, projectVersion);
         }
         catch (Exception)
         {
@@ -279,7 +279,7 @@ public class GumxSourceService
     {
         try
         {
-            return VariableSaveSerializer.DeserializeBehaviorSave(content, projectVersion);
+            return GumFileSerializer.DeserializeBehaviorSave(content, projectVersion);
         }
         catch (Exception)
         {

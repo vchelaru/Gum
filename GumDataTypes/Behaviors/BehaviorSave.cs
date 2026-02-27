@@ -58,7 +58,7 @@ namespace Gum.DataTypes.Behaviors
         {
             if (useCompactFormat)
             {
-                var serializer = VariableSaveSerializer.GetCompactSerializer(this.GetType());
+                var serializer = GumFileSerializer.GetCompactSerializer(this.GetType());
                 FileManager.XmlSerialize(this, fileName, serializer);
             }
             else

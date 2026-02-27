@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Gum\Managers\FontManager.cs" Link="FontManager.cs" />
     <Compile Include="..\Gum\Managers\Singleton.cs" Link="Singleton.cs" />
+    <Compile Include="..\Gum\Services\Fonts\FontManager.cs" Link="FontManager.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,9 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
     <ProjectReference Include="..\MonoGameGum\MonoGameGum.csproj" />
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
 
   <ItemGroup>

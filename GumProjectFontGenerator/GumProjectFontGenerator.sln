@@ -1,17 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.11.35312.102
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11430.68 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumProjectFontGenerator", "GumProjectFontGenerator.csproj", "{DBA2267F-5392-4057-8366-4C3BE63717B4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGameGum", "..\MonoGameGum\MonoGameGum.csproj", "{7E0AD0F1-FE3F-45A6-AB3D-F13029F2102F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToolsUtilitiesStandard", "..\ToolsUtilities\ToolsUtilitiesStandard.csproj", "{E2F2D6FC-17DA-48C7-AFE2-88037CB8E0B6}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumCommon", "..\GumCommon\GumCommon.csproj", "{855D2D7A-A093-4D45-8486-C9A65D83E352}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumDataTypesNet6", "..\GumDataTypes\GumDataTypesNet6.csproj", "{AD9566BE-C1C1-4FB7-9CD7-308689E610F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,18 +23,10 @@ Global
 		{7E0AD0F1-FE3F-45A6-AB3D-F13029F2102F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E0AD0F1-FE3F-45A6-AB3D-F13029F2102F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E0AD0F1-FE3F-45A6-AB3D-F13029F2102F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E2F2D6FC-17DA-48C7-AFE2-88037CB8E0B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E2F2D6FC-17DA-48C7-AFE2-88037CB8E0B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E2F2D6FC-17DA-48C7-AFE2-88037CB8E0B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E2F2D6FC-17DA-48C7-AFE2-88037CB8E0B6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{855D2D7A-A093-4D45-8486-C9A65D83E352}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{855D2D7A-A093-4D45-8486-C9A65D83E352}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{855D2D7A-A093-4D45-8486-C9A65D83E352}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{855D2D7A-A093-4D45-8486-C9A65D83E352}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AD9566BE-C1C1-4FB7-9CD7-308689E610F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AD9566BE-C1C1-4FB7-9CD7-308689E610F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AD9566BE-C1C1-4FB7-9CD7-308689E610F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AD9566BE-C1C1-4FB7-9CD7-308689E610F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

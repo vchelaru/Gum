@@ -9,7 +9,7 @@ using ToolsUtilities;
 
 namespace Gum.DataTypes;
 
-public static class VariableSaveSerializer
+public static class GumFileSerializer
 {
     private static readonly Dictionary<Type, XmlSerializer> _compactSerializers = new();
     private static readonly Dictionary<Type, XmlSerializer> _legacyInstancesCompactSerializers = new();

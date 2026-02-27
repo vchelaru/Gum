@@ -171,15 +171,15 @@ namespace Gum.DataTypes
         {
             if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
             {
-                var (content, isCompact) = VariableSaveSerializer.ReadAndDetectFormat(filePath);
+                var (content, isCompact) = GumFileSerializer.ReadAndDetectFormat(filePath);
                 if (isCompact)
                 {
                     // Transitional files saved before instance compaction have compact variables
                     // but instances still as child elements — use the legacy-instances serializer.
                     bool hasLegacyInstances = content.Contains("<Instance>");
                     var serializer = hasLegacyInstances
-                        ? VariableSaveSerializer.GetLegacyInstancesCompactSerializer(typeof(T))
-                        : VariableSaveSerializer.GetCompactSerializer(typeof(T));
+                        ? GumFileSerializer.GetLegacyInstancesCompactSerializer(typeof(T))
+                        : GumFileSerializer.GetCompactSerializer(typeof(T));
                     using var reader = new StringReader(content);
                     return (T)serializer.Deserialize(reader);
                 }
