@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <GumProjectSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <CustomProperties />
   <FontRanges>32-126,160-255</FontRanges>
@@ -50,6 +50,7 @@
   <RestrictToUnitValues>true</RestrictToUnitValues>
   <RestrictFileNamesForAndroid>false</RestrictFileNamesForAndroid>
   <Guides />
+  <FavoriteComponents />
   <ParentProjectRoot>../</ParentProjectRoot>
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
@@ -68,21 +69,6 @@
     <ElementType>Screen</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </ScreenReference>
-  <ScreenReference>
-    <Name>TestScreen</Name>
-    <ElementType>Screen</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ScreenReference>
-  <ScreenReference>
-    <Name>UserControlPageGum</Name>
-    <ElementType>Screen</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ScreenReference>
-  <ComponentReference>
-    <Name>ButtonDerived</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
   <ComponentReference>
     <Name>Controls/ButtonClose</Name>
     <ElementType>Component</ElementType>

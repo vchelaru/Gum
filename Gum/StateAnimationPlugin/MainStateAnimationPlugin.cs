@@ -97,7 +97,6 @@ public class MainStateAnimationPlugin : PluginBase
         AssignEvents();
     }
 
-
     private void CreateMenuItems()
     {
         menuItem = AddMenuItem("View", "View Animations");
@@ -132,7 +131,6 @@ public class MainStateAnimationPlugin : PluginBase
 
         this.GetAllErrors += HandleGetAllErrors;
     }
-
 
     private void HandleElementSelected(ElementSave? element)
     {
