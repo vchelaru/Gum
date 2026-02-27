@@ -2,15 +2,15 @@
 
 ## Introduction
 
-Visual properties can be directly bound. These can be directly bound to properties on a ViewModel, or they can be bound through custom properties on the Forms control. This section discusses the multiple ways that binding can be performed on visuals.
+Visual properties can be directly bound, either directly bound to properties on a ViewModel, or through custom properties on the Forms control. This section discusses the multiple ways that binding can be performed on visuals.
 
 {% hint style="warning" %}
-Typical ViewModels do not include view-specific properties such as colors, fonts, or margins. This allows ViewModels to be reusable across multiple views and even across different platforms (such as Gum Forms vs WPF). However, there are times when binding view properties is preferred. This section discusses how to do so, but it is up to the developer to decide when such binding should be performed.
+Although typical ViewModels do not include view-specific properties such as colors, fonts, or margins, sometimes binding view-specific properties is useful. This section discusses how to do so, but it is up to the developer to decide when such binding should be performed.
 {% endhint %}
 
 ### Binding Visual Properties Directly
 
-Visual properties can be bound directly. If the property is not specific to a type of Visual, then the Visual can be directly bound without being casted. For example, the following code shows how to bind the width of a Button to a ButtonWidth property on a ViewModel.
+Visual properties can be bound directly. For example, the following code shows how to bind the width of a Button to a ButtonWidth property on a ViewModel.
 
 ```csharp
 // assume MyButton is a valid button
@@ -39,13 +39,28 @@ For example, consider a screen named `GameScreenHud` which contains a single lab
 
 <figure><img src="../../.gitbook/assets/23_10 58 42.png" alt=""><figcaption></figcaption></figure>
 
-The ViewModel may contain general properties such as `CurrentHealth` and `IsLowHealth`, but the view will process these to display the health with a prefix, and to modify the Label property.
+The ViewModel may contain general properties such as `CurrentHealth` and `IsLowHealth`, but the view can process these properties to display the health with a prefix, and to modify the Label property.
 
 The following code could be added to `GameScreenHud.cs`, which is the custom code file created when the `GameScreenHud` is generated:
 
 ```csharp
+// assuming a ViewModel with the following properties:
+class GameScreenViewModel : ViewModel
+{
+    public int Health
+    {
+        get => Get<int>();
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(Health))]
+    public bool IsLowHealth => Health < 10;
+}
+
 partial class GameScreenHud
 {
+    // Processing is performed in the View, so the ViewModel doesn't need
+    // to include view-specific properties.
     public int CurrentHealth
     {
         set => this.HealthLabel.Text = 
@@ -78,3 +93,117 @@ partial class GameScreenHud
 }
 
 ```
+
+### Binding to States (Code Generation)
+
+If your project uses code generation, enums are automatically created for every category in your screens and components. The current state for each category can be bound to a ViewModel property. This can be done by adding a type to your ViewModel, or through a binding converter property.
+
+For this example, consider a component named ComponentWithState which has a SizeCategory with two states: Large and Small.
+
+<figure><img src="../../.gitbook/assets/27_06 19 01.png" alt=""><figcaption></figcaption></figure>
+
+This component generates an enum similar to the following block (you do not need to write this):
+
+```csharp
+public enum SizeCategory
+{
+    Large,
+    Small,
+}
+```
+
+Similarly, the generated code also includes a property which can be bound:
+
+```csharp
+public SizeCategory? SizeCategoryState
+{
+    get => _sizeCategoryState;
+    set
+    {
+        _sizeCategoryState = value;
+        ...
+```
+
+The ViewModel can directly contain a property of type SizeCategory, or a more abstract property can be used with a binding converter property in the custom code. Which you choose depends on how you like to organize your code.
+
+{% tabs %}
+{% tab title="Binding Converter Property" %}
+```csharp
+class MyViewModel : ViewModel
+{
+    // This could be a property with getter and setter, or it could
+    // be a getter-only property which depends on a different property
+    public bool IsLarge
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+}
+
+protected override void Initialize()
+{
+    // either one of these:
+    GumUI.Initialize(this, "GumProject/GumProject.gumx");
+
+    var screen = new MainMenu();
+    screen.AddToRoot();
+
+    screen.BindingContext = new MyViewModel();
+    screen.ComponentWithStateInstance.SetBinding(
+        nameof(screen.ComponentWithStateInstance.IsLarge),
+        nameof(MyViewModel.IsLarge));
+    // rest of code...
+}
+```
+
+This requires an extra property in the custom code for the component:
+
+```csharp
+// in ComponentWithState.cs
+partial class ComponentWithState
+{
+    public bool IsLarge
+    {
+        set => SizeCategoryState = value ? SizeCategory.Large : SizeCategory.Small;
+    }
+
+    partial void CustomInitialize()
+    {   
+    }
+}
+```
+{% endtab %}
+
+{% tab title="SizeCategory in ViewModel" %}
+```csharp
+class MyViewModel : ViewModel
+{
+    // This could be a property with getter and setter, or it could
+    // be a getter-only property which depends on a different property
+    public ComponentWithState.SizeCategory SizeCategory
+    {
+        get => Get<ComponentWithState.SizeCategory>();
+        set => Set(value);
+    }
+}
+
+protected override void Initialize()
+{
+    // either one of these:
+    GumUI.Initialize(this, "GumProject/GumProject.gumx");
+
+    var screen = new MainMenu();
+    screen.AddToRoot();
+
+    screen.BindingContext = new MyViewModel();
+    screen.ComponentWithStateInstance.SetBinding(
+        nameof(screen.ComponentWithStateInstance.SizeCategoryState),
+        nameof(MyViewModel.SizeCategory));
+    // rest of code ...
+}
+```
+{% endtab %}
+{% endtabs %}
+
+
+
