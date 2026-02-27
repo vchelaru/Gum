@@ -665,7 +665,7 @@ public class GumProjectSave
         }
     }
 
-    private static bool IsGumxCompactFormat(string content)
+    public static bool IsGumxCompactFormat(string content)
     {
         // v2 files store Name as an XML attribute, e.g. <ScreenReference Name="...">.
         // This matches ScreenReference, ComponentReference, StandardElementReference, and BehaviorReference.

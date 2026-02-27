@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Shouldly;
 using System.IO;
@@ -10,6 +11,139 @@ namespace MonoGameGum.Tests.DataTypes;
 
 public class VariableSaveSerializationTests
 {
+    [Fact]
+    public void DeserializeBehaviorSave_CompactFormat_LoadsVariables()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.RequiredVariables.Variables.Add(new VariableSave { Type = "float", Name = "X", Value = 51f, SetsValue = true });
+
+        XmlSerializer compactSerializer = VariableSaveSerializer.GetCompactSerializer(typeof(BehaviorSave));
+        string xml = SerializeToString(compactSerializer, original);
+
+        BehaviorSave? result = VariableSaveSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.RequiredVariables.Variables.Count.ShouldBe(1);
+        result.RequiredVariables.Variables[0].Type.ShouldBe("float");
+        result.RequiredVariables.Variables[0].Name.ShouldBe("X");
+        result.RequiredVariables.Variables[0].Value.ShouldBe(51f);
+    }
+
+    [Fact]
+    public void DeserializeBehaviorSave_LegacyFormat_LoadsVariables()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.RequiredVariables.Variables.Add(new VariableSave { Type = "float", Name = "X", Value = 51f, SetsValue = true });
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        BehaviorSave? result = VariableSaveSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.RequiredVariables.Variables.Count.ShouldBe(1);
+        result.RequiredVariables.Variables[0].Type.ShouldBe("float");
+        result.RequiredVariables.Variables[0].Name.ShouldBe("X");
+        result.RequiredVariables.Variables[0].Value.ShouldBe(51f);
+    }
+
+    [Fact]
+    public void DeserializeElementSave_CompactFormat_LoadsVariables()
+    {
+        ScreenSave original = new ScreenSave();
+        StateSave state = new StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Type = "float", Name = "X", Value = 51f, SetsValue = true });
+        original.States.Add(state);
+
+        XmlSerializer compactSerializer = VariableSaveSerializer.GetCompactSerializer(typeof(ScreenSave));
+        string xml = SerializeToString(compactSerializer, original);
+
+        ScreenSave? result = VariableSaveSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.DefaultState.ShouldNotBeNull();
+        result.DefaultState.Variables.Count.ShouldBe(1);
+        result.DefaultState.Variables[0].Type.ShouldBe("float");
+        result.DefaultState.Variables[0].Name.ShouldBe("X");
+        result.DefaultState.Variables[0].Value.ShouldBe(51f);
+    }
+
+    [Fact]
+    public void DeserializeElementSave_LegacyFormatInV1Project_LoadsVariables()
+    {
+        ScreenSave original = new ScreenSave();
+        StateSave state = new StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Type = "float", Name = "X", Value = 51f, SetsValue = true });
+        original.States.Add(state);
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        ScreenSave? result = VariableSaveSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 1);
+
+        result.ShouldNotBeNull();
+        result.DefaultState.ShouldNotBeNull();
+        result.DefaultState.Variables.Count.ShouldBe(1);
+        result.DefaultState.Variables[0].Type.ShouldBe("float");
+        result.DefaultState.Variables[0].Name.ShouldBe("X");
+        result.DefaultState.Variables[0].Value.ShouldBe(51f);
+    }
+
+    [Fact]
+    public void DeserializeElementSave_LegacyFormatInV2Project_LoadsVariables()
+    {
+        ScreenSave original = new ScreenSave();
+        StateSave state = new StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Type = "float", Name = "X", Value = 51f, SetsValue = true });
+        original.States.Add(state);
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        ScreenSave? result = VariableSaveSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.DefaultState.ShouldNotBeNull();
+        result.DefaultState.Variables.Count.ShouldBe(1);
+        result.DefaultState.Variables[0].Type.ShouldBe("float");
+        result.DefaultState.Variables[0].Name.ShouldBe("X");
+        result.DefaultState.Variables[0].Value.ShouldBe(51f);
+    }
+
+    [Fact]
+    public void DeserializeElementSave_MixedFormat_LoadsInstances()
+    {
+        const string mixedXml = """
+            <ScreenSave>
+              <Instance>
+                <Name>Background</Name>
+                <BaseType>Sprite</BaseType>
+              </Instance>
+              <State>
+                <Variable Type="float" Name="X" SetsValue="true">
+                  <Value xsi:type="xsd:float" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">51</Value>
+                </Variable>
+              </State>
+            </ScreenSave>
+            """;
+
+        ScreenSave? result = VariableSaveSerializer.DeserializeElementSave<ScreenSave>(mixedXml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.Instances.Count.ShouldBe(1);
+        result.Instances[0].Name.ShouldBe("Background");
+        result.Instances[0].BaseType.ShouldBe("Sprite");
+    }
+
+    [Fact]
+    public void DeserializeElementSave_NoVariables_ReturnsEmptyElement()
+    {
+        const string xml = "<ScreenSave />";
+
+        ScreenSave? result = VariableSaveSerializer.DeserializeElementSave<ScreenSave>(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.States.ShouldBeEmpty();
+        result.Instances.ShouldBeEmpty();
+    }
+
     [Fact]
     public void CompactFormat_DefinedByBase_OmittedWhenFalse()
     {
