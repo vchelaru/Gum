@@ -287,6 +287,7 @@
   * [Rendering Custom Graphics](code/standard-visuals/rendering-custom-graphics.md)
 * [Ordering, Layers, and Popups](code/ordering-layers-and-popups/README.md)
   * [Object Order](code/ordering-layers-and-popups/object-order.md)
+  * [Mixing Gum and 3D](code/ordering-layers-and-popups/mixing-gum-and-3d.md)
 * [Files and Fonts](code/files-and-fonts/README.md)
   * [File Loading](code/files-and-fonts/file-loading.md)
   * [BitmapFont](code/files-and-fonts/bitmapfont.md)
