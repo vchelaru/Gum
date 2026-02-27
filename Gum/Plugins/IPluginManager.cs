@@ -43,7 +43,7 @@ public interface IPluginManager
 
     void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete);
 
-    void DeleteConfirm(DeleteOptionsWindow window, Array objectsToDelete);
+    void DeleteConfirmed(DeleteOptionsWindow window, Array objectsToDelete);
 
     void ElementRename(ElementSave elementSave, string oldName);
 

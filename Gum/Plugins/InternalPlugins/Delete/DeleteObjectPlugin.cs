@@ -42,7 +42,7 @@ public class DeleteObjectPlugin : InternalPlugin
         CreateDeleteChildrenGroupBox();
 
         this.DeleteOptionsWindowShow += HandleDeleteOptionsShow;
-        this.DeleteConfirm += HandleDeleteConfirm;
+        this.DeleteConfirmed += HandleDeleteConfirmed;
     }
 
     private void CreateDeleteChildrenGroupBox()
@@ -63,7 +63,7 @@ public class DeleteObjectPlugin : InternalPlugin
         stackPanel.Children.Add(deleteAllContainedObjects);
     }
 
-    void HandleDeleteConfirm(Windows.DeleteOptionsWindow deleteOptionsWindow, Array deletedObjects)
+    void HandleDeleteConfirmed(Windows.DeleteOptionsWindow deleteOptionsWindow, Array deletedObjects)
     {
         // Collect all instances to delete in a batch
         var instancesToDelete = new List<InstanceSave>();
