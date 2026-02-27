@@ -130,6 +130,7 @@
   * [Is CodeGen Plugin Enabled](gum-tool/code-tab/is-codegen-plugin-enabled.md)
   * [Show CodeGen Preview](gum-tool/code-tab/show-codegen-preview.md)
 * [Localization](gum-tool/localization.md)
+* [Importing Elements](gum-tool/importing-elements.md)
 * [Menu](gum-tool/menu/README.md)
   * [Content](gum-tool/menu/content.md)
 * [Project Properties](gum-tool/project-properties.md)
