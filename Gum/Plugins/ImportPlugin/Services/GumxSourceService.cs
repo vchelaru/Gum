@@ -4,7 +4,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
@@ -139,9 +138,9 @@ public class GumxSourceService
         GumProjectSave gps;
         try
         {
-            bool isCompact = content.Contains("Reference Name=");
+            bool isCompact = GumProjectSave.IsGumxCompactFormat(content);
             var deserializer = isCompact
-                ? VariableSaveSerializer.GetGumProjectCompactSerializer()
+                ? GumFileSerializer.GetGumProjectCompactSerializer()
                 : FileManager.GetXmlSerializer(typeof(GumProjectSave));
             gps = (GumProjectSave)deserializer.Deserialize(new StringReader(content));
         }
@@ -268,23 +267,7 @@ public class GumxSourceService
     {
         try
         {
-            if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
-            {
-                bool isV1 = content.Contains("<Variable>");
-                bool isCompact = !isV1;
-                if (isCompact)
-                {
-                    bool hasLegacyInstances = content.Contains("<Instance>");
-                    var serializer = hasLegacyInstances
-                        ? VariableSaveSerializer.GetLegacyInstancesCompactSerializer(typeof(T))
-                        : VariableSaveSerializer.GetCompactSerializer(typeof(T));
-                    using var reader = new StringReader(content);
-                    return (T)serializer.Deserialize(reader);
-                }
-            }
-
-            return FileManager.XmlDeserializeFromStream<T>(
-                new MemoryStream(Encoding.UTF8.GetBytes(content)));
+            return GumFileSerializer.DeserializeElementSave<T>(content, projectVersion);
         }
         catch (Exception)
         {
@@ -296,20 +279,7 @@ public class GumxSourceService
     {
         try
         {
-            if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
-            {
-                bool isV1 = content.Contains("<Variable>");
-                bool isCompact = !isV1;
-                if (isCompact)
-                {
-                    var compactSerializer = VariableSaveSerializer.GetCompactSerializer(typeof(BehaviorSave));
-                    using var reader = new StringReader(content);
-                    return (BehaviorSave)compactSerializer.Deserialize(reader);
-                }
-            }
-
-            return FileManager.XmlDeserializeFromStream<BehaviorSave>(
-                new MemoryStream(Encoding.UTF8.GetBytes(content)));
+            return GumFileSerializer.DeserializeBehaviorSave(content, projectVersion);
         }
         catch (Exception)
         {

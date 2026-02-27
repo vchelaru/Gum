@@ -67,7 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Behaviors\BehaviorInstanceSave.cs" />
-    <Compile Include="Serialization\VariableSaveSerializer.cs" />
+    <Compile Include="Serialization\GumFileSerializer.cs" />
     <Compile Include="Behaviors\BehaviorReference.cs" />
     <Compile Include="Behaviors\BehaviorSave.cs" />
     <Compile Include="Behaviors\ElementBehaviorReference.cs" />

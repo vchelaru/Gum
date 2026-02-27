@@ -203,7 +203,7 @@ public class ImportLogic : IImportLogic
         {
             string strippedName = filePath.RemoveExtension().FileNameNoPath;
 
-            var (_, isCompact) = VariableSaveSerializer.ReadAndDetectFormat(filePath.FullPath);
+            var (_, isCompact) = GumFileSerializer.ReadAndDetectFormat(filePath.FullPath);
             int behaviorVersion = isCompact
                 ? (int)GumProjectSave.GumxVersions.AttributeVersion
                 : (int)GumProjectSave.GumxVersions.InitialVersion;

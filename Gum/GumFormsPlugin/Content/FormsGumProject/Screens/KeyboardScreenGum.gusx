@@ -1,133 +1,65 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>KeyboardScreenGum</Name>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyboardInstance.Height</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="float" Name="KeyboardInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">221</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyboardInstance.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyboardInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyboardInstance.Width</Name>
+    <Variable Type="float" Name="KeyboardInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">700</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyboardInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyboardInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyboardInstance.X</Name>
+    <Variable Type="float" Name="KeyboardInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyboardInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyboardInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyboardInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyboardInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyboardInstance.Y</Name>
+    <Variable Type="float" Name="KeyboardInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">-77</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyboardInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyboardInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyboardInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyboardInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextBoxInstance.Width</Name>
+    <Variable Type="float" Name="TextBoxInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">700</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextBoxInstance.X</Name>
+    <Variable Type="float" Name="TextBoxInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>TextBoxInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="TextBoxInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TextBoxInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="TextBoxInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextBoxInstance.Y</Name>
+    <Variable Type="float" Name="TextBoxInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">-309</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>TextBoxInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="TextBoxInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TextBoxInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="TextBoxInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
   </State>
-  <Instance>
-    <Name>KeyboardInstance</Name>
-    <BaseType>Controls/Keyboard</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextBoxInstance</Name>
-    <BaseType>Controls/TextBox</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="KeyboardInstance" BaseType="Controls/Keyboard" />
+  <Instance Name="TextBoxInstance" BaseType="Controls/TextBox" />
   <Behaviors />
 </ScreenSave>

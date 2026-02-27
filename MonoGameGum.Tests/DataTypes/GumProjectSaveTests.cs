@@ -108,7 +108,7 @@ public class GumProjectSaveTests : BaseTestClass
             </GumProjectSave>
             """;
 
-        var deserializer = VariableSaveSerializer.GetGumProjectCompactSerializer();
+        var deserializer = GumFileSerializer.GetGumProjectCompactSerializer();
         GumProjectSave project;
         using (var reader = new StringReader(v2Xml))
         {

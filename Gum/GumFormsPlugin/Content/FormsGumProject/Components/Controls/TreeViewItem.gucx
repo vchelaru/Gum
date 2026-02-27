@@ -1,146 +1,69 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Controls/TreeViewItem</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>InnerPanelInstance.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="InnerPanelInstance.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>InnerPanelInstance.Height</Name>
+    <Variable Type="float" Name="InnerPanelInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>InnerPanelInstance.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="InnerPanelInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>InnerPanelInstance.Width</Name>
+    <Variable Type="float" Name="InnerPanelInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>InnerPanelInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="InnerPanelInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>InnerPanelInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="InnerPanelInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>InnerPanelInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="InnerPanelInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>InnerPanelInstance.Y</Name>
+    <Variable Type="float" Name="InnerPanelInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ListBoxItemInstance.Height</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="float" Name="ListBoxItemInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ListBoxItemInstance.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ListBoxItemInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ListBoxItemInstance.Width</Name>
+    <Variable Type="float" Name="ListBoxItemInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>ListBoxItemInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="ListBoxItemInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ListBoxItemInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="ListBoxItemInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
   </State>
-  <Instance>
-    <Name>ToggleButtonInstance</Name>
-    <BaseType>Controls/TreeViewToggle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ListBoxItemInstance</Name>
-    <BaseType>Controls/ListBoxItem</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>InnerPanelInstance</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="ToggleButtonInstance" BaseType="Controls/TreeViewToggle" />
+  <Instance Name="ListBoxItemInstance" BaseType="Controls/ListBoxItem" />
+  <Instance Name="InnerPanelInstance" BaseType="Container" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>TreeViewItemBehavior</BehaviorName>

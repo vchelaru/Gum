@@ -1,711 +1,330 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Controls/Window</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Background.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Background.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>Background.StyleCategoryState</Name>
+    <Variable Type="string" Name="Background.Parent" SetsValue="true" />
+    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Panel</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomInstance.Height</Name>
+    <Variable Type="float" Name="BorderBottomInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BorderBottomInstance.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomInstance.Width</Name>
+    <Variable Type="string" Name="BorderBottomInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="BorderBottomInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BorderBottomInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BorderBottomInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomInstance.X</Name>
+    <Variable Type="float" Name="BorderBottomInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BorderBottomInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="BorderBottomInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderBottomInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderBottomInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomInstance.Y</Name>
+    <Variable Type="float" Name="BorderBottomInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BorderBottomInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="BorderBottomInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderBottomInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderBottomInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomLeftInstance.Height</Name>
+    <Variable Type="float" Name="BorderBottomLeftInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BorderBottomLeftInstance.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomLeftInstance.Width</Name>
+    <Variable Type="string" Name="BorderBottomLeftInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="BorderBottomLeftInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BorderBottomLeftInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BorderBottomLeftInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomLeftInstance.X</Name>
+    <Variable Type="float" Name="BorderBottomLeftInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BorderBottomLeftInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="BorderBottomLeftInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderBottomLeftInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderBottomLeftInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomLeftInstance.Y</Name>
+    <Variable Type="float" Name="BorderBottomLeftInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BorderBottomLeftInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="BorderBottomLeftInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderBottomLeftInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderBottomLeftInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomRightInstance.Height</Name>
+    <Variable Type="float" Name="BorderBottomRightInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BorderBottomRightInstance.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomRightInstance.Width</Name>
+    <Variable Type="string" Name="BorderBottomRightInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="BorderBottomRightInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BorderBottomRightInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BorderBottomRightInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomRightInstance.X</Name>
+    <Variable Type="float" Name="BorderBottomRightInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BorderBottomRightInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="BorderBottomRightInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderBottomRightInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderBottomRightInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderBottomRightInstance.Y</Name>
+    <Variable Type="float" Name="BorderBottomRightInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BorderBottomRightInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="BorderBottomRightInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderBottomRightInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderBottomRightInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderLeftInstance.Height</Name>
+    <Variable Type="float" Name="BorderLeftInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BorderLeftInstance.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BorderLeftInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BorderLeftInstance.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderLeftInstance.Width</Name>
+    <Variable Type="string" Name="BorderLeftInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="BorderLeftInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BorderLeftInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BorderLeftInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderLeftInstance.X</Name>
+    <Variable Type="float" Name="BorderLeftInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BorderLeftInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="BorderLeftInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderLeftInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderLeftInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderLeftInstance.Y</Name>
+    <Variable Type="float" Name="BorderLeftInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BorderLeftInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="BorderLeftInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderLeftInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderLeftInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderRightInstance.Height</Name>
+    <Variable Type="float" Name="BorderRightInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BorderRightInstance.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BorderRightInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BorderRightInstance.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderRightInstance.Width</Name>
+    <Variable Type="string" Name="BorderRightInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="BorderRightInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BorderRightInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BorderRightInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderRightInstance.X</Name>
+    <Variable Type="float" Name="BorderRightInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BorderRightInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="BorderRightInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderRightInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderRightInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderRightInstance.Y</Name>
+    <Variable Type="float" Name="BorderRightInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BorderRightInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="BorderRightInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderRightInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderRightInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopInstance.Height</Name>
+    <Variable Type="float" Name="BorderTopInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BorderTopInstance.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopInstance.Width</Name>
+    <Variable Type="string" Name="BorderTopInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="BorderTopInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BorderTopInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BorderTopInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopInstance.X</Name>
+    <Variable Type="float" Name="BorderTopInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BorderTopInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="BorderTopInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderTopInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderTopInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopInstance.Y</Name>
+    <Variable Type="float" Name="BorderTopInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BorderTopInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="BorderTopInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderTopInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderTopInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopLeftInstance.Height</Name>
+    <Variable Type="float" Name="BorderTopLeftInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BorderTopLeftInstance.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopLeftInstance.Width</Name>
+    <Variable Type="string" Name="BorderTopLeftInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="BorderTopLeftInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BorderTopLeftInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BorderTopLeftInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopLeftInstance.X</Name>
+    <Variable Type="float" Name="BorderTopLeftInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BorderTopLeftInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="BorderTopLeftInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderTopLeftInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderTopLeftInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopLeftInstance.Y</Name>
+    <Variable Type="float" Name="BorderTopLeftInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BorderTopLeftInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="BorderTopLeftInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderTopLeftInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderTopLeftInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopRightInstance.Height</Name>
+    <Variable Type="float" Name="BorderTopRightInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BorderTopRightInstance.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopRightInstance.Width</Name>
+    <Variable Type="string" Name="BorderTopRightInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="BorderTopRightInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BorderTopRightInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BorderTopRightInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopRightInstance.X</Name>
+    <Variable Type="float" Name="BorderTopRightInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BorderTopRightInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="BorderTopRightInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderTopRightInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderTopRightInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BorderTopRightInstance.Y</Name>
+    <Variable Type="float" Name="BorderTopRightInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BorderTopRightInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="BorderTopRightInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BorderTopRightInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="BorderTopRightInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">256</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>InnerPanelInstance.Height</Name>
+    <Variable Type="float" Name="InnerPanelInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>InnerPanelInstance.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="InnerPanelInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>InnerPanelInstance.Width</Name>
+    <Variable Type="float" Name="InnerPanelInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>InnerPanelInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="InnerPanelInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>InnerPanelInstance.X</Name>
+    <Variable Type="float" Name="InnerPanelInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>InnerPanelInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="InnerPanelInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>InnerPanelInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="InnerPanelInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>InnerPanelInstance.Y</Name>
+    <Variable Type="float" Name="InnerPanelInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>InnerPanelInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="InnerPanelInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>InnerPanelInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="InnerPanelInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float?</Type>
-      <Name>MinHeight</Name>
+    <Variable Type="float?" Name="MinHeight" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float?</Type>
-      <Name>MinWidth</Name>
+    <Variable Type="float?" Name="MinWidth" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
-      <Category>States and Visibility</Category>
-      <SetsValue>false</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TitleBarInstance.Height</Name>
+    <Variable Type="float" Name="TitleBarInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TitleBarInstance.Width</Name>
+    <Variable Type="float" Name="TitleBarInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TitleBarInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TitleBarInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TitleBarInstance.X</Name>
+    <Variable Type="float" Name="TitleBarInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>TitleBarInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="TitleBarInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TitleBarInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="TitleBarInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TitleBarInstance.Y</Name>
+    <Variable Type="float" Name="TitleBarInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>TitleBarInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="TitleBarInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TitleBarInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="TitleBarInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">256</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
   </State>
-  <Instance>
-    <Name>Background</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>InnerPanelInstance</Name>
-    <BaseType>Controls/Panel</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TitleBarInstance</Name>
-    <BaseType>Controls/Panel</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>BorderTopLeftInstance</Name>
-    <BaseType>Controls/Panel</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>BorderTopRightInstance</Name>
-    <BaseType>Controls/Panel</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>BorderBottomLeftInstance</Name>
-    <BaseType>Controls/Panel</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>BorderBottomRightInstance</Name>
-    <BaseType>Controls/Panel</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>BorderTopInstance</Name>
-    <BaseType>Controls/Panel</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>BorderBottomInstance</Name>
-    <BaseType>Controls/Panel</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>BorderLeftInstance</Name>
-    <BaseType>Controls/Panel</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>BorderRightInstance</Name>
-    <BaseType>Controls/Panel</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="Background" BaseType="NineSlice" />
+  <Instance Name="InnerPanelInstance" BaseType="Controls/Panel" />
+  <Instance Name="TitleBarInstance" BaseType="Controls/Panel" />
+  <Instance Name="BorderTopLeftInstance" BaseType="Controls/Panel" />
+  <Instance Name="BorderTopRightInstance" BaseType="Controls/Panel" />
+  <Instance Name="BorderBottomLeftInstance" BaseType="Controls/Panel" />
+  <Instance Name="BorderBottomRightInstance" BaseType="Controls/Panel" />
+  <Instance Name="BorderTopInstance" BaseType="Controls/Panel" />
+  <Instance Name="BorderBottomInstance" BaseType="Controls/Panel" />
+  <Instance Name="BorderLeftInstance" BaseType="Controls/Panel" />
+  <Instance Name="BorderRightInstance" BaseType="Controls/Panel" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>WindowBehavior</BehaviorName>

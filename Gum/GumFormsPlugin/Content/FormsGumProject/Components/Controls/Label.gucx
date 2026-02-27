@@ -1,60 +1,28 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Controls/Label</Name>
   <BaseType>Text</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>StyleCategoryState</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="StyleCategory" Name="StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Strong</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="float" Name="Width" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
   </State>
   <Behaviors>

@@ -1,162 +1,74 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Controls/SettingsView</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>FullscreenCheckboxInstance.Text</Name>
+    <Variable Type="string" Name="FullscreenCheckboxInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Fullscreen</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>FullscreenCheckboxInstance.Width</Name>
+    <Variable Type="float" Name="FullscreenCheckboxInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>FullscreenCheckboxInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="FullscreenCheckboxInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>FullscreenCheckboxInstance.Y</Name>
+    <Variable Type="float" Name="FullscreenCheckboxInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>MusicSliderInstance.Width</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="float" Name="MusicSliderInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>MusicSliderInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="MusicSliderInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>MusicVolumeLabel.Text</Name>
+    <Variable Type="string" Name="MusicVolumeLabel.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Music Volume</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>MusicVolumeLabel.Width</Name>
+    <Variable Type="float" Name="MusicVolumeLabel.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>MusicVolumeLabel.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="MusicVolumeLabel.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>MusicVolumeLabel.Y</Name>
+    <Variable Type="float" Name="MusicVolumeLabel.Y" SetsValue="true">
       <Value xsi:type="xsd:float">12</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>SoundSliderInstance.Width</Name>
+    <Variable Type="float" Name="SoundSliderInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>SoundSliderInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="SoundSliderInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>SoundVolumeLabel.Text</Name>
+    <Variable Type="string" Name="SoundVolumeLabel.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Sound Effect Volume</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>SoundVolumeLabel.Width</Name>
+    <Variable Type="float" Name="SoundVolumeLabel.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>SoundVolumeLabel.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="SoundVolumeLabel.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>SoundVolumeLabel.Y</Name>
+    <Variable Type="float" Name="SoundVolumeLabel.Y" SetsValue="true">
       <Value xsi:type="xsd:float">12</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
   </State>
-  <Instance>
-    <Name>FullscreenCheckboxInstance</Name>
-    <BaseType>Controls/CheckBox</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>MusicVolumeLabel</Name>
-    <BaseType>Controls/Label</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>MusicSliderInstance</Name>
-    <BaseType>Controls/Slider</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>SoundVolumeLabel</Name>
-    <BaseType>Controls/Label</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>SoundSliderInstance</Name>
-    <BaseType>Controls/Slider</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="FullscreenCheckboxInstance" BaseType="Controls/CheckBox" />
+  <Instance Name="MusicVolumeLabel" BaseType="Controls/Label" />
+  <Instance Name="MusicSliderInstance" BaseType="Controls/Slider" />
+  <Instance Name="SoundVolumeLabel" BaseType="Controls/Label" />
+  <Instance Name="SoundSliderInstance" BaseType="Controls/Slider" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>SettingsViewBehavior</BehaviorName>

@@ -3,11 +3,13 @@ using Gum.DataTypes.Variables;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Xml.Serialization;
+using ToolsUtilities;
 
 namespace Gum.DataTypes;
 
-public static class VariableSaveSerializer
+public static class GumFileSerializer
 {
     private static readonly Dictionary<Type, XmlSerializer> _compactSerializers = new();
     private static readonly Dictionary<Type, XmlSerializer> _legacyInstancesCompactSerializers = new();
@@ -121,6 +123,16 @@ public static class VariableSaveSerializer
     }
 
     /// <summary>
+    /// Returns true when <paramref name="content"/> contains attribute-style element tags
+    /// that indicate a compact (v2) element or behavior file.
+    /// Files with no variables or instances are indistinguishable and default to non-compact.
+    /// </summary>
+    private static bool IsElementContentCompact(string content) =>
+        content.Contains("<Variable ")
+        || content.Contains("<Instance ")
+        || content.Contains("<InstanceSave ");
+
+    /// <summary>
     /// Reads a file and detects whether it is in compact (v2) format or legacy (v1) format.
     /// V1 files serialize VariableSave and InstanceSave properties as child elements.
     /// V2 files serialize them as XML attributes: &lt;Variable Type="..." Name="..." /&gt;
@@ -131,14 +143,49 @@ public static class VariableSaveSerializer
     public static (string content, bool isCompact) ReadAndDetectFormat(string fileName)
     {
         string content = File.ReadAllText(fileName);
-        // Detect v2 by the presence of attribute-style opening tags.
-        // "<Variable " means a VariableSave with inline attributes (e.g. <Variable Type="float" Name="X" />).
-        // "<Instance " / "<InstanceSave " mean compact InstanceSave attributes.
-        // Absence of these markers — including files with no variables or instances at all —
-        // defaults to non-compact so the standard XML deserializer is used.
-        bool isCompact = content.Contains("<Variable ")
-            || content.Contains("<Instance ")
-            || content.Contains("<InstanceSave ");
-        return (content, isCompact);
+        return (content, IsElementContentCompact(content));
+    }
+
+    /// <summary>
+    /// Deserializes an <see cref="ElementSave"/> subtype from already-loaded XML text,
+    /// selecting compact or legacy XML deserialization based on the content and project version.
+    /// </summary>
+    public static T? DeserializeElementSave<T>(string content, int projectVersion) where T : ElementSave, new()
+    {
+        if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
+        {
+            if (IsElementContentCompact(content))
+            {
+                bool hasLegacyInstances = content.Contains("<Instance>");
+                var serializer = hasLegacyInstances
+                    ? GetLegacyInstancesCompactSerializer(typeof(T))
+                    : GetCompactSerializer(typeof(T));
+                using var reader = new StringReader(content);
+                return (T)serializer.Deserialize(reader);
+            }
+        }
+
+        return FileManager.XmlDeserializeFromStream<T>(
+            new MemoryStream(Encoding.UTF8.GetBytes(content)));
+    }
+
+    /// <summary>
+    /// Deserializes a <see cref="BehaviorSave"/> from already-loaded XML text,
+    /// selecting compact or legacy XML deserialization based on the content and project version.
+    /// </summary>
+    public static BehaviorSave? DeserializeBehaviorSave(string content, int projectVersion)
+    {
+        if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
+        {
+            if (IsElementContentCompact(content))
+            {
+                var compactSerializer = GetCompactSerializer(typeof(BehaviorSave));
+                using var reader = new StringReader(content);
+                return (BehaviorSave)compactSerializer.Deserialize(reader);
+            }
+        }
+
+        return FileManager.XmlDeserializeFromStream<BehaviorSave>(
+            new MemoryStream(Encoding.UTF8.GetBytes(content)));
     }
 }

@@ -391,7 +391,7 @@ public class GumProjectSave
                 string streamContent = reader.ReadToEnd();
                 bool isCompact = IsGumxCompactFormat(streamContent);
                 var deserializer = isCompact
-                    ? VariableSaveSerializer.GetGumProjectCompactSerializer()
+                    ? GumFileSerializer.GetGumProjectCompactSerializer()
                     : FileManager.GetXmlSerializer(typeof(GumProjectSave));
                 gps = (GumProjectSave)deserializer.Deserialize(new StringReader(streamContent));
                 if (!isCompact && !streamContent.Contains("<Version>"))
@@ -412,7 +412,7 @@ public class GumProjectSave
                 string fileContent = File.ReadAllText(fileName);
                 bool isCompact = IsGumxCompactFormat(fileContent);
                 var deserializer = isCompact
-                    ? VariableSaveSerializer.GetGumProjectCompactSerializer()
+                    ? GumFileSerializer.GetGumProjectCompactSerializer()
                     : FileManager.GetXmlSerializer(typeof(GumProjectSave));
                 gps = (GumProjectSave)deserializer.Deserialize(new StringReader(fileContent));
                 if (!isCompact && !fileContent.Contains("<Version>"))
@@ -665,7 +665,7 @@ public class GumProjectSave
         }
     }
 
-    private static bool IsGumxCompactFormat(string content)
+    public static bool IsGumxCompactFormat(string content)
     {
         // v2 files store Name as an XML attribute, e.g. <ScreenReference Name="...">.
         // This matches ScreenReference, ComponentReference, StandardElementReference, and BehaviorReference.
@@ -677,7 +677,7 @@ public class GumProjectSave
     public void Save(string fileName, bool saveElements)
     {
         var projectSerializer = Version >= (int)GumxVersions.AttributeVersion
-            ? VariableSaveSerializer.GetGumProjectCompactSerializer()
+            ? GumFileSerializer.GetGumProjectCompactSerializer()
             : FileManager.GetXmlSerializer(typeof(GumProjectSave));
         FileManager.XmlSerialize(this, fileName, projectSerializer);
 

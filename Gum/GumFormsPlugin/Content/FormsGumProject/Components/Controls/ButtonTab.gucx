@@ -1,386 +1,199 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Controls/ButtonTab</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Background.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>Background.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">TabBordered</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Background.Width</Name>
+    <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Background.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Background.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ButtonCategory</Type>
-      <Name>ButtonCategoryState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>FocusedIndicator.ColorCategoryState</Name>
+    <Variable Type="ButtonCategory" Name="ButtonCategoryState" SetsValue="false" />
+    <Variable Type="ColorCategory" Name="FocusedIndicator.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Warning</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>FocusedIndicator.Height</Name>
+    <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>FocusedIndicator.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>FocusedIndicator.Parent</Name>
+    <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Background</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>FocusedIndicator.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Solid</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>FocusedIndicator.Visible</Name>
+    <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>FocusedIndicator.Width</Name>
+    <Variable Type="float" Name="FocusedIndicator.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>FocusedIndicator.Y</Name>
+    <Variable Type="float" Name="FocusedIndicator.Y" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>FocusedIndicator.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="FocusedIndicator.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>FocusedIndicator.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="FocusedIndicator.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TabText.ColorCategoryState</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="ColorCategory" Name="TabText.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TabText.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TabText.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>TabText.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="TabText.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TabText.Parent</Name>
+    <Variable Type="string" Name="TabText.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Background</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TabText.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TabText.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Strong</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TabText.Text</Name>
+    <Variable Type="string" Name="TabText.Text" ExposedAsName="TabDisplayText" SetsValue="true">
       <Value xsi:type="xsd:string">Tab 1</Value>
-      <ExposedAsName>TabDisplayText</ExposedAsName>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>TabText.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="TabText.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>TabText.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="TabText.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TabText.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="TabText.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>TabText.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="TabText.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TabText.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="TabText.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>XUnits</Name>
+    <Variable Type="PositionUnitType" Name="XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
   </State>
   <Category>
     <Name>ButtonCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>Background.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Primary</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>TabText.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="TabText.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>Disabled</Name>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>Background.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">DarkGray</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>TabText.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="TabText.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>Highlighted</Name>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>Background.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">PrimaryLight</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>TabText.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="TabText.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>Pushed</Name>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>Background.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">PrimaryDark</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>TabText.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="TabText.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>HighlightedFocused</Name>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>Background.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">PrimaryLight</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>TabText.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="TabText.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>Background.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Primary</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>TabText.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="TabText.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>DisabledFocused</Name>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>Background.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">DarkGray</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>ColorCategory</Type>
-        <Name>TabText.ColorCategoryState</Name>
+      <Variable Type="ColorCategory" Name="TabText.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
   </Category>
-  <Instance>
-    <Name>Background</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TabText</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>FocusedIndicator</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="Background" BaseType="NineSlice" />
+  <Instance Name="TabText" BaseType="Text" />
+  <Instance Name="FocusedIndicator" BaseType="NineSlice" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ButtonBehavior</BehaviorName>

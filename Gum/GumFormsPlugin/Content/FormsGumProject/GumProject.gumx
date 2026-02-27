@@ -6,7 +6,7 @@
   <FontSpacingHorizontal>1</FontSpacingHorizontal>
   <UseFontCharacterFile>false</UseFontCharacterFile>
   <AutoSizeFontOutputs>false</AutoSizeFontOutputs>
-  <Version>1</Version>
+  <Version>2</Version>
   <DefaultCanvasWidth>1024</DefaultCanvasWidth>
   <DefaultCanvasHeight>768</DefaultCanvasHeight>
   <CustomCanvasSizes>
@@ -54,369 +54,91 @@
   <ParentProjectRoot>../</ParentProjectRoot>
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
-  <ScreenReference>
-    <Name>DemoScreenGum</Name>
-    <ElementType>Screen</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ScreenReference>
-  <ScreenReference>
-    <Name>KeyboardScreenGum</Name>
-    <ElementType>Screen</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ScreenReference>
-  <ScreenReference>
-    <Name>StylesScreen</Name>
-    <ElementType>Screen</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ScreenReference>
-  <ComponentReference>
-    <Name>Controls/ButtonClose</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ButtonConfirm</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ButtonDeny</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ButtonIcon</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ButtonStandard</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ButtonStandardIcon</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ButtonTab</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/CheckBox</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ComboBox</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/DialogBox</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ItemsControl</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/Keyboard</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/KeyboardKey</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/Label</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ListBox</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ListBoxItem</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/Menu</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/MenuItem</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/Panel</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/PasswordBox</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/RadioButton</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ScrollBar</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/ScrollViewer</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/SettingsView</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/Slider</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/SplitterStandard</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/StackPanel</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/TextBox</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/Toast</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/TreeView</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/TreeViewItem</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/TreeViewToggle</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/UserControl</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Controls/Window</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Elements/CautionLines</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Elements/DividerHorizontal</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Elements/DividerVertical</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Elements/Icon</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Elements/PercentBar</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Elements/PercentBarIcon</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Elements/VerticalLines</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <ComponentReference>
-    <Name>Styles</Name>
-    <ElementType>Component</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ComponentReference>
-  <StandardElementReference>
-    <Name>Circle</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>ColoredRectangle</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Component</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Container</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>NineSlice</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Polygon</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Rectangle</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Sprite</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Text</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <BehaviorReference>
-    <Name>ButtonBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>CheckBoxBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>ComboBoxBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>DialogBoxBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>InputDeviceSelectionItemBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>InputDeviceSelectorBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>ItemsControlBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>LabelBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>ListBoxBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>ListBoxItemBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>MenuBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>MenuItemBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>OnScreenKeyboardBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>PanelBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>PasswordBoxBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>PlayerJoinViewBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>PlayerJoinViewItemBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>RadioButtonBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>ScrollBarBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>ScrollViewerBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>SettingsViewBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>SliderBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>SplitterBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>StackPanelBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>TextBoxBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>ToastBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>ToggleBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>TreeViewBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>TreeViewItemBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>UserControlBehavior</Name>
-  </BehaviorReference>
-  <BehaviorReference>
-    <Name>WindowBehavior</Name>
-  </BehaviorReference>
+  <ScreenReference Name="DemoScreenGum" />
+  <ScreenReference Name="KeyboardScreenGum" />
+  <ScreenReference Name="StylesScreen" />
+  <ComponentReference Name="Controls/ButtonClose" />
+  <ComponentReference Name="Controls/ButtonConfirm" />
+  <ComponentReference Name="Controls/ButtonDeny" />
+  <ComponentReference Name="Controls/ButtonIcon" />
+  <ComponentReference Name="Controls/ButtonStandard" />
+  <ComponentReference Name="Controls/ButtonStandardIcon" />
+  <ComponentReference Name="Controls/ButtonTab" />
+  <ComponentReference Name="Controls/CheckBox" />
+  <ComponentReference Name="Controls/ComboBox" />
+  <ComponentReference Name="Controls/DialogBox" />
+  <ComponentReference Name="Controls/ItemsControl" />
+  <ComponentReference Name="Controls/Keyboard" />
+  <ComponentReference Name="Controls/KeyboardKey" />
+  <ComponentReference Name="Controls/Label" />
+  <ComponentReference Name="Controls/ListBox" />
+  <ComponentReference Name="Controls/ListBoxItem" />
+  <ComponentReference Name="Controls/Menu" />
+  <ComponentReference Name="Controls/MenuItem" />
+  <ComponentReference Name="Controls/Panel" />
+  <ComponentReference Name="Controls/PasswordBox" />
+  <ComponentReference Name="Controls/RadioButton" />
+  <ComponentReference Name="Controls/ScrollBar" />
+  <ComponentReference Name="Controls/ScrollViewer" />
+  <ComponentReference Name="Controls/SettingsView" />
+  <ComponentReference Name="Controls/Slider" />
+  <ComponentReference Name="Controls/SplitterStandard" />
+  <ComponentReference Name="Controls/StackPanel" />
+  <ComponentReference Name="Controls/TextBox" />
+  <ComponentReference Name="Controls/Toast" />
+  <ComponentReference Name="Controls/TreeView" />
+  <ComponentReference Name="Controls/TreeViewItem" />
+  <ComponentReference Name="Controls/TreeViewToggle" />
+  <ComponentReference Name="Controls/UserControl" />
+  <ComponentReference Name="Controls/Window" />
+  <ComponentReference Name="Elements/CautionLines" />
+  <ComponentReference Name="Elements/DividerHorizontal" />
+  <ComponentReference Name="Elements/DividerVertical" />
+  <ComponentReference Name="Elements/Icon" />
+  <ComponentReference Name="Elements/PercentBar" />
+  <ComponentReference Name="Elements/PercentBarIcon" />
+  <ComponentReference Name="Elements/VerticalLines" />
+  <ComponentReference Name="Styles" />
+  <StandardElementReference Name="Circle" />
+  <StandardElementReference Name="ColoredRectangle" />
+  <StandardElementReference Name="Component" />
+  <StandardElementReference Name="Container" />
+  <StandardElementReference Name="NineSlice" />
+  <StandardElementReference Name="Polygon" />
+  <StandardElementReference Name="Rectangle" />
+  <StandardElementReference Name="Sprite" />
+  <StandardElementReference Name="Text" />
+  <BehaviorReference Name="ButtonBehavior" />
+  <BehaviorReference Name="CheckBoxBehavior" />
+  <BehaviorReference Name="ComboBoxBehavior" />
+  <BehaviorReference Name="DialogBoxBehavior" />
+  <BehaviorReference Name="InputDeviceSelectionItemBehavior" />
+  <BehaviorReference Name="InputDeviceSelectorBehavior" />
+  <BehaviorReference Name="ItemsControlBehavior" />
+  <BehaviorReference Name="LabelBehavior" />
+  <BehaviorReference Name="ListBoxBehavior" />
+  <BehaviorReference Name="ListBoxItemBehavior" />
+  <BehaviorReference Name="MenuBehavior" />
+  <BehaviorReference Name="MenuItemBehavior" />
+  <BehaviorReference Name="OnScreenKeyboardBehavior" />
+  <BehaviorReference Name="PanelBehavior" />
+  <BehaviorReference Name="PasswordBoxBehavior" />
+  <BehaviorReference Name="PlayerJoinViewBehavior" />
+  <BehaviorReference Name="PlayerJoinViewItemBehavior" />
+  <BehaviorReference Name="RadioButtonBehavior" />
+  <BehaviorReference Name="ScrollBarBehavior" />
+  <BehaviorReference Name="ScrollViewerBehavior" />
+  <BehaviorReference Name="SettingsViewBehavior" />
+  <BehaviorReference Name="SliderBehavior" />
+  <BehaviorReference Name="SplitterBehavior" />
+  <BehaviorReference Name="StackPanelBehavior" />
+  <BehaviorReference Name="TextBoxBehavior" />
+  <BehaviorReference Name="ToastBehavior" />
+  <BehaviorReference Name="ToggleBehavior" />
+  <BehaviorReference Name="TreeViewBehavior" />
+  <BehaviorReference Name="TreeViewItemBehavior" />
+  <BehaviorReference Name="UserControlBehavior" />
+  <BehaviorReference Name="WindowBehavior" />
   <SinglePixelTextureTop xsi:nil="true" />
   <SinglePixelTextureLeft xsi:nil="true" />
   <SinglePixelTextureRight xsi:nil="true" />

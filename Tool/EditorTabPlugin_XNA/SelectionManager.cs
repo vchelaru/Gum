@@ -568,7 +568,7 @@ public class SelectionManager : ISelectionManager
 
     public GraphicalUiElement GetRepresentationAt(float x, float y, bool trySkipSelected, List<ElementWithState> elementStack)
     {
-        GraphicalUiElement ipsoOver = null;
+        GraphicalUiElement? ipsoOver = null;
 
         // First check if we're over the current
         var selectedRepresentations = _wireframeObjectManager.GetSelectedRepresentations();
@@ -665,8 +665,8 @@ public class SelectionManager : ISelectionManager
         // null, get the ElementSave
         if (ipsoOver != null)
         {
-            InstanceSave instance;
-            ElementSave element;
+            InstanceSave? instance;
+            ElementSave? element;
 
             GetElementOrInstanceForIpso(ipsoOver, elementStack, out instance, out element);
 
@@ -1249,8 +1249,8 @@ public class SelectionManager : ISelectionManager
 
                 if (representation != null)
                 {
-                    InstanceSave selectedInstance;
-                    ElementSave selectedElement;
+                    InstanceSave? selectedInstance;
+                    ElementSave? selectedElement;
                     GetElementOrInstanceForIpso(representation, elementStack, out selectedInstance, out selectedElement);
 
                     if (selectedInstance == null && selectedElement == null)
@@ -1333,7 +1333,7 @@ public class SelectionManager : ISelectionManager
     }
 
     private void GetElementOrInstanceForIpso(IRenderableIpso representation, List<ElementWithState> elementStack,
-                                                    out InstanceSave selectedInstance, out ElementSave selectedElement)
+                                                    out InstanceSave? selectedInstance, out ElementSave? selectedElement)
     {
         selectedInstance = null;
         selectedElement = null;
@@ -1347,13 +1347,13 @@ public class SelectionManager : ISelectionManager
 
         if (ipsoToUse != null)
         {
-            if (ipsoToUse.Tag is InstanceSave)
+            if (ipsoToUse.Tag is InstanceSave asInstanceSave)
             {
-                selectedInstance = ipsoToUse.Tag as InstanceSave;
+                selectedInstance = asInstanceSave;
             }
-            else if (ipsoToUse.Tag is ElementSave)
+            else if (ipsoToUse.Tag is ElementSave asElementSave)
             {
-                selectedElement = ipsoToUse.Tag as ElementSave;
+                selectedElement = asElementSave;
             }
             else
             {
@@ -1379,7 +1379,7 @@ public class SelectionManager : ISelectionManager
 
             foreach (var instance in _selectedState.SelectedInstances)
             {
-                GraphicalUiElement toAdd =
+                GraphicalUiElement? toAdd =
                     _wireframeObjectManager.GetRepresentation(instance, elementStack);
                 if (toAdd != null)
                 {
@@ -1389,7 +1389,7 @@ public class SelectionManager : ISelectionManager
         }
         else if (_selectedState.SelectedElement != null)
         {
-            GraphicalUiElement toAdd =
+            GraphicalUiElement? toAdd =
                 _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
 
             if (toAdd != null)

@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Services.Fonts;
 using ToolsUtilities;
 
 namespace GumProjectFontGenerator;
@@ -16,13 +17,11 @@ static class RunResponseCodes
 
 internal class Program
 {
-    static int Main(string[] args)
+    static async Task<int> Main(string[] args)
     {
         try
         {
-            //System.Threading.Thread.Sleep(25_000);
             var projectName = args[0];
-
             if(!System.IO.File.Exists(projectName))
             {
                 return RunResponseCodes.GumProjectFileNotFound;
@@ -39,7 +38,9 @@ internal class Program
             ObjectFinder.Self.GumProjectSave = gumProject;
             FileManager.RelativeDirectory = FileManager.GetDirectory(projectName);
 
-            FontManager.Self.CreateAllMissingFontFiles(gumProject);
+            FontManager fontManager = new FontManager();
+
+            await fontManager.CreateAllMissingFontFiles(gumProject);
         }
         catch(Exception e)
         {
