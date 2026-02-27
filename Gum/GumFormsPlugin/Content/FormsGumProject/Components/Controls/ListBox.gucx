@@ -1,545 +1,267 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Controls/ListBox</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Background.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">DarkGray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Background.Height</Name>
+    <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Background.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Background.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>Background.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Bordered</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Background.Width</Name>
+    <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Background.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Background.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Background.X</Name>
+    <Variable Type="float" Name="Background.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Background.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="Background.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Background.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="Background.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Background.Y</Name>
+    <Variable Type="float" Name="Background.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Background.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Background.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Background.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>ClipAndScrollContainer.HasEvents</Name>
+    <Variable Type="bool" Name="ClipAndScrollContainer.HasEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipAndScrollContainer.Height</Name>
+    <Variable Type="float" Name="ClipAndScrollContainer.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ClipAndScrollContainer.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ClipAndScrollContainer.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipAndScrollContainer.Width</Name>
+    <Variable Type="float" Name="ClipAndScrollContainer.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ClipAndScrollContainer.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ClipAndScrollContainer.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipAndScrollContainer.X</Name>
+    <Variable Type="float" Name="ClipAndScrollContainer.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>ClipAndScrollContainer.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="ClipAndScrollContainer.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ClipAndScrollContainer.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="ClipAndScrollContainer.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipAndScrollContainer.Y</Name>
+    <Variable Type="float" Name="ClipAndScrollContainer.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>ClipAndScrollContainer.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="ClipAndScrollContainer.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ClipAndScrollContainer.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="ClipAndScrollContainer.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>ClipContainerInstance.ClipsChildren</Name>
+    <Variable Type="bool" Name="ClipContainerInstance.ClipsChildren" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>ClipContainerInstance.HasEvents</Name>
+    <Variable Type="bool" Name="ClipContainerInstance.HasEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipContainerInstance.Height</Name>
+    <Variable Type="float" Name="ClipContainerInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ClipContainerInstance.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ClipContainerInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ClipContainerInstance.Parent</Name>
+    <Variable Type="string" Name="ClipContainerInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ClipContainerParent</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipContainerInstance.Width</Name>
+    <Variable Type="float" Name="ClipContainerInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ClipContainerInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ClipContainerInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipContainerInstance.X</Name>
+    <Variable Type="float" Name="ClipContainerInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>ClipContainerInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="ClipContainerInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ClipContainerInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="ClipContainerInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipContainerInstance.Y</Name>
+    <Variable Type="float" Name="ClipContainerInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>ClipContainerInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="ClipContainerInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ClipContainerInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="ClipContainerInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>ClipContainerParent.HasEvents</Name>
+    <Variable Type="bool" Name="ClipContainerParent.HasEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipContainerParent.Height</Name>
+    <Variable Type="float" Name="ClipContainerParent.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ClipContainerParent.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ClipContainerParent.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ClipContainerParent.Parent</Name>
+    <Variable Type="string" Name="ClipContainerParent.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ClipAndScrollContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipContainerParent.Width</Name>
+    <Variable Type="float" Name="ClipContainerParent.Width" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ClipContainerParent.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ClipContainerParent.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipContainerParent.X</Name>
+    <Variable Type="float" Name="ClipContainerParent.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>ClipContainerParent.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="ClipContainerParent.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ClipContainerParent.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="ClipContainerParent.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ClipContainerParent.Y</Name>
+    <Variable Type="float" Name="ClipContainerParent.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>ClipContainerParent.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="ClipContainerParent.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ClipContainerParent.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="ClipContainerParent.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>DefaultChildContainer</Name>
+    <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
       <Value xsi:type="xsd:string">InnerPanelInstance</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>FocusedIndicator.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="FocusedIndicator.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Warning</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>FocusedIndicator.Height</Name>
+    <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>FocusedIndicator.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>FocusedIndicator.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>FocusedIndicator.StyleCategoryState</Name>
+    <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
+    <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Solid</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>FocusedIndicator.Visible</Name>
+    <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>FocusedIndicator.Y</Name>
+    <Variable Type="float" Name="FocusedIndicator.Y" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>FocusedIndicator.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="FocusedIndicator.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>FocusedIndicator.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="FocusedIndicator.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">256</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>InnerPanelInstance.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="InnerPanelInstance.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>InnerPanelInstance.HasEvents</Name>
+    <Variable Type="bool" Name="InnerPanelInstance.HasEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>InnerPanelInstance.Height</Name>
+    <Variable Type="float" Name="InnerPanelInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>InnerPanelInstance.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="InnerPanelInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>InnerPanelInstance.Parent</Name>
+    <Variable Type="string" Name="InnerPanelInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ClipContainerInstance</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>InnerPanelInstance.Width</Name>
+    <Variable Type="float" Name="InnerPanelInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>InnerPanelInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="InnerPanelInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ListBoxCategory</Type>
-      <Name>ListBoxCategoryState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>VerticalScrollBarInstance.Parent</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="ListBoxCategory" Name="ListBoxCategoryState" SetsValue="false" />
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="string" Name="VerticalScrollBarInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ClipAndScrollContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>VerticalScrollBarInstance.Visible</Name>
+    <Variable Type="bool" Name="VerticalScrollBarInstance.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>VerticalScrollBarInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="VerticalScrollBarInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>VerticalScrollBarInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="VerticalScrollBarInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>VerticalScrollBarInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="VerticalScrollBarInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>VerticalScrollBarInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="VerticalScrollBarInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">256</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
   </State>
   <Category>
     <Name>ListBoxCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>Disabled</Name>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>DisabledFocused</Name>
-      <Variable>
-        <Type>bool</Type>
-        <Name>FocusedIndicator.Visible</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
   </Category>
-  <Instance>
-    <Name>Background</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>VerticalScrollBarInstance</Name>
-    <BaseType>Controls/ScrollBar</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ClipContainerInstance</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>InnerPanelInstance</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>FocusedIndicator</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ClipAndScrollContainer</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ClipContainerParent</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="Background" BaseType="NineSlice" />
+  <Instance Name="VerticalScrollBarInstance" BaseType="Controls/ScrollBar" />
+  <Instance Name="ClipContainerInstance" BaseType="Container" />
+  <Instance Name="InnerPanelInstance" BaseType="Container" />
+  <Instance Name="FocusedIndicator" BaseType="NineSlice" />
+  <Instance Name="ClipAndScrollContainer" BaseType="Container" />
+  <Instance Name="ClipContainerParent" BaseType="Container" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ListBoxBehavior</BehaviorName>

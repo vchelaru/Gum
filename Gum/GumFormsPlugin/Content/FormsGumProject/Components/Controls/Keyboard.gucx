@@ -1,3888 +1,1856 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Controls/Keyboard</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>AllRows.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="AllRows.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AllRows.Height</Name>
+    <Variable Type="float" Name="AllRows.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>AllRows.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="AllRows.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AllRows.Width</Name>
+    <Variable Type="float" Name="AllRows.Width" SetsValue="true">
       <Value xsi:type="xsd:float">90</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>AllRows.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="AllRows.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AllRows.X</Name>
+    <Variable Type="float" Name="AllRows.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>AllRows.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="AllRows.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>AllRows.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="AllRows.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AllRows.Y</Name>
+    <Variable Type="float" Name="AllRows.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>AllRows.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="AllRows.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>AllRows.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="AllRows.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>CursorMoveCategory</Type>
-      <Name>CursorMoveCategoryState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="CursorMoveCategory" Name="CursorMoveCategoryState" SetsValue="false" />
+    <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>HighlightRectangle.Blue</Name>
+    <Variable Type="int" Name="HighlightRectangle.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>HighlightRectangle.Green</Name>
+    <Variable Type="int" Name="HighlightRectangle.Green" SetsValue="true">
       <Value xsi:type="xsd:int">128</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>HighlightRectangle.Height</Name>
+    <Variable Type="float" Name="HighlightRectangle.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HighlightRectangle.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HighlightRectangle.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>HighlightRectangle.Red</Name>
+    <Variable Type="int" Name="HighlightRectangle.Red" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>HighlightRectangle.Visible</Name>
+    <Variable Type="bool" Name="HighlightRectangle.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>HighlightRectangle.Width</Name>
+    <Variable Type="float" Name="HighlightRectangle.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HighlightRectangle.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HighlightRectangle.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>HighlightRectangle.X</Name>
+    <Variable Type="float" Name="HighlightRectangle.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>HighlightRectangle.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="HighlightRectangle.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>HighlightRectangle.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="HighlightRectangle.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>HighlightRectangle.Y</Name>
+    <Variable Type="float" Name="HighlightRectangle.Y" SetsValue="true">
       <Value xsi:type="xsd:float">-1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>HighlightRectangle.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="HighlightRectangle.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>HighlightRectangle.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="HighlightRectangle.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>IconInstance.IconCategoryState</Name>
+    <Variable Type="IconCategory" Name="IconInstance.IconCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Delete</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>IconInstance.Parent</Name>
+    <Variable Type="string" Name="IconInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">KeyBackspace</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>IconInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="IconInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>IconInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="IconInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>IconInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="IconInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>IconInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="IconInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>IconInstance1.IconCategoryState</Name>
+    <Variable Type="IconCategory" Name="IconInstance1.IconCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Enter</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>IconInstance1.Parent</Name>
+    <Variable Type="string" Name="IconInstance1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">KeyReturn</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>IconInstance1.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="IconInstance1.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>IconInstance1.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="IconInstance1.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>IconInstance1.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="IconInstance1.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>IconInstance1.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="IconInstance1.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IconInstance2.FlipHorizontal</Name>
+    <Variable Type="bool" Name="IconInstance2.FlipHorizontal" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>IconInstance2.IconCategoryState</Name>
+    <Variable Type="IconCategory" Name="IconInstance2.IconCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Arrow1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>IconInstance2.Parent</Name>
+    <Variable Type="string" Name="IconInstance2.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">KeyLeft</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>IconInstance2.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="IconInstance2.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>IconInstance2.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="IconInstance2.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>IconInstance2.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="IconInstance2.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>IconInstance2.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="IconInstance2.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IconInstance3.FlipHorizontal</Name>
+    <Variable Type="bool" Name="IconInstance3.FlipHorizontal" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>IconInstance3.IconCategoryState</Name>
+    <Variable Type="IconCategory" Name="IconInstance3.IconCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Arrow1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>IconInstance3.Parent</Name>
+    <Variable Type="string" Name="IconInstance3.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">KeyRight</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>IconInstance3.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="IconInstance3.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>IconInstance3.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="IconInstance3.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>IconInstance3.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="IconInstance3.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>IconInstance3.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="IconInstance3.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key0.Height</Name>
+    <Variable Type="float" Name="Key0.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key0.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key0.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Key0.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="Key0.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key0.Parent</Name>
+    <Variable Type="string" Name="Key0.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key0.Text</Name>
+    <Variable Type="string" Name="Key0.Text" SetsValue="true">
       <Value xsi:type="xsd:string">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key0.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="Key0.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key0.Width</Name>
+    <Variable Type="float" Name="Key0.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key0.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key0.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key0.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Key0.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Key0.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Key0.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key1.Height</Name>
+    <Variable Type="float" Name="Key1.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key1.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key1.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Key1.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="Key1.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key1.Parent</Name>
+    <Variable Type="string" Name="Key1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key1.Text</Name>
+    <Variable Type="string" Name="Key1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key1.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="Key1.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key1.Width</Name>
+    <Variable Type="float" Name="Key1.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key1.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key1.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key1.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Key1.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Key1.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Key1.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key2.Height</Name>
+    <Variable Type="float" Name="Key2.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key2.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key2.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Key2.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="Key2.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key2.Parent</Name>
+    <Variable Type="string" Name="Key2.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key2.Text</Name>
+    <Variable Type="string" Name="Key2.Text" SetsValue="true">
       <Value xsi:type="xsd:string">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key2.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="Key2.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key2.Width</Name>
+    <Variable Type="float" Name="Key2.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key2.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key2.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key2.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Key2.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Key2.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Key2.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key3.Height</Name>
+    <Variable Type="float" Name="Key3.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key3.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key3.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Key3.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="Key3.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key3.Parent</Name>
+    <Variable Type="string" Name="Key3.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key3.Text</Name>
+    <Variable Type="string" Name="Key3.Text" SetsValue="true">
       <Value xsi:type="xsd:string">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key3.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="Key3.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key3.Width</Name>
+    <Variable Type="float" Name="Key3.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key3.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key3.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key3.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Key3.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Key3.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Key3.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key4.Height</Name>
+    <Variable Type="float" Name="Key4.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key4.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key4.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Key4.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="Key4.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key4.Parent</Name>
+    <Variable Type="string" Name="Key4.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key4.Text</Name>
+    <Variable Type="string" Name="Key4.Text" SetsValue="true">
       <Value xsi:type="xsd:string">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key4.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="Key4.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key4.Width</Name>
+    <Variable Type="float" Name="Key4.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key4.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key4.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key4.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Key4.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Key4.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Key4.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key5.Height</Name>
+    <Variable Type="float" Name="Key5.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key5.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key5.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Key5.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="Key5.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key5.Parent</Name>
+    <Variable Type="string" Name="Key5.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key5.Text</Name>
+    <Variable Type="string" Name="Key5.Text" SetsValue="true">
       <Value xsi:type="xsd:string">5</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key5.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="Key5.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key5.Width</Name>
+    <Variable Type="float" Name="Key5.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key5.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key5.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key5.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Key5.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Key5.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Key5.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key6.Height</Name>
+    <Variable Type="float" Name="Key6.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key6.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key6.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Key6.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="Key6.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key6.Parent</Name>
+    <Variable Type="string" Name="Key6.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key6.Text</Name>
+    <Variable Type="string" Name="Key6.Text" SetsValue="true">
       <Value xsi:type="xsd:string">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key6.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="Key6.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key6.Width</Name>
+    <Variable Type="float" Name="Key6.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key6.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key6.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key6.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Key6.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Key6.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Key6.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key7.Height</Name>
+    <Variable Type="float" Name="Key7.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key7.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key7.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Key7.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="Key7.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key7.Parent</Name>
+    <Variable Type="string" Name="Key7.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key7.Text</Name>
+    <Variable Type="string" Name="Key7.Text" SetsValue="true">
       <Value xsi:type="xsd:string">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key7.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="Key7.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key7.Width</Name>
+    <Variable Type="float" Name="Key7.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key7.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key7.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key7.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Key7.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Key7.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Key7.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key8.Height</Name>
+    <Variable Type="float" Name="Key8.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key8.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key8.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Key8.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="Key8.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key8.Parent</Name>
+    <Variable Type="string" Name="Key8.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key8.Text</Name>
+    <Variable Type="string" Name="Key8.Text" SetsValue="true">
       <Value xsi:type="xsd:string">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key8.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="Key8.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key8.Width</Name>
+    <Variable Type="float" Name="Key8.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key8.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key8.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key8.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Key8.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Key8.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Key8.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key9.Height</Name>
+    <Variable Type="float" Name="Key9.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key9.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key9.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Key9.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="Key9.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key9.Parent</Name>
+    <Variable Type="string" Name="Key9.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Key9.Text</Name>
+    <Variable Type="string" Name="Key9.Text" SetsValue="true">
       <Value xsi:type="xsd:string">9</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key9.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="Key9.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Key9.Width</Name>
+    <Variable Type="float" Name="Key9.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Key9.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Key9.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Key9.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Key9.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Key9.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Key9.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyA.Height</Name>
+    <Variable Type="float" Name="KeyA.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyA.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyA.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyA.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyA.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyA.Parent</Name>
+    <Variable Type="string" Name="KeyA.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyA.Text</Name>
+    <Variable Type="string" Name="KeyA.Text" SetsValue="true">
       <Value xsi:type="xsd:string">A</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyA.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyA.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyA.Width</Name>
+    <Variable Type="float" Name="KeyA.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyA.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyA.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyA.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyA.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyA.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyA.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyAmpersand.Height</Name>
+    <Variable Type="float" Name="KeyAmpersand.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyAmpersand.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyAmpersand.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyAmpersand.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyAmpersand.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyAmpersand.Parent</Name>
+    <Variable Type="string" Name="KeyAmpersand.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyAmpersand.Text</Name>
+    <Variable Type="string" Name="KeyAmpersand.Text" SetsValue="true">
       <Value xsi:type="xsd:string">&amp;</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyAmpersand.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyAmpersand.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyAmpersand.Width</Name>
+    <Variable Type="float" Name="KeyAmpersand.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyAmpersand.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyAmpersand.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyAmpersand.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyAmpersand.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyAmpersand.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyAmpersand.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyB.Height</Name>
+    <Variable Type="float" Name="KeyB.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyB.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyB.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyB.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyB.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyB.Parent</Name>
+    <Variable Type="string" Name="KeyB.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyB.Text</Name>
+    <Variable Type="string" Name="KeyB.Text" SetsValue="true">
       <Value xsi:type="xsd:string">B</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyB.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyB.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyB.Width</Name>
+    <Variable Type="float" Name="KeyB.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyB.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyB.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyB.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyB.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyB.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyB.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyBackspace.ButtonDisplayText</Name>
+    <Variable Type="string" Name="KeyBackspace.ButtonDisplayText" SetsValue="true">
       <Value xsi:type="xsd:string"></Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyBackspace.Height</Name>
+    <Variable Type="float" Name="KeyBackspace.Height" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyBackspace.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyBackspace.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyBackspace.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyBackspace.Text</Name>
+    <Variable Type="string" Name="KeyBackspace.Parent" SetsValue="true" />
+    <Variable Type="string" Name="KeyBackspace.Text" SetsValue="true">
       <Value xsi:type="xsd:string"></Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyBackspace.Width</Name>
+    <Variable Type="float" Name="KeyBackspace.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyBackspace.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyBackspace.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyBackspace.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyBackspace.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyBackspace.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyBackspace.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyBang.Height</Name>
+    <Variable Type="float" Name="KeyBang.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyBang.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyBang.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyBang.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyBang.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyBang.Parent</Name>
+    <Variable Type="string" Name="KeyBang.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyBang.Text</Name>
+    <Variable Type="string" Name="KeyBang.Text" SetsValue="true">
       <Value xsi:type="xsd:string">!</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyBang.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyBang.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyBang.Width</Name>
+    <Variable Type="float" Name="KeyBang.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyBang.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyBang.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyBang.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyBang.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyBang.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyBang.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyC.Height</Name>
+    <Variable Type="float" Name="KeyC.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyC.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyC.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyC.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyC.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyC.Parent</Name>
+    <Variable Type="string" Name="KeyC.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyC.Text</Name>
+    <Variable Type="string" Name="KeyC.Text" SetsValue="true">
       <Value xsi:type="xsd:string">C</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyC.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyC.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyC.Width</Name>
+    <Variable Type="float" Name="KeyC.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyC.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyC.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyC.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyC.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyC.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyC.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyComma.Height</Name>
+    <Variable Type="float" Name="KeyComma.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyComma.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyComma.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyComma.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyComma.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyComma.Parent</Name>
+    <Variable Type="string" Name="KeyComma.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyComma.Text</Name>
+    <Variable Type="string" Name="KeyComma.Text" SetsValue="true">
       <Value xsi:type="xsd:string">,</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyComma.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyComma.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyComma.Width</Name>
+    <Variable Type="float" Name="KeyComma.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyComma.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyComma.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyComma.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyComma.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyComma.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyComma.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyD.Height</Name>
+    <Variable Type="float" Name="KeyD.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyD.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyD.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyD.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyD.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyD.Parent</Name>
+    <Variable Type="string" Name="KeyD.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyD.Text</Name>
+    <Variable Type="string" Name="KeyD.Text" SetsValue="true">
       <Value xsi:type="xsd:string">D</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyD.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyD.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyD.Width</Name>
+    <Variable Type="float" Name="KeyD.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyD.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyD.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyD.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyD.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyD.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyD.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyE.Height</Name>
+    <Variable Type="float" Name="KeyE.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyE.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyE.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyE.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyE.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyE.Parent</Name>
+    <Variable Type="string" Name="KeyE.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyE.Text</Name>
+    <Variable Type="string" Name="KeyE.Text" SetsValue="true">
       <Value xsi:type="xsd:string">E</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyE.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyE.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyE.Width</Name>
+    <Variable Type="float" Name="KeyE.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyE.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyE.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyE.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyE.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyE.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyE.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyF.Height</Name>
+    <Variable Type="float" Name="KeyF.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyF.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyF.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyF.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyF.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyF.Parent</Name>
+    <Variable Type="string" Name="KeyF.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyF.Text</Name>
+    <Variable Type="string" Name="KeyF.Text" SetsValue="true">
       <Value xsi:type="xsd:string">F</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyF.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyF.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyF.Width</Name>
+    <Variable Type="float" Name="KeyF.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyF.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyF.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyF.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyF.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyF.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyF.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyG.Height</Name>
+    <Variable Type="float" Name="KeyG.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyG.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyG.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyG.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyG.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyG.Parent</Name>
+    <Variable Type="string" Name="KeyG.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyG.Text</Name>
+    <Variable Type="string" Name="KeyG.Text" SetsValue="true">
       <Value xsi:type="xsd:string">G</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyG.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyG.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyG.Width</Name>
+    <Variable Type="float" Name="KeyG.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyG.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyG.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyG.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyG.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyG.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyG.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyH.Height</Name>
+    <Variable Type="float" Name="KeyH.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyH.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyH.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyH.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyH.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyH.Parent</Name>
+    <Variable Type="string" Name="KeyH.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyH.Text</Name>
+    <Variable Type="string" Name="KeyH.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyH.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyH.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyH.Width</Name>
+    <Variable Type="float" Name="KeyH.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyH.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyH.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyH.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyH.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyH.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyH.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyHyphen.Height</Name>
+    <Variable Type="float" Name="KeyHyphen.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyHyphen.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyHyphen.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyHyphen.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyHyphen.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyHyphen.Parent</Name>
+    <Variable Type="string" Name="KeyHyphen.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyHyphen.Text</Name>
+    <Variable Type="string" Name="KeyHyphen.Text" SetsValue="true">
       <Value xsi:type="xsd:string">-</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyHyphen.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyHyphen.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyHyphen.Width</Name>
+    <Variable Type="float" Name="KeyHyphen.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyHyphen.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyHyphen.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyHyphen.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyHyphen.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyHyphen.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyHyphen.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyI.Height</Name>
+    <Variable Type="float" Name="KeyI.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyI.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyI.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyI.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyI.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyI.Parent</Name>
+    <Variable Type="string" Name="KeyI.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyI.Text</Name>
+    <Variable Type="string" Name="KeyI.Text" SetsValue="true">
       <Value xsi:type="xsd:string">I</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyI.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyI.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyI.Width</Name>
+    <Variable Type="float" Name="KeyI.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyI.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyI.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyI.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyI.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyI.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyI.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyJ.Height</Name>
+    <Variable Type="float" Name="KeyJ.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyJ.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyJ.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyJ.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyJ.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyJ.Parent</Name>
+    <Variable Type="string" Name="KeyJ.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyJ.Text</Name>
+    <Variable Type="string" Name="KeyJ.Text" SetsValue="true">
       <Value xsi:type="xsd:string">J</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyJ.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyJ.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyJ.Width</Name>
+    <Variable Type="float" Name="KeyJ.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyJ.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyJ.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyJ.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyJ.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyJ.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyJ.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyK.Height</Name>
+    <Variable Type="float" Name="KeyK.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyK.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyK.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyK.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyK.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyK.Parent</Name>
+    <Variable Type="string" Name="KeyK.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyK.Text</Name>
+    <Variable Type="string" Name="KeyK.Text" SetsValue="true">
       <Value xsi:type="xsd:string">K</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyK.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyK.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyK.Width</Name>
+    <Variable Type="float" Name="KeyK.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyK.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyK.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyK.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyK.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyK.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyK.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyL.Height</Name>
+    <Variable Type="float" Name="KeyL.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyL.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyL.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyL.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyL.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyL.Parent</Name>
+    <Variable Type="string" Name="KeyL.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyL.Text</Name>
+    <Variable Type="string" Name="KeyL.Text" SetsValue="true">
       <Value xsi:type="xsd:string">L</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyL.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyL.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyL.Width</Name>
+    <Variable Type="float" Name="KeyL.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyL.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyL.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyL.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyL.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyL.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyL.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyLeft.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyLeft.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyLeft.Text</Name>
+    <Variable Type="string" Name="KeyLeft.Text" SetsValue="true">
       <Value xsi:type="xsd:string"></Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyLeft.Width</Name>
+    <Variable Type="float" Name="KeyLeft.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyLeft.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyLeft.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyLeft.X</Name>
+    <Variable Type="float" Name="KeyLeft.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyLeft.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyLeft.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyLeft.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyLeft.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyLeft.Y</Name>
+    <Variable Type="float" Name="KeyLeft.Y" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyLeft.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyLeft.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyM.Height</Name>
+    <Variable Type="float" Name="KeyM.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyM.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyM.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyM.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyM.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyM.Parent</Name>
+    <Variable Type="string" Name="KeyM.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyM.Text</Name>
+    <Variable Type="string" Name="KeyM.Text" SetsValue="true">
       <Value xsi:type="xsd:string">M</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyM.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyM.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyM.Width</Name>
+    <Variable Type="float" Name="KeyM.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyM.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyM.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyM.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyM.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyM.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyM.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyN.Height</Name>
+    <Variable Type="float" Name="KeyN.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyN.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyN.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyN.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyN.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyN.Parent</Name>
+    <Variable Type="string" Name="KeyN.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyN.Text</Name>
+    <Variable Type="string" Name="KeyN.Text" SetsValue="true">
       <Value xsi:type="xsd:string">N</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyN.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyN.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyN.Width</Name>
+    <Variable Type="float" Name="KeyN.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyN.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyN.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyN.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyN.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyN.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyN.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyO.Height</Name>
+    <Variable Type="float" Name="KeyO.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyO.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyO.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyO.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyO.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyO.Parent</Name>
+    <Variable Type="string" Name="KeyO.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyO.Text</Name>
+    <Variable Type="string" Name="KeyO.Text" SetsValue="true">
       <Value xsi:type="xsd:string">O</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyO.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyO.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyO.Width</Name>
+    <Variable Type="float" Name="KeyO.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyO.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyO.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyO.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyO.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyO.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyO.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyP.Height</Name>
+    <Variable Type="float" Name="KeyP.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyP.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyP.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyP.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyP.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyP.Parent</Name>
+    <Variable Type="string" Name="KeyP.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyP.Text</Name>
+    <Variable Type="string" Name="KeyP.Text" SetsValue="true">
       <Value xsi:type="xsd:string">P</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyP.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyP.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyP.Width</Name>
+    <Variable Type="float" Name="KeyP.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyP.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyP.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyP.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyP.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyP.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyP.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyParenLeft.Height</Name>
+    <Variable Type="float" Name="KeyParenLeft.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyParenLeft.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyParenLeft.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyParenLeft.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyParenLeft.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyParenLeft.Parent</Name>
+    <Variable Type="string" Name="KeyParenLeft.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyParenLeft.Text</Name>
+    <Variable Type="string" Name="KeyParenLeft.Text" SetsValue="true">
       <Value xsi:type="xsd:string">(</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyParenLeft.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyParenLeft.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyParenLeft.Width</Name>
+    <Variable Type="float" Name="KeyParenLeft.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyParenLeft.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyParenLeft.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyParenLeft.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyParenLeft.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyParenLeft.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyParenLeft.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyParenRight.Height</Name>
+    <Variable Type="float" Name="KeyParenRight.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyParenRight.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyParenRight.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyParenRight.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyParenRight.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyParenRight.Parent</Name>
+    <Variable Type="string" Name="KeyParenRight.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyParenRight.Text</Name>
+    <Variable Type="string" Name="KeyParenRight.Text" SetsValue="true">
       <Value xsi:type="xsd:string">)</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyParenRight.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyParenRight.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyParenRight.Width</Name>
+    <Variable Type="float" Name="KeyParenRight.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyParenRight.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyParenRight.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyParenRight.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyParenRight.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyParenRight.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyParenRight.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyPeriod.Height</Name>
+    <Variable Type="float" Name="KeyPeriod.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyPeriod.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyPeriod.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyPeriod.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyPeriod.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyPeriod.Parent</Name>
+    <Variable Type="string" Name="KeyPeriod.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyPeriod.Text</Name>
+    <Variable Type="string" Name="KeyPeriod.Text" SetsValue="true">
       <Value xsi:type="xsd:string">.</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyPeriod.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyPeriod.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyPeriod.Width</Name>
+    <Variable Type="float" Name="KeyPeriod.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyPeriod.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyPeriod.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyPeriod.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyPeriod.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyPeriod.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyPeriod.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyQ.Height</Name>
+    <Variable Type="float" Name="KeyQ.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyQ.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyQ.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyQ.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyQ.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyQ.Parent</Name>
+    <Variable Type="string" Name="KeyQ.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyQ.Text</Name>
+    <Variable Type="string" Name="KeyQ.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Q</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyQ.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyQ.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyQ.Width</Name>
+    <Variable Type="float" Name="KeyQ.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyQ.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyQ.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyQ.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyQ.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyQ.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyQ.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyQuestion.Height</Name>
+    <Variable Type="float" Name="KeyQuestion.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyQuestion.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyQuestion.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyQuestion.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyQuestion.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyQuestion.Parent</Name>
+    <Variable Type="string" Name="KeyQuestion.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyQuestion.Text</Name>
+    <Variable Type="string" Name="KeyQuestion.Text" SetsValue="true">
       <Value xsi:type="xsd:string">?</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyQuestion.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyQuestion.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyQuestion.Width</Name>
+    <Variable Type="float" Name="KeyQuestion.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyQuestion.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyQuestion.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyQuestion.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyQuestion.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyQuestion.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyQuestion.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyR.Height</Name>
+    <Variable Type="float" Name="KeyR.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyR.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyR.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyR.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyR.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyR.Parent</Name>
+    <Variable Type="string" Name="KeyR.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyR.Text</Name>
+    <Variable Type="string" Name="KeyR.Text" SetsValue="true">
       <Value xsi:type="xsd:string">R</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyR.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyR.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyR.Width</Name>
+    <Variable Type="float" Name="KeyR.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyR.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyR.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyR.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyR.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyR.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyR.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyReturn.Height</Name>
+    <Variable Type="float" Name="KeyReturn.Height" SetsValue="true">
       <Value xsi:type="xsd:float">40</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyReturn.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyReturn.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyReturn.Text</Name>
+    <Variable Type="string" Name="KeyReturn.Text" SetsValue="true">
       <Value xsi:type="xsd:string"></Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyReturn.Width</Name>
+    <Variable Type="float" Name="KeyReturn.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyReturn.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyReturn.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyReturn.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyReturn.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyReturn.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyReturn.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyReturn.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyReturn.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyReturn.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyReturn.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyRight.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyRight.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyRight.Text</Name>
+    <Variable Type="string" Name="KeyRight.Text" SetsValue="true">
       <Value xsi:type="xsd:string"></Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyRight.Width</Name>
+    <Variable Type="float" Name="KeyRight.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyRight.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyRight.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyRight.X</Name>
+    <Variable Type="float" Name="KeyRight.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyRight.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyRight.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyRight.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyRight.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyRight.Y</Name>
+    <Variable Type="float" Name="KeyRight.Y" SetsValue="true">
       <Value xsi:type="xsd:float">40</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyRight.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyRight.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyS.Height</Name>
+    <Variable Type="float" Name="KeyS.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyS.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyS.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyS.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyS.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyS.Parent</Name>
+    <Variable Type="string" Name="KeyS.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyS.Text</Name>
+    <Variable Type="string" Name="KeyS.Text" SetsValue="true">
       <Value xsi:type="xsd:string">S</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyS.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyS.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyS.Width</Name>
+    <Variable Type="float" Name="KeyS.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyS.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyS.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyS.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyS.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyS.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyS.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeySpace.Height</Name>
+    <Variable Type="float" Name="KeySpace.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeySpace.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeySpace.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeySpace.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeySpace.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeySpace.Parent</Name>
+    <Variable Type="string" Name="KeySpace.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeySpace.Text</Name>
+    <Variable Type="string" Name="KeySpace.Text" SetsValue="true">
       <Value xsi:type="xsd:string">SPACE</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeySpace.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeySpace.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeySpace.Width</Name>
+    <Variable Type="float" Name="KeySpace.Width" SetsValue="true">
       <Value xsi:type="xsd:float">50</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeySpace.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeySpace.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeySpace.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeySpace.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeySpace.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeySpace.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyT.Height</Name>
+    <Variable Type="float" Name="KeyT.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyT.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyT.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyT.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyT.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyT.Parent</Name>
+    <Variable Type="string" Name="KeyT.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyT.Text</Name>
+    <Variable Type="string" Name="KeyT.Text" SetsValue="true">
       <Value xsi:type="xsd:string">T</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyT.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyT.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyT.Width</Name>
+    <Variable Type="float" Name="KeyT.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyT.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyT.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyT.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyT.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyT.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyT.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyU.Height</Name>
+    <Variable Type="float" Name="KeyU.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyU.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyU.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyU.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyU.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyU.Parent</Name>
+    <Variable Type="string" Name="KeyU.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyU.Text</Name>
+    <Variable Type="string" Name="KeyU.Text" SetsValue="true">
       <Value xsi:type="xsd:string">U</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyU.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyU.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyU.Width</Name>
+    <Variable Type="float" Name="KeyU.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyU.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyU.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyU.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyU.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyU.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyU.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyUnderscore.Height</Name>
+    <Variable Type="float" Name="KeyUnderscore.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyUnderscore.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyUnderscore.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyUnderscore.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyUnderscore.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyUnderscore.Parent</Name>
+    <Variable Type="string" Name="KeyUnderscore.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyUnderscore.Text</Name>
+    <Variable Type="string" Name="KeyUnderscore.Text" SetsValue="true">
       <Value xsi:type="xsd:string">_</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyUnderscore.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyUnderscore.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyUnderscore.Width</Name>
+    <Variable Type="float" Name="KeyUnderscore.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyUnderscore.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyUnderscore.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyUnderscore.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyUnderscore.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyUnderscore.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyUnderscore.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyV.Height</Name>
+    <Variable Type="float" Name="KeyV.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyV.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyV.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyV.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyV.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyV.Parent</Name>
+    <Variable Type="string" Name="KeyV.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyV.Text</Name>
+    <Variable Type="string" Name="KeyV.Text" SetsValue="true">
       <Value xsi:type="xsd:string">V</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyV.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyV.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyV.Width</Name>
+    <Variable Type="float" Name="KeyV.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyV.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyV.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyV.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyV.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyV.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyV.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyW.Height</Name>
+    <Variable Type="float" Name="KeyW.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyW.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyW.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyW.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyW.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyW.Parent</Name>
+    <Variable Type="string" Name="KeyW.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyW.Text</Name>
+    <Variable Type="string" Name="KeyW.Text" SetsValue="true">
       <Value xsi:type="xsd:string">W</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyW.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyW.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyW.Width</Name>
+    <Variable Type="float" Name="KeyW.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyW.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyW.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyW.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyW.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyW.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyW.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyX.Height</Name>
+    <Variable Type="float" Name="KeyX.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyX.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyX.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyX.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyX.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyX.Parent</Name>
+    <Variable Type="string" Name="KeyX.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyX.Text</Name>
+    <Variable Type="string" Name="KeyX.Text" SetsValue="true">
       <Value xsi:type="xsd:string">X</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyX.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyX.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyX.Width</Name>
+    <Variable Type="float" Name="KeyX.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyX.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyX.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyX.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyX.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyX.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyX.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyY.Height</Name>
+    <Variable Type="float" Name="KeyY.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyY.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyY.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyY.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyY.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyY.Parent</Name>
+    <Variable Type="string" Name="KeyY.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyY.Text</Name>
+    <Variable Type="string" Name="KeyY.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Y</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyY.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyY.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyY.Width</Name>
+    <Variable Type="float" Name="KeyY.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyY.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyY.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyY.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyY.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyY.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyY.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyZ.Height</Name>
+    <Variable Type="float" Name="KeyZ.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyZ.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyZ.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyZ.HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyZ.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyZ.Parent</Name>
+    <Variable Type="string" Name="KeyZ.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyZ.Text</Name>
+    <Variable Type="string" Name="KeyZ.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Z</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyZ.VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="KeyZ.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyZ.Width</Name>
+    <Variable Type="float" Name="KeyZ.Width" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyZ.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyZ.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyZ.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyZ.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyZ.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyZ.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>Row1Keys.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="Row1Keys.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Row1Keys.Height</Name>
+    <Variable Type="float" Name="Row1Keys.Height" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Row1Keys.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Row1Keys.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Row1Keys.Parent</Name>
+    <Variable Type="string" Name="Row1Keys.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">AllRows</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Row1Keys.Width</Name>
+    <Variable Type="float" Name="Row1Keys.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Row1Keys.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Row1Keys.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Row1Keys.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="Row1Keys.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Row1Keys.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="Row1Keys.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Row1Keys.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Row1Keys.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Row1Keys.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Row1Keys.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>Row2Keys.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="Row2Keys.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Row2Keys.Height</Name>
+    <Variable Type="float" Name="Row2Keys.Height" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Row2Keys.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Row2Keys.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Row2Keys.Parent</Name>
+    <Variable Type="string" Name="Row2Keys.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">AllRows</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Row2Keys.Width</Name>
+    <Variable Type="float" Name="Row2Keys.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Row2Keys.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Row2Keys.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>Row3Keys.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="Row3Keys.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Row3Keys.Height</Name>
+    <Variable Type="float" Name="Row3Keys.Height" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Row3Keys.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Row3Keys.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Row3Keys.Parent</Name>
+    <Variable Type="string" Name="Row3Keys.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">AllRows</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Row3Keys.Width</Name>
+    <Variable Type="float" Name="Row3Keys.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Row3Keys.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Row3Keys.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>Row4Keys.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="Row4Keys.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Row4Keys.Height</Name>
+    <Variable Type="float" Name="Row4Keys.Height" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Row4Keys.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Row4Keys.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Row4Keys.Parent</Name>
+    <Variable Type="string" Name="Row4Keys.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">AllRows</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Row4Keys.Width</Name>
+    <Variable Type="float" Name="Row4Keys.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Row4Keys.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Row4Keys.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>Row5Keys.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="Row5Keys.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Row5Keys.Height</Name>
+    <Variable Type="float" Name="Row5Keys.Height" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Row5Keys.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Row5Keys.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Row5Keys.Parent</Name>
+    <Variable Type="string" Name="Row5Keys.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">AllRows</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Row5Keys.Width</Name>
+    <Variable Type="float" Name="Row5Keys.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Row5Keys.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Row5Keys.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
   </State>
   <Category>
     <Name>CursorMoveCategory</Name>
     <State>
       <Name>LeftRightMoveSupported</Name>
-      <Variable>
-        <Type>bool</Type>
-        <Name>KeyLeft.Visible</Name>
+      <Variable Type="bool" Name="KeyLeft.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>KeyRight.Visible</Name>
+      <Variable Type="bool" Name="KeyRight.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>NoMovement</Name>
-      <Variable>
-        <Type>bool</Type>
-        <Name>KeyLeft.Visible</Name>
+      <Variable Type="bool" Name="KeyLeft.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>KeyRight.Visible</Name>
+      <Variable Type="bool" Name="KeyRight.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
   </Category>
-  <Instance>
-    <Name>Row1Keys</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>AllRows</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Key1</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyQ</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyA</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyZ</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyParenLeft</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyW</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyS</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyX</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyParenRight</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyE</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyD</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyC</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeySpace</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyR</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyF</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyV</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyT</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyG</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyB</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyY</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyH</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyN</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyU</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyJ</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyM</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyI</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyK</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyComma</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyQuestion</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyO</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyL</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyPeriod</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyBang</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyP</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyUnderscore</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyHyphen</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyAmpersand</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Key2</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Key3</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Key4</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Key5</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Key6</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Key7</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Key8</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Key9</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Key0</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Row2Keys</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Row3Keys</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Row4Keys</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Row5Keys</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyBackspace</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyReturn</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyLeft</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyRight</Name>
-    <BaseType>Controls/KeyboardKey</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>HighlightRectangle</Name>
-    <BaseType>Rectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>IconInstance</Name>
-    <BaseType>Elements/Icon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>IconInstance1</Name>
-    <BaseType>Elements/Icon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>IconInstance2</Name>
-    <BaseType>Elements/Icon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>IconInstance3</Name>
-    <BaseType>Elements/Icon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="Row1Keys" BaseType="Container" />
+  <Instance Name="AllRows" BaseType="Container" />
+  <Instance Name="Key1" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyQ" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyA" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyZ" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyParenLeft" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyW" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyS" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyX" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyParenRight" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyE" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyD" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyC" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeySpace" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyR" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyF" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyV" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyT" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyG" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyB" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyY" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyH" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyN" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyU" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyJ" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyM" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyI" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyK" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyComma" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyQuestion" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyO" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyL" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyPeriod" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyBang" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyP" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyUnderscore" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyHyphen" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyAmpersand" BaseType="Controls/KeyboardKey" />
+  <Instance Name="Key2" BaseType="Controls/KeyboardKey" />
+  <Instance Name="Key3" BaseType="Controls/KeyboardKey" />
+  <Instance Name="Key4" BaseType="Controls/KeyboardKey" />
+  <Instance Name="Key5" BaseType="Controls/KeyboardKey" />
+  <Instance Name="Key6" BaseType="Controls/KeyboardKey" />
+  <Instance Name="Key7" BaseType="Controls/KeyboardKey" />
+  <Instance Name="Key8" BaseType="Controls/KeyboardKey" />
+  <Instance Name="Key9" BaseType="Controls/KeyboardKey" />
+  <Instance Name="Key0" BaseType="Controls/KeyboardKey" />
+  <Instance Name="Row2Keys" BaseType="Container" />
+  <Instance Name="Row3Keys" BaseType="Container" />
+  <Instance Name="Row4Keys" BaseType="Container" />
+  <Instance Name="Row5Keys" BaseType="Container" />
+  <Instance Name="KeyBackspace" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyReturn" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyLeft" BaseType="Controls/KeyboardKey" />
+  <Instance Name="KeyRight" BaseType="Controls/KeyboardKey" />
+  <Instance Name="HighlightRectangle" BaseType="Rectangle" />
+  <Instance Name="IconInstance" BaseType="Elements/Icon" />
+  <Instance Name="IconInstance1" BaseType="Elements/Icon" />
+  <Instance Name="IconInstance2" BaseType="Elements/Icon" />
+  <Instance Name="IconInstance3" BaseType="Elements/Icon" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>OnScreenKeyboardBehavior</BehaviorName>

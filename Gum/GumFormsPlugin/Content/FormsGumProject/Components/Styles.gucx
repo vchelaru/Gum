@@ -1,761 +1,348 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Styles</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>int</Type>
-      <Name>Accent.Blue</Name>
+    <Variable Type="int" Name="Accent.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">138</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Accent.Green</Name>
+    <Variable Type="int" Name="Accent.Green" SetsValue="true">
       <Value xsi:type="xsd:int">48</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Accent.Parent</Name>
+    <Variable Type="string" Name="Accent.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Accent.Red</Name>
+    <Variable Type="int" Name="Accent.Red" SetsValue="true">
       <Value xsi:type="xsd:int">140</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Black.Blue</Name>
+    <Variable Type="int" Name="Black.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Black.Green</Name>
+    <Variable Type="int" Name="Black.Green" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Black.Parent</Name>
+    <Variable Type="string" Name="Black.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Black.Red</Name>
+    <Variable Type="int" Name="Black.Red" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>Colors.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="Colors.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Colors.Height</Name>
+    <Variable Type="float" Name="Colors.Height" SetsValue="true">
       <Value xsi:type="xsd:float">69</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Colors.StackSpacing</Name>
+    <Variable Type="float" Name="Colors.StackSpacing" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Colors.Width</Name>
+    <Variable Type="float" Name="Colors.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Colors.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Colors.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Colors.X</Name>
+    <Variable Type="float" Name="Colors.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Colors.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="Colors.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Colors.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="Colors.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Colors.Y</Name>
+    <Variable Type="float" Name="Colors.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Colors.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Colors.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Colors.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Colors.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Danger.Blue</Name>
+    <Variable Type="int" Name="Danger.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">41</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Danger.Green</Name>
+    <Variable Type="int" Name="Danger.Green" SetsValue="true">
       <Value xsi:type="xsd:int">18</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Danger.Parent</Name>
+    <Variable Type="string" Name="Danger.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Danger.Red</Name>
+    <Variable Type="int" Name="Danger.Red" SetsValue="true">
       <Value xsi:type="xsd:int">212</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>DarkGray.Blue</Name>
+    <Variable Type="int" Name="DarkGray.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">80</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>DarkGray.Green</Name>
+    <Variable Type="int" Name="DarkGray.Green" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>DarkGray.Parent</Name>
+    <Variable Type="string" Name="DarkGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>DarkGray.Red</Name>
+    <Variable Type="int" Name="DarkGray.Red" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Emphasis.FontSize</Name>
+    <Variable Type="int" Name="Emphasis.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>Emphasis.IsItalic</Name>
+    <Variable Type="bool" Name="Emphasis.IsItalic" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Emphasis.Parent</Name>
+    <Variable Type="string" Name="Emphasis.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Emphasis.Text</Name>
+    <Variable Type="string" Name="Emphasis.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Emphasis</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Gray.Blue</Name>
+    <Variable Type="int" Name="Gray.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Gray.Green</Name>
+    <Variable Type="int" Name="Gray.Green" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Gray.Parent</Name>
+    <Variable Type="string" Name="Gray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Gray.Red</Name>
+    <Variable Type="int" Name="Gray.Red" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>H1.FontSize</Name>
+    <Variable Type="int" Name="H1.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">22</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>H1.IsBold</Name>
+    <Variable Type="bool" Name="H1.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>H1.Parent</Name>
+    <Variable Type="string" Name="H1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>H1.Text</Name>
+    <Variable Type="string" Name="H1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>H2.FontSize</Name>
+    <Variable Type="int" Name="H2.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">18</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>H2.IsBold</Name>
+    <Variable Type="bool" Name="H2.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>H2.Parent</Name>
+    <Variable Type="string" Name="H2.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>H2.Text</Name>
+    <Variable Type="string" Name="H2.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>H3.FontSize</Name>
+    <Variable Type="int" Name="H3.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">16</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>H3.IsBold</Name>
+    <Variable Type="bool" Name="H3.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>H3.Parent</Name>
+    <Variable Type="string" Name="H3.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>H3.Text</Name>
+    <Variable Type="string" Name="H3.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>LightGray.Blue</Name>
+    <Variable Type="int" Name="LightGray.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>LightGray.Green</Name>
+    <Variable Type="int" Name="LightGray.Green" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>LightGray.Parent</Name>
+    <Variable Type="string" Name="LightGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>LightGray.Red</Name>
+    <Variable Type="int" Name="LightGray.Red" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Normal.FontSize</Name>
+    <Variable Type="int" Name="Normal.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Normal.Parent</Name>
+    <Variable Type="string" Name="Normal.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Normal.Text</Name>
+    <Variable Type="string" Name="Normal.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Primary.Blue</Name>
+    <Variable Type="int" Name="Primary.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Primary.Green</Name>
+    <Variable Type="int" Name="Primary.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Primary.Parent</Name>
+    <Variable Type="string" Name="Primary.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Primary.Red</Name>
+    <Variable Type="int" Name="Primary.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>PrimaryDark.Blue</Name>
+    <Variable Type="int" Name="PrimaryDark.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">137</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>PrimaryDark.Green</Name>
+    <Variable Type="int" Name="PrimaryDark.Green" SetsValue="true">
       <Value xsi:type="xsd:int">120</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PrimaryDark.Parent</Name>
+    <Variable Type="string" Name="PrimaryDark.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>PrimaryDark.Red</Name>
+    <Variable Type="int" Name="PrimaryDark.Red" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>PrimaryLight.Blue</Name>
+    <Variable Type="int" Name="PrimaryLight.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">193</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>PrimaryLight.Green</Name>
+    <Variable Type="int" Name="PrimaryLight.Green" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PrimaryLight.Parent</Name>
+    <Variable Type="string" Name="PrimaryLight.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>PrimaryLight.Red</Name>
+    <Variable Type="int" Name="PrimaryLight.Red" SetsValue="true">
       <Value xsi:type="xsd:int">74</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Small.FontSize</Name>
+    <Variable Type="int" Name="Small.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">12</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Small.Parent</Name>
+    <Variable Type="string" Name="Small.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Small.Text</Name>
+    <Variable Type="string" Name="Small.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Small</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
-      <Category>States and Visibility</Category>
-      <SetsValue>false</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Strong.FontSize</Name>
+    <Variable Type="int" Name="Strong.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>Strong.IsBold</Name>
+    <Variable Type="bool" Name="Strong.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Strong.Parent</Name>
+    <Variable Type="string" Name="Strong.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Strong.Text</Name>
+    <Variable Type="string" Name="Strong.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Strong</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Success.Blue</Name>
+    <Variable Type="int" Name="Success.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">48</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Success.Green</Name>
+    <Variable Type="int" Name="Success.Green" SetsValue="true">
       <Value xsi:type="xsd:int">167</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Success.Parent</Name>
+    <Variable Type="string" Name="Success.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Success.Red</Name>
+    <Variable Type="int" Name="Success.Red" SetsValue="true">
       <Value xsi:type="xsd:int">62</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>TextStyles.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="TextStyles.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextStyles.Height</Name>
+    <Variable Type="float" Name="TextStyles.Height" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextStyles.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextStyles.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextStyles.Width</Name>
+    <Variable Type="float" Name="TextStyles.Width" SetsValue="true">
       <Value xsi:type="xsd:float">308</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextStyles.X</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextStyles.Y</Name>
+    <Variable Type="float" Name="TextStyles.X" SetsValue="true" />
+    <Variable Type="float" Name="TextStyles.Y" SetsValue="true">
       <Value xsi:type="xsd:float">81</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Tiny.FontSize</Name>
+    <Variable Type="int" Name="Tiny.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">10</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Tiny.Parent</Name>
+    <Variable Type="string" Name="Tiny.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Tiny.Text</Name>
+    <Variable Type="string" Name="Tiny.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Tiny</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Title.FontSize</Name>
+    <Variable Type="int" Name="Title.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">28</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>Title.IsBold</Name>
+    <Variable Type="bool" Name="Title.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Title.Parent</Name>
+    <Variable Type="string" Name="Title.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Title.Text</Name>
+    <Variable Type="string" Name="Title.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Title</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Warning.Blue</Name>
+    <Variable Type="int" Name="Warning.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">25</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Warning.Green</Name>
+    <Variable Type="int" Name="Warning.Green" SetsValue="true">
       <Value xsi:type="xsd:int">171</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Warning.Parent</Name>
+    <Variable Type="string" Name="Warning.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Warning.Red</Name>
+    <Variable Type="int" Name="Warning.Red" SetsValue="true">
       <Value xsi:type="xsd:int">232</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>White.Parent</Name>
+    <Variable Type="string" Name="White.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>X</Name>
+    <Variable Type="float" Name="X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>XUnits</Name>
+    <Variable Type="PositionUnitType" Name="XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Y</Name>
+    <Variable Type="float" Name="Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>YUnits</Name>
+    <Variable Type="PositionUnitType" Name="YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
   </State>
-  <Instance>
-    <Name>Colors</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-    <Locked>true</Locked>
-  </Instance>
-  <Instance>
-    <Name>Black</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>DarkGray</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Gray</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>LightGray</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>White</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>PrimaryDark</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Primary</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>PrimaryLight</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Success</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Warning</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Danger</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Accent</Name>
-    <BaseType>ColoredRectangle</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Tiny</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Small</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Normal</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Emphasis</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Strong</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>H3</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>H2</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>H1</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextStyles</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Title</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="Colors" BaseType="Container" Locked="true" />
+  <Instance Name="Black" BaseType="ColoredRectangle" />
+  <Instance Name="DarkGray" BaseType="ColoredRectangle" />
+  <Instance Name="Gray" BaseType="ColoredRectangle" />
+  <Instance Name="LightGray" BaseType="ColoredRectangle" />
+  <Instance Name="White" BaseType="ColoredRectangle" />
+  <Instance Name="PrimaryDark" BaseType="ColoredRectangle" />
+  <Instance Name="Primary" BaseType="ColoredRectangle" />
+  <Instance Name="PrimaryLight" BaseType="ColoredRectangle" />
+  <Instance Name="Success" BaseType="ColoredRectangle" />
+  <Instance Name="Warning" BaseType="ColoredRectangle" />
+  <Instance Name="Danger" BaseType="ColoredRectangle" />
+  <Instance Name="Accent" BaseType="ColoredRectangle" />
+  <Instance Name="Tiny" BaseType="Text" />
+  <Instance Name="Small" BaseType="Text" />
+  <Instance Name="Normal" BaseType="Text" />
+  <Instance Name="Emphasis" BaseType="Text" />
+  <Instance Name="Strong" BaseType="Text" />
+  <Instance Name="H3" BaseType="Text" />
+  <Instance Name="H2" BaseType="Text" />
+  <Instance Name="H1" BaseType="Text" />
+  <Instance Name="TextStyles" BaseType="Container" />
+  <Instance Name="Title" BaseType="Text" />
   <Behaviors />
 </ComponentSave>

@@ -1,2516 +1,1159 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>StylesScreen</Name>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Bordered.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="Bordered.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Bordered.Height</Name>
+    <Variable Type="float" Name="Bordered.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Bordered.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Bordered.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Bordered.Parent</Name>
+    <Variable Type="string" Name="Bordered.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>Bordered.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="Bordered.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Bordered</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Bordered.Width</Name>
+    <Variable Type="float" Name="Bordered.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Bordered.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Bordered.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Bordered.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="Bordered.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Bordered.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="Bordered.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Bordered.Y</Name>
+    <Variable Type="float" Name="Bordered.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Bordered.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Bordered.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Bordered.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Bordered.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>BracketHorizontal.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="BracketHorizontal.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BracketHorizontal.Height</Name>
+    <Variable Type="float" Name="BracketHorizontal.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BracketHorizontal.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BracketHorizontal.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BracketHorizontal.Parent</Name>
+    <Variable Type="string" Name="BracketHorizontal.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>BracketHorizontal.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="BracketHorizontal.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">BracketHorizontal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BracketHorizontal.Width</Name>
+    <Variable Type="float" Name="BracketHorizontal.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BracketHorizontal.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BracketHorizontal.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BracketHorizontal.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="BracketHorizontal.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BracketHorizontal.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="BracketHorizontal.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BracketHorizontal.Y</Name>
+    <Variable Type="float" Name="BracketHorizontal.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BracketHorizontal.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="BracketHorizontal.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BracketHorizontal.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="BracketHorizontal.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>BracketVertical.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="BracketVertical.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BracketVertical.Height</Name>
+    <Variable Type="float" Name="BracketVertical.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BracketVertical.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BracketVertical.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BracketVertical.Parent</Name>
+    <Variable Type="string" Name="BracketVertical.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>BracketVertical.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="BracketVertical.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">BracketVertical</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BracketVertical.Width</Name>
+    <Variable Type="float" Name="BracketVertical.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>BracketVertical.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="BracketVertical.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BracketVertical.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="BracketVertical.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BracketVertical.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="BracketVertical.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BracketVertical.Y</Name>
+    <Variable Type="float" Name="BracketVertical.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BracketVertical.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="BracketVertical.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BracketVertical.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="BracketVertical.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonCloseInstance.Parent</Name>
+    <Variable Type="string" Name="ButtonCloseInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ButtonsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonCloseInstance.Y</Name>
+    <Variable Type="float" Name="ButtonCloseInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonConfirmInstance.Parent</Name>
+    <Variable Type="string" Name="ButtonConfirmInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ButtonsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonConfirmInstance.Text</Name>
+    <Variable Type="string" Name="ButtonConfirmInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Confirm</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonConfirmInstance.Y</Name>
+    <Variable Type="float" Name="ButtonConfirmInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonDenyInstance.Parent</Name>
+    <Variable Type="string" Name="ButtonDenyInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ButtonsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonDenyInstance.Text</Name>
+    <Variable Type="string" Name="ButtonDenyInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Deny</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonDenyInstance.Y</Name>
+    <Variable Type="float" Name="ButtonDenyInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonIconInstance.Parent</Name>
+    <Variable Type="string" Name="ButtonIconInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ButtonsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonIconInstance.Y</Name>
+    <Variable Type="float" Name="ButtonIconInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>ButtonsContainer.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="ButtonsContainer.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonsContainer.Height</Name>
+    <Variable Type="float" Name="ButtonsContainer.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ButtonsContainer.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ButtonsContainer.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonsContainer.Width</Name>
+    <Variable Type="float" Name="ButtonsContainer.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ButtonsContainer.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ButtonsContainer.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonsContainer.X</Name>
+    <Variable Type="float" Name="ButtonsContainer.X" SetsValue="true">
       <Value xsi:type="xsd:float">159</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonsContainer.Y</Name>
+    <Variable Type="float" Name="ButtonsContainer.Y" SetsValue="true">
       <Value xsi:type="xsd:float">12</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonStandardIconInstance.Parent</Name>
+    <Variable Type="string" Name="ButtonStandardIconInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ButtonsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonStandardIconInstance.Text</Name>
+    <Variable Type="string" Name="ButtonStandardIconInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Standard Icon</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonStandardIconInstance.Y</Name>
+    <Variable Type="float" Name="ButtonStandardIconInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonStandardInstance.Parent</Name>
+    <Variable Type="string" Name="ButtonStandardInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ButtonsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonStandardInstance.Text</Name>
+    <Variable Type="string" Name="ButtonStandardInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Standard</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonTabInstance.Parent</Name>
+    <Variable Type="string" Name="ButtonTabInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ButtonsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ButtonTabInstance.TabDisplayText</Name>
+    <Variable Type="string" Name="ButtonTabInstance.TabDisplayText" SetsValue="true">
       <Value xsi:type="xsd:string">Tab</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>ButtonTabInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="ButtonTabInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ButtonTabInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="ButtonTabInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonTabInstance.Y</Name>
+    <Variable Type="float" Name="ButtonTabInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>ButtonTabInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="ButtonTabInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>CautionLinesInstance.LineColor</Name>
+    <Variable Type="ColorCategory" Name="CautionLinesInstance.LineColor" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>CautionLinesInstance.Parent</Name>
+    <Variable Type="string" Name="CautionLinesInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>CautionLinesInstance.Width</Name>
+    <Variable Type="float" Name="CautionLinesInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>CautionLinesInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="CautionLinesInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>CautionLinesInstance.Y</Name>
+    <Variable Type="float" Name="CautionLinesInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>CheckBoxInstance.Parent</Name>
+    <Variable Type="string" Name="CheckBoxInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ControlsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>CheckBoxInstance.Width</Name>
+    <Variable Type="float" Name="CheckBoxInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>CheckBoxInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="CheckBoxInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>ColorContainer.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="ColorContainer.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ColorContainer.Height</Name>
+    <Variable Type="float" Name="ColorContainer.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ColorContainer.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ColorContainer.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ColorContainer.X</Name>
+    <Variable Type="float" Name="ColorContainer.X" SetsValue="true">
       <Value xsi:type="xsd:float">774</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ColorContainer.Y</Name>
+    <Variable Type="float" Name="ColorContainer.Y" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ComboBoxInstance.Parent</Name>
+    <Variable Type="string" Name="ComboBoxInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ControlsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ComboBoxInstance.Width</Name>
+    <Variable Type="float" Name="ComboBoxInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ComboBoxInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ComboBoxInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ComboBoxInstance.Y</Name>
+    <Variable Type="float" Name="ComboBoxInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>ControlsContainer.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="ControlsContainer.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ControlsContainer.Height</Name>
+    <Variable Type="float" Name="ControlsContainer.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ControlsContainer.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ControlsContainer.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ControlsContainer.Width</Name>
+    <Variable Type="float" Name="ControlsContainer.Width" SetsValue="true">
       <Value xsi:type="xsd:float">256</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ControlsContainer.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ControlsContainer.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ControlsContainer.X</Name>
+    <Variable Type="float" Name="ControlsContainer.X" SetsValue="true">
       <Value xsi:type="xsd:float">482</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ControlsContainer.Y</Name>
+    <Variable Type="float" Name="ControlsContainer.Y" SetsValue="true">
       <Value xsi:type="xsd:float">12</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>DialogBoxInstance.Parent</Name>
+    <Variable Type="string" Name="DialogBoxInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ControlsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DialogBoxInstance.Width</Name>
+    <Variable Type="float" Name="DialogBoxInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>DialogBoxInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="DialogBoxInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DialogBoxInstance.Y</Name>
+    <Variable Type="float" Name="DialogBoxInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>DividerHorizontalInstance.Parent</Name>
+    <Variable Type="string" Name="DividerHorizontalInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DividerHorizontalInstance.Width</Name>
+    <Variable Type="float" Name="DividerHorizontalInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>DividerHorizontalInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="DividerHorizontalInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DividerHorizontalInstance.Y</Name>
+    <Variable Type="float" Name="DividerHorizontalInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DividerVerticalInstance.Height</Name>
+    <Variable Type="float" Name="DividerVerticalInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>DividerVerticalInstance.Parent</Name>
+    <Variable Type="string" Name="DividerVerticalInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DividerVerticalInstance.Y</Name>
+    <Variable Type="float" Name="DividerVerticalInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>ElementsContainer.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="ElementsContainer.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ElementsContainer.Height</Name>
+    <Variable Type="float" Name="ElementsContainer.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ElementsContainer.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ElementsContainer.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ElementsContainer.X</Name>
+    <Variable Type="float" Name="ElementsContainer.X" SetsValue="true">
       <Value xsi:type="xsd:float">310</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ElementsContainer.Y</Name>
+    <Variable Type="float" Name="ElementsContainer.Y" SetsValue="true">
       <Value xsi:type="xsd:float">14</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>IconInstance.Parent</Name>
+    <Variable Type="string" Name="IconInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyboardContainer.Height</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="float" Name="KeyboardContainer.Height" SetsValue="true">
       <Value xsi:type="xsd:float">144</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyboardContainer.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyboardContainer.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyboardContainer.Width</Name>
+    <Variable Type="float" Name="KeyboardContainer.Width" SetsValue="true">
       <Value xsi:type="xsd:float">352</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyboardContainer.X</Name>
+    <Variable Type="float" Name="KeyboardContainer.X" SetsValue="true">
       <Value xsi:type="xsd:float">-326</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>KeyboardContainer.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="KeyboardContainer.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyboardContainer.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyboardContainer.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>KeyboardContainer.Y</Name>
+    <Variable Type="float" Name="KeyboardContainer.Y" SetsValue="true">
       <Value xsi:type="xsd:float">77</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>KeyboardContainer.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="KeyboardContainer.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>KeyboardContainer.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="KeyboardContainer.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>KeyboardInstance.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="KeyboardInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>KeyboardInstance.Parent</Name>
+    <Variable Type="string" Name="KeyboardInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">KeyboardContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>LabelInstance.Parent</Name>
+    <Variable Type="string" Name="LabelInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ControlsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ListBoxInstance.Height</Name>
+    <Variable Type="float" Name="ListBoxInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">96</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ListBoxInstance.Parent</Name>
+    <Variable Type="string" Name="ListBoxInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ControlsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ListBoxInstance.Width</Name>
+    <Variable Type="float" Name="ListBoxInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ListBoxInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ListBoxInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ListBoxInstance.Y</Name>
+    <Variable Type="float" Name="ListBoxInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>NineSliceStyleContainer.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="NineSliceStyleContainer.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>NineSliceStyleContainer.Height</Name>
+    <Variable Type="float" Name="NineSliceStyleContainer.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>NineSliceStyleContainer.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="NineSliceStyleContainer.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>NineSliceStyleContainer.Width</Name>
+    <Variable Type="float" Name="NineSliceStyleContainer.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>NineSliceStyleContainer.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="NineSliceStyleContainer.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>NineSliceStyleContainer.X</Name>
+    <Variable Type="float" Name="NineSliceStyleContainer.X" SetsValue="true">
       <Value xsi:type="xsd:float">9</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>NineSliceStyleContainer.Y</Name>
+    <Variable Type="float" Name="NineSliceStyleContainer.Y" SetsValue="true">
       <Value xsi:type="xsd:float">14</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Outlined.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="Outlined.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Outlined.Height</Name>
+    <Variable Type="float" Name="Outlined.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Outlined.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Outlined.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Outlined.Parent</Name>
+    <Variable Type="string" Name="Outlined.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>Outlined.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="Outlined.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Outlined</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Outlined.Width</Name>
+    <Variable Type="float" Name="Outlined.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Outlined.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Outlined.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Outlined.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="Outlined.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Outlined.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="Outlined.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Outlined.Y</Name>
+    <Variable Type="float" Name="Outlined.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Outlined.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Outlined.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Outlined.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Outlined.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>OutlinedHeavy.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="OutlinedHeavy.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>OutlinedHeavy.Height</Name>
+    <Variable Type="float" Name="OutlinedHeavy.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>OutlinedHeavy.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="OutlinedHeavy.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>OutlinedHeavy.Parent</Name>
+    <Variable Type="string" Name="OutlinedHeavy.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>OutlinedHeavy.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="OutlinedHeavy.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">OutlinedHeavy</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>OutlinedHeavy.Width</Name>
+    <Variable Type="float" Name="OutlinedHeavy.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>OutlinedHeavy.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="OutlinedHeavy.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>OutlinedHeavy.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="OutlinedHeavy.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>OutlinedHeavy.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="OutlinedHeavy.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>OutlinedHeavy.Y</Name>
+    <Variable Type="float" Name="OutlinedHeavy.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>OutlinedHeavy.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="OutlinedHeavy.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>OutlinedHeavy.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="OutlinedHeavy.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Panel.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="Panel.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Panel.Height</Name>
+    <Variable Type="float" Name="Panel.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Panel.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Panel.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Panel.Parent</Name>
+    <Variable Type="string" Name="Panel.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>Panel.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="Panel.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Panel</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Panel.Width</Name>
+    <Variable Type="float" Name="Panel.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Panel.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Panel.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Panel.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="Panel.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Panel.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="Panel.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Panel.Y</Name>
+    <Variable Type="float" Name="Panel.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Panel.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Panel.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Panel.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Panel.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PasswordBoxInstance.Parent</Name>
+    <Variable Type="string" Name="PasswordBoxInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ControlsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PasswordBoxInstance.Y</Name>
+    <Variable Type="float" Name="PasswordBoxInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>BarDecorCategory</Type>
-      <Name>PercentBarCautionDecor.BarDecorCategoryState</Name>
+    <Variable Type="BarDecorCategory" Name="PercentBarCautionDecor.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">CautionLines</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PercentBarCautionDecor.Parent</Name>
+    <Variable Type="string" Name="PercentBarCautionDecor.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarCautionDecor.Width</Name>
+    <Variable Type="float" Name="PercentBarCautionDecor.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>PercentBarCautionDecor.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="PercentBarCautionDecor.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarCautionDecor.Y</Name>
+    <Variable Type="float" Name="PercentBarCautionDecor.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>PercentBarIconCautionDecor.BarColor</Name>
+    <Variable Type="ColorCategory" Name="PercentBarIconCautionDecor.BarColor" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>BarDecorCategory</Type>
-      <Name>PercentBarIconCautionDecor.BarDecorCategoryState</Name>
+    <Variable Type="BarDecorCategory" Name="PercentBarIconCautionDecor.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">CautionLines</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>PercentBarIconCautionDecor.BarIcon</Name>
+    <Variable Type="IconCategory" Name="PercentBarIconCautionDecor.BarIcon" SetsValue="true">
       <Value xsi:type="xsd:string">Battery</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>PercentBarIconCautionDecor.BarIconColor</Name>
+    <Variable Type="ColorCategory" Name="PercentBarIconCautionDecor.BarIconColor" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PercentBarIconCautionDecor.Parent</Name>
+    <Variable Type="string" Name="PercentBarIconCautionDecor.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarIconCautionDecor.Width</Name>
+    <Variable Type="float" Name="PercentBarIconCautionDecor.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>PercentBarIconCautionDecor.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="PercentBarIconCautionDecor.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarIconCautionDecor.Y</Name>
+    <Variable Type="float" Name="PercentBarIconCautionDecor.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>PercentBarIconLinesDecor.BarColor</Name>
+    <Variable Type="ColorCategory" Name="PercentBarIconLinesDecor.BarColor" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>BarDecorCategory</Type>
-      <Name>PercentBarIconLinesDecor.BarDecorCategoryState</Name>
+    <Variable Type="BarDecorCategory" Name="PercentBarIconLinesDecor.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">VerticalLines</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>PercentBarIconLinesDecor.BarIcon</Name>
+    <Variable Type="IconCategory" Name="PercentBarIconLinesDecor.BarIcon" SetsValue="true">
       <Value xsi:type="xsd:string">Battery</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>PercentBarIconLinesDecor.BarIconColor</Name>
+    <Variable Type="ColorCategory" Name="PercentBarIconLinesDecor.BarIconColor" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PercentBarIconLinesDecor.Parent</Name>
+    <Variable Type="string" Name="PercentBarIconLinesDecor.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarIconLinesDecor.Width</Name>
+    <Variable Type="float" Name="PercentBarIconLinesDecor.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>PercentBarIconLinesDecor.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="PercentBarIconLinesDecor.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarIconLinesDecor.Y</Name>
+    <Variable Type="float" Name="PercentBarIconLinesDecor.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>PercentBarIconPrimary.BarColor</Name>
+    <Variable Type="ColorCategory" Name="PercentBarIconPrimary.BarColor" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>BarDecorCategory</Type>
-      <Name>PercentBarIconPrimary.BarDecorCategoryState</Name>
+    <Variable Type="BarDecorCategory" Name="PercentBarIconPrimary.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">None</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>PercentBarIconPrimary.BarIcon</Name>
+    <Variable Type="IconCategory" Name="PercentBarIconPrimary.BarIcon" SetsValue="true">
       <Value xsi:type="xsd:string">Battery</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>PercentBarIconPrimary.BarIconColor</Name>
+    <Variable Type="ColorCategory" Name="PercentBarIconPrimary.BarIconColor" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PercentBarIconPrimary.Parent</Name>
+    <Variable Type="string" Name="PercentBarIconPrimary.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarIconPrimary.Width</Name>
+    <Variable Type="float" Name="PercentBarIconPrimary.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>PercentBarIconPrimary.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="PercentBarIconPrimary.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarIconPrimary.Y</Name>
+    <Variable Type="float" Name="PercentBarIconPrimary.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>BarDecorCategory</Type>
-      <Name>PercentBarLinesDecor.BarDecorCategoryState</Name>
+    <Variable Type="BarDecorCategory" Name="PercentBarLinesDecor.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">VerticalLines</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PercentBarLinesDecor.Parent</Name>
+    <Variable Type="string" Name="PercentBarLinesDecor.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarLinesDecor.Width</Name>
+    <Variable Type="float" Name="PercentBarLinesDecor.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>PercentBarLinesDecor.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="PercentBarLinesDecor.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarLinesDecor.Y</Name>
+    <Variable Type="float" Name="PercentBarLinesDecor.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PercentBarPrimary.Parent</Name>
+    <Variable Type="string" Name="PercentBarPrimary.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PercentBarPrimary.Width</Name>
+    <Variable Type="float" Name="PercentBarPrimary.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>PercentBarPrimary.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="PercentBarPrimary.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>RadioButtonInstance.Parent</Name>
+    <Variable Type="string" Name="RadioButtonInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ControlsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>RadioButtonInstance.Width</Name>
+    <Variable Type="float" Name="RadioButtonInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>RadioButtonInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="RadioButtonInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>RadioButtonInstance.Y</Name>
+    <Variable Type="float" Name="RadioButtonInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>SliderInstance.Parent</Name>
+    <Variable Type="string" Name="SliderInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ControlsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>SliderInstance.Width</Name>
+    <Variable Type="float" Name="SliderInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>SliderInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="SliderInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>SliderInstance.Y</Name>
+    <Variable Type="float" Name="SliderInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Solid.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="Solid.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Solid.Height</Name>
+    <Variable Type="float" Name="Solid.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Solid.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Solid.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Solid.Parent</Name>
+    <Variable Type="string" Name="Solid.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>Solid.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="Solid.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Solid</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Solid.Width</Name>
+    <Variable Type="float" Name="Solid.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Solid.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Solid.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Solid.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="Solid.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Solid.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="Solid.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Solid.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Solid.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Solid.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Solid.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Tab.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="Tab.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Tab.Height</Name>
+    <Variable Type="float" Name="Tab.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Tab.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Tab.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Tab.Parent</Name>
+    <Variable Type="string" Name="Tab.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>Tab.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="Tab.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Tab</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Tab.Width</Name>
+    <Variable Type="float" Name="Tab.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Tab.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Tab.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Tab.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="Tab.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Tab.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="Tab.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Tab.Y</Name>
+    <Variable Type="float" Name="Tab.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Tab.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Tab.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Tab.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Tab.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TabBordered.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TabBordered.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TabBordered.Height</Name>
+    <Variable Type="float" Name="TabBordered.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TabBordered.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TabBordered.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TabBordered.Parent</Name>
+    <Variable Type="string" Name="TabBordered.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TabBordered.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TabBordered.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">TabBordered</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TabBordered.Width</Name>
+    <Variable Type="float" Name="TabBordered.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TabBordered.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TabBordered.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>TabBordered.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="TabBordered.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TabBordered.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="TabBordered.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TabBordered.Y</Name>
+    <Variable Type="float" Name="TabBordered.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>TabBordered.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="TabBordered.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TabBordered.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="TabBordered.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextAccent.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextAccent.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Accent</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextAccent.Parent</Name>
+    <Variable Type="string" Name="TextAccent.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextAccent.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextAccent.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextAccent.Text</Name>
+    <Variable Type="string" Name="TextAccent.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Accent</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextAccent.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextAccent.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextBlack.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextBlack.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Black</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextBlack.Parent</Name>
+    <Variable Type="string" Name="TextBlack.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextBlack.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextBlack.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextBlack.Text</Name>
+    <Variable Type="string" Name="TextBlack.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Black</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextBlack.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextBlack.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextBoxInstance.Parent</Name>
+    <Variable Type="string" Name="TextBoxInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ControlsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextBoxInstance.Y</Name>
+    <Variable Type="float" Name="TextBoxInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextDarkGray.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextDarkGray.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">DarkGray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextDarkGray.Parent</Name>
+    <Variable Type="string" Name="TextDarkGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextDarkGray.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextDarkGray.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextDarkGray.Text</Name>
+    <Variable Type="string" Name="TextDarkGray.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Dark Gray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextDarkGray.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextDarkGray.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextEmphasis.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextEmphasis.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextEmphasis.Parent</Name>
+    <Variable Type="string" Name="TextEmphasis.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextEmphasis.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextEmphasis.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Emphasis</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextEmphasis.Text</Name>
+    <Variable Type="string" Name="TextEmphasis.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Emphasis</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextGray.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextGray.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Gray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextGray.Parent</Name>
+    <Variable Type="string" Name="TextGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextGray.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextGray.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextGray.Text</Name>
+    <Variable Type="string" Name="TextGray.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Gray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextGray.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextGray.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextH1.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextH1.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextH1.Parent</Name>
+    <Variable Type="string" Name="TextH1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextH1.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextH1.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">H1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextH1.Text</Name>
+    <Variable Type="string" Name="TextH1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Heading 1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextH2.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextH2.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextH2.Parent</Name>
+    <Variable Type="string" Name="TextH2.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextH2.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextH2.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">H2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextH2.Text</Name>
+    <Variable Type="string" Name="TextH2.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Heading 2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextH3.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextH3.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextH3.Parent</Name>
+    <Variable Type="string" Name="TextH3.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextH3.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextH3.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">H3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextH3.Text</Name>
+    <Variable Type="string" Name="TextH3.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Heading 3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextLightGray.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextLightGray.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">LightGray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextLightGray.Parent</Name>
+    <Variable Type="string" Name="TextLightGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextLightGray.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextLightGray.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextLightGray.Text</Name>
+    <Variable Type="string" Name="TextLightGray.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Light Gray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextLightGray.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextLightGray.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextNormal.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextNormal.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextNormal.Parent</Name>
+    <Variable Type="string" Name="TextNormal.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextNormal.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextNormal.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextNormal.Text</Name>
+    <Variable Type="string" Name="TextNormal.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextPrimary.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextPrimary.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextPrimary.Parent</Name>
+    <Variable Type="string" Name="TextPrimary.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextPrimary.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextPrimary.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextPrimary.Text</Name>
+    <Variable Type="string" Name="TextPrimary.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextPrimary.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextPrimary.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextPrimaryDark.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextPrimaryDark.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">PrimaryDark</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextPrimaryDark.Parent</Name>
+    <Variable Type="string" Name="TextPrimaryDark.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextPrimaryDark.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextPrimaryDark.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextPrimaryDark.Text</Name>
+    <Variable Type="string" Name="TextPrimaryDark.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Primary Dark</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextPrimaryDark.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextPrimaryDark.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextPrimaryLight.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextPrimaryLight.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">PrimaryLight</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextPrimaryLight.Parent</Name>
+    <Variable Type="string" Name="TextPrimaryLight.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextPrimaryLight.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextPrimaryLight.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextPrimaryLight.Text</Name>
+    <Variable Type="string" Name="TextPrimaryLight.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Primary Light</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextPrimaryLight.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextPrimaryLight.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextSmall.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextSmall.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextSmall.Parent</Name>
+    <Variable Type="string" Name="TextSmall.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextSmall.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextSmall.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Small</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextSmall.Text</Name>
+    <Variable Type="string" Name="TextSmall.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Small</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextStrong.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextStrong.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextStrong.Parent</Name>
+    <Variable Type="string" Name="TextStrong.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextStrong.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextStrong.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Strong</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextStrong.Text</Name>
+    <Variable Type="string" Name="TextStrong.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Strong</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>TextStyleContainer.ChildrenLayout</Name>
+    <Variable Type="ChildrenLayout" Name="TextStyleContainer.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextStyleContainer.Height</Name>
+    <Variable Type="float" Name="TextStyleContainer.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextStyleContainer.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextStyleContainer.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextStyleContainer.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextStyleContainer.Width</Name>
+    <Variable Type="string" Name="TextStyleContainer.Parent" SetsValue="true" />
+    <Variable Type="float" Name="TextStyleContainer.Width" SetsValue="true">
       <Value xsi:type="xsd:float">85</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextStyleContainer.X</Name>
+    <Variable Type="float" Name="TextStyleContainer.X" SetsValue="true">
       <Value xsi:type="xsd:float">57</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TextStyleContainer.Y</Name>
+    <Variable Type="float" Name="TextStyleContainer.Y" SetsValue="true">
       <Value xsi:type="xsd:float">11</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextSuccess.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextSuccess.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Success</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextSuccess.Parent</Name>
+    <Variable Type="string" Name="TextSuccess.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextSuccess.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextSuccess.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextSuccess.Text</Name>
+    <Variable Type="string" Name="TextSuccess.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Success</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextSuccess.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextSuccess.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextTiny.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextTiny.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextTiny.Parent</Name>
+    <Variable Type="string" Name="TextTiny.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextTiny.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextTiny.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Tiny</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextTiny.Text</Name>
+    <Variable Type="string" Name="TextTiny.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Tiny</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextTitle.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextTitle.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextTitle.Parent</Name>
+    <Variable Type="string" Name="TextTitle.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextTitle.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextTitle.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Title</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextTitle.Text</Name>
+    <Variable Type="string" Name="TextTitle.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextWarning.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextWarning.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Warning</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextWarning.Parent</Name>
+    <Variable Type="string" Name="TextWarning.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextWarning.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextWarning.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextWarning.Text</Name>
+    <Variable Type="string" Name="TextWarning.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Warning</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextWarning.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextWarning.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextWarning1.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextWarning1.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Danger</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextWarning1.Parent</Name>
+    <Variable Type="string" Name="TextWarning1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextWarning1.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextWarning1.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextWarning1.Text</Name>
+    <Variable Type="string" Name="TextWarning1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Danger</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextWarning1.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextWarning1.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TextWhite.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TextWhite.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextWhite.Parent</Name>
+    <Variable Type="string" Name="TextWhite.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TextWhite.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TextWhite.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TextWhite.Text</Name>
+    <Variable Type="string" Name="TextWhite.Text" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TextWhite.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TextWhite.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TreeViewInstance.Parent</Name>
+    <Variable Type="string" Name="TreeViewInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ControlsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TreeViewInstance.Width</Name>
+    <Variable Type="float" Name="TreeViewInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TreeViewInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TreeViewInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TreeViewInstance.Y</Name>
+    <Variable Type="float" Name="TreeViewInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>VerticalLinesInstance.LineColor</Name>
+    <Variable Type="ColorCategory" Name="VerticalLinesInstance.LineColor" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>VerticalLinesInstance.Parent</Name>
+    <Variable Type="string" Name="VerticalLinesInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ElementsContainer</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>VerticalLinesInstance.Width</Name>
+    <Variable Type="float" Name="VerticalLinesInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>VerticalLinesInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="VerticalLinesInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>VerticalLinesInstance.Y</Name>
+    <Variable Type="float" Name="VerticalLinesInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
   </State>
-  <Instance>
-    <Name>TextStyleContainer</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextTitle</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextH1</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextH2</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextH3</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextNormal</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextStrong</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextEmphasis</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextSmall</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextTiny</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Solid</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Bordered</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>BracketHorizontal</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>BracketVertical</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Tab</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TabBordered</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Outlined</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>OutlinedHeavy</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Panel</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>NineSliceStyleContainer</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ButtonsContainer</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ButtonStandardInstance</Name>
-    <BaseType>Controls/ButtonStandard</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ButtonStandardIconInstance</Name>
-    <BaseType>Controls/ButtonStandardIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ButtonTabInstance</Name>
-    <BaseType>Controls/ButtonTab</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ButtonIconInstance</Name>
-    <BaseType>Controls/ButtonIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ButtonConfirmInstance</Name>
-    <BaseType>Controls/ButtonConfirm</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ButtonDenyInstance</Name>
-    <BaseType>Controls/ButtonDeny</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ButtonCloseInstance</Name>
-    <BaseType>Controls/ButtonClose</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ElementsContainer</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>PercentBarPrimary</Name>
-    <BaseType>Elements/PercentBar</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>PercentBarLinesDecor</Name>
-    <BaseType>Elements/PercentBar</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>PercentBarCautionDecor</Name>
-    <BaseType>Elements/PercentBar</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>PercentBarIconPrimary</Name>
-    <BaseType>Elements/PercentBarIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>PercentBarIconLinesDecor</Name>
-    <BaseType>Elements/PercentBarIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>PercentBarIconCautionDecor</Name>
-    <BaseType>Elements/PercentBarIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ControlsContainer</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>LabelInstance</Name>
-    <BaseType>Controls/Label</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>CheckBoxInstance</Name>
-    <BaseType>Controls/CheckBox</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>RadioButtonInstance</Name>
-    <BaseType>Controls/RadioButton</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ComboBoxInstance</Name>
-    <BaseType>Controls/ComboBox</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ListBoxInstance</Name>
-    <BaseType>Controls/ListBox</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>SliderInstance</Name>
-    <BaseType>Controls/Slider</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextBoxInstance</Name>
-    <BaseType>Controls/TextBox</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>PasswordBoxInstance</Name>
-    <BaseType>Controls/PasswordBox</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>DividerVerticalInstance</Name>
-    <BaseType>Elements/DividerVertical</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>DividerHorizontalInstance</Name>
-    <BaseType>Elements/DividerHorizontal</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>IconInstance</Name>
-    <BaseType>Elements/Icon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>CautionLinesInstance</Name>
-    <BaseType>Elements/CautionLines</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>VerticalLinesInstance</Name>
-    <BaseType>Elements/VerticalLines</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ColorContainer</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextBlack</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextDarkGray</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextGray</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextLightGray</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextWhite</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextPrimaryDark</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextPrimary</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextPrimaryLight</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextAccent</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextSuccess</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextWarning</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TextWarning1</Name>
-    <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyboardInstance</Name>
-    <BaseType>Controls/Keyboard</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>KeyboardContainer</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TreeViewInstance</Name>
-    <BaseType>Controls/TreeView</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>DialogBoxInstance</Name>
-    <BaseType>Controls/DialogBox</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="TextStyleContainer" BaseType="Container" />
+  <Instance Name="TextTitle" BaseType="Text" />
+  <Instance Name="TextH1" BaseType="Text" />
+  <Instance Name="TextH2" BaseType="Text" />
+  <Instance Name="TextH3" BaseType="Text" />
+  <Instance Name="TextNormal" BaseType="Text" />
+  <Instance Name="TextStrong" BaseType="Text" />
+  <Instance Name="TextEmphasis" BaseType="Text" />
+  <Instance Name="TextSmall" BaseType="Text" />
+  <Instance Name="TextTiny" BaseType="Text" />
+  <Instance Name="Solid" BaseType="NineSlice" />
+  <Instance Name="Bordered" BaseType="NineSlice" />
+  <Instance Name="BracketHorizontal" BaseType="NineSlice" />
+  <Instance Name="BracketVertical" BaseType="NineSlice" />
+  <Instance Name="Tab" BaseType="NineSlice" />
+  <Instance Name="TabBordered" BaseType="NineSlice" />
+  <Instance Name="Outlined" BaseType="NineSlice" />
+  <Instance Name="OutlinedHeavy" BaseType="NineSlice" />
+  <Instance Name="Panel" BaseType="NineSlice" />
+  <Instance Name="NineSliceStyleContainer" BaseType="Container" />
+  <Instance Name="ButtonsContainer" BaseType="Container" />
+  <Instance Name="ButtonStandardInstance" BaseType="Controls/ButtonStandard" />
+  <Instance Name="ButtonStandardIconInstance" BaseType="Controls/ButtonStandardIcon" />
+  <Instance Name="ButtonTabInstance" BaseType="Controls/ButtonTab" />
+  <Instance Name="ButtonIconInstance" BaseType="Controls/ButtonIcon" />
+  <Instance Name="ButtonConfirmInstance" BaseType="Controls/ButtonConfirm" />
+  <Instance Name="ButtonDenyInstance" BaseType="Controls/ButtonDeny" />
+  <Instance Name="ButtonCloseInstance" BaseType="Controls/ButtonClose" />
+  <Instance Name="ElementsContainer" BaseType="Container" />
+  <Instance Name="PercentBarPrimary" BaseType="Elements/PercentBar" />
+  <Instance Name="PercentBarLinesDecor" BaseType="Elements/PercentBar" />
+  <Instance Name="PercentBarCautionDecor" BaseType="Elements/PercentBar" />
+  <Instance Name="PercentBarIconPrimary" BaseType="Elements/PercentBarIcon" />
+  <Instance Name="PercentBarIconLinesDecor" BaseType="Elements/PercentBarIcon" />
+  <Instance Name="PercentBarIconCautionDecor" BaseType="Elements/PercentBarIcon" />
+  <Instance Name="ControlsContainer" BaseType="Container" />
+  <Instance Name="LabelInstance" BaseType="Controls/Label" />
+  <Instance Name="CheckBoxInstance" BaseType="Controls/CheckBox" />
+  <Instance Name="RadioButtonInstance" BaseType="Controls/RadioButton" />
+  <Instance Name="ComboBoxInstance" BaseType="Controls/ComboBox" />
+  <Instance Name="ListBoxInstance" BaseType="Controls/ListBox" />
+  <Instance Name="SliderInstance" BaseType="Controls/Slider" />
+  <Instance Name="TextBoxInstance" BaseType="Controls/TextBox" />
+  <Instance Name="PasswordBoxInstance" BaseType="Controls/PasswordBox" />
+  <Instance Name="DividerVerticalInstance" BaseType="Elements/DividerVertical" />
+  <Instance Name="DividerHorizontalInstance" BaseType="Elements/DividerHorizontal" />
+  <Instance Name="IconInstance" BaseType="Elements/Icon" />
+  <Instance Name="CautionLinesInstance" BaseType="Elements/CautionLines" />
+  <Instance Name="VerticalLinesInstance" BaseType="Elements/VerticalLines" />
+  <Instance Name="ColorContainer" BaseType="Container" />
+  <Instance Name="TextBlack" BaseType="Text" />
+  <Instance Name="TextDarkGray" BaseType="Text" />
+  <Instance Name="TextGray" BaseType="Text" />
+  <Instance Name="TextLightGray" BaseType="Text" />
+  <Instance Name="TextWhite" BaseType="Text" />
+  <Instance Name="TextPrimaryDark" BaseType="Text" />
+  <Instance Name="TextPrimary" BaseType="Text" />
+  <Instance Name="TextPrimaryLight" BaseType="Text" />
+  <Instance Name="TextAccent" BaseType="Text" />
+  <Instance Name="TextSuccess" BaseType="Text" />
+  <Instance Name="TextWarning" BaseType="Text" />
+  <Instance Name="TextWarning1" BaseType="Text" />
+  <Instance Name="KeyboardInstance" BaseType="Controls/Keyboard" />
+  <Instance Name="KeyboardContainer" BaseType="Container" />
+  <Instance Name="TreeViewInstance" BaseType="Controls/TreeView" />
+  <Instance Name="DialogBoxInstance" BaseType="Controls/DialogBox" />
   <Behaviors />
 </ScreenSave>

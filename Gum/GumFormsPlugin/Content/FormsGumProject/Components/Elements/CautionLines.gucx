@@ -1,112 +1,51 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Elements/CautionLines</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>bool</Type>
-      <Name>ClipsChildren</Name>
+    <Variable Type="bool" Name="ClipsChildren" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">16</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>LinesSprite.Alpha</Name>
-      <ExposedAsName>LineAlpha</ExposedAsName>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>LinesSprite.ColorCategoryState</Name>
-      <ExposedAsName>LineColor</ExposedAsName>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <IsFile>true</IsFile>
-      <Type>string</Type>
-      <Name>LinesSprite.SourceFile</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="int" Name="LinesSprite.Alpha" ExposedAsName="LineAlpha" SetsValue="false" />
+    <Variable Type="ColorCategory" Name="LinesSprite.ColorCategoryState" ExposedAsName="LineColor" SetsValue="false" />
+    <Variable IsFile="true" Type="string" Name="LinesSprite.SourceFile" SetsValue="true">
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>TextureAddress</Type>
-      <Name>LinesSprite.TextureAddress</Name>
+    <Variable Type="TextureAddress" Name="LinesSprite.TextureAddress" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>LinesSprite.TextureHeight</Name>
+    <Variable Type="int" Name="LinesSprite.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">32</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>LinesSprite.TextureLeft</Name>
+    <Variable Type="int" Name="LinesSprite.TextureLeft" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>LinesSprite.TextureTop</Name>
+    <Variable Type="int" Name="LinesSprite.TextureTop" SetsValue="true">
       <Value xsi:type="xsd:int">992</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>LinesSprite.TextureWidth</Name>
+    <Variable Type="int" Name="LinesSprite.TextureWidth" SetsValue="true">
       <Value xsi:type="xsd:int">1024</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>LinesSprite.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="LinesSprite.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>LinesSprite.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="LinesSprite.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>LinesSprite.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="LinesSprite.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">128</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
@@ -116,10 +55,6 @@
       <Value />
     </VariableList>
   </State>
-  <Instance>
-    <Name>LinesSprite</Name>
-    <BaseType>Sprite</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="LinesSprite" BaseType="Sprite" />
   <Behaviors />
 </ComponentSave>

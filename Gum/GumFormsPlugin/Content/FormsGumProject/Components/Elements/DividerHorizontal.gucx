@@ -1,270 +1,133 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Elements/DividerHorizontal</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>AccentLeft.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="AccentLeft.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Gray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AccentLeft.Height</Name>
+    <Variable Type="float" Name="AccentLeft.Height" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>AccentLeft.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="AccentLeft.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <IsFile>true</IsFile>
-      <Type>string</Type>
-      <Name>AccentLeft.SourceFile</Name>
+    <Variable IsFile="true" Type="string" Name="AccentLeft.SourceFile" SetsValue="true">
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>TextureAddress</Type>
-      <Name>AccentLeft.TextureAddress</Name>
+    <Variable Type="TextureAddress" Name="AccentLeft.TextureAddress" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>AccentLeft.TextureHeight</Name>
+    <Variable Type="int" Name="AccentLeft.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>AccentLeft.TextureLeft</Name>
+    <Variable Type="int" Name="AccentLeft.TextureLeft" SetsValue="true">
       <Value xsi:type="xsd:int">281</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>AccentLeft.TextureTop</Name>
+    <Variable Type="int" Name="AccentLeft.TextureTop" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>AccentLeft.TextureWidth</Name>
+    <Variable Type="int" Name="AccentLeft.TextureWidth" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AccentLeft.Width</Name>
+    <Variable Type="float" Name="AccentLeft.Width" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>AccentRight.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="AccentRight.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Gray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AccentRight.Height</Name>
+    <Variable Type="float" Name="AccentRight.Height" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>AccentRight.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="AccentRight.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <IsFile>true</IsFile>
-      <Type>string</Type>
-      <Name>AccentRight.SourceFile</Name>
+    <Variable IsFile="true" Type="string" Name="AccentRight.SourceFile" SetsValue="true">
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>TextureAddress</Type>
-      <Name>AccentRight.TextureAddress</Name>
+    <Variable Type="TextureAddress" Name="AccentRight.TextureAddress" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>AccentRight.TextureHeight</Name>
+    <Variable Type="int" Name="AccentRight.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>AccentRight.TextureLeft</Name>
+    <Variable Type="int" Name="AccentRight.TextureLeft" SetsValue="true">
       <Value xsi:type="xsd:int">281</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>AccentRight.TextureTop</Name>
+    <Variable Type="int" Name="AccentRight.TextureTop" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>AccentRight.TextureWidth</Name>
+    <Variable Type="int" Name="AccentRight.TextureWidth" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AccentRight.Width</Name>
+    <Variable Type="float" Name="AccentRight.Width" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>AccentRight.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="AccentRight.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>AccentRight.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="AccentRight.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Line.ColorCategoryState</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="ColorCategory" Name="Line.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Gray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Line.Height</Name>
+    <Variable Type="float" Name="Line.Height" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Line.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Line.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <IsFile>true</IsFile>
-      <Type>string</Type>
-      <Name>Line.SourceFile</Name>
+    <Variable IsFile="true" Type="string" Name="Line.SourceFile" SetsValue="true">
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>TextureAddress</Type>
-      <Name>Line.TextureAddress</Name>
+    <Variable Type="TextureAddress" Name="Line.TextureAddress" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Line.TextureHeight</Name>
+    <Variable Type="int" Name="Line.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Line.TextureLeft</Name>
+    <Variable Type="int" Name="Line.TextureLeft" SetsValue="true">
       <Value xsi:type="xsd:int">281</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Line.TextureTop</Name>
+    <Variable Type="int" Name="Line.TextureTop" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Line.TextureWidth</Name>
+    <Variable Type="int" Name="Line.TextureWidth" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Line.Width</Name>
+    <Variable Type="float" Name="Line.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-8</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Line.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="Line.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Line.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="Line.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Line.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="Line.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Line.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="Line.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Line.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="Line.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">128</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
@@ -288,20 +151,8 @@
       <Value />
     </VariableList>
   </State>
-  <Instance>
-    <Name>AccentLeft</Name>
-    <BaseType>Sprite</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Line</Name>
-    <BaseType>Sprite</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>AccentRight</Name>
-    <BaseType>Sprite</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="AccentLeft" BaseType="Sprite" />
+  <Instance Name="Line" BaseType="Sprite" />
+  <Instance Name="AccentRight" BaseType="Sprite" />
   <Behaviors />
 </ComponentSave>

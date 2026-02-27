@@ -1,307 +1,150 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Controls/ScrollBar</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>float</Type>
-      <Name>DownButtonInstance.Height</Name>
+    <Variable Type="float" Name="DownButtonInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>DownButtonInstance.IconCategory</Name>
+    <Variable Type="IconCategory" Name="DownButtonInstance.IconCategory" SetsValue="true">
       <Value xsi:type="xsd:string">Arrow1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DownButtonInstance.Rotation</Name>
+    <Variable Type="float" Name="DownButtonInstance.Rotation" SetsValue="true">
       <Value xsi:type="xsd:float">-90</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DownButtonInstance.Width</Name>
+    <Variable Type="float" Name="DownButtonInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>DownButtonInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="DownButtonInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>DownButtonInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="DownButtonInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>DownButtonInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="DownButtonInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>OrientationCategory</Type>
-      <Name>OrientationCategoryState</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ScrollBarCategory</Type>
-      <Name>ScrollBarCategoryState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ThumbInstance.Parent</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="OrientationCategory" Name="OrientationCategoryState" SetsValue="true" />
+    <Variable Type="ScrollBarCategory" Name="ScrollBarCategoryState" SetsValue="false" />
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="string" Name="ThumbInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TrackInstance</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ThumbInstance.Text</Name>
+    <Variable Type="string" Name="ThumbInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string"></Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ThumbInstance.Width</Name>
+    <Variable Type="float" Name="ThumbInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ThumbInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="ThumbInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>ThumbInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="ThumbInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ThumbInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="ThumbInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>ThumbInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="ThumbInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ThumbInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="ThumbInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TrackBackground.ColorCategoryState</Name>
+    <Variable Type="ColorCategory" Name="TrackBackground.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Gray</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TrackBackground.Height</Name>
+    <Variable Type="float" Name="TrackBackground.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TrackBackground.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TrackBackground.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TrackBackground.Parent</Name>
+    <Variable Type="string" Name="TrackBackground.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TrackInstance</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TrackBackground.StyleCategoryState</Name>
+    <Variable Type="StyleCategory" Name="TrackBackground.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Solid</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TrackBackground.Width</Name>
+    <Variable Type="float" Name="TrackBackground.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TrackBackground.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TrackBackground.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TrackBackground.X</Name>
+    <Variable Type="float" Name="TrackBackground.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>TrackBackground.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="TrackBackground.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TrackBackground.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="TrackBackground.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TrackBackground.Y</Name>
+    <Variable Type="float" Name="TrackBackground.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>TrackBackground.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="TrackBackground.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TrackBackground.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="TrackBackground.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TrackInstance.Height</Name>
+    <Variable Type="float" Name="TrackInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-48</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TrackInstance.HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TrackInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TrackInstance.Width</Name>
+    <Variable Type="float" Name="TrackInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TrackInstance.WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="TrackInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>TrackInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="TrackInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TrackInstance.XUnits</Name>
+    <Variable Type="PositionUnitType" Name="TrackInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>TrackInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="TrackInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TrackInstance.YUnits</Name>
+    <Variable Type="PositionUnitType" Name="TrackInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>UpButtonInstance.Height</Name>
+    <Variable Type="float" Name="UpButtonInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>UpButtonInstance.IconCategory</Name>
+    <Variable Type="IconCategory" Name="UpButtonInstance.IconCategory" SetsValue="true">
       <Value xsi:type="xsd:string">Arrow1</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>UpButtonInstance.Rotation</Name>
+    <Variable Type="float" Name="UpButtonInstance.Rotation" SetsValue="true">
       <Value xsi:type="xsd:float">90</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>UpButtonInstance.Width</Name>
+    <Variable Type="float" Name="UpButtonInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>UpButtonInstance.XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="UpButtonInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>UpButtonInstance.YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="UpButtonInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
     </Variable>
   </State>
   <Category>
@@ -311,357 +154,172 @@
     <Name>OrientationCategory</Name>
     <State>
       <Name>Vertical</Name>
-      <Variable>
-        <Type>float</Type>
-        <Name>DownButtonInstance.Rotation</Name>
+      <Variable Type="float" Name="DownButtonInstance.Rotation" SetsValue="true">
         <Value xsi:type="xsd:float">-90</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>DownButtonInstance.X</Name>
+      <Variable Type="float" Name="DownButtonInstance.X" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <Category>Position</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>HorizontalAlignment</Type>
-        <Name>DownButtonInstance.XOrigin</Name>
+      <Variable Type="HorizontalAlignment" Name="DownButtonInstance.XOrigin" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>PositionUnitType</Type>
-        <Name>DownButtonInstance.XUnits</Name>
+      <Variable Type="PositionUnitType" Name="DownButtonInstance.XUnits" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <Category>Position</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>DownButtonInstance.Y</Name>
+      <Variable Type="float" Name="DownButtonInstance.Y" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <Category>Position</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>VerticalAlignment</Type>
-        <Name>DownButtonInstance.YOrigin</Name>
+      <Variable Type="VerticalAlignment" Name="DownButtonInstance.YOrigin" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>PositionUnitType</Type>
-        <Name>DownButtonInstance.YUnits</Name>
+      <Variable Type="PositionUnitType" Name="DownButtonInstance.YUnits" SetsValue="true">
         <Value xsi:type="xsd:int">5</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>Height</Name>
+      <Variable Type="float" Name="Height" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>HeightUnits</Name>
+      <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>ThumbInstance.Height</Name>
+      <Variable Type="float" Name="ThumbInstance.Height" SetsValue="true">
         <Value xsi:type="xsd:float">32</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>ThumbInstance.HeightUnits</Name>
+      <Variable Type="DimensionUnitType" Name="ThumbInstance.HeightUnits" Category="Dimensions" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <Category>Dimensions</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>ThumbInstance.Width</Name>
+      <Variable Type="float" Name="ThumbInstance.Width" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>ThumbInstance.WidthUnits</Name>
+      <Variable Type="DimensionUnitType" Name="ThumbInstance.WidthUnits" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>TrackInstance.Height</Name>
+      <Variable Type="float" Name="TrackInstance.Height" SetsValue="true">
         <Value xsi:type="xsd:float">-48</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>TrackInstance.HeightUnits</Name>
+      <Variable Type="DimensionUnitType" Name="TrackInstance.HeightUnits" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>TrackInstance.Width</Name>
+      <Variable Type="float" Name="TrackInstance.Width" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>TrackInstance.WidthUnits</Name>
+      <Variable Type="DimensionUnitType" Name="TrackInstance.WidthUnits" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>UpButtonInstance.Rotation</Name>
+      <Variable Type="float" Name="UpButtonInstance.Rotation" SetsValue="true">
         <Value xsi:type="xsd:float">90</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>UpButtonInstance.X</Name>
+      <Variable Type="float" Name="UpButtonInstance.X" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <Category>Position</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>HorizontalAlignment</Type>
-        <Name>UpButtonInstance.XOrigin</Name>
+      <Variable Type="HorizontalAlignment" Name="UpButtonInstance.XOrigin" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>PositionUnitType</Type>
-        <Name>UpButtonInstance.XUnits</Name>
+      <Variable Type="PositionUnitType" Name="UpButtonInstance.XUnits" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <Category>Position</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>UpButtonInstance.Y</Name>
+      <Variable Type="float" Name="UpButtonInstance.Y" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <Category>Position</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>VerticalAlignment</Type>
-        <Name>UpButtonInstance.YOrigin</Name>
+      <Variable Type="VerticalAlignment" Name="UpButtonInstance.YOrigin" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>PositionUnitType</Type>
-        <Name>UpButtonInstance.YUnits</Name>
+      <Variable Type="PositionUnitType" Name="UpButtonInstance.YUnits" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:int">1</Value>
-        <Category>Position</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>Width</Name>
+      <Variable Type="float" Name="Width" SetsValue="true">
         <Value xsi:type="xsd:float">24</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>WidthUnits</Name>
+      <Variable Type="DimensionUnitType" Name="WidthUnits" Category="Dimensions" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <Category>Dimensions</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>Horizontal</Name>
-      <Variable>
-        <Type>float</Type>
-        <Name>DownButtonInstance.Rotation</Name>
+      <Variable Type="float" Name="DownButtonInstance.Rotation" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>DownButtonInstance.X</Name>
+      <Variable Type="float" Name="DownButtonInstance.X" SetsValue="true">
         <Value xsi:type="xsd:float">-0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>HorizontalAlignment</Type>
-        <Name>DownButtonInstance.XOrigin</Name>
+      <Variable Type="HorizontalAlignment" Name="DownButtonInstance.XOrigin" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>PositionUnitType</Type>
-        <Name>DownButtonInstance.XUnits</Name>
+      <Variable Type="PositionUnitType" Name="DownButtonInstance.XUnits" SetsValue="true">
         <Value xsi:type="xsd:int">4</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>DownButtonInstance.Y</Name>
+      <Variable Type="float" Name="DownButtonInstance.Y" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>VerticalAlignment</Type>
-        <Name>DownButtonInstance.YOrigin</Name>
+      <Variable Type="VerticalAlignment" Name="DownButtonInstance.YOrigin" SetsValue="true">
         <Value xsi:type="xsd:int">1</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>PositionUnitType</Type>
-        <Name>DownButtonInstance.YUnits</Name>
+      <Variable Type="PositionUnitType" Name="DownButtonInstance.YUnits" SetsValue="true">
         <Value xsi:type="xsd:int">7</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>Height</Name>
+      <Variable Type="float" Name="Height" SetsValue="true">
         <Value xsi:type="xsd:float">24</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>HeightUnits</Name>
+      <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>ThumbInstance.Height</Name>
+      <Variable Type="float" Name="ThumbInstance.Height" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>ThumbInstance.HeightUnits</Name>
+      <Variable Type="DimensionUnitType" Name="ThumbInstance.HeightUnits" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>ThumbInstance.Width</Name>
+      <Variable Type="float" Name="ThumbInstance.Width" SetsValue="true">
         <Value xsi:type="xsd:float">32</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>ThumbInstance.WidthUnits</Name>
+      <Variable Type="DimensionUnitType" Name="ThumbInstance.WidthUnits" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>TrackInstance.Height</Name>
+      <Variable Type="float" Name="TrackInstance.Height" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>TrackInstance.HeightUnits</Name>
+      <Variable Type="DimensionUnitType" Name="TrackInstance.HeightUnits" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>TrackInstance.Width</Name>
+      <Variable Type="float" Name="TrackInstance.Width" SetsValue="true">
         <Value xsi:type="xsd:float">-48</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>TrackInstance.WidthUnits</Name>
+      <Variable Type="DimensionUnitType" Name="TrackInstance.WidthUnits" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>UpButtonInstance.Rotation</Name>
+      <Variable Type="float" Name="UpButtonInstance.Rotation" SetsValue="true">
         <Value xsi:type="xsd:float">-180</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>UpButtonInstance.X</Name>
+      <Variable Type="float" Name="UpButtonInstance.X" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>HorizontalAlignment</Type>
-        <Name>UpButtonInstance.XOrigin</Name>
+      <Variable Type="HorizontalAlignment" Name="UpButtonInstance.XOrigin" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>PositionUnitType</Type>
-        <Name>UpButtonInstance.XUnits</Name>
+      <Variable Type="PositionUnitType" Name="UpButtonInstance.XUnits" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>UpButtonInstance.Y</Name>
+      <Variable Type="float" Name="UpButtonInstance.Y" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>VerticalAlignment</Type>
-        <Name>UpButtonInstance.YOrigin</Name>
+      <Variable Type="VerticalAlignment" Name="UpButtonInstance.YOrigin" SetsValue="true">
         <Value xsi:type="xsd:int">1</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>PositionUnitType</Type>
-        <Name>UpButtonInstance.YUnits</Name>
+      <Variable Type="PositionUnitType" Name="UpButtonInstance.YUnits" SetsValue="true">
         <Value xsi:type="xsd:int">7</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>Width</Name>
+      <Variable Type="float" Name="Width" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>DimensionUnitType</Type>
-        <Name>WidthUnits</Name>
+      <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
     </State>
   </Category>
-  <Instance>
-    <Name>UpButtonInstance</Name>
-    <BaseType>Controls/ButtonIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>DownButtonInstance</Name>
-    <BaseType>Controls/ButtonIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TrackInstance</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TrackBackground</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ThumbInstance</Name>
-    <BaseType>Controls/ButtonStandard</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
+  <Instance Name="UpButtonInstance" BaseType="Controls/ButtonIcon" />
+  <Instance Name="DownButtonInstance" BaseType="Controls/ButtonIcon" />
+  <Instance Name="TrackInstance" BaseType="Container" />
+  <Instance Name="TrackBackground" BaseType="NineSlice" />
+  <Instance Name="ThumbInstance" BaseType="Controls/ButtonStandard" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ScrollBarBehavior</BehaviorName>

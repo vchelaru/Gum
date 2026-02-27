@@ -97,7 +97,7 @@ public class MenuStripManagerTests : BaseTestClass
                 .First(mi => mi.Header as string == "Remove");
             var stateItem = removeMenu.Items
                 .OfType<MenuItem>()
-                .First(mi => (mi.Header as string).StartsWith("State"));
+                .First(mi => ((string)mi.Header).StartsWith("State"));
 
             stateItem.Header.ShouldBe("State Running");
             stateItem.IsEnabled.ShouldBeTrue();

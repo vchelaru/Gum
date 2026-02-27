@@ -1,326 +1,128 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <StandardElementSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Text</Name>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>int</Type>
-      <Name>Alpha</Name>
+    <Variable Type="int" Name="Alpha" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Blue</Name>
+    <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>ColorCategoryState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <IsFile>true</IsFile>
-      <Type>string</Type>
-      <Name>CustomFontFile</Name>
+    <Variable Type="ColorCategory" Name="ColorCategoryState" SetsValue="false" />
+    <Variable IsFile="true" Type="string" Name="CustomFontFile" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:string"></Value>
-      <Category>Font</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>ExposeChildrenEvents</Name>
+    <Variable Type="bool" Name="ExposeChildrenEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Behavior</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <IsFont>true</IsFont>
-      <Type>string</Type>
-      <Name>Font</Name>
+    <Variable IsFont="true" Type="string" Name="Font" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:string">Arial</Value>
-      <Category>Font</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>FontScale</Name>
+    <Variable Type="float" Name="FontScale" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
-      <Category>Font</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>FontSize</Name>
+    <Variable Type="int" Name="FontSize" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
-      <Category>Font</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Green</Name>
+    <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Guide</Name>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>HasEvents</Name>
+    <Variable Type="string" Name="Guide" Category="Position" SetsValue="true" />
+    <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Behavior</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>HorizontalAlignment</Name>
+    <Variable Type="HorizontalAlignment" Name="HorizontalAlignment" Category="Text" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Text</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IgnoredByParentSize</Name>
+    <Variable Type="bool" Name="IgnoredByParentSize" Category="Parent" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Parent</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsBold</Name>
+    <Variable Type="bool" Name="IsBold" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Font</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsItalic</Name>
+    <Variable Type="bool" Name="IsItalic" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Font</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>LineHeightMultiplier</Name>
+    <Variable Type="float" Name="LineHeightMultiplier" Category="Text" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
-      <Category>Text</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float?</Type>
-      <Name>MaxHeight</Name>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>int?</Type>
-      <Name>MaxLettersToShow</Name>
-      <Category>Text</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>int?</Type>
-      <Name>MaxNumberOfLines</Name>
-      <Category>Text</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float?</Type>
-      <Name>MaxWidth</Name>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float?</Type>
-      <Name>MinHeight</Name>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float?</Type>
-      <Name>MinWidth</Name>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>OutlineThickness</Name>
+    <Variable Type="float?" Name="MaxHeight" Category="Dimensions" SetsValue="true" />
+    <Variable Type="int?" Name="MaxLettersToShow" Category="Text" SetsValue="true" />
+    <Variable Type="int?" Name="MaxNumberOfLines" Category="Text" SetsValue="true" />
+    <Variable Type="float?" Name="MaxWidth" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MinHeight" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MinWidth" Category="Dimensions" SetsValue="true" />
+    <Variable Type="int" Name="OutlineThickness" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Font</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Parent</Name>
-      <Category>Parent</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Red</Name>
+    <Variable Type="string" Name="Parent" Category="Parent" SetsValue="true" />
+    <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Rotation</Name>
+    <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Flip and Rotation</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true">
       <Value xsi:type="xsd:string">Default</Value>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>StyleCategoryState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Text</Name>
+    <Variable Type="StyleCategory" Name="StyleCategoryState" SetsValue="false" />
+    <Variable Type="string" Name="Text" Category="Text" SetsValue="true">
       <Value xsi:type="xsd:string">Hello</Value>
-      <Category>Text</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>TextOverflowHorizontalMode</Type>
-      <Name>TextOverflowHorizontalMode</Name>
+    <Variable Type="TextOverflowHorizontalMode" Name="TextOverflowHorizontalMode" Category="Text" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Text</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>TextOverflowVerticalMode</Type>
-      <Name>TextOverflowVerticalMode</Name>
+    <Variable Type="TextOverflowVerticalMode" Name="TextOverflowVerticalMode" Category="Text" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Text</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>UseCustomFont</Name>
+    <Variable Type="bool" Name="UseCustomFont" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Font</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>UseFontSmoothing</Name>
+    <Variable Type="bool" Name="UseFontSmoothing" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <Category>Font</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>VerticalAlignment</Name>
+    <Variable Type="VerticalAlignment" Name="VerticalAlignment" Category="Text" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Text</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>Visible</Name>
+    <Variable Type="bool" Name="Visible" Category="States and Visibility" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="float" Name="Width" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>X</Name>
+    <Variable Type="float" Name="X" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="XOrigin" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>XUnits</Name>
+    <Variable Type="PositionUnitType" Name="XUnits" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Y</Name>
+    <Variable Type="float" Name="Y" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="YOrigin" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>YUnits</Name>
+    <Variable Type="PositionUnitType" Name="YUnits" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
@@ -335,23 +137,14 @@
     <Name>ColorCategory</Name>
     <State>
       <Name>Black</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -367,26 +160,14 @@
     </State>
     <State>
       <Name>DarkGray</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">80</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">70</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">70</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -403,26 +184,14 @@
     </State>
     <State>
       <Name>Gray</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">130</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">130</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">130</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -439,26 +208,14 @@
     </State>
     <State>
       <Name>LightGray</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">170</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">170</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">170</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -475,26 +232,14 @@
     </State>
     <State>
       <Name>White</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -511,26 +256,14 @@
     </State>
     <State>
       <Name>PrimaryDark</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">137</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">120</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">4</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -547,26 +280,14 @@
     </State>
     <State>
       <Name>Primary</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">177</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">159</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">6</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -583,26 +304,14 @@
     </State>
     <State>
       <Name>PrimaryLight</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">193</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">180</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">74</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -619,26 +328,14 @@
     </State>
     <State>
       <Name>Success</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">48</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">167</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">62</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -655,26 +352,14 @@
     </State>
     <State>
       <Name>Warning</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">25</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">171</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">232</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -691,26 +376,14 @@
     </State>
     <State>
       <Name>Danger</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">41</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">18</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">212</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -727,26 +400,14 @@
     </State>
     <State>
       <Name>Accent</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>Blue</Name>
+      <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">138</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Green</Name>
+      <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">48</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>Red</Name>
+      <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
         <Value xsi:type="xsd:int">140</Value>
-        <Category>Rendering</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -766,33 +427,17 @@
     <Name>StyleCategory</Name>
     <State>
       <Name>Tiny</Name>
-      <Variable>
-        <IsFont>true</IsFont>
-        <Type>string</Type>
-        <Name>Font</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
         <Value xsi:type="xsd:string">Arial</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>FontSize</Name>
+      <Variable Type="int" Name="FontSize" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:int">10</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsBold</Name>
+      <Variable Type="bool" Name="IsBold" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsItalic</Name>
+      <Variable Type="bool" Name="IsItalic" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -813,32 +458,17 @@
     </State>
     <State>
       <Name>Small</Name>
-      <Variable>
-        <IsFont>true</IsFont>
-        <Type>string</Type>
-        <Name>Font</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
         <Value xsi:type="xsd:string">Arial</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>FontSize</Name>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
         <Value xsi:type="xsd:int">12</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsBold</Name>
+      <Variable Type="bool" Name="IsBold" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsItalic</Name>
+      <Variable Type="bool" Name="IsItalic" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -860,33 +490,17 @@
     </State>
     <State>
       <Name>Normal</Name>
-      <Variable>
-        <IsFont>true</IsFont>
-        <Type>string</Type>
-        <Name>Font</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
         <Value xsi:type="xsd:string">Arial</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>FontSize</Name>
+      <Variable Type="int" Name="FontSize" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:int">14</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsBold</Name>
+      <Variable Type="bool" Name="IsBold" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsItalic</Name>
+      <Variable Type="bool" Name="IsItalic" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -908,32 +522,17 @@
     </State>
     <State>
       <Name>Emphasis</Name>
-      <Variable>
-        <IsFont>true</IsFont>
-        <Type>string</Type>
-        <Name>Font</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
         <Value xsi:type="xsd:string">Arial</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>FontSize</Name>
+      <Variable Type="int" Name="FontSize" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:int">14</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsBold</Name>
+      <Variable Type="bool" Name="IsBold" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsItalic</Name>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -955,32 +554,17 @@
     </State>
     <State>
       <Name>Strong</Name>
-      <Variable>
-        <IsFont>true</IsFont>
-        <Type>string</Type>
-        <Name>Font</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
         <Value xsi:type="xsd:string">Arial</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>FontSize</Name>
+      <Variable Type="int" Name="FontSize" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:int">14</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsBold</Name>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsItalic</Name>
+      <Variable Type="bool" Name="IsItalic" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1002,33 +586,17 @@
     </State>
     <State>
       <Name>H3</Name>
-      <Variable>
-        <IsFont>true</IsFont>
-        <Type>string</Type>
-        <Name>Font</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
         <Value xsi:type="xsd:string">Arial</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>FontSize</Name>
+      <Variable Type="int" Name="FontSize" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:int">16</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsBold</Name>
+      <Variable Type="bool" Name="IsBold" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsItalic</Name>
+      <Variable Type="bool" Name="IsItalic" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1050,33 +618,17 @@
     </State>
     <State>
       <Name>H2</Name>
-      <Variable>
-        <IsFont>true</IsFont>
-        <Type>string</Type>
-        <Name>Font</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
         <Value xsi:type="xsd:string">Arial</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>FontSize</Name>
+      <Variable Type="int" Name="FontSize" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:int">18</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsBold</Name>
+      <Variable Type="bool" Name="IsBold" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsItalic</Name>
+      <Variable Type="bool" Name="IsItalic" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1098,33 +650,17 @@
     </State>
     <State>
       <Name>H1</Name>
-      <Variable>
-        <IsFont>true</IsFont>
-        <Type>string</Type>
-        <Name>Font</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
         <Value xsi:type="xsd:string">Arial</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>FontSize</Name>
+      <Variable Type="int" Name="FontSize" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:int">22</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsBold</Name>
+      <Variable Type="bool" Name="IsBold" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsItalic</Name>
+      <Variable Type="bool" Name="IsItalic" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1146,33 +682,17 @@
     </State>
     <State>
       <Name>Title</Name>
-      <Variable>
-        <IsFont>true</IsFont>
-        <Type>string</Type>
-        <Name>Font</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
         <Value xsi:type="xsd:string">Arial</Value>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>FontSize</Name>
+      <Variable Type="int" Name="FontSize" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:int">28</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsBold</Name>
+      <Variable Type="bool" Name="IsBold" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IsItalic</Name>
+      <Variable Type="bool" Name="IsItalic" Category="Font" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-        <Category>Font</Category>
-        <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>

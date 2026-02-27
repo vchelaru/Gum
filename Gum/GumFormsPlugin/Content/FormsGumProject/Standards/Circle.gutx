@@ -1,166 +1,72 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <StandardElementSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Circle</Name>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>int</Type>
-      <Name>Alpha</Name>
+    <Variable Type="int" Name="Alpha" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Blue</Name>
+    <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>ExposeChildrenEvents</Name>
+    <Variable Type="bool" Name="ExposeChildrenEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Behavior</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Green</Name>
+    <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Guide</Name>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>HasEvents</Name>
+    <Variable Type="string" Name="Guide" Category="Position" SetsValue="true" />
+    <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Behavior</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" SetsValue="true" IsHiddenInPropertyGrid="true">
       <Value xsi:type="xsd:float">16</Value>
-      <SetsValue>true</SetsValue>
-      <IsHiddenInPropertyGrid>true</IsHiddenInPropertyGrid>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IgnoredByParentSize</Name>
+    <Variable Type="bool" Name="IgnoredByParentSize" Category="Parent" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Parent</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsOverrideInCodeGen</Name>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsXamarinFormsControl</Name>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Xamarin Forms</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Parent</Name>
-      <Category>Parent</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Radius</Name>
+    <Variable Type="string" Name="Parent" Category="Parent" SetsValue="true" />
+    <Variable Type="float" Name="Radius" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">60</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Red</Name>
+    <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Rotation</Name>
+    <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="false">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Flip and Rotation</Category>
-      <SetsValue>false</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
-      <Category>States and Visibility</Category>
-      <SetsValue>false</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>Visible</Name>
+    <Variable Type="bool" Name="Visible" Category="States and Visibility" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="float" Name="Width" SetsValue="true" IsHiddenInPropertyGrid="true">
       <Value xsi:type="xsd:float">16</Value>
-      <SetsValue>true</SetsValue>
-      <IsHiddenInPropertyGrid>true</IsHiddenInPropertyGrid>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>X</Name>
+    <Variable Type="float" Name="X" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="XOrigin" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>XUnits</Name>
+    <Variable Type="PositionUnitType" Name="XUnits" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Y</Name>
+    <Variable Type="float" Name="Y" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="YOrigin" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>YUnits</Name>
+    <Variable Type="PositionUnitType" Name="YUnits" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
