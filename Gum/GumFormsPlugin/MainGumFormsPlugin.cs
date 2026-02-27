@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
+using Gum.Logic.FileWatch;
 
 namespace GumFormsPlugin;
 
@@ -30,6 +31,7 @@ internal class MainGumFormsPlugin : PluginBase
     System.Windows.Controls.MenuItem _addFormsMenuItem;
     private readonly FormsFileService _formsFileService;
     private readonly IImportLogic _importLogic;
+    private readonly IFileWatchManager _fileWatchManager;
 
     #endregion
 
@@ -37,6 +39,7 @@ internal class MainGumFormsPlugin : PluginBase
     {
         _formsFileService = new FormsFileService();
         _importLogic = Locator.GetRequiredService<IImportLogic>();
+        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
     }
 
     public override void StartUp()
@@ -110,7 +113,13 @@ internal class MainGumFormsPlugin : PluginBase
         }
         #endregion
 
-        var viewModel = new AddFormsViewModel(_formsFileService, _dialogService, _fileCommands, _importLogic, projectState);
+        var viewModel = new AddFormsViewModel(
+            _formsFileService, 
+            _dialogService,
+            _fileCommands, 
+            _importLogic, 
+            projectState,
+            _fileWatchManager);
         _dialogService.Show(viewModel);
     }
 

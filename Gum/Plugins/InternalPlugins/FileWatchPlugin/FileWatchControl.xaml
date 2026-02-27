@@ -9,6 +9,10 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
     <StackPanel>
+        <CheckBox
+            Margin="4,4,4,8"
+            Content="Print File Changes to Output"
+            IsChecked="{Binding PrintFileChangesToOutput}" />
         <TextBlock Text="{Binding WatchFolderInformation}" />
         <TextBlock Text="{Binding NumberOfFilesToFlush}" />
         <TextBlock Text="{Binding TimeToNextFlush}" />

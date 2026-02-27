@@ -31,4 +31,10 @@ public class FileWatchViewModel : ViewModel
         get => Get<string>();
         set => Set(value);
     }
+
+    public bool PrintFileChangesToOutput
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
 }

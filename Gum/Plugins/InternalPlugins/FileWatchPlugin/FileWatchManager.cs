@@ -1,8 +1,10 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.Managers;
 using Gum.Services;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using ToolsUtilities;
@@ -12,10 +14,11 @@ namespace Gum.Logic.FileWatch;
 public interface IFileWatchManager
 {
     IReadOnlyDictionary<FilePath, DateTime> TimedChangesToIgnore { get; }
-    HashSet<FilePath> ChangedFilesWaitingForFlush { get; }
+    IEnumerable<FilePath> ChangedFilesWaitingForFlush { get; }
     bool Enabled { get; }
     IEnumerable<FilePath> CurrentFilePathsWatching { get; }
     TimeSpan TimeToNextFlush { get; }
+    bool PrintFileChangesToOutput { get; set; }
 
     void EnableWithDirectories(HashSet<FilePath> directories);
     void Disable();
@@ -28,8 +31,8 @@ public class FileWatchManager : IFileWatchManager
 {
     #region Fields/Properties
 
-    Dictionary<FilePath, int> changesToIgnore = new ();
-    Dictionary<FilePath, DateTime> timedChangesToIgnore = new ();
+    ConcurrentDictionary<FilePath, int> changesToIgnore = new();
+    ConcurrentDictionary<FilePath, DateTime> timedChangesToIgnore = new();
 
     public IReadOnlyDictionary<FilePath, DateTime> TimedChangesToIgnore => timedChangesToIgnore;
 
@@ -38,19 +41,19 @@ public class FileWatchManager : IFileWatchManager
     /// change to the Gum main system and plugins. If a file is ignored (either
     /// directly or by time) then it should not appear here.
     /// </summary>
-    public HashSet<FilePath> ChangedFilesWaitingForFlush { get; private set; } = new ();
-    List<FilePath> filesCurrentlyFlushing = new List<FilePath>();
+    ConcurrentDictionary<FilePath, byte> _changedFilesWaitingForFlush = new();
+    public IEnumerable<FilePath> ChangedFilesWaitingForFlush => _changedFilesWaitingForFlush.Keys;
 
-    List<FileSystemWatcher> fileSystemWatchers = new ();
+    List<FileSystemWatcher> fileSystemWatchers = new();
     public bool Enabled =>
         fileSystemWatchers.FirstOrDefault()?.EnableRaisingEvents == true;
 
     DateTime LastFileChange;
 
-    object LockObject=new object();
-
     bool IsFlushing;
     private readonly IGuiCommands _guiCommands;
+
+    public bool PrintFileChangesToOutput { get; set; }
 
     public IEnumerable<FilePath> CurrentFilePathsWatching
     {
@@ -91,7 +94,7 @@ public class FileWatchManager : IFileWatchManager
 
             var fileWatcher = CreateFileSystemWatcher();
 
-            // Gum standard is to have a trailing slash, 
+            // Gum standard is to have a trailing slash,
             // but FileSystemWatcher expects no trailing slash:
             var pathToAssign = filePathAsString.Substring(0, filePathAsString.Length - 1);
             try
@@ -171,56 +174,50 @@ public class FileWatchManager : IFileWatchManager
 
     private void HandleFileSystemChange(FilePath fileName)
     {
-        lock (LockObject)
+        bool wasIgnored = TryGetIgnoreFileChange(fileName);
+        string? skipReason = wasIgnored ? "on ignore list" : null;
+
+        if(!wasIgnored)
         {
-            bool wasIgnored = TryGetIgnoreFileChange(fileName);
+            var directoryContainingThis = fileName.GetDirectoryContainingThis();
+            var isFolderConsidered =
+                CurrentFilePathsWatching.Any(item =>
+                    item == directoryContainingThis ||
+                    item.IsRootOf(fileName));
 
-            if(!wasIgnored)
+            if(!isFolderConsidered)
             {
-                var directoryContainingThis = fileName.GetDirectoryContainingThis();
-                var isFolderConsidered = 
-                    CurrentFilePathsWatching.Any(item => 
-                        item == directoryContainingThis || 
-                        item.IsRootOf(fileName));
-
-                if(!isFolderConsidered)
-                {
-                    wasIgnored = true;
-                }
+                wasIgnored = true;
+                skipReason = "directory not watched";
             }
+        }
 
-            if (!wasIgnored)
+        if (wasIgnored)
+        {
+            if (PrintFileChangesToOutput)
             {
-                // shuffle so that changes move to the end:
-                if(ChangedFilesWaitingForFlush.Contains(fileName))
-                {
-                    ChangedFilesWaitingForFlush.Remove(fileName);
-                }
-                ChangedFilesWaitingForFlush.Add(fileName);
-
-                LastFileChange = DateTime.Now;
+                _guiCommands.PrintOutput($"File change skipped ({skipReason}): {fileName}");
             }
+        }
+        else
+        {
+            _changedFilesWaitingForFlush[fileName] = 0;
+            LastFileChange = DateTime.Now;
         }
     }
 
     bool TryGetIgnoreFileChange(FilePath fileName)
     {
-
-
-        if (changesToIgnore.ContainsKey(fileName))
+        if (changesToIgnore.TryGetValue(fileName, out int timesToIgnore))
         {
-            int timesToIgnore = 0;
-            timesToIgnore = changesToIgnore[fileName];
-
-            changesToIgnore[fileName] = System.Math.Max(0, timesToIgnore - 1);
-            if( timesToIgnore > 0)
+            changesToIgnore[fileName] = Math.Max(0, timesToIgnore - 1);
+            if (timesToIgnore > 0)
             {
                 return true;
             }
         }
-        if(timedChangesToIgnore.ContainsKey(fileName))
+        if (timedChangesToIgnore.TryGetValue(fileName, out DateTime timeToIgnoreUntil))
         {
-            DateTime timeToIgnoreUntil = timedChangesToIgnore[fileName];
             if (timeToIgnoreUntil > DateTime.Now)
             {
                 return true;
@@ -230,24 +227,13 @@ public class FileWatchManager : IFileWatchManager
         return false;
     }
 
-
     public void IgnoreNextChangeUntil(FilePath filePath, DateTime? time = null)
     {
         time = time ?? DateTime.Now.AddSeconds(5);
-        lock (LockObject)
-        {
-            if (timedChangesToIgnore.ContainsKey(filePath))
-            {
-                if (time > timedChangesToIgnore[filePath])
-                {
-                    timedChangesToIgnore[filePath] = time.Value;
-                }
-            }
-            else
-            {
-                timedChangesToIgnore.Add(filePath, time.Value);
-            }
-        }
+        timedChangesToIgnore.AddOrUpdate(
+            filePath,
+            time.Value,
+            (key, existing) => time.Value > existing ? time.Value : existing);
     }
 
     public void ClearIgnoredFiles()
@@ -268,20 +254,31 @@ public class FileWatchManager : IFileWatchManager
             return;
         }
         // endif
-        lock (LockObject)
+
+        IsFlushing = true;
+
+        var filesToProcess = _changedFilesWaitingForFlush.Keys.ToList();
+        foreach (var file in filesToProcess)
         {
-            IsFlushing = true;
+            _changedFilesWaitingForFlush.TryRemove(file, out _);
+        }
 
-            filesCurrentlyFlushing.AddRange(ChangedFilesWaitingForFlush);
-            ChangedFilesWaitingForFlush.Clear();
-
-            foreach (var file in filesCurrentlyFlushing)
+        foreach (var file in filesToProcess)
+        {
+            if (PrintFileChangesToOutput)
+            {
+                var stopwatch = Stopwatch.StartNew();
+                FileChangeReactionLogic.Self.ReactToFileChanged(file);
+                stopwatch.Stop();
+                _guiCommands.PrintOutput($"File change processed: {file} (took {stopwatch.ElapsedMilliseconds}ms)");
+            }
+            else
             {
                 FileChangeReactionLogic.Self.ReactToFileChanged(file);
             }
-            filesCurrentlyFlushing.Clear();
-            IsFlushing = false;
         }
+
+        IsFlushing = false;
     }
 
 }

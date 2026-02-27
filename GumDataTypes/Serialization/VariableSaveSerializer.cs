@@ -122,15 +122,23 @@ public static class VariableSaveSerializer
 
     /// <summary>
     /// Reads a file and detects whether it is in compact (v2) format or legacy (v1) format.
-    /// V1 files have a &lt;Type&gt; child element inside &lt;Variable&gt;.
+    /// V1 files serialize VariableSave and InstanceSave properties as child elements.
+    /// V2 files serialize them as XML attributes: &lt;Variable Type="..." Name="..." /&gt;
+    /// or &lt;Instance Name="..." BaseType="..." /&gt;.
+    /// Files with no variables or instances are indistinguishable and default to non-compact.
     /// Returns both the file content and whether it is in compact format.
     /// </summary>
     public static (string content, bool isCompact) ReadAndDetectFormat(string fileName)
     {
         string content = File.ReadAllText(fileName);
-        // v1 files have <Variable> as a child-element opening tag with no attributes.
-        // v2 files have attributes inline: <Variable Type="..." ...>
-        bool isV1 = content.Contains("<Variable>");
-        return (content, !isV1);
+        // Detect v2 by the presence of attribute-style opening tags.
+        // "<Variable " means a VariableSave with inline attributes (e.g. <Variable Type="float" Name="X" />).
+        // "<Instance " / "<InstanceSave " mean compact InstanceSave attributes.
+        // Absence of these markers — including files with no variables or instances at all —
+        // defaults to non-compact so the standard XML deserializer is used.
+        bool isCompact = content.Contains("<Variable ")
+            || content.Contains("<Instance ")
+            || content.Contains("<InstanceSave ");
+        return (content, isCompact);
     }
 }
