@@ -166,6 +166,13 @@ public class ElementRenameChanges
         return details;
     }
 
+    public void ExcludeContainersBeingDeleted(IEnumerable<ElementSave> deletedElements)
+    {
+        var deletedSet = new HashSet<ElementSave>(deletedElements);
+        InstancesWithBaseTypeReference.RemoveAll(pair => deletedSet.Contains(pair.Container));
+        ElementsWithBaseTypeReference.RemoveAll(e => deletedSet.Contains(e));
+    }
+
     public string GetDeleteImpactDetails()
     {
         var details = string.Empty;

@@ -23,7 +23,7 @@ namespace GumToolUnitTests.Managers;
 public class DeleteLogicTests : BaseTestClass
 {
     private readonly AutoMocker _mocker;
-    private readonly IDeleteLogic _deleteLogic;
+    private readonly DeleteLogic _deleteLogic;
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IDialogService> _dialogService;
     private readonly Mock<IGuiCommands> _guiCommands;
@@ -312,6 +312,54 @@ public class DeleteLogicTests : BaseTestClass
         string impactDetails = impactChanges.GetDeleteImpactDetails();
 
         impactDetails.ShouldBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void GetDeleteImpactDetails_WhenContainerIsAlsoBeingDeleted_ReturnsEmpty()
+    {
+        // Arrange: Item contains an instance of ItemContainer.
+        // Deleting ItemContainer alone would warn that Item's instance will become invalid.
+        // But since Item is also being deleted, the warning is irrelevant.
+        var itemContainer = new ComponentSave { Name = "ItemContainer" };
+        var item = new ComponentSave { Name = "Item" };
+        var instance = new InstanceSave { Name = "itemContainerInstance", BaseType = "ItemContainer", ParentContainer = item };
+        item.Instances.Add(instance);
+
+        var impactChanges = new ElementRenameChanges();
+        impactChanges.InstancesWithBaseTypeReference.Add((item, instance));
+
+        impactChanges.ExcludeContainersBeingDeleted([item, itemContainer]);
+
+        impactChanges.GetDeleteImpactDetails().ShouldBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void ShowDeleteDialogMessage_WhenBothElementAndItsContainerAreDeleted_OmitsImpactWarning()
+    {
+        // Arrange: Item contains an instance of ItemContainer.
+        // Deleting only ItemContainer would warn that Item's instance will become invalid.
+        // When both are deleted together, that warning should be suppressed.
+        var itemContainer = new ComponentSave { Name = "ItemContainer" };
+        var item = new ComponentSave { Name = "Item" };
+        var instance = new InstanceSave { Name = "itemContainerInstance", BaseType = "ItemContainer", ParentContainer = item };
+        item.Instances.Add(instance);
+
+        var impactChanges = new ElementRenameChanges();
+        impactChanges.InstancesWithBaseTypeReference.Add((item, instance));
+
+        _referenceFinder
+            .Setup(r => r.GetReferencesToElement(itemContainer, itemContainer.Name))
+            .Returns(impactChanges);
+
+        // Capture the impact text before BuildDeleteDialogMessage mutates impactChanges,
+        // so we can assert it is absent without hardcoding any UI strings.
+        var unfilteredImpact = impactChanges.GetDeleteImpactDetails();
+        unfilteredImpact.ShouldNotBeNullOrEmpty("setup: ItemContainer deletion should have a suppressible warning");
+
+        Array objectsToDelete = new object[] { item, itemContainer };
+        var message = _deleteLogic.BuildDeleteDialogMessage(objectsToDelete);
+
+        message.ShouldNotContain(unfilteredImpact);
     }
 
     private ScreenSave CreateScreenWithInstances(params string[] instanceNames)

@@ -34,7 +34,7 @@ namespace Gum.Managers;
 
 public interface ITreeNode
 {
-    object Tag { get; }
+    object? Tag { get; }
     FilePath GetFullFilePath();
     ITreeNode? Parent { get; }
     string Text { get; }
@@ -631,7 +631,7 @@ public class DragDropManager : IDragDropManager
 
     #region General Functions
 
-    public bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
+    public bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode? targetNode, int index)
     {
         if (targetNode == null) return false;
 

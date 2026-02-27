@@ -373,7 +373,23 @@ public class DeleteLogic : IDeleteLogic
 
         optionsWindow = new DeleteOptionsWindow();
         optionsWindow.Title = titleText;
-        optionsWindow.Message = "Are you sure you want to delete:\n";
+        optionsWindow.Message = BuildDeleteDialogMessage(objectsToDelete, instancesFromBase);
+        optionsWindow.ObjectsToDelete = objectsToDelete;
+
+        // do this in Loaded so it has height
+        //_guiCommands.MoveToCursor(optionsWindow);
+
+        _pluginManager.ShowDeleteDialog(optionsWindow, objectsToDelete);
+
+        var result = optionsWindow.ShowDialog();
+
+
+        return result;
+    }
+
+    internal string BuildDeleteDialogMessage(Array objectsToDelete, List<InstanceSave>? instancesFromBase = null)
+    {
+        var message = "Are you sure you want to delete:\n";
 
         // Collect the short name of every item, then find which names appear more than once
         var names = new List<string>();
@@ -389,18 +405,18 @@ public class DeleteLogic : IDeleteLogic
             if (item != null)
             {
                 // I tried a tab, but the spacing was too big
-                optionsWindow.Message += $"  • {GetItemDisplayName(item, duplicateNames)}\n";
+                message += $"  • {GetItemDisplayName(item, duplicateNames)}\n";
             }
         }
 
         if (instancesFromBase != null && instancesFromBase.Count > 0)
         {
-            optionsWindow.Message += "\nThe following will NOT be deleted (defined in base):";
+            message += "\nThe following will NOT be deleted (defined in base):";
             foreach (var instance in instancesFromBase)
             {
-                optionsWindow.Message += $"\n  • {instance.Name}";
+                message += $"\n  • {instance.Name}";
             }
-            optionsWindow.Message += "\n";
+            message += "\n";
         }
 
         var elementItems = objectsToDelete.OfType<ElementSave>().ToList();
@@ -408,32 +424,23 @@ public class DeleteLogic : IDeleteLogic
         foreach (var element in elementItems)
         {
             ElementRenameChanges impactChanges = _referenceFinder.GetReferencesToElement(element, element.Name);
+            impactChanges.ExcludeContainersBeingDeleted(elementItems);
             string impactDetails = impactChanges.GetDeleteImpactDetails();
             if (!string.IsNullOrEmpty(impactDetails))
             {
-                optionsWindow.Message += "\n";
+                message += "\n";
                 if (multipleElements)
                 {
-                    optionsWindow.Message += $"\nImpact of deleting {element.Name}:\n{impactDetails}";
+                    message += $"\nImpact of deleting {element.Name}:\n{impactDetails}";
                 }
                 else
                 {
-                    optionsWindow.Message += $"\n{impactDetails}";
+                    message += $"\n{impactDetails}";
                 }
             }
         }
 
-        optionsWindow.ObjectsToDelete = objectsToDelete;
-
-        // do this in Loaded so it has height
-        //_guiCommands.MoveToCursor(optionsWindow);
-
-        _pluginManager.ShowDeleteDialog(optionsWindow, objectsToDelete);
-
-        var result = optionsWindow.ShowDialog();
-
-
-        return result;
+        return message;
     }
 
     private static string GetShortName(object item)
