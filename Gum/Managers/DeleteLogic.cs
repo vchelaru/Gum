@@ -128,10 +128,10 @@ public class DeleteLogic : IDeleteLogic
                     var siblings = selectedInstance.GetSiblingsIncludingThis();
                     var parentInstance = selectedInstance.GetParentInstance();
 
-                    // Fire DeleteConfirm before removal so plugins can still find
+                    // Fire DeleteConfirmed before removal so plugins can still find
                     // children via parent reference variables (e.g. "Child.Parent = thisInstance").
                     // RemoveInstanceFromElement destroys those references, breaking GetChildrenOf.
-                    _pluginManager.DeleteConfirm(optionsWindow, objectsDeleted);
+                    _pluginManager.DeleteConfirmed(optionsWindow, objectsDeleted);
                     objectsDeleted = null; // prevent double-firing at the end of DoDeletingLogic
 
                     var selectedElement = selectedElements.FirstOrDefault();
@@ -230,7 +230,7 @@ public class DeleteLogic : IDeleteLogic
 
         if (shouldDelete)
         {
-            _pluginManager.DeleteConfirm(optionsWindow, objectsDeleted);
+            _pluginManager.DeleteConfirmed(optionsWindow, objectsDeleted);
         }
     }
 
@@ -278,7 +278,7 @@ public class DeleteLogic : IDeleteLogic
         // 1. Notify plugins before removal so they can still find children via
         //    parent reference variables (e.g. "Child.Parent = thisInstance").
         //    RemoveInstanceFromElement destroys those references, breaking GetChildrenOf.
-        _pluginManager.DeleteConfirm(optionsWindow, combinedArray);
+        _pluginManager.DeleteConfirmed(optionsWindow, combinedArray);
 
         // 2. Remove instances (skip if parent element/behavior is also being deleted)
         foreach (var instance in deletableInstances)

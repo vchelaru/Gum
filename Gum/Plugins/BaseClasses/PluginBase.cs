@@ -45,7 +45,7 @@ public abstract class PluginBase : IPlugin
     public event Action<ElementSave>? AfterElementSave;
     public event Action<ElementSave>? Export;
     public event Action<DeleteOptionsWindow, Array>? DeleteOptionsWindowShow;
-    public event Action<DeleteOptionsWindow, Array>? DeleteConfirm;
+    public event Action<DeleteOptionsWindow, Array>? DeleteConfirmed;
 
     public event Action<ElementSave>? ElementAdd;
     public event Action<ElementSave>? ElementDelete;
@@ -372,8 +372,8 @@ public abstract class PluginBase : IPlugin
     public void CallDeleteOptionsWindowShow(DeleteOptionsWindow optionsWindow, Array objectsToDelete) =>
             DeleteOptionsWindowShow?.Invoke(optionsWindow, objectsToDelete);
 
-    public void CallDeleteConfirm(DeleteOptionsWindow optionsWindow, Array deletedObjects) =>
-        DeleteConfirm?.Invoke(optionsWindow, deletedObjects);
+    public void CallDeleteConfirmed(DeleteOptionsWindow optionsWindow, Array deletedObjects) =>
+        DeleteConfirmed?.Invoke(optionsWindow, deletedObjects);
     
     public void CallElementAdd(ElementSave element) =>
         ElementAdd?.Invoke(element);

@@ -127,7 +127,7 @@ public class MainStateAnimationPlugin : PluginBase
         this.GetDeleteStateCategoryResponse = HandleGetDeleteStateCategoryResponse;
 
         this.DeleteOptionsWindowShow += _elementDeleteService.HandleDeleteOptionsWindowShow;
-        this.DeleteConfirm += _elementDeleteService.HandleConfirmDelete;
+        this.DeleteConfirmed += _elementDeleteService.HandleConfirmDelete;
 
         this.GetAllErrors += HandleGetAllErrors;
     }

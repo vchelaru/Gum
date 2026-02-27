@@ -268,8 +268,8 @@ public class PluginManager : IPluginManager
     public void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete) =>
         CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsWindowShow(window, objectsToDelete));
 
-    public void DeleteConfirm(DeleteOptionsWindow window, Array objectsToDelete) => 
-        CallMethodOnPlugin(plugin => plugin.CallDeleteConfirm(window, objectsToDelete));
+    public void DeleteConfirmed(DeleteOptionsWindow window, Array objectsToDelete) =>
+        CallMethodOnPlugin(plugin => plugin.CallDeleteConfirmed(window, objectsToDelete));
 
     public void ElementRename(ElementSave elementSave, string oldName) =>
         CallMethodOnPlugin(plugin => plugin.CallElementRename(elementSave, oldName));
