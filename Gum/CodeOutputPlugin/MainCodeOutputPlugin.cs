@@ -50,6 +50,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly CodeGenerator _codeGenerator;
     private readonly ParentSetLogic _parentSetLogic;
     private readonly IFileCommands _fileCommands;
+    private readonly CodeOutputProjectSettingsManager _codeOutputProjectSettingsManager;
 
     PluginTab pluginTab = default!;
 
@@ -93,6 +94,9 @@ public class MainCodeOutputPlugin : PluginBase
 
         _messenger = Locator.GetRequiredService<IMessenger>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
+
+        _codeOutputProjectSettingsManager = new CodeOutputProjectSettingsManager(
+            Locator.GetRequiredService<IOutputManager>());
 
         _parentSetLogic = new ParentSetLogic(_codeGenerator);
 
@@ -191,7 +195,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleProjectLoaded(GumProjectSave project)
     {
-        codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
+        codeOutputProjectSettings = _codeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
         HandleElementSelected(null);
     }
@@ -452,7 +456,7 @@ public class MainCodeOutputPlugin : PluginBase
                 break;
             case nameof(viewModel.InheritanceLocation):
                 codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
-                CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
+                _codeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
                 break;
             default:
                 RefreshCodeDisplay();
@@ -469,7 +473,7 @@ public class MainCodeOutputPlugin : PluginBase
 
             RefreshCodeDisplay();
         }
-        CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
+        _codeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
     }
 
     private void HandleGenerateCodeButtonClicked()

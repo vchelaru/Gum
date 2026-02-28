@@ -1,4 +1,5 @@
 ﻿using CodeOutputPlugin.Models;
+using Gum.Managers;
 using Gum.Services;
 using Gum.ToolStates;
 using Newtonsoft.Json;
@@ -11,21 +12,28 @@ using ToolsUtilities;
 
 namespace CodeOutputPlugin.Manager;
 
-public static class CodeOutputProjectSettingsManager
+public class CodeOutputProjectSettingsManager
 {
-    public static void WriteSettingsForProject(CodeOutputProjectSettings settings)
+    private readonly IOutputManager _outputManager;
+
+    public CodeOutputProjectSettingsManager(IOutputManager outputManager)
+    {
+        _outputManager = outputManager;
+    }
+
+    public void WriteSettingsForProject(CodeOutputProjectSettings settings)
     {
         var fileName = GetProjectCodeSettingsFile();
         if(fileName != null)
         {
-            var serialized = JsonConvert.SerializeObject(settings, 
+            var serialized = JsonConvert.SerializeObject(settings,
                 // This makes debugging a little easier:
                 Formatting.Indented);
             System.IO.File.WriteAllText(fileName.FullPath, serialized);
         }
     }
 
-    private static FilePath? GetProjectCodeSettingsFile()
+    private FilePath? GetProjectCodeSettingsFile()
     {
         var projectState = Locator.GetRequiredService<IProjectState>();
         if(projectState.ProjectDirectory == null)
@@ -44,17 +52,25 @@ public static class CodeOutputProjectSettingsManager
         }
     }
 
-    public static CodeOutputProjectSettings CreateOrLoadSettingsForProject()
+    public CodeOutputProjectSettings CreateOrLoadSettingsForProject()
     {
-        CodeOutputProjectSettings toReturn;
+        CodeOutputProjectSettings? toReturn = null;
         var fileName = GetProjectCodeSettingsFile();
-        if(fileName?.Exists() == true)
+        try
         {
-            var contents = System.IO.File.ReadAllText(fileName.FullPath);
+            if(fileName?.Exists() == true)
+            {
+                var contents = System.IO.File.ReadAllText(fileName.FullPath);
 
-            toReturn = JsonConvert.DeserializeObject<CodeOutputProjectSettings>(contents)!;
+                toReturn = JsonConvert.DeserializeObject<CodeOutputProjectSettings>(contents)!;
+            }
         }
-        else
+        catch(Exception e)
+        {
+            _outputManager.AddError($"Error loading project code settings from {fileName}: {e.Message}");
+        }
+
+        if(toReturn == null)
         {
             toReturn = new CodeOutputProjectSettings();
 
