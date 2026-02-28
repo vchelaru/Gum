@@ -344,12 +344,14 @@ public class SpriteRenderer
         clone.AddressU = source.AddressU;
         clone.AddressV = source.AddressV;
         clone.AddressW = source.AddressW;
-        clone.BorderColor = source.BorderColor;
         clone.Filter = source.Filter;
         clone.MaxAnisotropy = source.MaxAnisotropy;
         clone.MaxMipLevel = source.MaxMipLevel;
+#if !FNA
+        clone.BorderColor = source.BorderColor;
         clone.ComparisonFunction = source.ComparisonFunction;
         clone.FilterMode = source.FilterMode;
+#endif
         clone.MipMapLevelOfDetailBias = -64;
         return clone;
     }
