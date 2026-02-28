@@ -352,7 +352,14 @@ public class SpriteRenderer
         clone.ComparisonFunction = source.ComparisonFunction;
         clone.FilterMode = source.FilterMode;
 #endif
+
+#if KNI
+        // KNI seems to throw exceptions on larger negative values, so we'll use a smaller value for the bias.
+        // 32 throws an exception, but 16 works fine, so we'll go with that.
+        clone.MipMapLevelOfDetailBias = -16;
+#else
         clone.MipMapLevelOfDetailBias = -64;
+#endif
         return clone;
     }
 
