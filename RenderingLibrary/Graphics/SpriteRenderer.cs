@@ -34,6 +34,11 @@ public class SpriteRenderer
     RasterizerState scissorTestEnabled;
     RasterizerState scissorTestDisabled;
 
+    SamplerState linearWrapWithMipBias;
+    SamplerState pointWrapWithMipBias;
+    SamplerState linearClampWithMipBias;
+    SamplerState pointClampWithMipBias;
+
     BasicEffect basicEffect;
 
     // This is used by GumBatch to force a matrix for all calls in its own Begin/End pair
@@ -46,7 +51,6 @@ public class SpriteRenderer
             return mSpriteBatch.LastFrameDrawStates;
         }
     }
-
 
     #endregion
 
@@ -65,6 +69,7 @@ public class SpriteRenderer
         mSpriteBatch = new SpriteBatchStack(graphicsDevice);
 
         CreateRasterizerStates();
+        CreateSamplerStates();
 
         CreateBasicEffect(graphicsDevice);
     }
@@ -323,31 +328,40 @@ public class SpriteRenderer
 
     private Microsoft.Xna.Framework.Graphics.SamplerState GetSamplerState(RenderStateVariables renderStates)
     {
-        SamplerState samplerState;
-
         if (renderStates.Wrap)
         {
-            if (renderStates.Filtering)
-            {
-                samplerState = SamplerState.LinearWrap;
-            }
-            else
-            {
-                samplerState = SamplerState.PointWrap;
-            }
+            return renderStates.Filtering ? linearWrapWithMipBias : pointWrapWithMipBias;
         }
         else
         {
-            if (renderStates.Filtering)
-            {
-                samplerState = SamplerState.LinearClamp;
-            }
-            else
-            {
-                samplerState = SamplerState.PointClamp;
-            }
+            return renderStates.Filtering ? linearClampWithMipBias : pointClampWithMipBias;
         }
-        return samplerState;
+    }
+
+    private SamplerState CloneSamplerStateWithMipBias(SamplerState source)
+    {
+        var clone = new SamplerState();
+        clone.AddressU = source.AddressU;
+        clone.AddressV = source.AddressV;
+        clone.AddressW = source.AddressW;
+        clone.Filter = source.Filter;
+        clone.MaxAnisotropy = source.MaxAnisotropy;
+        clone.MaxMipLevel = source.MaxMipLevel;
+#if !FNA
+        clone.BorderColor = source.BorderColor;
+        clone.ComparisonFunction = source.ComparisonFunction;
+        clone.FilterMode = source.FilterMode;
+#endif
+        clone.MipMapLevelOfDetailBias = -64;
+        return clone;
+    }
+
+    private void CreateSamplerStates()
+    {
+        linearWrapWithMipBias  = CloneSamplerStateWithMipBias(SamplerState.LinearWrap);
+        pointWrapWithMipBias   = CloneSamplerStateWithMipBias(SamplerState.PointWrap);
+        linearClampWithMipBias = CloneSamplerStateWithMipBias(SamplerState.LinearClamp);
+        pointClampWithMipBias  = CloneSamplerStateWithMipBias(SamplerState.PointClamp);
     }
 
 
