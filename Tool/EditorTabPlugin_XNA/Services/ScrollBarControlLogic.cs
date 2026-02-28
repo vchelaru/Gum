@@ -6,7 +6,9 @@ using Gum.Controls;
 
 namespace FlatRedBall.SpecializedXnaControls;
 
+#pragma warning disable CA1001 // Types that own disposable fields should be disposable, this is never disposed
 public class ScrollBarControlLogic
+#pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     #region Fields
 

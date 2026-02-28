@@ -836,11 +836,12 @@ public class Renderer : IRenderer
             int height = System.Math.Max(0, bottom - top);
 
             // ScissorRectangles are relative to the viewport in Gum, so we need to adjust for that:
-            left += this.GraphicsDevice.Viewport.X;
-            right += this.GraphicsDevice.Viewport.X;
+            // In updating, no they are not, it causes problems in both FRB and MonoGame Gum, so why are these adjustments here?
+            //left += this.GraphicsDevice.Viewport.X;
+            //right += this.GraphicsDevice.Viewport.X;
 
-            top += this.GraphicsDevice.Viewport.Y;
-            bottom += this.GraphicsDevice.Viewport.Y;
+            //top += this.GraphicsDevice.Viewport.Y;
+            //bottom += this.GraphicsDevice.Viewport.Y;
 
             Rectangle thisRectangle = new Rectangle(
                 left,
