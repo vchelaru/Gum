@@ -907,7 +907,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items.Add("Item 1");
 
         bool eventFired = false;
-        SelectionChangedEventArgs capturedArgs = null;
+        SelectionChangedEventArgs? capturedArgs = null;
 
         listBox.SelectionChanged += (sender, args) =>
         {
@@ -937,7 +937,7 @@ public class ListBoxTests : BaseTestClass
         listBox.SelectedItems.Add("Item 0");
 
         bool eventFired = false;
-        SelectionChangedEventArgs capturedArgs = null;
+        SelectionChangedEventArgs? capturedArgs = null;
 
         listBox.SelectionChanged += (sender, args) =>
         {

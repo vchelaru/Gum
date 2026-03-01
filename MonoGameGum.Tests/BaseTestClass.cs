@@ -34,8 +34,10 @@ public class BaseTestClass : IDisposable
 
     public virtual void Dispose()
     {
+        GraphicalUiElement.IsAllLayoutSuspended = false;
         GraphicalUiElement.CanvasWidth = 800;
         GraphicalUiElement.CanvasHeight = 600;
+        GraphicalUiElement.GlobalFontScale = 1;
 
         FrameworkElement.KeyboardsForUiControl.Clear();
         FrameworkElement.ClickCombos.Clear();
@@ -85,7 +87,6 @@ public class BaseTestClass : IDisposable
 
         FileManager.CustomGetStreamFromFile = null;
 
-        GraphicalUiElement.GlobalFontScale = 1;
         RenderingLibrary.Graphics.Text.Customizations.Clear();
     }
 }
