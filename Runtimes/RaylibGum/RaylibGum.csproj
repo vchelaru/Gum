@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.raylib</PackageId>
-		<Version>2026.2.23.1</Version>
+		<Version>2026.3.1.1</Version>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
