@@ -1108,11 +1108,20 @@ public class ListBox : ItemsControl, IInputReceiver
     #region Collection Changed
 
     bool _suppressCollectionChangedToBase = false;
+    bool _isAddingFromItemsCollection = false;
     protected override void HandleItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
         if(_suppressCollectionChangedToBase == false)
         {
-            base.HandleItemsCollectionChanged(sender, e);
+            _isAddingFromItemsCollection = e.Action == NotifyCollectionChangedAction.Add;
+            try
+            {
+                base.HandleItemsCollectionChanged(sender, e);
+            }
+            finally
+            {
+                _isAddingFromItemsCollection = false;
+            }
         }
 
         // Handle removal of selected items from the Items collection
@@ -1167,15 +1176,20 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             ListBoxItemsInternal.Insert(newItemIndex, listBoxItem);
             listBoxItem.AssignListBoxEvents(
-                HandleItemSelected, 
-                HandleItemFocused, 
-                HandleListBoxItemPushed, 
+                HandleItemSelected,
+                HandleItemFocused,
+                HandleListBoxItemPushed,
                 HandleListBoxItemClicked,
                 HandleListBoxItemDragging);
             if(this.IsEnabled == false)
             {
                 // so this appears disabled:
                 newItem.UpdateState();
+            }
+
+            if (!_isAddingFromItemsCollection && !Items.Contains(listBoxItem))
+            {
+                Items.Insert(newItemIndex, listBoxItem);
             }
         }
     }

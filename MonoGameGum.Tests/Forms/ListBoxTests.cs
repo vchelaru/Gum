@@ -104,6 +104,19 @@ public class ListBoxTests : BaseTestClass
     #endregion
 
     [Fact]
+    public void InnerPanel_AddListBoxItemVisual_SelectionShouldWork()
+    {
+        ListBox listBox = new();
+        ListBoxItem listBoxItem = new();
+
+        listBox.InnerPanel.Children.Add(listBoxItem.Visual);
+
+        listBoxItem.IsSelected = true;
+
+        listBox.SelectedObject.ShouldBe(listBoxItem);
+    }
+
+    [Fact]
     public void InnerPanel_AddListBoxItemVisual_ShouldBeReflectedInItems()
     {
         ListBox listBox = new();
@@ -112,7 +125,40 @@ public class ListBoxTests : BaseTestClass
         listBox.InnerPanel.Children.Add(listBoxItem.Visual);
 
         listBox.ListBoxItems.Count.ShouldBe(1);
-        listBox.Items.Count.ShouldBe(1); // This should fail - Items is not updated when adding directly to InnerPanel
+        listBox.Items.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void InnerPanel_AddListBoxItemVisual_ThenRemoveViaItems_ShouldSyncAllCollections()
+    {
+        ListBox listBox = new();
+        ListBoxItem listBoxItem = new();
+
+        listBox.InnerPanel.Children.Add(listBoxItem.Visual);
+        listBox.Items.Count.ShouldBe(1);
+
+        listBox.Items.Remove(listBoxItem);
+
+        listBox.Items.Count.ShouldBe(0);
+        listBox.ListBoxItems.Count.ShouldBe(0);
+        listBox.InnerPanel.Children.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void InnerPanel_AddMultipleListBoxItemVisuals_CountsShouldStayInSync()
+    {
+        ListBox listBox = new();
+        ListBoxItem item0 = new();
+        ListBoxItem item1 = new();
+        ListBoxItem item2 = new();
+
+        listBox.InnerPanel.Children.Add(item0.Visual);
+        listBox.InnerPanel.Children.Add(item1.Visual);
+        listBox.InnerPanel.Children.Add(item2.Visual);
+
+        listBox.Items.Count.ShouldBe(3);
+        listBox.ListBoxItems.Count.ShouldBe(3);
+        listBox.InnerPanel.Children.Count.ShouldBe(3);
     }
 
     [Fact]
@@ -255,6 +301,35 @@ public class ListBoxTests : BaseTestClass
         {
             innerPanel.Children[i].ShouldBe(listBox.ListBoxItems[i].Visual);
         }
+    }
+
+    [Fact]
+    public void Items_AssignTypedCollection_ShouldSyncListBoxItems()
+    {
+        // Typed ObservableCollection<string> assigned before items are added
+        var items = new ObservableCollection<string>();
+        ListBox listBox = new();
+        listBox.Items = items;
+
+        items.Add("Item 0");
+        items.Add("Item 1");
+        items.Add("Item 2");
+
+        listBox.ListBoxItems.Count.ShouldBe(3);
+        listBox.InnerPanel.Children.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Items_AssignTypedCollectionWithExistingData_ShouldSyncListBoxItems()
+    {
+        // Typed ObservableCollection<string> pre-populated before assignment
+        var items = new ObservableCollection<string> { "Item 0", "Item 1", "Item 2" };
+        ListBox listBox = new();
+
+        listBox.Items = items;
+
+        listBox.ListBoxItems.Count.ShouldBe(3);
+        listBox.InnerPanel.Children.Count.ShouldBe(3);
     }
 
     [Fact]

@@ -418,9 +418,11 @@ public class ItemsControl : ScrollViewer
 
                         }
 
-                        InnerPanel?.Children.Insert(index, newVisual);
-
-                        newVisual.Parent = InnerPanel;
+                        if (newVisual.Parent != InnerPanel)
+                        {
+                            InnerPanel?.Children.Insert(index, newVisual);
+                            newVisual.Parent = InnerPanel;
+                        }
                         // handled by the panel being updated:
                         //HandleCollectionNewItemCreated(newItem, index);
 
