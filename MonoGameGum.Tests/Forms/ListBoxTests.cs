@@ -18,6 +18,8 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class ListBoxTests : BaseTestClass
 {
+    #region Children
+
     [Fact]
     public void Children_Containers_ShouldNotHaveEvents()
     {
@@ -37,45 +39,6 @@ public class ListBoxTests : BaseTestClass
         }
     }
 
-    [Fact]
-    public void IsEnabled_ShouldSetListBoxItemsDisable_IfSetToFalse()
-    {
-        bool didSet = false;
-        ListBoxItem listBoxItem = new ();
-        var disabledState = listBoxItem.GetState(FrameworkElement.DisabledStateName);
-
-        disabledState.Clear();
-        disabledState.Apply = () =>
-        {
-            didSet = true;
-        };
-
-        ListBox listBox = new ListBox();
-        listBox.Items.Add(listBoxItem);
-        didSet.ShouldBeFalse();
-        listBox.IsEnabled = false;
-        didSet.ShouldBeTrue();
-
-    }
-
-    [Fact]
-    public void IsEnabled_ShouldSetListBoxItemAfterDisabled_IfSetToFalse()
-    {
-        bool didSet = false;
-        ListBoxItem listBoxItem = new();
-        var disabledState = listBoxItem.GetState(FrameworkElement.DisabledStateName);
-        disabledState.Clear();
-        disabledState.Apply = () =>
-        {
-            didSet = true;
-        };
-
-        ListBox listBox = new ListBox();
-        listBox.IsEnabled = false;
-        didSet.ShouldBeFalse();
-        listBox.Items.Add(listBoxItem);
-        didSet.ShouldBeTrue();
-    }
 
     [Fact]
     public void Click_ShouldNotSelect_IfDisabled()
@@ -136,6 +99,60 @@ public class ListBoxTests : BaseTestClass
             throw new Exception(diagnostics);
         }
 
+    }
+
+    #endregion
+
+    [Fact]
+    public void InnerPanel_AddListBoxItemVisual_ShouldBeReflectedInItems()
+    {
+        ListBox listBox = new();
+        ListBoxItem listBoxItem = new();
+
+        listBox.InnerPanel.Children.Add(listBoxItem.Visual);
+
+        listBox.ListBoxItems.Count.ShouldBe(1);
+        listBox.Items.Count.ShouldBe(1); // This should fail - Items is not updated when adding directly to InnerPanel
+    }
+
+    [Fact]
+    public void IsEnabled_ShouldSetListBoxItemsDisable_IfSetToFalse()
+    {
+        bool didSet = false;
+        ListBoxItem listBoxItem = new();
+        var disabledState = listBoxItem.GetState(FrameworkElement.DisabledStateName);
+
+        disabledState.Clear();
+        disabledState.Apply = () =>
+        {
+            didSet = true;
+        };
+
+        ListBox listBox = new ListBox();
+        listBox.Items.Add(listBoxItem);
+        didSet.ShouldBeFalse();
+        listBox.IsEnabled = false;
+        didSet.ShouldBeTrue();
+
+    }
+
+    [Fact]
+    public void IsEnabled_ShouldSetListBoxItemAfterDisabled_IfSetToFalse()
+    {
+        bool didSet = false;
+        ListBoxItem listBoxItem = new();
+        var disabledState = listBoxItem.GetState(FrameworkElement.DisabledStateName);
+        disabledState.Clear();
+        disabledState.Apply = () =>
+        {
+            didSet = true;
+        };
+
+        ListBox listBox = new ListBox();
+        listBox.IsEnabled = false;
+        didSet.ShouldBeFalse();
+        listBox.Items.Add(listBoxItem);
+        didSet.ShouldBeTrue();
     }
 
     [Fact]
@@ -1111,6 +1128,8 @@ public class ListBoxTests : BaseTestClass
 
     #endregion
 
+    #region Setup Methods
+
     private static Mock<ICursor> SetupForPush()
     {
         Mock<ICursor> mockCursor = new();
@@ -1210,4 +1229,6 @@ public class ListBoxTests : BaseTestClass
 
         return mockCursor;
     }
+
+    #endregion
 }
