@@ -1,5 +1,7 @@
 # Migrating to 2026 February
 
+## Introduction
+
 This page discusses breaking changes and other considerations when migrating from `2026 January` to `2026 February` . Note that due to last-minute bug fixes, the version was released on March 1.
 
 ## Upgrading Gum Tool
