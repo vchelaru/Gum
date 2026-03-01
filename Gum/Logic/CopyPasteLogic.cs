@@ -809,11 +809,23 @@ public class CopyPasteLogic : ICopyPasteLogic
                     {
                         newParentName = desiredParentInstance.Name;
 
-                        var childName = ObjectFinder.Self.GetDefaultChildName(desiredParentInstance, selectedState.SelectedStateSave);
-
-                        if (!string.IsNullOrEmpty(childName))
+                        // If the source instance's original parent was a dotted path rooted at
+                        // this same instance (e.g. "ComboBoxInstance.InnerPanelInstance"), preserve
+                        // that suffix. Otherwise fall back to GetDefaultChildName so that pasting
+                        // into a new parent still picks up its default sub-container.
+                        if (copiedParentMap.TryGetValue(sourceInstance.Name, out var originalParentPath) &&
+                            originalParentPath.StartsWith(desiredParentInstance.Name + "."))
                         {
-                            newParentName += "." + childName;
+                            newParentName += originalParentPath.Substring(desiredParentInstance.Name.Length);
+                        }
+                        else
+                        {
+                            var childName = ObjectFinder.Self.GetDefaultChildName(desiredParentInstance, selectedState.SelectedStateSave);
+
+                            if (!string.IsNullOrEmpty(childName))
+                            {
+                                newParentName += "." + childName;
+                            }
                         }
                     }
 
@@ -936,10 +948,17 @@ public class CopyPasteLogic : ICopyPasteLogic
             return element;
         }
 
+        // When the parent is a dotted path (e.g. "ComboBoxInstance.InnerPanelInstance"),
+        // the root segment is the top-level instance name. The suffix is handled separately
+        // when building the parent variable value during paste.
+        var parentInstanceName = parentName.Contains(".")
+            ? parentName.Substring(0, parentName.IndexOf('.'))
+            : parentName;
+
         // Try element first (works for copy), then copied instances (needed for cut
         // where the parent was also removed from the element)
-        return (object?)element.GetInstance(parentName)
-            ?? instancesToCopy.FirstOrDefault(item => item.Name == parentName)
+        return (object?)element.GetInstance(parentInstanceName)
+            ?? instancesToCopy.FirstOrDefault(item => item.Name == parentInstanceName)
             ?? (object)element;
     }
 

@@ -635,6 +635,48 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void OnPaste_InstanceWithDottedSubInstanceParent_InDifferentScreen_ShouldPreserveHierarchy()
+    {
+        /*
+         * Screen1:
+         *   ComboBoxInstance
+         *   ListBoxItemInstance (Parent = "ComboBoxInstance.InnerPanelInstance")
+         *
+         * Copy ComboBoxInstance (which recursively includes ListBoxItemInstance because its
+         * Parent starts with "ComboBoxInstance.") and paste into Screen2.
+         *
+         * Expected Screen2:
+         *   Instance1 (from CreateDefaultScreen)
+         *   ComboBoxInstance
+         *   ListBoxItemInstance (Parent = "ComboBoxInstance.InnerPanelInstance")
+         */
+
+        ScreenSave screen1 = CreateDefaultScreen();
+        screen1.Name = "Screen1";
+        var comboBoxInstance = screen1.Instances[0];
+        comboBoxInstance.Name = "ComboBoxInstance";
+
+        AddChild("ListBoxItemInstance", "ComboBoxInstance.InnerPanelInstance", screen1);
+
+        ScreenSave screen2 = CreateDefaultScreen();
+        screen2.Name = "Screen2";
+
+        SelectInstances(comboBoxInstance);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+
+        SelectElement(screen2);
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen2.Instances.Count.ShouldBe(3, "Instance1 from CreateDefaultScreen plus the 2 pasted instances");
+
+        screen2.DefaultState.GetValue("ListBoxItemInstance.Parent")
+            .ShouldBe("ComboBoxInstance.InnerPanelInstance",
+                "The ListBoxItem's dotted parent path should be preserved in the target screen");
+    }
+
+    [Fact]
     public void OnPaste_MultipleInstances_WithNested_ShouldParentCorrectly()
     {
         /*
