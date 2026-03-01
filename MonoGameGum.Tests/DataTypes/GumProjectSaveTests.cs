@@ -90,7 +90,7 @@ public class GumProjectSaveTests : BaseTestClass
         GumProjectSave project;
         using (var reader = new StringReader(v1Xml))
         {
-            project = (GumProjectSave)deserializer.Deserialize(reader);
+            project = (GumProjectSave)deserializer.Deserialize(reader)!;
         }
 
         project.ScreenReferences.Count.ShouldBe(1);
@@ -112,7 +112,7 @@ public class GumProjectSaveTests : BaseTestClass
         GumProjectSave project;
         using (var reader = new StringReader(v2Xml))
         {
-            project = (GumProjectSave)deserializer.Deserialize(reader);
+            project = (GumProjectSave)deserializer.Deserialize(reader)!;
         }
 
         project.ScreenReferences.Count.ShouldBe(1);

@@ -216,7 +216,7 @@ public class GumFileSerializerTests
         StateSave result;
         using (var reader = new StringReader(xml))
         {
-            result = (StateSave)serializer.Deserialize(reader);
+            result = (StateSave)serializer.Deserialize(reader)!;
         }
 
         result.Name.ShouldBe("Default");
@@ -260,7 +260,7 @@ public class GumFileSerializerTests
         ScreenSave screen;
         using (var reader = new StringReader(v2Xml))
         {
-            screen = (ScreenSave)serializer.Deserialize(reader);
+            screen = (ScreenSave)serializer.Deserialize(reader)!;
         }
 
         screen.Instances.Count.ShouldBe(1);
@@ -286,7 +286,7 @@ public class GumFileSerializerTests
         StateSave result;
         using (var reader = new StringReader(xml))
         {
-            result = (StateSave)standardSerializer.Deserialize(reader);
+            result = (StateSave)standardSerializer.Deserialize(reader)!;
         }
 
         result.Name.ShouldBe("Default");
@@ -312,7 +312,7 @@ public class GumFileSerializerTests
         ScreenSave screen;
         using (var reader = new StringReader(mixedXml))
         {
-            screen = (ScreenSave)serializer.Deserialize(reader);
+            screen = (ScreenSave)serializer.Deserialize(reader)!;
         }
 
         screen.Instances.Count.ShouldBe(1);
