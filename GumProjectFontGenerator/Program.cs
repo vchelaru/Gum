@@ -22,7 +22,8 @@ internal class Program
         try
         {
             var projectName = args[0];
-            if(!System.IO.File.Exists(projectName))
+
+            if (!System.IO.File.Exists(projectName))
             {
                 return RunResponseCodes.GumProjectFileNotFound;
             }

@@ -598,10 +598,12 @@ public partial class InteractiveGue : BindableGue
     /// cursor hit detection.
     /// </remarks>
     /// <param name="cursor">The cursor to check whether it is over this.</param>
+    /// <param name="layer">Optional layer to use for coordinate conversion. 
+    /// If this is null, then the top-most parent GraphicalUiElement's layer will be used.</param>
     /// <returns>Whether the cursor is over this.</returns>
     public virtual bool HasCursorOver(ICursor cursor, Layer? layer = null)
     {
-        layer = layer ?? (this.GetTopParent() as GraphicalUiElement).Layer;
+        layer = layer ?? ((GraphicalUiElement)this.GetTopParent()).Layer;
 
         bool toReturn = false;
 
