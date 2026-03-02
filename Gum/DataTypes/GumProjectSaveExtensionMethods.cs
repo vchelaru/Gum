@@ -45,6 +45,15 @@ namespace Gum.DataTypes
                     {
                         throw;
                     }
+                    else
+                    {
+                        // we tolerate them, we want to make sure they have a parent container at least:
+                        if(standardElementSave.DefaultState != null && 
+                            standardElementSave.DefaultState.ParentContainer == null)
+                        {
+                            standardElementSave.DefaultState.ParentContainer = standardElementSave;
+                        }
+                    }
                 }
             }
 

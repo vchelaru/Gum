@@ -138,7 +138,6 @@ public class FontManager
         }
 #endif
 
-        int countCreated = 0;
         var start = DateTime.Now;
 
 #if GUM
@@ -215,7 +214,8 @@ public class FontManager
         }
     }
 
-    public BmfcSave? TryGetBmfcSaveFor(InstanceSave instance, StateSave stateSave, string fontRanges, int spacingHorizontal, int spacingVertical, StateSave forcedValues)
+    public BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave, string fontRanges, 
+        int spacingHorizontal, int spacingVertical, StateSave? forcedValues)
     {
         string prefix = "";
         if (instance != null)
@@ -549,8 +549,7 @@ public class FontManager
 
             FilePath assemblyLocation = Assembly.GetExecutingAssembly().Location;
 
-            string mainExecutablePath = assemblyLocation.GetDirectoryContainingThis().FullPath;
-
+            string mainExecutablePath = assemblyLocation.GetDirectoryContainingThis()!.FullPath;
 
             string bmFontExeLocation = System.IO.Path.Combine(mainExecutablePath, "Libraries\\bmfont.exe");
 

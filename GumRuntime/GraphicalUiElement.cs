@@ -3589,17 +3589,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 if (this.EffectiveParentGue?.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                 {
-                    System.Collections.IList siblings = null;
+                    System.Collections.IList? siblings = null;
 
                     if (this.Parent == null)
                     {
-                        siblings = this.ElementGueContainingThis.mWhatThisContains;
+                        siblings = this.ElementGueContainingThis!.mWhatThisContains;
                     }
                     else if (this.Parent is GraphicalUiElement)
                     {
                         siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
                     }
-                    var thisIndex = siblings.IndexOf(this);
+                    var thisIndex = siblings?.IndexOf(this);
                     if (thisIndex > 0)
                     {
                         forcePixelsFromSmall = true;
@@ -3903,13 +3903,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         // See if we're explicitly updating only Y. If so, skip setting X.
         if (xOrY != XOrY.Y)
         {
-            this.mContainedObjectAsIpso.X = unitOffsetX;
+            this.mContainedObjectAsIpso!.X = unitOffsetX;
         }
 
         // See if we're explicitly updating only X. If so, skip setting Y.
         if (xOrY != XOrY.X)
         {
-            this.mContainedObjectAsIpso.Y = unitOffsetY;
+            this.mContainedObjectAsIpso!.Y = unitOffsetY;
         }
     }
 
@@ -5716,7 +5716,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             string underlyingProperty = mExposedVariables[propertyName];
             int indexOfDot = underlyingProperty.IndexOf('.');
             string instanceName = underlyingProperty.Substring(0, indexOfDot);
-            GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
+            GraphicalUiElement? containedGue = GetGraphicalUiElementByName(instanceName);
             string variable = underlyingProperty.Substring(indexOfDot + 1);
 
             // Children may not have been created yet
@@ -5729,7 +5729,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             int indexOfDot = propertyName.IndexOf('.');
             string instanceName = propertyName.Substring(0, indexOfDot);
-            GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
+            GraphicalUiElement? containedGue = GetGraphicalUiElementByName(instanceName);
             string variable = propertyName.Substring(indexOfDot + 1);
 
             // instances may not have been set yet
@@ -5964,7 +5964,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     && propertyName[propertyNameLength - 5] == 'S'
                     && value is string)
                 {
-                    var valueAsString = value as string;
+                    var valueAsString = (string)value;
 
                     string nameWithoutState = propertyName.Substring(0, propertyName.Length - "State".Length);
 

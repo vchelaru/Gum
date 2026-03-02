@@ -1,19 +1,18 @@
-﻿namespace Gum.Managers
-{
-    public class Singleton<T> where T : new()
-    {
-        static T mSelf;
+﻿namespace Gum.Managers;
 
-        public static T Self
+public class Singleton<T> where T : new()
+{
+    static T mSelf = default!;
+
+    public static T Self
+    {
+        get
         {
-            get
+            if (mSelf == null)
             {
-                if (mSelf == null)
-                {
-                    mSelf = new T();
-                }
-                return mSelf;
+                mSelf = new T();
             }
+            return mSelf;
         }
     }
 }
