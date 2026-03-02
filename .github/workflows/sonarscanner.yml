@@ -26,6 +26,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'   # matches your net10.0 TFM
 
+      - name: Install workloads
+        run: dotnet workload install ios maui
+
       - name: Cache SonarQube packages
         uses: actions/cache@v4
         with:
