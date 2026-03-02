@@ -110,7 +110,7 @@ public enum DragDropReorderMode
 
 #region RepositionDirections Enum
 
-public enum RepositionDirections
+internal enum RepositionDirections
 {
     None = 0,
     Up = 1,
