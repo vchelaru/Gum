@@ -140,6 +140,7 @@ public class FontManager
 
         var start = DateTime.Now;
 
+        int countCreated = 0;
 #if GUM
         var window = _guiCommands.ShowSpinner();
 #endif
