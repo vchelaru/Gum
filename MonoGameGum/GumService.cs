@@ -83,7 +83,9 @@ public class GumService
 
     public DeferredActionQueue DeferredQueue { get; private set; }
 
+#if !IOS && !ANDROID
     private IGumHotReloadManager? _hotReloadManager;
+#endif
 
     /// <summary>
     /// Gets or sets the width of the canvas, which acts as the root-most coordiante space. This value
@@ -113,6 +115,7 @@ public class GumService
     /// <inheritdoc/>
     public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
 
+#if !IOS && !ANDROID
     /// <summary>
     /// Starts watching the Gum project source files at the given path.
     /// When any .gumx, .gucx, .gusx, or .gutx file changes, the project
@@ -126,6 +129,7 @@ public class GumService
         _hotReloadManager = new GumHotReloadManager();
         _hotReloadManager.Start(absoluteGumxSourcePath);
     }
+#endif
 
     public void UseKeyboardDefaults()
     {
@@ -463,7 +467,9 @@ public class GumService
 #endif
 
         DeferredQueue.ProcessPending();
+#if !IOS && !ANDROID
         _hotReloadManager?.Update(Root);
+#endif
         GameTime = gameTime;
 #if XNALIKE
         FormsUtilities.Update(_game, gameTime, roots);

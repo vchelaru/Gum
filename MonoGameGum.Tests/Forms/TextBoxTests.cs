@@ -1,9 +1,11 @@
 ﻿using Gum.Forms.Controls;
 using Gum.Forms.Data;
+using Gum.Localization;
 using Gum.Mvvm;
 using Gum.Wireframe;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
+using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -17,6 +19,31 @@ namespace MonoGameGum.Tests.Forms;
 
 public class TextBoxTests : BaseTestClass
 {
+
+    [Fact]
+    public void AcceptsReturn_ShouldAddMultipleLines_OnEnterPress()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+
+        textBox.HandleCharEntered('1');
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('2');
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('3');
+
+
+        var textInstance =
+            (TextRuntime)textBox.Visual.GetChildByNameRecursively("TextInstance")!;
+
+        var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
+
+        innerTextObject.WrappedText.Count.ShouldBe(3);
+        innerTextObject.WrappedText[0].Trim().ShouldBe("1");
+        innerTextObject.WrappedText[1].Trim().ShouldBe("2");
+        innerTextObject.WrappedText[2].Trim().ShouldBe("3");
+    }
 
     [Fact]
     public void CaretIndex_ShouldAdjustCaretPosition()
@@ -104,6 +131,16 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleCharEntered_ShouldAddCharacter_WhenNonEnterKeyTyped()
+    {
+        TextBox textBox = new();
+
+        textBox.HandleCharEntered('a');
+
+        textBox.Text.ShouldBe("a");
+    }
+
+    [Fact]
     public void HandleCharEntered_ShouldUpdateBindingSource_OnEnterNoAcceptsReturn()
     {
         TextBox textBox = new();
@@ -124,6 +161,20 @@ public class TextBoxTests : BaseTestClass
         textBox.HandleCharEntered('\n'); // Simulate Enter key press
 
         vm.Text.ShouldBe("Test text");
+    }
+
+    [Fact]
+    public void HandleCharEntered_ShouldNotLocalizeText_WhenTypingCharacter()
+    {
+        var mockLocalization = new Mock<ILocalizationService>();
+        mockLocalization.Setup(x => x.Translate(It.IsAny<string>())).Returns("TRANSLATED");
+        CustomSetPropertyOnRenderable.LocalizationService = mockLocalization.Object;
+
+        TextBox textBox = new();
+        textBox.Text.ShouldBeNullOrEmpty();
+        textBox.HandleCharEntered('a');
+
+        textBox.Text.ShouldBe("a");
     }
 
     [Fact]
@@ -189,15 +240,6 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
-    public void asdf()
-    {
-        TextBox textBox = new();
-        DefaultTextBoxRuntime visual = (DefaultTextBoxRuntime)textBox.Visual;
-
-    }
-
-
-    [Fact]
     public void IsFocused_ShouldRaiseLostFocus_IfIsFocusedSetToFalse()
     {
         TextBox textBox = new();
@@ -218,81 +260,6 @@ public class TextBoxTests : BaseTestClass
         selection.Color = Microsoft.Xna.Framework.Color.Blue;
 
         selection.ShouldNotBeNull();
-    }
-
-    #region Visual
-    [Fact]
-    public void Visual_HasEvents_ShouldBeTrue()
-    {
-        TextBox sut = new();
-        sut.Visual.HasEvents.ShouldBeTrue();
-    }
-
-    #endregion
-
-    [Fact]
-    public void TextWrapping_NoWrap_ShouldRenderCorrectlyWithAcceptsReturn()
-    {
-        TextBox textBox = new();
-        textBox.TextWrapping = Gum.Forms.TextWrapping.NoWrap;
-        textBox.AcceptsReturn = true;
-        textBox.IsFocused = true;
-
-        DefaultTextBoxBaseRuntime visual =
-            (DefaultTextBoxBaseRuntime)textBox.Visual;
-
-        float originalCaretX = visual.CaretInstance.X;
-        float originalCaretY = visual.CaretInstance.Y;
-
-        float textInstanceX = visual.TextInstance.X;
-
-
-        for(int i = 0; i < 40; i++)
-        {
-            textBox.HandleCharEntered('a');
-        }
-
-        visual.CaretInstance.X.ShouldBeGreaterThan(originalCaretX);
-        visual.CaretInstance.Y.ShouldBe(originalCaretY);
-        visual.TextInstance.X.ShouldBeLessThan(textInstanceX, "because the text scrolled to the left");
-
-        textBox.HandleCharEntered('\n');
-        visual.CaretInstance.X.ShouldBe(originalCaretX, 
-            // Add some tolerance because text positioning is based on caret size, and this is different than the
-            // starting Text value. Oh well...
-            tolerance:2, 
-            customMessage:"because the caret should reset to the start of the line after a newline");
-        visual.CaretInstance.Y.ShouldBeGreaterThan(originalCaretY, "because the caret should move down after a newline");
-        visual.TextInstance.X.ShouldBe(textInstanceX, 
-            // See above why we add tolerance:
-            tolerance:2,
-            customMessage:"because the text should not scroll to the left after a newline in NoWrap mode");
-    }
-
-
-    [Fact]
-    public void AcceptsReturn_ShouldAddMultipleLines_OnEnterPress()
-    {
-        TextBox textBox = new();
-        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
-        textBox.AcceptsReturn = true;
-
-        textBox.HandleCharEntered('1');
-        textBox.HandleCharEntered('\n');
-        textBox.HandleCharEntered('2');
-        textBox.HandleCharEntered('\n');
-        textBox.HandleCharEntered('3');
-
-
-        var textInstance =
-            (TextRuntime)textBox.Visual.GetChildByNameRecursively("TextInstance")!;
-
-        var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
-
-        innerTextObject.WrappedText.Count.ShouldBe(3);
-        innerTextObject.WrappedText[0].Trim().ShouldBe("1");
-        innerTextObject.WrappedText[1].Trim().ShouldBe("2");
-        innerTextObject.WrappedText[2].Trim().ShouldBe("3");
     }
 
     [Fact]
@@ -372,6 +339,44 @@ public class TextBoxTests : BaseTestClass
         innerTextObject.MaxLettersToShow.ShouldBe(3);
     }
 
+    [Fact]
+    public void TextWrapping_NoWrap_ShouldRenderCorrectlyWithAcceptsReturn()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.NoWrap;
+        textBox.AcceptsReturn = true;
+        textBox.IsFocused = true;
+
+        DefaultTextBoxBaseRuntime visual =
+            (DefaultTextBoxBaseRuntime)textBox.Visual;
+
+        float originalCaretX = visual.CaretInstance.X;
+        float originalCaretY = visual.CaretInstance.Y;
+
+        float textInstanceX = visual.TextInstance.X;
+
+
+        for(int i = 0; i < 40; i++)
+        {
+            textBox.HandleCharEntered('a');
+        }
+
+        visual.CaretInstance.X.ShouldBeGreaterThan(originalCaretX);
+        visual.CaretInstance.Y.ShouldBe(originalCaretY);
+        visual.TextInstance.X.ShouldBeLessThan(textInstanceX, "because the text scrolled to the left");
+
+        textBox.HandleCharEntered('\n');
+        visual.CaretInstance.X.ShouldBe(originalCaretX, 
+            // Add some tolerance because text positioning is based on caret size, and this is different than the
+            // starting Text value. Oh well...
+            tolerance:2, 
+            customMessage:"because the caret should reset to the start of the line after a newline");
+        visual.CaretInstance.Y.ShouldBeGreaterThan(originalCaretY, "because the caret should move down after a newline");
+        visual.TextInstance.X.ShouldBe(textInstanceX, 
+            // See above why we add tolerance:
+            tolerance:2,
+            customMessage:"because the text should not scroll to the left after a newline in NoWrap mode");
+    }
 
     #region ViewModels
 
@@ -382,6 +387,16 @@ public class TextBoxTests : BaseTestClass
             get => Get<string>();
             set => Set(value);
         }
+    }
+
+    #endregion
+
+    #region Visual
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        TextBox sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
     }
 
     #endregion

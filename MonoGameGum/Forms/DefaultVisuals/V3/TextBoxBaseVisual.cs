@@ -206,7 +206,8 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         TextInstance.HorizontalAlignment = HorizontalAlignment.Left;
         TextInstance.VerticalAlignment = VerticalAlignment.Center;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
-        TextInstance.Text = "";
+        TextInstance.SetTextNoTranslate("");
+
         ClipContainer.AddChild(TextInstance);
 
         PlaceholderTextInstance = new TextRuntime();

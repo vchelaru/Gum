@@ -104,7 +104,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         TextInstance.VerticalAlignment = VerticalAlignment.Center;
         TextInstance.Color = Styling.ActiveStyle.Colors.White;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
-        TextInstance.Text = "";
+        TextInstance.SetTextNoTranslate("");
         ClipContainer.AddChild(TextInstance);
 
         PlaceholderTextInstance = new TextRuntime();

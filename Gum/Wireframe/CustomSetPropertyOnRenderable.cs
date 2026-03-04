@@ -3,13 +3,11 @@
 #endif
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
-using Gum.Graphics.Animation;
 using Gum.RenderingLibrary;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
-using RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -26,10 +24,10 @@ using System.IO;
 using Gum.Localization;
 using System.Security.Policy;
 using Gum.Managers;
-using Microsoft.Xna.Framework.Graphics;
 using Gum.Converters;
+using Gum.Wireframe;
 
-#if !FRB
+#if !FRB && !RAYLIB
 using MonoGameGum.GueDeriving;
 #endif
 
@@ -41,15 +39,21 @@ using Gum.ToolStates;
 
 
 #if RAYLIB
+using Gum.Renderables;
+using Gum.GueDeriving;
+using Raylib_cs;
 namespace RaylibGum.Renderables;
 #else
+using Gum.Graphics.Animation;
+using RenderingLibrary.Math.Geometry;
+using Microsoft.Xna.Framework.Graphics;
 namespace Gum.Wireframe;
 #endif
-
 
 public class CustomSetPropertyOnRenderable
 {
     public static ILocalizationService? LocalizationService { get; set; }
+
 #if GUM
     private static readonly FontManager _fontManager;
 #endif
@@ -64,7 +68,8 @@ public class CustomSetPropertyOnRenderable
     }
 
     /// <summary>
-    /// Additional logic to perform before falling back to reflection. This can be added by libraries adding additional runtime types
+    /// Additional logic to perform before falling back to reflection. 
+    /// This can be added by libraries adding additional runtime types
     /// </summary>
     public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
 
@@ -93,59 +98,10 @@ public class CustomSetPropertyOnRenderable
         }
         else if (renderableIpso is SolidRectangle)
         {
-            var solidRect = renderableIpso as SolidRectangle;
-
-            if (propertyName == "Blend")
-            {
-                var valueAsGumBlend = (RenderingLibrary.Blend)value;
-
-                var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-                solidRect.BlendState = valueAsXnaBlend;
-
-                handled = true;
-            }
-            else if (propertyName == "Alpha")
-            {
-                int valueAsInt = (int)value;
-                solidRect.Alpha = valueAsInt;
-                handled = true;
-            }
-            else if (propertyName == "Red")
-            {
-                int valueAsInt = (int)value;
-                solidRect.Red = valueAsInt;
-                handled = true;
-            }
-            else if (propertyName == "Green")
-            {
-                int valueAsInt = (int)value;
-                solidRect.Green = valueAsInt;
-                handled = true;
-            }
-            else if (propertyName == "Blue")
-            {
-                int valueAsInt = (int)value;
-                solidRect.Blue = valueAsInt;
-                handled = true;
-            }
-            else if (propertyName == "Color")
-            {
-                //var valueAsColor = (Color)value;
-                if (value is System.Drawing.Color drawingColor)
-                {
-                    solidRect.Color = drawingColor;
-                }
-                else if (value is Microsoft.Xna.Framework.Color xnaColor)
-                {
-                    solidRect.Color = xnaColor.ToSystemDrawing();
-
-                }
-
-                handled = true;
-            }
-
+            handled = TrySetPropertyOnSolidRectangle(renderableIpso, propertyName, value, handled);
         }
+#endif
+
         else if (renderableIpso is Sprite renderableSprite)
         {
             handled = TrySetPropertyOnSprite(renderableSprite, graphicalUiElement, propertyName, value);
@@ -158,7 +114,6 @@ public class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnInvisbileRenderable(renderableIpso, propertyName, value, handled);
         }
-#endif
 
         if(!handled && AdditionalPropertyOnRenderable != null)
         {
@@ -194,6 +149,63 @@ public class CustomSetPropertyOnRenderable
                 }
             }
         }
+    }
+
+    private static bool TrySetPropertyOnSolidRectangle(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
+    {
+        var solidRect = renderableIpso as SolidRectangle;
+
+        if (propertyName == "Blend")
+        {
+            var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+            var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+            solidRect.BlendState = valueAsXnaBlend;
+
+            handled = true;
+        }
+        else if (propertyName == "Alpha")
+        {
+            int valueAsInt = (int)value;
+            solidRect.Alpha = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Red")
+        {
+            int valueAsInt = (int)value;
+            solidRect.Red = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Green")
+        {
+            int valueAsInt = (int)value;
+            solidRect.Green = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Blue")
+        {
+            int valueAsInt = (int)value;
+            solidRect.Blue = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Color")
+        {
+            //var valueAsColor = (Color)value;
+            if (value is System.Drawing.Color drawingColor)
+            {
+                solidRect.Color = drawingColor;
+            }
+            else if (value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                solidRect.Color = xnaColor.ToSystemDrawing();
+
+            }
+
+            handled = true;
+        }
+
+        return handled;
     }
 
     private static bool TrySetPropertyOnInvisbileRenderable(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)

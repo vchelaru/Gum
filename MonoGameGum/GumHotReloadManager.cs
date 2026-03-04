@@ -14,14 +14,42 @@ namespace MonoGameGum;
 namespace RaylibGum;
 #endif
 
+#if !IOS && !ANDROID
+
+/// <summary>
+/// Watches a Gum project directory for file changes and triggers a reload when relevant files are modified.
+/// </summary>
 public interface IGumHotReloadManager
 {
+    /// <summary>
+    /// Raised after a reload has been performed in response to a file change.
+    /// </summary>
     event Action? ReloadCompleted;
+
+    /// <summary>
+    /// Starts watching the directory containing the specified .gumx project file for changes.
+    /// This is not typically called directly — use <see cref="GumService.EnableHotReload"/> instead.
+    /// </summary>
+    /// <param name="absoluteGumxSourcePath">The absolute path to the .gumx project file.</param>
     void Start(string absoluteGumxSourcePath);
+
+    /// <summary>
+    /// Stops watching for file changes and releases the underlying file system watcher.
+    /// </summary>
     void Stop();
+
+    /// <summary>
+    /// Checks for a pending reload and, if enough time has elapsed since the last file change, performs the reload.
+    /// This is not typically called directly — <see cref="GumService"/> calls this automatically each frame.
+    /// </summary>
+    /// <param name="root">The root <see cref="GraphicalUiElement"/> whose children will be reloaded.</param>
     void Update(GraphicalUiElement root);
 }
 
+/// <summary>
+/// Default implementation of <see cref="IGumHotReloadManager"/>. Watches Gum project files on disk
+/// and hot-reloads the element tree when changes are detected.
+/// </summary>
 public class GumHotReloadManager : IGumHotReloadManager
 {
     private string _projectSourcePath = "";
@@ -29,8 +57,10 @@ public class GumHotReloadManager : IGumHotReloadManager
     private volatile bool _pendingReload;
     private DateTime _lastChangeTime;
 
+    /// <inheritdoc/>
     public event Action? ReloadCompleted;
 
+    /// <inheritdoc/>
     public void Start(string absoluteGumxSourcePath)
     {
         _projectSourcePath = absoluteGumxSourcePath;
@@ -50,6 +80,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         _watcher.Renamed += (sender, e) => HandleFileChange(sender, e);
     }
 
+    /// <inheritdoc/>
     public void Stop()
     {
         if (_watcher != null)
@@ -60,6 +91,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
     }
 
+    /// <inheritdoc/>
     public void Update(GraphicalUiElement root)
     {
         if (_pendingReload && (DateTime.UtcNow - _lastChangeTime) >= TimeSpan.FromMilliseconds(200))
@@ -116,3 +148,4 @@ public class GumHotReloadManager : IGumHotReloadManager
         ReloadCompleted?.Invoke();
     }
 }
+#endif // !IOS && !ANDROID
