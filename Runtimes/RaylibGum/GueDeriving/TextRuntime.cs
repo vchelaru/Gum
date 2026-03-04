@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Raylib_cs;
 namespace Gum.GueDeriving;
 #else
+using Color = Microsoft.Xna.Framework.Color;
 namespace MonoGameGum.GueDeriving;
 #endif
 
@@ -132,7 +133,11 @@ public class TextRuntime : InteractiveGue
     public HorizontalAlignment HorizontalAlignment
     {
         get => ContainedText.HorizontalAlignment;
-        set => ContainedText.HorizontalAlignment = value;
+        set
+        {
+            ContainedText.HorizontalAlignment = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -168,19 +173,17 @@ public class TextRuntime : InteractiveGue
     public int? MaxNumberOfLines
     {
         get => mContainedText.MaxNumberOfLines;
-        set
-        {
-            mContainedText.MaxNumberOfLines = value;
-        }
+        set => mContainedText.MaxNumberOfLines = value;
     }
 #endif
 
+#if RAYLIB
     public Font CustomFont
     {
         get => ContainedText.Font;
-
         set => ContainedText.Font = value;
     }
+#endif
 
     public float FontScale
     {

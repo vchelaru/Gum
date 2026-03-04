@@ -1,21 +1,35 @@
 ﻿#if MONOGAME || KNI || XNA4 || FNA
 #define XNALIKE
 #endif
+using Gum.Content.AnimationChain;
 using Gum.DataTypes;
-using Gum.GueDeriving;
-using Gum.Managers;
-using Gum.Renderables;
-using Gum.Wireframe;
-using Gum.Localization;
-using Raylib_cs;
+using Gum.RenderingLibrary;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Globalization;
 using System.Linq;
-using System.Reflection.Metadata;
+using System.Numerics;
+using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilitiesStandard.Helpers;
+using System.Net;
+using System.IO;
+using Gum.Localization;
+using System.Security.Policy;
+using Gum.Managers;
+using Gum.Converters;
+using Gum.Wireframe;
+
+#if !FRB && !RAYLIB
+using MonoGameGum.GueDeriving;
+#endif
 
 #if GUM
 using Gum.Services;
@@ -25,8 +39,14 @@ using Gum.ToolStates;
 
 
 #if RAYLIB
+using Gum.Renderables;
+using Gum.GueDeriving;
+using Raylib_cs;
 namespace RaylibGum.Renderables;
 #else
+using Gum.Graphics.Animation;
+using RenderingLibrary.Math.Geometry;
+using Microsoft.Xna.Framework.Graphics;
 namespace Gum.Wireframe;
 #endif
 
@@ -48,7 +68,8 @@ public class CustomSetPropertyOnRenderable
     }
 
     /// <summary>
-    /// Additional logic to perform before falling back to reflection. This can be added by libraries adding additional runtime types
+    /// Additional logic to perform before falling back to reflection. 
+    /// This can be added by libraries adding additional runtime types
     /// </summary>
     public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
 
@@ -58,10 +79,11 @@ public class CustomSetPropertyOnRenderable
 
         // First try special-casing.  
 
-        if (renderableIpso is Text asText)
+        if (renderableIpso is Text renderableText)
         {
-            handled = TrySetPropertyOnText(asText, graphicalUiElement, propertyName, value);
+            handled = TrySetPropertyOnText(renderableText, graphicalUiElement, propertyName, value);
         }
+
         else if (renderableIpso is Sprite renderableSprite)
         {
             handled = TrySetPropertyOnSprite(renderableSprite, graphicalUiElement, propertyName, value);
@@ -307,7 +329,7 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    private static bool TrySetPropertyOnText(Text asText, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    private static bool TrySetPropertyOnText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
 
@@ -320,8 +342,7 @@ public class CustomSetPropertyOnRenderable
 
         void ReactToFontValueChange()
         {
-
-            UpdateToFontValues(asText, graphicalUiElement);
+            UpdateToFontValues(textRenderable, graphicalUiElement);
 
             handled = true;
         }
@@ -333,12 +354,22 @@ public class CustomSetPropertyOnRenderable
                 graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
             {
                 // make it have no line wrap width before assignign the text:
-                asText.Width = null;
+                textRenderable.Width = null;
             }
 
             var valueAsString = value as string;
 
-            asText.RawText = valueAsString;
+            var rawText = valueAsString;
+
+
+            if (LocalizationService != null && propertyName == "Text")
+            {
+                rawText = LocalizationService.Translate(rawText);
+            }
+
+            textRenderable.RawText = rawText;
+            // todo - markup
+
             // we want to update if the text's size is based on its "children" (the letters it contains)
             if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
                 // If height is relative to children, it could be in a stack
@@ -350,7 +381,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Font Scale" || propertyName == "FontScale")
         {
-            asText.FontScale = (float)value;
+            textRenderable.FontScale = (float)value;
             // we want to update if the text's size is based on its "children" (the letters it contains)
             if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
                 // If height is relative to children, it could be in a stack
@@ -365,12 +396,12 @@ public class CustomSetPropertyOnRenderable
         {
             if (value is Font font)
             {
-                asText.Font = font;
+                textRenderable.Font = font;
                 handled = true;
             }
             else if (value is string fontString)
             {
-                asText.FontFamily = fontString;
+                textRenderable.FontFamily = fontString;
 
 
                 ReactToFontValueChange();

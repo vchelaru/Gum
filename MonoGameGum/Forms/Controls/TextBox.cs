@@ -44,7 +44,9 @@ public class TextBox : TextBoxBase
                 // go through the component instead of the core text object to force a layout refresh if necessary
                 // Calling SetProperty.
                 // This bypasses the Text change event so we need to explicitly handle text changing.
-                textComponent.SetProperty("Text", value);
+                // Do not set "Text" because that invokes localization which we don't want to do, that would add (loc) suffix
+                //textComponent.SetProperty("Text", value);
+                textComponent.SetProperty("TextNoTranslate", value);
 
                 OnTextChanged(value);
             }

@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Raylib_cs;
 namespace Gum.GueDeriving;
 #else
+using Color = Microsoft.Xna.Framework.Color;
 namespace MonoGameGum.GueDeriving;
 #endif
 
@@ -107,7 +108,7 @@ public class TextRuntime : InteractiveGue
     /// <summary>
     /// Gets or sets the color used to render the text. This includes color and alpha (opacity) components.
     /// </summary>
-    public Microsoft.Xna.Framework.Color Color
+    public Color Color
     {
 #if XNALIKE
         get => RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedText.Color);
@@ -173,6 +174,14 @@ public class TextRuntime : InteractiveGue
     {
         get => mContainedText.MaxNumberOfLines;
         set => mContainedText.MaxNumberOfLines = value;
+    }
+#endif
+
+#if RAYLIB
+    public Font CustomFont
+    {
+        get => ContainedText.Font;
+        set => ContainedText.Font = value;
     }
 #endif
 
