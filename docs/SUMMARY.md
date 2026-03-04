@@ -3,6 +3,7 @@
 ## Gum Tool
 
 * [Introduction](README.md)
+  * [For Figma Users](gum-tool/readme/for-figma-users.md)
 * [Setup](gum-tool/setup/README.md)
   * [Running from Source](gum-tool/setup/running-from-source.md)
 * [Showcase](gum-tool/showcase.md)
