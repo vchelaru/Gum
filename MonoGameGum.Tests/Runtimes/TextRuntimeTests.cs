@@ -237,6 +237,74 @@ $"chars count=223\r\n";
 
     #endregion
 
+    #region GlobalFontScale
+
+    [Fact]
+    public void GlobalFontScale_ShouldAffectAbsoluteHeight_WhenRelativeToChildren()
+    {
+        TextRuntime sut = new();
+        sut.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        sut.Height = 0;
+        sut.Text = "Hello";
+
+        var baseHeight = sut.GetAbsoluteHeight();
+        baseHeight.ShouldBeGreaterThan(0);
+
+        GraphicalUiElement.GlobalFontScale = 2;
+        sut.UpdateLayout();
+
+        sut.GetAbsoluteHeight().ShouldBe(baseHeight * 2);
+    }
+
+    [Fact]
+    public void GlobalFontScale_ShouldAffectAbsoluteWidth_WhenRelativeToChildren()
+    {
+        TextRuntime sut = new();
+        sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        sut.Width = 0;
+        sut.Text = "Hello";
+
+        var baseWidth = sut.GetAbsoluteWidth();
+        baseWidth.ShouldBeGreaterThan(0);
+
+        GraphicalUiElement.GlobalFontScale = 2;
+        sut.UpdateLayout();
+
+        sut.GetAbsoluteWidth().ShouldBe(baseWidth * 2);
+    }
+
+    [Fact]
+    public void GlobalFontScale_WrappedTextHeight_ShouldDoubleWhenScaleIsTwo()
+    {
+        TextRuntime sut = new();
+        sut.Text = "Hello";
+
+        var containedText = (Text)sut.RenderableComponent;
+        var baseHeight = containedText.WrappedTextHeight;
+        baseHeight.ShouldBeGreaterThan(0);
+
+        GraphicalUiElement.GlobalFontScale = 2;
+
+        containedText.WrappedTextHeight.ShouldBe(baseHeight * 2);
+    }
+
+    [Fact]
+    public void GlobalFontScale_WrappedTextWidth_ShouldDoubleWhenScaleIsTwo()
+    {
+        TextRuntime sut = new();
+        sut.Text = "Hello";
+
+        var containedText = (Text)sut.RenderableComponent;
+        var baseWidth = containedText.WrappedTextWidth;
+        baseWidth.ShouldBeGreaterThan(0);
+
+        GraphicalUiElement.GlobalFontScale = 2;
+
+        containedText.WrappedTextWidth.ShouldBe(baseWidth * 2);
+    }
+
+    #endregion
+
     #region HasEvents
 
     [Fact]

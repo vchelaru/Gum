@@ -1016,9 +1016,7 @@
 
     <!--  SubmenuItem: leaf items inside a dropdown (shared by Menu and ContextMenu)  -->
     <ControlTemplate x:Key="{x:Static MenuItem.SubmenuItemTemplateKey}" TargetType="{x:Type MenuItem}">
-        <Border
-            Name="Border"
-            SnapsToDevicePixels="True">
+        <Border Name="Border" SnapsToDevicePixels="True">
             <Grid Background="Transparent">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="Icon" />
@@ -1087,9 +1085,7 @@
 
     <!--  SubmenuHeader: items inside a dropdown that have their own sub-items (shared by Menu and ContextMenu)  -->
     <ControlTemplate x:Key="{x:Static MenuItem.SubmenuHeaderTemplateKey}" TargetType="{x:Type MenuItem}">
-        <Border
-            Name="Border"
-            SnapsToDevicePixels="True">
+        <Border Name="Border" SnapsToDevicePixels="True">
             <Grid Background="Transparent">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="Icon" />
@@ -1132,9 +1128,7 @@
                     IsOpen="{TemplateBinding IsSubmenuOpen}"
                     Placement="Right"
                     PopupAnimation="Slide">
-                    <Border
-                        Padding="0,0,6,6"
-                        Background="Transparent">
+                    <Border Padding="0,0,6,6" Background="Transparent">
                         <Grid>
                             <!--  Background + shadow  -->
                             <Border
@@ -1198,9 +1192,7 @@
                         BorderBrush="Transparent"
                         BorderThickness="1,1,1,0"
                         SnapsToDevicePixels="True">
-                        <ContentPresenter
-                            ContentSource="Header"
-                            RecognizesAccessKey="True" />
+                        <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" />
                     </Border>
                     <Popup
                         Name="Popup"
@@ -1226,17 +1218,19 @@
                                     </Border.Effect>
                                     <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
                                 </Border>
-                                <!--  Cutout: erases the top border under the header for a connected look.
-                                      The outer Grid sizes to the header width; the Rectangle is inset 1px
-                                      on each side so it doesn't eat into the green border corners.  -->
+                                <!--
+                                    Cutout: erases the top border under the header for a connected look.
+                                    The outer Grid sizes to the header width; the Rectangle is inset 1px
+                                    on each side so it doesn't eat into the green border corners.
+                                -->
                                 <Grid
                                     Name="TopBorderPatchContainer"
                                     Width="{Binding ElementName=Border, Path=ActualWidth}"
                                     Height="1"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
-                                    Visibility="Collapsed"
-                                    SnapsToDevicePixels="True">
+                                    SnapsToDevicePixels="True"
+                                    Visibility="Collapsed">
                                     <Rectangle
                                         Name="TopBorderPatch"
                                         Margin="1,0,1,0"
@@ -1274,9 +1268,7 @@
                     Padding="6,3,6,3"
                     Background="Transparent"
                     CornerRadius="3">
-                    <ContentPresenter
-                        ContentSource="Header"
-                        RecognizesAccessKey="True" />
+                    <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" />
                 </Border>
                 <ControlTemplate.Triggers>
                     <Trigger Property="IsHighlighted" Value="True">

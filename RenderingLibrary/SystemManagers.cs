@@ -100,10 +100,18 @@ public partial class SystemManagers : ISystemManagers
     }
 
     /// <summary>
-    /// The font scale value. This can be used to scale all fonts globally, 
+    /// The font scale value. This can be used to scale all fonts globally,
     /// generally in response to a font scaling value like the Android font scale setting.
     /// </summary>
+#if USE_GUMCOMMON
+    public static float GlobalFontScale
+    {
+        get => GumRuntime.GraphicalUiElement.GlobalFontScale;
+        set => GumRuntime.GraphicalUiElement.GlobalFontScale = value;
+    }
+#else
     public static float GlobalFontScale { get; set; } = 1.0f;
+#endif
     public bool EnableTouchEvents { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
     public static Dictionary<string, byte[]> StreamByteDictionary { get; private set; } = new Dictionary<string, byte[]>();
