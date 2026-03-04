@@ -106,8 +106,8 @@ public partial class SystemManagers : ISystemManagers
 #if USE_GUMCOMMON
     public static float GlobalFontScale
     {
-        get => GumRuntime.GraphicalUiElement.GlobalFontScale;
-        set => GumRuntime.GraphicalUiElement.GlobalFontScale = value;
+        get => GraphicalUiElement.GlobalFontScale;
+        set => GraphicalUiElement.GlobalFontScale = value;
     }
 #else
     public static float GlobalFontScale { get; set; } = 1.0f;
