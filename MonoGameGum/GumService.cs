@@ -83,6 +83,8 @@ public class GumService
 
     public DeferredActionQueue DeferredQueue { get; private set; }
 
+    private IGumHotReloadManager? _hotReloadManager;
+
     /// <summary>
     /// Gets or sets the width of the canvas, which acts as the root-most coordiante space. This value
     /// represents the "internal coordinates" which can be adjusted by Camera zoom.
@@ -110,6 +112,20 @@ public class GumService
     public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
     /// <inheritdoc/>
     public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
+
+    /// <summary>
+    /// Starts watching the Gum project source files at the given path.
+    /// When any .gumx, .gucx, .gusx, or .gutx file changes, the project
+    /// is reloaded and active elements in Root have their state reapplied.
+    /// </summary>
+    /// <param name="absoluteGumxSourcePath">
+    /// Absolute path to the source .gumx file (not the bin/Content copy).
+    /// </param>
+    public void EnableHotReload(string absoluteGumxSourcePath)
+    {
+        _hotReloadManager = new GumHotReloadManager();
+        _hotReloadManager.Start(absoluteGumxSourcePath);
+    }
 
     public void UseKeyboardDefaults()
     {
@@ -447,6 +463,7 @@ public class GumService
 #endif
 
         DeferredQueue.ProcessPending();
+        _hotReloadManager?.Update(Root);
         GameTime = gameTime;
 #if XNALIKE
         FormsUtilities.Update(_game, gameTime, roots);

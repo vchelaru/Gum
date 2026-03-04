@@ -20,9 +20,8 @@
             ToolTipService.InitialShowDelay="100">
             <TextBlock.ContextMenu>
                 <ContextMenu>
-                    <MenuItem
-                        Click="OnViewInExplorerClick"
-                        Header="View in explorer" />
+                    <MenuItem Click="OnViewInExplorerClick" Header="View in explorer" />
+                    <MenuItem Click="OnCopyFullPathClick" Header="Copy full path" />
                 </ContextMenu>
             </TextBlock.ContextMenu>
         </TextBlock>

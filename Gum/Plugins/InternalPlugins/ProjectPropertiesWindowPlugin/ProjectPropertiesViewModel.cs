@@ -69,11 +69,6 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value);
     }
 
-    public decimal DisplayDensity
-    {
-        get => Get<decimal>();
-        set => Set(value);
-    }
 
     public bool RestrictFileNamesForAndroid
     {

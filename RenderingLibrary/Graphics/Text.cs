@@ -193,6 +193,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     float mFontScale = 1;
 
+    private float EffectiveFontScale => mFontScale * SystemManagers.GlobalFontScale;
+
+    float IText.FontScale => EffectiveFontScale;
+
     public bool mIsTextureCreationSuppressed;
 
     bool IWrappedText.IsMidWordLineBreakEnabled => IsMidWordLineBreakEnabled;
@@ -232,11 +236,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             if (mPreRenderWidth != null)
             {
-                return mPreRenderWidth.Value * mFontScale;
+                return mPreRenderWidth.Value * EffectiveFontScale;
             }
             else if (mTextureToRender?.Width > 0)
             {
-                return mTextureToRender.Width * mFontScale;
+                return mTextureToRender.Width * EffectiveFontScale;
             }
             else
             {
@@ -251,11 +255,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             if (mPreRenderHeight != null)
             {
-                return mPreRenderHeight.Value * mFontScale;
+                return mPreRenderHeight.Value * EffectiveFontScale;
             }
             else if (mTextureToRender?.Height > 0)
             {
-                return mTextureToRender.Height * mFontScale;
+                return mTextureToRender.Height * EffectiveFontScale;
             }
             else
             {
@@ -425,7 +429,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             // priority to the prerendered values as they may be more up-to-date.
             else if (mPreRenderWidth.HasValue)
             {
-                return mPreRenderWidth.Value * mFontScale;
+                return mPreRenderWidth.Value * EffectiveFontScale;
             }
             else if (mTextureToRender != null)
             {
@@ -435,7 +439,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 }
                 else
                 {
-                    return mTextureToRender.Width * mFontScale;
+                    return mTextureToRender.Width * EffectiveFontScale;
                 }
             }
             else
@@ -460,7 +464,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             // See EffectiveWidth for an explanation of why the prerendered values need to come first
             else if (mPreRenderHeight.HasValue)
             {
-                return mPreRenderHeight.Value * mFontScale;
+                return mPreRenderHeight.Value * EffectiveFontScale;
             }
             else if (mTextureToRender != null)
             {
@@ -470,7 +474,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 }
                 else
                 {
-                    return mTextureToRender.Height * mFontScale;
+                    return mTextureToRender.Height * EffectiveFontScale;
                 }
             }
             else
@@ -1000,14 +1004,14 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 }
                 else
                 {
-                    fontToUse.DrawTextLines(WrappedText, 
+                    fontToUse.DrawTextLines(WrappedText,
                         HorizontalAlignment,
                         this,
                         requiredWidth, widths, spriteRenderer, Color,
                         absoluteLeft,
                         absoluteTop,
-                        this.GetAbsoluteRotation(), 
-                        mFontScale, mFontScale, maxLettersToShow, 
+                        this.GetAbsoluteRotation(),
+                        EffectiveFontScale, EffectiveFontScale, maxLettersToShow,
                         OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
                         overlapDirection: OverlapDirection);
                 }
@@ -1068,21 +1072,21 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     requiredWidth, widths, spriteRenderer, color,
                     absoluteLeft,
                     topOfLine,
-                    this.GetAbsoluteRotation(), mFontScale, 
-                    mFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                    this.GetAbsoluteRotation(), EffectiveFontScale,
+                    EffectiveFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
                     overlapDirection: OverlapDirection);
 
-                topOfLine += fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
+                topOfLine += fontToUse.EffectiveLineHeight(EffectiveFontScale, EffectiveFontScale);
                 maxLettersToShow -= lineOfText.Length;
             }
             else
             {
                 individualLineWidth[0] = widths[i];
-                var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, LineHeightMultiplier);
+                var lineHeight = fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
                 var defaultBaseline = fontToUse.BaselineY;
 
-                float currentFontScale = FontScale;
-                float maxFontScale = 1;
+                float currentFontScale = EffectiveFontScale;
+                float maxFontScale = EffectiveFontScale;
                 BitmapFont currentFont = fontToUse;
 
                 float maxBaseline = currentFontScale * currentFont.BaselineY;
@@ -1094,7 +1098,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         var variable = substring.Variables[variableIndex];
                         if (variable.VariableName == nameof(FontScale))
                         {
-                            currentFontScale = (float)variable.Value;
+                            currentFontScale = (float)variable.Value * SystemManagers.GlobalFontScale;
                             lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
                             maxFontScale = System.Math.Max(maxFontScale, currentFontScale);
                             maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
@@ -1121,7 +1125,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
                     lineByLineList[0] = substring.Substring;
                     color = Color;
-                    var fontScale = mFontScale;
+                    var fontScale = EffectiveFontScale;
                     var effectiveFont = fontToUse;
                     var effectiveTopOfLine = topOfLine;
                     float yOffset = 0;
@@ -1138,7 +1142,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         }
                         else if (variable.VariableName == nameof(FontScale))
                         {
-                            fontScale = (float)variable.Value;
+                            fontScale = (float)variable.Value * SystemManagers.GlobalFontScale;
                         }
                         else if (variable.VariableName == nameof(BitmapFont))
                         {
@@ -1356,7 +1360,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         if (mBitmapFont?.AtlasedTexture != null)
         {
             mBitmapFont.RenderAtlasedTextureToScreen(WrappedText, this.HorizontalAlignment, mTextureToRender.Height,
-                Color.FromArgb(mAlpha, mRed, mGreen, mBlue), Rotation, mFontScale, managers, spriteRenderer, this);
+                Color.FromArgb(mAlpha, mRed, mGreen, mBlue), Rotation, EffectiveFontScale, managers, spriteRenderer, this);
         }
         else
         {
@@ -1383,13 +1387,13 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
         if (mPreRenderWidth.HasValue)
         {
-            mTempForRendering.Width = this.mPreRenderWidth.Value * mFontScale;
-            mTempForRendering.Height = this.mPreRenderHeight.Value * mFontScale;
+            mTempForRendering.Width = this.mPreRenderWidth.Value * EffectiveFontScale;
+            mTempForRendering.Height = this.mPreRenderHeight.Value * EffectiveFontScale;
         }
         else
         {
-            mTempForRendering.Width = this.mTextureToRender.Width * mFontScale;
-            mTempForRendering.Height = this.mTextureToRender.Height * mFontScale;
+            mTempForRendering.Width = this.mTextureToRender.Width * EffectiveFontScale;
+            mTempForRendering.Height = this.mTextureToRender.Height * EffectiveFontScale;
         }
         //mTempForRendering.Parent = this.Parent;
 

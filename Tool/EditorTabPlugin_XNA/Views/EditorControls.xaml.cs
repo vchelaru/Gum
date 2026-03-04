@@ -37,5 +37,10 @@ public partial class EditorControls : UserControl
 
         PlusButton.Width = buttonWidth;
         PlusButton.FontSize = baseFontSize;
+
+        FontScaleMinusButton.Width = buttonWidth;
+        FontScaleMinusButton.FontSize = baseFontSize;
+        FontScalePlusButton.Width = buttonWidth;
+        FontScalePlusButton.FontSize = baseFontSize;
     }
 }

@@ -35,6 +35,61 @@ public partial class EditorViewModel : ViewModel
     }
     Ruler? TopRuler { get; set; }
 
+    // Preset font scale steps for + / - buttons
+    static readonly float[] FontScaleSteps = new float[]
+    {
+        0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f, 4.0f
+    };
+
+    public float GlobalFontScale
+    {
+        get => Get<float>();
+        set
+        {
+            if (Set(value))
+            {
+                GraphicalUiElement.GlobalFontScale = value;
+                _wireframeObjectManager.RefreshAll(forceLayout: true);
+            }
+        }
+    }
+
+    [DependsOn(nameof(GlobalFontScale))]
+    public string GlobalFontScaleDisplay => $"{GlobalFontScale:0.##}x";
+
+    [RelayCommand]
+    public void FontScaleIncrease()
+    {
+        var index = GetFontScaleIndex();
+        if (index < FontScaleSteps.Length - 1)
+        {
+            GlobalFontScale = FontScaleSteps[index + 1];
+        }
+    }
+
+    [RelayCommand]
+    public void FontScaleDecrease()
+    {
+        var index = GetFontScaleIndex();
+        if (index > 0)
+        {
+            GlobalFontScale = FontScaleSteps[index - 1];
+        }
+    }
+
+    private int GetFontScaleIndex()
+    {
+        var current = GlobalFontScale;
+        for (int i = FontScaleSteps.Length - 1; i >= 0; i--)
+        {
+            if (FontScaleSteps[i] <= current)
+            {
+                return i;
+            }
+        }
+        return 0;
+    }
+
     public ZoomLevel[] ZoomLevels { get; init; } = new ZoomLevel[]
     {
         new ZoomLevel{Value = 1600 },
@@ -174,6 +229,7 @@ public partial class EditorViewModel : ViewModel
         CustomCanvasSizes = DefaultCanvasSizes;
 
         SetWithoutNotifying(CustomCanvasSizes[0], nameof(SelectedCustomCanvasSize));
+        SetWithoutNotifying(GraphicalUiElement.GlobalFontScale, nameof(GlobalFontScale));
     }
 
     public void InitializeXnaView(SystemManagers systemManagers, Ruler topRuler, Ruler leftRuler)
