@@ -321,6 +321,38 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// Sets the text without applying localization/translation. Equivalent to calling
+    /// <c>SetProperty("TextNoTranslate", value)</c>.
+    /// </summary>
+    public void SetTextNoTranslate(string? value)
+    {
+        var widthBefore = ContainedText.WrappedTextWidth;
+        var heightBefore = ContainedText.WrappedTextHeight;
+        if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+        {
+            if (this.MaxWidth == null)
+            {
+                ContainedText.Width = null;
+            }
+            else
+            {
+                ContainedText.Width = this.MaxWidth;
+            }
+        }
+
+        this.SetProperty("TextNoTranslate", value);
+
+        NotifyPropertyChanged(nameof(Text));
+        var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
+        if (shouldUpdate)
+        {
+            UpdateLayout(
+                Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
+        }
+    }
+
     #region Defaults
 
     // todo - add more here

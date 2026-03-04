@@ -73,7 +73,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.Height = -4f;
                 TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                TextInstance.Text = "";
+                TextInstance.SetTextNoTranslate("");
                 TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                 TextInstance.Width = 0f;
                 TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
