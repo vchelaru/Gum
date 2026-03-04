@@ -95,6 +95,8 @@ internal class MainGumFormsPlugin : PluginBase
                 item.Extension != "gutx" &&
                 item.Extension != "fnt" && 
                 item.Extension != "bmfc" &&
+                item.Extension != "setj" &&
+                item.Extension != "json" &&
                 item.Exists());
 
         return firstMatch != null;

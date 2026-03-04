@@ -50,6 +50,21 @@ public partial class TitleFilePathDisplay : UserControl
         }
     }
 
+    private void OnCopyFullPathClick(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(FullPath))
+        {
+            try
+            {
+                Clipboard.SetText(FullPath);
+            }
+            catch
+            {
+                // Silently fail if clipboard is unavailable
+            }
+        }
+    }
+
     private void OnViewInExplorerClick(object sender, RoutedEventArgs e)
     {
         if (!string.IsNullOrEmpty(FullPath) && File.Exists(FullPath))
