@@ -1,27 +1,69 @@
-﻿<UserControl x:Class="EditorTabPlugin_XNA.Views.EditorControls"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:EditorTabPlugin_XNA.Views"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             mc:Ignorable="d" >
-    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
-        <Button x:Name="MinusButton" Content="-" Width="20" Command="{Binding ZoomOutCommand}" Style="{StaticResource MaterialDesignToolForegroundButton}" materialDesign:RippleAssist.IsDisabled="True"/>
-        <ComboBox Grid.Column="1" Width="100"
-                  SelectedItem="{Binding PercentZoomLevel}"
-                  ItemsSource="{Binding ZoomLevels}"
-                  DisplayMemberPath="ZoomDisplay"
-                  />
-        <Button x:Name="PlusButton" Grid.Column="2" Width="20" Content="+" Command="{Binding ZoomInCommand}" Style="{StaticResource MaterialDesignToolForegroundButton}" materialDesign:RippleAssist.IsDisabled="True"/>
+﻿<UserControl
+    x:Class="EditorTabPlugin_XNA.Views.EditorControls"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:EditorTabPlugin_XNA.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <StackPanel
+        HorizontalAlignment="Left"
+        VerticalAlignment="Top"
+        Orientation="Horizontal">
+        <Button
+            x:Name="MinusButton"
+            Width="20"
+            materialDesign:RippleAssist.IsDisabled="True"
+            Command="{Binding ZoomOutCommand}"
+            Content="-"
+            Style="{StaticResource MaterialDesignToolForegroundButton}" />
+        <ComboBox
+            Grid.Column="1"
+            Width="100"
+            DisplayMemberPath="ZoomDisplay"
+            ItemsSource="{Binding ZoomLevels}"
+            SelectedItem="{Binding PercentZoomLevel}" />
+        <Button
+            x:Name="PlusButton"
+            Grid.Column="2"
+            Width="20"
+            materialDesign:RippleAssist.IsDisabled="True"
+            Command="{Binding ZoomInCommand}"
+            Content="+"
+            Style="{StaticResource MaterialDesignToolForegroundButton}" />
 
         <ComboBox
-            Margin="10,0,0,0"
             Width="180"
-            SelectedItem="{Binding SelectedCustomCanvasSize}"
-            ItemsSource="{Binding CustomCanvasSizes}"
+            Margin="10,0,0,0"
             DisplayMemberPath="FriendlyName"
-            />
+            ItemsSource="{Binding CustomCanvasSizes}"
+            SelectedItem="{Binding SelectedCustomCanvasSize}" />
+
+        <TextBlock
+            Margin="20,0,4,0"
+            VerticalAlignment="Center"
+            Text="Font Scale:" />
+        <Button
+            x:Name="FontScaleMinusButton"
+            Width="20"
+            materialDesign:RippleAssist.IsDisabled="True"
+            Command="{Binding FontScaleDecreaseCommand}"
+            Content="-"
+            Style="{StaticResource MaterialDesignToolForegroundButton}" />
+        <TextBlock
+            Width="40"
+            Margin="10,0,0,0"
+            VerticalAlignment="Center"
+            Text="{Binding GlobalFontScaleDisplay}"
+            TextAlignment="Center" />
+        <Button
+            x:Name="FontScalePlusButton"
+            Width="20"
+            materialDesign:RippleAssist.IsDisabled="True"
+            Command="{Binding FontScaleIncreaseCommand}"
+            Content="+"
+            Style="{StaticResource MaterialDesignToolForegroundButton}" />
 
     </StackPanel>
 </UserControl>

@@ -8,7 +8,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+#if XNALIKE
 namespace MonoGameGum;
+#elif RAYLIB
+namespace RaylibGum;
+#endif
 
 public interface IGumHotReloadManager
 {
