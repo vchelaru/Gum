@@ -73,7 +73,7 @@ public class ContainerRuntime : InteractiveGue
         }
     }
 
-    public Gum.RenderingLibrary.Blend Blend
+    public Gum.RenderingLibrary.Blend? Blend
     {
         get
         {
@@ -81,12 +81,14 @@ public class ContainerRuntime : InteractiveGue
         }
         set
         {
+            if (value.HasValue)
+            {
 #if XNALIKE
-            BlendState = value.ToBlendState().ToXNA();
+                BlendState = value.Value.ToBlendState().ToXNA();
 #else
-            BlendState = value.ToBlendState();
+                BlendState = value.Value.ToBlendState();
 #endif
-
+            }
             // NotifyPropertyChanged handled by BlendState:
         }
     }

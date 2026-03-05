@@ -56,7 +56,7 @@ public class SpriteRuntime : global::Gum.Wireframe.BindableGue, IRenderTargetTex
         }
     }
 
-    public Gum.RenderingLibrary.Blend Blend
+    public Gum.RenderingLibrary.Blend? Blend
     {
         get
         {
@@ -64,8 +64,10 @@ public class SpriteRuntime : global::Gum.Wireframe.BindableGue, IRenderTargetTex
         }
         set
         {
-            BlendState = value.ToBlendState().ToXNA();
-
+            if (value.HasValue)
+            {
+                BlendState = value.Value.ToBlendState().ToXNA();
+            }
             // NotifyPropertyChanged handled by BlendState:
         }
     }

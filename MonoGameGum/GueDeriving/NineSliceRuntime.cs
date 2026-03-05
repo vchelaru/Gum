@@ -71,7 +71,7 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
-        public Gum.RenderingLibrary.Blend Blend
+        public Gum.RenderingLibrary.Blend? Blend
         {
             get
             {
@@ -79,8 +79,10 @@ namespace MonoGameGum.GueDeriving
             }
             set
             {
-                BlendState = value.ToBlendState().ToXNA();
-
+                if (value.HasValue)
+                {
+                    BlendState = value.Value.ToBlendState().ToXNA();
+                }
                 // NotifyPropertyChanged handled by BlendState:
             }
         }

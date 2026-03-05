@@ -55,7 +55,7 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-    public Gum.RenderingLibrary.Blend Blend
+    public Gum.RenderingLibrary.Blend? Blend
     {
         get
         {
@@ -63,7 +63,10 @@ public class TextRuntime : InteractiveGue
         }
         set
         {
-            BlendState = value.ToBlendState().ToXNA();
+            if (value.HasValue)
+            {
+                BlendState = value.Value.ToBlendState().ToXNA();
+            }
             // NotifyPropertyChanged handled by BlendState:
         }
     }
