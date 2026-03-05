@@ -189,8 +189,10 @@ When using `Maintain File Aspect Ratio Width`, the Sprite's effective width depe
 
 ## Absolute Multiplied by Font Scale
 
-`Absolute Multiplied by Font Scale` is a value which multiplies the `Font Scale` property at runtime with the `Width` value. This can be used to create widths which are responsive to font scales for devices which may have variable text sizes.
+`Absolute Multiplied by Font Scale` is a value which multiplies an object's `Width` value by the global Font Scale value. This can be used to create widths which are responsive to font scales for devices which may have variable text sizes.
 
-At the time of this writing, the Gum tool always uses a Font Scale of 1, so this cannot be previewed in the tool. However, when a Gum project is loaded at runtime, the runtime may apply a `Font Scale` value such as using the **Text size** from Windows.
+The Font Scale value can be adjusted in the Editor tab to preview different global Font Scale values. When a Gum project is loaded at runtime, the runtime may apply a `Font Scale` value such as using the **Text size** from Windows.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Width of 100 using Absolute Multiplied by Font Scale results in an absolute width of 100 in the Gum tool</p></figcaption></figure>
+The global Font Scale value is set to 4, so the rectangle in the following image is drawn at an effective width of 200 pixels.
+
+<figure><img src="../../../.gitbook/assets/05_05 41 52.png" alt=""><figcaption><p>Width affected by global Font Scale</p></figcaption></figure>

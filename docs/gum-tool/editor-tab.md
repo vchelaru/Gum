@@ -30,6 +30,20 @@ To do this:
 
 1. Locate the .gumx file for your project
 2. Open the .gumx file in a text editor
-3. Search for the CustomCanvasSizes tag
+3. Search for the `CustomCanvasSizes` tag
 
 You can remove or add new sizes by making changes here. If the entire `CustomCanvasSizes` tag is deleted, Gum automatically re-creates the default set of tags the next time it loads the .gumx file.
+
+## Font Scale&#x20;
+
+The Font Scale UI allows changing the global font scale of the project. This Font Scale value multiplies the font values for all Text instances in a project. This can be used to test your project at different global font scales.&#x20;
+
+This is a preview value and does not change your project. Similarly, this value is not automatically applied at runtime - it must be explicitly set in code.
+
+<figure><img src="../.gitbook/assets/05_05 29 03.png" alt=""><figcaption></figcaption></figure>
+
+Changing the global Font Scale value does the following to Gum elements:
+
+* Text objects have their Font Scale value multiplied by this value. Note that this does not generate new bitmap fonts
+* Objects which are sized according to the size of Text instances (such as the buttons in the screenshot above) are resized appropriately
+* Objects which use `Width Units` of [Absolute Multiplied by Font Scale](gum-elements/general-properties/width-units.md#absolute-multiplied-by-font-scale) or `Height Units` of [Absolute Multiplied by Font Scale](gum-elements/general-properties/height-units.md#absolute-multiplied-by-font-scale) are resized appropriately.

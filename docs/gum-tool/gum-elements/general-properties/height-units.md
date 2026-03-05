@@ -237,3 +237,13 @@ When this value is used, a Sprite's `Width` can be changed resulting in its abso
 When using `Maintain File Aspect Ratio Height`, the Sprite's absolute height depends on the Sprite's `Texture Height` property.
 
 <figure><img src="../../../.gitbook/assets/30_07 25 09.gif" alt=""><figcaption><p>Changing either <code>Width</code> or <code>Texture Height</code> affects the Sprite's absolute height</p></figcaption></figure>
+
+## Absolute Multiplied by Font Scale
+
+Absolute Multiplied by Font Scale is a value which multiplies an object's Height value by the global Font Scale value. This can be used to create heights which are responsive to font scale for devices which may have variable text sizes.
+
+The Font Scale value can be adjusted in the Editor tab to preview different global Font Scale values. When a Gum project is loaded at runtime, the runtime may apply a `Font Scale` value such as using the **Text size** from Windows.
+
+The global Font Scale value is set to 4, so the rectangle in the following image is drawn at an effective height of 200 pixels.
+
+<figure><img src="../../../.gitbook/assets/05_05 40 02.png" alt=""><figcaption><p>Height affected by global Font Scale</p></figcaption></figure>
