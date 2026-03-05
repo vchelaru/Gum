@@ -60,7 +60,7 @@ using System.Linq;
     /// like a PDF renderer, this might just be GraphicalUiElement.
     /// </summary>
     public string DefaultScreenBase { get; set; } =
-            "Gum.Wireframe.BindableGue";
+            "Gum.Wireframe.GraphicalUiElement";
 
     public OutputLibrary OutputLibrary { get; set; } = OutputLibrary.MonoGame;
 

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace SilkNetGum.Screens;
-internal class CodeOnlyScreen : BindableGue
+internal class CodeOnlyScreen : GraphicalUiElement
 {
     private ContainerRuntime root;
 

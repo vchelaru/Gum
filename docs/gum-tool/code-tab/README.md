@@ -138,7 +138,7 @@ namespace MyProject.Components;
 
 ### Default Screen Base
 
-Enter the type that you would like all screen runtimes to inherit from. If you're not sure what to enter, then use `Gum.Wireframe.BindableGue`. If your game uses a custom class that you have written for all screens, then use the name of that class. You can switch to custom classes later as your project grows.
+Enter the type that you would like all screen runtimes to inherit from. If you're not sure what to enter, then use `Gum.Wireframe.GraphicalUiElement`. If your game uses a custom class that you have written for all screens, then use the name of that class. You can switch to custom classes later as your project grows.
 
 Note that Gum may choose to override this base class in certain conditions including:
 

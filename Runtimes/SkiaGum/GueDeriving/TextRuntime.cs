@@ -12,7 +12,7 @@ namespace SkiaGum.GueDeriving;
 /// <summary>
 /// A visual text element which can display a string.
 /// </summary>
-public class TextRuntime : BindableGue
+public class TextRuntime : GraphicalUiElement
 {
     #region Skia-specific properties, which may go away in the future
     public static int DefaultRed { get; set; } = 69;

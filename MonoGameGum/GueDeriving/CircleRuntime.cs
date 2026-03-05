@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving;
 
-public class CircleRuntime : BindableGue
+public class CircleRuntime : GraphicalUiElement
 {
     LineCircle containedLineCircle;
 

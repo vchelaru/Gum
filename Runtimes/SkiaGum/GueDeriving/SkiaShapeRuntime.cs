@@ -7,7 +7,7 @@ using SkiaSharp;
 
 namespace SkiaGum.GueDeriving;
 
-public abstract class SkiaShapeRuntime : BindableGue
+public abstract class SkiaShapeRuntime : GraphicalUiElement
 {
     protected abstract Renderables.RenderableShapeBase ContainedRenderable { get; }
 

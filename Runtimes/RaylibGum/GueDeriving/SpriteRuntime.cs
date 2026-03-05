@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Gum.GueDeriving;
-public class SpriteRuntime : BindableGue
+public class SpriteRuntime : GraphicalUiElement
 {
     #region Contained Sprite
     Sprite mContainedSprite;

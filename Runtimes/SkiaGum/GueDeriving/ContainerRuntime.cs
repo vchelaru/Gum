@@ -3,7 +3,7 @@ using SkiaGum.Renderables;
 
 namespace SkiaGum.GueDeriving;
 
-public class ContainerRuntime : BindableGue
+public class ContainerRuntime : GraphicalUiElement
 {
     public ContainerRuntime(bool fullInstantiation = true)
     {

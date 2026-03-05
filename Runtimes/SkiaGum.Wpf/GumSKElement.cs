@@ -20,12 +20,12 @@ namespace SkiaGum.Wpf
 
         #region Fields/Properties
 
-        private ObservableCollection<BindableGue> GumElementsInternal { get; set; } = new ObservableCollection<BindableGue>();
+        private ObservableCollection<GraphicalUiElement> GumElementsInternal { get; set; } = new ObservableCollection<GraphicalUiElement>();
 
-        public IReadOnlyCollection<BindableGue> GumElements => GumElementsInternal;
+        public IReadOnlyCollection<GraphicalUiElement> GumElements => GumElementsInternal;
 
         // this is public to support adding GUE's directly in gencode.
-        public ObservableCollection<BindableGue> Children => GumElementsInternal;
+        public ObservableCollection<GraphicalUiElement> Children => GumElementsInternal;
 
         public bool EnableTouchEvents { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
@@ -66,7 +66,7 @@ namespace SkiaGum.Wpf
                 case NotifyCollectionChangedAction.Add:
                     foreach (var toAdd in e.NewItems)
                     {
-                        var bindableGue = toAdd as BindableGue;
+                        var bindableGue = toAdd as GraphicalUiElement;
 
                         bindableGue.AddToManagers(this);
                         bindableGue.BindingContext = this.DataContext;
@@ -79,7 +79,7 @@ namespace SkiaGum.Wpf
         }
 
 
-        public void Add(BindableGue toAdd)
+        public void Add(GraphicalUiElement toAdd)
         {
             GumElementsInternal.Add(toAdd);
         }
@@ -88,7 +88,7 @@ namespace SkiaGum.Wpf
         {
             foreach (var element in GumElementsInternal)
             {
-                if (element is BindableGue bindableGue)
+                if (element is GraphicalUiElement bindableGue)
                 {
                     bindableGue.BindingContext = this.DataContext;
                 }

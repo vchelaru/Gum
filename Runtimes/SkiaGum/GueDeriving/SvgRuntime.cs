@@ -5,7 +5,7 @@ using Svg.Skia;
 
 namespace SkiaGum.GueDeriving;
 
-public class SvgRuntime : BindableGue
+public class SvgRuntime : GraphicalUiElement
 {
     VectorSprite mContainedSprite;
     VectorSprite ContainedSprite
