@@ -1,6 +1,6 @@
 using Gum.Mvvm;
 using Gum.Wireframe;
-using MonoGameGum.GueDeriving;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
 
@@ -14,11 +14,18 @@ namespace MonoGameGum.Tests.Runtimes;
 /// </summary>
 public class DeprecatedBindableGueTests
 {
+    private static BindableGue CreateBindableGue()
+    {
+        var gue = new BindableGue();
+        gue.SetContainedObject(new InvisibleRenderable());
+        return gue;
+    }
+
     [Fact]
     public void BindableGue_BindingContext_ShouldUpdateBoundProperty()
     {
         // arrange
-        BindableGue gue = new ContainerRuntime();
+        BindableGue gue = CreateBindableGue();
         TestViewModel testViewModel = new();
         gue.SetBinding(nameof(gue.X), nameof(testViewModel.IntPropertyOnVm));
 
@@ -33,7 +40,7 @@ public class DeprecatedBindableGueTests
     [Fact]
     public void BindableGue_IsAssignableTo_GraphicalUiElement()
     {
-        BindableGue gue = new ContainerRuntime();
+        BindableGue gue = CreateBindableGue();
         (gue is GraphicalUiElement).ShouldBeTrue();
     }
 
@@ -41,7 +48,7 @@ public class DeprecatedBindableGueTests
     public void BindableGue_SetBinding_ShouldWork()
     {
         // arrange
-        BindableGue gue = new ContainerRuntime();
+        BindableGue gue = CreateBindableGue();
         TestViewModel testViewModel = new();
         gue.BindingContext = testViewModel;
 

@@ -3,6 +3,7 @@ using Gum.Wireframe;
 using MonoGameGum.Forms;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -131,6 +132,7 @@ public class BindableGueTests
     {
         // arrange
         GraphicalUiElement gue = new GraphicalUiElement();
+        gue.SetContainedObject(new InvisibleRenderable());
         TestViewModel testViewModel = new();
         gue.SetBinding(nameof(gue.X), nameof(testViewModel.IntPropertyOnVm));
 
