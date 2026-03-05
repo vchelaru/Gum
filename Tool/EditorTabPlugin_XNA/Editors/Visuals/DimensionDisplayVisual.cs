@@ -172,7 +172,9 @@ public class DimensionDisplayVisual : EditorVisualBase
         // This should have ZERO affect for anyone not using UI level zoom
         float scaleFactor = (float)(_uiSettingsService.BaseFontSize / 12);
         float decreasedScaleFactor = scaleFactor * 0.75f;
-        float finalizedScaleFactor = decreasedScaleFactor < 1 ? 1 : decreasedScaleFactor;
+        // divide by the global font scale - we don't want the Dimension Display to be affected by global
+        // font scale
+        float finalizedScaleFactor = (decreasedScaleFactor < 1 ? 1 : decreasedScaleFactor) / GraphicalUiElement.GlobalFontScale;
 
         // The dividing by zoom makes sure when we zoom the editor, it retains the same size for text
         // even though the editor objects are changing in size.
