@@ -40,7 +40,12 @@ public static class BlendExtensions
 
 #if MONOGAME || KNI || SKIA || FNA || RAYLIB
 
+#if FRB
+    // FRB uses generated code which is harder to upgrade, so we will keep this signature the same here
     public static Blend ToBlend(this BlendState blendState)
+#else
+    public static Blend? ToBlend(this BlendState blendState)
+#endif
     {
         if (blendState == BlendState.NonPremultiplied)
         {
@@ -68,8 +73,11 @@ public static class BlendExtensions
         }
         else
         {
-            // Should this return normal? Or should this be nullable?
+#if FRB
             return Blend.Normal;
+#else
+            return null;
+#endif
         }
 
     }
