@@ -23,7 +23,7 @@ namespace RenderingLibrary.Graphics
                 var bottom = top + renderableIpso.Height;
                 return new SKRect(left, top, right, bottom);
             }
-            else if (renderableIpso is BindableGue gue && gue.ClipsChildren)
+            else if (renderableIpso is GraphicalUiElement gue && gue.ClipsChildren)
             {
                 var left = renderableIpso.GetAbsoluteX();
                 var top = renderableIpso.GetAbsoluteY();

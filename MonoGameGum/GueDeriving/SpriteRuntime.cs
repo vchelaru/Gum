@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving;
 
-public class SpriteRuntime : global::Gum.Wireframe.BindableGue, IRenderTargetTextureReferencer
+public class SpriteRuntime : global::Gum.Wireframe.GraphicalUiElement, IRenderTargetTextureReferencer
 {
     #region Contained Sprite
     Sprite mContainedSprite;

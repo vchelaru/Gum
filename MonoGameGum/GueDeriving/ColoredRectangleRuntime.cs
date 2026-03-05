@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving;
 
-public class ColoredRectangleRuntime : BindableGue
+public class ColoredRectangleRuntime : GraphicalUiElement
 {
     public static float DefaultWidth = 50;
     public static float DefaultHeight = 50;

@@ -76,12 +76,12 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
 {
     #region Fields/Properties
 
-    //private ObservableCollection<BindableGue> GumElementsInternal { get; set; } = new ObservableCollection<BindableGue>();
+    //private ObservableCollection<GraphicalUiElement> GumElementsInternal { get; set; } = new ObservableCollection<GraphicalUiElement>();
 
-    //public IReadOnlyCollection<BindableGue> GumElements => GumElementsInternal;
+    //public IReadOnlyCollection<GraphicalUiElement> GumElements => GumElementsInternal;
 
     // this is public to support adding GUE's directly in gencode.
-    public ObservableCollection<BindableGue> Children { get; private set; } = new ObservableCollectionNoReset<BindableGue>();
+    public ObservableCollection<GraphicalUiElement> Children { get; private set; } = new ObservableCollectionNoReset<GraphicalUiElement>();
 
     SystemManagers SystemManagers;
     public Renderer Renderer => SystemManagers.Renderer;
@@ -349,7 +349,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
         }
     }
 
-    private void DarkenElement(BindableGue elementPushed)
+    private void DarkenElement(GraphicalUiElement elementPushed)
     {
         if (elementPushed is ColoredCircleRuntime circleRuntime)
         {
@@ -358,7 +358,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
         }
     }
 
-    BindableGue itemPushed;
+    GraphicalUiElement itemPushed;
 
     // Made public for auto tests:
     //public async Task TryPushOnContainedGumObjects(float x, float y)
@@ -476,7 +476,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
     //    }
     //}
 
-    private InteractiveGue FindElement(float x, float y, IList<BindableGue> list, Func<InteractiveGue, bool> condition)
+    private InteractiveGue FindElement(float x, float y, IList<GraphicalUiElement> list, Func<InteractiveGue, bool> condition)
     {
         //for (int i = 0; i < list.Count; i++)
         // Items later in the list appear on top, so we need to test back-to-front
@@ -499,7 +499,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
                 }
                 else
                 {
-                    var children = gumElement.Children.Select(item => item as BindableGue).Where(item => item != null).ToList();
+                    var children = gumElement.Children.Select(item => item as GraphicalUiElement).Where(item => item != null).ToList();
 
                     var foundElement = FindElement(x, y, children, condition);
 
@@ -529,7 +529,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
                 {
                     foreach (var toAdd in e.NewItems)
                     {
-                        var bindableGue = (BindableGue)toAdd;
+                        var bindableGue = (GraphicalUiElement)toAdd;
 
                         bindableGue.AddToManagers(this);
                         bindableGue.BindingContext = this.BindingContext;
@@ -540,13 +540,13 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
         }
     }
 
-    public void AddChild(BindableGue toAdd) => Children.Add(toAdd);
+    public void AddChild(GraphicalUiElement toAdd) => Children.Add(toAdd);
 
         //if (toAdd.ClickedAsync != null || toAdd.PushedAsync != null || toAdd.DragAsync != null)
         //{
         //    this.EnableTouchEvents = true;
         //}
-    public void RemoveChild(BindableGue toRemove) => Children.Remove(toRemove);
+    public void RemoveChild(GraphicalUiElement toRemove) => Children.Remove(toRemove);
 
 
     protected override void OnBindingContextChanged()
@@ -555,7 +555,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
 
         foreach (var element in Children)
         {
-            if (element is BindableGue bindableGue)
+            if (element is GraphicalUiElement bindableGue)
             {
                 if (!string.IsNullOrEmpty(element.BindingContextBinding))
                 {
@@ -739,7 +739,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
         return bottomRight;
     }
 
-    private void GetBottomRightMostRecursive(BindableGue gue, ref Vector2 bottomRight)
+    private void GetBottomRightMostRecursive(GraphicalUiElement gue, ref Vector2 bottomRight)
     {
         if (gue.Visible == false)
         {
@@ -753,14 +753,14 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
 
         if (gue.Children == null)
         {
-            foreach (BindableGue item in gue.ContainedElements)
+            foreach (GraphicalUiElement item in gue.ContainedElements)
             {
                 GetBottomRightMostRecursive(item, ref bottomRight);
             }
         }
         else
         {
-            foreach (BindableGue item in gue.Children)
+            foreach (GraphicalUiElement item in gue.Children)
             {
                 GetBottomRightMostRecursive(item, ref bottomRight);
             }

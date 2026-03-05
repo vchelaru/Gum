@@ -3,6 +3,7 @@ using Gum.Wireframe;
 using MonoGameGum.Forms;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -60,6 +61,27 @@ public class BindableGueTests
     }
 
     [Fact]
+    public void BindingContext_ShouldPropagate_ThroughAllDescendants()
+    {
+        // arrange
+        GraphicalUiElement root = new ContainerRuntime();
+        GraphicalUiElement child = new ContainerRuntime();
+        GraphicalUiElement grandChild = new ContainerRuntime();
+        root.AddChild(child);
+        child.AddChild(grandChild);
+
+        TestViewModel testViewModel = new();
+        grandChild.SetBinding(nameof(grandChild.X), nameof(testViewModel.IntPropertyOnVm));
+        testViewModel.IntPropertyOnVm = 42;
+
+        // act - binding context set on root should cascade to grandchild
+        root.BindingContext = testViewModel;
+
+        // assert
+        grandChild.X.ShouldBe(42);
+    }
+
+    [Fact]
     public void BindingContext_ShouldSubscribe_IfBindingExistsBefore()
     {
         // arrange
@@ -103,6 +125,23 @@ public class BindableGueTests
 
         sut.IntPropertyOnGue = 5;
         testViewModel.IntPropertyOnVm.ShouldBe(5);
+    }
+
+    [Fact]
+    public void SetBinding_OnGraphicalUiElement_ShouldWork()
+    {
+        // arrange
+        GraphicalUiElement gue = new GraphicalUiElement();
+        gue.SetContainedObject(new InvisibleRenderable());
+        TestViewModel testViewModel = new();
+        gue.SetBinding(nameof(gue.X), nameof(testViewModel.IntPropertyOnVm));
+
+        // act
+        gue.BindingContext = testViewModel;
+        testViewModel.IntPropertyOnVm = 42;
+
+        // assert
+        gue.X.ShouldBe(42);
     }
 
     [Fact(Skip = "For Vic K - we need to fix this!")]
@@ -198,7 +237,7 @@ public class BindableGueTests
         }
     }
 
-    class BindableGueDerived : BindableGue
+    class BindableGueDerived : GraphicalUiElement
     {
         int intProperty;
         public int IntPropertyOnGue

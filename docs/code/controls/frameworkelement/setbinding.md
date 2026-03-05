@@ -21,7 +21,7 @@ SetBinding takes two parameters:&#x20;
 Usually this method is called using the `nameof`  keyword to avoid errors from typos and refactoring.
 
 {% hint style="info" %}
-SetBinding exists on both FrameworkElement (Forms objects) as well as BindableGue (Gum runtime objects). This document is written in context of Forms controls, but binding can be performed directly on a runtime object's properties, including a FrameworkElement's Visual instance.
+SetBinding exists on both FrameworkElement (Forms objects) as well as GraphicalUiElement (Gum runtime objects). This document is written in context of Forms controls, but binding can be performed directly on a runtime object's properties, including a FrameworkElement's Visual instance.
 {% endhint %}
 
 ## Code Example - Binding a TextBox's Text Property

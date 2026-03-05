@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Gum.GueDeriving;
-public class ColoredRectangleRuntime : BindableGue
+public class ColoredRectangleRuntime : GraphicalUiElement
 {
     public static float DefaultWidth = 50;
     public static float DefaultHeight = 50;

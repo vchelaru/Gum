@@ -68,7 +68,7 @@ public class SelectionChangedEventArgs
 /// The base object for all interactive Gum runtime objects. It provides events for cursor interaction which can be used
 /// to create full interactive controls
 /// </summary>
-public partial class InteractiveGue : BindableGue
+public partial class InteractiveGue : GraphicalUiElement
 {
 
     static List<Action> nextPushActions = new List<Action>();
