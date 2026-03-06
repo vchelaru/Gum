@@ -1,6 +1,7 @@
 ﻿#if MONOGAME || KNI || FNA
 #define XNALIKE
 #endif
+using Gum.DataTypes.Behaviors;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultFromFileVisuals;
 using Gum.Managers;
@@ -544,31 +545,31 @@ public class FormsUtilities
         {
             var categoryNames = component.Categories.Select(item => item.Name).ToList();
             var behaviorNames = component.Behaviors.Select(item => item.BehaviorName).ToList();
-            if (behaviorNames.Contains("ButtonBehavior"))
+            if (behaviorNames.Contains(StandardFormsBehaviorNames.ButtonBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileButtonRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("CheckBoxBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.CheckBoxBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileCheckBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (categoryNames.Contains("ComboBoxCategory") || behaviorNames.Contains("ComboBoxBehavior"))
+            else if (categoryNames.Contains("ComboBoxCategory") || behaviorNames.Contains(StandardFormsBehaviorNames.ComboBoxBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileComboBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("ItemsControlBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.ItemsControlBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileItemsControlRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (categoryNames.Contains("LabelCategory") || behaviorNames.Contains("LabelBehavior"))
+            else if (categoryNames.Contains("LabelCategory") || behaviorNames.Contains(StandardFormsBehaviorNames.LabelBehaviorName))
             {
                 if (component.BaseType == "Text")
                 {
@@ -583,19 +584,19 @@ public class FormsUtilities
                         typeof(DefaultFromFileLabelRuntime), overwriteIfAlreadyExists: false);
                 }
             }
-            else if (behaviorNames.Contains("ListBoxBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.ListBoxBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileListBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("ListBoxItemBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.ListBoxItemBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileListBoxItemRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("MenuBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.MenuBehaviorName))
             {
 #if !RAYLIB
                 ElementSaveExtensions.RegisterGueInstantiationType(
@@ -603,7 +604,7 @@ public class FormsUtilities
                     typeof(DefaultFromFileMenuRuntime), overwriteIfAlreadyExists: false);
 #endif
             }
-            else if (behaviorNames.Contains("MenuItemBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.MenuItemBehaviorName))
             {
 #if !RAYLIB
                 ElementSaveExtensions.RegisterGueInstantiationType(
@@ -611,13 +612,13 @@ public class FormsUtilities
                     typeof(DefaultFromFileMenuItemRuntime), overwriteIfAlreadyExists: false);
 #endif
             }
-            else if (behaviorNames.Contains("PanelBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.PanelBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFilePanelRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("PasswordBoxBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.PasswordBoxBehaviorName))
             {
 #if !RAYLIB
                 ElementSaveExtensions.RegisterGueInstantiationType(
@@ -625,49 +626,49 @@ public class FormsUtilities
                     typeof(DefaultFromFilePasswordBoxRuntime), overwriteIfAlreadyExists: false);
 #endif
             }
-            else if (behaviorNames.Contains("RadioButtonBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.RadioButtonBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileRadioButtonRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("ScrollBarBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.ScrollBarBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileScrollBarRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("ScrollViewerBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.ScrollViewerBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileScrollViewerRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("SliderBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.SliderBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileSliderRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("SplitterBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.SplitterBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileSplitterRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("StackPanelBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.StackPanelBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileStackPanelRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("TextBoxBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.TextBoxBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (behaviorNames.Contains("WindowBehavior"))
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.WindowBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,

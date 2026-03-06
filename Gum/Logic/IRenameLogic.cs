@@ -14,9 +14,9 @@ public interface IRenameLogic
 
     void RenameState(StateSave stateSave, StateSaveCategory category, string newName, bool applyRefactoringChanges = true);
 
-    StateRenameChanges GetChangesForRenamedState(StateSave state, string oldName, IStateContainer? container, StateSaveCategory? category);
+    StateReferences GetChangesForRenamedState(StateSave state, string oldName, IStateContainer? container, StateSaveCategory? category);
 
-    void ApplyStateRenameChanges(StateRenameChanges changes, StateSave state);
+    void ApplyStateReferences(StateReferences changes, StateSave state);
 
     #endregion
 
@@ -24,9 +24,9 @@ public interface IRenameLogic
 
     void AskToRenameStateCategory(StateSaveCategory category, IStateContainer owner);
 
-    CategoryRenameChanges GetChangesForRenamedCategory(IStateContainer owner, StateSaveCategory category, string oldName);
+    CategoryReferences GetChangesForRenamedCategory(IStateContainer owner, StateSaveCategory category, string oldName);
 
-    void ApplyCategoryRenameChanges(CategoryRenameChanges categoryChanges, IStateContainer owner, StateSaveCategory category, string oldName, string newName);
+    void ApplyCategoryReferences(CategoryReferences categoryChanges, IStateContainer owner, StateSaveCategory category, string oldName, string newName);
 
     #endregion
 
@@ -34,13 +34,13 @@ public interface IRenameLogic
 
     GeneralResponse HandleRename(IInstanceContainer instanceContainer, InstanceSave? instance, string oldName, NameChangeAction action, bool askAboutRename = true);
 
-    InstanceRenameChanges GetChangesForRenamedInstance(ElementSave containerElement, InstanceSave instance, string oldName);
+    InstanceReferences GetChangesForRenamedInstance(ElementSave containerElement, InstanceSave instance, string oldName);
 
-    void ApplyInstanceRenameChanges(InstanceRenameChanges changes, string newName, string oldName, HashSet<ElementSave> elementsToSave);
+    void ApplyInstanceReferences(InstanceReferences changes, string newName, string oldName, HashSet<ElementSave> elementsToSave);
 
-    ElementRenameChanges GetChangesForRenamedElement(ElementSave elementSave, string oldName);
+    ElementReferences GetChangesForRenamedElement(ElementSave elementSave, string oldName);
 
-    void ApplyElementRenameChanges(ElementRenameChanges changes, ElementSave elementSave, string oldName);
+    void ApplyElementReferences(ElementReferences changes, ElementSave elementSave, string oldName);
 
     #endregion
 

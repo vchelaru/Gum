@@ -37,6 +37,7 @@
 		<Compile Include="..\GumDataTypes\Behaviors\BehaviorReference.cs" Link="Behaviors\BehaviorReference.cs" />
 		<Compile Include="..\GumDataTypes\Behaviors\BehaviorSave.cs" Link="Behaviors\BehaviorSave.cs" />
 		<Compile Include="..\GumDataTypes\Behaviors\ElementBehaviorReference.cs" Link="Behaviors\ElementBehaviorReference.cs" />
+		<Compile Include="..\GumDataTypes\Behaviors\StandardFormsBehaviorNames.cs" Link="Behaviors\StandardFormsBehaviorNames.cs" />
 		<Compile Include="..\GumDataTypes\ComponentSave.cs" Link="DataTypes\ComponentSave.cs" />
 		<Compile Include="..\GumDataTypes\CustomPropertySave.cs" Link="DataTypes\CustomPropertySave.cs" />
 		<Compile Include="..\GumDataTypes\DimensionUnitType.cs" Link="DataTypes\DimensionUnitType.cs" />

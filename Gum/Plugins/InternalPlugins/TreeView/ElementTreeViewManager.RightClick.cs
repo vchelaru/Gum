@@ -317,8 +317,12 @@ public partial class ElementTreeViewManager
             else if (_selectedState.SelectedBehavior != null)
             {
                 AddMenuItem("View in explorer", HandleViewInExplorer);
-                AddSeparator();
                 var selectedBehaviors = _selectedState.SelectedBehaviors.ToList();
+                if (selectedBehaviors.Count == 1)
+                {
+                    AddMenuItem("Rename", () => _editCommands.AskToRenameBehavior(_selectedState.SelectedBehavior));
+                }
+                AddSeparator();
                 var behaviorDeleteText = selectedBehaviors.Count > 1
                     ? $"Delete {selectedBehaviors.Count} Behaviors"
                     : "Delete " + _selectedState.SelectedBehavior.ToString();

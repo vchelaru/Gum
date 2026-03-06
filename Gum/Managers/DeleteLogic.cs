@@ -202,6 +202,26 @@ public class DeleteLogic : IDeleteLogic
         {
             var array = _selectedState.SelectedBehaviors.ToArray();
 
+            var standardBehaviors = array
+                .Where(b => StandardFormsBehaviorNames.All.Contains(b.Name))
+                .Select(b => b.Name)
+                .ToList();
+
+            if (standardBehaviors.Count > 0)
+            {
+                var names = string.Join("\n", standardBehaviors.Select(n => $"• {n}"));
+                var warning = standardBehaviors.Count == 1
+                    ? $"\"{standardBehaviors[0]}\" is a standard Gum Forms behavior.\n\n"
+                    : $"The following are standard Gum Forms behaviors:\n{names}\n\n";
+
+                warning += "Deleting a standard Forms behavior will break Forms functionality " +
+                           "for all components that use it.\n\nDelete anyway?";
+
+                var confirmed = _dialogService.ShowYesNoMessage(warning, "Delete Standard Forms Behavior");
+                if (!confirmed)
+                    return;
+            }
+
             var result = ShowDeleteDialog(array, out optionsWindow);
 
             if (result == true)
@@ -261,6 +281,25 @@ public class DeleteLogic : IDeleteLogic
                     "Delete Instances");
             }
             return;
+        }
+
+        var standardBehaviors = behaviors
+            .Where(b => StandardFormsBehaviorNames.All.Contains(b.Name))
+            .Select(b => b.Name)
+            .ToList();
+
+        if (standardBehaviors.Count > 0)
+        {
+            var names = string.Join("\n", standardBehaviors.Select(n => $"• {n}"));
+            var warning = standardBehaviors.Count == 1
+                ? $"\"{standardBehaviors[0]}\" is a standard Gum Forms behavior.\n\n"
+                : $"The following are standard Gum Forms behaviors:\n{names}\n\n";
+
+            warning += "Deleting a standard Forms behavior will break Forms functionality " +
+                       "for all components that use it.\n\nDelete anyway?";
+
+            if (!_dialogService.ShowYesNoMessage(warning, "Delete Standard Forms Behavior"))
+                return;
         }
 
         var combinedArray = combinedList.ToArray();
@@ -423,24 +462,51 @@ public class DeleteLogic : IDeleteLogic
         bool multipleElements = elementItems.Count > 1;
         foreach (var element in elementItems)
         {
-            ElementRenameChanges impactChanges = _referenceFinder.GetReferencesToElement(element, element.Name);
+            ElementReferences impactChanges = _referenceFinder.GetReferencesToElement(element, element.Name);
             impactChanges.ExcludeContainersBeingDeleted(elementItems);
-            string impactDetails = impactChanges.GetDeleteImpactDetails();
-            if (!string.IsNullOrEmpty(impactDetails))
+            AppendImpactSection(ref message, impactChanges.GetDeleteImpactDetails(), element.Name, multipleElements);
+        }
+
+        var instanceItems = objectsToDelete.OfType<InstanceSave>().ToList();
+        bool multipleInstances = instanceItems.Count > 1;
+        foreach (var instance in instanceItems)
+        {
+            if (instance.ParentContainer == null)
             {
-                message += "\n";
-                if (multipleElements)
-                {
-                    message += $"\nImpact of deleting {element.Name}:\n{impactDetails}";
-                }
-                else
-                {
-                    message += $"\n{impactDetails}";
-                }
+                continue;
             }
+            InstanceReferences impactChanges = _referenceFinder.GetReferencesToInstance(
+                instance.ParentContainer, instance, instance.Name);
+            AppendImpactSection(ref message, impactChanges.GetDeleteImpactDetails(), instance.Name, multipleInstances);
+        }
+
+        var behaviorItems = objectsToDelete.OfType<BehaviorSave>().ToList();
+        bool multipleBehaviors = behaviorItems.Count > 1;
+        foreach (var behavior in behaviorItems)
+        {
+            BehaviorReferences impactChanges = _referenceFinder.GetReferencesToBehavior(behavior, behavior.Name);
+            AppendImpactSection(ref message, impactChanges.GetDeleteImpactDetails(), behavior.Name, multipleBehaviors);
         }
 
         return message;
+    }
+
+    private static void AppendImpactSection(ref string message, string impactDetails, string itemName, bool multipleItems)
+    {
+        if (string.IsNullOrEmpty(impactDetails))
+        {
+            return;
+        }
+
+        message += "\n";
+        if (multipleItems)
+        {
+            message += $"\nImpact of deleting {itemName}:\n{impactDetails}";
+        }
+        else
+        {
+            message += $"\n{impactDetails}";
+        }
     }
 
     private static string GetShortName(object item)

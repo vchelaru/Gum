@@ -80,6 +80,8 @@ public interface IEditCommands
 
     void AddBehavior();
 
+    void AskToRenameBehavior(BehaviorSave behavior);
+
     #endregion
 
     #region Element

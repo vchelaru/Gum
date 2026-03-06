@@ -62,7 +62,7 @@ Do not call `IDeleteLogic` methods directly from UI code — always go through `
 | `Gum/Commands/EditCommands.cs` | Implementation; AskTo* dialog logic lives here |
 | `Gum/Managers/IDeleteLogic.cs` | Interface for pure data-mutation operations |
 | `Gum/Managers/DeleteLogic.cs` | Data mutation + DeleteOptionsWindow orchestration |
-| `Gum/Logic/RenameLogic.cs` | `ElementRenameChanges` class; `GetDeleteImpactDetails()` and `ExcludeContainersBeingDeleted()` used to build impact warnings in the delete dialog |
+| `Gum/Logic/RenameLogic.cs` | `ElementReferences` class; `GetDeleteImpactDetails()` and `ExcludeContainersBeingDeleted()` used to build impact warnings in the delete dialog |
 | `Gum/Plugins/InternalPlugins/Delete/DeleteObjectPlugin.cs` | Contributes "Delete XML?" and "Delete children?" to DeleteOptionsWindow |
 | `Gum/Plugins/InternalPlugins/StatePlugin/StateTreeViewRightClickService.cs` | State/category right-click menu; calls AskTo* methods |
 | `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.RightClick.cs` | Element tree right-click; calls DeleteSelection |

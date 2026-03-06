@@ -45,7 +45,7 @@ public class ReferenceFinderTests : BaseTestClass
         derivedButton.States.Add(new StateSave { Name = "Default", ParentContainer = derivedButton });
         _project.Components.Add(derivedButton);
 
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
 
         changes.ElementsWithBaseTypeReference.ShouldContain(derivedButton);
     }
@@ -65,7 +65,7 @@ public class ReferenceFinderTests : BaseTestClass
         defaultState.Variables.Add(containedTypeVar);
         _project.Components.Add(listBox);
 
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
 
         changes.ContainedTypeVariableReferences.Count.ShouldBe(1);
         changes.ContainedTypeVariableReferences[0].Container.ShouldBe(listBox);
@@ -87,7 +87,7 @@ public class ReferenceFinderTests : BaseTestClass
         screen.Instances.Add(instance);
         _project.Screens.Add(screen);
 
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
 
         changes.InstancesWithBaseTypeReference.Count.ShouldBe(1);
         changes.InstancesWithBaseTypeReference[0].Container.ShouldBe(screen);
@@ -105,7 +105,7 @@ public class ReferenceFinderTests : BaseTestClass
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         _project.Screens.Add(screen);
 
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(button, elementName: "OldButtonName");
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(button, elementName: "OldButtonName");
 
         changes.ElementsWithBaseTypeReference.ShouldBeEmpty();
         changes.InstancesWithBaseTypeReference.ShouldBeEmpty();
@@ -124,7 +124,7 @@ public class ReferenceFinderTests : BaseTestClass
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         _project.Screens.Add(screen);
 
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(panel, elementName: "Panel");
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(panel, elementName: "Panel");
 
         changes.ElementsWithBaseTypeReference.ShouldContain(screen);
     }
@@ -141,7 +141,7 @@ public class ReferenceFinderTests : BaseTestClass
         otherComponent.States.Add(new StateSave { Name = "Default", ParentContainer = otherComponent });
         _project.Components.Add(otherComponent);
 
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
 
         changes.ElementsWithBaseTypeReference.ShouldBeEmpty();
     }
@@ -162,7 +162,7 @@ public class ReferenceFinderTests : BaseTestClass
         defaultState.VariableLists.Add(varRefList);
         _project.Screens.Add(screen);
 
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
 
         changes.VariableReferenceChanges.Count.ShouldBe(1);
         changes.VariableReferenceChanges[0].Container.ShouldBe(screen);
@@ -186,7 +186,7 @@ public class ReferenceFinderTests : BaseTestClass
         defaultState.VariableLists.Add(varRefList);
         _project.Screens.Add(screen);
 
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
 
         changes.VariableReferenceChanges.Count.ShouldBe(1);
         changes.VariableReferenceChanges[0].Container.ShouldBe(screen);
@@ -211,7 +211,7 @@ public class ReferenceFinderTests : BaseTestClass
         defaultState.VariableLists.Add(varRefList);
         _project.Screens.Add(screen);
 
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
 
         changes.VariableReferenceChanges.Count.ShouldBe(1);
         changes.VariableReferenceChanges[0].LineIndex.ShouldBe(0);
@@ -234,7 +234,7 @@ public class ReferenceFinderTests : BaseTestClass
         defaultState.VariableLists.Add(varRefList);
         _project.Screens.Add(screen);
 
-        ElementRenameChanges changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
 
         changes.VariableReferenceChanges.ShouldBeEmpty();
     }
@@ -263,7 +263,7 @@ public class ReferenceFinderTests : BaseTestClass
         screenDefault.Variables.Add(stateVar);
         _project.Screens.Add(screen);
 
-        StateRenameChanges changes = _referenceFinder.GetReferencesToState(shownState, "Shown", button, visibilityCategory);
+        StateReferences changes = _referenceFinder.GetReferencesToState(shownState, "Shown", button, visibilityCategory);
 
         changes.VariablesToUpdate.Count.ShouldBe(1);
         changes.VariablesToUpdate[0].Container.ShouldBe(screen);
@@ -290,7 +290,7 @@ public class ReferenceFinderTests : BaseTestClass
         screenDefault.Variables.Add(new VariableSave { Name = "myButton.VisibilityState", Value = "Hidden" });
         _project.Screens.Add(screen);
 
-        StateRenameChanges changes = _referenceFinder.GetReferencesToState(shownState, "Shown", button, visibilityCategory);
+        StateReferences changes = _referenceFinder.GetReferencesToState(shownState, "Shown", button, visibilityCategory);
 
         changes.VariablesToUpdate.ShouldBeEmpty();
     }
@@ -314,7 +314,7 @@ public class ReferenceFinderTests : BaseTestClass
         screenDefault.Variables.Add(stateVar);
         _project.Screens.Add(screen);
 
-        StateRenameChanges changes = _referenceFinder.GetReferencesToState(activeState, "Active", button, category: null);
+        StateReferences changes = _referenceFinder.GetReferencesToState(activeState, "Active", button, category: null);
 
         changes.VariablesToUpdate.Count.ShouldBe(1);
         changes.VariablesToUpdate[0].Variable.ShouldBe(stateVar);
@@ -349,7 +349,7 @@ public class ReferenceFinderTests : BaseTestClass
         screenDefault.Variables.Add(stateVar);
         _project.Screens.Add(screen);
 
-        CategoryRenameChanges changes = _referenceFinder.GetReferencesToStateCategory(button, visibilityCategory, "Visibility");
+        CategoryReferences changes = _referenceFinder.GetReferencesToStateCategory(button, visibilityCategory, "Visibility");
 
         changes.VariableChanges.Count.ShouldBe(1);
         changes.VariableChanges[0].Variable.ShouldBe(stateVar);
@@ -376,7 +376,7 @@ public class ReferenceFinderTests : BaseTestClass
         screenDefault.Variables.Add(stateVar);
         _project.Screens.Add(screen);
 
-        CategoryRenameChanges changes = _referenceFinder.GetReferencesToStateCategory(button, visibilityCategory, "Visibility");
+        CategoryReferences changes = _referenceFinder.GetReferencesToStateCategory(button, visibilityCategory, "Visibility");
 
         changes.VariableChanges.Count.ShouldBe(1);
         changes.VariableChanges[0].Variable.ShouldBe(stateVar);
@@ -400,7 +400,7 @@ public class ReferenceFinderTests : BaseTestClass
         screenDefault.Variables.Add(new VariableSave { Name = "myButton.AppearanceState", Type = "Appearance" });
         _project.Screens.Add(screen);
 
-        CategoryRenameChanges changes = _referenceFinder.GetReferencesToStateCategory(button, visibilityCategory, "Visibility");
+        CategoryReferences changes = _referenceFinder.GetReferencesToStateCategory(button, visibilityCategory, "Visibility");
 
         changes.VariableChanges.ShouldBeEmpty();
     }
@@ -434,7 +434,7 @@ public class ReferenceFinderTests : BaseTestClass
         screenDefault.Variables.Add(parentVar);
         _project.Screens.Add(screen);
 
-        InstanceRenameChanges changes = _referenceFinder.GetReferencesToInstance(containerComponent, beforeRenameInstance, "BeforeRename");
+        InstanceReferences changes = _referenceFinder.GetReferencesToInstance(containerComponent, beforeRenameInstance, "BeforeRename");
 
         changes.ParentVariablesInOtherElements.Count.ShouldBe(1);
         changes.ParentVariablesInOtherElements[0].Container.ShouldBe(screen);
@@ -468,7 +468,7 @@ public class ReferenceFinderTests : BaseTestClass
         defaultStateB.VariableLists.Add(varRefListB);
         _project.Components.Add(componentB);
 
-        InstanceRenameChanges changes = _referenceFinder.GetReferencesToInstance(componentA, spriteA, "Sprite");
+        InstanceReferences changes = _referenceFinder.GetReferencesToInstance(componentA, spriteA, "Sprite");
 
         changes.VariableReferenceChanges.Count.ShouldBe(1);
         changes.VariableReferenceChanges[0].VariableReferenceList.ShouldBe(varRefListA);
@@ -496,7 +496,7 @@ public class ReferenceFinderTests : BaseTestClass
         defaultStateB.VariableLists.Add(varRefList);
         _project.Components.Add(componentB);
 
-        InstanceRenameChanges changes = _referenceFinder.GetReferencesToInstance(componentA, spriteA, "Sprite");
+        InstanceReferences changes = _referenceFinder.GetReferencesToInstance(componentA, spriteA, "Sprite");
 
         changes.VariableReferenceChanges.Count.ShouldBe(1);
         changes.VariableReferenceChanges[0].Container.ShouldBe(componentB);
@@ -525,7 +525,7 @@ public class ReferenceFinderTests : BaseTestClass
         derivedDefault.VariableLists.Add(varRefList);
         _project.Components.Add(derivedComponent);
 
-        InstanceRenameChanges changes = _referenceFinder.GetReferencesToInstance(componentB, childA, "ChildA");
+        InstanceReferences changes = _referenceFinder.GetReferencesToInstance(componentB, childA, "ChildA");
 
         changes.VariableReferenceChanges.Count.ShouldBe(1);
         changes.VariableReferenceChanges[0].Container.ShouldBe(derivedComponent);
@@ -551,12 +551,103 @@ public class ReferenceFinderTests : BaseTestClass
         defaultState.VariableLists.Add(varRefList);
         _project.Components.Add(componentA);
 
-        InstanceRenameChanges changes = _referenceFinder.GetReferencesToInstance(componentA, childA, "ChildA");
+        InstanceReferences changes = _referenceFinder.GetReferencesToInstance(componentA, childA, "ChildA");
 
         changes.VariableReferenceChanges.Count.ShouldBe(1);
         changes.VariableReferenceChanges[0].Container.ShouldBe(componentA);
         changes.VariableReferenceChanges[0].LineIndex.ShouldBe(0);
         changes.VariableReferenceChanges[0].ChangedSide.ShouldBe(SideOfEquals.Right);
+    }
+
+    #endregion
+
+    #region GetReferencesToBehavior
+
+    [Fact]
+    public void GetReferencesToBehavior_ComponentWithMatchingBehavior_IsDetected()
+    {
+        // A component that references the behavior by name should appear in BehaviorReferences.
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehaviorNew" };
+
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        button.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+        _project.Components.Add(button);
+
+        BehaviorReferences changes = _referenceFinder.GetReferencesToBehavior(behavior, oldName: "ButtonBehavior");
+
+        changes.ElementsWithBehaviorReference.Count.ShouldBe(1);
+        changes.ElementsWithBehaviorReference[0].Container.ShouldBe(button);
+        changes.ElementsWithBehaviorReference[0].Reference.BehaviorName.ShouldBe("ButtonBehavior");
+    }
+
+    [Fact]
+    public void GetReferencesToBehavior_MultiplComponentsWithSameBehavior_AllDetected()
+    {
+        // Two components that both reference the behavior should both appear in BehaviorReferences.
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehaviorNew" };
+
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        button.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+        _project.Components.Add(button);
+
+        ComponentSave iconButton = new ComponentSave { Name = "IconButton" };
+        iconButton.States.Add(new StateSave { Name = "Default", ParentContainer = iconButton });
+        iconButton.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+        _project.Components.Add(iconButton);
+
+        BehaviorReferences changes = _referenceFinder.GetReferencesToBehavior(behavior, oldName: "ButtonBehavior");
+
+        changes.ElementsWithBehaviorReference.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void GetReferencesToBehavior_NoMatchingReferences_ReturnsEmpty()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
+
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        button.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "OtherBehavior" });
+        _project.Components.Add(button);
+
+        BehaviorReferences changes = _referenceFinder.GetReferencesToBehavior(behavior, oldName: "ButtonBehavior");
+
+        changes.ElementsWithBehaviorReference.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetReferencesToBehavior_ScreenWithMatchingBehavior_IsDetected()
+    {
+        // A screen that references the behavior should also be detected.
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehaviorNew" };
+
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        screen.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+        _project.Screens.Add(screen);
+
+        BehaviorReferences changes = _referenceFinder.GetReferencesToBehavior(behavior, oldName: "ButtonBehavior");
+
+        changes.ElementsWithBehaviorReference.Count.ShouldBe(1);
+        changes.ElementsWithBehaviorReference[0].Container.ShouldBe(screen);
+    }
+
+    [Fact]
+    public void GetReferencesToBehavior_ComponentWithUnrelatedBehavior_IsNotDetected()
+    {
+        // A component referencing a different behavior should not appear.
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
+
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        button.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SliderBehavior" });
+        _project.Components.Add(button);
+
+        BehaviorReferences changes = _referenceFinder.GetReferencesToBehavior(behavior, oldName: "ButtonBehavior");
+
+        changes.ElementsWithBehaviorReference.ShouldBeEmpty();
     }
 
     #endregion

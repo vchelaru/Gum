@@ -48,7 +48,13 @@ public class DeleteLogicTests : BaseTestClass
 
         _referenceFinder
             .Setup(r => r.GetReferencesToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
-            .Returns(new ElementRenameChanges());
+            .Returns(new ElementReferences());
+        _referenceFinder
+            .Setup(r => r.GetReferencesToInstance(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>(), It.IsAny<string>()))
+            .Returns(new InstanceReferences());
+        _referenceFinder
+            .Setup(r => r.GetReferencesToBehavior(It.IsAny<BehaviorSave>(), It.IsAny<string>()))
+            .Returns(new BehaviorReferences());
 
         _deleteLogic = new DeleteLogic(
             _selectedState.Object,
@@ -267,7 +273,7 @@ public class DeleteLogicTests : BaseTestClass
         ComponentSave componentB = new ComponentSave { Name = "ComponentB", BaseType = "ComponentA" };
         componentB.States.Add(new StateSave { Name = "Default", ParentContainer = componentB });
 
-        ElementRenameChanges impactChanges = new ElementRenameChanges();
+        ElementReferences impactChanges = new ElementReferences();
         impactChanges.ElementsWithBaseTypeReference.Add(componentB);
 
         _referenceFinder
@@ -294,7 +300,7 @@ public class DeleteLogicTests : BaseTestClass
         InstanceSave instance = new InstanceSave { Name = "myComponent", BaseType = "ComponentA", ParentContainer = screen };
         screen.Instances.Add(instance);
 
-        ElementRenameChanges impactChanges = new ElementRenameChanges();
+        ElementReferences impactChanges = new ElementReferences();
         impactChanges.InstancesWithBaseTypeReference.Add((screen, instance));
 
         string impactDetails = impactChanges.GetDeleteImpactDetails();
@@ -307,7 +313,7 @@ public class DeleteLogicTests : BaseTestClass
     [Fact]
     public void GetDeleteImpactDetails_NoReferences_ReturnsEmpty()
     {
-        ElementRenameChanges impactChanges = new ElementRenameChanges();
+        ElementReferences impactChanges = new ElementReferences();
 
         string impactDetails = impactChanges.GetDeleteImpactDetails();
 
@@ -325,7 +331,7 @@ public class DeleteLogicTests : BaseTestClass
         var instance = new InstanceSave { Name = "itemContainerInstance", BaseType = "ItemContainer", ParentContainer = item };
         item.Instances.Add(instance);
 
-        var impactChanges = new ElementRenameChanges();
+        var impactChanges = new ElementReferences();
         impactChanges.InstancesWithBaseTypeReference.Add((item, instance));
 
         impactChanges.ExcludeContainersBeingDeleted([item, itemContainer]);
@@ -344,7 +350,7 @@ public class DeleteLogicTests : BaseTestClass
         var instance = new InstanceSave { Name = "itemContainerInstance", BaseType = "ItemContainer", ParentContainer = item };
         item.Instances.Add(instance);
 
-        var impactChanges = new ElementRenameChanges();
+        var impactChanges = new ElementReferences();
         impactChanges.InstancesWithBaseTypeReference.Add((item, instance));
 
         _referenceFinder
@@ -360,6 +366,73 @@ public class DeleteLogicTests : BaseTestClass
         var message = _deleteLogic.BuildDeleteDialogMessage(objectsToDelete);
 
         message.ShouldNotContain(unfilteredImpact);
+    }
+
+    [Fact]
+    public void BuildDeleteDialogMessage_BehaviorWithReferencingElements_ShowsImpactDetails()
+    {
+        // Arrange: behavior is referenced by a component.
+        BehaviorSave behavior = new BehaviorSave { Name = "Focusable" };
+        ComponentSave button = new ComponentSave { Name = "Button" };
+
+        BehaviorReferences impactChanges = new BehaviorReferences();
+        impactChanges.ElementsWithBehaviorReference.Add((button, new ElementBehaviorReference { BehaviorName = "Focusable" }));
+
+        _referenceFinder
+            .Setup(r => r.GetReferencesToBehavior(behavior, behavior.Name))
+            .Returns(impactChanges);
+
+        Array objectsToDelete = new object[] { behavior };
+        string message = _deleteLogic.BuildDeleteDialogMessage(objectsToDelete);
+
+        message.ShouldContain("Button");
+    }
+
+    [Fact]
+    public void BuildDeleteDialogMessage_InstanceWithOrphanedParentVariable_ShowsImpactDetails()
+    {
+        // Arrange: deleting an instance that has a Parent variable reference in another element.
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        InstanceSave instance = new InstanceSave { Name = "container", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        _gumProject.Screens.Add(screen);
+
+        VariableSave parentVar = new VariableSave { Name = "child.Parent", Value = "otherInstance.container" };
+        ScreenSave otherScreen = new ScreenSave { Name = "OtherScreen" };
+
+        InstanceReferences impactChanges = new InstanceReferences();
+        impactChanges.ParentVariablesInOtherElements.Add((otherScreen, parentVar));
+
+        _referenceFinder
+            .Setup(r => r.GetReferencesToInstance(screen, instance, instance.Name))
+            .Returns(impactChanges);
+
+        Array objectsToDelete = new object[] { instance };
+        string message = _deleteLogic.BuildDeleteDialogMessage(objectsToDelete);
+
+        message.ShouldContain("OtherScreen");
+    }
+
+    [Fact]
+    public void BuildDeleteDialogMessage_InstanceWithNoOrphans_ContainsNoImpactWarning()
+    {
+        // Arrange: no orphaned references — impact section should be absent.
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        InstanceSave instance = new InstanceSave { Name = "sprite", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        _gumProject.Screens.Add(screen);
+
+        // default mock already returns empty InstanceReferences
+
+        Array objectsToDelete = new object[] { instance };
+        string message = _deleteLogic.BuildDeleteDialogMessage(objectsToDelete);
+
+        string impactDetails = new InstanceReferences().GetDeleteImpactDetails();
+        // no impact section — message should only contain the item name, no extra impact text
+        message.ShouldContain("sprite");
+        message.ShouldNotContain("invalid");
     }
 
     private ScreenSave CreateScreenWithInstances(params string[] instanceNames)

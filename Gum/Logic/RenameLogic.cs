@@ -101,9 +101,9 @@ public class VariableChangeResponse
 
 #endregion
 
-#region ElementRenameChanges Class
+#region ElementReferences Class
 
-public class ElementRenameChanges
+public class ElementReferences
 {
     // Screens or components where BaseType == oldName
     public List<ElementSave> ElementsWithBaseTypeReference = new();
@@ -228,9 +228,9 @@ public class ElementRenameChanges
 
 #endregion
 
-#region InstanceRenameChanges Class
+#region InstanceReferences Class
 
-public class InstanceRenameChanges
+public class InstanceReferences
 {
     // Variables across all states in the containing element that reference the instance by name
     public List<(ElementSave Container, VariableSave Variable)> VariablesToRename = new();
@@ -299,30 +299,44 @@ public class InstanceRenameChanges
 
         return details;
     }
-}
 
-#endregion
-
-#region StateRenameChanges Class
-
-public class StateRenameChanges
-{
-    // Variables in referencing elements whose value == oldStateName and which need updating
-    public List<(ElementSave Container, VariableSave Variable)> VariablesToUpdate = new();
-
-    public string GetChangesDetails()
+    /// <summary>
+    /// Returns a description of the orphaned references that will remain invalid after
+    /// this instance is deleted. Variables and events directly on the instance are
+    /// auto-cleaned by the delete logic; this reports only the references that will not
+    /// be automatically removed.
+    /// </summary>
+    public string GetDeleteImpactDetails()
     {
-        if (VariablesToUpdate.Count == 0)
-            return string.Empty;
-
         var details = string.Empty;
 
-        if (VariablesToUpdate.Count > 0)
+        if (DefaultChildContainerWillChange)
         {
-            details += "This will also update the following variables:";
-            foreach (var (container, variable) in VariablesToUpdate)
+            details += "The DefaultChildContainer reference will become invalid.";
+        }
+
+        if (ParentVariablesInOtherElements.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "The following Parent variables in other elements will become invalid:";
+            foreach (var (container, variable) in ParentVariablesInOtherElements)
             {
-                details += $"\n• {variable.Name} in {container.Name}";
+                details += $"\n• {variable.Name} ({variable.Value}) in {container.Name}";
+            }
+        }
+
+        if (VariableReferenceChanges.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(details)) details += "\n\n";
+            details += "The following variable references will become invalid:";
+            foreach (var change in VariableReferenceChanges)
+            {
+                try
+                {
+                    var line = change.VariableReferenceList.ValueAsIList[change.LineIndex];
+                    details += $"\n• {line} in {change.Container.Name}";
+                }
+                catch { }
             }
         }
 
@@ -332,9 +346,99 @@ public class StateRenameChanges
 
 #endregion
 
-#region CategoryRenameChanges Class
+#region StateReferences Class
 
-public class CategoryRenameChanges
+public class StateReferences
+{
+    // Variables in referencing elements whose value == oldStateName and which need updating
+    public List<(ElementSave Container, VariableSave Variable)> VariablesToUpdate = new();
+
+    public string GetChangesDetails()
+    {
+        if (VariablesToUpdate.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var details = "This will also update the following variables:";
+        foreach (var (container, variable) in VariablesToUpdate)
+        {
+            details += $"\n• {variable.Name} in {container.Name}";
+        }
+
+        return details;
+    }
+
+    /// <summary>
+    /// Returns a description of which variables reference this state and will become
+    /// invalid after deletion (orphaned references are not automatically cleaned up).
+    /// </summary>
+    public string GetDeleteImpactDetails()
+    {
+        if (VariablesToUpdate.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var details = "The following variables reference this state and will become invalid:";
+        foreach (var (container, variable) in VariablesToUpdate)
+        {
+            details += $"\n• {variable.Name} in {container.Name}";
+        }
+
+        return details;
+    }
+}
+
+#endregion
+
+#region BehaviorReferences Class
+
+public class BehaviorReferences
+{
+    // ElementBehaviorReference entries in any screen or component that reference the old behavior name
+    public List<(ElementSave Container, ElementBehaviorReference Reference)> ElementsWithBehaviorReference = new();
+
+    public string GetChangesDetails()
+    {
+        if (ElementsWithBehaviorReference.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        string details = "The following elements will have their behavior reference updated:";
+        foreach (var (container, _) in ElementsWithBehaviorReference)
+        {
+            details += $"\n• {container.Name}";
+        }
+        return details;
+    }
+
+    /// <summary>
+    /// Returns a description of which elements reference this behavior and will be
+    /// affected by its deletion.
+    /// </summary>
+    public string GetDeleteImpactDetails()
+    {
+        if (ElementsWithBehaviorReference.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        string details = "The following elements reference this behavior:";
+        foreach (var (container, _) in ElementsWithBehaviorReference)
+        {
+            details += $"\n• {container.Name}";
+        }
+        return details;
+    }
+}
+
+#endregion
+
+#region CategoryReferences Class
+
+public class CategoryReferences
 {
     // Variables in referencing elements/components whose Type matches the old category name
     public List<VariableChange> VariableChanges = new();
@@ -342,9 +446,33 @@ public class CategoryRenameChanges
     public string GetChangesDetails()
     {
         if (VariableChanges.Count == 0)
+        {
             return string.Empty;
+        }
 
         var details = "The following variables will be affected:";
+        foreach (var change in VariableChanges)
+        {
+            var containerDisplay = change.Container is ElementSave elementSave
+                ? elementSave.Name
+                : change.Container.ToString();
+            details += $"\n• {change.Variable.Name} in {containerDisplay}";
+        }
+        return details;
+    }
+
+    /// <summary>
+    /// Returns a description of which variables use this category type and will become
+    /// invalid after deletion.
+    /// </summary>
+    public string GetDeleteImpactDetails()
+    {
+        if (VariableChanges.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var details = "The following variables use this category type and will become invalid:";
         foreach (var change in VariableChanges)
         {
             var containerDisplay = change.Container is ElementSave elementSave
@@ -411,7 +539,7 @@ public class RenameLogic : IRenameLogic
             var container = ObjectFinder.Self.GetStateContainerOf(stateSave);
             var stateChanges = applyRefactoringChanges
                 ? GetChangesForRenamedState(stateSave, oldName, container, category)
-                : new StateRenameChanges();
+                : new StateReferences();
 
             stateSave.Name = newName;
             _guiCommands.RefreshStateTreeView();
@@ -424,19 +552,19 @@ public class RenameLogic : IRenameLogic
 
             _pluginManager.StateRename(stateSave, oldName);
 
-            ApplyStateRenameChanges(stateChanges, stateSave);
+            ApplyStateReferences(stateChanges, stateSave);
 
             _fileCommands.TryAutoSaveCurrentObject();
         }
     }
 
-    public StateRenameChanges GetChangesForRenamedState(
+    public StateReferences GetChangesForRenamedState(
         StateSave state, string oldName, IStateContainer? container, StateSaveCategory? category)
     {
         return _referenceFinder.GetReferencesToState(state, oldName, container, category);
     }
 
-    public void ApplyStateRenameChanges(StateRenameChanges changes, StateSave state)
+    public void ApplyStateReferences(StateReferences changes, StateSave state)
     {
         var elementsToSave = new HashSet<ElementSave>();
 
@@ -492,7 +620,7 @@ public class RenameLogic : IRenameLogic
 
             if (_dialogService.GetUserString(elemMessage, elemTitle, elemOptions) is { } elemNewName)
             {
-                ApplyCategoryRenameChanges(elemChanges, elementSave, category, elemOldName, elemNewName);
+                ApplyCategoryReferences(elemChanges, elementSave, category, elemOldName, elemNewName);
             }
         }
         else if (owner is BehaviorSave behaviorSave)
@@ -505,12 +633,12 @@ public class RenameLogic : IRenameLogic
 
             if (_dialogService.GetUserString(message, title, options) is { } newName)
             {
-                ApplyCategoryRenameChanges(new CategoryRenameChanges(), behaviorSave, category, oldName, newName);
+                ApplyCategoryReferences(new CategoryReferences(), behaviorSave, category, oldName, newName);
             }
         }
     }
 
-    public void ApplyCategoryRenameChanges(CategoryRenameChanges categoryChanges, IStateContainer owner, StateSaveCategory category, string oldName, string newName)
+    public void ApplyCategoryReferences(CategoryReferences categoryChanges, IStateContainer owner, StateSaveCategory category, string oldName, string newName)
     {
         // Gather self-referencing state variables in the owner element before mutating anything
         var ownerAsElement = owner as ElementSave;
@@ -584,7 +712,7 @@ public class RenameLogic : IRenameLogic
         }
     }
 
-    public CategoryRenameChanges GetChangesForRenamedCategory(IStateContainer owner, StateSaveCategory category, string oldName)
+    public CategoryReferences GetChangesForRenamedCategory(IStateContainer owner, StateSaveCategory category, string oldName)
     {
         return _referenceFinder.GetReferencesToStateCategory(owner, category, oldName);
     }
@@ -594,12 +722,12 @@ public class RenameLogic : IRenameLogic
     #region Instance
 
 
-    public InstanceRenameChanges GetChangesForRenamedInstance(ElementSave containerElement, InstanceSave instance, string oldName)
+    public InstanceReferences GetChangesForRenamedInstance(ElementSave containerElement, InstanceSave instance, string oldName)
     {
         return _referenceFinder.GetReferencesToInstance(containerElement, instance, oldName);
     }
 
-    public void ApplyInstanceRenameChanges(InstanceRenameChanges changes, string newName, string oldName, HashSet<ElementSave> elementsToSave)
+    public void ApplyInstanceReferences(InstanceReferences changes, string newName, string oldName, HashSet<ElementSave> elementsToSave)
     {
         foreach (var (container, variable) in changes.ParentVariablesInOtherElements)
         {
@@ -669,12 +797,12 @@ public class RenameLogic : IRenameLogic
 
     #region Element
 
-    public ElementRenameChanges GetChangesForRenamedElement(ElementSave elementSave, string oldName)
+    public ElementReferences GetChangesForRenamedElement(ElementSave elementSave, string oldName)
     {
         return _referenceFinder.GetReferencesToElement(elementSave, oldName);
     }
 
-    public void ApplyElementRenameChanges(ElementRenameChanges changes, ElementSave elementSave, string oldName)
+    public void ApplyElementReferences(ElementReferences changes, ElementSave elementSave, string oldName)
     {
         var containersToSave = new HashSet<ElementSave>();
 
@@ -754,7 +882,7 @@ public class RenameLogic : IRenameLogic
 
             var elementSave = instanceContainer as ElementSave;
 
-            ElementRenameChanges? elementRenameChanges = null;
+            ElementReferences? elementRenameChanges = null;
             if (isRenamingXmlFile && elementSave != null)
             {
                 elementRenameChanges = GetChangesForRenamedElement(elementSave, oldName);
@@ -762,7 +890,7 @@ public class RenameLogic : IRenameLogic
 
             shouldContinue = AskIfToRenameElement(oldName, askAboutRename, action, shouldContinue, elementRenameChanges);
 
-            InstanceRenameChanges? instanceRenameChanges = null;
+            InstanceReferences? instanceRenameChanges = null;
             if (!isRenamingXmlFile && elementSave != null && instance != null)
             {
                 instanceRenameChanges = GetChangesForRenamedInstance(elementSave, instance, oldName);
@@ -780,7 +908,7 @@ public class RenameLogic : IRenameLogic
                 if (instanceRenameChanges != null && instance != null)
                 {
                     var elementsToSave = new HashSet<ElementSave>();
-                    ApplyInstanceRenameChanges(instanceRenameChanges, instance.Name, oldName, elementsToSave);
+                    ApplyInstanceReferences(instanceRenameChanges, instance.Name, oldName, elementsToSave);
                     foreach (var element in elementsToSave)
                         _fileCommands.TryAutoSaveElement(element);
                 }
@@ -870,7 +998,7 @@ public class RenameLogic : IRenameLogic
         if (instance == null)
         {
             var elementChanges = GetChangesForRenamedElement(elementSave, oldName);
-            ApplyElementRenameChanges(elementChanges, elementSave, oldName);
+            ApplyElementReferences(elementChanges, elementSave, oldName);
         }
         if (instance != null)
         {
@@ -950,7 +1078,7 @@ public class RenameLogic : IRenameLogic
         }
     }
 
-    private bool AskIfToRenameElement(string oldName, bool askAboutRename, NameChangeAction action, bool shouldContinue, ElementRenameChanges? elementRenameChanges = null)
+    private bool AskIfToRenameElement(string oldName, bool askAboutRename, NameChangeAction action, bool shouldContinue, ElementReferences? elementRenameChanges = null)
     {
         if (shouldContinue && isRenamingXmlFile && askAboutRename)
         {
@@ -975,7 +1103,7 @@ public class RenameLogic : IRenameLogic
         return shouldContinue;
     }
 
-    private bool AskToRenameInstance(InstanceSave? instance, string oldName, bool askAboutRename, bool shouldContinue, InstanceRenameChanges? instanceRenameChanges)
+    private bool AskToRenameInstance(InstanceSave? instance, string oldName, bool askAboutRename, bool shouldContinue, InstanceReferences? instanceRenameChanges)
     {
         if (shouldContinue && !isRenamingXmlFile && instance != null && askAboutRename)
         {
