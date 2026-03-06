@@ -33,16 +33,19 @@ public class RenameLogicTests : BaseTestClass
         // so that tests which call rename methods work through the delegation.
         _mocker.GetMock<IReferenceFinder>()
             .Setup(x => x.GetReferencesToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
-            .Returns(new ElementRenameChanges());
+            .Returns(new ElementReferences());
         _mocker.GetMock<IReferenceFinder>()
             .Setup(x => x.GetReferencesToInstance(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>(), It.IsAny<string>()))
-            .Returns(new InstanceRenameChanges());
+            .Returns(new InstanceReferences());
         _mocker.GetMock<IReferenceFinder>()
             .Setup(x => x.GetReferencesToState(It.IsAny<StateSave>(), It.IsAny<string>(), It.IsAny<IStateContainer>(), It.IsAny<StateSaveCategory>()))
-            .Returns(new StateRenameChanges());
+            .Returns(new StateReferences());
         _mocker.GetMock<IReferenceFinder>()
             .Setup(x => x.GetReferencesToStateCategory(It.IsAny<IStateContainer>(), It.IsAny<StateSaveCategory>(), It.IsAny<string>()))
-            .Returns(new CategoryRenameChanges());
+            .Returns(new CategoryReferences());
+        _mocker.GetMock<IReferenceFinder>()
+            .Setup(x => x.GetReferencesToBehavior(It.IsAny<BehaviorSave>(), It.IsAny<string>()))
+            .Returns(new BehaviorReferences());
         _mocker.GetMock<IReferenceFinder>()
             .Setup(x => x.GetReferencesToVariable(It.IsAny<IStateContainer>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(new VariableChangeResponse());
@@ -51,7 +54,7 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void ApplyElementRenameChanges_ElementBaseType_IsUpdated()
+    public void ApplyElementReferences_ElementBaseType_IsUpdated()
     {
         // After apply, an element whose BaseType matched oldName should be updated to the new name.
         ComponentSave button = new ComponentSave { Name = "ButtonNew" };
@@ -59,16 +62,16 @@ public class RenameLogicTests : BaseTestClass
         ScreenSave screen = new ScreenSave { Name = "TestScreen", BaseType = "Button" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
 
-        ElementRenameChanges changes = new ElementRenameChanges();
+        ElementReferences changes = new ElementReferences();
         changes.ElementsWithBaseTypeReference.Add(screen);
 
-        _renameLogic.ApplyElementRenameChanges(changes, button, oldName: "Button");
+        _renameLogic.ApplyElementReferences(changes, button, oldName: "Button");
 
         screen.BaseType.ShouldBe("ButtonNew");
     }
 
     [Fact]
-    public void ApplyElementRenameChanges_InstanceBaseType_IsUpdated()
+    public void ApplyElementReferences_InstanceBaseType_IsUpdated()
     {
         // After apply, an instance whose BaseType matched oldName should be updated to the new name.
         ComponentSave button = new ComponentSave { Name = "ButtonNew" };
@@ -78,16 +81,16 @@ public class RenameLogicTests : BaseTestClass
         InstanceSave instance = new InstanceSave { Name = "myButton", BaseType = "Button", ParentContainer = screen };
         screen.Instances.Add(instance);
 
-        ElementRenameChanges changes = new ElementRenameChanges();
+        ElementReferences changes = new ElementReferences();
         changes.InstancesWithBaseTypeReference.Add((screen, instance));
 
-        _renameLogic.ApplyElementRenameChanges(changes, button, oldName: "Button");
+        _renameLogic.ApplyElementReferences(changes, button, oldName: "Button");
 
         instance.BaseType.ShouldBe("ButtonNew");
     }
 
     [Fact]
-    public void ApplyElementRenameChanges_VariableReferenceEntry_StringIsUpdated()
+    public void ApplyElementReferences_VariableReferenceEntry_StringIsUpdated()
     {
         // After apply, a VariableReferences list entry whose right side referenced
         // "Components/Button.SomeProperty" should be rewritten with the new element name.
@@ -100,7 +103,7 @@ public class RenameLogicTests : BaseTestClass
         varRefList.Value.Add("SomeVar = Components/Button.SomeProperty");
         defaultState.VariableLists.Add(varRefList);
 
-        ElementRenameChanges changes = new ElementRenameChanges();
+        ElementReferences changes = new ElementReferences();
         changes.VariableReferenceChanges.Add(new VariableReferenceChange
         {
             Container = screen,
@@ -109,7 +112,7 @@ public class RenameLogicTests : BaseTestClass
             ChangedSide = SideOfEquals.Right
         });
 
-        _renameLogic.ApplyElementRenameChanges(changes, button, oldName: "Button");
+        _renameLogic.ApplyElementReferences(changes, button, oldName: "Button");
 
         varRefList.Value[0].ShouldBe("SomeVar = Components/ButtonNew.SomeProperty");
     }
@@ -160,7 +163,7 @@ public class RenameLogicTests : BaseTestClass
         screenDefault.Variables.Add(stateVar);
         _project.Screens.Add(screen);
 
-        StateRenameChanges stateChanges = new StateRenameChanges();
+        StateReferences stateChanges = new StateReferences();
         stateChanges.VariablesToUpdate.Add((screen, stateVar));
         _mocker.GetMock<IReferenceFinder>()
             .Setup(x => x.GetReferencesToState(shownState, "Shown", button, visibilityCategory))
@@ -177,7 +180,7 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void ApplyStateRenameChanges_UpdatesVariableValue()
+    public void ApplyStateReferences_UpdatesVariableValue()
     {
         var button = new ComponentSave { Name = "Button" };
         button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
@@ -190,10 +193,10 @@ public class RenameLogicTests : BaseTestClass
         var stateVar = new VariableSave { Name = "myButton.VisibilityState", Value = "Shown" };
         var renamedState = new StateSave { Name = "Visible", ParentContainer = button };
 
-        var changes = new StateRenameChanges();
+        var changes = new StateReferences();
         changes.VariablesToUpdate.Add((screen, stateVar));
 
-        _renameLogic.ApplyStateRenameChanges(changes, renamedState);
+        _renameLogic.ApplyStateReferences(changes, renamedState);
 
         stateVar.Value.ShouldBe("Visible");
     }
@@ -256,7 +259,7 @@ public class RenameLogicTests : BaseTestClass
     #region Instance rename
 
     [Fact]
-    public void ApplyInstanceRenameChanges_VariableReferenceRightSide_IsUpdated()
+    public void ApplyInstanceReferences_VariableReferenceRightSide_IsUpdated()
     {
         // "Width = ChildA.Width" should become "Width = NewName.Width".
         var componentA = new ComponentSave { Name = "ComponentA" };
@@ -268,7 +271,7 @@ public class RenameLogicTests : BaseTestClass
         varRefList.Value.Add("Width = ChildA.Width");
         defaultState.VariableLists.Add(varRefList);
 
-        var changes = new InstanceRenameChanges();
+        var changes = new InstanceReferences();
         changes.VariableReferenceChanges.Add(new VariableReferenceChange
         {
             Container = componentA,
@@ -277,15 +280,15 @@ public class RenameLogicTests : BaseTestClass
             ChangedSide = SideOfEquals.Right
         });
 
-        _renameLogic.ApplyInstanceRenameChanges(changes, "NewName", "ChildA", new HashSet<ElementSave>());
+        _renameLogic.ApplyInstanceReferences(changes, "NewName", "ChildA", new HashSet<ElementSave>());
 
         varRefList.Value[0].ShouldBe("Width = NewName.Width");
     }
 
     [Fact]
-    public void ApplyInstanceRenameChanges_ParentVariableInOtherElement_IsUpdated()
+    public void ApplyInstanceReferences_ParentVariableInOtherElement_IsUpdated()
     {
-        // An InstanceRenameChanges with a ParentVariablesInOtherElements entry whose value is
+        // An InstanceReferences with a ParentVariablesInOtherElements entry whose value is
         // "componentInstance.BeforeRename" should have that value updated to
         // "componentInstance.AfterRename" after applying the changes.
         var screen = new ScreenSave { Name = "TestScreen" };
@@ -295,16 +298,16 @@ public class RenameLogicTests : BaseTestClass
         var parentVar = new VariableSave { Name = "OtherContainer.Parent", Value = "componentInstance.BeforeRename" };
         screen.DefaultState.Variables.Add(parentVar);
 
-        var changes = new InstanceRenameChanges();
+        var changes = new InstanceReferences();
         changes.ParentVariablesInOtherElements.Add((screen, parentVar));
 
-        _renameLogic.ApplyInstanceRenameChanges(changes, "AfterRename", "BeforeRename", new HashSet<ElementSave>());
+        _renameLogic.ApplyInstanceReferences(changes, "AfterRename", "BeforeRename", new HashSet<ElementSave>());
 
         parentVar.Value.ShouldBe("componentInstance.AfterRename");
     }
 
     [Fact]
-    public void ApplyInstanceRenameChanges_AddsContainerToElementsToSave()
+    public void ApplyInstanceReferences_AddsContainerToElementsToSave()
     {
         var componentA = new ComponentSave { Name = "ComponentA" };
         var defaultState = new StateSave { Name = "Default", ParentContainer = componentA };
@@ -315,7 +318,7 @@ public class RenameLogicTests : BaseTestClass
         varRefList.Value.Add("Width = ChildA.Width");
         defaultState.VariableLists.Add(varRefList);
 
-        var changes = new InstanceRenameChanges();
+        var changes = new InstanceReferences();
         changes.VariableReferenceChanges.Add(new VariableReferenceChange
         {
             Container = componentA,
@@ -325,7 +328,7 @@ public class RenameLogicTests : BaseTestClass
         });
 
         var elementsToSave = new HashSet<ElementSave>();
-        _renameLogic.ApplyInstanceRenameChanges(changes, "NewName", "ChildA", elementsToSave);
+        _renameLogic.ApplyInstanceReferences(changes, "NewName", "ChildA", elementsToSave);
 
         elementsToSave.ShouldContain(componentA);
     }
@@ -395,6 +398,130 @@ public class RenameLogicTests : BaseTestClass
         childVar.Name.ShouldBe("InnerSprite.Color");
         childVar.Value.ShouldBe("Blue");
     }
+
+    #region GetDeleteImpactDetails
+
+    [Fact]
+    public void BehaviorReferences_GetDeleteImpactDetails_ListsReferencingElements()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        ElementBehaviorReference reference = new ElementBehaviorReference { BehaviorName = "Focusable" };
+
+        BehaviorReferences changes = new BehaviorReferences();
+        changes.ElementsWithBehaviorReference.Add((button, reference));
+
+        string details = changes.GetDeleteImpactDetails();
+
+        details.ShouldNotBeNullOrEmpty();
+        details.ShouldContain("Button");
+    }
+
+    [Fact]
+    public void BehaviorReferences_GetDeleteImpactDetails_NoReferences_ReturnsEmpty()
+    {
+        BehaviorReferences changes = new BehaviorReferences();
+
+        string details = changes.GetDeleteImpactDetails();
+
+        details.ShouldBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void CategoryReferences_GetDeleteImpactDetails_ListsAffectedVariables()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        VariableSave stateVar = new VariableSave { Name = "VisibilityState", Type = "VisibilityState" };
+
+        CategoryReferences changes = new CategoryReferences();
+        changes.VariableChanges.Add(new VariableChange
+        {
+            Container = button,
+            Variable = stateVar
+        });
+
+        string details = changes.GetDeleteImpactDetails();
+
+        details.ShouldNotBeNullOrEmpty();
+        details.ShouldContain("VisibilityState");
+        details.ShouldContain("Button");
+    }
+
+    [Fact]
+    public void CategoryReferences_GetDeleteImpactDetails_NoReferences_ReturnsEmpty()
+    {
+        CategoryReferences changes = new CategoryReferences();
+
+        string details = changes.GetDeleteImpactDetails();
+
+        details.ShouldBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void InstanceReferences_GetDeleteImpactDetails_DefaultChildContainerChange_IncludesWarning()
+    {
+        InstanceReferences changes = new InstanceReferences();
+        changes.DefaultChildContainerWillChange = true;
+
+        string details = changes.GetDeleteImpactDetails();
+
+        details.ShouldNotBeNullOrEmpty();
+        details.ShouldContain("DefaultChildContainer");
+    }
+
+    [Fact]
+    public void InstanceReferences_GetDeleteImpactDetails_NoOrphans_ReturnsEmpty()
+    {
+        InstanceReferences changes = new InstanceReferences();
+
+        string details = changes.GetDeleteImpactDetails();
+
+        details.ShouldBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void InstanceReferences_GetDeleteImpactDetails_ParentVariablesInOtherElements_ListsContainerNames()
+    {
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        VariableSave parentVar = new VariableSave { Name = "child.Parent", Value = "container.deletedInstance" };
+
+        InstanceReferences changes = new InstanceReferences();
+        changes.ParentVariablesInOtherElements.Add((screen, parentVar));
+
+        string details = changes.GetDeleteImpactDetails();
+
+        details.ShouldNotBeNullOrEmpty();
+        details.ShouldContain("MainScreen");
+    }
+
+    [Fact]
+    public void StateReferences_GetDeleteImpactDetails_ListsAffectedVariables()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        VariableSave stateVar = new VariableSave { Name = "myButton.VisibilityState", Value = "Shown" };
+
+        StateReferences changes = new StateReferences();
+        changes.VariablesToUpdate.Add((button, stateVar));
+
+        string details = changes.GetDeleteImpactDetails();
+
+        details.ShouldNotBeNullOrEmpty();
+        details.ShouldContain("myButton.VisibilityState");
+        details.ShouldContain("Button");
+    }
+
+    [Fact]
+    public void StateReferences_GetDeleteImpactDetails_NoReferences_ReturnsEmpty()
+    {
+        StateReferences changes = new StateReferences();
+
+        string details = changes.GetDeleteImpactDetails();
+
+        details.ShouldBeNullOrEmpty();
+    }
+
+    #endregion
 
     [Fact]
     public void ApplyVariableRenameChanges_InstanceVariableRename_AddsElementToNeedingSave()

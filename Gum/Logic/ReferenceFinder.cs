@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
@@ -17,9 +18,9 @@ public class ReferenceFinder : IReferenceFinder
         _projectState = projectState;
     }
 
-    public ElementRenameChanges GetReferencesToElement(ElementSave element, string elementName)
+    public ElementReferences GetReferencesToElement(ElementSave element, string elementName)
     {
-        var changes = new ElementRenameChanges();
+        var changes = new ElementReferences();
         var project = _projectState.GumProjectSave;
 
         string qualifiedOldName = element switch
@@ -40,10 +41,14 @@ public class ReferenceFinder : IReferenceFinder
             CollectChangesInElement(component, elementName, qualifiedOldName, changes);
         }
 
+        // StandardElements are intentionally not scanned here. Standard elements do not support
+        // inheritance between each other (a StandardElementSave cannot have another StandardElementSave
+        // as its BaseType in normal usage), so there are no cross-standard BaseType references to update.
+
         return changes;
     }
 
-    private static void CollectChangesInElement(ElementSave element, string oldName, string qualifiedOldName, ElementRenameChanges changes)
+    private static void CollectChangesInElement(ElementSave element, string oldName, string qualifiedOldName, ElementReferences changes)
     {
         if (element.BaseType == oldName)
         {
@@ -97,9 +102,9 @@ public class ReferenceFinder : IReferenceFinder
         }
     }
 
-    public InstanceRenameChanges GetReferencesToInstance(ElementSave containerElement, InstanceSave instance, string oldName)
+    public InstanceReferences GetReferencesToInstance(ElementSave containerElement, InstanceSave instance, string oldName)
     {
-        var changes = new InstanceRenameChanges();
+        var changes = new InstanceReferences();
 
         // Variables across all states that reference this instance by name
         foreach (var state in containerElement.AllStates)
@@ -282,9 +287,28 @@ public class ReferenceFinder : IReferenceFinder
         return changes;
     }
 
-    public StateRenameChanges GetReferencesToState(StateSave state, string oldName, IStateContainer? container, StateSaveCategory? category)
+    public BehaviorReferences GetReferencesToBehavior(BehaviorSave behavior, string oldName)
     {
-        var changes = new StateRenameChanges();
+        var changes = new BehaviorReferences();
+        var project = _projectState.GumProjectSave;
+
+        foreach (var element in project.AllElements)
+        {
+            foreach (var reference in element.Behaviors)
+            {
+                if (reference.BehaviorName == oldName)
+                {
+                    changes.ElementsWithBehaviorReference.Add((element, reference));
+                }
+            }
+        }
+
+        return changes;
+    }
+
+    public StateReferences GetReferencesToState(StateSave state, string oldName, IStateContainer? container, StateSaveCategory? category)
+    {
+        var changes = new StateReferences();
 
         string variableName = category != null ? category.Name + "State" : "State";
 
@@ -316,9 +340,9 @@ public class ReferenceFinder : IReferenceFinder
         return changes;
     }
 
-    public CategoryRenameChanges GetReferencesToStateCategory(IStateContainer owner, StateSaveCategory category, string oldName)
+    public CategoryReferences GetReferencesToStateCategory(IStateContainer owner, StateSaveCategory category, string oldName)
     {
-        var changes = new CategoryRenameChanges();
+        var changes = new CategoryReferences();
 
         var project = _projectState.GumProjectSave;
 
@@ -346,7 +370,7 @@ public class ReferenceFinder : IReferenceFinder
         return changes;
     }
 
-    private static void CollectCategoryReferencesInElement(StateSaveCategory changedCategory, string oldName, ICollection<ElementSave> inheritingElements, ElementSave element, CategoryRenameChanges changes)
+    private static void CollectCategoryReferencesInElement(StateSaveCategory changedCategory, string oldName, ICollection<ElementSave> inheritingElements, ElementSave element, CategoryReferences changes)
     {
         // If the element inherits from the owner of the category and if the screen has a variable of this type, change it.
         foreach (var state in element.AllStates)
