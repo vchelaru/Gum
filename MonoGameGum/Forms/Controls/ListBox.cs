@@ -9,6 +9,8 @@ using Gum.Converters;
 using Gum.DataTypes;
 using RenderingLibrary.Graphics;
 using System.Linq;
+using FlatRedBall.Managers;
+
 
 
 
@@ -1390,6 +1392,15 @@ public class ListBox : ItemsControl, IInputReceiver
         var layerToAddListBoxTo = GetLayerToAddTo(listBoxParent);
 
 #if FRB
+        // just in case:
+        if(popup.Visual.Managers != null)
+        {
+            // don't do this, it can clear binding:
+            //popup.Visual.RemoveFromManagers();
+            GraphicalUiElement.RemoveRenderableFromManagers?.Invoke(popup.Visual, popup.Visual.Managers);
+            popup.Visual.ClearManagers();
+            GuiManager.RemoveWindow(popup.Visual);
+        }
         popup.Visual.AddToManagers(listBoxParent.EffectiveManagers,
             layerToAddListBoxTo);
 
