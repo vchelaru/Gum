@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CodeOutputPlugin.Models;
+namespace Gum.ProjectServices.CodeGeneration;
 
 public enum OutputLibrary
 {

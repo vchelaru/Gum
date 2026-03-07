@@ -73,6 +73,8 @@
 		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\AnimationChainListSave.cs" />
 		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\AnimationChainSave.cs" />
 		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationFrameSave.cs" Link="Animation\AnimationFrameSave.cs" />
+		<Compile Include="..\Gum\Managers\CommonValidationError.cs" Link="Managers\CommonValidationError.cs" />
+		<Compile Include="..\Gum\Managers\INameVerifier.cs" Link="Managers\INameVerifier.cs" />
 		<Compile Include="..\Gum\Managers\ObjectFinder.cs" Link="Managers\ObjectFinder.cs" />
 		<Compile Include="..\Gum\Mvvm\ViewModel.cs" Link="Mvvm\ViewModel.cs" />
 		<Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="Content\IContentLoader.cs" />

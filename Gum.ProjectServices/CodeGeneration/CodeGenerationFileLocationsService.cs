@@ -1,31 +1,31 @@
-﻿using CodeOutputPlugin.Models;
 using Gum.DataTypes;
 using Gum.Managers;
-using Gum.ToolStates;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
 
-namespace CodeOutputPlugin.Manager;
+namespace Gum.ProjectServices.CodeGeneration;
 
-internal class CodeGenerationFileLocationsService
+/// <summary>
+/// Resolves output file paths for generated and custom code files.
+/// </summary>
+public class CodeGenerationFileLocationsService
 {
-    CodeGenerator _codeGenerator;
+    private readonly CodeGenerator _codeGenerator;
     private readonly CodeGenerationNameVerifier _nameVerifier;
-    private readonly IProjectState _projectState;
+    private readonly string? _projectDirectory;
 
-    public CodeGenerationFileLocationsService(CodeGenerator codeGenerator, CodeGenerationNameVerifier nameVerifier, IProjectState projectState)
+    public CodeGenerationFileLocationsService(CodeGenerator codeGenerator, CodeGenerationNameVerifier nameVerifier, string? projectDirectory)
     {
         _codeGenerator = codeGenerator;
         _nameVerifier = nameVerifier;
-        _projectState = projectState;
+        _projectDirectory = projectDirectory;
     }
 
+    /// <summary>
+    /// Gets the generated (.Generated.cs) file path for an element.
+    /// </summary>
     public FilePath? GetGeneratedFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null )
+        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null)
     {
         ///////////////////Early Out///////////////////
         if (codeOutputProjectSettings.CodeProjectRoot == null)
@@ -35,12 +35,12 @@ internal class CodeGenerationFileLocationsService
         /////////////////End Early Out/////////////////
         string generatedFileName = elementSettings.GeneratedFileName;
 
-        if(!string.IsNullOrEmpty(forcedElementName))
+        if (!string.IsNullOrEmpty(forcedElementName))
         {
             var foundElement = ObjectFinder.Self.GetElementSave(forcedElementName!);
             selectedElement = foundElement ?? selectedElement;
         }
-        if(selectedElement != null)
+        if (selectedElement != null)
         {
             var elementName = forcedElementName ?? selectedElement.Name;
 
@@ -57,14 +57,17 @@ internal class CodeGenerationFileLocationsService
                 context.CodeOutputProjectSettings = codeOutputProjectSettings;
 
                 string? fileName = _codeGenerator.GetClassNameForType(elementName, selectedElement.GetType(), effectiveVisualApi, context, out bool isPrefixed);
-                if (isPrefixed) fileName = fileName?.Substring(1);
-                
+                if (isPrefixed)
+                {
+                    fileName = fileName?.Substring(1);
+                }
+
                 var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(fileName);
 
                 var folder = codeOutputProjectSettings.CodeProjectRoot;
                 if (FileManager.IsRelative(folder))
                 {
-                    folder = _projectState.ProjectDirectory + folder;
+                    folder = _projectDirectory + folder;
                 }
 
                 generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
@@ -73,7 +76,7 @@ internal class CodeGenerationFileLocationsService
 
         if (!string.IsNullOrEmpty(generatedFileName) && FileManager.IsRelative(generatedFileName))
         {
-            generatedFileName = _projectState.ProjectDirectory + generatedFileName;
+            generatedFileName = _projectDirectory + generatedFileName;
         }
 
         // If it's empty, return null so it doesn't get used in code generation externally
@@ -87,8 +90,11 @@ internal class CodeGenerationFileLocationsService
         }
     }
 
+    /// <summary>
+    /// Gets the custom code (.cs) file path for an element.
+    /// </summary>
     public FilePath? GetCustomCodeFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null )
+        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null)
     {
         var generatedFileName = GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings, visualApi, forcedElementName);
         if (generatedFileName == null)
@@ -102,5 +108,4 @@ internal class CodeGenerationFileLocationsService
             return customCodeFileName;
         }
     }
-
 }

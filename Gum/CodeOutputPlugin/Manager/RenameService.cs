@@ -1,17 +1,9 @@
-﻿using CodeOutputPlugin.Models;
+using Gum.ProjectServices.CodeGeneration;
 using Gum.DataTypes;
 using Gum.Managers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
-using System.IO;
-using Gum;
-using Gum.Commands;
 using Gum.ToolStates;
 
 namespace CodeOutputPlugin.Manager;
@@ -19,9 +11,10 @@ namespace CodeOutputPlugin.Manager;
 internal class RenameService
 {
     private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
-    private CodeGenerationService _codeGenerationService;
+    private readonly CodeGenerationService _codeGenerationService;
     private readonly CodeGenerator _codeGenerator;
     private readonly CustomCodeGenerator _customCodeGenerator;
+    private readonly CodeOutputElementSettingsManager _elementSettingsManager;
     private readonly IDialogService _dialogService;
 
     public RenameService(CodeGenerationService codeGenerationService,
@@ -31,7 +24,8 @@ internal class RenameService
         IDialogService dialogService,
         IProjectState projectState)
     {
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator, nameVerifier, projectState);
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator, nameVerifier, projectState.ProjectDirectory);
+        _elementSettingsManager = new CodeOutputElementSettingsManager(projectState.ProjectDirectory);
         _codeGenerationService = codeGenerationService;
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
@@ -40,33 +34,30 @@ internal class RenameService
 
     internal void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi)
     {
-        if(codeOutputProjectSettings.CodeProjectRoot == string.Empty)
+        if (codeOutputProjectSettings.CodeProjectRoot == string.Empty)
         {
             return;
         }
         try
         {
-            var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+            var elementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
 
             var oldGeneratedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, visualApi, oldName);
             var oldCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi, oldName);
             var newCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi);
             RegenerateAndMoveCode(element, oldName, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             _dialogService.ShowMessage(e.ToString(), $"Error moving code for {element}");
         }
-
     }
 
-    private void RegenerateAndMoveCode(ElementSave element, string oldName, 
-        CodeOutputProjectSettings codeOutputProjectSettings, FilePath? oldGeneratedFileName, 
+    private void RegenerateAndMoveCode(ElementSave element, string oldName,
+        CodeOutputProjectSettings codeOutputProjectSettings, FilePath? oldGeneratedFileName,
         FilePath? oldCustomFileName, FilePath? newCustomFileName,
         VisualApi? oldVisualApi = null)
     {
-
-        // This should:
         // 1. Delete the old generated file
         if (oldGeneratedFileName?.Exists() == true)
         {
@@ -97,7 +88,6 @@ internal class RenameService
         }
 
         // 3. Rename the class inside the custom code file
-        // Change the class name in the non-generated .cs
         if (newCustomFileName?.Exists() == true)
         {
             string fileContents = FileManager.FromFileText(newCustomFileName.FullPath);
@@ -107,35 +97,32 @@ internal class RenameService
             FileManager.SaveText(fileContents, newCustomFileName.FullPath);
         }
 
-        // 4. Regenerate everything referencing this?
+        // 4. Regenerate everything referencing this
         var referencingElements = ObjectFinder.Self.GetElementsReferencingRecursively(element);
 
         foreach (var referencingElement in referencingElements)
         {
-            var elementOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(referencingElement);
-            _codeGenerationService.GenerateCodeForElement(referencingElement, elementOutputSettings, codeOutputProjectSettings, false);
+            var elementOutputSettings = _elementSettingsManager.LoadOrCreateSettingsFor(referencingElement);
+            _codeGenerationService.GenerateCodeForElement(referencingElement, elementOutputSettings, codeOutputProjectSettings, showPopups: false);
         }
 
-        var thisElementOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+        var thisElementOutputSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
 
         // 5. Regenerate this
-        _codeGenerationService.GenerateCodeForElement(element, thisElementOutputSettings, codeOutputProjectSettings, false);
+        _codeGenerationService.GenerateCodeForElement(element, thisElementOutputSettings, codeOutputProjectSettings, showPopups: false);
     }
 
     internal void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         /////////////////////////Early Out////////////////////
-        if(variableName != "BaseType" || instance != null)
+        if (variableName != "BaseType" || instance != null)
         {
             return;
         }
 
+        var elementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
 
-        // we changed the base type, so let's see if this changed the names
-        // The easeist way to do this is to set the value back and compare with the new:
-        var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
-
-        if(elementSettings.GenerationBehavior == GenerationBehavior.NeverGenerate)
+        if (elementSettings.GenerationBehavior == GenerationBehavior.NeverGenerate)
         {
             return;
         }
@@ -149,16 +136,15 @@ internal class RenameService
         var newValue = element.BaseType;
         var newCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, oldVisualApi);
 
-        if(oldValue != null)
+        if (oldValue != null)
         {
             // Temporarily set the element back to the old type to get the old values
-            if(oldValue is StandardElementTypes standardElementTypes)
+            if (oldValue is StandardElementTypes standardElementTypes)
             {
                 element.BaseType = standardElementTypes.ToString();
             }
             else
             {
-                // The old type better exist. If not, then this element was in a very bad state
                 element.BaseType = (string)oldValue;
             }
 
@@ -166,10 +152,9 @@ internal class RenameService
             oldCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, oldVisualApi);
         }
 
-
         element.BaseType = newValue;
 
-        if(newCustomFileName != null)
+        if (newCustomFileName != null)
         {
             if (newCustomFileName != oldCustomFileName)
             {
@@ -177,7 +162,6 @@ internal class RenameService
             }
             else
             {
-                // same file, which means we only changed the types:
                 string fileContents = FileManager.FromFileText(newCustomFileName.FullPath);
 
                 RenameClassInCode(element, codeOutputProjectSettings, ref fileContents);
@@ -185,25 +169,24 @@ internal class RenameService
                 FileManager.SaveText(fileContents, newCustomFileName.FullPath);
             }
         }
-
     }
 
-    void RenameClassInCode(ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings, ref string contents)
+    private void RenameClassInCode(ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings, ref string contents)
     {
         var startOfLine = contents.IndexOf("partial class ");
         ////////////////Early Out/////////////////
-        if(startOfLine <= -1)
+        if (startOfLine <= -1)
         {
             return;
         }
         //////////////End Early Out///////////////
-        ///
+
         var endOfLine = contents.IndexOf("\n", startOfLine + 1);
 
         var oldClassHeader = contents.Substring(startOfLine, endOfLine - startOfLine);
         string suffix = string.Empty;
 
-        if(oldClassHeader.Contains(":"))
+        if (oldClassHeader.Contains(":"))
         {
             var colonIndex = oldClassHeader.IndexOf(":");
             suffix = " " + oldClassHeader.Substring(colonIndex).Trim();
@@ -211,13 +194,7 @@ internal class RenameService
 
         contents = contents.Remove(startOfLine, endOfLine - startOfLine);
 
-
-        var newHeader = _customCodeGenerator.GetClassHeader(element, codeOutputProjectSettings) + suffix
-            // don't append \n - it's already there from what was removed earlier
-            //+ "\n"
-            ;
+        var newHeader = _customCodeGenerator.GetClassHeader(element, codeOutputProjectSettings) + suffix;
         contents = contents.Insert(startOfLine, newHeader);
-
     }
-
 }

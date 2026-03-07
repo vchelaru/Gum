@@ -447,6 +447,8 @@
 		<Compile Remove="Graphics\Animation\Content\AnimationChainListSave.cs" />
 		<Compile Remove="Graphics\Animation\Content\AnimationChainSave.cs" />
 		<Compile Remove="Graphics\Animation\Content\AnimationFrameSave.cs" />
+		<Compile Remove="Managers\CommonValidationError.cs" />
+		<Compile Remove="Managers\INameVerifier.cs" />
 		<Compile Remove="Managers\ObjectFinder.cs" />
 		<Compile Remove="Managers\StandardElementsManager.cs" />
 		<Compile Remove="Mvvm\ViewModel.cs" />

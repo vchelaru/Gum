@@ -1,4 +1,4 @@
-﻿using CodeOutputPlugin.Models;
+﻿using Gum.ProjectServices.CodeGeneration;
 using CodeOutputPlugin.ViewModels;
 using Gum.Commands;
 using Gum.DataTypes;
