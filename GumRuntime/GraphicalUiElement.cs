@@ -188,6 +188,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     protected ISystemManagers? mManagers;
 
+    // hack for FRB:
+    [Obsolete("Don't use this, it exists only for FRB")]
+    public void ClearManagers() => mManagers = null;
+
     int mTextureTop;
     int mTextureLeft;
     int mTextureWidth;

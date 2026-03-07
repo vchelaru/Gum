@@ -12,7 +12,9 @@ using System.Linq;
 
 
 
+
 #if FRB
+using FlatRedBall.Managers;
 using FlatRedBall.Input;
 using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 using Microsoft.Xna.Framework.Input;
@@ -1390,6 +1392,15 @@ public class ListBox : ItemsControl, IInputReceiver
         var layerToAddListBoxTo = GetLayerToAddTo(listBoxParent);
 
 #if FRB
+        // just in case:
+        if(popup.Visual.Managers != null)
+        {
+            // don't do this, it can clear binding:
+            //popup.Visual.RemoveFromManagers();
+            GraphicalUiElement.RemoveRenderableFromManagers?.Invoke(popup.Visual, popup.Visual.Managers);
+            popup.Visual.ClearManagers();
+            GuiManager.RemoveWindow(popup.Visual);
+        }
         popup.Visual.AddToManagers(listBoxParent.EffectiveManagers,
             layerToAddListBoxTo);
 
