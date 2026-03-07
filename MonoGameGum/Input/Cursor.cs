@@ -132,7 +132,7 @@ public partial class Cursor : ICursor
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-        return ((X - GetViewportLeft()) / zoom) ?? 0;
+        return ((X - GetViewportLeft()) / zoom) + renderer.Camera.X ?? 0;
     }
 
     /// <summary>
@@ -150,7 +150,7 @@ public partial class Cursor : ICursor
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-        return ((Y - GetViewportTop()) / zoom) ?? 0;
+        return ((Y - GetViewportTop()) / zoom) + renderer.Camera.Y ?? 0;
     }
 
     /// <summary>
