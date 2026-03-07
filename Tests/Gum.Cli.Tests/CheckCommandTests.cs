@@ -111,16 +111,16 @@ public class CheckCommandTests : IDisposable
         string componentPath = Path.Combine(componentDir, "BrokenComponent.gucx");
         File.WriteAllText(componentPath, componentXml);
 
-        // Update the .gumx to reference the component
+        // Update the .gumx to reference the component.
+        // GumProjectSave uses [XmlElement("ComponentReference")] so each
+        // reference is a direct child of <GumProjectSave>, not nested.
         string gumxContent = File.ReadAllText(filePath);
         string componentRef =
             """
-              <Components>
-                <ElementReference>
-                  <Name>BrokenComponent</Name>
-                  <Link>Components/BrokenComponent.gucx</Link>
-                </ElementReference>
-              </Components>
+              <ComponentReference>
+                <Name>BrokenComponent</Name>
+                <Link>Components/BrokenComponent.gucx</Link>
+              </ComponentReference>
             """;
 
         gumxContent = gumxContent.Replace("</GumProjectSave>", componentRef + "\n</GumProjectSave>");
