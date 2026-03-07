@@ -10,7 +10,7 @@ public class Program
 {
     public static int Main(string[] args)
     {
-        var rootCommand = new RootCommand("Gum CLI - create projects, check for errors, and generate code.");
+        var rootCommand = new RootCommand("gumcli - create projects, check for errors, and generate code.");
 
         rootCommand.AddCommand(NewCommand.Create());
         rootCommand.AddCommand(CheckCommand.Create());

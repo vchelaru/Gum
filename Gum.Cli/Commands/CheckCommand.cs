@@ -10,7 +10,7 @@ using Gum.ProjectServices;
 namespace Gum.Cli.Commands;
 
 /// <summary>
-/// Defines the <c>gum check</c> command which loads a project and reports errors.
+/// Defines the <c>gumcli check</c> command which loads a project and reports errors.
 /// </summary>
 public static class CheckCommand
 {

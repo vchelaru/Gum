@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StandardElementSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>NineSlice</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="int" Name="Alpha" Category="Rendering" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="bool" Name="Animate" Category="Animation" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="Blend" Name="Blend" Category="Rendering" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderScale" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="CurrentChainName" Category="Animation" SetsValue="true" />
+    <Variable Type="float?" Name="CustomFrameTextureCoordinateWidth" Category="Source" SetsValue="true" />
+    <Variable Type="bool" Name="ExposeChildrenEvents" Category="Behavior" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="string" Name="Guide" Category="Position" SetsValue="true" />
+    <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="Height" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:float">64</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="IgnoredByParentSize" Category="Parent" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
+    <Variable Type="float?" Name="MaxHeight" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MaxWidth" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MinHeight" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MinWidth" Category="Dimensions" SetsValue="true" />
+    <Variable Type="string" Name="Parent" Category="Parent" SetsValue="true" />
+    <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="SourceFile" Category="Source" SetsValue="true">
+      <Value xsi:type="xsd:string">ExampleSpriteFrame.png</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
+      <Value xsi:type="xsd:string">Default</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="TextureAddress" Category="Source" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="Visible" Category="States and Visibility" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="Width" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:float">64</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="X" Category="Position" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="XOrigin" Category="Position" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="XUnits" Category="Position" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Y" Category="Position" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="YOrigin" Category="Position" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="YUnits" Category="Position" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value />
+    </VariableList>
+  </State>
+  <Behaviors />
+</StandardElementSave>

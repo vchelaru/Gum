@@ -7,7 +7,7 @@ using Gum.ProjectServices;
 namespace Gum.Cli.Commands;
 
 /// <summary>
-/// Defines the <c>gum new</c> command which creates a blank Gum project.
+/// Defines the <c>gumcli new</c> command which creates a blank Gum project.
 /// </summary>
 public static class NewCommand
 {
