@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Reflection;
 using Gum.Cli.Commands;
 
 namespace Gum.Cli;
@@ -10,7 +11,12 @@ public class Program
 {
     public static int Main(string[] args)
     {
-        var rootCommand = new RootCommand("gumcli - create projects, check for errors, and generate code.");
+        string version = Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
+            ?? "unknown";
+
+        var rootCommand = new RootCommand($"gumcli v{version} - create projects, check for errors, and generate code.");
 
         rootCommand.AddCommand(NewCommand.Create());
         rootCommand.AddCommand(CheckCommand.Create());
