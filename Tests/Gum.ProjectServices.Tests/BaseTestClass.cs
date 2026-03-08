@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 
 namespace Gum.ProjectServices.Tests;
@@ -9,13 +10,18 @@ public class BaseTestClass : IDisposable
 
     public BaseTestClass()
     {
+        StandardElementsManager.Self.Initialize();
+
         Project = new GumProjectSave();
 
-        Project.StandardElements.Add(new StandardElementSave { Name = "Container" });
-        Project.StandardElements.Add(new StandardElementSave { Name = "NineSlice" });
-        Project.StandardElements.Add(new StandardElementSave { Name = "Sprite" });
-        Project.StandardElements.Add(new StandardElementSave { Name = "Text" });
-        Project.StandardElements.Add(new StandardElementSave { Name = "ColoredRectangle" });
+        foreach (string name in new[] { "Container", "NineSlice", "Sprite", "Text", "ColoredRectangle" })
+        {
+            StandardElementSave element = new StandardElementSave { Name = name };
+            StateSave defaultState = new StateSave { Name = "Default" };
+            defaultState.ParentContainer = element;
+            element.States.Add(defaultState);
+            Project.StandardElements.Add(element);
+        }
     }
 
     public virtual void Dispose()

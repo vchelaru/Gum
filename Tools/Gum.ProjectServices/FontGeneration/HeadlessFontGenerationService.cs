@@ -239,8 +239,12 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         }
     }
 
-    private async Task GenerateMissingFontsFor(GumProjectSave project, IEnumerable<ElementSave> elements,
-        string projectDirectory, bool forceRecreate)
+    /// <summary>
+    /// Collects all unique fonts required by the given elements without performing any I/O.
+    /// Keyed by <see cref="BmfcSave.FontCacheFileName"/> so duplicate font+size+style combinations
+    /// are automatically deduplicated.
+    /// </summary>
+    internal Dictionary<string, BmfcSave> CollectRequiredFonts(GumProjectSave project, IEnumerable<ElementSave> elements)
     {
         string fontRanges = project.FontRanges;
         int spacingHorizontal = project.FontSpacingHorizontal;
@@ -267,6 +271,14 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
                 }
             }
         }
+
+        return bitmapFonts;
+    }
+
+    private async Task GenerateMissingFontsFor(GumProjectSave project, IEnumerable<ElementSave> elements,
+        string projectDirectory, bool forceRecreate)
+    {
+        Dictionary<string, BmfcSave> bitmapFonts = CollectRequiredFonts(project, elements);
 
         if (bitmapFonts.Count == 0)
         {

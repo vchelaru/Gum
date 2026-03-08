@@ -1,8 +1,10 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.ProjectServices.FontGeneration;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace Gum.ProjectServices.Tests;
@@ -14,15 +16,79 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     public HeadlessFontGenerationServiceTests()
     {
         _sut = new HeadlessFontGenerationService();
+
+        // Add font defaults to the Text standard element's Default state so
+        // inheritance tests can resolve Font/FontSize via GetValueRecursive.
+        StandardElementSave textStandard = Project.StandardElements.First(e => e.Name == "Text");
+        StateSave textDefault = textStandard.DefaultState;
+        textDefault.Variables.Add(new VariableSave { SetsValue = true, Name = "Font", Value = "Arial" });
+        textDefault.Variables.Add(new VariableSave { SetsValue = true, Name = "FontSize", Value = 18 });
+
+        ObjectFinder.Self.GumProjectSave = Project;
     }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Creates a state directly under an element (sets ParentContainer), adds it to the
+    /// element's States list, and returns it.
+    /// </summary>
+    private static StateSave AddState(ElementSave element, string name = "Default")
+    {
+        StateSave state = new StateSave { Name = name };
+        state.ParentContainer = element;
+        element.States.Add(state);
+        return state;
+    }
+
+    /// <summary>
+    /// Creates a state inside a named category on an element and returns it.
+    /// </summary>
+    private static StateSave AddCategoryState(ElementSave element, string categoryName, string stateName)
+    {
+        StateSaveCategory category = element.Categories.FirstOrDefault(c => c.Name == categoryName)
+            ?? new StateSaveCategory { Name = categoryName };
+
+        if (!element.Categories.Contains(category))
+        {
+            element.Categories.Add(category);
+        }
+
+        StateSave state = new StateSave { Name = stateName };
+        state.ParentContainer = element;
+        category.States.Add(state);
+        return state;
+    }
+
+    /// <summary>
+    /// Adds a Text instance named <paramref name="instanceName"/> to <paramref name="element"/>.
+    /// </summary>
+    private static InstanceSave AddTextInstance(ElementSave element, string instanceName = "Label")
+    {
+        InstanceSave instance = new InstanceSave { Name = instanceName, BaseType = "Text" };
+        element.Instances.Add(instance);
+        return instance;
+    }
+
+    private static void SetVar(StateSave state, string name, object value)
+    {
+        state.Variables.Add(new VariableSave { SetsValue = true, Name = name, Value = value });
+    }
+
+    // -------------------------------------------------------------------------
+    // TryGetBmfcSaveFor
+    // -------------------------------------------------------------------------
 
     #region TryGetBmfcSaveFor
 
     [Fact]
     public void TryGetBmfcSaveFor_ShouldReturnNull_WhenFontNotSet()
     {
-        StateSave state = new StateSave();
-        state.Variables.Add(new VariableSave { Name = "FontSize", Value = 18 });
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "FontSize", 18);
 
         BmfcSave? result = _sut.TryGetBmfcSaveFor(null, state, fontRanges: "", spacingHorizontal: 1, spacingVertical: 1, forcedValues: null);
 
@@ -32,8 +98,9 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     [Fact]
     public void TryGetBmfcSaveFor_ShouldReturnNull_WhenFontSizeNotSet()
     {
-        StateSave state = new StateSave();
-        state.Variables.Add(new VariableSave { Name = "Font", Value = "Arial" });
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Arial");
 
         BmfcSave? result = _sut.TryGetBmfcSaveFor(null, state, fontRanges: "", spacingHorizontal: 1, spacingVertical: 1, forcedValues: null);
 
@@ -43,9 +110,10 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     [Fact]
     public void TryGetBmfcSaveFor_ShouldReturnBmfcSave_WhenFontAndSizeAreSet()
     {
-        StateSave state = new StateSave();
-        state.Variables.Add(new VariableSave { Name = "Font", Value = "Arial" });
-        state.Variables.Add(new VariableSave { Name = "FontSize", Value = 24 });
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Arial");
+        SetVar(state, "FontSize", 24);
 
         BmfcSave? result = _sut.TryGetBmfcSaveFor(null, state, fontRanges: "32-126", spacingHorizontal: 2, spacingVertical: 3, forcedValues: null);
 
@@ -60,9 +128,10 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     [Fact]
     public void TryGetBmfcSaveFor_ShouldApplyDefaults_WhenOptionalPropertiesNotSet()
     {
-        StateSave state = new StateSave();
-        state.Variables.Add(new VariableSave { Name = "Font", Value = "Comic Sans MS" });
-        state.Variables.Add(new VariableSave { Name = "FontSize", Value = 12 });
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Comic Sans MS");
+        SetVar(state, "FontSize", 12);
 
         BmfcSave? result = _sut.TryGetBmfcSaveFor(null, state, fontRanges: "", spacingHorizontal: 1, spacingVertical: 1, forcedValues: null);
 
@@ -76,13 +145,14 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     [Fact]
     public void TryGetBmfcSaveFor_ShouldReadOutlineItalicBold_WhenSetInState()
     {
-        StateSave state = new StateSave();
-        state.Variables.Add(new VariableSave { Name = "Font", Value = "Times New Roman" });
-        state.Variables.Add(new VariableSave { Name = "FontSize", Value = 32 });
-        state.Variables.Add(new VariableSave { Name = "OutlineThickness", Value = 2 });
-        state.Variables.Add(new VariableSave { Name = "IsItalic", Value = true });
-        state.Variables.Add(new VariableSave { Name = "IsBold", Value = true });
-        state.Variables.Add(new VariableSave { Name = "UseFontSmoothing", Value = false });
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Times New Roman");
+        SetVar(state, "FontSize", 32);
+        SetVar(state, "OutlineThickness", 2);
+        SetVar(state, "IsItalic", true);
+        SetVar(state, "IsBold", true);
+        SetVar(state, "UseFontSmoothing", false);
 
         BmfcSave? result = _sut.TryGetBmfcSaveFor(null, state, fontRanges: "", spacingHorizontal: 1, spacingVertical: 1, forcedValues: null);
 
@@ -96,11 +166,11 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     [Fact]
     public void TryGetBmfcSaveFor_ShouldUsePrefixedVariables_WhenInstanceProvided()
     {
-        InstanceSave instance = new InstanceSave { Name = "MyLabel", BaseType = "Text" };
-
-        StateSave state = new StateSave();
-        state.Variables.Add(new VariableSave { Name = "MyLabel.Font", Value = "Verdana" });
-        state.Variables.Add(new VariableSave { Name = "MyLabel.FontSize", Value = 16 });
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        InstanceSave instance = AddTextInstance(screen, "MyLabel");
+        StateSave state = AddState(screen);
+        SetVar(state, "MyLabel.Font", "Verdana");
+        SetVar(state, "MyLabel.FontSize", 16);
 
         BmfcSave? result = _sut.TryGetBmfcSaveFor(instance, state, fontRanges: "", spacingHorizontal: 1, spacingVertical: 1, forcedValues: null);
 
@@ -112,13 +182,14 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     [Fact]
     public void TryGetBmfcSaveFor_ForcedValues_ShouldOverrideStateValues()
     {
-        StateSave state = new StateSave();
-        state.Variables.Add(new VariableSave { Name = "Font", Value = "Arial" });
-        state.Variables.Add(new VariableSave { Name = "FontSize", Value = 12 });
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Arial");
+        SetVar(state, "FontSize", 12);
 
         StateSave forced = new StateSave();
-        forced.Variables.Add(new VariableSave { Name = "Font", Value = "Impact" });
-        forced.Variables.Add(new VariableSave { Name = "FontSize", Value = 48 });
+        SetVar(forced, "Font", "Impact");
+        SetVar(forced, "FontSize", 48);
 
         BmfcSave? result = _sut.TryGetBmfcSaveFor(null, state, fontRanges: "", spacingHorizontal: 1, spacingVertical: 1, forcedValues: forced);
 
@@ -128,6 +199,314 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     }
 
     #endregion
+
+    // -------------------------------------------------------------------------
+    // CollectRequiredFonts — basic collection and deduplication
+    // -------------------------------------------------------------------------
+
+    #region CollectRequiredFonts — basic
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldReturnEmpty_WhenProjectHasNoElements()
+    {
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, Enumerable.Empty<ElementSave>());
+
+        result.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldReturnEmpty_WhenElementHasNoFontVariables()
+    {
+        ScreenSave screen = new ScreenSave { Name = "EmptyScreen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Width", 800);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen });
+
+        result.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldReturn1Font_WhenDefaultStateHasFontAndSize()
+    {
+        ScreenSave screen = new ScreenSave { Name = "MainMenu" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Arial");
+        SetVar(state, "FontSize", 24);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen });
+
+        result.ShouldHaveSingleItem();
+        BmfcSave font = result.Values.Single();
+        font.FontName.ShouldBe("Arial");
+        font.FontSize.ShouldBe(24);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldDeduplicate_WhenTwoStatesSpecifySameFontAndSize()
+    {
+        ScreenSave screen = new ScreenSave { Name = "Screen" };
+        StateSave defaultState = AddState(screen, "Default");
+        SetVar(defaultState, "Font", "Arial");
+        SetVar(defaultState, "FontSize", 18);
+
+        StateSave otherState = AddCategoryState(screen, "SizeCategory", "Large");
+        SetVar(otherState, "Font", "Arial");
+        SetVar(otherState, "FontSize", 18);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen });
+
+        result.ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldReturn2Fonts_WhenTwoStatesHaveDifferentSizes()
+    {
+        ScreenSave screen = new ScreenSave { Name = "Screen" };
+        StateSave defaultState = AddState(screen, "Default");
+        SetVar(defaultState, "Font", "Arial");
+        SetVar(defaultState, "FontSize", 18);
+
+        StateSave largeState = AddCategoryState(screen, "SizeCategory", "Large");
+        SetVar(largeState, "Font", "Arial");
+        SetVar(largeState, "FontSize", 32);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen });
+
+        result.Count.ShouldBe(2);
+        result.Values.ShouldContain(f => f.FontSize == 18);
+        result.Values.ShouldContain(f => f.FontSize == 32);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldReturn2Fonts_WhenOutlineThicknessDiffers()
+    {
+        ScreenSave screen = new ScreenSave { Name = "Screen" };
+        StateSave defaultState = AddState(screen, "Default");
+        SetVar(defaultState, "Font", "Arial");
+        SetVar(defaultState, "FontSize", 24);
+        SetVar(defaultState, "OutlineThickness", 0);
+
+        StateSave outlineState = AddCategoryState(screen, "StyleCategory", "Outlined");
+        SetVar(outlineState, "Font", "Arial");
+        SetVar(outlineState, "FontSize", 24);
+        SetVar(outlineState, "OutlineThickness", 2);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen });
+
+        result.Count.ShouldBe(2);
+        result.Values.ShouldContain(f => f.OutlineThickness == 0);
+        result.Values.ShouldContain(f => f.OutlineThickness == 2);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldAccumulateFonts_AcrossMultipleElements()
+    {
+        ScreenSave screen1 = new ScreenSave { Name = "Screen1" };
+        StateSave state1 = AddState(screen1);
+        SetVar(state1, "Font", "Arial");
+        SetVar(state1, "FontSize", 18);
+
+        ScreenSave screen2 = new ScreenSave { Name = "Screen2" };
+        StateSave state2 = AddState(screen2);
+        SetVar(state2, "Font", "Verdana");
+        SetVar(state2, "FontSize", 24);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen1, screen2 });
+
+        result.Count.ShouldBe(2);
+        result.Values.ShouldContain(f => f.FontName == "Arial" && f.FontSize == 18);
+        result.Values.ShouldContain(f => f.FontName == "Verdana" && f.FontSize == 24);
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
+    // CollectRequiredFonts — instance variables
+    // -------------------------------------------------------------------------
+
+    #region CollectRequiredFonts — instance variables
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldCollectFont_WhenInstanceHasFontAndSizeInComponentState()
+    {
+        ComponentSave component = new ComponentSave { Name = "HudComponent", BaseType = "Container" };
+        StateSave state = AddState(component);
+        AddTextInstance(component, "ScoreLabel");
+
+        // Font and FontSize set directly on the instance within this component's state.
+        SetVar(state, "ScoreLabel.Font", "Impact");
+        SetVar(state, "ScoreLabel.FontSize", 36);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.ShouldHaveSingleItem();
+        BmfcSave font = result.Values.Single();
+        font.FontName.ShouldBe("Impact");
+        font.FontSize.ShouldBe(36);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldCollectBothElementAndInstanceFonts_WhenBothAreSet()
+    {
+        // A Text-typed element with a font on its own default state...
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave state = AddState(component);
+        SetVar(state, "Font", "Arial");
+        SetVar(state, "FontSize", 18);
+
+        // ...plus a child Text instance with a different font.
+        AddTextInstance(component, "Title");
+        SetVar(state, "Title.Font", "Impact");
+        SetVar(state, "Title.FontSize", 48);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.Count.ShouldBe(2);
+        result.Values.ShouldContain(f => f.FontName == "Arial" && f.FontSize == 18);
+        result.Values.ShouldContain(f => f.FontName == "Impact" && f.FontSize == 48);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldReturnEmpty_WhenInstanceHasSizeButNoFont()
+    {
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave state = AddState(component);
+        // Use a Sprite instance — Sprite has no Font variable in its standard element,
+        // so FontSize alone can never produce a font entry.
+        component.Instances.Add(new InstanceSave { Name = "Label", BaseType = "Sprite" });
+
+        // Only FontSize — no Font anywhere in the hierarchy — so nothing should be collected.
+        SetVar(state, "Label.FontSize", 20);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldReturn2Fonts_WhenInstanceHasDifferentSizePerCategoryState()
+    {
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave defaultState = AddState(component, "Default");
+        StateSave largeState = AddCategoryState(component, "SizeCategory", "Large");
+        AddTextInstance(component, "Label");
+
+        SetVar(defaultState, "Label.Font", "Arial");
+        SetVar(defaultState, "Label.FontSize", 18);
+
+        SetVar(largeState, "Label.Font", "Arial");
+        SetVar(largeState, "Label.FontSize", 32);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.Count.ShouldBe(2);
+        result.Values.ShouldContain(f => f.FontSize == 18);
+        result.Values.ShouldContain(f => f.FontSize == 32);
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
+    // CollectRequiredFonts — inheritance from Text standard element
+    // -------------------------------------------------------------------------
+
+    #region CollectRequiredFonts — inheritance
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldInheritFont_WhenInstanceFontNotSetInComponentState()
+    {
+        // The component's state only sets FontSize on the instance.
+        // Font should fall through to the Text standard element's default ("Arial").
+        ComponentSave component = new ComponentSave { Name = "HudPanel", BaseType = "Container" };
+        StateSave state = AddState(component);
+        AddTextInstance(component, "Label");
+
+        SetVar(state, "Label.FontSize", 24);
+        // Note: "Label.Font" is intentionally not set — should resolve to "Arial" from Text standard.
+
+        Project.Components.Add(component);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.ShouldHaveSingleItem();
+        BmfcSave font = result.Values.Single();
+        font.FontName.ShouldBe("Arial");
+        font.FontSize.ShouldBe(24);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldInheritFontSize_WhenInstanceFontSizeNotSetInComponentState()
+    {
+        // The component's state only sets Font on the instance.
+        // FontSize should fall through to the Text standard element's default (18).
+        ComponentSave component = new ComponentSave { Name = "HudPanel", BaseType = "Container" };
+        StateSave state = AddState(component);
+        AddTextInstance(component, "Label");
+
+        SetVar(state, "Label.Font", "Verdana");
+        // Note: "Label.FontSize" is intentionally not set — should resolve to 18 from Text standard.
+
+        Project.Components.Add(component);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.ShouldHaveSingleItem();
+        BmfcSave font = result.Values.Single();
+        font.FontName.ShouldBe("Verdana");
+        font.FontSize.ShouldBe(18);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldReturnEmpty_WhenInstanceHasNoOverridesAndTextStandardHasNoFont()
+    {
+        // Replace the Text standard with one that has NO font variables.
+        Project.StandardElements.Clear();
+        StandardElementSave emptyText = new StandardElementSave { Name = "Text" };
+        StateSave emptyDefault = new StateSave { Name = "Default" };
+        emptyDefault.ParentContainer = emptyText;
+        emptyText.States.Add(emptyDefault);
+        Project.StandardElements.Add(emptyText);
+        ObjectFinder.Self.GumProjectSave = Project;
+
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        AddState(component);
+        AddTextInstance(component, "Label");
+        Project.Components.Add(component);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldProduceDifferentFonts_WhenCategoryStateOverridesFontSizeWithInheritedFont()
+    {
+        // Default state: instance FontSize=18 (Font inherited as "Arial" from Text standard).
+        // Category state: instance FontSize=36 (Font still inherited as "Arial").
+        // Both fonts should be collected — Arial@18 and Arial@36.
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave defaultState = AddState(component, "Default");
+        StateSave largeState = AddCategoryState(component, "SizeCategory", "Large");
+        AddTextInstance(component, "Label");
+
+        SetVar(defaultState, "Label.FontSize", 18);
+        SetVar(largeState, "Label.FontSize", 36);
+
+        Project.Components.Add(component);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.Count.ShouldBe(2);
+        result.Values.ShouldContain(f => f.FontName == "Arial" && f.FontSize == 18);
+        result.Values.ShouldContain(f => f.FontName == "Arial" && f.FontSize == 36);
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
+    // Windows gate
+    // -------------------------------------------------------------------------
 
     #region Windows gate
 
