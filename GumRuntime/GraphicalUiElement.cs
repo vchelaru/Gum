@@ -6470,11 +6470,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (element.Parent.GetType().Equals(type))
             {
-                return element as GraphicalUiElement;
+                return element.Parent as GraphicalUiElement;
             }
             else
             {
-                return GetParentByType(element, type);
+                return GetParentByType(element.Parent, type);
             }
         }
         else

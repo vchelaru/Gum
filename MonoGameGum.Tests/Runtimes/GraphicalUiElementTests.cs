@@ -1655,4 +1655,99 @@ public class GraphicalUiElementTests : BaseTestClass
 
         rightChild.GetAbsoluteLeft().ShouldBe(100);
     }
+
+    #region GetParentByTypeRecursively Tests
+
+    // Subclass used to distinguish type from ContainerRuntime in parent-search tests
+    private class SpecialContainer : ContainerRuntime { }
+
+    [Fact]
+    public void GetParentByTypeRecursively_ReturnsDirectParent_WhenDirectParentMatchesType()
+    {
+        ContainerRuntime parent = new();
+        GraphicalUiElement child = new();
+        parent.AddChild(child);
+
+        var result = child.GetParentByTypeRecursively(typeof(ContainerRuntime));
+
+        result.ShouldBe(parent);
+    }
+
+    [Fact]
+    public void GetParentByTypeRecursively_ReturnsDirectParent_NotGrandparent_WhenBothMatch()
+    {
+        // Verifies the fix for bug where element was returned instead of element.Parent:
+        // result must be the direct parent, not a grandparent or the child itself.
+        ContainerRuntime grandparent = new();
+        ContainerRuntime parent = new();
+        GraphicalUiElement child = new();
+        grandparent.AddChild(parent);
+        parent.AddChild(child);
+
+        var result = child.GetParentByTypeRecursively(typeof(ContainerRuntime));
+
+        result.ShouldBe(parent);
+        result.ShouldNotBe(grandparent);
+    }
+
+    [Fact]
+    public void GetParentByTypeRecursively_SkipsNonMatchingParent_AndFindsGrandparent()
+    {
+        // grandparent is SpecialContainer; parent is ContainerRuntime (not SpecialContainer)
+        // searching for SpecialContainer must skip the direct parent and find the grandparent.
+        SpecialContainer grandparent = new();
+        ContainerRuntime middleParent = new();
+        GraphicalUiElement child = new();
+        grandparent.AddChild(middleParent);
+        middleParent.AddChild(child);
+
+        var result = child.GetParentByTypeRecursively(typeof(SpecialContainer));
+
+        result.ShouldBe(grandparent);
+    }
+
+    [Fact]
+    public void GetParentByTypeRecursively_ReturnsNull_WhenNoAncestorMatchesType()
+    {
+        ContainerRuntime parent = new();
+        GraphicalUiElement child = new();
+        parent.AddChild(child);
+
+        // SpecialContainer is not in the hierarchy
+        var result = child.GetParentByTypeRecursively(typeof(SpecialContainer));
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetParentByTypeRecursively_ReturnsNull_WhenElementHasNoParent()
+    {
+        GraphicalUiElement element = new();
+
+        var result = element.GetParentByTypeRecursively(typeof(ContainerRuntime));
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetParentByTypeRecursively_DoesNotStackOverflow_WithDeepHierarchy()
+    {
+        // Guards against the regression where the recursive call passed 'element' instead
+        // of 'element.Parent', which caused infinite recursion and a StackOverflowException.
+        SpecialContainer root = new();
+        ContainerRuntime current = root;
+        for (int i = 0; i < 100; i++)
+        {
+            ContainerRuntime next = new();
+            current.AddChild(next);
+            current = next;
+        }
+
+        // The leaf should find the root (SpecialContainer) by traversing 100 levels up.
+        var result = current.GetParentByTypeRecursively(typeof(SpecialContainer));
+
+        result.ShouldBe(root);
+    }
+
+    #endregion
 }
