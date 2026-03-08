@@ -59,10 +59,10 @@ jobs:
 
     # Build and pack GumCli as a dotnet tool (not in AllLibraries.sln)
     - name: Build GumCli
-      run: dotnet build Gum.Cli/Gum.Cli.csproj --configuration ${{ env.CONFIGURATION }}
+      run: dotnet build Tools/Gum.Cli/Gum.Cli.csproj --configuration ${{ env.CONFIGURATION }}
 
     - name: Pack GumCli
-      run: dotnet pack Gum.Cli/Gum.Cli.csproj --configuration ${{ env.CONFIGURATION }} --no-build --output ./nupkgs
+      run: dotnet pack Tools/Gum.Cli/Gum.Cli.csproj --configuration ${{ env.CONFIGURATION }} --no-build --output ./nupkgs
 
     # Upload artifacts for inspection (both .nupkg and .snupkg)
     - name: Upload NuGet packages as artifacts

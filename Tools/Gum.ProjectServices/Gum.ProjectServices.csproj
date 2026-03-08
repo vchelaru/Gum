@@ -15,6 +15,7 @@
 	<ItemGroup>
 		<EmbeddedResource Include="Templates\Default\Standards\*.gutx" />
 		<EmbeddedResource Include="Templates\Default\ExampleSpriteFrame.png" />
+		<EmbeddedResource Include="Templates\FormsTemplate\**\*" Exclude="Templates\FormsTemplate\FontCache\**\*;Templates\FormsTemplate\Libraries\**\*" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -22,7 +23,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 	</ItemGroup>
 
 </Project>
