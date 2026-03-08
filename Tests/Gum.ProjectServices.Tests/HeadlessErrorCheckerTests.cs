@@ -36,6 +36,35 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetAllErrors_ShouldReturnError_WhenComponentInstanceHasInvalidBaseType()
+    {
+        ComponentSave component = new ComponentSave { Name = "BrokenComponent", BaseType = "Container" };
+        component.Instances.Add(new InstanceSave { Name = "BadChild", BaseType = "NonExistentType" });
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.ElementName.ShouldBe("BrokenComponent");
+        error.Message.ShouldContain("NonExistentType");
+        error.Severity.ShouldBe(ErrorSeverity.Error);
+    }
+
+    [Fact]
+    public void GetAllErrors_ShouldReturnError_WhenScreenInstanceHasInvalidBaseType()
+    {
+        ScreenSave screen = new ScreenSave { Name = "MainMenu" };
+        screen.Instances.Add(new InstanceSave { Name = "BadChild", BaseType = "NonExistentType" });
+        Project.Screens.Add(screen);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.ElementName.ShouldBe("MainMenu");
+        error.Severity.ShouldBe(ErrorSeverity.Error);
+    }
+
+    [Fact]
     public void GetAllErrors_ShouldReturnEmpty_WhenProjectHasNoElements()
     {
         GumProjectSave emptyProject = new GumProjectSave();

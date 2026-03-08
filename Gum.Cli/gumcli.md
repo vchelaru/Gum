@@ -20,7 +20,7 @@ gumcli new path/to/MyProject.gumx
 
 ### `gumcli check <project.gumx> [--json]`
 
-Loads a project and reports errors.
+Loads a project and reports all errors, including malformed XML in element files, missing referenced files, and semantic errors (invalid base types, missing behavior instances, etc.).
 
 ```
 gumcli check MyProject.gumx
@@ -28,8 +28,8 @@ gumcli check MyProject.gumx --json
 ```
 
 - Human-readable output by default
-- `--json` outputs a JSON array of `{ element, message, severity }` objects
-- Exit code `0` = no errors, `1` = errors found, `2` = load failure
+- `--json` outputs a JSON array of `{ element, message, severity }` objects — all error types use this same format
+- Exit code `0` = no errors, `1` = errors found, `2` = project .gumx file could not be loaded
 
 ### `gumcli codegen <project.gumx> [--element <name>...]`
 

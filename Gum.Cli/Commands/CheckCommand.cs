@@ -62,28 +62,24 @@ public static class CheckCommand
             return 2;
         }
 
-        if (loadResult.MissingFiles.Count > 0)
-        {
-            foreach (string missingFile in loadResult.MissingFiles)
-            {
-                Console.Error.WriteLine($"warning: missing file: {missingFile}");
-            }
-        }
-
         ITypeResolver typeResolver = new DefaultTypeResolver();
         IHeadlessErrorChecker checker = new HeadlessErrorChecker(typeResolver);
-        IReadOnlyList<ErrorResult> errors = checker.GetAllErrors(loadResult.Project!);
+        IReadOnlyList<ErrorResult> checkerErrors = checker.GetAllErrors(loadResult.Project!);
+
+        var allErrors = new List<ErrorResult>();
+        allErrors.AddRange(loadResult.LoadErrors);
+        allErrors.AddRange(checkerErrors);
 
         if (json)
         {
-            WriteJson(errors);
+            WriteJson(allErrors);
         }
         else
         {
-            WriteHumanReadable(errors);
+            WriteHumanReadable(allErrors);
         }
 
-        return errors.Count > 0 ? 1 : 0;
+        return allErrors.Any(e => e.Severity == ErrorSeverity.Error) ? 1 : 0;
     }
 
     private static void WriteJson(IReadOnlyList<ErrorResult> errors)

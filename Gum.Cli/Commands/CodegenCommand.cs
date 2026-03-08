@@ -61,12 +61,10 @@ public static class CodegenCommand
             return 2;
         }
 
-        if (loadResult.MissingFiles.Count > 0)
+        foreach (ErrorResult loadError in loadResult.LoadErrors)
         {
-            foreach (string missingFile in loadResult.MissingFiles)
-            {
-                Console.Error.WriteLine($"warning: missing file: {missingFile}");
-            }
+            string severity = loadError.Severity == ErrorSeverity.Warning ? "warning" : "error";
+            Console.Error.WriteLine($"{severity}: {loadError.ElementName}: {loadError.Message}");
         }
 
         var project = loadResult.Project!;

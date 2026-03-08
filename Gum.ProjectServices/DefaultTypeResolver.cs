@@ -1,5 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Gum.DataTypes;
+using Gum.Managers;
+using Gum.RenderingLibrary;
+using RenderingLibrary.Graphics;
 
 namespace Gum.ProjectServices;
 
@@ -50,5 +54,16 @@ public class DefaultTypeResolver : ITypeResolver
         RegisterType(typeof(byte));
         RegisterType(typeof(long));
         RegisterType(typeof(char));
+
+        // Gum enum types used in standard elements
+        RegisterType(typeof(HorizontalAlignment));
+        RegisterType(typeof(VerticalAlignment));
+        RegisterType(typeof(PositionUnitType));
+        RegisterType(typeof(DimensionUnitType));
+        RegisterType(typeof(Blend));
+        RegisterType(typeof(TextureAddress));
+        RegisterType(typeof(ChildrenLayout));
+        RegisterType(typeof(TextOverflowHorizontalMode));
+        RegisterType(typeof(TextOverflowVerticalMode));
     }
 }
