@@ -1,15 +1,11 @@
-﻿using CodeOutputPlugin.Models;
+using Gum.ProjectServices.CodeGeneration;
 using Gum.DataTypes;
 using Gum;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
 using Gum.Managers;
 using Gum.Commands;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 
@@ -20,6 +16,7 @@ internal class CodeGenerationService
     private readonly CodeGenerator _codeGenerator;
     private readonly CustomCodeGenerator _customCodeGenerator;
     private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
+    private readonly CodeOutputElementSettingsManager _elementSettingsManager;
     private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
 
@@ -31,13 +28,14 @@ internal class CodeGenerationService
     {
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, nameVerifier, projectState);
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, nameVerifier, projectState.ProjectDirectory);
+        _elementSettingsManager = new CodeOutputElementSettingsManager(projectState.ProjectDirectory);
         _guiCommands = guiCommands;
         _dialogService = dialogService;
     }
 
 
-    public void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups,
+    public void GenerateCodeForElement(ElementSave selectedElement, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups,
         bool checkForMissing = true)
     {
         var visualApi = _codeGenerator.GetVisualApiForElement(selectedElement);
@@ -65,11 +63,6 @@ internal class CodeGenerationService
 
         //////////////////////////////////////End Early Out//////////////////////////
 
-        // We used to use the view model code, but the viewmodel may have
-        // an instance within the element selected. Instead, we want to output
-        // the code for the whole selected element.
-        //var contents = ViewModel.Code;
-
         if(checkForMissing)
         {
             var elementReferences = ObjectFinder.Self.GetElementsReferencedByThis(selectedElement);
@@ -82,9 +75,9 @@ internal class CodeGenerationService
                     }
                     else
                     {
-                        var settings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(item);
-                        var generatedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(item, settings, codeOutputProjectSettings, visualApi);
-                        return generatedFileName?.Exists() == false;
+                        var settings = _elementSettingsManager.LoadOrCreateSettingsFor(item);
+                        var genFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(item, settings, codeOutputProjectSettings, visualApi);
+                        return genFileName?.Exists() == false;
                     }
                 })
                 .ToList();
@@ -125,7 +118,7 @@ internal class CodeGenerationService
             {
                 foreach(var element in elementsWithMissingCodeGen)
                 {
-                    GenerateCodeForElement(element, CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element), codeOutputProjectSettings, false, false);
+                    GenerateCodeForElement(element, _elementSettingsManager.LoadOrCreateSettingsFor(element), codeOutputProjectSettings, showPopups: false, checkForMissing: false);
                 }
             }
         }
@@ -160,20 +153,13 @@ internal class CodeGenerationService
         {
             GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
 
-            // show a message somewhere?
             message += $"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}";
 
             if (!string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
             {
-
-                // nope! This strips out periods in folders. We don't want to do that:
-                //var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
-                //var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
-                // Instead, just strip it off the end:
                 var fullPath = generatedFileName.FullPath;
                 var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
 
-                // todo - only save this if it doesn't already exist
                 if (!System.IO.File.Exists(customCodeFileName))
                 {
                     var directory = FileManager.GetDirectory(customCodeFileName);

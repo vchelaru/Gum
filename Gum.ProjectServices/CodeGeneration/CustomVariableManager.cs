@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CodeOutputPlugin.Manager;
+namespace Gum.ProjectServices.CodeGeneration;
 
-internal class CustomVariableManager
+public class CustomVariableManager
 {
     public static void HandleAddAndRemoveVariablesForType(string type, StateSave stateSave)
     {

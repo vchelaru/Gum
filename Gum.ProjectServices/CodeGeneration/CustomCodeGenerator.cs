@@ -1,12 +1,11 @@
-﻿using CodeOutputPlugin.Models;
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CodeOutputPlugin.Manager
+namespace Gum.ProjectServices.CodeGeneration
 {
     public class CustomCodeGenerator
     {

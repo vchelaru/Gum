@@ -1,30 +1,30 @@
-﻿using CodeOutputPlugin.Models;
-using Gum.Managers;
-using Gum.Services;
-using Gum.ToolStates;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
 
-namespace CodeOutputPlugin.Manager;
+namespace Gum.ProjectServices.CodeGeneration;
 
+/// <summary>
+/// Loads and saves project-level code output settings (ProjectCodeSettings.codsj).
+/// </summary>
 public class CodeOutputProjectSettingsManager
 {
-    private readonly IOutputManager _outputManager;
+    private readonly ICodeGenLogger _logger;
+    private readonly string? _projectDirectory;
 
-    public CodeOutputProjectSettingsManager(IOutputManager outputManager)
+    public CodeOutputProjectSettingsManager(ICodeGenLogger logger, string? projectDirectory)
     {
-        _outputManager = outputManager;
+        _logger = logger;
+        _projectDirectory = projectDirectory;
     }
 
+    /// <summary>
+    /// Writes the project settings to the ProjectCodeSettings.codsj file.
+    /// </summary>
     public void WriteSettingsForProject(CodeOutputProjectSettings settings)
     {
         var fileName = GetProjectCodeSettingsFile();
-        if(fileName != null)
+        if (fileName != null)
         {
             var serialized = JsonConvert.SerializeObject(settings,
                 // This makes debugging a little easier:
@@ -35,42 +35,37 @@ public class CodeOutputProjectSettingsManager
 
     private FilePath? GetProjectCodeSettingsFile()
     {
-        var projectState = Locator.GetRequiredService<IProjectState>();
-        if(projectState.ProjectDirectory == null)
+        if (_projectDirectory == null)
         {
             return null;
         }
-        FilePath folder = projectState.ProjectDirectory;
-        if(folder == null)
-        {
-            return null;
-        }
-        else
-        {
-            var fileName = folder + "ProjectCodeSettings.codsj";
-            return fileName;
-        }
+        FilePath folder = _projectDirectory;
+        var fileName = folder + "ProjectCodeSettings.codsj";
+        return fileName;
     }
 
+    /// <summary>
+    /// Loads the project code settings from disk, or creates defaults if not found.
+    /// </summary>
     public CodeOutputProjectSettings CreateOrLoadSettingsForProject()
     {
         CodeOutputProjectSettings? toReturn = null;
         var fileName = GetProjectCodeSettingsFile();
         try
         {
-            if(fileName?.Exists() == true)
+            if (fileName?.Exists() == true)
             {
                 var contents = System.IO.File.ReadAllText(fileName.FullPath);
 
                 toReturn = JsonConvert.DeserializeObject<CodeOutputProjectSettings>(contents)!;
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
-            _outputManager.AddError($"Error loading project code settings from {fileName}: {e.Message}");
+            _logger.PrintError($"Error loading project code settings from {fileName}: {e.Message}");
         }
 
-        if(toReturn == null)
+        if (toReturn == null)
         {
             toReturn = new CodeOutputProjectSettings();
 

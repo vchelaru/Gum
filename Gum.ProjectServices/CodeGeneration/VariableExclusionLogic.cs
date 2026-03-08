@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CodeOutputPlugin.Manager
+namespace Gum.ProjectServices.CodeGeneration
 {
-    internal static class VariableExclusionLogic
+    public static class VariableExclusionLogic
     {
-        internal static bool GetIfVariableIsExcluded(VariableSave variable, RecursiveVariableFinder rvf)
+        public static bool GetIfVariableIsExcluded(VariableSave variable, RecursiveVariableFinder rvf)
         {
             InstanceSave instance = rvf.InstanceSave;
 

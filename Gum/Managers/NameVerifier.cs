@@ -8,17 +8,6 @@ using System.Globalization;
 using System.Linq;
 namespace Gum.Managers;
 
-public enum CommonValidationError
-{
-    None,
-    IsEmpty,
-    StartsWithSpace,
-    EndsWithSpace,
-    InvalidCharacter,
-    InvalidStartingCharacterForCSharp,
-    ReservedCSharpKeyword
-}
-
 public class NameVerifier : INameVerifier
 {
     #region Fields/Properties

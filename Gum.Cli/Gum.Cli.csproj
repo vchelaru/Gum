@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>12.0</LangVersion>
+		<AssemblyName>gumcli</AssemblyName>
+
+		<Version>2026.3.4.1</Version>
+		<PackAsTool>true</PackAsTool>
+		<ToolCommandName>gumcli</ToolCommandName>
+		<PackageId>GumCli</PackageId>
+		<Description>CLI for Gum UI projects — create projects, check errors, generate C# code</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Include="gumcli.md" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="gumcli.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+	</ItemGroup>
+
+</Project>

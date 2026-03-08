@@ -126,6 +126,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IReorderLogic>(provider => provider.GetRequiredService<ReorderLogic>());
 
         services.AddSingleton<IUserProjectSettingsManager, UserProjectSettingsManager>();
+        services.AddSingleton<ProjectServices.ITypeResolver>(provider =>
+            new TypeManagerTypeResolverAdapter(provider.GetRequiredService<Reflection.ITypeManager>()));
+        services.AddSingleton<ProjectServices.IHeadlessErrorChecker>(provider =>
+            new ProjectServices.HeadlessErrorChecker(provider.GetRequiredService<ProjectServices.ITypeResolver>()));
         services.AddSingleton<ErrorChecker>();
         services.AddSingleton<IErrorChecker>(provider => provider.GetRequiredService<ErrorChecker>());
         services.AddSingleton<VariableReferenceLogic>();

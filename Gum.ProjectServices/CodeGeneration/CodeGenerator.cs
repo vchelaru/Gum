@@ -1,28 +1,23 @@
-using CodeOutputPlugin.Models;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
-using Gum.Reflection;
 using Gum.StateAnimation.SaveClasses;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
-using SharpDX.DirectWrite;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Net.Mime;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using ToolsUtilities;
 
-namespace CodeOutputPlugin.Manager;
+namespace Gum.ProjectServices.CodeGeneration;
 
 #region Enums
 
@@ -254,6 +249,13 @@ public class CodeGenerator
 
     private readonly CodeGenerationNameVerifier _codeGenerationNameVerifier;
     private readonly LocalizationService _localizationService;
+    private readonly ITypeStringResolver? _typeStringResolver;
+    private readonly CodeOutputElementSettingsManager _elementSettingsManager;
+
+    /// <summary>
+    /// The project directory (folder containing the .gumx file). Used for resolving element file paths.
+    /// </summary>
+    public string? ProjectDirectory { get; set; }
 
     public static int CanvasWidth { get; set; } = 480;
     public static int CanvasHeight { get; set; } = 854;
@@ -261,17 +263,20 @@ public class CodeGenerator
 
     /// <summary>
     /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect.
-    /// Update: This is now set to false because .... well, it makes it hard to create flexible layouts. It's best to set a resolution of 
+    /// Update: This is now set to false because .... well, it makes it hard to create flexible layouts. It's best to set a resolution of
     /// 320 wide and let density scale things up
     /// </summary>
     static bool AdjustPixelValuesForDensity { get; set; } = false;
 
     #endregion
-    
-    public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier, LocalizationService localizationService)
+
+    public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier, LocalizationService localizationService,
+        CodeOutputElementSettingsManager elementSettingsManager, ITypeStringResolver? typeStringResolver = null)
     {
         _codeGenerationNameVerifier = codeGenerationNameVerifier;
         _localizationService = localizationService;
+        _elementSettingsManager = elementSettingsManager;
+        _typeStringResolver = typeStringResolver;
     }
 
     #region Using Statements
@@ -973,8 +978,8 @@ public class CodeGenerator
                 var property = type?.GetProperty(exposedVariable.ExposedAsName);
                 var setter = property?.GetSetMethod();
                 var isVirtual = setter?.IsVirtual == true && !setter.IsFinal;
-                var doTypesMatch = 
-                    TypeManager.Self.GetTypeFromString(exposedVariable.Type) == property?.PropertyType;
+                var doTypesMatch =
+                    _typeStringResolver?.GetTypeFromString(exposedVariable.Type) == property?.PropertyType;
                 return isVirtual && doTypesMatch;
             }
         }
@@ -3367,7 +3372,7 @@ public class CodeGenerator
             return null;
         }
 
-        var fullPathXmlForElement = element.GetFullPathXmlFile();
+        var fullPathXmlForElement = ElementFilePathHelper.GetFullPathXmlFile(element, ProjectDirectory);
         if (fullPathXmlForElement == null)
         {
             return null;
@@ -5115,7 +5120,7 @@ public class CodeGenerator
 
         if (component != null)
         {
-            var instanceComponentSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(component);
+            var instanceComponentSettings = _elementSettingsManager.LoadOrCreateSettingsFor(component);
 
             if (instanceComponentSettings?.LocalizeElement == true)
             {
