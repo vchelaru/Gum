@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Gum.Cli\Gum.Cli.csproj" />
+    <ProjectReference Include="..\..\Tools\Gum.Cli\Gum.Cli.csproj" />
   </ItemGroup>
 
   <ItemGroup>

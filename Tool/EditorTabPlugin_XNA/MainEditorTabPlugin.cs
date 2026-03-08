@@ -125,7 +125,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IProjectManager _projectManager;
     private EditorViewModel _editorViewModel;
-    private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private readonly FileLocations _fileLocations;
     private IDragDropManager _dragDropManager;
     WireframeControl _wireframeControl;

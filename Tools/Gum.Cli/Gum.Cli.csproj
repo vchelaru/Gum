@@ -24,7 +24,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Tools\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
 	</ItemGroup>
 
 </Project>
