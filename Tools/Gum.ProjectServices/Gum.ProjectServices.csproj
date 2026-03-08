@@ -16,6 +16,8 @@
 		<EmbeddedResource Include="Templates\Default\Standards\*.gutx" />
 		<EmbeddedResource Include="Templates\Default\ExampleSpriteFrame.png" />
 		<EmbeddedResource Include="Templates\FormsTemplate\**\*" Exclude="Templates\FormsTemplate\FontCache\**\*;Templates\FormsTemplate\Libraries\**\*" />
+		<EmbeddedResource Include="..\..\Gum\Libraries\bmfont.exe" Link="Libraries\bmfont.exe" />
+		<EmbeddedResource Include="..\..\Gum\Content\BmfcTemplate.bmfc" Link="Content\BmfcTemplate.bmfc" />
 	</ItemGroup>
 
 	<ItemGroup>

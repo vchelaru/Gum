@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,26 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Gum\Managers\Singleton.cs" Link="Singleton.cs" />
-    <Compile Include="..\Gum\Services\Fonts\FontManager.cs" Link="FontManager.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.2.1105" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\MonoGameGum\MonoGameGum.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Content\BmfcTemplate.bmfc">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Libraries\bmfont.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\Tools\Gum.ProjectServices\Gum.ProjectServices.csproj" />
   </ItemGroup>
 
 </Project>

@@ -83,10 +83,25 @@ gumcli codegen MyProject.gumx --element Button --element Slider
 - Warnings are printed to stderr but do not block generation
 - Exit code `0` = success, `1` = elements blocked by errors, `2` = load failure or missing configuration
 
+### `gumcli fonts <project.gumx>`
+
+Generates all missing bitmap font files (.fnt + .png) referenced by text elements in a Gum project.
+
+```
+gumcli fonts MyProject.gumx
+gumcli fonts path/to/MyProject.gumx
+```
+
+- Scans all elements and states for font references (Font + FontSize variable pairs)
+- Creates missing `.fnt` and `.png` files in the project's `FontCache/` folder
+- Skips fonts whose output files already exist
+- **Windows-only**: requires `bmfont.exe`, which is a Windows-only application. Running on Linux or macOS exits with code `2`.
+- Exit code `0` = success, `1` = error during generation, `2` = project could not be loaded or non-Windows platform
+
 ## Exit Codes
 
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| 1 | Errors found (check) or elements blocked (codegen) |
-| 2 | Project could not be loaded or invalid arguments |
+| 1 | Errors found (check) or elements blocked (codegen) or font generation error |
+| 2 | Project could not be loaded, invalid arguments, or non-Windows platform (fonts) |
