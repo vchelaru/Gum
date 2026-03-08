@@ -12,6 +12,14 @@ public class DefaultTypeResolverTests
         _sut = new DefaultTypeResolver();
     }
 
+    [Fact]
+    public void GetTypeFromString_ShouldResolveFullyQualifiedTypeName()
+    {
+        Type? result = _sut.GetTypeFromString("Gum.Managers.TextureAddress");
+
+        result.ShouldNotBeNull();
+    }
+
     [Theory]
     [InlineData("Boolean", typeof(bool))]
     [InlineData("Int32", typeof(int))]

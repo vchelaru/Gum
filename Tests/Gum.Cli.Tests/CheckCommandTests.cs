@@ -99,12 +99,10 @@ public class CheckCommandTests : IDisposable
             <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
               <Name>BrokenComponent</Name>
               <BaseType>Container</BaseType>
-              <Instances>
-                <InstanceSave>
-                  <Name>BadChild</Name>
-                  <BaseType>NonExistentType</BaseType>
-                </InstanceSave>
-              </Instances>
+              <Instance>
+                <Name>BadChild</Name>
+                <BaseType>NonExistentType</BaseType>
+              </Instance>
             </ComponentSave>
             """;
 
@@ -112,16 +110,10 @@ public class CheckCommandTests : IDisposable
         File.WriteAllText(componentPath, componentXml);
 
         // Update the .gumx to reference the component.
-        // GumProjectSave uses [XmlElement("ComponentReference")] so each
-        // reference is a direct child of <GumProjectSave>, not nested.
+        // The project is saved in v2 compact format, so references use XML attributes:
+        // <ComponentReference Name="..." /> not child elements.
         string gumxContent = File.ReadAllText(filePath);
-        string componentRef =
-            """
-              <ComponentReference>
-                <Name>BrokenComponent</Name>
-                <Link>Components/BrokenComponent.gucx</Link>
-              </ComponentReference>
-            """;
+        const string componentRef = """  <ComponentReference Name="BrokenComponent" />""";
 
         gumxContent = gumxContent.Replace("</GumProjectSave>", componentRef + "\n</GumProjectSave>");
         File.WriteAllText(filePath, gumxContent);

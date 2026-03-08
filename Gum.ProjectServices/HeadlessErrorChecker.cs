@@ -358,6 +358,10 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 {
                     continue;
                 }
+                if (!string.IsNullOrEmpty(variable.SourceObject))
+                {
+                    continue;
+                }
                 if (KnownBaseTypes.Contains(variableType))
                 {
                     continue;
@@ -403,14 +407,6 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     });
                     continue;
                 }
-
-                errors.Add(new ErrorResult
-                {
-                    ElementName = elementSave.Name,
-                    Message =
-                            $"The variable {variable.Name} uses an unknown type of {variable.Type}. " +
-                            $"This can cause code generation problems."
-                });
             }
         }
 

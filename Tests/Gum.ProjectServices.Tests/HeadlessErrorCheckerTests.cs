@@ -36,6 +36,35 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetAllErrors_ShouldReturnError_WhenComponentInstanceHasInvalidBaseType()
+    {
+        ComponentSave component = new ComponentSave { Name = "BrokenComponent", BaseType = "Container" };
+        component.Instances.Add(new InstanceSave { Name = "BadChild", BaseType = "NonExistentType" });
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.ElementName.ShouldBe("BrokenComponent");
+        error.Message.ShouldContain("NonExistentType");
+        error.Severity.ShouldBe(ErrorSeverity.Error);
+    }
+
+    [Fact]
+    public void GetAllErrors_ShouldReturnError_WhenScreenInstanceHasInvalidBaseType()
+    {
+        ScreenSave screen = new ScreenSave { Name = "MainMenu" };
+        screen.Instances.Add(new InstanceSave { Name = "BadChild", BaseType = "NonExistentType" });
+        Project.Screens.Add(screen);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.ElementName.ShouldBe("MainMenu");
+        error.Severity.ShouldBe(ErrorSeverity.Error);
+    }
+
+    [Fact]
     public void GetAllErrors_ShouldReturnEmpty_WhenProjectHasNoElements()
     {
         GumProjectSave emptyProject = new GumProjectSave();
@@ -330,22 +359,6 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
 
         errors.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void GetErrorsFor_ShouldReportError_WhenVariableTypeIsUnknown()
-    {
-        ComponentSave component = new ComponentSave { Name = "TestComponent" };
-        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
-        defaultState.Variables.Add(new VariableSave { Name = "CustomProp", Type = "CompletelyUnknownType" });
-        component.States.Add(defaultState);
-        Project.Components.Add(component);
-
-        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
-
-        errors.Count.ShouldBe(1);
-        errors[0].Message.ShouldContain("CompletelyUnknownType");
-        errors[0].Message.ShouldContain("unknown type");
     }
 
     [Fact]
