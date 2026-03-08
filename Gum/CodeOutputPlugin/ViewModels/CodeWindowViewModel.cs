@@ -43,6 +43,7 @@ public class CodeWindowViewModel : ViewModel
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IProjectState _projectState;
+    private readonly ICodeGenerationAutoSetupService _autoSetupService;
 
     public bool CanGenerateCode
     {
@@ -176,12 +177,14 @@ public class CodeWindowViewModel : ViewModel
     public CodeWindowViewModel(IProjectState projectState,
         IFileCommands fileCommands,
         IDialogService dialogService,
-        IGuiCommands guiCommands)
+        IGuiCommands guiCommands,
+        ICodeGenerationAutoSetupService autoSetupService)
     {
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _projectState = projectState;
+        _autoSetupService = autoSetupService;
     }
 
     public FilePath? GetCsprojDirectoryAboveGumx()
@@ -226,81 +229,28 @@ public class CodeWindowViewModel : ViewModel
 
     public bool HandleAutoSetupClicked(CodeOutputProjectSettings codeOutputProjectSettings)
     {
-        var csprojLocation = GetCsprojDirectoryAboveGumx();
+        var projectFilePath = _projectState.GumProjectSave?.FullFileName;
 
-        var shouldContinue = true;
-
-        if (csprojLocation == null)
+        if (string.IsNullOrEmpty(projectFilePath))
         {
             _dialogService.ShowMessage("No .csproj file found, so cannot automatically set up code generation.");
-            shouldContinue = false;
+            return false;
         }
 
-        if (shouldContinue)
+        AutoSetupResult result = _autoSetupService.Run(projectFilePath);
+
+        if (!result.Success)
         {
-            var gumDirectory = _projectState.ProjectDirectory!;
-            var relativePath = FileManager.MakeRelative(csprojLocation!.FullPath, gumDirectory);
-            codeOutputProjectSettings.CodeProjectRoot = relativePath;
-
-            // we're going to load the project, so let's set it to find by name:
-            codeOutputProjectSettings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
-
-            try
-            {
-                var csprojDirectory = codeOutputProjectSettings.CodeProjectRoot;
-
-                var csproj = _fileCommands.GetFiles(csprojDirectory, "*.csproj", System.IO.SearchOption.TopDirectoryOnly)
-                    .Select(item => new FilePath(item))
-                    .FirstOrDefault();
-
-                if (csproj != null)
-                {
-                    var contents = _fileCommands.ReadAllText(csproj.FullPath);
-
-                    var isMonoGameBased = contents.Contains("<PackageReference Include=\"MonoGame.Framework.") ||
-                        contents.Contains("<PackageReference Include=\"nkast.Xna.Framework");
-
-                    if (isMonoGameBased)
-                    {
-                        // if the user has added forms, let's default to Forms
-                        // Otherwise, fall back to normal monogame.
-                        var project = ObjectFinder.Self.GumProjectSave;
-
-                        // This is arbitrary, but let's pick 2 behaviors which are common in forms
-                        // and use those to determine if this project has forms:
-                        //var hasForms = project.Behaviors.Any(item => item.Name == "ButtonBehavior") &&
-                        //    project.Behaviors.Any(item => item.Name == "TextBoxBehavior");
-                        // Update - why not always use forms? This seems like it will cause less confusion
-                        //if(hasForms)
-                        //{
-                            codeOutputProjectSettings.OutputLibrary = OutputLibrary.MonoGameForms;
-                        //}
-                    }
-
-                    var namespaceName = csproj.CaseSensitiveNoPathNoExtension
-                        .Replace(".", "_")
-                        .Replace("-", "_")
-                        .Replace(" ", "_")
-                        ;
-
-                    if (contents.Contains("<RootNamespace>"))
-                    {
-                        var startIndex = contents.IndexOf("<RootNamespace>") + "<RootNamespace>".Length;
-                        var endIndex = contents.IndexOf("</RootNamespace>");
-                        namespaceName = contents.Substring(startIndex, endIndex - startIndex);
-                    }
-
-                    codeOutputProjectSettings.RootNamespace = namespaceName;
-                }
-
-
-            }
-            catch (Exception ex)
-            {
-                _guiCommands.PrintOutput($"Error: {ex}");
-            }
+            _dialogService.ShowMessage(result.ErrorMessage ?? "Auto setup failed.");
+            return false;
         }
 
-        return shouldContinue;
+        var configured = result.Settings!;
+        codeOutputProjectSettings.CodeProjectRoot = configured.CodeProjectRoot;
+        codeOutputProjectSettings.ObjectInstantiationType = configured.ObjectInstantiationType;
+        codeOutputProjectSettings.OutputLibrary = configured.OutputLibrary;
+        codeOutputProjectSettings.RootNamespace = configured.RootNamespace;
+
+        return true;
     }
 }

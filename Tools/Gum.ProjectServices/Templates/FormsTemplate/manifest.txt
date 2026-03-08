@@ -84,7 +84,6 @@ Components/Elements/VerticalLines.gucx
 Components/Styles.gucx
 EventExport/gum_events.json
 GumProject.gumx
-ProjectCodeSettings.codsj
 Screens/DemoScreenGum.gusx
 Screens/DemoScreenGumAnimations.ganx
 Screens/KeyboardScreenGum.gusx

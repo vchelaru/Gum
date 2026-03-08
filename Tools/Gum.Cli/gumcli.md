@@ -49,6 +49,23 @@ gumcli check MyProject.gumx --json
 - `--json` outputs a JSON array of `{ element, message, severity }` objects — all error types use this same format
 - Exit code `0` = no errors, `1` = errors found, `2` = project .gumx file could not be loaded
 
+### `gumcli codegen-init <project.gumx> [--force]`
+
+Auto-configures code generation settings for a Gum project by walking up from the `.gumx` directory to find the nearest `.csproj`.
+
+```
+gumcli codegen-init MyProject.gumx
+gumcli codegen-init path/to/MyProject.gumx --force
+```
+
+- Writes `ProjectCodeSettings.codsj` next to the `.gumx` file
+- Derives `CodeProjectRoot` as a relative path from the `.gumx` directory to the `.csproj` directory
+- Sets `ObjectInstantiationType` to `FindByName`
+- Detects MonoGame/KNI package references and sets `OutputLibrary` to `MonoGameForms` when found
+- Extracts `RootNamespace` from the `<RootNamespace>` tag in the `.csproj`, or falls back to the `.csproj` filename (with `.`, `-`, spaces replaced by `_`)
+- If `ProjectCodeSettings.codsj` already exists, prints a warning and exits without overwriting — pass `--force` to overwrite
+- Exit code `0` = success, `2` = `.csproj` not found, settings file already exists, or other error
+
 ### `gumcli codegen <project.gumx> [--element <name>...]`
 
 Generates C# code for elements in a Gum project.
