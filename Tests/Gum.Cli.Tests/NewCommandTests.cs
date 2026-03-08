@@ -51,6 +51,17 @@ public class NewCommandTests : IDisposable
     }
 
     [Fact]
+    public void New_DefaultTemplate_ShouldBeFormsTemplate()
+    {
+        string filePath = Path.Combine(_tempDirectory, "FormsDefault.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath);
+
+        result.ExitCode.ShouldBe(0);
+        File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeTrue();
+    }
+
+    [Fact]
     public void New_WhenProjectAlreadyExists_ShouldReturnExitCode2()
     {
         string filePath = Path.Combine(_tempDirectory, "Existing.gumx");
@@ -60,6 +71,39 @@ public class NewCommandTests : IDisposable
 
         result.ExitCode.ShouldBe(2);
         result.StandardError.ShouldContain("already exists");
+    }
+
+    [Fact]
+    public void New_WithInvalidTemplate_ShouldReturnExitCode2()
+    {
+        string filePath = Path.Combine(_tempDirectory, "InvalidTemplate.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath, "--template", "bogus");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("bogus");
+    }
+
+    [Fact]
+    public void New_WithTemplateEmpty_ShouldCreateStandardFiles()
+    {
+        string filePath = Path.Combine(_tempDirectory, "EmptyTemplate.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath, "-t", "empty");
+
+        result.ExitCode.ShouldBe(0);
+        File.Exists(Path.Combine(_tempDirectory, "Standards", "Text.gutx")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void New_WithTemplateEmpty_ShouldNotCreateFormsControls()
+    {
+        string filePath = Path.Combine(_tempDirectory, "EmptyNoForms.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath, "-t", "empty");
+
+        result.ExitCode.ShouldBe(0);
+        Directory.Exists(Path.Combine(_tempDirectory, "Components", "Controls")).ShouldBeFalse();
     }
 
     public void Dispose()

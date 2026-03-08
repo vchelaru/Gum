@@ -4,16 +4,34 @@ Command-line tool for Gum UI projects. Creates projects, checks for errors, and 
 
 ## Commands
 
-### `gumcli new <path>`
+### `gumcli new <path> [--template <name>]`
 
 Creates a new Gum project with standard elements and folder structure.
 
 ```
 gumcli new MyProject
 gumcli new path/to/MyProject.gumx
+gumcli new MyProject --template forms
+gumcli new MyProject -t empty
 ```
 
 - If `<path>` has no `.gumx` extension, creates `<path>/<name>.gumx`
+- `--template` / `-t` selects the project template (default: `forms`)
+
+#### Template: `forms` (default)
+
+Populates the project with the full Forms UI control set:
+
+- All Forms behaviors (Button, CheckBox, ComboBox, ListBox, Slider, TextBox, etc.)
+- All Forms components (controls and element variants)
+- Standard elements and StandardGraphics
+- Demo and keyboard screens
+- `UISpriteSheet.png` and `ProjectCodeSettings.codsj`
+
+#### Template: `empty`
+
+Creates a minimal project with only the standard elements.
+
 - Creates subfolders: Screens, Components, Standards, Behaviors
 - Writes 9 standard elements (Circle, ColoredRectangle, Component, Container, NineSlice, Polygon, Rectangle, Sprite, Text)
 - Copies `ExampleSpriteFrame.png` (default NineSlice texture)
