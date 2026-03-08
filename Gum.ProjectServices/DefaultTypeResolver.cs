@@ -35,11 +35,15 @@ public class DefaultTypeResolver : ITypeResolver
     }
 
     /// <summary>
-    /// Registers an additional type for resolution.
+    /// Registers an additional type for resolution by both its short name and its fully-qualified name.
     /// </summary>
     public void RegisterType(Type type)
     {
         _typesByName[type.Name] = type;
+        if (type.FullName != null)
+        {
+            _typesByName[type.FullName] = type;
+        }
     }
 
     private void RegisterCommonTypes()

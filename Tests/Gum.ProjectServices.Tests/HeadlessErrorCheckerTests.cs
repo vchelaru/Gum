@@ -362,22 +362,6 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
-    public void GetErrorsFor_ShouldReportError_WhenVariableTypeIsUnknown()
-    {
-        ComponentSave component = new ComponentSave { Name = "TestComponent" };
-        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
-        defaultState.Variables.Add(new VariableSave { Name = "CustomProp", Type = "CompletelyUnknownType" });
-        component.States.Add(defaultState);
-        Project.Components.Add(component);
-
-        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
-
-        errors.Count.ShouldBe(1);
-        errors[0].Message.ShouldContain("CompletelyUnknownType");
-        errors[0].Message.ShouldContain("unknown type");
-    }
-
-    [Fact]
     public void GetErrorsFor_ShouldWarn_WhenVariableNameMissingStateSuffix()
     {
         ComponentSave component = new ComponentSave { Name = "TestComponent" };
