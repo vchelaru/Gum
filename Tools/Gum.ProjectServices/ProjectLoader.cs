@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.Managers;
 
 namespace Gum.ProjectServices;
 
@@ -22,6 +23,8 @@ public class ProjectLoader : IProjectLoader
 
         string projectDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath)) ?? "";
 
+        StandardElementsManager.Self.Initialize();
+
         var gumLoadResult = new GumLoadResult();
         try
         {
@@ -34,6 +37,7 @@ public class ProjectLoader : IProjectLoader
             }
             else
             {
+                project.Initialize();
                 result.LoadErrors.AddRange(
                     ParseElementLoadErrors(gumLoadResult.ErrorMessage));
                 result.LoadErrors.AddRange(

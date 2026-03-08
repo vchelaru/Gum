@@ -84,9 +84,19 @@ public static class CodegenCommand
 
         if (string.IsNullOrEmpty(projectSettings.CodeProjectRoot))
         {
-            Console.Error.WriteLine("No CodeProjectRoot configured in ProjectCodeSettings.codsj. " +
-                "Code generation requires a code project root to be set.");
-            return 2;
+            var autoSetup = new CodeGenerationAutoSetupService();
+            AutoSetupResult autoResult = autoSetup.Run(fullPath);
+
+            if (!autoResult.Success)
+            {
+                Console.Error.WriteLine($"error: CodeProjectRoot is not configured and auto-detection failed: {autoResult.ErrorMessage}");
+                Console.Error.WriteLine($"Run 'gumcli codegen-init {projectPath}' after placing your .gumx inside a project with a .csproj.");
+                return 2;
+            }
+
+            projectSettings = autoResult.Settings!;
+            projectSettingsManager.WriteSettingsForProject(projectSettings);
+            Console.WriteLine($"Auto-configured code generation settings (CodeProjectRoot: {projectSettings.CodeProjectRoot}, Namespace: {projectSettings.RootNamespace}).");
         }
 
         // Build the codegen pipeline

@@ -116,7 +116,8 @@ public class MainCodeOutputPlugin : PluginBase
             Locator.GetRequiredService<IProjectState>(),
             Locator.GetRequiredService<IFileCommands>(),
             Locator.GetRequiredService<IDialogService>(),
-            Locator.GetRequiredService<IGuiCommands>());
+            Locator.GetRequiredService<IGuiCommands>(),
+            new CodeGenerationAutoSetupService());
     }
 
     private void HandleRequestCodeGeneration(RequestCodeGenerationMessage message)

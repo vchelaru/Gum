@@ -21,6 +21,7 @@ public class Program
         rootCommand.AddCommand(NewCommand.Create());
         rootCommand.AddCommand(CheckCommand.Create());
         rootCommand.AddCommand(CodegenCommand.Create());
+        rootCommand.AddCommand(CodegenInitCommand.Create());
 
         return rootCommand.Invoke(args);
     }
