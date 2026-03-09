@@ -1559,6 +1559,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
 #if !FRB
+    /// <summary>
+    /// The list of <see cref="AnimationRuntime"/> objects available on this element.
+    /// Animations are typically populated when loading a Gum project. Use
+    /// <see cref="PlayAnimation(AnimationRuntime)"/> or the extension methods
+    /// <c>PlayAnimation(int)</c> / <c>PlayAnimation(string)</c> to start playback,
+    /// or access <see cref="AnimationController"/> directly for full control.
+    /// </summary>
     public List<AnimationRuntime>? Animations { get; set; }
 
     /// <summary>
@@ -1568,9 +1575,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public AnimationController AnimationController { get; } = new();
 
     /// <summary>
-    /// Starts playing the specified AnimationRuntime.
+    /// Convenience wrapper for <see cref="AnimationController.Play(AnimationRuntime)"/>.
+    /// Starts playing the specified <see cref="AnimationRuntime"/> from the beginning.
+    /// <para>
+    /// Only one animation can play at a time. Calling this while an animation is already
+    /// playing will replace the current animation. To play multiple animations in sequence
+    /// or to access playback state and events (pause, resume, <see cref="AnimationController.OnCompleted"/>),
+    /// use <see cref="AnimationController"/> directly.
+    /// </para>
     /// </summary>
-    /// <param name="animation">the AnimationRuntime object</param>
+    /// <param name="animation">The AnimationRuntime object to play.</param>
     /// <exception cref="ArgumentNullException">Thrown when animation is null.</exception>
     public void PlayAnimation(AnimationRuntime animation)
     {
@@ -1579,7 +1593,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 
     /// <summary>
-    /// Stops the currently playing animation.
+    /// Convenience wrapper for <see cref="AnimationController.Stop()"/>.
+    /// Stops the currently playing animation and resets the playback time to zero.
+    /// <see cref="AnimationController"/> plays one animation at a time, so this stops
+    /// whichever animation is currently active.
     /// </summary>
     public void StopAnimation()
     {
@@ -1629,7 +1646,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public static Action<string, GraphicalUiElement>? ApplyMarkup;
 
     public static Action<IRenderableIpso, GraphicalUiElement, string, object> SetPropertyOnRenderable =
-        // This is the default fallback to make Gum work. Specific rendering libraries can change this to provide 
+        // This is the default fallback to make Gum work. Specific rendering libraries can change this to provide
         // better performance.
         SetPropertyThroughReflection;
 
@@ -5146,7 +5163,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public bool IsFullyCreated { get; private set; }
     /// <summary>
-    /// Method which is called after a control is fully created when it is created from a FrameworkElement 
+    /// Method which is called after a control is fully created when it is created from a FrameworkElement
     /// when ToGraphicalUiElement or SetGraphicalUiElement are called. 
     /// </summary>
     public virtual void AfterFullCreation()
@@ -6841,7 +6858,7 @@ public static class GraphicalUiElementExtensions
     /// <param name="graphicalUiElement">The GraphicalUiElement on which to apply the animation</param>
     /// <param name="animation">The AnimationRuntime object to apply</param>
     /// <param name="timeInSeconds">The elapesd time since the animation started, in seconds.</param>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="ArgumentNullException">Thrown when animation is null.</exception>
     public static void ApplyAnimation(this GraphicalUiElement graphicalUiElement, AnimationRuntime animation, double timeInSeconds)
     {
         if (animation != null)
