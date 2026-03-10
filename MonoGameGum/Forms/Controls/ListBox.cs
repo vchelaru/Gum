@@ -317,7 +317,7 @@ public class ListBox : ItemsControl, IInputReceiver
             if (selectedItemsCollection.Count > 0)
             {
                 var firstSelectedItem = selectedItemsCollection[0];
-                return Items.IndexOf(firstSelectedItem);
+                return Items != null ? Items.IndexOf(firstSelectedItem) : -1;
             }
 
             return -1;
