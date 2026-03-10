@@ -77,8 +77,8 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public int Red
     {
-        get => mContainedText.Red;
-        set => mContainedText.Red = value;
+        get => ContainedText.Red;
+        set => ContainedText.Red = value;
     }
 
     /// <summary>
@@ -86,8 +86,8 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public int Green
     {
-        get => mContainedText.Green;
-        set => mContainedText.Green = value;
+        get => ContainedText.Green;
+        set => ContainedText.Green = value;
     }
 
     /// <summary>
@@ -95,8 +95,8 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public int Blue
     {
-        get => mContainedText.Blue;
-        set => mContainedText.Blue = value;
+        get => ContainedText.Blue;
+        set => ContainedText.Blue = value;
     }
 
     /// <summary>
@@ -104,8 +104,8 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public int Alpha
     {
-        get => mContainedText.Alpha;
-        set => mContainedText.Alpha = value;
+        get => ContainedText.Alpha;
+        set => ContainedText.Alpha = value;
     }
 
     /// <summary>
@@ -159,10 +159,10 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public int? MaxLettersToShow
     {
-        get => mContainedText.MaxLettersToShow;
+        get => ContainedText.MaxLettersToShow;
         set
         {
-            mContainedText.MaxLettersToShow = value;
+            ContainedText.MaxLettersToShow = value;
         }
     }
 #endif
@@ -175,8 +175,8 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public int? MaxNumberOfLines
     {
-        get => mContainedText.MaxNumberOfLines;
-        set => mContainedText.MaxNumberOfLines = value;
+        get => ContainedText.MaxNumberOfLines;
+        set => ContainedText.MaxNumberOfLines = value;
     }
 #endif
 

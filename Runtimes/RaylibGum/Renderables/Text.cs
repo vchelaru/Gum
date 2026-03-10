@@ -267,8 +267,6 @@ public class Text : IVisible, IRenderableIpso,
 
 
     public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
-        // temp:
-        = true;
 
     public string Name
     {

@@ -170,7 +170,11 @@ public class TextRuntime : GraphicalUiElement
     public HorizontalAlignment HorizontalAlignment
     {
         get => ContainedText.HorizontalAlignment;
-        set => ContainedText.HorizontalAlignment = value;
+        set
+        {
+            ContainedText.HorizontalAlignment = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -189,10 +193,10 @@ public class TextRuntime : GraphicalUiElement
     /// </summary>
     public int? MaxLettersToShow
     {
-        get => mContainedText.MaxLettersToShow;
+        get => ContainedText.MaxLettersToShow;
         set
         {
-            mContainedText.MaxLettersToShow = value;
+            ContainedText.MaxLettersToShow = value;
         }
     }
 #endif
@@ -204,8 +208,8 @@ public class TextRuntime : GraphicalUiElement
     /// </summary>
     public int? MaxNumberOfLines
     {
-        get => mContainedText.MaxNumberOfLines;
-        set => mContainedText.MaxNumberOfLines = value;
+        get => ContainedText.MaxNumberOfLines;
+        set => ContainedText.MaxNumberOfLines = value;
     }
 #endif
 
@@ -242,52 +246,100 @@ public class TextRuntime : GraphicalUiElement
     public float FontScale
     {
         get => ContainedText.FontScale;
-        set => ContainedText.FontScale = value;
+        set
+        {
+            if (value != FontScale)
+            {
+                ContainedText.FontScale = value;
+                NotifyPropertyChanged();
+                UpdateLayout();
+            }
+        }
     }
 
     public float LineHeightMultiplier
     {
         get => ContainedText.LineHeightMultiplier;
-        set => ContainedText.LineHeightMultiplier = value;
-    }
-
-    TextOverflowHorizontalMode textOverflowHorizontalMode;
-    public TextOverflowHorizontalMode TextOverflowHorizontalMode
-    {
-        get => textOverflowHorizontalMode;
         set
         {
-            textOverflowHorizontalMode = value;
-            if (textOverflowHorizontalMode == TextOverflowHorizontalMode.EllipsisLetter)
+            if (value != LineHeightMultiplier)
             {
-                ContainedText.IsTruncatingWithEllipsisOnLastLine = true;
-            }
-            else
-            {
-                ContainedText.IsTruncatingWithEllipsisOnLastLine = false;
+                ContainedText.LineHeightMultiplier = value;
+                NotifyPropertyChanged();
+                UpdateLayout();
             }
         }
     }
 
-
-    public string Text
+    public TextOverflowHorizontalMode TextOverflowHorizontalMode
     {
-        get => ContainedText.RawText;
-        set => ContainedText.RawText = value;
+        // Currently GraphicalUiElement doesn't expose this property so we have to go through setting it by string:
+        get => ContainedText.IsTruncatingWithEllipsisOnLastLine ? TextOverflowHorizontalMode.EllipsisLetter : TextOverflowHorizontalMode.TruncateWord;
+        set
+        {
+            ContainedText.IsTruncatingWithEllipsisOnLastLine = value == TextOverflowHorizontalMode.EllipsisLetter;
+            NotifyPropertyChanged();
+            UpdateLayout();
+        }
+    }
+
+
+    /// <summary>
+    /// Gets or sets the raw text content displayed by the control. This is the value before line wrapping and bbcode parsing has been applied.
+    /// </summary>
+    /// <remarks>Setting this property updates the displayed text and may trigger layout changes if the text
+    /// size affects the control's dimensions. If the control's width is set relative to its children and no maximum
+    /// width is specified, the text will not be line-wrapped.</remarks>
+    public string? Text
+    {
+        get
+        {
+            return ContainedText.RawText;
+        }
+        set
+        {
+            var widthBefore = ContainedText.WrappedTextWidth;
+            var heightBefore = ContainedText.WrappedTextHeight;
+            if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+            {
+                if (this.MaxWidth == null)
+                {
+                    // make it have no line wrap width before assignign the text:
+                    ContainedText.Width = null;
+                }
+                else
+                {
+                    ContainedText.Width = this.MaxWidth;
+                }
+            }
+
+            // Use SetProperty so it goes through the BBCode-checking methods
+            //ContainedText.RawText = value;
+            this.SetProperty("Text", value);
+
+            NotifyPropertyChanged();
+            var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
+            if (shouldUpdate)
+            {
+                UpdateLayout(
+                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
+            }
+        }
     }
 
     public bool IsBold
     {
-        get => mContainedText.BoldWeight > 1;
+        get => ContainedText.BoldWeight > 1;
         set
         {
             if(value)
             {
-                mContainedText.BoldWeight = 1.5f;
+                ContainedText.BoldWeight = 1.5f;
             }
             else
             {
-                mContainedText.BoldWeight = 1;
+                ContainedText.BoldWeight = 1;
             }
         }
     }
@@ -299,8 +351,8 @@ public class TextRuntime : GraphicalUiElement
     /// </summary>
     public float BoldWeight
     {
-        get => mContainedText.BoldWeight;
-        set => mContainedText.BoldWeight = value;
+        get => ContainedText.BoldWeight;
+        set => ContainedText.BoldWeight = value;
     }
 
     //public SKTypeface FontType
@@ -358,9 +410,18 @@ public class TextRuntime : GraphicalUiElement
 
     string font;
     /// <summary>
-    /// The font name, such as "Arial", which is used to load fonts from 
+    /// The font name, such as "Arial", which is used to load fonts from
     /// </summary>
     public string Font
+    {
+        get => FontFamily;
+        set => FontFamily = value;
+    }
+
+    /// <summary>
+    /// The font name, such as "Arial", which is used to load fonts from
+    /// </summary>
+    public string FontFamily
     {
         get { return font; }
         set { font = value; UpdateToFontValues(); }
@@ -393,6 +454,7 @@ public class TextRuntime : GraphicalUiElement
     {
         if(fullInstantiation)
         {
+            this.SuspendLayout();
             SetContainedObject(new Text());
 
             this.Height = 0;
@@ -410,6 +472,7 @@ public class TextRuntime : GraphicalUiElement
             Blue = 255;
 
             this.Text = "Hello";
+            this.ResumeLayout();
         }
     }
 
