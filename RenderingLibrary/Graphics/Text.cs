@@ -320,8 +320,6 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     }
 
     public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
-        // temp:
-        = true;
 
     string? mRawText;
     public string? RawText

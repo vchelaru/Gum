@@ -3,7 +3,6 @@
 #endif
 using Gum.DataTypes;
 using Gum.Renderables;
-using Gum.Renderables;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -26,14 +25,14 @@ namespace MonoGameGum.GueDeriving;
 /// </summary>
 public class TextRuntime : InteractiveGue
 {
-    Text mContainedText;
+    Text? mContainedText;
     Text ContainedText
     {
         get
         {
             if (mContainedText == null)
             {
-                mContainedText = this.RenderableComponent as Text;
+                mContainedText = (Text)this.RenderableComponent;
             }
             return mContainedText;
         }
@@ -159,10 +158,10 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public int? MaxLettersToShow
     {
-        get => mContainedText.MaxLettersToShow;
+        get => ContainedText.MaxLettersToShow;
         set
         {
-            mContainedText.MaxLettersToShow = value;
+            ContainedText.MaxLettersToShow = value;
         }
     }
 #endif
@@ -175,8 +174,8 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public int? MaxNumberOfLines
     {
-        get => mContainedText.MaxNumberOfLines;
-        set => mContainedText.MaxNumberOfLines = value;
+        get => ContainedText.MaxNumberOfLines;
+        set => ContainedText.MaxNumberOfLines = value;
     }
 #endif
 
@@ -220,14 +219,14 @@ public class TextRuntime : InteractiveGue
         set { useCustomFont = value; UpdateToFontValues(); }
     }
 
-    string customFontFile;
+    string? customFontFile;
     /// <summary>
     /// Specifies the name of the custom font. This can be specified relative to
     /// FileManager.RelativeDirectory, which is the Content folder for code-only projects,
     /// or the folder containing the .gumx project if loading a Gum project. This should
     /// include the .fnt extension.
     /// </summary>
-    public string CustomFontFile
+    public string? CustomFontFile
     {
         get { return customFontFile; }
         set { customFontFile = value; UpdateToFontValues(); }
@@ -235,9 +234,18 @@ public class TextRuntime : InteractiveGue
 
     string font;
     /// <summary>
-    /// The font name, such as "Arial", which is used to load fonts from 
+    /// The font name, such as "Arial", which is used to load fonts from
     /// </summary>
     public string Font
+    {
+        get => FontFamily;
+        set => FontFamily = value;
+    }
+
+    /// <summary>
+    /// The font name, such as "Arial", which is used to load fonts from
+    /// </summary>
+    public string FontFamily
     {
         get { return font; }
         set { font = value; UpdateToFontValues(); }
@@ -278,6 +286,18 @@ public class TextRuntime : InteractiveGue
     {
         get { return outlineThickness; }
         set { outlineThickness = value; UpdateToFontValues(); }
+    }
+
+    public TextOverflowHorizontalMode TextOverflowHorizontalMode
+    {
+        // Currently GraphicalUiElement doesn't expose this property so we have to go through setting it by string:
+        get => ContainedText.IsTruncatingWithEllipsisOnLastLine ? TextOverflowHorizontalMode.EllipsisLetter : TextOverflowHorizontalMode.TruncateWord;
+        set
+        {
+            ContainedText.IsTruncatingWithEllipsisOnLastLine = value == TextOverflowHorizontalMode.EllipsisLetter;
+            NotifyPropertyChanged();
+            UpdateLayout();
+        }
     }
 
     /// <summary>
@@ -356,11 +376,35 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// The lines of text after wrapping and bbcode parsing have been applied.
+    /// </summary>
+    public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
+
     #region Defaults
 
     // todo - add more here
-    //public static string DefaultFont = "Arial";
-    //public static int DefaultFontSize = 18;
+    public static string DefaultFont = "Arial";
+    public static int DefaultFontSize = 18;
+
+    /// <summary>
+    /// Indicates whether the font should be assigned during object construction.
+    /// </summary>
+    /// <remarks>Set this field to <see langword="true"/> to assign the font in the constructor, or to <see
+    /// langword="false"/> to defer font assignment until later in the object's lifecycle. This can be set to false
+    /// if TextRuntime instances are always given a custom font, so this can prevent unnecessary font loading/assignment.</remarks>
+    public static bool AssignFontInConstructor = true;
+
+    /// <summary>
+    /// A default Font to assign to all new TextRuntime instances during construction.
+    /// When set, this takes priority over <see cref="DefaultFont"/> and <see cref="DefaultFontSize"/>.
+    /// When null, the default font is constructed from <see cref="DefaultFont"/> and <see cref="DefaultFontSize"/>.
+    /// </summary>
+#if !RAYLIB
+    public static BitmapFont? DefaultCustomFont;
+#else
+    public static Font? DefaultCustomFont;
+#endif
 
     public float DefaultWidth = 0;
     public float DefaultHeight = 0;
@@ -374,7 +418,8 @@ public class TextRuntime : InteractiveGue
     {
         if (fullInstantiation)
         {
-            var textRenderable = new Text();
+            this.SuspendLayout();
+            var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
             mContainedText = textRenderable;
 
             SetContainedObject(textRenderable);
@@ -383,11 +428,26 @@ public class TextRuntime : InteractiveGue
             WidthUnits = DefaultWidthUnits;
             Height = DefaultHeight;
             HeightUnits = DefaultHeightUnits;
-            //this.FontSize = DefaultFontSize;
-            //this.Font = DefaultFont;
+            if(AssignFontInConstructor)
+            {
+                if(DefaultCustomFont != null)
+                {
+#if !RAYLIB
+                    this.BitmapFont = DefaultCustomFont;
+#else
+                    this.CustomFont = DefaultCustomFont.Value;
+#endif
+                }
+                else
+                {
+                    this.FontSize = DefaultFontSize;
+                    this.Font = DefaultFont;
+                }
+            }
             HasEvents = false;
 
             textRenderable.RawText = "Hello World";
+            this.ResumeLayout();
         }
     }
 
