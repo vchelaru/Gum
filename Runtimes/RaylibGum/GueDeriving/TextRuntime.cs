@@ -395,6 +395,17 @@ public class TextRuntime : InteractiveGue
     /// if TextRuntime instances are always given a custom font, so this can prevent unnecessary font loading/assignment.</remarks>
     public static bool AssignFontInConstructor = true;
 
+    /// <summary>
+    /// A default Font to assign to all new TextRuntime instances during construction.
+    /// When set, this takes priority over <see cref="DefaultFont"/> and <see cref="DefaultFontSize"/>.
+    /// When null, the default font is constructed from <see cref="DefaultFont"/> and <see cref="DefaultFontSize"/>.
+    /// </summary>
+#if !RAYLIB
+    public static BitmapFont? DefaultCustomFont;
+#else
+    public static Font? DefaultCustomFont;
+#endif
+
     public float DefaultWidth = 0;
     public float DefaultHeight = 0;
 
@@ -419,8 +430,19 @@ public class TextRuntime : InteractiveGue
             HeightUnits = DefaultHeightUnits;
             if(AssignFontInConstructor)
             {
-                this.FontSize = DefaultFontSize;
-                this.Font = DefaultFont;
+                if(DefaultCustomFont != null)
+                {
+#if !RAYLIB
+                    this.BitmapFont = DefaultCustomFont;
+#else
+                    this.CustomFont = DefaultCustomFont.Value;
+#endif
+                }
+                else
+                {
+                    this.FontSize = DefaultFontSize;
+                    this.Font = DefaultFont;
+                }
             }
             HasEvents = false;
 
