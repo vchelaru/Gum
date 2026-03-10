@@ -84,8 +84,19 @@ public class Game1 : Game
 
 If an example references a `label` variable (for event feedback), add a `Label` and `mainPanel.AddChild(label)` before the example body — the doc snippets assume it already exists in context.
 
-## PowerShell encoding script
-Use this function to produce an encoded URL from a complete Game1 source string:
+## Encoding tool (preferred)
+
+Use the pre-built exe at `tools/xnafiddle-encode.exe` in the XnaFiddle repo. Pass `code` or `snippet` as the first argument:
+
+```bash
+tools/xnafiddle-encode.exe code --file MyGame.cs
+tools/xnafiddle-encode.exe snippet '{"IsGum":true,"initialize":"..."}'
+```
+
+Output is a single line with the complete URL. See the **Snippet format** section below for full details.
+
+## PowerShell encoding script (fallback)
+Only use this if the exe is unavailable. Produces an encoded string for `#code=` links:
 
 ```powershell
 function Encode-ForXnaFiddle($code) {
@@ -161,25 +172,33 @@ That 268-character JSON is the entire input. The encoder produces the `#snippet=
 | Example has custom draw, members, or update logic beyond Gum | `#snippet=` with extra fields, or `#code=` if it's complex |
 | Example has custom helper classes or multiple types | `#code=` with a full Game class |
 
-### PowerShell encoding script for snippets
+### Encoding tool
 
-```powershell
-function Encode-Snippet($json) {
-    $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
-    $ms = New-Object System.IO.MemoryStream
-    $gz = New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionLevel]::Optimal)
-    $gz.Write($bytes, 0, $bytes.Length)
-    $gz.Close()
-    $base64 = [Convert]::ToBase64String($ms.ToArray())
-    return $base64.Replace('+', '-').Replace('/', '_').TrimEnd('=')
-}
+A pre-built Windows exe lives at `tools/xnafiddle-encode.exe` in the XnaFiddle repo. **Agents should use this instead of writing encoding logic manually.** Invoke it directly — no installation, no dotnet required at runtime.
 
-# Build the JSON — use a here-string to avoid escaping issues
-$json = @'
-{"IsGum":true,"initialize":"var btn = new Button();\nbtn.Text = \"Hello\";\nbtn.AddToRoot();"}
-'@
+```bash
+# Snippet from an inline JSON string
+tools/xnafiddle-encode.exe snippet '{"IsGum":true,"initialize":"var btn = new Button();\nbtn.AddToRoot();"}'
 
-$url = "https://xnafiddle.net/#snippet=$(Encode-Snippet $json.Trim())"
+# Snippet from a file
+tools/xnafiddle-encode.exe snippet --file mysnippet.json
+
+# Full code from a file
+tools/xnafiddle-encode.exe code --file MyGame.cs
+```
+
+Output is always a single line — the complete URL — ready to paste into Markdown:
+
+```
+https://xnafiddle.net/#snippet=H4sIAAAAAAAACqtW8i...
+```
+
+#### Rebuilding the exe
+
+If `UrlCodec` encoding logic changes, rebuild with:
+
+```bash
+dotnet publish XnaFiddle.Encoder/XnaFiddle.Encoder.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:DebugType=none -o tools
 ```
 
 ### Markdown link format for snippets

@@ -78,7 +78,7 @@ var label = new Label();
 mainPanel.AddChild(label);
 label.Text = $"I was created at {System.DateTime.Now}";
 ```
-<a href="https://xnafiddle.net/#code=H4sIAAAAAAAEAI1TwWrbQBC9-ysG04MMZaH01pBCaxFjqEupHdNbGUtje8lqx8yupKbB_97dtaKqsZNmLxrNe_vem0GqnbY7WOhC2PHWqx8W1Y1gRS3L3dWofglWM8HDXheu57HlWQBndfXYCqW6YancWUNN2XphE5DRod4YXUBh0DmICu_gQ3qOHkYQzkF0g57g0TCnRhe0QIs7Evi563NEcnBYkkRCLG_ncP1x0FM5bbE2Prgm5ZNz8swmqXWyjKcXhmuw1F62z_xeu8lVfymORdar78w-10KFZ7kPAuMOGP-lzt2Ca0dr7fTGUOB4qekEH7t4wj4oUAnckIguCRrWJcyt9hqN_k1nodPMakCI-d5CN3bwqtG4NYnTbNX6_aRbRDwNClSo7Te0ZLqZlx6Lu9TIBkP2LPWpLFccZx3CUcjgphf5Eutn70_32pRZ4g8o6V2t6JcPIm_Gc2jRQSGEcRvo4WF57zxVKg-Nla5IfeX2OFjuBh0N1zB51WJvD2XQy-L3EEVh1xWXt9yxe9IT98vwfxLkgu0r_P_5FNXUEEo2ZcMS_iuxW8MtyWdTDzOdMif9p0lT8yzn8Q_6bFx8HgQAAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAEAGWLzQqCUBBGX2UYWhjEfQClRRSEIBHp0s3kHejS_QEdsxLfPb0LN-0O5_vOiHl37h2m0va8Q-ONGLLmy5jii1pwZPyVPFvYg-cBSqHmGUWyzWq_zuqgdRVuIUj0S2rpvmbFwv_F8WGsTuJx2SKoit8yZ5sacxiog6ZlEtZAAmP56YSdOs2iMo7VJQxTjRlOP54RijvIAAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../../../.gitbook/assets/13_08 21 48.png" alt=""><figcaption><p>Label displaying when it was created</p></figcaption></figure>
 
@@ -104,7 +104,7 @@ disabledButton.IsEnabled = false;
 disabledButton.Click += (_, _) =>
     label.Text = "This never happens";
 ```
-<a href="https://xnafiddle.net/#code=H4sIAAAAAAAEAJVUwY7aMBC98xWjqIegrixVvXVFtYV0EVKpqsKi3pBJBrBw7Mh2oNsV_96xk01DgO6uL3HmPc97MxmntEJtYCpSo61eO_ZLcXZveI4HbXa3vfJ_MBsbXmxFahueVnpM4LjMn0O0Zffa5PYswEZaOaMlIb2iXEmRQiq5teAzfIBP4dl76gGtwog9dwjPggnuRYpTrvgGDSw3jQ9PJoUZGk_w24cJDD63YizBNS-lI9WQuVIOmnE_hCpJv5rEMACFh8vysdsK279tDvmyUDn2U2uXCIOp0-aREkQ1EP2jTuxUlxYXwoqVROI4U2IFH2t7RjvKgBnoPRojMoS9FhlMlHCCS_EHz0yHmlmL4P3dQF02aZVc2gUaK7Rii4_9uhF-7bmBnAv1gyuUdc0zx9NdCMStIhsW-5Jlc-1rbcM-keSrJsk3v796frQVMosDv0UJ72yOv11oHn2lHbgtwqp0TisgUB-ijvkaq0SH4eUF1epEi1MFOrpTjM4YFfJ-APHyBpZ9mrKGcWb_XVSZoQmnQ_Q17-Bp9mgd5iyhuZ6LHNl3fTh268mE5TQZ2fDNdZ2ebHFPgabOpA7X2aOrByb2q6qYA1jTJOFV5lsaFM1pSKk6GnLY8qJAZdsd5xbbE91_1R15KDLqbeyvtm8wbOrN5QtTsxtSR_0y_IKDxPDDK_RP_irUNuQmHmmpDf0ijVrTnKMZyrLtqfIc8nedhuCZz-NfFn5KxekFAAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAEAI2PYUvDMBCG_8oR_NDh6A-YVHSbyEBFXD8GRtqc9FiajCbd1LH_bpN0G7MK5tPlvfe5927PFvaxrdnENS2OGWlyJBR9IZuwrWigFqRfhUYFGWjcwdKJch2EZHTD9amd3kuZmzdjXNA9qkRxwp58PSRmFSmZBOORKlrnjO6xafj8xUWrb8YqzfHDdSRnM0XlGp6Rs3MzatcZJKsxrEaQ3QLX0L0Qf2SvOIuhUHo_SriD_fLTOqzTuXCYU43pi9kdwui4siQrCoVy-v_VLxFvulTOp8x7vR8YYn94F_ZBR08G70JZHFqGx_9yO2d5RbbbfosNVGKzQW27PHb4BhMOatYlAgAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../../../.gitbook/assets/13_07 14 20.gif" alt=""><figcaption><p>Buttons only respond to Click if IsEnabled is set to true (default)</p></figcaption></figure>
 
@@ -129,7 +129,7 @@ checkBox.Text = "Click Me";
 checkBox.Checked += (_, _) => label.Text = "CheckBox checked";
 checkBox.Unchecked += (_, _) => label.Text = "CheckBox unchecked";
 ```
-<a href="https://xnafiddle.net/#code=H4sIAAAAAAAEAJVU0W7aMRR95yuueEq0ytK0t1ZMWoOKkIo0rYD2hkxyCRbGF1070G3qv892QpZCtnZ-iXPP8TnnOnYqq0wJM5UzWdo48d1I8cByjyfi3d2g-hcsJiwPW5XblkeGJh6cVPtzyU_FA_HeXhVERsYxaY8MDtVaqxxyLa2FoPARbuNz8GsAfhxYHaVDOBuO8ahynEkjS2RYlW2OQPYOT8iBEKaLKYw-d2pijBtZaeddo3LtHD2TNJZqyzBaYRiBwVO_feK2yqZ37aLQFhonvhG5sWLMHfEPLzBsgOEf6tTOqLK4VFatNXqO4wpr-KWJx-S8AhZAR2RWBcKRVAFTo5ySWv3Eq9CxZ9EhhHw30LTtvSqp7RLZKjJi-SltNiKMo2TYS2W-SoO66fnJyXwXC0mnyZYlvhTFnEKvXTgIabluRR7D_K_rs63SRRL5HUp8F3N8dmHz5lSWfovcFiHfYr5b0zN4nE7Di_wRvfdo7Zw1r2-Yn1d1WOdSGyHzB2UHMxz2cKKN_0ofRpCsbmCVhkP3uoNzknoRFn0yC5P_h1BlrqXW0mL346fvOk6LQ-GvVxJuwVztEcpm0n-2GnZLunDvh99IMGZ5eof_qwsoMo2Sk4w0sf-bsNn484B8r6tupjpz1L9MGotXOV9-A3_xlGMUBQAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAEAJWOUQuCMBSF_8rlPimJP8AwKB8iKIiyN0HWNmg4N7BZUvTfy-nMiB56O_ee8x3OHVfnZV1iZKqaByiUMIJIceMY4YVUUBKhtkRxCTEofoW9IbSwD8-fZmqwwzljqd5pbey_RSU5Dti61d9EchKSeTboKHritFjopgeT_vzFunhrOx2mvDEvPsNEClrAhmc4tm0nZzCJwcsDyH2IZ93aEelm0C782XBQ9J-OWr1b8PEEDSmh0XMBAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../../../.gitbook/assets/13_07 17 43.gif" alt=""><figcaption><p>CheckBox responds to clicks</p></figcaption></figure>
 
@@ -151,7 +151,7 @@ comboBox.SelectionChanged += (_, _) =>
 };
 mainPanel.AddChild(comboBox);
 ```
-<a href="https://xnafiddle.net/#code=H4sIAAAAAAAEAI1U32_aMBB-5684RXsIorL2462MSWtQEdLQpkHR3pCTHODV8aGzA90q_vfaIaQZ0K5-8eXu8_d9d9iUVpkVTFTGZGnpxC8jxS3LAnfE9_1O-VpZjFhu1iqzDY4MjXxxVBbHlA_FLXFhzxIiIeOYtK90NmWqVQaZltZCYPgA19XeeeyAXxtWW-kQjoJD3KoMJ9LIFTIsVo2PAPYKU-QACOHdGAZfWjkxxKUstfOqFfNBudKMu1XqIBlWQwwDMLi7LB-7tbLdfnMotIXGiZ9EbqgYM0f8xxNEdSF6ho7thEqLc2VVqtFjHJd4KO9re0zOM2AOtEVmlSNsSeUwNsopqdVfPDNd9SxagODvCuq2vVYptZ0jW0VGzD9160GEtZUMhVTmhzSo656nTmb3VSJuNdmgxNc8n1HotV0ORFqmDcm3EL94PlkrnccVvgWpvsUMH1wY3hS1nwNIA8phAb5Eu-jEekZFSjf0UIsm9Wdbd0kMsTIOlAe97_vtM3wMe6_XbUDPswzryCrGXtgGv_G7KMTwqPZRi3vfOTtycO0HnaylWflfsTeAeHEFi66_lC_oXeob82uIoHdKjPn39LffWx5eHfHxeMt0Ki22L0v3TdfvbpP75xiHVzNTBcKqDi7fxRrdgE7UL5f_42DIcvcG_X8erEg0So4T0sT-34fN0l8i5Btdtj0dPFf8p06r5JnP_ROF066BRAUAAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAEAG2PTUvEMBCG_8oQPKR0KeKxtYL2IAuC4u4xsKTN6I6mE-hmdbH0v5vEbQ9qLu98Pe9MRrE-3B97UfrhiCtBTJ60pS8UpfjQA_Sa-EkzWqiB8RM2XnfvqSCzSvHSLm6N2bpn53yqR9TqdsEeYvyXaPZkjUyDM9W5vnV37nQGm3Oa2Bc3gCT2QKF7WQW5hquoeZ4pHhVDeLNBsfbYH-IWeaFETGCkSYloNClexjZosfPkuNlrfkUDeQ1yt4JdBvXN4ppuLLZ48mG1Ej8QmjLEkMMvMzSP7VvQuOn_L89AVonpGyQzeFCDAQAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../../../.gitbook/assets/13_07 34 57.gif" alt=""><figcaption><p>ComboBox responding to items being selected</p></figcaption></figure>
 
@@ -177,7 +177,7 @@ listBox.SelectionChanged += (_, _) =>
 };
 mainPanel.AddChild(listBox);
 ```
-<a href="https://xnafiddle.net/#code=H4sIAAAAAAAEAI1UUW_aMBB-51ecUB-CWll01V7WddIKKkNatWmlbG_IJAfcamxkO9AN5b_vnITULdDVL77cfb7vu_PFuSM9h1tKrXFm5sUvLcWNlUvcGPtw2cpfC4uBlasFpa7BGW0GHBzky52LTXFj7NLtOUTPaG-N4khrlU8VpZAq6RyEDOfwodxb2xbwWllaS4-wI-zjmlK8lVrO0cJk3ugIYGa4QxsAwbwfwtWnyCf6OJO58sxaZq6YS86kU7oqyrCaxHAFGjeH6RO_INe5bA6FslB78cMY3yeLqTf2Dydo14H2E3Tobk3ucEyOpgoZ422OVbio5VnjOQNmYNZoLWUIa0MZDDV5kor-4p7osmYRAYK-M6jLZq5cKjdG68hoMb7o1I0Iay0tLCXp71Kjqmu-8zJ9KB1JVGSDEp-zbGRCrXE4JFJy2iT5Guyj53sLUllS4iNI-S1G-OhD8-5QcR9AaiCPS-CQ2bRfSFfk_LV53HFWXzFrDRBVE8RPyvyC0efvu0cxX5Dmi6DgohuBZsZCQtoDcaR7ydtHeBf209NOA3q6kjjvkOW7UHVy0g42bKloRxqLPSVV6XxbvYXUcx6F0ytIJmcw6fBkH2OLmvcsENZJ3U1OVTaTHGyfk2H2bfqb9wIk16gzfNxHDIO7iKa5eP16q-NRpVPpMJ7Tzpsm_36V8UuQhB92REuEeW0c_g1qdAN6wX44_B8FfSs3b-B_9laInkJpk55RxvLDZ_WM5xfttcpjTZXmMv9LpaVzT2fxDxup_eq_BQAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAEAHWQUUvDMBSF_8ol-NDSUariy2YF3YMWBMUN9xIY2RLXq2kCbarF0v9ubus6pJiXm5xzv5uTtCyr7uuCzV1ZqxlDgw6Fxm_F5uxTlFAINM_CKA0pGPUFKyf2H70QhAtuRju-lXJtX6x1vU6oFrsRe6T9lFjmqGXQN44UVu7ONkduOPXkrxO_YlULHW9Quty3nV8lU_NB4SF33r1MyOXmzZYQoHGAXkwWvlzDBdUoCrlpuQG_jkMyp4qK8gVnnNEBWuw4oxDd6aqV0mrv0JplLsxBSYhSCLYz2IaQ3pxm0uPitWoozSDR8oMH3nNIN2AF7d_JSj7t3n3tQPjYRqpm2pGR7KNRsn8-dyDCBet-AF6amxDsAQAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../../../.gitbook/assets/13_07 37 21.gif" alt=""><figcaption><p>ListBox responding to items being selected</p></figcaption></figure>
 
@@ -221,7 +221,7 @@ var radioButton3 = new RadioButton();
 radioButton3.Text = "Option 3";
 group2.AddChild(radioButton3);
 ```
-<a href="https://xnafiddle.net/#code=H4sIAAAAAAAEAI2VTW_iMBCG7_wKi1OQVtYm3LbqSiSoiAPaVUvR9rQyyQBWjR2NHdgP9b-vnaTBG1BqX2LNvJ7nHSeaVJrLPVnxHJVWO0N_SEYfkB3hrPD1blQNpekCWXngue50SqqFTS6q43vIbumDwqO-CtBMSYNK2MyorLaC5yQXTGviKsTkS_0c_R0Ru0rkJ2aAvAPncOI5rJhke0Dyc9_5cGJLeAJ0Ard9XpL7r16MzmHHKmEsta7ckGtmNKlDDdKtrjC5JxLOt_GROXA9uesOubZAGvqolJlzhNwo_G0LjNvE-CJd6pWqNGy45lsBVmOwgib91tpDZWwFKIg6ASIvgJwUL8hScsOZ4H_gynTdM_UEzt8n0rZtWRUTegOouZJ0M520F-HWiSE5Mi6_Mwmi7fnJsPy1DkRek52KzopirVyvftoV2qOqyji8SnbgooiaU31TdTQZrNVI6IsVxZ8_RiR9BLKCq7QyRslZC3q8hHySr6Rr-GXcy_1WGnufZDbuOYovXP_cAD0Npqd9ehpGTwfoWTA969OzMHo2QI-D6XGfHvfpyU361afl5ZJgetKnJ2H0oa9uGkyf9unTMPrUK7dlGvwhMQkaO89lYcdw5Kblmh-B7NvN7RnUqjtRj347_YGDObJzAP-_QU0zAQyjTAmF9q-DcifUGTAVle-p8VzX7zutg1c-3_4B6WgLNTwHAAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAEAI3SvQrCMBQF4FcJmSpIMelmcWgyiJOiLkKXYIMGayI1VVF8d_ujtpDgdb3nnvsRyAPPztPyiMe2KOUQK62sErm6SzzGF1Ggo1B6IbTM0QRpeUUrK7aHZhAM4lR_4zDJsrVZGmObeV3dFaY8kT96fK_yLGjX67BXp_56m4WbKiWjH-dod64QmTKstNbo5H102Y2aq_2VcC1vttpL8fxkldEoSfEHJp3Sr3gtBlvMsRhkMa_FYYs7Focs3lqORmCNOBrpNOrViPdlFLaoY1HI8v-OCLYix4ogKxrE-PkCGTo7X20DAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../../../.gitbook/assets/13_07 39 16.gif" alt=""><figcaption><p>RadioButtons responding to clicks in two different groups</p></figcaption></figure>
 
@@ -243,7 +243,7 @@ for(int i = 0; i < 15; i++)
     scrollViewer.AddChild(button);
 }
 ```
-<a href="https://xnafiddle.net/#code=H4sIAAAAAAAEAI1UTY_aMBC98ytGnBJRWWyrXkq3Uhe0iANS1WVpb5VJBhitY6OxDf0Q_752ErKm0HZ9sTPz5r03_oi3pDcwp4KNNWsnvmop7llWeDD8NOr5f6XFlOVuS4U94aa-EveGq8uAGBvt2KiQ6e38SlEBhZLWwjRw3cC7eu796kEYO6a9dAgn9gnuqcC51HKDDN82nWgEB4UH5AiIy8cZ3H5IYmKCa-mVC6o1c6Nca2Z5HWok4-iI4RY0Hq7LZ25LNh91RbEt1E58NsZNiLFwhn8Egn6b6D9DZ3ZuvMUlWVopDBjHHpv0sbXHxgUGLMHskZlKhL2hEmaaHElFP_HCdN2zSADR3yto2w5aXiq7RLZktFi-yduNiGMvGSpJ-pPUqNqeH5wsnupAljTZocTHslyY2GuajkQ2XBClloSHcEQtVxJK4SlUfKHSbUPB6-HwL3rjLakyS4vSJtaGISPtgALJcBSm93DzNsyDQd6BnrfrZHflnTO6NXpXf6QW42ggYoHfXTzPBgR9GACdA8_66Qw35QnnsVutpMX0yPIXXYLHXRkeRRbv7oIqhE27uH4jWnQHGp2rX0__x8GE5eEF-mfPRowVSs7GRhkO_wDWa2XCPt0pn3pqPNf8fzqtgxc-j78BAQgI4bcEAAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAEAF2OTw8BMRDFv8qkp5WVzZK4-HPAQdwE4dJL2cpO1DSpWYT47tousvQy7Xu_N30PMT_PqpPos6t0WyAhozJ416IvLsrBSSEtFGkDIyB9hRWr_TEKSWsg6Wtn46JY26W1HPUQPe-dNWaD-qrdJ92QItdksi0WXHqym-f_q6clmiJp0iEt6WBdgsSAPpYP_BhCp-dnmrYkPSSBP6HLrmK29G4xiY_4f_BrL1vrG3tAitr2F0gB38xPz2-fOhn2PMXzBa3qHJNKAQAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../../../.gitbook/assets/13_07 41 52.gif" alt=""><figcaption><p>ScrollViewer containing buttons</p></figcaption></figure>
 
@@ -262,7 +262,7 @@ slider.ValueChanged += (_,_) =>
     label.Text = $"Slider value: {slider.Value:0.0}";
 mainPanel.AddChild(slider);
 ```
-<a href="https://xnafiddle.net/#code=H4sIAAAAAAAEAI1UUW_aMBB-51ec0B6CVll0e6Ni0gYqQhrStFK6N2SSg1h1bHR2oFvFf9_ZSbMMsq5-iX3f5_u-O9spnTI7WKiUrLNbL34YKW5JFni09HjTK1-DxYzkPlepa3jW2BmDs7J4CfFU3Foq3EVATKzxZDUjvX250SqFVEvnIGS4hlH89p57wGNP6iA9wovgFA8qxYU0cocE613jI5BZ4Q4pEML0fg7jT62YmOJWltqzasxcKUfNZBBDlWQYTWIYg8Fjt3zic-UGN82mUBYaL75b66eKMPWWfnKCfg30_1DnbmFLhyvl1EYjczyVWMGn2h5ZzxkwA3tAIpUhHKzKYG6UV1KrX3hhOtYsWoTg7wrqslmrlNqtkJyyRqw-DupGhHGQBIVU5ps0qOua77xMH2MgaRXZsMTnLFvaUGsbDom03DRJvob5P_dPcqWzJPJblLgWS3zyoXkLrh98juA0N4GAMXvsn3mvsdp4XLRFK1g8qMznTPowHF5gC2VWURaMdmDyqcauO3aupC5xkkuz48N6P4ZkfQXrAd-9hnhR1Lt-5ZG9894RPLdTjYZieOq_2rGK3ipwIx22T37wprt0v8_4bSXhCSxVgbCrJ90Xq2Y3pDP1bvg_DqYkj2_Q_-v1iYlGScnEakv8KyGz5QuB9IVb1_JUeY75z53G4IXP02-mLfckEQUAAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAEAG2P0QqCMBSGX-UwulASsS4Ng_AigoIoqRshTm3kaE7QaZL07s1ZJtSutu_83_avIatiWabEV3nJHMIlVxwFfzDikwpzSJHLLUomIADJ7rBXeLkZYNmzWPZjd0FplO2yTBneqgLPvbZu979GmHBBLRP8WIXglOWf18zBeB13j5yqRE-nnveFG107LVONhxDrN5wMswcUJQsTlFdGYRyAdXJONgRziCXoZbq4EauVFkcx6RpA1Vo-NMNLfM_1njH5_6cuaM_I8wW4WNisYgEAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../../../.gitbook/assets/13_07 43 36.gif" alt=""><figcaption><p>Slider responding to cursor input</p></figcaption></figure>
 
@@ -282,6 +282,6 @@ textBox.TextChanged += (_, _) =>
     label.Text = $"Text box text is now: {textBox.Text}";
 mainPanel.AddChild(textBox);
 ```
-<a href="https://xnafiddle.net/#code=H4sIAAAAAAAEAI1UUW_aMBB-51ecoj0ErbK67a0Vk1pYEdKQqpWyvSGTHMSq8aGzA-0q_vtsJ81Swrr6hcvd5-_7zj5TWmXWMFUZk6WVE7-MFDcsN7gnfrjslW-VxZjltlCZbXBkaOyL43LzkvKhuCHe2E5CDMk4Ju0rvW251CqDTEtrITB8gov423vugV9bVjvpEF4ER7hTGU6lkWtkWKwbHwHsFe6QAyCE9xMYfG3lxAhXstTOq0bmSjlqpv2YqiTDaohhAAb3p-VTVyjbv2w2hbbQOPGDyI0UY-aInzxBUheSv9CJnVJpca6sWmr0GMclVuVDbY_JeQbMgXbIrHKEHakcJkY5JbX6jR3TsWfRAgR_Z1C37bVKqe0c2SoyYv6lXx9EWDvJsJHK3EqDuu75zsnsISbSVpMNSlzl-YxCr-1yINJy2ZB8D_E_9w8LpfM04luQ-C1m-OjC4c2etgjKgCsQlvQIvkb75Mi78-BrX6xEZ9VXW7YGiFstMyxI5356PPk3fzHVbiiQUQiRdPf8VLkrPPrz-Xm3GLSGhTRrf1MfB5AuzmDR94PXADsdfUhiEHqJwsqCof0FPLcpD8mbR1ZDWw0upcX23fffNU3329y_rjQ8gpnaIKzr4PRo1egGdKR-uvwfByOW-3fov3p_YqhRcjokTez_TNis_EggX-uy7anyHPmPncZkx-fhD5UBBBQTBQAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAEAG2Py4oCMRBFf6UoXHQzEsRlSwsqIoILcYTZBCSawgRjAm18oPjvky5baZjJqnLvPfV44Pw0Ox-xiNWZumi9jVY5eycs8KIqOCrrl8qTgxI8XeE7qt2BhSwfSP-xxUjrdViFEFmvUae2H2xR13-JibFOZxx8U5FucRxuDbd-_ZhsHLF0akcmOE1VSkmcJufFgaGKhBASW_Efq6NJwX6v11LrxhOj_J40fJWQbbqwyaEcgvSQHq_EoUR2JHK1TWvxGHsCH64FPNrdnjz1n_OaUD7A5y9_J2gcbgEAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../../../.gitbook/assets/13_08 09 13.gif" alt=""><figcaption><p>TextBox responding to text input</p></figcaption></figure>
