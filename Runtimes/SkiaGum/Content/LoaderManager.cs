@@ -87,7 +87,8 @@ public class LoaderManager
 #if FULL_DIAGNOSTICS
         if (this.ContentLoader == null)
         {
-            throw new Exception("The content loader is null - you must set it prior to calling LoadContent.");
+            throw new Exception("The content loader is null - you must set it prior to calling LoadContent. " +
+                "If you haven't yet, you must first initialize Gum.");
         }
 #endif
         return ContentLoader.TryLoadContent<T>(contentName);
