@@ -48,7 +48,7 @@ public class ListBoxTests : BaseTestClass
         listBox.AddToRoot();
         for (int i = 0; i < 10; i++)
         {
-            listBox.Items.Add("Item " + i);
+            listBox.Items!.Add("Item " + i);
         }
 
         Mock<ICursor> mockCursor = SetupForPush();
@@ -69,7 +69,7 @@ public class ListBoxTests : BaseTestClass
         listBox.AddToRoot();
         for (int i = 0; i < 10; i++)
         {
-            listBox.Items.Add("Item " + i);
+            listBox.Items!.Add("Item " + i);
         }
 
         Mock<ICursor> mockCursor = SetupForPushOnItem(listBox, itemIndex: 0);
@@ -87,7 +87,7 @@ public class ListBoxTests : BaseTestClass
 
         if(listBox.SelectedObject == null)
         {
-            var firstListBoxItem = listBox.ListBoxItems[0];
+            var firstListBoxItem = listBox.ListBoxItems[0]!;
 
             var isOverFirst = mockCursor.Object.VisualOver ==
                 firstListBoxItem.Visual;
@@ -125,7 +125,7 @@ public class ListBoxTests : BaseTestClass
         listBox.InnerPanel.Children.Add(listBoxItem.Visual);
 
         listBox.ListBoxItems.Count.ShouldBe(1);
-        listBox.Items.Count.ShouldBe(1);
+        listBox.Items!.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -135,9 +135,9 @@ public class ListBoxTests : BaseTestClass
         ListBoxItem listBoxItem = new();
 
         listBox.InnerPanel.Children.Add(listBoxItem.Visual);
-        listBox.Items.Count.ShouldBe(1);
+        listBox.Items!.Count.ShouldBe(1);
 
-        listBox.Items.Remove(listBoxItem);
+        listBox.Items!.Remove(listBoxItem);
 
         listBox.Items.Count.ShouldBe(0);
         listBox.ListBoxItems.Count.ShouldBe(0);
@@ -156,7 +156,7 @@ public class ListBoxTests : BaseTestClass
         listBox.InnerPanel.Children.Add(item1.Visual);
         listBox.InnerPanel.Children.Add(item2.Visual);
 
-        listBox.Items.Count.ShouldBe(3);
+        listBox.Items!.Count.ShouldBe(3);
         listBox.ListBoxItems.Count.ShouldBe(3);
         listBox.InnerPanel.Children.Count.ShouldBe(3);
     }
@@ -175,7 +175,7 @@ public class ListBoxTests : BaseTestClass
         };
 
         ListBox listBox = new ListBox();
-        listBox.Items.Add(listBoxItem);
+        listBox.Items!.Add(listBoxItem);
         didSet.ShouldBeFalse();
         listBox.IsEnabled = false;
         didSet.ShouldBeTrue();
@@ -197,7 +197,7 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new ListBox();
         listBox.IsEnabled = false;
         didSet.ShouldBeFalse();
-        listBox.Items.Add(listBoxItem);
+        listBox.Items!.Add(listBoxItem);
         didSet.ShouldBeTrue();
     }
 
@@ -205,12 +205,12 @@ public class ListBoxTests : BaseTestClass
     public void Items_ShoudAddListBoxItem_WhenAdding()
     {
         ListBox listBox = new ();
-        listBox.Items.Add(1);
+        listBox.Items!.Add(1);
         listBox.ListBoxItems.Count.ShouldBe(1);
-        (listBox.ListBoxItems[0] is ListBoxItem).ShouldBeTrue();
+        (listBox.ListBoxItems[0]! is ListBoxItem).ShouldBeTrue();
 
         listBox.InnerPanel.Children.Count.ShouldBe(1);
-        (listBox.InnerPanel.Children[0] is InteractiveGue).ShouldBeTrue();
+        (listBox.InnerPanel.Children[0]! is InteractiveGue).ShouldBeTrue();
         (listBox.InnerPanel.Children[0] as InteractiveGue)!.FormsControlAsObject
             .ShouldBeOfType<ListBoxItem>();
     }
@@ -221,7 +221,7 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         for (int i = 0; i < 10; i++)
         {
-            listBox.Items.Add("Item " + i);
+            listBox.Items!.Add("Item " + i);
         }
         listBox.ListBoxItems.Count.ShouldBe(10);
     }
@@ -232,9 +232,9 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         for (int i = 0; i < 10; i++)
         {
-            listBox.Items.Add("Item " + i);
+            listBox.Items!.Add("Item " + i);
         }
-        listBox.Items.Clear();
+        listBox.Items!.Clear();
         listBox.ListBoxItems.Count.ShouldBe(0);
     }
 
@@ -245,9 +245,9 @@ public class ListBoxTests : BaseTestClass
 
         ListBox listBox = new();
         button.Parent.ShouldBeNull();
-        listBox.Items.Add(button);
+        listBox.Items!.Add(button);
         button.Parent.ShouldNotBeNull();
-        listBox.Items.Clear(); // should not throw
+        listBox.Items!.Clear(); // should not throw
         button.Parent.ShouldBeNull();
     }
 
@@ -257,15 +257,15 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         for (int i = 0; i < 10; i++)
         {
-            listBox.Items.Add("Item " + i);
+            listBox.Items!.Add("Item " + i);
         }
 
-        var itemToRemove = listBox.Items[5];
-        listBox.Items.RemoveAt(5);
-        listBox.Items.Insert(0, itemToRemove);
+        var itemToRemove = listBox.Items![5]!;
+        listBox.Items!.RemoveAt(5);
+        listBox.Items!.Insert(0, itemToRemove);
 
         listBox.ListBoxItems.Count.ShouldBe(10);
-        var item5 = listBox.ListBoxItems[0];
+        var item5 = listBox.ListBoxItems[0]!;
         item5.BindingContext.ShouldBe("Item 5");
     }
 
@@ -287,19 +287,19 @@ public class ListBoxTests : BaseTestClass
 
         for(int i = 0; i < 10; i++)
         {
-            listBox.ListBoxItems[i].BindingContext.ShouldBe("Item " + i);
+            listBox.ListBoxItems[i]!.BindingContext.ShouldBe("Item " + i);
         }
 
         values.Move(0, 1);
 
-        listBox.ListBoxItems[0].BindingContext.ShouldBe("Item 1");
-        listBox.ListBoxItems[1].BindingContext.ShouldBe("Item 0");
+        listBox.ListBoxItems[0]!.BindingContext.ShouldBe("Item 1");
+        listBox.ListBoxItems[1]!.BindingContext.ShouldBe("Item 0");
 
         var innerPanel = listBox.Visual.GetChildByNameRecursively("InnerPanelInstance")!;
         innerPanel.Children.Count.ShouldBe(10);
         for(int i = 0; i < 10; i++)
         {
-            innerPanel.Children[i].ShouldBe(listBox.ListBoxItems[i].Visual);
+            innerPanel.Children[i]!.ShouldBe(listBox.ListBoxItems[i]!.Visual);
         }
     }
 
@@ -339,16 +339,16 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         for (int i = 0; i < 10; i++)
         {
-            listBox.Items.Add("Item " + i);
+            listBox.Items!.Add("Item " + i);
         }
 
         for(int i = 0; i < 10; i++)
         {
-            listBox.Items.Remove("Item " + i);
+            listBox.Items!.Remove("Item " + i);
             listBox.ListBoxItems.Count.ShouldBe(9 - i);
             if( listBox.ListBoxItems.Count > 0)
             {
-                var nextItem = listBox.ListBoxItems[0];
+                var nextItem = listBox.ListBoxItems[0]!;
                 nextItem.BindingContext.ShouldBe("Item " + (i + 1));
             }
         }
@@ -360,12 +360,12 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         for (int i = 0; i < 10; i++)
         {
-            listBox.Items.Add("Item " + i);
+            listBox.Items!.Add("Item " + i);
         }
 
         for (int i = 0; i < 10; i++)
         {
-            listBox.Items.RemoveAt(0);
+            listBox.Items!.RemoveAt(0);
             listBox.ListBoxItems.Count.ShouldBe(9 - i);
         }
     }
@@ -376,10 +376,10 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         for (int i = 0; i < 2; i++)
         {
-            listBox.Items.Add("Item " + i);
+            listBox.Items!.Add("Item " + i);
         }
         listBox.ListBoxItems.Count.ShouldBe(2);
-        listBox.Items.Remove("Item 1");
+        listBox.Items!.Remove("Item 1");
         listBox.ListBoxItems.Count.ShouldBe(1);
         foreach(var listBoxItem in listBox.ListBoxItems)
         {
@@ -403,9 +403,9 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Extended };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         // Select first item
         listBox.ListBoxItems[0].IsSelected = true;
@@ -415,7 +415,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe("Item 1");
+        listBox.SelectedItems[0]!.ShouldBe("Item 1");
         listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
         listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
         listBox.ListBoxItems[2].IsSelected.ShouldBeFalse();
@@ -428,8 +428,8 @@ public class ListBoxTests : BaseTestClass
         var expectedItem = "Item 0";
         var listBox = new ListBox { SelectionMode = SelectionMode.Extended };
         listBox.AddToRoot();
-        listBox.Items.Add(expectedItem);
-        listBox.Items.Add("Item 1");
+        listBox.Items!.Add(expectedItem);
+        listBox.Items!.Add("Item 1");
 
         // Act - simulate Ctrl+Click on first item when nothing is selected
         var mockCursor = SetupForPushWithCtrlOnItem(listBox, itemIndex: 0);
@@ -441,7 +441,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe(expectedItem);
+        listBox.SelectedItems[0]!.ShouldBe(expectedItem);
     }
 
     [Fact]
@@ -452,8 +452,8 @@ public class ListBoxTests : BaseTestClass
         var secondItem = "Item 1";
         var listBox = new ListBox { SelectionMode = SelectionMode.Extended };
         listBox.AddToRoot();
-        listBox.Items.Add(firstItem);
-        listBox.Items.Add(secondItem);
+        listBox.Items!.Add(firstItem);
+        listBox.Items!.Add(secondItem);
 
         // Select both items initially
         listBox.SelectedItems.Add(firstItem);
@@ -473,7 +473,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert - first item should be deselected, second should remain selected
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe(secondItem);
+        listBox.SelectedItems[0]!.ShouldBe(secondItem);
         listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
         listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
     }
@@ -487,9 +487,9 @@ public class ListBoxTests : BaseTestClass
         var thirdItem = "Item 2";
         var listBox = new ListBox { SelectionMode = SelectionMode.Extended };
         listBox.AddToRoot();
-        listBox.Items.Add(firstItem);
-        listBox.Items.Add(secondItem);
-        listBox.Items.Add(thirdItem);
+        listBox.Items!.Add(firstItem);
+        listBox.Items!.Add(secondItem);
+        listBox.Items!.Add(thirdItem);
 
         // Select first item initially
         listBox.SelectedItems.Add(firstItem);
@@ -522,7 +522,7 @@ public class ListBoxTests : BaseTestClass
         listBox.AddToRoot();
         for (int i = 0; i < 5; i++)
         {
-            listBox.Items.Add($"Item {i}");
+            listBox.Items!.Add($"Item {i}");
         }
 
         // Select item at index 3 as anchor
@@ -556,7 +556,7 @@ public class ListBoxTests : BaseTestClass
         listBox.AddToRoot();
         for (int i = 0; i < 5; i++)
         {
-            listBox.Items.Add($"Item {i}");
+            listBox.Items!.Add($"Item {i}");
         }
 
         // Select first item as anchor
@@ -589,9 +589,9 @@ public class ListBoxTests : BaseTestClass
         var expectedItem = "Item 2";
         var listBox = new ListBox { SelectionMode = SelectionMode.Extended };
         listBox.AddToRoot();
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add(expectedItem);
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add(expectedItem);
 
         // Act - simulate Shift+Click when no item is selected
         var mockCursor = SetupForPushWithShiftOnItem(listBox, itemIndex: 2);
@@ -606,7 +606,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert - only the clicked item should be selected
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe(expectedItem);
+        listBox.SelectedItems[0]!.ShouldBe(expectedItem);
     }
 
     [Fact]
@@ -635,9 +635,9 @@ public class ListBoxTests : BaseTestClass
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
         listBox.AddToRoot();
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         // Act - click first item to select it
         var mockCursor1 = SetupForPushOnItem(listBox, itemIndex: 0);
@@ -651,7 +651,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe("Item 0");
+        listBox.SelectedItems[0]!.ShouldBe("Item 0");
 
         // Act - click second item (both should be selected in Multiple mode)
         var mockCursor2 = SetupForPushOnItem(listBox, itemIndex: 1);
@@ -680,7 +680,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe("Item 1");
+        listBox.SelectedItems[0]!.ShouldBe("Item 1");
     }
 
     [Fact]
@@ -689,14 +689,14 @@ public class ListBoxTests : BaseTestClass
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
         listBox.AddToRoot();
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         // Select first item
         listBox.ListBoxItems[0].IsSelected = true;
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe("Item 0");
+        listBox.SelectedItems[0]!.ShouldBe("Item 0");
 
         // Act - Click the already-selected item (simulate push)
         Mock<ICursor> mockCursor = SetupForPushOnItem(listBox, itemIndex: 0);
@@ -719,12 +719,12 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         // Act - select all items
-        foreach (var item in listBox.Items)
+        foreach (var item in listBox.Items!)
         {
             listBox.SelectedItems.Add(item);
         }
@@ -756,13 +756,34 @@ public class ListBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void SelectedIndex_Getter_ShouldReturnNegativeOne_WhenItemsIsNull()
+    {
+        var listBox = new ListBox();
+        listBox.Items = null;
+
+        listBox.SelectedIndex.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void SelectedIndex_Getter_ShouldReturnNegativeOne_WhenItemsIsNullAndSelectedObjectIsSet()
+    {
+        // Reproduce NRE: Items set to null, then SelectedObject set.
+        // SelectedObject setter calls SelectedIndex getter internally via SyncIsSelectedFromSelectedItems.
+        var listBox = new ListBox();
+        listBox.Items = null;
+
+        Should.NotThrow(() => listBox.SelectedObject = "test");
+        listBox.SelectedIndex.ShouldBe(-1);
+    }
+
+    [Fact]
     public void SelectedIndex_Getter_ShouldReturnFirstSelectedItemIndex()
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         // Act
         listBox.SelectedItems.Add("Item 1");
@@ -777,8 +798,8 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
 
         // Assert
         listBox.SelectedIndex.ShouldBe(-1);
@@ -789,9 +810,9 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         listBox.SelectedItems.Add("Item 0");
         listBox.SelectedItems.Add("Item 1");
@@ -801,7 +822,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe("Item 2");
+        listBox.SelectedItems[0]!.ShouldBe("Item 2");
         listBox.SelectedIndex.ShouldBe(2);
     }
 
@@ -810,9 +831,9 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         // Act
         listBox.SelectedItems.Add("Item 1");
@@ -824,13 +845,24 @@ public class ListBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void SelectedItems_Add_ShouldNotThrow_WhenItemsIsNull()
+    {
+        // Reproduce NRE: Items set to null, then SelectedItems.Add called.
+        // HandleSelectedItemsCollectionChanged calls Items.IndexOf which NREs when Items is null.
+        var listBox = new ListBox();
+        listBox.Items = null;
+
+        Should.NotThrow(() => listBox.SelectedItems.Add("test"));
+    }
+
+    [Fact]
     public void SelectedItems_AddMultipleInSingleMode_ShouldAllowAll()
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Single };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         // Act - add multiple items programmatically in Single mode
         listBox.SelectedItems.Add("Item 0");
@@ -854,8 +886,8 @@ public class ListBoxTests : BaseTestClass
         var validItem = "Item 0";
         var invalidItem = "NonExistent Item";
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add(validItem);
-        listBox.Items.Add("Item 1");
+        listBox.Items!.Add(validItem);
+        listBox.Items!.Add("Item 1");
 
         // Act - add a valid item, then try to add an item not in the Items collection
         listBox.SelectedItems.Add(validItem);
@@ -864,8 +896,8 @@ public class ListBoxTests : BaseTestClass
         // Assert - the invalid item is added to SelectedItems but doesn't crash
         // This matches the current behavior where SelectedItems can contain items not in Items
         listBox.SelectedItems.Count.ShouldBe(2);
-        listBox.SelectedItems[0].ShouldBe(validItem);
-        listBox.SelectedItems[1].ShouldBe(invalidItem);
+        listBox.SelectedItems[0]!.ShouldBe(validItem);
+        listBox.SelectedItems[1]!.ShouldBe(invalidItem);
     }
 
     [Fact]
@@ -873,9 +905,9 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         listBox.SelectedItems.Add("Item 0");
         listBox.SelectedItems.Add("Item 1");
@@ -895,9 +927,9 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         listBox.SelectedItems.Add("Item 0");
         listBox.SelectedItems.Add("Item 1");
@@ -925,13 +957,22 @@ public class ListBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void SelectedObject_Getter_ShouldReturnNull_WhenItemsIsNull()
+    {
+        var listBox = new ListBox();
+        listBox.Items = null;
+
+        listBox.SelectedObject.ShouldBeNull();
+    }
+
+    [Fact]
     public void SelectedObject_Getter_ShouldReturnFirstSelectedItem()
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         // Act
         listBox.SelectedItems.Add("Item 1");
@@ -946,7 +987,7 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
+        listBox.Items!.Add("Item 0");
 
         // Assert
         listBox.SelectedObject.ShouldBeNull();
@@ -957,9 +998,9 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         listBox.SelectedItems.Add("Item 0");
         listBox.SelectedItems.Add("Item 1");
@@ -969,7 +1010,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe("Item 2");
+        listBox.SelectedItems[0]!.ShouldBe("Item 2");
         listBox.SelectedObject.ShouldBe("Item 2");
     }
 
@@ -978,8 +1019,8 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
 
         bool eventFired = false;
         SelectionChangedEventArgs? capturedArgs = null;
@@ -997,7 +1038,7 @@ public class ListBoxTests : BaseTestClass
         eventFired.ShouldBeTrue();
         capturedArgs.ShouldNotBeNull();
         capturedArgs.AddedItems.Count.ShouldBe(1);
-        capturedArgs.AddedItems[0].ShouldBe("Item 0");
+        capturedArgs.AddedItems[0]!.ShouldBe("Item 0");
         capturedArgs.RemovedItems.Count.ShouldBe(0);
     }
 
@@ -1006,8 +1047,8 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
 
         listBox.SelectedItems.Add("Item 0");
 
@@ -1028,7 +1069,7 @@ public class ListBoxTests : BaseTestClass
         capturedArgs.ShouldNotBeNull();
         capturedArgs.AddedItems.Count.ShouldBe(0);
         capturedArgs.RemovedItems.Count.ShouldBe(1);
-        capturedArgs.RemovedItems[0].ShouldBe("Item 0");
+        capturedArgs.RemovedItems[0]!.ShouldBe("Item 0");
     }
 
     [Fact]
@@ -1036,9 +1077,9 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         listBox.SelectedItems.Add("Item 0");
         listBox.SelectedItems.Add("Item 1");
@@ -1049,7 +1090,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe("Item 0");
+        listBox.SelectedItems[0]!.ShouldBe("Item 0");
     }
 
     [Fact]
@@ -1069,9 +1110,9 @@ public class ListBoxTests : BaseTestClass
         var firstItem = "Item 0";
         var secondItem = "Item 1";
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add(firstItem);
-        listBox.Items.Add(secondItem);
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add(firstItem);
+        listBox.Items!.Add(secondItem);
+        listBox.Items!.Add("Item 2");
 
         // Select two items in Multiple mode
         listBox.SelectedItems.Add(firstItem);
@@ -1089,14 +1130,14 @@ public class ListBoxTests : BaseTestClass
 
         // Assert - only first item should remain
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe(firstItem);
+        listBox.SelectedItems[0]!.ShouldBe(firstItem);
 
         // Act - switch back to Multiple mode
         listBox.SelectionMode = SelectionMode.Multiple;
 
         // Assert - the single selection should be maintained
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe(firstItem);
+        listBox.SelectedItems[0]!.ShouldBe(firstItem);
     }
 
     [Fact]
@@ -1104,8 +1145,8 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
 
         // Act - switch to Single mode without any selection
         listBox.SelectionMode = SelectionMode.Single;
@@ -1119,9 +1160,9 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Single };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         // Act
         listBox.ListBoxItems[0].IsSelected = true;
@@ -1129,7 +1170,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe("Item 1");
+        listBox.SelectedItems[0]!.ShouldBe("Item 1");
         listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
         listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
     }
@@ -1141,8 +1182,8 @@ public class ListBoxTests : BaseTestClass
         var expectedItem = "Item 0";
         var listBox = new ListBox { SelectionMode = SelectionMode.Single };
         listBox.AddToRoot();
-        listBox.Items.Add(expectedItem);
-        listBox.Items.Add("Item 1");
+        listBox.Items!.Add(expectedItem);
+        listBox.Items!.Add("Item 1");
 
         // Select first item
         listBox.SelectedItems.Add(expectedItem);
@@ -1158,7 +1199,7 @@ public class ListBoxTests : BaseTestClass
 
         // Assert - item should still be selected
         listBox.SelectedItems.Count.ShouldBe(1);
-        listBox.SelectedItems[0].ShouldBe(expectedItem);
+        listBox.SelectedItems[0]!.ShouldBe(expectedItem);
     }
 
     [Fact]
@@ -1166,15 +1207,15 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         listBox.SelectedItems.Add("Item 0");
         listBox.SelectedItems.Add("Item 1");
 
         // Act
-        listBox.Items.Remove("Item 1");
+        listBox.Items!.Remove("Item 1");
 
         // Assert
         listBox.SelectedItems.Count.ShouldBe(1);
@@ -1187,15 +1228,15 @@ public class ListBoxTests : BaseTestClass
     {
         // Arrange
         var listBox = new ListBox { SelectionMode = SelectionMode.Multiple };
-        listBox.Items.Add("Item 0");
-        listBox.Items.Add("Item 1");
-        listBox.Items.Add("Item 2");
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
 
         listBox.SelectedItems.Add("Item 0");
         listBox.SelectedItems.Add("Item 1");
 
         // Act
-        listBox.Items.Clear();
+        listBox.Items!.Clear();
 
         // Assert
         listBox.SelectedItems.Count.ShouldBe(0);
@@ -1232,7 +1273,7 @@ public class ListBoxTests : BaseTestClass
 
         if (itemIndex >= 0 && itemIndex < listBox.ListBoxItems.Count)
         {
-            var targetItemVisual = listBox.ListBoxItems[itemIndex].Visual;
+            var targetItemVisual = listBox.ListBoxItems[itemIndex]!.Visual;
             var cursorX = targetItemVisual.GetAbsoluteX() + targetItemVisual.GetAbsoluteWidth() / 2;
             var cursorY = targetItemVisual.GetAbsoluteY() + targetItemVisual.GetAbsoluteHeight() / 2;
 

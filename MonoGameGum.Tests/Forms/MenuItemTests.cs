@@ -23,7 +23,7 @@ public class MenuItemTests : BaseTestClass
         Menu menu = new();
 
         MenuItem menuItem = new();
-        menu.Items.Add(menuItem);
+        menu.Items!.Add(menuItem);
         var submenuIndicator = menuItem.GetVisual("SubmenuIndicatorInstance")!;
 
         submenuIndicator.Visible.ShouldBeFalse();
@@ -35,11 +35,11 @@ public class MenuItemTests : BaseTestClass
         Menu menu = new();
 
         MenuItem topItem = new();
-        menu.Items.Add(topItem);
+        menu.Items!.Add(topItem);
 
         for (int i = 0; i < 5; i++)
         {
-            topItem.Items.Add(i);
+            topItem.Items!.Add(i);
         }
 
         topItem.GetVisual("SubmenuIndicatorInstance")!.Visible.ShouldBeFalse();
@@ -51,14 +51,14 @@ public class MenuItemTests : BaseTestClass
         Menu menu = new();
 
         MenuItem parentItem = new();
-        menu.Items.Add(parentItem);
+        menu.Items!.Add(parentItem);
 
         MenuItem childMenuItem = new();
-        parentItem.Items.Add(childMenuItem);
+        parentItem.Items!.Add(childMenuItem);
 
         for(int i = 0; i < 5 ; i++)
         {
-            childMenuItem.Items.Add(i);
+            childMenuItem.Items!.Add(i);
         }
 
         parentItem.IsSelected = true;

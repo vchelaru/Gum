@@ -76,8 +76,8 @@ public  class ComboBoxTests : BaseTestClass
 
         comboBox.Items = items;
 
-        comboBox.ListBox.Items.Count.ShouldBe(3);
-        comboBox.ListBox.ListBoxItems.Count.ShouldBe(3);
+        comboBox.ListBox!.Items!.Count.ShouldBe(3);
+        comboBox.ListBox!.ListBoxItems.Count.ShouldBe(3);
     }
 
     [Fact]
@@ -100,17 +100,17 @@ public  class ComboBoxTests : BaseTestClass
             nameof(comboBox.Items),
             nameof(viewModel.Items));
 
-        comboBox.ListBox.Items.Count.ShouldBe(3);
-        comboBox.ListBox.ListBoxItems.Count.ShouldBe(3);
-        comboBox.ListBox.ListBoxItems[0].BindingContext.ShouldBe("1");
+        comboBox.ListBox!.Items!.Count.ShouldBe(3);
+        comboBox.ListBox!.ListBoxItems.Count.ShouldBe(3);
+        comboBox.ListBox!.ListBoxItems[0]!.BindingContext.ShouldBe("1");
 
         comboBox.IsDropDownOpen = true;
 
-        comboBox.ListBox.ListBoxItems[0].BindingContext.ShouldBe("1");
+        comboBox.ListBox!.ListBoxItems[0]!.BindingContext.ShouldBe("1");
 
         comboBox.IsDropDownOpen = false;
 
-        comboBox.ListBox.ListBoxItems[0].BindingContext.ShouldBe("1");
+        comboBox.ListBox!.ListBoxItems[0]!.BindingContext.ShouldBe("1");
 
     }
 
