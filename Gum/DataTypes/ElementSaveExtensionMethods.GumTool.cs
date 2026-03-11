@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes.Variables;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Services;
 using Gum.ToolStates;
@@ -13,8 +13,7 @@ namespace Gum.DataTypes;
 
 public static class ElementSaveExtensionMethodsGumTool
 {
-    private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
-    private static readonly IProjectManager _projectManager = Locator.GetRequiredService<IProjectManager>();
+    private static IProjectManager ProjectManager => Locator.GetRequiredService<IProjectManager>();
 
     public static FilePath? GetFullPathXmlFile(this ElementSave? elementSave)
     {
@@ -24,7 +23,7 @@ public static class ElementSaveExtensionMethodsGumTool
 
     public static FilePath? GetFullPathXmlFile(this ElementSave elementSave, string elementSaveName)
     {
-        var gumProject = _projectManager.GumProjectSave;
+        var gumProject = ProjectManager.GumProjectSave;
         if (string.IsNullOrEmpty(gumProject?.FullFileName))
         {
             return null;
@@ -72,65 +71,78 @@ public static class ElementSaveExtensionMethodsGumTool
     }
 
     /// <summary>
-    /// Returns the VariableSave from the argument element or its base element.  
-    /// If forceDefault is set to true, then only the element's default state will be checked.
+    /// Returns the VariableSave from the argument element or its base element using an explicit state.
     /// </summary>
-    /// <param name="element"></param>
-    /// <param name="variable"></param>
-    /// <param name="forceDefault"></param>
-    /// <returns></returns>
-    public static VariableSave GetVariableFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
+    public static VariableSave GetVariableFromThisOrBase(this ElementSave element, string variable, StateSave stateToPullFrom)
     {
-        StateSave stateToPullFrom = element.DefaultState;
-
-        if (element == _selectedState.SelectedElement &&
-            _selectedState.SelectedStateSave != null &&
-            !forceDefault)
-        {
-            stateToPullFrom = _selectedState.SelectedStateSave;
-        }
-
         return stateToPullFrom.GetVariableRecursive(variable);
     }
 
-    public static VariableListSave GetVariableListFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
+    /// <summary>
+    /// Returns the VariableSave from the argument element or its base element.
+    /// Uses the currently selected state when the element is selected, unless forceDefault is true.
+    /// </summary>
+    public static VariableSave GetVariableFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
     {
-        var stateToPullFrom = element.DefaultState;
+        if (forceDefault)
+            return element.GetVariableFromThisOrBase(variable, element.DefaultState);
 
-        if (element == _selectedState.SelectedElement &&
-            _selectedState.SelectedStateSave != null &&
-            !forceDefault)
-        {
-            stateToPullFrom = _selectedState.SelectedStateSave;
-        }
+        var selectedState = Locator.GetRequiredService<ISelectedState>();
+        var stateToPullFrom = (element == selectedState.SelectedElement && selectedState.SelectedStateSave != null)
+            ? selectedState.SelectedStateSave
+            : element.DefaultState;
 
+        return element.GetVariableFromThisOrBase(variable, stateToPullFrom);
+    }
+
+    /// <summary>
+    /// Returns the VariableListSave from the argument element or its base element using an explicit state.
+    /// </summary>
+    public static VariableListSave GetVariableListFromThisOrBase(this ElementSave element, string variable, StateSave stateToPullFrom)
+    {
         return stateToPullFrom.GetVariableListRecursive(variable);
     }
 
+    /// <summary>
+    /// Returns the VariableListSave from the argument element or its base element.
+    /// Uses the currently selected state when the element is selected, unless forceDefault is true.
+    /// </summary>
+    public static VariableListSave GetVariableListFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
+    {
+        if (forceDefault)
+            return element.GetVariableListFromThisOrBase(variable, element.DefaultState);
 
+        var selectedState = Locator.GetRequiredService<ISelectedState>();
+        var stateToPullFrom = (element == selectedState.SelectedElement && selectedState.SelectedStateSave != null)
+            ? selectedState.SelectedStateSave
+            : element.DefaultState;
 
+        return element.GetVariableListFromThisOrBase(variable, stateToPullFrom);
+    }
 
+    /// <summary>
+    /// Returns the value from the argument element or its base element using an explicit state.
+    /// </summary>
+    public static object GetValueFromThisOrBase(this ElementSave element, string variable, StateSave stateToPullFrom)
+    {
+        return stateToPullFrom.GetVariableRecursive(variable)?.Value;
+    }
 
+    /// <summary>
+    /// Returns the value from the argument element or its base element.
+    /// Uses the currently selected state when the element is selected, unless forceDefault is true.
+    /// </summary>
     public static object GetValueFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
     {
-        StateSave stateToPullFrom = element.DefaultState;
+        if (forceDefault)
+            return element.GetValueFromThisOrBase(variable, element.DefaultState);
 
-        if (element == _selectedState.SelectedElement &&
-            _selectedState.SelectedStateSave != null &&
-            !forceDefault)
-        {
-            stateToPullFrom = _selectedState.SelectedStateSave;
-        }
+        var selectedState = Locator.GetRequiredService<ISelectedState>();
+        var stateToPullFrom = (element == selectedState.SelectedElement && selectedState.SelectedStateSave != null)
+            ? selectedState.SelectedStateSave
+            : element.DefaultState;
 
-        VariableSave variableSave = stateToPullFrom.GetVariableRecursive(variable);
-        if (variableSave != null)
-        {
-            return variableSave.Value;
-        }
-        else
-        {
-            return null;
-        }
+        return element.GetValueFromThisOrBase(variable, stateToPullFrom);
     }
 
 }
