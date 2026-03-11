@@ -119,6 +119,18 @@ internal class EvaluatedSyntax
             }
 
         }
+        else if (syntaxNode is PrefixUnaryExpressionSyntax prefixUnary)
+        {
+            if (prefixUnary.OperatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ExclamationToken))
+            {
+                var operand = Evaluate(prefixUnary.Operand, stateForUnqualifiedRightSide);
+                if (operand?.Value is bool b)
+                {
+                    return FromSyntaxAndValue(syntaxNode, !b);
+                }
+            }
+            return null;
+        }
         else if (syntaxNode is LiteralExpressionSyntax literalExpression)
         {
             var value = literalExpression.Token.Value;

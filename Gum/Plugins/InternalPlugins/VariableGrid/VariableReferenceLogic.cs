@@ -27,14 +27,14 @@ public class VariableReferenceLogic
     #region Fields/Properties
 
     private readonly IGuiCommands _guiCommands;
-    private readonly WireframeCommands _wireframeCommands;
+    private readonly IWireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
 
     #endregion
 
-    public VariableReferenceLogic(IGuiCommands guiCommands, 
-        WireframeCommands wireframeCommands, 
+    public VariableReferenceLogic(IGuiCommands guiCommands,
+        IWireframeCommands wireframeCommands,
         IDialogService dialogService,
         IFileCommands fileCommands)
     {
@@ -403,7 +403,7 @@ public class VariableReferenceLogic
         }
         if (instanceElement != null)
         {
-            var variableOnInstance = instanceElement.GetVariableFromThisOrBase(unqualifiedVariableName);
+            var variableOnInstance = instanceElement.GetVariableFromThisOrBase(unqualifiedVariableName, forceDefault: true);
 
             List<TypedElementReference> references = null;
 

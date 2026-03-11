@@ -531,6 +531,14 @@ namespace GumRuntime
 
         private static object GetRightSideValue(StateSave stateSave, string right, string leftSideType)
         {
+            if (right.TrimStart().StartsWith("!"))
+            {
+                var withoutNot = right.TrimStart().Substring(1).Trim();
+                var originalValue = GetRightSideValue(stateSave, withoutNot, leftSideType);
+                if (originalValue is bool boolValue) return !boolValue;
+                return null;
+            }
+
             if(CustomEvaluateExpression != null)
             {
                 return CustomEvaluateExpression(stateSave, right, leftSideType);
