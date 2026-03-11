@@ -319,16 +319,16 @@ public class ListBox : ItemsControl, IInputReceiver
             if (selectedItemsCollection.Count > 0)
             {
                 var firstSelectedItem = selectedItemsCollection[0];
-                return Items.IndexOf(firstSelectedItem);
+                return Items?.IndexOf(firstSelectedItem) ?? -1;
             }
 
             return -1;
         }
         set
         {
-            if (value > -1 && value < Items.Count)
+            if (value > -1 && value < (Items?.Count ?? 0))
             {
-                var itemToSelect = Items[value];
+                var itemToSelect = Items![value];
 
                 // Clear SelectedItems and select the single item
                 _suppressSelectionSync = true;
@@ -956,7 +956,7 @@ public class ListBox : ItemsControl, IInputReceiver
         for (int i = 0; i < ListBoxItemsInternal.Count; i++)
         {
             var listBoxItem = ListBoxItemsInternal[i];
-            var item = i < Items.Count ? Items[i] : listBoxItem;
+            var item = i < (Items?.Count ?? 0) ? Items![i] : listBoxItem;
 
             bool shouldBeSelected = selectedItemsCollection.Contains(item);
 
@@ -1008,7 +1008,7 @@ public class ListBox : ItemsControl, IInputReceiver
                 {
                     foreach (var item in e.NewItems)
                     {
-                        var index = Items.IndexOf(item);
+                        var index = Items?.IndexOf(item) ?? -1;
                         if (index >= 0 && index < ListBoxItemsInternal.Count)
                         {
                             var listBoxItem = ListBoxItemsInternal[index];
@@ -1027,7 +1027,7 @@ public class ListBox : ItemsControl, IInputReceiver
                 {
                     foreach (var item in e.OldItems)
                     {
-                        var index = Items.IndexOf(item);
+                        var index = Items?.IndexOf(item) ?? -1;
                         if (index >= 0 && index < ListBoxItemsInternal.Count)
                         {
                             var listBoxItem = ListBoxItemsInternal[index];
@@ -1049,7 +1049,7 @@ public class ListBox : ItemsControl, IInputReceiver
                     if (listBoxItem.IsSelected)
                     {
                         listBoxItem.IsSelected = false;
-                        var item = i < Items.Count ? Items[i] : listBoxItem;
+                        var item = i < (Items?.Count ?? 0) ? Items![i] : listBoxItem;
                         selectionChangedArgs.RemovedItems.Add(item);
                     }
                 }
@@ -1060,7 +1060,7 @@ public class ListBox : ItemsControl, IInputReceiver
                 {
                     foreach (var item in e.OldItems)
                     {
-                        var index = Items.IndexOf(item);
+                        var index = Items?.IndexOf(item) ?? -1;
                         if (index >= 0 && index < ListBoxItemsInternal.Count)
                         {
                             var listBoxItem = ListBoxItemsInternal[index];
@@ -1076,7 +1076,7 @@ public class ListBox : ItemsControl, IInputReceiver
                 {
                     foreach (var item in e.NewItems)
                     {
-                        var index = Items.IndexOf(item);
+                        var index = Items?.IndexOf(item) ?? -1;
                         if (index >= 0 && index < ListBoxItemsInternal.Count)
                         {
                             var listBoxItem = ListBoxItemsInternal[index];

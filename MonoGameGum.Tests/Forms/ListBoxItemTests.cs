@@ -30,7 +30,7 @@ public class ListBoxItemTests : BaseTestClass
             return new InGameListBoxItemRuntime();
         });
 
-        listBox.Items.Add("1");
+        listBox.Items!.Add("1");
 
         listBox.ListBoxItems.Count.ShouldBe(1);
 
