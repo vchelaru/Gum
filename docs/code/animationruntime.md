@@ -266,7 +266,7 @@ protected override void Initialize()
 ## Playing Multiple Animations on the Same Instance
 
 {% hint style="warning" %}
-The following code requires December 2025 or newer of the Gum runtimes. You can also link against source to get the latest code.
+The following code requires December 2025 or newer of the Gum runtimes.
 {% endhint %}
 
 The `PlayAnimation` method performs the following logic:
