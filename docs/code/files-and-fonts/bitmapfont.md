@@ -19,6 +19,7 @@ Your files should be part of your Visual Studio project.
 Once the file has been added to the project, create a BitmapFont instance using the following code:
 
 ```csharp
+// Initialize
 var bitmapFont = new BitmapFont("Fonts/Font32Batang.fnt");
 
 var text = new TextRuntime();

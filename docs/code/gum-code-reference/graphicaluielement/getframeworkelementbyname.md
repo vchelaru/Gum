@@ -17,6 +17,7 @@ using MonoGameGum.Forms;
 The following code shows how to get a Button instance from a screen which is loaded from a Gum project.
 
 ```csharp
+// Initialize
 var project = GumUI.Initialize(this, "GumProject/GumProject.gumx");
 
 var screen = project.Screens.Find(item => item.Name == "MainMenu");
@@ -34,6 +35,7 @@ As mentioned above, Gum performs recursive searches for an item by name. If your
 The button can be obtained by qualified name as shown in the following code block:
 
 ```csharp
+// Initialize
 var button = screenRuntime.GetFrameworkElementByName<Controls.Button>("MenuContainer.PlayButton");
 button.Click += (_, _) => System.Diagnostics.Debug.WriteLine("Play was clicked");
 ```

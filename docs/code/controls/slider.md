@@ -9,6 +9,7 @@ The Slider control provides a way for the user to change a value by dragging the
 The following code creates a Slider which allows the user to select a value between 0 and 30, inclusive. The `IsSnapToTickEnabled` property results in the value being snapped to the `TickFrequency` value. In this case, the value is used to force whole numbers.
 
 ```csharp
+// Initialize
 var slider = new Slider();
 slider.AddToRoot();
 slider.X = 50;
@@ -33,12 +34,14 @@ Value is a `double` which represents the number displayed by the Slider. This va
 The following code directly sets Value:
 
 ```csharp
+// Initialize
 slider.Value = 25;
 ```
 
 Setting a value outside of its bounds forces the value to the bounds. For example, the following code results in a value of 50:
 
 ```csharp
+// Initialize
 slider.Minimum = 0;
 slider.Maximum = 50;
 slider.Value = 100; // value is set to 50
@@ -47,6 +50,7 @@ slider.Value = 100; // value is set to 50
 Value can also be changed by changing either Minimum or Maximum:
 
 ```csharp
+// Initialize
 slider.Minimum = 0;
 slider.Maximum = 100;
 

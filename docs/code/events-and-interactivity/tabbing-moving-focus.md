@@ -19,6 +19,7 @@ The keyboard can be used to interact with controls. Keyboards can be used to:
 To enable gamepad control, add the following code. This code only needs to run once, so add it to your game's Initialize or other code which runs at startup.
 
 ```csharp
+// Initialize
 GumUI.UseKeyboardDefaults();
 ```
 
@@ -27,6 +28,7 @@ Keep in mind that a control must first be explicitly set to receive keyboard inp
 For example, the following code gives a Button focus assuming MyButton is a valid button:
 
 ```csharp
+// Initialize
 MyButton.IsFocused = true;
 ```
 
@@ -35,6 +37,7 @@ Note that TextBox and PasswordBox automatically have IsFocused set to true when 
 Controls can be skipped when tabbed by setting `GamepadTabbingFocusBehavior`. For example the following code results in a button being skipped if it receives focus from tabbing:
 
 ```csharp
+// Initialize
 MyButton.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
 ```
 
@@ -53,6 +56,7 @@ To enable gamepad support in your game:
 For example, the following code enables gamepad control for a game assuming MyButton is a valid button:
 
 ```csharp
+// Initialize
 // The first gamepad:
 var gamepad = GumUI.Gamepads[0];
 // If this code is run multiple times then the gamepad
@@ -80,6 +84,7 @@ Gamepad navigation uses the following input for tabbing to the previous item:
 Left and right navigation can be enabled or disabled on a control by setting `IsUsingLeftAndRightGamepadDirectionsForNavigation` to false. For example the following code adds a button which can only be navigated from by pressing up/down on the gamepad:
 
 ```csharp
+// Initialize
 var button = new Button();
 myStackPanel.AddChild(button);
 button.IsUsingLeftAndRightGamepadDirectionsForNavigation = false;
@@ -94,6 +99,7 @@ The static `InteractiveGue.CurrentInputReceiver` returns the current item that h
 The following code shows how to display which button has focus with a label:
 
 ```csharp
+// Class scope
 Label label;
 
 protected override void Initialize()

@@ -11,6 +11,7 @@ MenuItem is a control which is added to Menu instances, or as a child of other M
 The following code shows how to create menu items. Notice that MenuItems can be added to a Menu, or as children of other MenuItems.
 
 ```csharp
+// Initialize
 var menu = new Menu();
 menu.AddToRoot();
 
@@ -47,6 +48,7 @@ Typically this property is set to true by clicking on a MenuItem, or by hovering
 The following code shows how to explicitly set IsSelected to true based on keyboard input:
 
 ```csharp
+// Update
 var keyboard = GumService.Default.Keyboard;
 
 if(keyboard.IsAltDown)

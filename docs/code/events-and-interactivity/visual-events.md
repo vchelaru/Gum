@@ -29,6 +29,7 @@ The following table provides examples on which events are raised when the user p
 Visual events can be subscribed to on any control. The following code shows how to subscribe to a `Visual.HoverOver` event which is raised every frame that the cursor is hovering over the `Button`.
 
 ```csharp
+// Initialize
 Button button = new();
 button.AddToRoot();
 button.Anchor(Anchor.Center);

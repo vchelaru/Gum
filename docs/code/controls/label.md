@@ -9,6 +9,7 @@ Label provides a way to display a string to the user. Unlike TextBox, Labels can
 The following code adds a Label instance to the root:
 
 ```csharp
+// Initialize
 var label = new Label();
 label.AddToRoot();
 label.Text = "This is a Gum label";

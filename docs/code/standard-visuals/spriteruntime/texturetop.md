@@ -9,6 +9,7 @@ TextureTop controls the top side of the source rectangle of a SpriteRuntime's Te
 The following code assigns a SpriteRuntime's TextureTop:
 
 ```csharp
+// Initialize
 // Assuming a Sprite's TextureAddress is set to Custom
 sprite.TextureTop = 32;
 ```

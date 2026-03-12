@@ -9,6 +9,7 @@ Gum raises events in response to the Cursor moving over the bounds of an object.
 By default the bounds of an object are based on its size. That is, by changing an object's Height or Width, its bounds update in response to this change. We can see this by creating a few buttons of various size in a StackPanel.
 
 ```csharp
+// Initialize
 StackPanel panel = new ();
 panel.AddToRoot();
 panel.Spacing = 10;
@@ -40,6 +41,7 @@ It might seem as if the background of the Button is deciding whether the Button 
 For example the following code creates two buttons. One button has a background that is smaller than the button, and one has a background that is larger - it spills over the edge.
 
 ```csharp
+// Initialize
 StackPanel panel = new ();
 panel.AddToRoot();
 panel.Spacing = 10;
@@ -75,6 +77,7 @@ By default, children controls only respond to cursor events if they are in their
 The following code shows a few buttons added to a Window. Notice that only the buttons contained within the bounds of its parent respond to the Cursor.
 
 ```csharp
+// Initialize
 Window window = new ();
 window.AddToRoot();
 window.Anchor(Anchor.Center);
@@ -99,6 +102,7 @@ We can force a parent to still raise events on its children even if the children
 Windows have an InnerPanel which is where children are added when AddChild is called. We can recursively set `RaiseChildrenEventsOutsideOfBounds` to `true` to make buttons react to Cursor actions even when the button bounds spill over the edge of the window as shown in the following code:
 
 ```csharp
+// Initialize
 Window parent = new ();
 parent.AddToRoot();
 parent.Anchor(Anchor.Center);

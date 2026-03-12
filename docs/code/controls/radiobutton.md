@@ -9,6 +9,7 @@ RadioButtons provide a way to display multiple mutually-exclusive options to the
 The following code creates RadioButtons for selecting difficulty:
 
 ```csharp
+// Initialize
 var stackPanel = new StackPanel();
 stackPanel.AddToRoot();
 

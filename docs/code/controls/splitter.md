@@ -9,6 +9,7 @@ The Splitter control can be used to control the size of two controls, usually in
 The following code creates two ListBoxes with a Splitter inbetween them. The Splitter can be used to adjust the ListBox sizes.
 
 ```csharp
+// Initialize
 var stackPanel = new StackPanel();
 stackPanel.Spacing = 1;
 stackPanel.AddToRoot();

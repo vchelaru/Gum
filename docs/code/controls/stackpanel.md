@@ -9,6 +9,7 @@ StackPanel is a container used to for controls which should stack vertically or 
 The following code shows how to add Button instances to a StackPanel. Notice that each button is automatically stacked vertically.
 
 ```csharp
+// Initialize
 var stackPanel = new StackPanel();
 stackPanel.AddToRoot();
 stackPanel.X = 50;
@@ -39,6 +40,7 @@ This means that as more children are added to a StackPanel, the StackPanel grows
 The following code creates a main StackPanel with two internal StackPanels. Each internal StackPanel contains a Button which can be used to add labels to the respective internal StackPanel.
 
 ```csharp
+// Initialize
 var mainStackPanel = new StackPanel();
 mainStackPanel.AddToRoot();
 mainStackPanel.X = 50;

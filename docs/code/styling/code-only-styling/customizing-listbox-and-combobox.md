@@ -11,6 +11,7 @@ This document shows how to customize `ListBoxItem` instances using template clas
 `ListBox` and `ComboBox` include a `VisualTemplate` property which can be used to customize `ListBoxItem` instances. The following code modifies the color of each `ListBoxItem`.
 
 ```csharp
+// Initialize
 var listBox = new ListBox();
 listBox.AddToRoot();
 listBox.Anchor(Anchor.Center);
@@ -36,6 +37,7 @@ for(int i = 0; i < 20; i++)
 `ComboBox` uses the same syntax as `ListBox` for its `VisualTemplate` since internally `ComboBoxes` create `ListBoxes` as their dropdown. The following code shows how to customize a `ComboBox's` dropdown items:
 
 ```csharp
+// Initialize
 var comboBox = new ComboBox();
 comboBox.AddToRoot();
 comboBox.Anchor(Anchor.Center);

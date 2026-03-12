@@ -9,6 +9,7 @@ Window is a forms control which can be moved and resized with the cursor. It can
 The following code creates a message box window.
 
 ```csharp
+// Initialize
 var window = new Window();
 window.Anchor(Gum.Wireframe.Anchor.Center);
 window.Width = 300;
@@ -60,6 +61,7 @@ Note that changing any of these values will not update the visual appearance of 
 The following code disabled resizing by setting ResizeMode:
 
 ```csharp
+// Initialize
 var window = new Window();
 window.AddToRoot();
 window.ResizeMode = ResizeMode.NoResize;
@@ -72,6 +74,7 @@ The following code shows how to force dock a window to the right side of the scr
 {% tabs %}
 {% tab title="Code-only" %}
 ```csharp
+// Initialize
 var window = new Window();
 window.AddToRoot();
 
@@ -96,6 +99,7 @@ windowVisual.BorderRightInstance.IsEnabled = false;
 
 {% tab title="General" %}
 ```csharp
+// Initialize
 var window = new Window();
 window.AddToRoot();
 
@@ -122,5 +126,6 @@ window.GetFrameworkElement("BorderRightInstance").IsEnabled = false;
 Each individual border and title bar instance can be independently disabled to customize the resize/movement behavior. For example, the following line is specifically responsible for disabling the ability to move the window:
 
 ```csharp
+// Initialize
 window.GetFrameworkElement("TitleBarInstance").IsEnabled = false;
 ```

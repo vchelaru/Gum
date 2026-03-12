@@ -13,6 +13,7 @@ RoundedRectangleRuntime requires using SkiaGum. For more information on platform
 The following code creates a RoundedRectangleRuntime:
 
 ```csharp
+// Initialize
 var roundedRectangle = new RoundedRectangleRuntime();
 MainStack.Children.Add(roundedRectangle);
 roundedRectangle.Width = 100;

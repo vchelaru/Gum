@@ -17,6 +17,7 @@ If an object is added to the `Items` property then the `ItemsControl` creates a 
 The following code creates ten `Labels` by adding integers to the `Items` property.
 
 ```csharp
+// Initialize
 var itemsControl = new ItemsControl();
 itemsControl.AddToRoot();
 for(int i = 0; i < 10; i++)

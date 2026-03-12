@@ -137,6 +137,7 @@ By default the Gum path is relative to your game's Content folder.
 If your Gum project is not part of the the folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumx`:
 
 ```csharp
+// Initialize
 GumUI.Initialize(
     this, "../GumProject/GumProject.gumx");
 ```
@@ -186,6 +187,7 @@ Note that calling ToGraphicalUiElement creates a [GraphicalUiElement](../../gum-
 You can get a reference to elements within the screen by calling `GetGraphicalUiElementByName`, as shown in the following code:
 
 ```csharp
+// Initialize
 // Load the gum project (see code above)
 var screenRuntime = ObjectFinder.Self.GumProject.Screens[0]
     .ToGraphicalUiElement();

@@ -63,12 +63,14 @@ Gum supports applying input from the keyboard and gamepads. By default the TextB
 To enable keyboard input, add the keyboard to the FrameworkElement.KeyboardsForUiControl list as shown in the following code block:
 
 ```csharp
+// Initialize
 FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
 ```
 
 To enable gamepad input, add the gamepad to the FrameworkElement.GamePadsForUiControl list as shown in the following code block:
 
 ```csharp
+// Initialize
 FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
 ```
 
@@ -81,6 +83,7 @@ Most games either support the main keyboard or no keyboard input. KeyboardsForUi
 Once keyboard and gamepads are added to their appropriate lists, focused forms controls receive input from these input devices. For example, the following code shows how to set focus on a `Button` which receives input from the keyboard.
 
 ```csharp
+// Initialize
 FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
 FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
 
@@ -107,6 +110,7 @@ If your game includes multiple controls then the user can tab between the contro
 The following code shows how to create multiple buttons. Once the first button is focused, the user can tab between the buttons to click each one.
 
 ```csharp
+// Initialize
 // Give some spacing between the buttons:
 mainPanel.Spacing = 6;
 
@@ -136,6 +140,7 @@ Tab navigation stops on every control which implements the `IInputReceiver` inte
 The following code shows that tabbing skips the labels and moves between each TextBox.
 
 ```csharp
+// Initialize
 var label = new Label();
 label.Text = "First Name:";
 mainPanel.AddChild(label);
@@ -170,6 +175,7 @@ mainPanel.AddChild(passwordBox);
 Tabbing can be performed to move focus between complex hierarchies. Gum performs a [depth first](https://en.wikipedia.org/wiki/Depth-first_search) search for controls which implement IInputReceiver. For example, the following code creates two groups of `RadioButton` instances, each inside their own `StackPanel`. Tabbing is able to move between the two groups automatically.
 
 ```csharp
+// Initialize
 var panel1 = new StackPanel();
 mainPanel.AddChild(panel1);
 for (int i = 0; i < 3; i++)
@@ -205,6 +211,7 @@ The keyboard's tab and shift+tab keys are used to move focus between forms contr
 For example, the following code adds the ability to tab by pressing the up and down arrows on the keyboard.
 
 ```csharp
+// Initialize
 FrameworkElement.TabKeyCombos.Add(new KeyCombo()
 {
     PushedKey = Microsoft.Xna.Framework.Input.Keys.Down
@@ -222,6 +229,7 @@ Adding a KeyCombo to either of these lists enables navigation with these keys gl
 Tabbing on a case by case basis can be performed by subscribing to individual control events as shown in the following code. Only the `Button` instances have left/right key tabbing while the `Slider` does not tab with left/right so that it can use the arrow keys to change its value:
 
 ```csharp
+// Initialize
 var slider = new Slider();
 mainPanel.AddChild(slider);
 

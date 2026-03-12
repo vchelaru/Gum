@@ -23,6 +23,7 @@ The following table shows which visuals and properties are available for each ty
 The following code shows how to access the Visual on a Button and TextBox to change the background color of each control:
 
 ```csharp
+// Initialize
 var button = new Button();
 button.AddToRoot();
 var buttonVisual = (ButtonVisual)button.Visual;
@@ -48,6 +49,7 @@ Each color property listed above ultimately sets the color of one of the parts o
 For example, the following code sets the `Background.Color` property on a `Button`, and this seems to change the color; however, the background color resets back when the user hovers over the button.
 
 ```csharp
+// Initialize
 var button = new Button();
 button.AddToRoot();
 button.Anchor(Anchor.Center);
@@ -88,6 +90,7 @@ The following table provides the names of the background objects for each contro
 The background for a control's Visual can be modified using the built-in background styles, as shown in the following code:
 
 ```csharp
+// Initialize
 var panel = new Panel();
 panel.AddToRoot();
 panel.Anchor(Anchor.Center);
@@ -139,6 +142,7 @@ To use this texture on a button, first save the texture in the folder where you 
 You can load this texture however you load other textures in your project, or you can use Gum's built-in content loading.
 
 ```csharp
+// Initialize
 var texture = GumService.Default.ContentLoader.LoadContent<Texture2D>(
     "input_outline_square.png");
 ```
@@ -146,6 +150,7 @@ var texture = GumService.Default.ContentLoader.LoadContent<Texture2D>(
 Once you have the texture loaded, you can use this on any control's background, a shown in the following code:
 
 ```csharp
+// Initialize
 var texture = GumService.Default.ContentLoader.LoadContent<Texture2D>(
     "input_outline_square.png");
 
@@ -162,7 +167,8 @@ visual.Background.TextureAddress = TextureAddress.EntireTexture;
 
 Notice that the button still uses its default coloring. This can be changed as shown in the following code:
 
-<pre class="language-csharp"><code class="lang-csharp">var button = new Button();
+<pre class="language-csharp"><code class="lang-csharp">// Initialize
+var button = new Button();
 button.AddToRoot();
 button.Anchor(Anchor.Center);
 

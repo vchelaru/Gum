@@ -9,6 +9,7 @@ Returns the height of the calling GraphicalUiElement in pixels. This can be used
 The following code gets the absolute height of a Text instance:
 
 ```csharp
+// Initialize
 // Assuming TextInstance is a valid instance:
 var absoluteHeight = TextInstance.GetAbsoluteHeight();
 ```

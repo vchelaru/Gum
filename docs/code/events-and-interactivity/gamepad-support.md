@@ -17,6 +17,7 @@ To enable gamepad support in your screen:
 For example, the following code enables gamepad control for a game assuming MyButton is a valid button:
 
 ```csharp
+// Initialize
 // The first gamepad:
 var gamepad = GumUI.Gamepads[0];
 // If this code is run multiple times then the gamepad
@@ -32,6 +33,7 @@ MyButton.IsFocused = true;
 By default a gamepad's A button can be used to select the focused control. If the focused control is a `Button` then pressing a gamepad's A button. The following example code shows how to detect clicks on a button which happen with the gamepad:
 
 ```csharp
+// Initialize
 FrameworkElement.GamePadsForUiControl.AddRange(
     GumUI.Gamepads);
 
@@ -50,6 +52,7 @@ Pressing the A button raises the focused button's Click event.
 Handling buttons specifically can be handled by subscribing to `ControllerButtonPushed`.
 
 ```csharp
+// Initialize
 TopButton.ControllerButtonPushed += (button) =>
     TextInstance.Text = $"Top button button pushed: {button} @ {DateTime.Now}";
 ```
@@ -59,6 +62,7 @@ TopButton.ControllerButtonPushed += (button) =>
 The Click event may be raised with InputEventArgs containing the gamepad. Remember, clicks can happen a variety of ways including the mouse or even being directly invoked, so you need to check whether the second parameter is of type `InputEventArgs` and if the device is a GamePad.
 
 ```csharp
+// Initialize
 TopButton.Click += HandleClick;
 
 // later, define the Click event:
@@ -80,6 +84,7 @@ private void HandleClick(object sender, EventArgs args)
 If additional flexibility is needed, gamepad events can be polled in an Update method.
 
 ```csharp
+// Update
 var gamepads = FrameworkElement.GamePadsForUiControl;
 for (int i = 0; i < gamepads.Count; i++)
 {

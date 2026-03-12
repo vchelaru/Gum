@@ -33,6 +33,7 @@ Gum separates its visuals from the main controls, so many of the visual properti
 For example, the following code is valid in WPF:
 
 ```csharp
+// Initialize
 // Assuming MyButton is a valid button:
 MyButton.Background = Brushes.LightBlue;
 ```
@@ -44,6 +45,7 @@ To style a button, your code must access the visual object, which requires makin
 If you are using a code-only setup, then you can cast the Visual property to the appropriate type to access its values. For example, the following code can be used to access and modify a Button's background:
 
 ```csharp
+// Initialize
 var buttonVisual = (ButtonVisual)MyButton.Visual;
 buttonVisual.Background.Color = Color.Red;
 ```
@@ -53,9 +55,10 @@ buttonVisual.Background.Color = Color.Red;
 Gum provides limited properties for its controls. Gum code allows changing position, size, dock, and anchor values. For example, the following would result in a button filling its parent and setting a margin of 4 pixels:
 
 ```csharp
+// Initialize
 MyButton.Dock(Dock.Fill);
 // Mulitply by 2 since we need 4 pixel margin on left and right:
-MyButton.Width = -4 * 2; 
+MyButton.Width = -4 * 2;
 // Also multiply by 2 since we need 4 pixel margin on top and bottom:
 MyButton.Height = -4 * 2;
 ```
@@ -63,6 +66,7 @@ MyButton.Height = -4 * 2;
 More advanced layout control must be performed through the `Visual` property:
 
 ```csharp
+// Initialize
 MyButton.Visual.XOrigin = HorizontalAlignment.Center;
 ```
 
@@ -75,6 +79,7 @@ Gum uses the property `BindingContext` rather than `DataContext`, similar to .NE
 The following code blocks compare the two approaches:
 
 ```csharp
+// Initialize
 // Gum:
 MyButton.BindingContext = MyViewModel;
 MyButton.SetBinding(nameof(Button.Text), nameof(MyViewModel.ButtonText));

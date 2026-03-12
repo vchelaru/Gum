@@ -23,6 +23,7 @@ By contrast, elements added to the PopupRoot are not modal - other elements can 
 The following code can be used to display a popup to either ModalRoot or PopupRoot depending on the `isModal` value.
 
 ```csharp
+// Initialize
 var popupButton = new Button();
 popupButton.AddToRoot();
 popupButton.Y = 50;
@@ -63,6 +64,7 @@ void ShowPopup(string text, bool isModal)
 Popups can also be created if your game is loading a Gum project. Since the GraphicalUiElement will be added to either ModalRoot or PopupRoot, it should not also be added to managers.
 
 ```csharp
+// Initialize
 var popupComponent = gumProject.Components.First(item => item.Name == "MyPopup")
     .ToGraphicalUiElement();
 
@@ -76,6 +78,7 @@ popupComponent.Parent = null;
 If you are going to add a Screen to a ModalRoot, then the Screen must have a renderable contained object so that it can have its Parent assigned. You can do this by creating a Screen runtime which inherits from ContainerBase, or you can optionally add an InvisibleRenderable as shown in the following code:
 
 ```csharp
+// Initialize
 var popupScreen = gumProject.Screens.First(item => item.Name == "MyScreen")
     .ToGraphicalUiElement();
 popupScreen.Parent = GumService.Default.ModalRoot;

@@ -19,6 +19,7 @@ If using code generation, these could be accessed by their names. If not using c
 For example, the following code could be used to set the children width:
 
 ```csharp
+// Initialize
 for(int i = 0; i < ExampleComponentInstance.Children.Count; i++)
 {
     var child = (GraphicalUiElement)ExampleComponentInstance.Children[i];
@@ -31,6 +32,7 @@ Of course, if you know the type of the children, you can cast the child to its s
 For example, the following code could be used to edit the children as ColoredRectangleRuntimes:
 
 ```csharp
+// Initialize
 for(int i = 0; i < ExampleComponentInstance.Children.Count; i++)
 {
     var child = (ColoredRectangleRuntime)ExampleComponentInstance.Children[i];

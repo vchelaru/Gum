@@ -24,6 +24,7 @@ Layouts are performed immediately after a value is set so that absolute values a
 For example, we can see that a `StackPanel's` `Visual` always reflects its size after every child is added.
 
 ```csharp
+// Initialize
 StackPanel stackPanel = new();
 stackPanel.AddToRoot();
 stackPanel.Anchor(Anchor.Center);
@@ -56,7 +57,8 @@ The number of layout calls which have been performed can be obtained from the `G
 
 We can modify the code above to display layout call counts when each label is created. Note that this code increases to create 20 Label instances:
 
-<pre class="language-csharp"><code class="lang-csharp">StackPanel stackPanel = new();
+<pre class="language-csharp"><code class="lang-csharp">// Initialize
+StackPanel stackPanel = new();
 stackPanel.AddToRoot();
 stackPanel.Anchor(Anchor.Center);
 
@@ -69,7 +71,7 @@ stackPanel.Anchor(Anchor.Center);
 
     float heightAfter = stackPanel.Visual.GetAbsoluteHeight();
 
-<strong>    label.Text = 
+<strong>    label.Text =
 </strong><strong>        $"Label {i + 1}, layout calls: {GraphicalUiElement.UpdateLayoutCallCount}";
 </strong>}
 </code></pre>
@@ -92,6 +94,7 @@ Based on the screenshot above, our project is performing over 1000 unnecessary l
 It's important to note that a single control may perform multiple layout calls when a single variable is changed. For example, consider the following code:
 
 ```csharp
+// Initialize
 Button button = new();
 button.AddToRoot();
 button.Anchor(Anchor.Center);
@@ -122,7 +125,8 @@ Therefore, changing the button's Width requires multiple visuals to update their
 
 We can improve the performance of our code by setting `GraphicalUiElement.IsAllLayoutSuspended` to true, then resuming layout it after the adds have finished:
 
-<pre class="language-csharp"><code class="lang-csharp"><strong>GraphicalUiElement.IsAllLayoutSuspended = true;
+<pre class="language-csharp"><code class="lang-csharp">// Initialize
+<strong>GraphicalUiElement.IsAllLayoutSuspended = true;
 </strong>
 StackPanel stackPanel = new();
 stackPanel.AddToRoot();
@@ -153,6 +157,7 @@ for(int i = 0; i &#x3C; 20; i++)
 States can be used to set multiple variables at once. Internally Gum automatically suppresses and resumes layouts when states are applied. The following code shows how to apply states to a button. Notice that fewer layout calls are performed compared to explicitly setting each value:
 
 ```csharp
+// Initialize
 Button button = new();
 button.AddToRoot();
 button.Anchor(Anchor.Center);

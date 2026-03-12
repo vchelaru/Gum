@@ -78,6 +78,38 @@ Do not use anchor-only links to other files (e.g., `[foo](other-file.md#section)
 - Avoid passive voice — prefer "Gum displays a label" over "a label is displayed."
 - Screenshots (`.png`) for single states; animated GIFs (`.gif`) for multi-step interactions. Use them liberally.
 
+## Code Sample Placement Comments
+
+Every `\`\`\`csharp` block must have a placement comment as its first line so readers and agents know where the code belongs.
+
+| Comment | Meaning |
+|---|---|
+| `// Initialize` | General initialization — could be `Initialize()`, `CustomInitialize()`, a constructor, etc. Use this by default. |
+| `// Update` | Code that runs each frame in the update loop. |
+| `// Draw` | Code that runs each frame in the draw loop. |
+| `// Class scope` | Field or property declarations at class level. |
+| `// In CustomInitialize` | Code specifically in a generated partial `CustomInitialize()` method. |
+
+**When to omit the comment:**
+- Tutorial pages that show a complete Game/app class — leave as-is.
+- Non-game types shown as their own type definition (ViewModels, enums, partial generated classes).
+- `using` statements — self-evident, no comment needed.
+
+**Mixed-scope snippets** (class members + method bodies): use `// Class scope` for the member declarations, then show the actual method block(s) with full signatures and indented bodies — no outer class wrapper:
+
+```csharp
+// Class scope
+int clickCount;
+
+protected override void Initialize()
+{
+    var button = new Button();
+    button.Click += (_, _) => clickCount++;
+}
+```
+
+**Platform-agnostic by default:** prefer `// Initialize` over MonoGame-specific phrasing unless the page is explicitly MonoGame-only. This supports Raylib and other runtimes.
+
 ## Gotchas
 
 - SUMMARY.md indentation is 2 spaces per level — wrong indentation breaks nesting visually in GitBook.

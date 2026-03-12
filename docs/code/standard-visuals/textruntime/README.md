@@ -17,6 +17,7 @@ TextRuntime corresponds to the Text type in the Gum UI tool, and shares all of t
 To create a TextRuntime, instantiate it and add it to root as shown in the following code:
 
 ```csharp
+// Initialize
 var textInstance = new TextRuntime();
 textInstance.Text = "Hello world";
 textInstance.AddToRoot();
@@ -27,6 +28,7 @@ textInstance.AddToRoot();
 TextRuntimes can be added as children of controls. For example, the following code shows how to create a TextRuntime and add it to a Stackpanel named MainStackPanel.
 
 ```csharp
+// Initialize
 var textInstance = new TextRuntime();
 textInstance.Text = "Hello world";
 MainStackPanel.AddChild(textInstance);
@@ -37,9 +39,10 @@ MainStackPanel.AddChild(textInstance);
 TextRuntimes are used in Gum Forms controls for all Text display. For example, Button instanes use a TextRuntime named TextInstace, as shown in the following code block:
 
 ```csharp
+// Initialize
 var button = new Button();
 var buttonVisual = (ButtonVisual)button.Visual;
 var textRuntime = buttonVisual.TextInstance;
-textRuntime.FontScale = 2; 
+textRuntime.FontScale = 2;
 // additional modifications can be made to textRuntime
 ```

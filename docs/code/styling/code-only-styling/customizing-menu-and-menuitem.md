@@ -7,6 +7,7 @@ MenuItems can contain sub-items. This page discusses how to customize individual
 ## Customizing MenuItem Text Color
 
 ```csharp
+// Initialize
 var menu = new Menu();
 menu.AddToRoot();
 
@@ -43,6 +44,7 @@ Each `MenuItem` can contain sub-items which appear when the user hovers over the
 The following code shows how to customize the `ScrollViewer` so it has a red background.
 
 ```csharp
+// Initialize
 var menu = new Menu();
 menu.AddToRoot();
 

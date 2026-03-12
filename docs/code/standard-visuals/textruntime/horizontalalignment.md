@@ -9,7 +9,8 @@ HorizontalAlignment controls the placement of the letters inside the Text's boun
 The following code shows how to right-align a TextRuntime in its parent:
 
 ```csharp
-textRuntime.HorizontalAlignment = 
+// Initialize
+textRuntime.HorizontalAlignment =
     RenderingLibrary.Graphics.HorizontalAlignment.Right;
 textRuntime.XOrigin = 
     RenderingLibrary.Graphics.HorizontalAlignment.Right;

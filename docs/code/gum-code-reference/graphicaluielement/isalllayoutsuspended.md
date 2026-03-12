@@ -11,6 +11,7 @@ This property is false by default, which mean layout is not suspended.
 By default changes to Gum immediately result in a layout. For example, consider the following code:
 
 ```csharp
+// Initialize
 var child = new ColoredRectangleRuntime();
 parent.Children.Add(child);
 
@@ -25,6 +26,7 @@ The parent in the code above may be sized according to its children. If so, any 
 However, typically a layout is not needed until all objects have been added and after all of their variables have been modified. Therefore, the following modifications could be made:
 
 ```csharp
+// Initialize
 GraphicalUiElement.IsAllLayoutSuspended = true;
 
 var child = new ColoredRectangleRuntime();
@@ -47,6 +49,7 @@ The UpdateLayoutCallCount property can be used to measure the number of UpdateLa
 For example, the followign code can be used to display layout calls:
 
 ```csharp
+// Initialize
 var stackingContainer = new ContainerRuntime();
 
 stackingContainer.Width = 200;
@@ -79,6 +82,7 @@ Number of layout calls: 15510
 We can add additional code to suppress layouts until we are finished adding all children:
 
 ```csharp
+// Initialize
 var stackingContainer = new ContainerRuntime();
 
 GraphicalUiElement.IsAllLayoutSuspended = true;// <---------New

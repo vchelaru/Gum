@@ -37,6 +37,7 @@ void HandleClick(object sender, EventArgs args)
 
 {% tab title="Lambda" %}
 ```csharp
+// Initialize
 var button = new Button();
 button.AddToRoot();
 button.X = 50;
@@ -63,6 +64,7 @@ button.Click += (_, _) =>
 Clicking can be performed programmatically by calling PerformClick. The following example shows how to click a button when the Enter key is pressed:
 
 ```csharp
+// Update
 var keyboard = FormsUtilities.Keyboard;
 if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
 {
@@ -73,5 +75,6 @@ if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
 Optionally you can pass the input device to the PerformClick method:
 
 ```csharp
+// Update
 button.PerformClick(keyboard);
 ```

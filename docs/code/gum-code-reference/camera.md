@@ -11,6 +11,7 @@ By default the Camera's position is at X=0 and Y=0, with the top-left of the Cam
 The following code shows how to move objects in response to the MouseState:
 
 ```csharp
+// Update
 var camera = SystemManagers.Default.Renderer.Camera;
 var mouseState = Mouse.GetState();
 camera.X = mouseState.X;
@@ -26,6 +27,7 @@ By default the Camera's Zoom value is set to 1. This Zoom value applies a global
 The following code shows how to zoom in and out.&#x20;
 
 ```csharp
+// Update
 var camera = SystemManagers.Default.Renderer.Camera;
 if(mouseState.LeftButton == ButtonState.Pressed)
 {
@@ -44,6 +46,7 @@ Note that the text that is positioned along the right and bottom does not update
 This can be fixed by also adjusting the canvas as shown in the following code. Note the following code assumes a default width of 800 and height of 600:
 
 ```csharp
+// Update
 var camera = SystemManagers.Default.Renderer.Camera;
 
 var needsRefresh = false;

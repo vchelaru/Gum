@@ -13,6 +13,7 @@ This document uses the ListBox control for consistency but most of the same code
 By default whenever an instance is added to the `ListBox` `Items` property, the `ListBox` creates a `ListBoxItem` internally to display the object. Notice that the following code adds integers to a `ListBox's` `Items` property which internally creates UI elements to represent the integers.
 
 ```csharp
+// Initialize
 var listBox = new ListBox();
 for (int i = 0; i < 10; i++)
 {
@@ -74,6 +75,7 @@ class WeaponDefinition
     public int Price { get; set; }
 }
 
+// Initialize
 // Later, create the ListBox:
 var listBox = new ListBox();
 listBox.Width = 400;

@@ -9,6 +9,7 @@ RemoveFromManagers removes the calling GraphicalUiElement from the SystemManager
 The following code shows how to add and remove a GraphicalUiElement.
 
 ```csharp
+// Initialize
 // You can create a GrahicalUiElement from an ElementSave.
 // Assume elementSave is valid, such as a Screen obtained from a Gum project
 var graphicalUiElement = elementSave.ToGraphicalUiElement();

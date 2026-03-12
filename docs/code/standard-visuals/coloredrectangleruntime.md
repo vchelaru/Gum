@@ -7,6 +7,7 @@ The ColoredRectangleRuntime object can be used to draw a solid (filled) rectangl
 The following code creates a ColoredRectangleRuntime:
 
 ```csharp
+// Initialize
 var coloredRectangleInstance = new ColoredRectangleRuntime();
 coloredRectangleInstance.Width = 120;
 coloredRectangleInstance.Height = 24;
