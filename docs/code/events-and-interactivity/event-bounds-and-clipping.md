@@ -127,3 +127,9 @@ for(int i = 0; i < 5; i++)
 
 <figure><img src="../../.gitbook/assets/19_14 33 00.gif" alt=""><figcaption><p>Children outside the bounds of a window responding to Cursor actions</p></figcaption></figure>
 
+## Event Bounds and Render Targets
+
+If you are using a render target to offset or scale your game, then the cursor hit tests may not align with the final-drawn render target. To address this, a TransformMatrix can be assigned to the Cursor.
+
+For more information and examples, see the [Cursor TransformMatrix](../gum-code-reference/cursor/transformmatrix.md) page.
+
