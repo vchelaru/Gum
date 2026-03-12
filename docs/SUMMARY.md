@@ -294,6 +294,7 @@
   * [Mixing Gum and 3D](code/ordering-layers-and-popups/mixing-gum-and-3d.md)
 * [Files and Fonts](code/files-and-fonts/README.md)
   * [File Loading](code/files-and-fonts/file-loading.md)
+  * [Troubleshooting File Loading](code/files-and-fonts/troubleshooting-file-loading.md)
   * [BitmapFont](code/files-and-fonts/bitmapfont.md)
   * [Content Using Embedded Resources](code/files-and-fonts/content-using-embedded-resources.md)
 * [Localization](code/localization.md)
