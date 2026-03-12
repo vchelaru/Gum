@@ -97,6 +97,18 @@ public class LoaderManager
         return ContentLoader.TryLoadContent<T>(contentName);
     }
 
+    public T TryGetCachedDisposable<T>(string contentName)
+    {
+        if (mCachedDisposables.ContainsKey(contentName))
+        {
+            return (T)mCachedDisposables[contentName];
+        }
+        else
+        {
+            return default(T);
+        }
+    }
+
     public IDisposable? GetDisposable(string name)
     {
         if (mCachedDisposables.ContainsKey(name))
