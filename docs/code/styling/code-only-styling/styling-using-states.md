@@ -35,6 +35,7 @@ To change how a control displays itself using states, the following steps must b
 The following code shows how to change a button so that its colors are explicitly set when highlighted, pressed, or in its default (Enabled) state.
 
 ```csharp
+// Initialize
 var button = new Button();
 button.AddToRoot();
 button.Anchor(Anchor.Center);
@@ -70,6 +71,7 @@ button.UpdateState();
 Although the default states only modify color, custom states are free to modify any property on the Visual. For example, the following code shows how to also modify the button's text size and increase the background size.
 
 ```csharp
+// Initialize
 var button = new Button();
 button.AddToRoot();
 button.Anchor(Anchor.Center);

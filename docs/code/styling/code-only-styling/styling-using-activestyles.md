@@ -15,6 +15,7 @@ Gum can be restyled using an `ActiveStyle` object. Changes to `ActiveStyle` resu
 Gum includes a `Styling` object which contains multiple color values for default styling. For example the `Primary` color can be changed using the following code:
 
 ```csharp
+// Initialize
 Styling.ActiveStyle.Colors.Primary = Color.DarkGreen;
 ```
 
@@ -126,6 +127,7 @@ By changing these colors, controls are created using the new colors:
 Styling only applies after it has been set. Controls which are created before styling is set do not automatically update to the new style. The following code shows how order can impact how styling is assigned:
 
 ```csharp
+// Initialize
 var stackPanel = new StackPanel();
 stackPanel.AddToRoot();
 stackPanel.Anchor(Anchor.Center);

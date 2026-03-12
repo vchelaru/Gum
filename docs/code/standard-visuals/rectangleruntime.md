@@ -7,6 +7,7 @@ The RectangleRuntime object can be used to draw a single-pixel-wide rectangle. I
 The following code creates a RectangleRuntime:
 
 ```csharp
+// Initialize
 var lineRectangle = new RectangleRuntime();
 lineRectangle.Width = 120;
 lineRectangle.Height = 24;

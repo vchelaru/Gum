@@ -13,6 +13,7 @@ VerticalScrollBarVisibility controls the visibility of the vertical scroll bar, 
 The default is Auto which means that the scroll bar only displays if necessary. This can be modified to change the ScrollBar behavior.
 
 ```csharp
+// Initialize
 var scrollViewer = new ScrollViewer();
 scrollViewer.AddToRoot();
 scrollViewer.X = 50;
@@ -46,6 +47,7 @@ button.Click += (_, _) =>
 The following code sets the visibility to never show:
 
 ```csharp
+// Initialize
 scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
 ```
 

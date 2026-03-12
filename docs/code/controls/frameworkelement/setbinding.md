@@ -29,6 +29,7 @@ SetBinding exists on both FrameworkElement (Forms objects) as well as GraphicalU
 The following code shows how to bind a TextBox's Text property to a ViewModel's CharacterName property:
 
 ```csharp
+// Initialize
 // Assuming the TextBox's BindingContext is of type PlayerViewModel, and
 // also assuming PlayerViewModel has a PlayerName property:
 TextBoxInstance.SetBinding(

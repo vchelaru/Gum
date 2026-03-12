@@ -79,6 +79,7 @@ Whether you are using code-only or the Gum tool, you must add the following line
 If using December 2025 or earlier:
 
 ```csharp
+// Initialize
 GumUI.Initialize(...);
 // Initialize ShapeRenderer after GumUI:
 ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
@@ -87,6 +88,7 @@ ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
 If using January 2026 or later:
 
 ```csharp
+// Initialize
 GumUI.Initialize(...);
 // Initialize ShapeRenderer after GumUI:
 ShapeRenderer.Self.Initialize();

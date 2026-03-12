@@ -9,6 +9,7 @@ RaiseChildrenEventsOutsideOfBounds determines whether InteractiveGue instances c
 By default RaiseChildrenEventsOutsideOfBounds is set to false. This means that all parents only raise events for their children if the cursor is within the bounds of the parent. For example, the following code adds a wide Button to a narrow StackLayout. The Button only receives clicks if the Cursor is within the bounds of the StackLayout.
 
 ```csharp
+// Initialize
 var mainPanel = new StackPanel();
 var visual = mainPanel.Visual;
 mainPanel.Visual.AddToRoot();
@@ -36,7 +37,8 @@ Notice that all events are disabled when outside of the bounds of mainPanel incl
 
 The code can be modified to enable clicks outside of the mainPanel:
 
-```diff
+```csharp
+// Initialize
 var mainPanel = new StackPanel();
 var visual = mainPanel.Visual;
 mainPanel.Visual.AddToRoot();
@@ -48,10 +50,9 @@ mainPanel.Visual.Width = 100;
 mainPanel.Visual.Height = 100;
 mainPanel.Visual.WidthUnits = DimensionUnitType.Absolute;
 mainPanel.Visual.HeightUnits = DimensionUnitType.Absolute;
-// If this is false, then no events are raised when the cursor is 
+// If this is false, then no events are raised when the cursor is
 // outside of the bounds of mainPanel
--mainPanel.Visual.RaiseChildrenEventsOutsideOfBounds = false;
-+mainPanel.Visual.RaiseChildrenEventsOutsideOfBounds = true;
+mainPanel.Visual.RaiseChildrenEventsOutsideOfBounds = true;
 
 var button = new Button();
 button.Visual.Width = 300;

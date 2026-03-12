@@ -17,7 +17,9 @@ The following example shows how to use `GetEventFailureReason`:
 ```csharp
 using MonoGameGum.Input; // Adds GetEventFailureReason extension method
 
+// Class scope
 Button button;
+
 protected override void Initialize()
 {
     GumUI.Initialize(this, DefaultVisualsVersion.V3);
@@ -51,7 +53,9 @@ Improved diagnostics can be provided if names are given to controls. For example
 
 <pre class="language-csharp"><code class="lang-csharp">using MonoGameGum.Input; // Adds GetEventFailureReason extension method
 
+// Class scope
 Button button;
+
 protected override void Initialize()
 {
     GumUI.Initialize(this, DefaultVisualsVersion.V3);
@@ -85,6 +89,7 @@ The argument ButtonVisual named TestButton is invisible so it will not raise eve
 You can check the Cursor.WindowOver property to see what the Cursor believes it is over. This can tell you if the Cursor is over the object that you expect it to be over. The following code can be used to output the CursorOver to Visual Studio's output window:
 
 ```csharp
+// Update
 string windowOver = "<null>";
 var cursor = GumUI.Cursor;
 if(cursor.WindowOver != null)

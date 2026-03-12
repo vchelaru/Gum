@@ -11,6 +11,7 @@ This document provides a deep dive into Gum stacking behavior, which is the defa
 The `StackPanel` provides stacking behavior for its children. The following code shows how to add stacked `Buttons` to a `StackPanel`:
 
 ```csharp
+// Initialize
 var stackPanel = new StackPanel();
 stackPanel.AddToRoot();
 stackPanel.Anchor(Gum.Wireframe.Anchor.Center);
@@ -31,7 +32,8 @@ StackPanel exposes some of the stack-related properties; however, we will be acc
 
 The StackSpacing variable can be used to add spacing between each stacked item, as shown in the following code:
 
-<pre class="language-csharp"><code class="lang-csharp">var stackPanel = new StackPanel();
+<pre class="language-csharp"><code class="lang-csharp">// Initialize
+var stackPanel = new StackPanel();
 stackPanel.AddToRoot();
 stackPanel.Anchor(Gum.Wireframe.Anchor.Center);
 
@@ -52,7 +54,8 @@ for(int i = 0; i &#x3C; 10; i++)
 
 We can change the stacking direction by changing the `ChildrenLayout` property as shown in the following code. Note that the `Buttons` have been made narrower so they all fit on screen.
 
-<pre class="language-csharp"><code class="lang-csharp">var stackPanel = new StackPanel();
+<pre class="language-csharp"><code class="lang-csharp">// Initialize
+var stackPanel = new StackPanel();
 stackPanel.AddToRoot();
 stackPanel.Anchor(Gum.Wireframe.Anchor.Center);
 
@@ -78,6 +81,7 @@ Stacked children can also be wrapped horizontally. Before wrapping can happen, t
 The following code shows how to set an absolute Height on the parent `StackPanel` and enable wrapping:
 
 ```csharp
+// Initialize
 var stackPanel = new StackPanel();
 stackPanel.AddToRoot();
 stackPanel.Anchor(Gum.Wireframe.Anchor.Center);
@@ -110,6 +114,7 @@ A `StackPanel's` `Visual` only provides two possible stacking modes:
 By combining Dock and ChildrenLayout, we can create bottom-up and right-to-left stacking. The following code shows how to create a bottom-up stack similar to a chat room or command line:
 
 ```csharp
+// Class scope
 StackPanel stackPanel;
 
 protected override void Initialize()
@@ -150,7 +155,9 @@ If children use a `Height Units` of `Ratio`, then they are sized according to th
 The following code creates buttons which all share the height of their parent StackPanel.
 
 ```csharp
+// Class scope
 StackPanel stackPanel;
+
 protected override void Initialize()
 {
     GumUI.Initialize(this, DefaultVisualsVersion.V3);

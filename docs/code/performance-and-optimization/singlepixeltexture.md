@@ -13,7 +13,8 @@ For performance reasons, the single pixel texture should be a PNG which also has
 To assign the SinglePixelTexture, you must access the Renderer. This can typically be accessed through the default SystemManagers as shown in the following code:
 
 ```csharp
-// assuming MainTexture is a texture that contains 
+// Initialize
+// assuming MainTexture is a texture that contains
 // the single pixel
 var renderer = SystemManagers.Default.Renderer;
 renderer.SinglePixelTexture = MainTexture;

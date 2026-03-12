@@ -11,6 +11,7 @@ By default the ScrollViewer's InnerPanel expands automatically in response to it
 ScrollViewers can contain other forms controls. The following code creates a ScrollViewer and adds buttons using the AddChild method.
 
 ```csharp
+// Initialize
 var scrollViewer = new ScrollViewer();
 scrollViewer.AddToRoot();
 scrollViewer.X = 50;
@@ -45,6 +46,7 @@ ScrollViewers can be scrolled by the user using by performing any of the followi
 The following code creates a ScrollViewer and adds ColoredRectangleRuntimes to the ScrollViewer. Any non-Forms visual object can be added to the ScrollViewer through AddChild.
 
 ```csharp
+// Initialize
 var scrollViewer = new ScrollViewer();
 scrollViewer.AddToRoot();
 scrollViewer.X = 50;
@@ -73,6 +75,7 @@ for (int i = 0; i < 30; i++)
 The following code shows how to wrap children in a ScrollViewer. It modifies the `InnerPanel` to change the layout type.
 
 ```csharp
+// Initialize
 var scrollViewer = new ScrollViewer();
 scrollViewer.Width = 310;
 scrollViewer.AddToRoot();

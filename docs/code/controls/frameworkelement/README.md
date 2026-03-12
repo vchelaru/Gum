@@ -18,6 +18,7 @@ FrameworkElements have a Visual property which is of type InteractiveGue. This V
 For example, to change the Width of a Button, the following code might be used.
 
 ```csharp
+// Initialize
 Button.Visual.Width = 100;
 ```
 
@@ -32,7 +33,8 @@ FrameworkElements offer a few common shortcut properties and methods for commonl
 
 For example, the following two blocks of code are identical:
 
-```
+```csharp
+// Initialize
 // Properties can be assigned through shortcuts...
 Label.Dock(Dock.Left);
 Label.X = 10;

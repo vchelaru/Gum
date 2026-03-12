@@ -287,6 +287,7 @@ To play multiple animations, we can keep track of each animation time and apply 
 The following code assumes that `Animation1` and `Animation2` are valid animations. The following code also assumes that `MyInstance` is a valid visual instance.
 
 ```csharp
+// Class scope
 double animation1Time = 0;
 double animation2Time = 0;
 

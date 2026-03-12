@@ -15,6 +15,7 @@ By default Gum objects render directly to the back buffer, so the alpha value of
 If you are rendering to a render target, then you may want to modify the blend state so that the object being renders adds to the alpha. The following code shows how to do this:
 
 ```csharp
+// Initialize
 // assuming MyColoredRectangle is a valid GraphicalUiElement
 MyColoredRectangle.BlendState = Gum.BlendState.NonPremultipliedAddAlpha;
 ```

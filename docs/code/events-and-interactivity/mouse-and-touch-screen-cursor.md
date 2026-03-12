@@ -39,6 +39,7 @@ The `Cursor` class reports information about what it is over which can be checke
 The `WindowOver` property returns the visual that the `Cursor` is over. The following code shows how to detect the Button that the Cursor is hovering over.
 
 ```csharp
+// Class scope
 Label label;
 
 protected override void Initialize()

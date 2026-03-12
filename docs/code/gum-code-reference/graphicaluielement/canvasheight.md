@@ -25,6 +25,7 @@ If you are not using Root (such as if you are using GumBatch), or if you need up
 If your game is not zoomed, then the CanvasWidth and CanvasHeight should match the graphicsDevice width and height as shown in the following code:
 
 ```csharp
+// Initialize
 // CanvasWidth and CanvasHeight are not tied to a particular
 // GraphicalUiElement instance - they are static values so we
 // use the GraphicalUiElement type.
@@ -35,6 +36,7 @@ GraphicalUiElement.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height;
 If responding to a window resize or zoom change you may need to also call UpdateLayout on any objects which do not have parents. Usually this is a single root object, as shown in the following code:
 
 ```csharp
+// Initialize
 RootInstance.UpdateLayout();
 ```
 
@@ -43,11 +45,15 @@ RootInstance.UpdateLayout();
 The following code can be used to update Root in response to resized windows:
 
 ```csharp
-if (GraphicsDevice.Viewport.Width != GraphicalUiElement.CanvasWidth ||
-    GraphicsDevice.Viewport.Height != GraphicalUiElement.CanvasHeight)
+protected override void Update(GameTime gameTime)
 {
-    GraphicalUiElement.CanvasWidth = GraphicsDevice.Viewport.Width;
-    GraphicalUiElement.CanvasHeight = GraphicsDevice.Viewport.Height;
-    Root?.UpdateLayout();
+    // KNI does not provide a resize event, so poll each frame:
+    if (GraphicsDevice.Viewport.Width != GraphicalUiElement.CanvasWidth ||
+        GraphicsDevice.Viewport.Height != GraphicalUiElement.CanvasHeight)
+    {
+        GraphicalUiElement.CanvasWidth = GraphicsDevice.Viewport.Width;
+        GraphicalUiElement.CanvasHeight = GraphicsDevice.Viewport.Height;
+        Root?.UpdateLayout();
+    }
 }
 ```

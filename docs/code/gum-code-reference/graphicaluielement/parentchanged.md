@@ -14,6 +14,7 @@ The ParentChanged event is invoked whenever an object's direct parent is changed
 The following code raises the ParentChanged event when children are added to a parent using a variety of methods:
 
 ```csharp
+// Initialize
 var child= new ContainerRuntime();
 child.ParentChanged += (_,_) => System.Diagnostics.Debug.WriteLine("parent changed");
 

@@ -9,6 +9,7 @@ The CircleRuntime object can be used to draw a single-pixel-wide circle. It can 
 The following code creates a CircleRuntime:
 
 ```csharp
+// Initialize
 var circle = new CircleRuntime();
 circle.Radius = 64;
 circle.Color = Color.Green; // This is a Microsoft.Xna.Framework.Color

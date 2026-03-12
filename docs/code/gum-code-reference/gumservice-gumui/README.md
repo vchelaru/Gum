@@ -25,6 +25,7 @@ GumService GumUI => GumService.Default;
 To load a Gum project, the following code can be used:
 
 ```csharp
+// Initialize
 GumUI.Initialize(this, "GumProject/GumProject.gumx");
 ```
 
@@ -39,16 +40,19 @@ If the Gum project is located outside of the Content folder, it can be loaded us
 1.  Prefix the path with "../". For example the following code can be used to load a Gum project located in a resources folder:&#x20;
 
     ```csharp
+    // Initialize
     GumUI.Initialize(this, "../resources/GumProject/GumProject.gumx");
     ```
 2.  Set FileManager.RelativeDirectory prior to loading:
 
     ```csharp
+    // Initialize
     FileManager.RelativeDirectory = "resources/";
     GumUI.Initialize(this, "GumProject/GumProject.gumx");
     ```
 3.  Set an absolute path. Be careful specifying an absolute path as this may prevent your project from running on other machines.
 
     ```csharp
+    // Initialize
     GumUI.Initialize(this, "c:/Gum/GumProject.gumx");
     ```

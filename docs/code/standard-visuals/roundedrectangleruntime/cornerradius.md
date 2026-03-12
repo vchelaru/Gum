@@ -9,6 +9,7 @@ CornerRadius controls a RoundedRectangleRuntime's corner radius. A value of 0 re
 CornerRadius can be assigned to set the radius of a RoundedRectangleRuntime. The following code assigns the CornerRadius to 20 pixels:
 
 ```csharp
+// Initialize
 var roundedRectangle = new RoundedRectangleRuntime();
 MainStack.Children.Add(roundedRectangle);
 roundedRectangle.Width = 100;
@@ -28,6 +29,7 @@ Each corner on a RoundedRectangleRuntime supports a custom radius.
 For example, the following creates a RoundedRectangleRuntime with 0 radii for the bottom corners, and a larger corner for top right.
 
 ```csharp
+// Initialize
 var roundedRectangle = new RoundedRectangleRuntime();
 MainStack.Children.Add(roundedRectangle);
 roundedRectangle.Width = 100;

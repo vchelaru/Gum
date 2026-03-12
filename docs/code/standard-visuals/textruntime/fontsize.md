@@ -20,5 +20,6 @@ The following platforms can dynamically create fonts:
 The following code shows how to assign FontSize. Note that the effective font produced is a combination of the current values of other font values.
 
 ```csharp
+// Initialize
 MyTextRuntime.FontSize = 18;
 ```

@@ -28,6 +28,7 @@ Scrolling speed is controlled by the following two variables:
 The following code creates two `ListBoxes` to compare the scrolling speed of each.
 
 ```csharp
+// Initialize
 var defaultListBox = new ListBox();
 defaultListBox.AddToRoot();
 defaultListBox.Anchor(Anchor.Center);

@@ -9,6 +9,7 @@ Gum provides multiple options to control how binding behaves using the `Binding`
 The fastest way to set up binding is to use the name of the properties being bound, as shown in the following code example:
 
 ```csharp
+// Initialize
 label.SetBinding(
     // UI property:
     nameof(label.Text),
@@ -20,6 +21,7 @@ label.SetBinding(
 The SetBinding call shown above is a shortcut for creating a `Binding` object. The following code is functionally identical:
 
 ```csharp
+// Initialize
 // Binding is created using the ViewModel property
 Binding binding = new(nameof(MyViewModel.LabelText));
 label.SetBinding(
@@ -31,6 +33,7 @@ label.SetBinding(
 The Binding instance can be modified by setting its properties on initializers. For example the following code shows how to update the binding to be one-way from the source (ViewModel) to the target (Label):
 
 ```csharp
+// Initialize
 Binding binding = new(nameof(MyViewModel.LabelText))
 {
     Mode = BindingMode.OneWay

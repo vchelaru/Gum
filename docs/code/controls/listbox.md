@@ -9,6 +9,7 @@ The ListBox control provides a scrollable list of ListBoxItems for displaying an
 The following code adds items to a ListBox when a button is clicked. When an item is added, `ScrollIntoView` is called so the item is shown.
 
 ```csharp
+// Initialize
 var listBox = new ListBox();
 listBox.AddToRoot();
 listBox.X = 50;
@@ -38,6 +39,7 @@ The Items property contains the data that is displayed by the ListBox. Whenever 
 Any object can be added to Items. By default, ToList is called on any added item. The following code shows how `int` andn `string` instances can be added and mixed in a ListBox:
 
 ```csharp
+// Initialize
 StackPanel stackPanel = new();
 stackPanel.AddToRoot();
 stackPanel.Anchor(Anchor.Center);
@@ -72,6 +74,7 @@ If a ListBoxItem is added directly to the Items property, then the ListBox uses 
 For example, the following code shows how to create ListBoxItems with custom colors:
 
 ```csharp
+// Initialize
 ListBox listBox = new();
 listBox.AddToRoot();
 listBox.Anchor(Anchor.Center);
@@ -101,18 +104,21 @@ ListBox items can be selected. The ListBox class provides a number of ways to wo
 Selection can be set by index:
 
 ```csharp
+// Initialize
 listBox.SelectedIndex = 0;
 ```
 
 Item can also be selected by the reference itself, assuming the referenced item is part of the list box:
 
 ```csharp
+// Initialize
 listBox.SelectedObject = "English";
 ```
 
 Whenever the selection changes, the SelectionChanged event is raised:
 
 ```csharp
+// Initialize
 listBox.SelectionChanged += (sender, args) =>
 {
     System.Diagnostics.Debug.WriteLine($"Selected item: {listBox.SelectedObject}");
@@ -126,6 +132,7 @@ The `DragDropReorderMode` controls whether the user can automatically reorder `L
 The following code creates a ListBox which supports reordering:
 
 ```csharp
+// Initialize
 var listBox = new ListBox();
 listBox.AddToRoot();
 
@@ -144,9 +151,10 @@ listBox.DragDropReorderMode = DragDropReorderMode.Immediate;
 The VisualTemplate lets you customize the type of ListBoxItem created for the ListBox. The following code shows how to assign a VisualTemplate to a runtime object named CustomListBoxItemRuntime:
 
 ```csharp
+// Initialize
 // assign the template before adding new list items
-listBox.VisualTemplate = 
-    new MonoGameGum.Forms.VisualTemplate(() => 
+listBox.VisualTemplate =
+    new MonoGameGum.Forms.VisualTemplate(() =>
         // do not create a forms object because this template will be
         // automatically added to a ListBoxItem by the ListBox:
         new CustomListBoxItemRuntime(tryCreateFormsObject:false));
@@ -155,9 +163,10 @@ listBox.VisualTemplate =
 The VisualTemplate class can optionally pass a parameter representing the item in the list box. This can be used to create different types of items based on the object added. For example the following code would compare the passed object as an integer to whether it is greater than 100 and returns a different item depending on this result:
 
 ```csharp
+// Initialize
 // assign the template before adding new list items
-listBox.VisualTemplate = 
-    new MonoGameGum.Forms.VisualTemplate((item) => 
+listBox.VisualTemplate =
+    new MonoGameGum.Forms.VisualTemplate((item) =>
     {
         // Be sure you know the type before casting:
         var itemAsInt = (int)item;
@@ -184,6 +193,7 @@ In other words, you are free to use the item for your game's needs; however, kee
 By default the ListBox calls ToString on each item. This is usually okay if you are dealing with primitive types. For example, the following code adds sequential integers to a ListBox:
 
 ```csharp
+// Initialize
 for (int i = 0; i < 20; i++)
 {
     listBox.Items.Add(i);
@@ -195,6 +205,7 @@ for (int i = 0; i < 20; i++)
 Often you may want to add a list of items which should not use their ToString method. For example you may have a list of IDs which represent weapons in a dictionary. The display can be customized by inheriting from ListBoxItem as shown in the following code:
 
 ```csharp
+// Initialize
 listBox.ListBoxItemFormsType = typeof(WeaponDisplayingListBoxItem);
 
 foreach(var weapon in weapons)

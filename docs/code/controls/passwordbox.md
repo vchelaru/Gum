@@ -11,6 +11,7 @@ PasswordBox does not support the CTRL+C copy hotkey.
 The following code adds a password box.
 
 ```csharp
+// Initialize
 var passwordBox = new PasswordBox();
 passwordBox.AddToRoot();
 passwordBox.X = 50;

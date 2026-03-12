@@ -13,6 +13,7 @@ This method can also be used on text which includes BBCode, returning an index a
 The following code shows how to use the Gum cursor to hover over a TextRuntime and display the character under the cursor.
 
 ```csharp
+// Class scope
 TextRuntime textRuntime;
 
 protected override void Initialize()

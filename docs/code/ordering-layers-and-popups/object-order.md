@@ -11,6 +11,7 @@ By default Gum draws and performs click checks by traversing the scene. When dra
 The following code shows the draw order by creating Button instances in a loop. The buttons added at the end draw on top of the first buttons.
 
 ```csharp
+// Initialize
 for(int i = 0; i < 10; i++)
 {
     Button button = new();
@@ -28,7 +29,8 @@ The order of items can be adjusted by reordering the Children property on the it
 
 The following code brings the clicked button to the front of all children:
 
-<pre class="language-csharp"><code class="lang-csharp">for(int i = 0; i &#x3C; 10; i++)
+<pre class="language-csharp"><code class="lang-csharp">// Initialize
+for(int i = 0; i &#x3C; 10; i++)
 {
     Button button = new();
     button.AddToRoot();

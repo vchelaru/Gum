@@ -11,6 +11,7 @@ The InnerPanelInstance must be modified to enable scrolling. By default InnerPan
 The easiest way to modify this is to change the InnerPanelInstance so it sizes itself according to its children both vertically and horizontally. This can be performed by calling Dock on the InnerPanelInstance as shown in the following code:
 
 ```csharp
+// Initialize
 var scrollViewer = new ScrollViewer();
 scrollViewer.AddToRoot();
 scrollViewer.Anchor(Anchor.Center);
@@ -40,6 +41,7 @@ for (int i = 0; i < 10; i++)
 The following code sets the visibility to never show:
 
 ```csharp
+// Initialize
 ScrollViewerInstance.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
 ```
 

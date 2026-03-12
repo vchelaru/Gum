@@ -9,6 +9,7 @@ TextureWidth controls the width side of the source rectangle of a SpriteRuntime'
 The following code assigns a SpriteRuntime's TextureWidth:
 
 ```csharp
+// Initialize
 // Assuming a Sprite's TextureAddress is set to Custom
 sprite.TextureWidth = 32;
 ```
