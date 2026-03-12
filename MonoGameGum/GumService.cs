@@ -177,6 +177,17 @@ public class GumService
         DeferredQueue = new DeferredActionQueue();
     }
 
+    /// <summary>
+    /// Marks GumService as initialized without requiring a graphics device.
+    /// Intended for use in unit tests only.
+    /// </summary>
+    public void InitializeForTesting()
+    {
+        if (!IsInitialized)
+        {
+            IsInitialized = true;
+        }
+    }
 
 #if XNALIKE
     /// <summary>

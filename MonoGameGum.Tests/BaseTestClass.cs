@@ -16,6 +16,7 @@ public class BaseTestClass : IDisposable
 
     public BaseTestClass()
     {
+        GumService.Default.InitializeForTesting();
         CreateMockCursor();
     }
 
