@@ -177,6 +177,17 @@ public class GumService
         DeferredQueue = new DeferredActionQueue();
     }
 
+    /// <summary>
+    /// Marks GumService as initialized without requiring a graphics device.
+    /// Intended for use in unit tests only.
+    /// </summary>
+    public void InitializeForTesting()
+    {
+        if (!IsInitialized)
+        {
+            IsInitialized = true;
+        }
+    }
 
 #if XNALIKE
     /// <summary>
@@ -503,6 +514,11 @@ public static class GraphicalUiElementExtensionMethods
 {
     public static void AddToRoot(this GraphicalUiElement element)
     {
+        if(GumService.Default.IsInitialized == false)
+        {
+            throw new InvalidOperationException("Cannot call AddToRoot because GumService.Default " +
+                "is not initialized - did you remember to initialize Gum first (GumUI.Initialize)?");
+        }
         GumService.Default.Root.Children.Add(element);
     }
 
@@ -520,6 +536,11 @@ public static class GraphicalUiElementExtensionMethods
 
     public static void AddToRoot(this FrameworkElement element)
     {
+        if (GumService.Default.IsInitialized == false)
+        {
+            throw new InvalidOperationException("Cannot call AddToRoot because GumService.Default " +
+                "is not initialized - did you remember to initialize Gum first (GumUI.Initialize)?");
+        }
         GumService.Default.Root.Children.Add(element.Visual);
     }
 }
