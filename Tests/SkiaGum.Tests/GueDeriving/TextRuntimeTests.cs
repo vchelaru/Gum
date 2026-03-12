@@ -1,11 +1,21 @@
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using SkiaGum;
 using SkiaGum.GueDeriving;
 
 namespace SkiaGum.Tests.GueDeriving;
 
 public class TextRuntimeTests
 {
+    public TextRuntimeTests()
+    {
+        // Wire up the SkiaGum custom property setter so SetProperty routes correctly.
+        // Normally done by SystemManagers.Initialize(), but we don't need the full
+        // rendering pipeline for these unit tests.
+        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+    }
+
     #region FontFamily
 
     [Fact]
@@ -77,6 +87,27 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region SetTextNoTranslate
+
+    [Fact]
+    public void SetTextNoTranslate_ShouldUpdateTextProperty()
+    {
+        TextRuntime sut = new();
+        sut.SetTextNoTranslate("Translated Text");
+        sut.Text.ShouldBe("Translated Text");
+    }
+
+    [Fact]
+    public void SetTextNoTranslate_WhenNull_ShouldSetTextToNull()
+    {
+        TextRuntime sut = new();
+        sut.Text = "Some text";
+        sut.SetTextNoTranslate(null);
+        sut.Text.ShouldBeNull();
+    }
+
+    #endregion
+
     #region TextOverflowHorizontalMode
 
     [Fact]
@@ -101,6 +132,48 @@ public class TextRuntimeTests
         sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.EllipsisLetter;
         sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.TruncateWord;
         sut.TextOverflowHorizontalMode.ShouldBe(TextOverflowHorizontalMode.TruncateWord);
+    }
+
+    #endregion
+
+    #region UseFontSmoothing
+
+    [Fact]
+    public void UseFontSmoothing_ShouldDefaultToTrue()
+    {
+        TextRuntime sut = new();
+        sut.UseFontSmoothing.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UseFontSmoothing_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.UseFontSmoothing = false;
+        sut.UseFontSmoothing.ShouldBeFalse();
+    }
+
+    #endregion
+
+    #region Defaults
+
+    [Fact]
+    public void DefaultFont_ShouldBeArial()
+    {
+        TextRuntime.DefaultFont.ShouldBe("Arial");
+    }
+
+    [Fact]
+    public void DefaultFontSize_ShouldBe18()
+    {
+        TextRuntime.DefaultFontSize.ShouldBe(18);
+    }
+
+    [Fact]
+    public void CustomFontFile_ShouldBeNullByDefault()
+    {
+        TextRuntime sut = new();
+        sut.CustomFontFile.ShouldBeNull();
     }
 
     #endregion

@@ -522,7 +522,7 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     // We should phase this out, so not adding it to raylib. Instead, add to root
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer:null);
 #endif

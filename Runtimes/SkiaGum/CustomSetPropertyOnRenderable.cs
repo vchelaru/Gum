@@ -439,7 +439,7 @@ public class CustomSetPropertyOnRenderable
             handled = true;
         }
 
-        if (propertyName == "Text")
+        if (propertyName == "Text" || propertyName == "TextNoTranslate")
         {
             if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||
                 // If height is relative to children, it could be in a stack

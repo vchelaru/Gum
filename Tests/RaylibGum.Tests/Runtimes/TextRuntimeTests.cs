@@ -190,6 +190,46 @@ public class TextRuntimeTests : BaseTestClass
 
     #endregion
 
+    #region SetTextNoTranslate
+
+    [Fact]
+    public void SetTextNoTranslate_ShouldUpdateTextProperty()
+    {
+        TextRuntime sut = new();
+        sut.SetTextNoTranslate("Translated Text");
+        sut.Text.ShouldBe("Translated Text");
+    }
+
+    [Fact]
+    public void SetTextNoTranslate_WhenNull_ShouldSetTextToNull()
+    {
+        TextRuntime sut = new();
+        sut.Text = "Some text";
+        sut.SetTextNoTranslate(null);
+        sut.Text.ShouldBeNull();
+    }
+
+    #endregion
+
+    #region UseFontSmoothing
+
+    [Fact]
+    public void UseFontSmoothing_ShouldDefaultToTrue()
+    {
+        TextRuntime sut = new();
+        sut.UseFontSmoothing.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UseFontSmoothing_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.UseFontSmoothing = false;
+        sut.UseFontSmoothing.ShouldBeFalse();
+    }
+
+    #endregion
+
     #region WrappedText
 
     [Fact]

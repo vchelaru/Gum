@@ -187,6 +187,39 @@ public class TextRuntime : InteractiveGue
     }
 #endif
 
+#if !RAYLIB && !SKIA
+    public BitmapFont BitmapFont
+    {
+        get => ContainedText.BitmapFont;
+        set
+        {
+            if (value != BitmapFont)
+            {
+                ContainedText.BitmapFont = value;
+                NotifyPropertyChanged();
+                UpdateLayout();
+            }
+        }
+    }
+#endif
+
+#if RAYLIB || XNALIKE
+    /// <summary>
+    /// A multiplier used when rendering the text. The default value is 1.0.
+    /// </summary>
+    /// <remarks>
+    /// Setting this value to a value other than 1 scales the text accordingly. This is
+    /// a scalue value applied to the existing font, so a value larger than 1 can result
+    /// in the font appearing pixellated.
+    ///
+    /// Since this value does not affect the underlying Font, it can be changed without
+    /// requiring a dedicated font asset.
+    /// </remarks>
+#else
+    /// <summary>
+    /// A multiplier used when rendering the text. The default value is 1.0.
+    /// </summary>
+#endif
     public float FontScale
     {
         get => ContainedText.FontScale;
@@ -200,6 +233,22 @@ public class TextRuntime : InteractiveGue
             }
         }
     }
+
+#if !RAYLIB
+    public float LineHeightMultiplier
+    {
+        get => ContainedText.LineHeightMultiplier;
+        set
+        {
+            if (value != LineHeightMultiplier)
+            {
+                ContainedText.LineHeightMultiplier = value;
+                NotifyPropertyChanged();
+                UpdateLayout();
+            }
+        }
+    }
+#endif
 
     bool useCustomFont;
     /// <summary>
@@ -300,6 +349,21 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+#if !RAYLIB
+    /// <summary>
+    /// Gets or sets the text rendering position mode to use for the contained text, overriding the default behavior if
+    /// specified.
+    /// </summary>
+    /// <remarks>Set this property to control how text positioning is handled during rendering. If the value
+    /// is <see langword="null"/>, the default rendering position mode is used. Changing this property affects only the
+    /// contained text and does not impact other elements.</remarks>
+    public TextRenderingPositionMode? TextRenderingPositionMode
+    {
+        get => ContainedText.OverrideTextRenderingPositionMode;
+        set => ContainedText.OverrideTextRenderingPositionMode = value;
+    }
+#endif
+
     /// <summary>
     /// Gets or sets the raw text content displayed by the control. This is the value before line wrapping and bbcode parsing has been applied.
     /// </summary>
@@ -381,6 +445,14 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
 
+#if !RAYLIB
+    public OverlapDirection OverlapDirection
+    {
+        get => ContainedText.OverlapDirection;
+        set => ContainedText.OverlapDirection = value;
+    }
+#endif
+
     #region Defaults
 
     // todo - add more here
@@ -420,6 +492,9 @@ public class TextRuntime : InteractiveGue
         {
             this.SuspendLayout();
             var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
+#if !RAYLIB
+            textRenderable.RenderBoundary = false;
+#endif
             mContainedText = textRenderable;
 
             SetContainedObject(textRenderable);
@@ -451,11 +526,12 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     // We should phase this out, so not adding it to raylib. Instead, add to root
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer:null);
 #endif
 
+#if !RAYLIB
     /// <summary>
     /// Returns the index of the character at the specified screen position. This returns the index
     /// within the WrappedText, so to index in, you need to loop through each line.
@@ -464,4 +540,5 @@ public class TextRuntime : InteractiveGue
     /// <param name="screenY">The screen y position, usually obtained by Cursor.YRespectingGumZoomAndBounds()</param>
     /// <returns>The index in the WrappedText</returns>
     public int GetCharacterIndexAtPosition(float screenX, float screenY) => ContainedText.GetCharacterIndexAtPosition(screenX, screenY);
+#endif
 }
