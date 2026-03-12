@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("MonoGameGum.Tests")]
+[assembly: InternalsVisibleTo("MonoGameGum.Tests.V2")]
 
 #if FRB
 namespace FlatRedBall.Forms.Data;
