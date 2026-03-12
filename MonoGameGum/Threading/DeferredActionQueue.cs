@@ -19,6 +19,14 @@ public class DeferredActionQueue
         }
     }
 
+    public void Clear()
+    {
+        lock (_lock)
+        {
+            _actions.Clear();
+        }
+    }
+
     public void ProcessPending()
     {
         Queue<Action> toProcess;

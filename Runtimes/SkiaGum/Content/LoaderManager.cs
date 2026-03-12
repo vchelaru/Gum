@@ -46,6 +46,9 @@ public class LoaderManager
     //bool mCacheTextures = false;
     bool mCacheTextures = true;
     Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>(StringComparer.OrdinalIgnoreCase);
+
+    public IReadOnlyDictionary<string, IDisposable> CachedDisposables => mCachedDisposables;
+
     public bool CacheTextures
     {
         get { return mCacheTextures; }

@@ -415,6 +415,103 @@ public class GumService
 #endif
     #endregion
 
+    #region Uninitialize
+
+    /// <summary>
+    /// Tears down this GumService instance, releasing GPU resources, clearing registrations,
+    /// and resetting all static state so that Initialize can be called again (e.g., between
+    /// test runs or after a scene transition that requires full teardown).
+    /// </summary>
+    public void Uninitialize()
+    {
+#if !IOS && !ANDROID
+        _hotReloadManager?.Stop();
+        _hotReloadManager = null;
+#endif
+
+        DeferredQueue.Clear();
+
+        InteractiveGue.CurrentInputReceiver = null;
+
+        Root.Children.Clear();
+        Root.RemoveFromManagers();
+
+        if (FrameworkElement.PopupRoot != null)
+        {
+            FrameworkElement.PopupRoot.Children.Clear();
+            FrameworkElement.PopupRoot.RemoveFromManagers();
+            FrameworkElement.PopupRoot = null;
+        }
+
+        if (FrameworkElement.ModalRoot != null)
+        {
+            FrameworkElement.ModalRoot.Children.Clear();
+            FrameworkElement.ModalRoot.RemoveFromManagers();
+            FrameworkElement.ModalRoot = null;
+        }
+
+        FrameworkElement.KeyboardsForUiControl.Clear();
+        FrameworkElement.GamePadsForUiControl.Clear();
+        FrameworkElement.MainCursor = null;
+        FrameworkElement.MainKeyboard = null;
+
+        FormsUtilities.Uninitialize();
+
+        ElementSaveExtensions.ClearRegistrations();
+
+        FrameworkElement.DefaultFormsTemplates.Clear();
+        FrameworkElement.DefaultFormsComponents.Clear();
+
+        ObjectFinder.Self.GumProjectSave = null;
+
+        LoaderManager.Self.DisposeAndClear();
+
+#if XNALIKE
+        Text.DefaultBitmapFont = null;
+        Text.DefaultFont = null;
+
+        if (Sprite.InvalidTexture != null)
+        {
+            Sprite.InvalidTexture.Dispose();
+            Sprite.InvalidTexture = null;
+        }
+
+        if (_systemManagers != null)
+        {
+            _systemManagers.Renderer.Uninitialize();
+        }
+
+        Gum.Forms.DefaultVisuals.Styling.ActiveStyle = null;
+        Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null;
+#endif
+
+        GraphicalUiElement.SetPropertyOnRenderable = null!;
+        GraphicalUiElement.UpdateFontFromProperties = null;
+        GraphicalUiElement.AddRenderableToManagers = null;
+        GraphicalUiElement.RemoveRenderableFromManagers = null;
+
+        GraphicalUiElement.CanvasWidth = 0;
+        GraphicalUiElement.CanvasHeight = 0;
+
+        SystemManagers.Default = null;
+        ISystemManagers.Default = null;
+
+        // Only reset RelativeDirectory if a project was loaded (it gets set to the project directory).
+        // Reset to the default value expected before initialization.
+        FileManager.RelativeDirectory = "Content/";
+
+        IsInitialized = false;
+
+        _systemManagers = null;
+#if XNALIKE
+        _game = null;
+#endif
+
+        _default = null;
+    }
+
+    #endregion
+
     #region Update
 
 #if XNALIKE

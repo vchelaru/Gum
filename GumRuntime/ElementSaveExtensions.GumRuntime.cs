@@ -53,6 +53,15 @@ namespace GumRuntime
             TemplateFunc = templateFunc;
         }
 
+        public static void ClearRegistrations()
+        {
+            mElementToGueTypes.Clear();
+            mElementToGueTypeFuncs.Clear();
+            TemplateFunc = null;
+            CustomCreateGraphicalComponentFunc = null;
+            CustomEvaluateExpression = null;
+        }
+
 
 
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string? genericType = null)
