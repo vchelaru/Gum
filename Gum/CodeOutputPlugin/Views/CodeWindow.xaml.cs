@@ -180,10 +180,11 @@ public partial class CodeWindow : UserControl
             {
                 return _projectState.ProjectDirectory;
             }
-            else if (projectRoot != null && FileManager.IsRelative(projectRoot))
-            {
-                return FileManager.RemoveDotDotSlash(_projectState.ProjectDirectory + projectRoot);
-            }
+            // absolute file paths confuse people, let's leave it relative:
+            //else if (projectRoot != null && FileManager.IsRelative(projectRoot))
+            //{
+            //    return FileManager.RemoveDotDotSlash(_projectState.ProjectDirectory + projectRoot);
+            //}
             else
             {
                 return projectRoot;
