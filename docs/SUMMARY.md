@@ -366,3 +366,12 @@
   * [Layered Forms](code/monogame/layered-forms.md)
   * [Ordering](code/monogame/ordering.md)
   * [Known Issues](code/monogame/known-issues.md)
+
+## CLI
+
+* [GumCli](cli/README.md)
+  * [new](cli/new.md)
+  * [check](cli/check.md)
+  * [codegen-init](cli/codegen-init.md)
+  * [codegen](cli/codegen.md)
+  * [fonts](cli/fonts.md)
