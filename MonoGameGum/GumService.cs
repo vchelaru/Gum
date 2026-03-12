@@ -503,6 +503,11 @@ public static class GraphicalUiElementExtensionMethods
 {
     public static void AddToRoot(this GraphicalUiElement element)
     {
+        if(GumService.Default.IsInitialized == false)
+        {
+            throw new InvalidOperationException("Cannot call AddToRoot because GumService.Default " +
+                "is not initialized - did you remember to initialize Gum first (GumUI.Initialize)?");
+        }
         GumService.Default.Root.Children.Add(element);
     }
 
