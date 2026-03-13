@@ -1,4 +1,4 @@
-# Introduction to Gum Layout
+﻿# Introduction to Gum Layout
 
 Gum's layout engine can be used to create layouts to dock, anchor, size, and position objects responsively. This section provides an introduction to the layout engine which is used for all types of controls.
 
@@ -75,6 +75,6 @@ child.Height = 80;
 child.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 child.Parent = container;
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACq1SXUvrQBB9L_Q_DH1SuMYqXLgoPlTFD1CUWrFCX9ZkkixuZsPsxnoV_7uTrU0T9MGvl5A9M-fsSc557vcABqfuuCoGO-C5wj8B0aS9VkY_ocCDzU0YQWzJK03I4AROwFvIlUnB5wguZkSCuU58DooS2B4Oy0fwypgZPShukfeAcA4Hy_O4Iq8LXFvfnVGzFE1l7e-wA92-h6bX4tIJLu4jUXxA9sguOkaZKlNPJ_9LjC71Ixp3xLa4KsRRV_YXNG7CZ7-zF-C2_KHyqhZz0aF8MjltaaWPHKMwM7xILxXLa0frBHWWe9GRH_vB4LO3jO6cNZXHjsQoSSZ2bK0PIcxokXauTQKlIjRQaqJF4HXWHJxgkiHYFOp7y-D3LejAW4ZsLGMyxtgrygx2sq73orAh2-c6Zuts6qMpqeiIVYFzy_eLuTyZUmPnyPumwoZcl2Rja9ic64a0jl9vx5nibCX_g2YE_rIV_1aWvtSIdlaB3XSgpfj9-AN90TRhNm3YHfR7L_3eK7OSh3sYBAAA" target="_blank">Try on XnaFiddle.NET</a>
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACq1SXUvrQBB9L_Q_DH1SuMYqXLgoPlTFD1CUWrFCX9ZkkixuZsPsxnoV_7uTrU0T9MGvl5A9M-fsSc557vcABqfuuCoGO-C5wj8B0aS9VkY_ocCDzU0YQWzJK03I4AROwFvIlUnB5wguZkSCuU58DooS2B4Oy0fwypgZPShukfeAcA4Hy_O4Iq8LXFvfnVGzFE1l7e-wA92-h6bX4tIJLu4jUXxA9sguOkaZKlNPJ_9LjC71Ixp3xLa4KsRRV_YXNG7CZ7-zF-C2_KHyqhZz0aF8MjltaaWPHKMwM7xILxXLa0frBHWWe9GRH_vB4LO3jO6cNZXHjsQoSSZ2bK0PIcxokXauTQKlIjRQaqJF4HXWHJxgkiHYFOp7y-D3LejAW4ZsLGMyxtgrygx2sq73orAh2-c6Zuts6qMpqeiIVYFzy_eLuTyZUmPnyPumwoZcl2Rja9ic64a0jl9vx5nibCX_g2YE_rIV_1aWvtSIdlaB3XSgpfj9-AN90TRhNm3YHfR7L_3eK7OSh3sYBAAA" width="600" height="400"></iframe>
 
 Setting `child.X = -10` with `XUnits = PixelsFromLarge` places the child 10 pixels inward from the right edge of `container`. When `container` resizes (because it is `PercentageOfParent`), the child automatically stays 10 pixels from the right.

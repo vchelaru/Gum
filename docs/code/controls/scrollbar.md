@@ -1,4 +1,4 @@
-# ScrollBar
+﻿# ScrollBar
 
 ## Introduction
 
@@ -41,7 +41,7 @@ scrollBar.Value = 0;
 scrollBar.ValueChanged += (_, _) =>
     System.Diagnostics.Debug.WriteLine($"ScrollBar value: {scrollBar.Value}");
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm3QW0vDMBgG4PtC_8NH8KLFUebQm40K6kCFeWPFKRRGXD_SD3KANJmHsf9u6qGQaq6S582bhOzTBIDddtdesTk463HyJaTJEZf0gYHZjlvottZIeRlmJWh8hep3neWLWg9pcdE0D-beGDfyp9A7m0b0_JfW1Lg28Ow04hsk0brep_H-u_BQ5VVIRs7ffvxk1KgUl_Kq5Vpgf32UrbgVOGSzuPjIpe_5H_2uNHBcQraZwCaH8rzWEEb13jlUxZK40KZztO2KJb54UawtOVyRxuyoZsNfwq4_bg770QWHmuULliaHNPkE38k-YLIBAAA" target="_blank">Try on XnaFiddle.NET</a>
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACm3QW0vDMBgG4PtC_8NH8KLFUebQm40K6kCFeWPFKRRGXD_SD3KANJmHsf9u6qGQaq6S582bhOzTBIDddtdesTk463HyJaTJEZf0gYHZjlvottZIeRlmJWh8hep3neWLWg9pcdE0D-beGDfyp9A7m0b0_JfW1Lg28Ow04hsk0brep_H-u_BQ5VVIRs7ffvxk1KgUl_Kq5Vpgf32UrbgVOGSzuPjIpe_5H_2uNHBcQraZwCaH8rzWEEb13jlUxZK40KZztO2KJb54UawtOVyRxuyoZsNfwq4_bg770QWHmuULliaHNPkE38k-YLIBAAA" width="600" height="400"></iframe>
 
 ## ScrollBar and ScrollViewer
 

@@ -40,12 +40,15 @@ All fields optional: `IsGum`, `usings`, `members`, `initialize`, `loadContent`, 
 2. Run `xnafiddle-encode.exe snippet --file mysnippet.json` (or `code --file MyGame.cs`).
 3. Place the output URL **immediately after** the closing triple-backtick, before any `<figure>` or blank line.
 
-## Link format
+## Embed format
 
-```markdown
-<a href="https://xnafiddle.net/#snippet=<encoded>" target="_blank">Try on XnaFiddle.NET</a>
+Always use the gate page with `?hover=true` — never a bare `<a>` link:
+
+```html
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=<encoded>" width="600" height="400"></iframe>
 ```
 
-- HTML `<a>` with `target="_blank"` — standard Markdown links cannot set this.
-- Link text is always `Try on XnaFiddle.NET` (`.NET` suffix intentional).
-- **One link per code block** — keep each fiddle focused and self-contained.
+- `embed-gate.html` shows a **"▶ Run Sample"** button and prefetches the ~4 MB WASM in the background. Once clicked on any page, future visits skip the button automatically.
+- `?hover=true` throttles to 2 fps when the mouse is not over the canvas — essential when multiple iframes appear on one page.
+- Place the `<iframe>` immediately after the closing triple-backtick, before any `<figure>` or blank line.
+- **One iframe per code block** — keep each fiddle focused and self-contained.

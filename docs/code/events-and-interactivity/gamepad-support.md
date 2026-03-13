@@ -1,4 +1,4 @@
-# Gamepad Support
+﻿# Gamepad Support
 
 ## Introduction
 
@@ -130,7 +130,7 @@ FrameworkElement.GamePadsForUiControl.Clear();
 FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
 listBox.IsFocused = true;
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqVSYUtCMRT9LvgfLqMPSvJSKwLFwDRNCBRTIhjEdBddPTfZ9tIS_3v3zZQ0yKB92e69595zdrZVNgPAOq6dzFgFvE2wEDJKK69ErD6Q0uxNWIiV8zdmCTXQuID7TZTLV7n-qkSPSvop1cvF4rfsHarJ1FO6dFk8BA-JxVGJ2KOm8GLwPkcXNdUMtVNGp-U0FdVHzsSJxx9j_zGg43HmorqUOc66c09oKHGW_x1RPoo4P4q42EdQbWD6xvjgJdfBazHCeOt0et74nJ6ip9TKq-IuHuAydZeznkXnIJmfSbPQQEQTMcO5kOANjKdCTxAcxjhORXC26z_k3-p62GIboVfCaQ1yzwUQduLyULvmesU10NqTccLZphFlBVb7s1B2Ry-0rwP7OrC1LIlcGPt6GyM9mo_aFPeEdC1jh6phtLcmjhoxChv0_Q1Pd-qnonP0L4adgCEj3N7DUMc4cXSvWvj2VZbNrLOZT_A5IeIQAwAA" target="_blank">Try on XnaFiddle.NET</a>
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACqVSYUtCMRT9LvgfLqMPSvJSKwLFwDRNCBRTIhjEdBddPTfZ9tIS_3v3zZQ0yKB92e69595zdrZVNgPAOq6dzFgFvE2wEDJKK69ErD6Q0uxNWIiV8zdmCTXQuID7TZTLV7n-qkSPSvop1cvF4rfsHarJ1FO6dFk8BA-JxVGJ2KOm8GLwPkcXNdUMtVNGp-U0FdVHzsSJxx9j_zGg43HmorqUOc66c09oKHGW_x1RPoo4P4q42EdQbWD6xvjgJdfBazHCeOt0et74nJ6ip9TKq-IuHuAydZeznkXnIJmfSbPQQEQTMcO5kOANjKdCTxAcxjhORXC26z_k3-p62GIboVfCaQ1yzwUQduLyULvmesU10NqTccLZphFlBVb7s1B2Ry-0rwP7OrC1LIlcGPt6GyM9mo_aFPeEdC1jh6phtLcmjhoxChv0_Q1Pd-qnonP0L4adgCEj3N7DUMc4cXSvWvj2VZbNrLOZT_A5IeIQAwAA" width="600" height="400"></iframe>
 
 Pressing down selects the next item and pressing up selects the previous item. The selection does not wrap when it reaches the first or last item.
 
@@ -162,6 +162,6 @@ FrameworkElement.GamePadsForUiControl.Clear();
 FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
 slider.IsFocused = true;
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACo2SUWvCMBDH3wW_w1H2oExCHduL0oHUKcKEoXVjUJC4HjMsTSRJp5v43XeN4oJP9qn3-9_d_67XfbMBEE3suCqjHjhTYccToYQTXIpfJBx9cwNWigINJKBwC3MftNr9XB05exOFW5N6F8cXcEGtLClkwYbc8exng5YNRYnKCq1quUZssLJaVg7_y6c0RVmVVBv0nPLdCXZDq1cuKyT4ELB5yaVM11x91ko3UAZFkemZ1s6vkKt6QclXKE_7PdfvXvOUvRO_j89hhjtH5CaPvG0P9uEUhzw6Z14ahXnHyQq4TaC17MCyDcljrva5AnquNzr4xiPDS9xq8_Ukkb6sY2OKX3hhR9osRKqVM1qyVCI_nu26fBp_Vg_ZouMtJj5nQznB3SdU8FFZWiPxv08_ajYOzcYfiDE4m1gCAAA" target="_blank">Try on XnaFiddle.NET</a>
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACo2SUWvCMBDH3wW_w1H2oExCHduL0oHUKcKEoXVjUJC4HjMsTSRJp5v43XeN4oJP9qn3-9_d_67XfbMBEE3suCqjHjhTYccToYQTXIpfJBx9cwNWigINJKBwC3MftNr9XB05exOFW5N6F8cXcEGtLClkwYbc8exng5YNRYnKCq1quUZssLJaVg7_y6c0RVmVVBv0nPLdCXZDq1cuKyT4ELB5yaVM11x91ko3UAZFkemZ1s6vkKt6QclXKE_7PdfvXvOUvRO_j89hhjtH5CaPvG0P9uEUhzw6Z14ahXnHyQq4TaC17MCyDcljrva5AnquNzr4xiPDS9xq8_Ukkb6sY2OKX3hhR9osRKqVM1qyVCI_nu26fBp_Vg_ZouMtJj5nQznB3SdU8FFZWiPxv08_ajYOzcYfiDE4m1gCAAA" width="600" height="400"></iframe>
 
 Each left or right press changes `Value` by the amount set in `SmallChange`. You can also set `LargeChange` for larger increments when clicking the track area with a mouse or cursor.

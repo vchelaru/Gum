@@ -1,4 +1,4 @@
-# ComboBox
+﻿# ComboBox
 
 ## Introduction
 
@@ -53,7 +53,7 @@ for(int i = 0; i < 5; i++)
 }
 comboBox.SelectedIndex = 2;
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUkvNzk_Kd8isUbBXyUssVnKFcDU3rmDyYnJ5jSkpIflB-fglYOC2_SCMzr0QhE6jHwBpI2SiYAiltbc2YvOqYPAUggOv0LEnNLQbp11CJUQJxFKoza2OUQMbUIlkQnJqTmlySmuKZl5IKcoqRtRIvVy0An04fSsYAAAA" target="_blank">Try on XnaFiddle.NET</a>
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUkvNzk_Kd8isUbBXyUssVnKFcDU3rmDyYnJ5jSkpIflB-fglYOC2_SCMzr0QhE6jHwBpI2SiYAiltbc2YvOqYPAUggOv0LEnNLQbp11CJUQJxFKoza2OUQMbUIlkQnJqTmlySmuKZl5IKcoqRtRIvVy0An04fSsYAAAA" width="600" height="400"></iframe>
 
 ## SelectionChanged
 
@@ -73,4 +73,4 @@ comboBox.SelectionChanged += (sender, args) =>
     System.Console.WriteLine($"Selected: {comboBox.SelectedObject}");
 };
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACnVPwUrDQBC9F_oPw-IhISX14qUxguYgBUGwgpdc0u7YjGxmYHer1pB_d7dtai_u5e28x3tvpp9OANTSPe46tQBvdzg7MMTkqTH0g4FWn42FjXRreZBvKIHxC6rTmKRFzaOW32v9Ki8i_kC_i02IPVDwXBcBbuEmQJalNfc1Q3hn59Jj56I_uapVHKCnoVYxZrgoWKHBjSfhqm14ixqyEhKHrNHOoLFbl0J5d06fz_8Kjk7Uz-uPgNCK0Q58i_Easwd3koFC99G92rvwzythJwbzNxukJ2KMG45pC-j_aRiXL9R0MvwCXTCUyGcBAAA" target="_blank">Try on XnaFiddle.NET</a>
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACnVPwUrDQBC9F_oPw-IhISX14qUxguYgBUGwgpdc0u7YjGxmYHer1pB_d7dtai_u5e28x3tvpp9OANTSPe46tQBvdzg7MMTkqTH0g4FWn42FjXRreZBvKIHxC6rTmKRFzaOW32v9Ki8i_kC_i02IPVDwXBcBbuEmQJalNfc1Q3hn59Jj56I_uapVHKCnoVYxZrgoWKHBjSfhqm14ixqyEhKHrNHOoLFbl0J5d06fz_8Kjk7Uz-uPgNCK0Q58i_Easwd3koFC99G92rvwzythJwbzNxukJ2KMG45pC-j_aRiXL9R0MvwCXTCUyGcBAAA" width="600" height="400"></iframe>
