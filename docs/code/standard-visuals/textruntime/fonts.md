@@ -31,6 +31,7 @@ Note that the font must be installed on the system to be used.
 The following code shows how to load a custom font (the first approach):
 
 ```csharp
+// Initialize
 var customText = new TextRuntime();
 customText.UseCustomFont = true;
 customText.CustomFontFile = "WhitePeaberryOutline/WhitePeaberryOutline.fnt";
@@ -57,6 +58,7 @@ The easiest way to mark all content as "Copy to Output Directory" is to use wild
 The following code shows how to assign the BitmapFont property on a TextRuntime:
 
 ```csharp
+// Initialize
 var bitmapFont = new BitmapFont("WhitePeaberryOutline/WhitePeaberryOutline.fnt", SystemManagers.Default);
 customText.BitmapFont = bitmapFont;
 // no additional properties such as UseCustomFont or any of the font component values
@@ -78,6 +80,7 @@ A TextRuntime's font can be controlled by its individual font component values. 
 By default, all fonts will be of the format `Font{Font}{FontSize}.fnt`. Consider the following code:
 
 ```csharp
+// Initialize
 text.UseCustomFont = false;
 text.Font = "Arial";
 text.FontSize = 24;
@@ -97,6 +100,7 @@ The following additional suffixes (in order listed below) are added to the font 
 The BmfcSave.GetFontCacheFileNameFor method can be called with any combination to obtain the desired font value. For example, the following code coudl be used to determine the desired .fnt file:
 
 ```csharp
+// Initialize
 var desiredFntName = BmfcSave.GetFontCacheFileNameFor(
     18, // font size
     "Consolas", // font name
@@ -144,6 +148,7 @@ Another option is to use the `GraphicalUiElement.ThrowExceptionsForMissingFiles`
 The following code example shows how to check for invalid fonts using this method:
 
 ```csharp
+// Initialize
 var textWithValidFont = new TextRuntime();
 textWithValidFont.UseCustomFont = true;
 textWithValidFont.CustomFontFile = "Fonts/ValidFont.fnt";

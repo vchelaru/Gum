@@ -13,6 +13,7 @@ Although typical ViewModels do not include view-specific properties such as colo
 Visual properties can be bound directly. For example, the following code shows how to bind the width of a Button to a ButtonWidth property on a ViewModel.
 
 ```csharp
+// Initialize
 // assume MyButton is a valid button
 var buttonVisual = MyButton.Visual;
 buttonVisual.SetBinding(
@@ -23,6 +24,7 @@ buttonVisual.SetBinding(
 If the property requires a specific type, then the Visual can be casted to access type-specific properties, as shown in the following code block:
 
 ```csharp
+// Initialize
 // This assumes the project is code-only
 var buttonVisual = (ButtonVisual)MyButton.Visual;
 var text = buttonVisual.TextInstance;
@@ -140,6 +142,7 @@ class MyViewModel : ViewModel
     }
 }
 
+// Initialize
 protected override void Initialize()
 {
     // either one of these:
@@ -187,6 +190,7 @@ class MyViewModel : ViewModel
     }
 }
 
+// Initialize
 protected override void Initialize()
 {
     // either one of these:

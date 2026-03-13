@@ -9,6 +9,7 @@ TextureLeft controls the left side of the source rectangle of a SpriteRuntime's 
 The following code assigns a SpriteRuntime's TextureLeft:
 
 ```csharp
+// Initialize
 // Assuming a Sprite's TextureAddress is set to Custom
 sprite.TextureLeft = 32;
 ```

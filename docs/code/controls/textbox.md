@@ -7,6 +7,7 @@ The TextBox control allows users to enter a string. It supports highlighting, co
 The following code creates two TextBoxes.
 
 ```csharp
+// Initialize
 var panel = new StackPanel();
 panel.Spacing = 5;
 panel.X = 50;
@@ -50,6 +51,7 @@ The event includes arguments with a `Handled` property. Setting this to true pre
 For example, the following code shows how to only allow numbers in a TextBox:
 
 ```csharp
+// Initialize
 var label = new Label();
 panel.AddChild(label);
 
@@ -80,6 +82,7 @@ If `IsReadOnly` is set to true, then the user cannot modify a `TextBox`'s `Text`
 The following code shows how to create a read-only TextBox:
 
 ```csharp
+// Initialize
 var textBox = new TextBox();
 textBox.Width = 200;
 textBox.IsReadOnly = true;
@@ -96,6 +99,7 @@ Selection can be performed programmatically or by the user using the cursor.
 The `SelectionLength` property can be used to determine if any text is selected. The following code shows how to output the selected characters:
 
 ```csharp
+// Update
 if(textBox.SelectionLength > 0)
 {
     var selectedText = textBox.Text.Substring(
@@ -108,6 +112,7 @@ if(textBox.SelectionLength > 0)
 The `SelectionStart` and `SelectionLength` properties can be modified to change the visual selection. For example, the following selects the first 5 letters:
 
 ```csharp
+// Initialize
 textBox.SelectionStart = 0;
 textBox.SelectionLength = 5;
 ```
@@ -115,6 +120,7 @@ textBox.SelectionLength = 5;
 The entire text can be selected as shown in the following code:
 
 ```csharp
+// Initialize
 textBox.SelectionStart = 0;
 textBox.SelectionLength = textBox.Text?.Length ?? 0; // in case text is null
 ```
@@ -156,6 +162,7 @@ When `CaretIndex` changes the `CaretIndexChanged` event is raised.
 The following code shows how to display the CaretIndex in a label:
 
 ```csharp
+// Initialize
 var panel = new StackPanel();
 panel.AddToRoot();
 
@@ -190,6 +197,7 @@ The placeholder text automatically disappears when the user has entered text.
 The following code shows how to set `Placeholder` :
 
 ```csharp
+// Initialize
 TextBox textBox = new();
 textBox.AddToRoot();
 textBox.Anchor(Anchor.Center);
@@ -200,6 +208,7 @@ textBox.Placeholder = "Enter Name...";
 Placeholder can be removed by assigning an empty string:
 
 ```csharp
+// Initialize
 textBox.Placeholder = string.Empty;
 ```
 
@@ -208,6 +217,7 @@ textBox.Placeholder = string.Empty;
 The `TextWrapping` property can be used to set whether the TextBox wraps text. By default this value is set to `TextWrapping.NoWrap` which means the text does not wrap, but instead extends horizontally.
 
 ```csharp
+// Initialize
 var textBox = new TextBox();
 textBox.AddToRoot();
 ```
@@ -217,9 +227,10 @@ textBox.AddToRoot();
 If `TextWrapping` is set to `TextWrapping.Wrap`, then text wraps to multiple lines. Note that usually this is combined with a taller text box so that multiple lines display properly.
 
 ```csharp
- var wrappedTextBox = new TextBox();
- wrappedTextBox.AddToRoot();
- wrappedTextBox.TextWrapping = TextWrapping.Wrap;
+// Initialize
+var wrappedTextBox = new TextBox();
+wrappedTextBox.AddToRoot();
+wrappedTextBox.TextWrapping = TextWrapping.Wrap;
  // If you have set up your TextBox in code, you may need to make it taller:
  wrappedTextBox.Height = 140;
 ```
@@ -229,6 +240,7 @@ If `TextWrapping` is set to `TextWrapping.Wrap`, then text wraps to multiple lin
 `AcceptsReturn` can be set to true to add newlines when the return (enter) key is pressed.
 
 ```csharp
+// Initialize
 var wrappedTextBox = new TextBox();
 wrappedTextBox.AddToRoot();
 wrappedTextBox.TextWrapping = TextWrapping.Wrap;
@@ -250,6 +262,7 @@ The `TextBox.Text` property can be bound to a ViewModel's property. By default t
 In this situation, the enter key also applies binding even if the TextBox has not lost focus.
 
 ```csharp
+// Initialize
 var label = new Label();
 label.SetBinding(nameof(label.Text), nameof(TextViewModel.Text));
 mainPanel.AddChild(label);

@@ -9,6 +9,7 @@ AddNextClickAction adds a delegate to be raised the next time the Cursor perform
 The following code creates a Button which displays a StackPanel of Buttons. The StackPanel closes on any click, whether on the StackPanel or not, but each button in the StackPanel registers a click.
 
 ```csharp
+// Initialize
 var popupPanel = new StackPanel();
 popupPanel.IsVisible = false;
 popupPanel.Anchor(Anchor.Center);

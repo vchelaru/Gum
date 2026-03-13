@@ -13,6 +13,7 @@ The following code can be used to instantiate a Sprite which uses a Texture (png
 {% endhint %}
 
 ```csharp
+// Initialize
 var sprite = new SpriteRuntime();
 sprite.SourceFileName = "BearTexture.png";
 container.Children.Add(sprite);
@@ -29,6 +30,7 @@ A SpriteRuntime's texture can be assigned using the name of the file or a direct
 The SourceFileName property is used to assign the SpriteRuntime's texture using a file name. The name of the file should (by default) be relative to the Content folder. For example, consider the following line:
 
 ```csharp
+// Initialize
 sprite.SourceFileName = "BearTexture.png";
 ```
 
@@ -43,6 +45,7 @@ Assigning Texture
 If your game manages its own textures, you can assign a Texture on the SpriteRuntime through its Texture property as shown in the following code.
 
 ```csharp
+// Initialize
 // This code assumes that MyTexture is a valid Texture2D
 sprite.Texture = MyTexture;
 ```

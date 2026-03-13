@@ -29,7 +29,7 @@ public class ExampleViewModel : ViewModel
 }
 
 //------------------------------------------
-
+// Initialize
 var viewModel = new ExampleViewModel();
 
 var stackPanel = new StackPanel();
@@ -67,7 +67,7 @@ The `FrameworkElementTemplate` template can be modified to support creating cust
 }
 
 //------------------------------------------
-
+// Initialize
 var viewModel = new ExampleViewModel();
 
 var stackPanel = new StackPanel();
@@ -167,6 +167,7 @@ public class ButtonWithSubtext : Button
 Finally, these view models and custom button can be used to display weapons in an `ItemsControl` as shown in the following code block:
 
 ```csharp
+// Initialize
 var viewModel = new TopLevelViewModel();
 
 var stackPanel = new StackPanel();

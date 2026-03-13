@@ -13,11 +13,12 @@ GumBatch can be used to render strings directly. This requires a BitmapFont.
 The following code renders a string at X = 100, Y=200:
 
 ```csharp
+// Draw
 gumBatch.Begin();
 gumBatch.DrawString(
-    font, 
+    font,
     "I am at X=100, Y=200",
-    new Vector2(100, 200), 
+    new Vector2(100, 200),
     Color.White);
 gumBatch.End();
 ```
@@ -27,13 +28,14 @@ gumBatch.End();
 Multiple strings can be rendered between `Begin` and `End` calls:
 
 ```csharp
+// Draw
 gumBatch.Begin();
 for(int i = 0; i < 10; i++)
 {
     gumBatch.DrawString(
-        font, 
-        $"This is string {i}", 
-        new Vector2(0, 20*i), 
+        font,
+        $"This is string {i}",
+        new Vector2(0, 20*i),
         Color.White);
 
 }
@@ -45,11 +47,12 @@ gumBatch.End();
 DrawString can accept newlines and color the text:
 
 ```csharp
+// Draw
 gumBatch.Begin();
     gumBatch.DrawString(
-        font, 
+        font,
         $"This string contains\nnewlines which result in\nthe text rendering over multiple lines",
-        new Vector2(20, 20), 
+        new Vector2(20, 20),
         Color.Purple);
 gumBatch.End();
 ```
@@ -65,37 +68,41 @@ TextRuntimes can be used in both GumBatch as well as they can be added to the Sy
 The following code shows how to create a TextRuntime instance and render it using GumBatch:
 
 ```csharp
-// In Game1 at class scope:
+// Class scope
 TextRuntime textRuntime;
 
-// In Initialize:
-textRuntime = new TextRuntime();
-textRuntime.UseCustomFont = true;
-textRuntime.CustomFontFile = "Fonts/Font16Jing_Jing.fnt";
-textRuntime.Text = 
-    "I am an immediate mode TextRuntime. I am really long text which will wrap within the bounds of the TextRuntime";
-textRuntime.X = 0;
-textRuntime.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-textRuntime.XOrigin = HorizontalAlignment.Center;
+protected override void Initialize()
+{
+    textRuntime = new TextRuntime();
+    textRuntime.UseCustomFont = true;
+    textRuntime.CustomFontFile = "Fonts/Font16Jing_Jing.fnt";
+    textRuntime.Text =
+        "I am an immediate mode TextRuntime. I am really long text which will wrap within the bounds of the TextRuntime";
+    textRuntime.X = 0;
+    textRuntime.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+    textRuntime.XOrigin = HorizontalAlignment.Center;
 
-textRuntime.Y = 0;
-textRuntime.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-textRuntime.YOrigin = VerticalAlignment.Center;
+    textRuntime.Y = 0;
+    textRuntime.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+    textRuntime.YOrigin = VerticalAlignment.Center;
 
-textRuntime.HorizontalAlignment = HorizontalAlignment.Center;
-textRuntime.VerticalAlignment = VerticalAlignment.Center;
+    textRuntime.HorizontalAlignment = HorizontalAlignment.Center;
+    textRuntime.VerticalAlignment = VerticalAlignment.Center;
 
-textRuntime.Width = 300;
-textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-textRuntime.Height = 0;
-textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+    textRuntime.Width = 300;
+    textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+    textRuntime.Height = 0;
+    textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
-textRuntime.Rotation = 90;
+    textRuntime.Rotation = 90;
+}
 
-// In Draw:
-gumBatch.Begin();
-gumBatch.Draw(textRuntime);
-gumBatch.End();
+protected override void Draw(GameTime gameTime)
+{
+    gumBatch.Begin();
+    gumBatch.Draw(textRuntime);
+    gumBatch.End();
+}
 ```
 
 <figure><img src="../../.gitbook/assets/image (66).png" alt=""><figcaption><p>Rendering a TextRuntime in immediate mode with GumBatch</p></figcaption></figure>
@@ -109,39 +116,44 @@ For example, the following code creates a parent ColoredRectangleRuntime and a c
 Since the Draw call is only called on the Parent, then only the Parent reference is kept at class scope:
 
 ```csharp
-// at class scope:
+// Class scope
 ColoredRectangleRuntime buttonRectangle;
 
-// in initialize:
-// It's possible to create a runtime object...
-buttonRectangle = new ColoredRectangleRuntime();
-buttonRectangle.Width = 128;
-buttonRectangle.Height = 32;
-buttonRectangle.Color = Color.DarkBlue;
-buttonRectangle.X = 0;
-buttonRectangle.Y = 100;
-// ... and add children to it:
-var buttonText = new TextRuntime();
-buttonText.Text = "Button text";
-buttonText.X = 0;
-buttonText.Y = 0;
-buttonText.Width = 0;
-buttonText.Height = 0;
-buttonText.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-buttonText.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-buttonText.XOrigin = HorizontalAlignment.Center;
-buttonText.YOrigin = VerticalAlignment.Center;
-buttonText.HorizontalAlignment = HorizontalAlignment.Center;
-buttonText.VerticalAlignment = VerticalAlignment.Center;
-buttonText.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-buttonText.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-buttonRectangle.Children.Add(buttonText);
+protected override void Initialize()
+{
+    // It's possible to create a runtime object...
+    buttonRectangle = new ColoredRectangleRuntime();
+    buttonRectangle.Width = 128;
+    buttonRectangle.Height = 32;
+    buttonRectangle.Color = Color.DarkBlue;
+    buttonRectangle.X = 0;
+    buttonRectangle.Y = 100;
+    // ... and add children to it:
+    var buttonText = new TextRuntime();
+    buttonText.Text = "Button text";
+    buttonText.X = 0;
+    buttonText.Y = 0;
+    buttonText.Width = 0;
+    buttonText.Height = 0;
+    buttonText.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+    buttonText.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+    buttonText.XOrigin = HorizontalAlignment.Center;
+    buttonText.YOrigin = VerticalAlignment.Center;
+    buttonText.HorizontalAlignment = HorizontalAlignment.Center;
+    buttonText.VerticalAlignment = VerticalAlignment.Center;
+    buttonText.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+    buttonText.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+    buttonRectangle.Children.Add(buttonText);
+}
 
-// Then draw call is only performed on the buttonRectangle - the children 
-// (buttonText) are drawn automatically:
-gumBatch.Begin();
-gumBatch.Draw(buttonRectangle);
-gumBatch.End();
+protected override void Draw(GameTime gameTime)
+{
+    // The draw call is only performed on the buttonRectangle - the children
+    // (buttonText) are drawn automatically:
+    gumBatch.Begin();
+    gumBatch.Draw(buttonRectangle);
+    gumBatch.End();
+}
 ```
 
 <figure><img src="../../.gitbook/assets/ButtonTextOverBlueButton.png" alt=""><figcaption><p>buttonRectangle drawn with its child buttonText</p></figcaption></figure>
@@ -153,6 +165,7 @@ GumBatch can be used to render Gum objects on RenderTarget2Ds, just like regular
 The following code shows how to render on a RenderTarget:
 
 ```csharp
+// Draw
 // Assuming MyRenderTarget is a valid render target:
 GraphicsDevice.SetRenderTarget(MyRenderTarget);
 gumBatch.Begin();
@@ -169,6 +182,7 @@ Note that if you are rendering multiple objects on a render target, the BlendSta
 The following shows how to create a BlendState for objects which have partial transparency and are to be drawn on RenderTargets:
 
 ```csharp
+// Initialize
 var blendState = new BlendState();
 
 blendState.ColorSourceBlend = BlendState.NonPremultiplied.ColorSourceBlend;

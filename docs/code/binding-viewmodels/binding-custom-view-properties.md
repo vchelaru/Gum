@@ -49,6 +49,7 @@ public class ButtonWithSubtext : Button
 An instance of this view could be created using the following code:
 
 ```csharp
+// Initialize
 ButtonWithSubtext button = new ();
 button.AddToRoot();
 button.Anchor(Anchor.Center);

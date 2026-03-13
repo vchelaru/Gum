@@ -266,7 +266,7 @@ protected override void Initialize()
 ## Playing Multiple Animations on the Same Instance
 
 {% hint style="warning" %}
-The following code requires December 2025 or newer of the Gum runtimes. You can also link against source to get the latest code.
+The following code requires December 2025 or newer of the Gum runtimes.
 {% endhint %}
 
 The `PlayAnimation` method performs the following logic:
@@ -287,6 +287,7 @@ To play multiple animations, we can keep track of each animation time and apply 
 The following code assumes that `Animation1` and `Animation2` are valid animations. The following code also assumes that `MyInstance` is a valid visual instance.
 
 ```csharp
+// Class scope
 double animation1Time = 0;
 double animation2Time = 0;
 

@@ -18,6 +18,7 @@ The following absolute values are available:
 The following assumes that container is a valid GraphicalUiElement. Its absolute position is used to draw a Sprite using SpriteBatch.
 
 ```csharp
+// Draw
 var absoluteLeft = container.AbsoluteLeft;
 var absoluteTop = container.AbsoluteTop;
 

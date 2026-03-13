@@ -9,6 +9,7 @@ Gum Forms can be added to layers to control ordering, apply offsets, and change 
 A typical Gum control must be be drawn and must have its every-frame logic performed. Both of these are handled when a control is added to GumServices.Root, which can be accomplished by calling AddToRoot. For example, the following code creates a fully-functional and drawn Button:
 
 ```csharp
+// Initialize
 var button = new Button();
 button.AddToRoot();
 ```

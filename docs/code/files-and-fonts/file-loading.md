@@ -25,6 +25,7 @@ All runtime types support the assignment of these files by direct assignment of 
 For example, a Sprite's texture could be assigned either through the SourceFileName property or the Texture property:
 
 ```csharp
+// Initialize
 SpriteRuntimeInstance.SourceFile = "bear.png";
 // or
 SpriteRuntimeInstance.Texture = MyTexture;
@@ -48,6 +49,7 @@ Usually both files are added to the same directory. Be sure to mark both files a
 The file can be loaded using the BitmapFont constructor:
 
 ```csharp
+// Initialize
 // RelativeDirectory defaults to "Content/" so we leave that off
 var bitmapFont = new BitmapFont("Fonts/Font18Arial.fnt", SystemManagers.Default);
 ```
@@ -80,6 +82,7 @@ It's recommended practice to set the RelativeDirectory to your Gum project's loc
 By default Gum caches loaded textures. In other words, the following code only results in a single file IO operation:
 
 ```csharp
+// Initialize
 Sprite1.SourceFile = "MyFile.png";
 Sprite2.SourceFile = "MyFile.png";
 ```
@@ -87,6 +90,7 @@ Sprite2.SourceFile = "MyFile.png";
 File caching can be disabled by setting the LoaderManager's CacheTextures property to false as shown in the following code:
 
 ```csharp
+// Initialize
 LoaderManager.Self.CacheTextures = false;
 ```
 
@@ -95,13 +99,14 @@ Of course, doing so means that Gum will go to disk for every file which can incr
 Note that setting CacheTextures to false flushes the cache and disposes all cached content, so you can force the reload of all files by calling setting CacheTextures to false, then back to true as shown in the following code:
 
 ```csharp
+// Initialize
 Sprite1.SourceFile = "MyFile.png"; // This loads the file from disk
 Sprite2.SourceFile = "MyFile.png"; // This uses the cached Texture2D
 
 LoaderManager.Self.CacheTextures = false; // This clears the cache:
 LoaderManager.Self.CacheTextures = true;
 Sprite1.SourceFile = "MyFile.png"; // This once-again goes to disk to load the file
-Sprite2.SourceFile = "MyFile.png"; // This uses the cached Texture2D 
+Sprite2.SourceFile = "MyFile.png"; // This uses the cached Texture2D
 
 LoaderManager.Self.CacheTextures = false; // This clears the cache
 Sprite1.SourceFile = "MyFile.png"; // This once-again goes to disk to load the file

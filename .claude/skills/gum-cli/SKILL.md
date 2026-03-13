@@ -60,12 +60,23 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 
 **Non-obvious:** `HeadlessErrorChecker` is not a duplicate of the tool's `ErrorChecker` — the tool's `ErrorChecker` **delegates to** `HeadlessErrorChecker`. Zero duplication by design.
 
+`HeadlessErrorChecker` accepts a second constructor overload taking `IEnumerable<IAdditionalErrorSource>` for extensibility; the CLI uses the single-argument overload.
+
+`HeadlessNameVerifier` only implements real logic in `IsValidCSharpName`; all other `INameVerifier` methods return `true` unconditionally. This is intentional — the CLI only needs C# name validation for codegen.
+
+`ProjectLoader` runs `DetectSilentlyDroppedContent` after deserialization to catch incorrect XML element names (e.g., `<States>` instead of `<State>`, `<InstanceSave>` instead of `<Instance>`) that `XmlSerializer` silently ignores. Without this, AI-generated files with wrong structure load as empty elements with no error.
+
+`CodeGenerationAutoSetupService` detects MonoGame vs non-MonoGame projects by scanning for `<PackageReference Include="MonoGame.Framework.` or `nkast.Xna.Framework` in the `.csproj`, then sets `OutputLibrary` accordingly. Namespace falls back to the `.csproj` filename (dots/dashes/spaces replaced with underscores) when `<RootNamespace>` is absent.
+
 ## Codegen Flow (non-obvious details)
 
-- `codegen` iterates elements individually (not via `GenerateCodeForAllElements`) so it can run per-element error checks first
+- `codegen` iterates elements individually (not via `GenerateCodeForAllElements`) so it can run per-element error checks first; `GenerateCodeForAllElements` exists on `HeadlessCodeGenerationService` but the CLI does not call it
+- Only Screens and Components are generated; StandardElements are intentionally excluded
 - Errors (`ErrorSeverity.Error`) block generation for that element; warnings print to stderr but do not block
-- `ObjectFinder.Self` cache is managed at the CLI level (enabled before iteration, disabled after)
-- `ProjectCodeSettings.codsj` must exist in the same directory as the `.gumx` file; missing config exits with code 2
+- `ObjectFinder.Self` cache is managed at the CLI level (enabled before the loop, disabled in `finally`)
+- If `ProjectCodeSettings.codsj` is missing, `codegen` attempts `CodeGenerationAutoSetupService` auto-detection first and writes the settings file before continuing; exit code 2 only if auto-detection also fails
+- When `--element` is specified, `checkForMissing: true` is passed so `GenerateCodeForElement` auto-generates any referenced elements whose code files do not yet exist; full-run mode skips that check
+- `codegen-init` exits with code 2 (not 1) if settings already exist and `--force` is absent
 
 ## Key Files
 

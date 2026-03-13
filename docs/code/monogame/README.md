@@ -69,6 +69,7 @@ The Gum layout engine is built around the concept of "units". As mentioned above
 At runtime, these properties exist as enums which can be changed. For example, to set an element's XUnits to be relative to the horizontal center of its parent, the following code can be used:
 
 ```csharp
+// Initialize
 uiElement.XUnits = GeneralUnitType.PixelsFromMiddle;
 ```
 
@@ -79,6 +80,7 @@ As mentioned above, the Gum tool is very useful for testing out how different pr
 The position, units, and origin values can be used to create common layouts. The following code could be used to center a child in its parent:
 
 ```csharp
+// Initialize
 //assuming child is a valid GraphicalUiElement:
 child.X = 0;
 child.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -96,6 +98,7 @@ This same layout could be achieved in the Gum UI tool by setting the following v
 An element's size can also be controlled through units. For example, a child rectangle could set to provide an 8 pixel border inside of its parent container using the following code.
 
 ```csharp
+// Initialize
 child.X = 0;
 child.XUnits = GeneralUnitType.PixelsFromMiddle;
 child.XOrigin = HorizontalAlignment.Center;

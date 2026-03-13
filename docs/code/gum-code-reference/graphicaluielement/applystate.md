@@ -7,6 +7,7 @@ ApplyState can be used to apply a state (StateSave) to a GraphicalUiElement. Sta
 ### Code Example - Setting States by Reference
 
 ```csharp
+// Initialize
 var stateToSet = setMeInCode.ElementSave.Categories
     .FirstOrDefault(item => item.Name == "RightSideCategory")
     .States.Find(item => item.Name == "Blue");
@@ -16,12 +17,14 @@ setMeInCode.ApplyState(stateToSet);
 ### Code Example - Setting States by Name
 
 ```csharp
+// Initialize
 setMeInCode.ApplyState("Green");
 ```
 
 ### Code Example - Creating Dynamic States
 
 ```csharp
+// Initialize
 var dynamicState = new StateSave();
 dynamicState.Variables.Add(new VariableSave()
 {

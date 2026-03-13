@@ -9,6 +9,7 @@
 The following code shows how to size a ScrollViewer to its children:
 
 ```csharp
+// Initialize
 var stackPanel = new StackPanel();
 stackPanel.AddToRoot();
 

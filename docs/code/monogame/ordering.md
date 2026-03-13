@@ -14,6 +14,7 @@ The visual and logical ordering of Gum instances is controlled by the order of a
 Children are drawn in order that they are added to their parent, with the last child appearing on top. The following code adds buttons in a loop. Notice that the last button appears on top:
 
 ```csharp
+// Initialize
 for(int i = 0; i < 5; i++)
 {
     var button = new Button();
@@ -29,6 +30,7 @@ for(int i = 0; i < 5; i++)
 Similarly, children can be added to a control such as a window. The following code adds buttons to a Window rather than to the root:
 
 ```csharp
+// Initialize
 var window = new Window();
 window.AddToRoot();
 window.Width = 300;
@@ -52,6 +54,7 @@ for (int i = 0; i < 5; i++)
 A child can be reordered at runtime, resulting in the visual ordering changing. This can be useful if your game includes floating windows which can be brought to the foreground. The following code creates&#x20;
 
 ```csharp
+// Class scope
 List<Window> windows = new();
 
 protected override void Initialize()

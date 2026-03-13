@@ -214,6 +214,7 @@ namespace RenderingLibrary.Content
             }
 
             mCachedDisposables.Clear();
+            mContentManager = null;
         }
 
         public T TryLoadContent<T>( string contentName)

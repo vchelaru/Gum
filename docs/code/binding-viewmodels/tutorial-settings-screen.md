@@ -193,6 +193,7 @@ This approach can also be used to handle events as shown in the [Task Screen tut
 Once the `SettingsScreen` is defined, we can instantiate it in our game. The following code shows how to create a `SettingsScreen` instance and assign its `BindingContext` to a `SettingsViewModel` instance. Note that we are setting initial values on the view model - these values are shown by our UI when we run the game:
 
 ```csharp
+// Initialize
 var screen = new SettingsScreen();
 screen.AddToRoot();
 

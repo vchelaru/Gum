@@ -14,6 +14,7 @@ Panels have the following behavior by default:
 We can change this default behavior to create a grid as shown in the following code:
 
 ```csharp
+// Initialize
 var panel = new Panel();
 panel.AddToRoot();
 panel.Anchor(Gum.Wireframe.Anchor.Center);
@@ -41,7 +42,8 @@ for(int i = 0; i < 9; i++)
 
 Children in a grid treat their cell as their direct parent. This means that Dock and Anchor calls are performed relative to the cell rather than the entire panel as shown in the following code:
 
-<pre class="language-csharp"><code class="lang-csharp">var panel = new Panel();
+<pre class="language-csharp"><code class="lang-csharp">// Initialize
+var panel = new Panel();
 panel.AddToRoot();
 panel.Anchor(Gum.Wireframe.Anchor.Center);
 panel.Height = 400;
@@ -70,6 +72,7 @@ for(int i = 0; i &#x3C; 9; i++)
 The `AutoGridHorizontalCells` and `AutoGridVerticalCells` properties determine the number of rows and columns in the grid. For example, the following code creates a grid with eight (8) cells:
 
 ```csharp
+// Initialize
 var panel = new Panel();
 panel.AddToRoot();
 panel.Anchor(Gum.Wireframe.Anchor.Center);
@@ -97,6 +100,7 @@ for(int i = 0; i < 8; i++)
 If additional buttons are added, they overflow the grid. Notice that the grid's size is not modified by the additional cells, so additional rows do not shift the grid up.
 
 ```csharp
+// Initialize
 var panel = new Panel();
 panel.AddToRoot();
 panel.Anchor(Gum.Wireframe.Anchor.Center);
@@ -126,6 +130,7 @@ for(int i = 0; i < 14; i++)
 If a Panel is sized to its children, then the size of the grid is based on the largest cell. The following code creates a grid with nine (9) cells. The largest button decides the size of the cell. All cells in the grid match the largest size.
 
 ```csharp
+// Initialize
 var panel = new Panel();
 panel.AddToRoot();
 panel.Anchor(Gum.Wireframe.Anchor.Center);

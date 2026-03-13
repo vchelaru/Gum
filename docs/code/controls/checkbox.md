@@ -7,6 +7,7 @@ The CheckBox control provides the ability to display a true/false state and allo
 ## Code Example: Adding a CheckBox
 
 ```csharp
+// Initialize
 var checkBox = new CheckBox();
 checkBox.AddToRoot();
 checkBox.X = 50;
@@ -27,6 +28,7 @@ Default CheckBoxes have the following default values:
 The text within the CheckBox draws and wraps according to the bounds of the CheckBox. In other words, longer text results in line wrapping, as show in the following code block:
 
 ```csharp
+// Initialize
 var checkBox = new CheckBox();
 checkBox.Text = "This is some longer text";
 stackPanel.AddChild(checkBox);

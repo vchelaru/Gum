@@ -9,6 +9,7 @@ TextureHeight controls the portion of the SpriteRuntime's Texture which is displ
 The following code assigns a SpriteRuntime's TextureHeight:
 
 ```csharp
+// Initialize
 // Assuming a Sprite's TextureAddress is set to Custom
 sprite.TextureHeight = 64;
 ```

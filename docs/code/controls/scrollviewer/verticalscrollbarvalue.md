@@ -11,6 +11,7 @@ This range for this value is between 0 and `VerticalScrollBarMaximum`.
 The following code gets the VerticalScrollBarValue and displays it using a Label.
 
 ```csharp
+// Initialize
 var mainPanel = new StackPanel();
 mainPanel.AddToRoot();
 

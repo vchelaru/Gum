@@ -294,6 +294,7 @@
   * [Mixing Gum and 3D](code/ordering-layers-and-popups/mixing-gum-and-3d.md)
 * [Files and Fonts](code/files-and-fonts/README.md)
   * [File Loading](code/files-and-fonts/file-loading.md)
+  * [Troubleshooting File Loading](code/files-and-fonts/troubleshooting-file-loading.md)
   * [BitmapFont](code/files-and-fonts/bitmapfont.md)
   * [Content Using Embedded Resources](code/files-and-fonts/content-using-embedded-resources.md)
 * [Localization](code/localization.md)
@@ -365,3 +366,12 @@
   * [Layered Forms](code/monogame/layered-forms.md)
   * [Ordering](code/monogame/ordering.md)
   * [Known Issues](code/monogame/known-issues.md)
+
+## CLI
+
+* [GumCli](cli/README.md)
+  * [new](cli/new.md)
+  * [check](cli/check.md)
+  * [codegen-init](cli/codegen-init.md)
+  * [codegen](cli/codegen.md)
+  * [fonts](cli/fonts.md)

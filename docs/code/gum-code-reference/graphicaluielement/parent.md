@@ -9,6 +9,7 @@ The Parent property get or sets the calling GraphicalUiElement's parent. If Pare
 The following code shows how to add a SpriteRuntime to a parent `ContainerInstance`. It assumes that `ContainerInstance` is a valid GraphicalUiElement:
 
 ```csharp
+// Initialize
 var sprite = new SpriteRuntime();
 // This automatically adds sprite as a child of ContainerRuntime
 sprite.Parent = ContainerInstance;
@@ -17,6 +18,7 @@ sprite.Parent = ContainerInstance;
 Later, the sprite could be removed by setting its Parent to null:
 
 ```csharp
+// Initialize
 // This removes the Sprite from its Parent (ContainerInstance)
 sprite.Parent = null;
 ```
@@ -24,6 +26,7 @@ sprite.Parent = null;
 Gum Forms objects can be added to or removed from parents by setting Parent. For example, the following code could be used to show a button in a popup and remove it when it has been clicked:
 
 ```csharp
+// Initialize
 var button = new Button();
 button.Text = "Click Me!";
 button.Parent = FrameworkElement.ModalRoot;

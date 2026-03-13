@@ -16,6 +16,7 @@ ContainerRuntime instances have no visuals, so they cannot be directly observed 
 To create a ContainerRuntime, instantiate it and add it to the managers as shown in the following code:
 
 ```csharp
+// Initialize
 var container = new ContainerRuntime();
 container.Width = 150; // by default, containers use absolute width...
 container.Height = 150; // ...and height.
@@ -27,6 +28,7 @@ container.AddToManagers(SystemManagers.Default, null);
 Containers are usually used as parents for other runtime objects. To add another runtime instance to a container, add it to the Children list as shown in the following code:
 
 ```csharp
+// Initialize
 var parentContainer = new ContainerRuntime();
 parentContainer.AddToManagers(SystemManagers.Default, null);
 
@@ -40,6 +42,7 @@ Notice that only the parent object needs to have its AddToManagers method called
 The following code shows a parent container added to managers. The child container and child text do not need to be added to managers:
 
 ```csharp
+// Initialize
 var parentContainer = new ContainerRuntime();
 parentContainer.AddToManagers(SystemManagers.Default, null);
 

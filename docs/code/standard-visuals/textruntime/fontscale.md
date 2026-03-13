@@ -13,5 +13,6 @@ Setting FontScale on XNA-like platforms and FlatRedBall changs the size of the T
 The following code shows how to assign FontScale.
 
 ```csharp
+// Initialize
 MyText.FontScale = 2; // A value of 2 doubles the text's size
 ```

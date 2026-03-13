@@ -9,6 +9,7 @@ VerticalAlignment controls the placement of the letters inside the Text's bounds
 The following code shows how to bottom-align a TextRuntime in its parent:
 
 ```csharp
+// Initialize
 textRuntime.VerticalAlignment =
     RenderingLibrary.Graphics.VerticalAlignment.Bottom;
 textRuntime.YOrigin =

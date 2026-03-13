@@ -7,6 +7,7 @@ The ComboBox control provides a compact way for users to select from a list of o
 ## Code Example: Adding a ComboBox
 
 ```csharp
+// Initialize
 var comboBox = new ComboBox();
 comboBox.AddToRoot();
 for(int i = 0; i < 10; i++)
@@ -24,6 +25,7 @@ for(int i = 0; i < 10; i++)
 This can be modified, even if it hasn't yet been shown. The following code shows how to modify the default size of the ListBox:
 
 ```csharp
+// Initialize
 var comboBox = new ComboBox();
 comboBox.AddToRoot();
 comboBox.Anchor(Anchor.Top);

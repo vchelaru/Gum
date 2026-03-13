@@ -9,6 +9,7 @@
 The following code can be used to print letters out one at a time.
 
 ```csharp
+// Class scope
 TextRuntime textRuntime;
 bool isPrinting = false;
 float numberOfCharacters;

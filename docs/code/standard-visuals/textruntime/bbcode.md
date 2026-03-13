@@ -48,6 +48,7 @@ To use the Custom tag, the following must be performed:
 The following code block shows how to create a TextRuntime with letters shaking horizontally:
 
 ```csharp
+// Initialize
 LetterCustomization ShakeHorizontally(int index, string textInBlock)
 {
     var customization = new LetterCustomization();
@@ -109,6 +110,7 @@ class GrowShrinkCustomFunction
 We can register this function and use it on a TextRuntime. The following code creates a button which increases the gold and resets the start time:
 
 ```csharp
+// Class scope
 int _gold = 0;
 GrowShrinkCustomFunction _growShrink;
 

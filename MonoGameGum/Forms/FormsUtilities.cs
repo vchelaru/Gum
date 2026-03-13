@@ -522,6 +522,13 @@ public class FormsUtilities
         container.Height = GraphicalUiElement.CanvasHeight;
     }
 
+    internal static void Uninitialize()
+    {
+        cursor = null;
+        keyboard = null;
+        Gamepads = new GamePad[4];
+    }
+
     public static void RegisterFromFileFormRuntimeDefaults()
     {
 #if FULL_DIAGNOSTICS

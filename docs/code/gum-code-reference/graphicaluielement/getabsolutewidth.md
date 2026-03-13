@@ -9,6 +9,7 @@ Returns the width of the calling GraphicalUiElement in pixels. This can be used 
 The following code gets the absolute width of a Text instance:
 
 ```csharp
+// Initialize
 // Assuming TextInstance is a valid instance:
 var absoluteWidth = TextInstance.GetAbsoluteWidth();
 ```

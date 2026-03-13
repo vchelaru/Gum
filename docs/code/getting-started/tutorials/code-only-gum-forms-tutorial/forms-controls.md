@@ -42,6 +42,7 @@ As we'll see below, each forms control has a specific purpose. Buttons are click
 However, each control also wraps a Visual object which gives you full layout control. The Visual property is of type GraphicalUiElement, and it has access to the full Gum layout engine. For example, a button could be made to be as wide as its parents using the following code:
 
 ```csharp
+// Initialize
 // assuming MyButton is a valid Button:
 MyButton.Visual.Width = 0;
 MyButton.Visual.WidthUnits = DimensionUnitType.RelativeToContainer;
@@ -60,6 +61,7 @@ Some Visual properties are also provided at the Forms Control level for convenie
 For example, the following two lines of code are equivalent:
 
 ```csharp
+// Initialize
 MyButton.Width = 100;
 MyButton.Visual.Width = 100;
 ```
@@ -74,6 +76,7 @@ For the sake of brevity, we will add all of our controls in the game's Initializ
 Labels are text objects which can display a string. Labels do not have any direct interaction such as responding to clicks. The following code adds a label to the project:
 
 ```csharp
+// Initialize
 var label = new Label();
 mainPanel.AddChild(label);
 label.Text = $"I was created at {System.DateTime.Now}";
@@ -91,10 +94,11 @@ Button controls are usually added when a user needs to perform a command. Button
 The following code creates two buttons. One is disabled so it does not respond to click events:
 
 ```csharp
+// Initialize
 var button = new Button();
 mainPanel.AddChild(button);
 button.Text = "Click Me";
-button.Click += (_, _) => 
+button.Click += (_, _) =>
     label.Text = $"Button clicked @ {System.DateTime.Now}";
 
 var disabledButton = new Button();
@@ -123,6 +127,7 @@ CheckBox controls allow the user to toggle a bool value by clicking on it. Just 
 The following code creates a CheckBox with two method handlers (Checked/Unchecked):
 
 ```csharp
+// Initialize
 var checkBox = new CheckBox();
 mainPanel.AddChild(checkBox);
 checkBox.Text = "Click Me";
@@ -140,6 +145,7 @@ ComboBox provides a collapsible way to display and select from a list of options
 The following code creates a ComboBox which raises an event whenever an item is selected.
 
 ```csharp
+// Initialize
 var comboBox = new ComboBox();
 for (int i = 0; i < 20; i++)
 {
@@ -162,6 +168,7 @@ ListBox provides a way to display a list of items. Each item can be selected.
 The following code creates a ListBox which raises an event whenever an item is selected.
 
 ```csharp
+// Initialize
 var listBox = new ListBox();
 listBox.Visual.Width = 150;
 listBox.Visual.Height = 300;
@@ -188,6 +195,7 @@ RadioButton controls allow the user to view a set of options and pick from one o
 The following creates six radio buttons in two separate groups.
 
 ```csharp
+// Initialize
 var group1 = new StackPanel();
 mainPanel.AddChild(group1);
 
@@ -232,6 +240,7 @@ ScrollViewer provides a scrollable panel for controls. ScrollViewers are similar
 The following code creates a ScrollViewer and adds buttons using AddChild.
 
 ```csharp
+// Initialize
 var scrollViewer = new ScrollViewer();
 scrollViewer.Width = 200;
 mainPanel.AddChild(scrollViewer);
@@ -254,6 +263,7 @@ Slider controls allow the user to select a value between a minimum and maximum v
 The following code creates a Slider which raises an event whenever its Value changes.
 
 ```csharp
+// Initialize
 var slider = new Slider();
 slider.Width = 200;
 slider.Minimum = 0;
@@ -275,6 +285,7 @@ TextBoxes are automatically focused when clicked, but IsFocused can be explicitl
 The following code creates a TextBox which raises an event whenever its text is changed. The text is then copied over to a label.
 
 ```csharp
+// Initialize
 var textBox = new TextBox();
 textBox.Placeholder = "Enter text here...";
 textBox.Width = 200;

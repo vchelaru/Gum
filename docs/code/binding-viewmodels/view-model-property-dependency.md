@@ -28,6 +28,7 @@ class PlayerViewModel : ViewModel
 We can use the `PlayerViewModel` to update the UI in response to `Money` changing. The following block of code shows how to do so in a code-only project.
 
 ```csharp
+// Initialize
 var viewModel = new PlayerViewModel();
 
 var mainPanel = new StackPanel();

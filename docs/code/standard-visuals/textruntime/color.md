@@ -23,5 +23,6 @@ The Color type depends on the platform.
 The following code shows how to assign Color:
 
 ```csharp
+// Initialize
 MyText.Color = Color.Red;
 ```

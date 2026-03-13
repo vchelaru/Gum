@@ -193,6 +193,7 @@ Currently Gum does not support command binding. Future versions of Gum may intro
 Once the `TaskScreen` is defined, we can instantiate this in our game. The following code shows how to create a `TaskScreen` instance and assign its `BindingContext` to a `TaskScreenViewModel` instance.
 
 ```csharp
+// Initialize
 var screen = new TaskScreen();
 screen.AddToRoot();
 

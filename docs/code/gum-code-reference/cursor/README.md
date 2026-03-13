@@ -13,12 +13,14 @@ Most runtimes create a Cursor internally.
 The cursor can be accessed through GumService.
 
 ```csharp
+// Initialize
 var cursor = GumService.Default.Cursor;
 ```
 
 GumService.Default.Cursor was introduced in March 2025. Older versions of Gum can access the cursor through FormsUtilities.
 
 ```csharp
+// Initialize
 var cursor = FormsUtilities.Cursor;
 ```
 
@@ -40,6 +42,7 @@ The WindowOver property can be used to detect if clicks should be consumed or pa
 The following code shows how to check if the user is over Gum UI.
 
 ```csharp
+// Update
 var cursor = GumService.Default.Cursor;
 var isOverUi = cursor.WindowOver != null;
 
@@ -70,6 +73,7 @@ WindowPushed returns the InteractiveGue (Forms Visual) which was under the Curso
 For example, consider a game which allows the user to purchase items. The user can push and drag an item onto a container to buy the item. The following code shows how that might be performed:
 
 ```csharp
+// Update
 var cursor = GumService.Default.Cursor;
 
 // A PrimaryClick means the cursor was released...

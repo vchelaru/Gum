@@ -317,6 +317,17 @@ public class Renderer : IRenderer
         }
     }
 
+    public void Uninitialize()
+    {
+        mSinglePixelTexture?.Dispose();
+        mSinglePixelTexture = null;
+
+        mDottedLineTexture?.Dispose();
+        mDottedLineTexture = null;
+
+        CustomEffectManager.Reset();
+    }
+
     #region Add/Remove Layers
 
     public Layer AddLayer()
@@ -1472,18 +1483,118 @@ public class CustomEffectManager
                                    new DeviceManager(graphicsDevice)));
         }
 
-        // Loads the Shader.xnb effect file. The shader is optional; if missing, 
+        // Loads the Shader.xnb effect file. The shader is optional; if missing,
         // the application won't be able to use custom effects.
         // Use of try-catch avoids using platform specific code.
         // Shader should be capitalized.
         try
-        { 
+        {
             Effect = mContentManager.Load<Effect>("Content/Shader");
-        } 
+        }
         catch
         {
             Debug.WriteLine("'Content/Shader.xnb' not found. Custom rendering is not available.");
         }
+    }
+
+    public void Reset()
+    {
+        _effect?.Dispose();
+        _effect = null!;
+
+        ParameterCurrentTexture = null!;
+        ParameterViewProj = null!;
+        ParameterColorModifier = null;
+
+        _techniqueTexture = null;
+        _techniqueAdd = null;
+        _techniqueSubtract = null;
+        _techniqueModulate = null;
+        _techniqueModulate2X = null;
+        _techniqueModulate4X = null;
+        _techniqueInverseTexture = null;
+        _techniqueColor = null;
+        _techniqueColorTextureAlpha = null;
+        _techniqueInterpolateColor = null;
+
+        _techniqueTexture_CM = null;
+        _techniqueAdd_CM = null;
+        _techniqueSubtract_CM = null;
+        _techniqueModulate_CM = null;
+        _techniqueModulate2X_CM = null;
+        _techniqueModulate4X_CM = null;
+        _techniqueInverseTexture_CM = null;
+        _techniqueColor_CM = null;
+        _techniqueColorTextureAlpha_CM = null;
+        _techniqueInterpolateColor_CM = null;
+
+        _techniqueTexture_LN = null;
+        _techniqueAdd_LN = null;
+        _techniqueSubtract_LN = null;
+        _techniqueModulate_LN = null;
+        _techniqueModulate2X_LN = null;
+        _techniqueModulate4X_LN = null;
+        _techniqueInverseTexture_LN = null;
+        _techniqueColor_LN = null;
+        _techniqueColorTextureAlpha_LN = null;
+        _techniqueInterpolateColor_LN = null;
+
+        _techniqueTexture_LN_CM = null;
+        _techniqueAdd_LN_CM = null;
+        _techniqueSubtract_LN_CM = null;
+        _techniqueModulate_LN_CM = null;
+        _techniqueModulate2X_LN_CM = null;
+        _techniqueModulate4X_LN_CM = null;
+        _techniqueInverseTexture_LN_CM = null;
+        _techniqueColor_LN_CM = null;
+        _techniqueColorTextureAlpha_LN_CM = null;
+        _techniqueInterpolateColor_LN_CM = null;
+
+        _techniqueTexture_Linear = null;
+        _techniqueAdd_Linear = null;
+        _techniqueSubtract_Linear = null;
+        _techniqueModulate_Linear = null;
+        _techniqueModulate2X_Linear = null;
+        _techniqueModulate4X_Linear = null;
+        _techniqueInverseTexture_Linear = null;
+        _techniqueColor_Linear = null;
+        _techniqueColorTextureAlpha_Linear = null;
+        _techniqueInterpolateColor_Linear = null;
+
+        _techniqueTexture_Linear_CM = null;
+        _techniqueAdd_Linear_CM = null;
+        _techniqueSubtract_Linear_CM = null;
+        _techniqueModulate_Linear_CM = null;
+        _techniqueModulate2X_Linear_CM = null;
+        _techniqueModulate4X_Linear_CM = null;
+        _techniqueInverseTexture_Linear_CM = null;
+        _techniqueColor_Linear_CM = null;
+        _techniqueColorTextureAlpha_Linear_CM = null;
+        _techniqueInterpolateColor_Linear_CM = null;
+
+        _techniqueTexture_Linear_LN = null;
+        _techniqueAdd_Linear_LN = null;
+        _techniqueSubtract_Linear_LN = null;
+        _techniqueModulate_Linear_LN = null;
+        _techniqueModulate2X_Linear_LN = null;
+        _techniqueModulate4X_Linear_LN = null;
+        _techniqueInverseTexture_Linear_LN = null;
+        _techniqueColor_Linear_LN = null;
+        _techniqueColorTextureAlpha_Linear_LN = null;
+        _techniqueInterpolateColor_Linear_LN = null;
+
+        _techniqueTexture_Linear_LN_CM = null;
+        _techniqueAdd_Linear_LN_CM = null;
+        _techniqueSubtract_Linear_LN_CM = null;
+        _techniqueModulate_Linear_LN_CM = null;
+        _techniqueModulate2X_Linear_LN_CM = null;
+        _techniqueModulate4X_Linear_LN_CM = null;
+        _techniqueInverseTexture_Linear_LN_CM = null;
+        _techniqueColor_Linear_LN_CM = null;
+        _techniqueColorTextureAlpha_Linear_LN_CM = null;
+        _techniqueInterpolateColor_Linear_LN_CM = null;
+
+        mContentManager = null;
     }
 
     static EffectTechnique GetTechniqueVariant(bool useDefaultOrPointFilter, EffectTechnique point, EffectTechnique pointLinearized, EffectTechnique linear, EffectTechnique linearLinearized)

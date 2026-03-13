@@ -15,6 +15,7 @@ The following code can be used to instantiate a NineSliceRuntime which uses a Te
 {% endhint %}
 
 ```csharp
+// Initialize
 var nineSlice = new NineSliceRuntime();
 nineSlice.SourceFileName = "Frame.png";
 nineSlice.Width = 256;
@@ -35,6 +36,7 @@ For example, consider a file called Frame.png which is located in the Content di
 This file can be used as a texture by assigning the RelativeDirectory and then loading Frame.png. Note that RelativeDirectory is usually set to Content, or to the location of the .gumx file.
 
 ```csharp
+// Initialize
 ToolsUtilities.FileManager.RelativeDirectory = "Content";
 nineSlice.SourceFileName = "Frame.png";
 ```
@@ -42,6 +44,7 @@ nineSlice.SourceFileName = "Frame.png";
 Alternatively, a Texture2D can be assigned directly
 
 ```csharp
+// Initialize
 // assuming MyTexture is a valid Texture2D
 nineSlice.Texture = MyTexture;
 ```
@@ -49,6 +52,7 @@ nineSlice.Texture = MyTexture;
 Once a SourceFileName is assigned, the Texture property references a valid Texture2D which can be reused.
 
 ```csharp
+// Initialize
 // assigning SourceFileName results in Texture also being set
 firstNineSlice.SourceFileName = "Frame.png";
 secondNineSlice.Texture = firstNineSlice.Texture;
@@ -69,6 +73,7 @@ We can obtain a portion of this texture by assigning the coordinate values. Befo
 We can use these values to set `TextureLeft`, `TextureTop`, `TextureWidth`, and `TextureHeight` values as shown in the following code:
 
 ```csharp
+// Initialize
 nineSlice.TextureAddress = Gum.Managers.TextureAddress.Custom;
 nineSlice.TextureLeft = 438;
 nineSlice.TextureTop = 231;

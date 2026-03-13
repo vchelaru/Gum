@@ -20,13 +20,14 @@ Some UI elements should react immediately when pressed rather than waiting for t
 For simplicity the following code can be used to test click events:
 
 ```csharp
+// Initialize
 var button = new Button();
 button.AddToRoot();
 button.Anchor(Gum.Wireframe.Anchor.Center);
 
 // Button's Click event internally uses an InteractiveGue's Click, so
 // we can test when clicks are raised by subscribing to a Button's Click
-button.Click += (_, _) => 
+button.Click += (_, _) =>
     button.Text = DateTime.Now.ToString();
 ```
 

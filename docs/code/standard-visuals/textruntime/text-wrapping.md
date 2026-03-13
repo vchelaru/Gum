@@ -19,6 +19,7 @@ For a more detailed discussion of WidthUnits see the [WidthUnits page](../../../
 The following code creates a Text instance which wraps its text. Since its `Width` is set to 100 absolute, the wrapped text must fit inside the `TextRuntime`'s absolute width.
 
 ```csharp
+// Initialize
 var text = new TextRuntime();
 text.Text = "This text is long enough that it should wrap to multiple lines";
 text.Width = 100;
@@ -31,6 +32,7 @@ mainPanel.AddChild(text);
 TextRuntime treats its internal letters as children. If WidthUnits is changed to RelativeToChildren then the text no longer wraps since the TextRuntime sizes itself to contain all letters horizontally as shown in the following code block:
 
 ```csharp
+// Initialize
 var text = new TextRuntime();
 text.Text = "This text is long, but it should no longer wrap because WidthUnits=RelativeToChildren";
 text.WidthUnits = DimensionUnitType.RelativeToChildren;
@@ -46,6 +48,7 @@ mainPanel.AddChild(text);
 XNA-like environments (MonoGame, FNA, KNI, and FlatRedBall) control whether line wrapping takes place mid-word, or only on whitespace characters. As of June 2025 line wrapping only occurs on whitespace characters, but this behavior can be changed. For example, the following code shows how to set a TextRuntime instance to break apart words when wrapping.
 
 ```csharp
+// Initialize
 var text = new TextRuntime();
 // Set this value before changing width-related properties.
 // This is a global value, so it is used by all TextRuntime

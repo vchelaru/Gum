@@ -11,6 +11,7 @@ Gum Forms includes a default ListBoxItem implementation which includes a single 
 ListBoxItems can be implicitly instantiated by adding any type of object to a ListBox. The following code creates 20 ListBoxItems, each displaying an integer.
 
 ```csharp
+// Initialize
 var listBox = new ListBox();
 listBox.AddToRoot();
 listBox.X = 50;
