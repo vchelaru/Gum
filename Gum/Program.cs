@@ -154,7 +154,7 @@ namespace Gum
                 }
             };
 
-            fileWatchTimer.Start(TimeSpan.FromSeconds(2));
+            fileWatchTimer.Start(TimeSpan.FromMilliseconds(500));
         }
 
         private static void MigrateAppSettings(IServiceProvider services, GeneralSettingsFile legacySettings)

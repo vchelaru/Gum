@@ -1,5 +1,6 @@
 using CommonFormsAndControls;
 using System;
+using System.Collections.Generic;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
@@ -32,4 +33,14 @@ public interface ICollapseToggleService
     /// Clears all saved state. Called when the tree is refreshed.
     /// </summary>
     void Clear();
+
+    /// <summary>
+    /// Returns the paths of all currently expanded nodes.
+    /// </summary>
+    List<string> SaveExpandedPaths(MultiSelectTreeView treeView);
+
+    /// <summary>
+    /// Expands nodes matching the previously saved paths.
+    /// </summary>
+    void RestoreExpandedPaths(MultiSelectTreeView treeView, List<string> paths);
 }

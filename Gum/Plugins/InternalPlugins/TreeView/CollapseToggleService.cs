@@ -47,6 +47,12 @@ public class CollapseToggleService : ICollapseToggleService
         _isDirty = false;
     }
 
+    public List<string> SaveExpandedPaths(MultiSelectTreeView treeView) =>
+        GetExpandedNodePaths(treeView);
+
+    public void RestoreExpandedPaths(MultiSelectTreeView treeView, List<string> paths) =>
+        ApplyExpandedNodePaths(treeView, paths);
+
     private void HandleCollapseToggle(MultiSelectTreeView treeView, Action collapseAction, CollapseActionType actionType)
     {
         bool canRestore = _lastCollapseAction == actionType

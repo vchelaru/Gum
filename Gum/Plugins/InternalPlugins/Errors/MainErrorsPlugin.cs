@@ -86,6 +86,7 @@ public class MainErrorsPlugin : InternalPlugin
     private void AssignEvents()
     {
         this.ElementSelected += HandleElementSelected;
+        this.ElementReloaded += HandleElementReloaded;
         this.InstanceSelected += HandleInstanceSelected;
 
         this.InstanceAdd += HandleInstanceAdd;
@@ -115,6 +116,11 @@ public class MainErrorsPlugin : InternalPlugin
     }
 
     private void HandleInstanceAdd(ElementSave element, InstanceSave instance)
+    {
+        UpdateErrorsForElement(element);
+    }
+
+    private void HandleElementReloaded(ElementSave element)
     {
         UpdateErrorsForElement(element);
     }

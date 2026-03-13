@@ -66,6 +66,12 @@ The tree icon refresh and the Errors tab refresh are independent. Both call `Err
 | `Gum/Messages/RequestErrorRefreshMessage.cs` | Message to force Errors tab refresh |
 | `Tool/Tests/GumToolUnitTests/Managers/ErrorCheckerTests.cs` | Unit tests for ErrorChecker |
 
+## Element Reload and Errors
+
+When an element file changes on disk, `FileChangeReactionLogic.ReactToElementSaveChanged` calls `_pluginManager.ElementReloaded(element)`. `MainErrorsPlugin` subscribes to `ElementReloaded` and calls `UpdateErrorsForElement` — this is the correct trigger for refreshing errors after a reload.
+
+Do **not** rely on `ElementSelected` alone for error refresh after reload: the reload path temporarily sets `SelectedElement = null` (to force a UI reset), which clears errors, and the subsequent re-selection uses `file.StandardizedNoPathNoExtension` which fails to find elements in subfolders — so errors would never be repopulated.
+
 ## Non-Obvious Behaviors
 
 **Two separate refreshes**: The "!" icon in the tree and the Errors tab list are populated independently. Changing `ErrorChecker` automatically affects both, but only if the right events trigger both refresh paths.
