@@ -425,6 +425,12 @@ public class PluginManager : IPluginManager
     public void BehaviorInstanceAdd(BehaviorSave behavior, BehaviorInstanceSave instance) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorInstanceAdd(behavior, instance));
 
+    public void BehaviorInstanceDelete(BehaviorSave behavior, BehaviorInstanceSave instance) =>
+        CallMethodOnPlugin(plugin => plugin.CallBehaviorInstanceDelete(behavior, instance));
+
+    public void BehaviorInstanceRename(BehaviorSave behavior, BehaviorInstanceSave instance) =>
+        CallMethodOnPlugin(plugin => plugin.CallBehaviorInstanceRename(behavior, instance));
+
     public StateSave? GetDefaultStateFor(string type)
     {
         StateSave? toReturn = null;

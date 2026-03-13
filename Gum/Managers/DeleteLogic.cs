@@ -139,9 +139,10 @@ public class DeleteLogic : IDeleteLogic
                     {
                         RemoveInstanceFromElement(selectedInstance, selectedElement);
                     }
-                    else if (selectedBehavior != null)
+                    else if (selectedBehavior != null && selectedInstance is BehaviorInstanceSave behaviorInstanceToDelete)
                     {
-                        selectedBehavior.RequiredInstances.Remove(selectedInstance as BehaviorInstanceSave);
+                        selectedBehavior.RequiredInstances.Remove(behaviorInstanceToDelete);
+                        _pluginManager.BehaviorInstanceDelete(selectedBehavior, behaviorInstanceToDelete);
                     }
 
 

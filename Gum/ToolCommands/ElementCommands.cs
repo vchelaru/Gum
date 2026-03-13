@@ -133,6 +133,21 @@ public class ElementCommands : IElementCommands
         return StringFunctions.MakeStringUnique(name, existingNames);
     }
 
+    public string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, BehaviorSave containerForNewInstance)
+    {
+#if DEBUG
+        if (elementSaveForNewInstance == null)
+        {
+            throw new ArgumentNullException(nameof(elementSaveForNewInstance));
+        }
+#endif
+        // remove the path - we dont want folders to be part of the name
+        string name = FileManager.RemovePath(elementSaveForNewInstance.Name) + "Instance";
+        IEnumerable<string> existingNames = containerForNewInstance.RequiredInstances.Select(i => i.Name);
+
+        return StringFunctions.MakeStringUnique(name, existingNames);
+    }
+
     #endregion
 
     #region State
