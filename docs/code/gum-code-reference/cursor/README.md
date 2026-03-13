@@ -17,10 +17,10 @@ The cursor can be accessed through GumService.
 var cursor = GumService.Default.Cursor;
 ```
 
-GumService.Default.Cursor was introduced in March 2025. Older versions of Gum can access the cursor through FormsUtilities.
+GumService.Default.Cursor was introduced in March 2025. For legacy projects on older versions of Gum, the cursor can be accessed through the now-deprecated FormsUtilities class:
 
 ```csharp
-// Initialize
+// Initialize (legacy - use GumService.Default.Cursor in new projects)
 var cursor = FormsUtilities.Cursor;
 ```
 
