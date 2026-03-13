@@ -1,4 +1,4 @@
-# Gamepad Support
+﻿# Gamepad Support
 
 ## Introduction
 
@@ -105,3 +105,63 @@ for (int i = 0; i < gamepads.Count; i++)
 ```
 
 <figure><img src="../../.gitbook/assets/09_10 56 13.png" alt=""><figcaption></figcaption></figure>
+
+## ListBox Navigation
+
+When a `ListBox` has focus, pressing up or down on the D-pad (or tilting the left stick up or down) moves the selection through the list. The `SelectionChanged` event fires each time the selected item changes.
+
+The following example adds items to a `ListBox`, enables gamepad input, and reacts to selection changes:
+
+```csharp
+// Initialize
+var listBox = new ListBox();
+listBox.Width = 200;
+listBox.Height = 150;
+listBox.Items.Add("Option 1");
+listBox.Items.Add("Option 2");
+listBox.Items.Add("Option 3");
+listBox.Items.Add("Option 4");
+listBox.AddToRoot();
+
+listBox.SelectionChanged += (_, args) =>
+    TextInstance.Text = $"Selected: {listBox.SelectedObject}";
+
+FrameworkElement.GamePadsForUiControl.Clear();
+FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
+listBox.IsFocused = true;
+```
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACqVSYUtCMRT9LvgfLqMPSvJSKwLFwDRNCBRTIhjEdBddPTfZ9tIS_3v3zZQ0yKB92e69595zdrZVNgPAOq6dzFgFvE2wEDJKK69ErD6Q0uxNWIiV8zdmCTXQuID7TZTLV7n-qkSPSvop1cvF4rfsHarJ1FO6dFk8BA-JxVGJ2KOm8GLwPkcXNdUMtVNGp-U0FdVHzsSJxx9j_zGg43HmorqUOc66c09oKHGW_x1RPoo4P4q42EdQbWD6xvjgJdfBazHCeOt0et74nJ6ip9TKq-IuHuAydZeznkXnIJmfSbPQQEQTMcO5kOANjKdCTxAcxjhORXC26z_k3-p62GIboVfCaQ1yzwUQduLyULvmesU10NqTccLZphFlBVb7s1B2Ry-0rwP7OrC1LIlcGPt6GyM9mo_aFPeEdC1jh6phtLcmjhoxChv0_Q1Pd-qnonP0L4adgCEj3N7DUMc4cXSvWvj2VZbNrLOZT_A5IeIQAwAA" width="600" height="400"></iframe>
+
+Pressing down selects the next item and pressing up selects the previous item. The selection does not wrap when it reaches the first or last item.
+
+## Slider Adjustment
+
+When a `Slider` has focus, pressing left or right on the D-pad (or tilting the left stick left or right) decreases or increases the slider's `Value` by `SmallChange`. By default, a `Slider` sets `IsUsingLeftAndRightGamepadDirectionsForNavigation` to `false` so that left and right inputs adjust the value rather than moving focus to another control.
+
+The following example creates a `Slider` with a range of 0–100, enables gamepad input, and displays the current value:
+
+```csharp
+// Initialize
+var slider = new Slider();
+slider.Width = 200;
+slider.Minimum = 0;
+slider.Maximum = 100;
+slider.Value = 50;
+slider.SmallChange = 10;
+slider.AddToRoot();
+
+var label = new Label();
+label.Y = 40;
+label.Text = $"Value: {slider.Value}";
+label.AddToRoot();
+
+slider.ValueChanged += (_, _) =>
+    label.Text = $"Value: {slider.Value}";
+
+FrameworkElement.GamePadsForUiControl.Clear();
+FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
+slider.IsFocused = true;
+```
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACo2SUWvCMBDH3wW_w1H2oExCHduL0oHUKcKEoXVjUJC4HjMsTSRJp5v43XeN4oJP9qn3-9_d_67XfbMBEE3suCqjHjhTYccToYQTXIpfJBx9cwNWigINJKBwC3MftNr9XB05exOFW5N6F8cXcEGtLClkwYbc8exng5YNRYnKCq1quUZssLJaVg7_y6c0RVmVVBv0nPLdCXZDq1cuKyT4ELB5yaVM11x91ko3UAZFkemZ1s6vkKt6QclXKE_7PdfvXvOUvRO_j89hhjtH5CaPvG0P9uEUhzw6Z14ahXnHyQq4TaC17MCyDcljrva5AnquNzr4xiPDS9xq8_Ukkb6sY2OKX3hhR9osRKqVM1qyVCI_nu26fBp_Vg_ZouMtJj5nQznB3SdU8FFZWiPxv08_ajYOzcYfiDE4m1gCAAA" width="600" height="400"></iframe>
+
+Each left or right press changes `Value` by the amount set in `SmallChange`. You can also set `LargeChange` for larger increments when clicking the track area with a mouse or cursor.

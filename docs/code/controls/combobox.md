@@ -1,4 +1,4 @@
-# ComboBox
+﻿# ComboBox
 
 ## Introduction
 
@@ -38,3 +38,39 @@ for(int i = 0; i < 40; i++)
 ```
 
 <figure><img src="../../.gitbook/assets/25_07 59 59.png" alt=""><figcaption><p>ComboBox ListBox with custom Height</p></figcaption></figure>
+
+## SelectedObject and SelectedIndex
+
+Use `SelectedIndex` to select an item by its zero-based position in `Items`, or read it back to find which item is currently selected. Use `SelectedObject` to get or set the selected item directly as an object.
+
+```csharp
+// Initialize
+var comboBox = new ComboBox();
+comboBox.AddToRoot();
+for(int i = 0; i < 5; i++)
+{
+    comboBox.Items.Add($"Item {i}");
+}
+comboBox.SelectedIndex = 2;
+```
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUkvNzk_Kd8isUbBXyUssVnKFcDU3rmDyYnJ5jSkpIflB-fglYOC2_SCMzr0QhE6jHwBpI2SiYAiltbc2YvOqYPAUggOv0LEnNLQbp11CJUQJxFKoza2OUQMbUIlkQnJqTmlySmuKZl5IKcoqRtRIvVy0An04fSsYAAAA" width="600" height="400"></iframe>
+
+## SelectionChanged
+
+The `SelectionChanged` event fires whenever the user picks a different item. The handler receives a `SelectionChangedEventArgs` with information about the previously and newly selected items. You can also read `SelectedObject` or `SelectedIndex` directly inside the handler.
+
+```csharp
+// Initialize
+var comboBox = new ComboBox();
+comboBox.AddToRoot();
+for(int i = 0; i < 5; i++)
+{
+    comboBox.Items.Add($"Item {i}");
+}
+comboBox.SelectionChanged += (sender, args) =>
+{
+    // comboBox.SelectedObject holds the newly selected item
+    System.Console.WriteLine($"Selected: {comboBox.SelectedObject}");
+};
+```
+<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACnVPwUrDQBC9F_oPw-IhISX14qUxguYgBUGwgpdc0u7YjGxmYHer1pB_d7dtai_u5e28x3tvpp9OANTSPe46tQBvdzg7MMTkqTH0g4FWn42FjXRreZBvKIHxC6rTmKRFzaOW32v9Ki8i_kC_i02IPVDwXBcBbuEmQJalNfc1Q3hn59Jj56I_uapVHKCnoVYxZrgoWKHBjSfhqm14ixqyEhKHrNHOoLFbl0J5d06fz_8Kjk7Uz-uPgNCK0Q58i_Easwd3koFC99G92rvwzythJwbzNxukJ2KMG45pC-j_aRiXL9R0MvwCXTCUyGcBAAA" width="600" height="400"></iframe>
