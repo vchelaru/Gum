@@ -25,6 +25,7 @@ var hardRadioButton = new RadioButton();
 stackPanel.AddChild(hardRadioButton);
 hardRadioButton.Text = "Hard";
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACp2NuwrCMBSG90Lf4ZCpgvQBFAcVUQdBascswQQ82CbQnnjFdzcp0pbUqev3X753HAGwfb21JZsBVVZNG4IaCUWBL-Uwu4kKahLn61FoVcACtLrDqQXJZM51l6dLKXOTGUNNwLWfK1E_MyHRrCyR0b-PHvlzsr5gIZNg6WsBSnP1IPfI2cYFnLXSUkm05TjtYOuLA9ipD03Uk19EJcepg6WvBajT7lzgpCyOPnH0BaJP-5HOAQAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/13_09 42 01.gif" alt=""><figcaption></figcaption></figure>
 
@@ -66,7 +67,7 @@ hardRadioButton.Checked += (sender, _) =>
     System.Console.WriteLine("Hard selected");
 };
 ```
-<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACqWPQWsCMRCF74L_YchppbI_oGUFuxQVPIgKvQQkbAY2GCeQzNZa8b83saKSempzfG_e-16O_R6AmIVJtxPPwL7D4VkxZNgoa74wyuJDeQismu1CEVqogHAPq6tQDF4k3fxyrPXaLZ3jsyEpxVGFw1Jp4147ZkeXjjvlQUndGquLLJnOMqlc4yfHRineoiHFFdoqr_8GzZLpLJNu0Gk0LtB8WN1is0UNTxUUAUmjH8JmANVI0lESxLc6BMZdWTsKzmL57g3j3BAWP5-BgBYbxghIG04PdvyLkbb_Yoh-7_QNwOpGWxkCAAA" width="600" height="400"></iframe>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqWPQWsCMRCF74L_YchppbI_oGUFuxQVPIgKvQQkbAY2GCeQzNZa8b83saKSempzfG_e-16O_R6AmIVJtxPPwL7D4VkxZNgoa74wyuJDeQismu1CEVqogHAPq6tQDF4k3fxyrPXaLZ3jsyEpxVGFw1Jp4147ZkeXjjvlQUndGquLLJnOMqlc4yfHRineoiHFFdoqr_8GzZLpLJNu0Gk0LtB8WN1is0UNTxUUAUmjH8JmANVI0lESxLc6BMZdWTsKzmL57g3j3BAWP5-BgBYbxghIG04PdvyLkbb_Yoh-7_QNwOpGWxkCAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 ## Reading IsChecked
 
@@ -99,4 +100,4 @@ button.Click += (_, _) =>
         System.Console.WriteLine("Nothing selected");
 };
 ```
-<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACp2RUUvDMBSF3wf7D5c-tTjKfHVUmEV0ICLbQITAiMvVXpYl0KTqHPvvJm1pS1CQ5fHcc8-XnBzHI4BoYe6qfXQFtqxwUiukyBKX9I1Ojj54Ccby7e6JK5SQgcJPWHVCnMyY6ufpXIi1Xmpt6wFTfh25OSy5IH1TWatVmzFQfgnJC5IiDja9LZDSNX5Zl8iiWzdgUQcteCnOgwab3hZIPfTeDQbQ1yFrgGn0oJxWfHH2y-m0F7rwvMDtDgxK3FrSqua0nlySG11kEG8msEkgu2bqyBS4Q29hbenC1FEoIMvqj04aqz-rg7G4T3OtjJaYPpdk8YEUxk2jQKa9AbqH-mv7JZQGPSjs5UyQb_Fv0L8iHrUtSL0HEadZNB6dfgAYHhTD6QIAAA" width="600" height="400"></iframe>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACp2RUUvDMBSF3wf7D5c-tTjKfHVUmEV0ICLbQITAiMvVXpYl0KTqHPvvJm1pS1CQ5fHcc8-XnBzHI4BoYe6qfXQFtqxwUiukyBKX9I1Ojj54Ccby7e6JK5SQgcJPWHVCnMyY6ufpXIi1Xmpt6wFTfh25OSy5IH1TWatVmzFQfgnJC5IiDja9LZDSNX5Zl8iiWzdgUQcteCnOgwab3hZIPfTeDQbQ1yFrgGn0oJxWfHH2y-m0F7rwvMDtDgxK3FrSqua0nlySG11kEG8msEkgu2bqyBS4Q29hbenC1FEoIMvqj04aqz-rg7G4T3OtjJaYPpdk8YEUxk2jQKa9AbqH-mv7JZQGPSjs5UyQb_Fv0L8iHrUtSL0HEadZNB6dfgAYHhTD6QIAAA" target="_blank">Try on XnaFiddle.NET</a>

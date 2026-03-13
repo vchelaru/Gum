@@ -15,6 +15,7 @@ for(int i = 0; i < 10; i++)
     comboBox.Items.Add($"Item {i}");
 }
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUkvNzk_Kd8isUbBXyUssVnKFcDU3rmDyYnJ5jSkpIflB-fglYOC2_SCMzr0QhE6jHwBpI2SgYgmhtbc2YvOqYPAUggGv1LEnNLQYZoKESowTiKFRn1sYogcypVeLlquXlAgAcjglhrAAAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/27_07 29 52.gif" alt=""><figcaption><p>ComboBox displaying a list of items</p></figcaption></figure>
 
@@ -36,6 +37,7 @@ for(int i = 0; i < 40; i++)
     comboBox.Items.Add($"Item {i+1}");
 }
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2OzQqCUBCF94LvMFxaKIYYtMpaVIsSWoXLuzG75UDOhF4rEt-9sT-o2Xycc5gz07oOgErqVVOqCdiqMcOng4QWsxPejdjqklWQc7njBd9gBmSusHxLz481fbJwvt-nvGW2fzblBVfeC2HK5590g7XtuTZ4LKz0j6NIck0H2UGygOJFsWAqkTAIfE2tJpD5tiTWlHX_gDfQqhfQYjDqtOpvdcp1Otd5AB7haVDuAAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/25_07 59 59.png" alt=""><figcaption><p>ComboBox ListBox with custom Height</p></figcaption></figure>
 
@@ -53,7 +55,7 @@ for(int i = 0; i < 5; i++)
 }
 comboBox.SelectedIndex = 2;
 ```
-<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUkvNzk_Kd8isUbBXyUssVnKFcDU3rmDyYnJ5jSkpIflB-fglYOC2_SCMzr0QhE6jHwBpI2SiYAiltbc2YvOqYPAUggOv0LEnNLQbp11CJUQJxFKoza2OUQMbUIlkQnJqTmlySmuKZl5IKcoqRtRIvVy0An04fSsYAAAA" width="600" height="400"></iframe>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUkvNzk_Kd8isUbBXyUssVnKFcDU3rmDyYnJ5jSkpIflB-fglYOC2_SCMzr0QhE6jHwBpI2SiYAiltbc2YvOqYPAUggOv0LEnNLQbp11CJUQJxFKoza2OUQMbUIlkQnJqTmlySmuKZl5IKcoqRtRIvVy0An04fSsYAAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 ## SelectionChanged
 
@@ -73,4 +75,4 @@ comboBox.SelectionChanged += (sender, args) =>
     System.Console.WriteLine($"Selected: {comboBox.SelectedObject}");
 };
 ```
-<iframe src="https://xnafiddle.net/embed-gate.html?hover=true#snippet=H4sIAAAAAAAACnVPwUrDQBC9F_oPw-IhISX14qUxguYgBUGwgpdc0u7YjGxmYHer1pB_d7dtai_u5e28x3tvpp9OANTSPe46tQBvdzg7MMTkqTH0g4FWn42FjXRreZBvKIHxC6rTmKRFzaOW32v9Ki8i_kC_i02IPVDwXBcBbuEmQJalNfc1Q3hn59Jj56I_uapVHKCnoVYxZrgoWKHBjSfhqm14ixqyEhKHrNHOoLFbl0J5d06fz_8Kjk7Uz-uPgNCK0Q58i_Easwd3koFC99G92rvwzythJwbzNxukJ2KMG45pC-j_aRiXL9R0MvwCXTCUyGcBAAA" width="600" height="400"></iframe>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACnVPwUrDQBC9F_oPw-IhISX14qUxguYgBUGwgpdc0u7YjGxmYHer1pB_d7dtai_u5e28x3tvpp9OANTSPe46tQBvdzg7MMTkqTH0g4FWn42FjXRreZBvKIHxC6rTmKRFzaOW32v9Ki8i_kC_i02IPVDwXBcBbuEmQJalNfc1Q3hn59Jj56I_uapVHKCnoVYxZrgoWKHBjSfhqm14ixqyEhKHrNHOoLFbl0J5d06fz_8Kjk7Uz-uPgNCK0Q58i_Easwd3koFC99G92rvwzythJwbzNxukJ2KMG45pC-j_aRiXL9R0MvwCXTCUyGcBAAA" target="_blank">Try on XnaFiddle.NET</a>

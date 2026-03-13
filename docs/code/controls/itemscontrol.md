@@ -25,5 +25,6 @@ for(int i = 0; i < 10; i++)
     itemsControl.Items.Add(i);
 }
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUMktSc4ud8_NKivJzFGwV8lLLFTyRhDQ0rWOAehACeo4pKSH5Qfn5JWCptPwijcy8EoVMoF4DayBlo2AIorW1NWPyqmPyFIAARTvYcJAhGpkg_bVKvFy1vFwA64IJNbAAAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/19_05 28 54.png" alt=""><figcaption><p>ItemsControl with ten items</p></figcaption></figure>

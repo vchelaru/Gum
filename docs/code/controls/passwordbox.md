@@ -27,5 +27,6 @@ button.Y = 90;
 button.Text = "Get Password";
 button.Click += (_, _) => Debug.WriteLine(passwordBox.Password.ToString());
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm2PQUvDQBCF7_kVw54SLKFYPWiJYG1phR6KBqqwUNLukAymu2UzaYvif3fTrtpGb_O-95Z97yMAEI_VuF6LW2BbY6cBpIkpK-kdHRXbzMImq6qdsWpg9pCAxh3MfkkY9aU-ScT3SqXmyRj-47y419fdFnz9D85JceGMy27bmSDlBTurd9VyZmW2wsKUCq2zpRhpdtd3UylcXOpmzrJmNtovGRzEoeqRt_p7-FPd66b1zYlOcd-UkmKMfP6nDzyUtHqDiwTCRQcWESR3MMRlncdzS4xT0hiejfF3nJpntqTzMIr6IvgMvgDQN6x3tAEAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/13_09 34 46.gif" alt=""><figcaption><p>Password entered in a PasswordBox</p></figcaption></figure>

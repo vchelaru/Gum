@@ -33,6 +33,7 @@ button.Click += (_, _) =>
 };
 
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RXWuDMBSG7_0VB68s66T7uFpx0Dq2CrsqMhkIJepZDU1yRoy1rPS_L1ppXTeWu_Pk5c3Dyd4BcKPqpZbuAxhd47gFXHHDmeBfaKm7ZRoargpqIACFDSTd4I2mqTpyf6bykrRna_yEa_zQTGIP_RCVQT0IJ7wwpa26m0zOcIF8XRpLb4d0VhQxLYlM91iqWhWDOxOpyjCVYy_0yjIUXWR46T9RvrlwapEf0-ev7Hv79P0lje1gL1J3gUIQRMAkMJBYVWyNkNEudX_IhiUXhTesOHtntTGkeuN5N3TKR_7vCudkI3IQbm2vb9pF9eAkGgqq8E-rPvnGq5qJQVcoeL6BqwC81RhWIwgeU7VPFdjTVyxR0hafNcnTVxymrnNwvgF3GhpjPgIAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/14_06 14 56.gif" alt=""><figcaption><p>Window responding to move and resize actions</p></figcaption></figure>
 
@@ -66,6 +67,7 @@ var window = new Window();
 window.AddToRoot();
 window.ResizeMode = ResizeMode.NoResize;
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvmUlBQ8ix2L81VslIoKSpN1QEJZOZllmQm5mRWpQJFlcoSixTKM_NS8ssVbBXyUssVwsEcDU3rmDyIuJ5jSkpIflB-fgmyYFBqMdAE3_yUVKA-BEfPLx_CsVbiquUCAI5YsKWBAAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 ## Code Example: Forced Docking
 
@@ -95,6 +97,7 @@ windowVisual.BorderTopInstance.IsEnabled = false;
 windowVisual.BorderBottomInstance.IsEnabled = false;
 windowVisual.BorderRightInstance.IsEnabled = false;
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACp2QMU_DMBCF9_yKU6ZUQuneioEIVEViqiK6sBzJhVh1fJV9aUoR_x3XLtABqNrF0r2n7947vycAaekWQ5_OQOxANwdBGSUKtdqTV9MtWhiVaXiEWzA0wioM2WT-bKKe3zVNxUtmCeK3fM_1Ojs8-VK9dhK9n3VPyg2o_dJsdTJPjnCcAjKdQo9rAiXgGKQjGBxZqNEYFrDkfFNgCz1vKdhxRQBpV9NGoPV2x1bt2Qhq_Tb7Khlj8kqJpgJtaZygqSkv3YPBF02N79eidnRy2JEp2DZkK948Uiv_gr9j4VMu5QoW4f6axEieD_2r7nV5l1Ln-qXJR_IJz-IpZ7YCAAA" target="_blank">Try on XnaFiddle.NET</a>
 {% endtab %}
 
 {% tab title="General" %}
@@ -118,6 +121,7 @@ window.GetFrameworkElement("BorderTopInstance").IsEnabled = false;
 window.GetFrameworkElement("BorderBottomInstance").IsEnabled = false;
 window.GetFrameworkElement("BorderRightInstance").IsEnabled = false;
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACq2QMWvDMBCFd_-KQ5MDxdlTOtQ0DYZOwdDFi2qfa2FJF07nuE3pf68jQ-hQqAcvB3oPfffefSUAqgiHwakdCA94dxWMN2K0NRecVHXWDKPxDY3wAB5HeI2PdHNf-VnPHpumpCORRPEmP1Hdp9eRHc17J7O33YLTPYIRCATSIQwBGWrtPQkwhmktEIOjM0Z7hsWP-FHjSaCd7I7YXMiLtvZzd9t4QHlm7XAk7vcWHXpJK1UasZhrLnwQ7Wus1CYrwt7rN4vNVKrVNuDv4H9jcuIGuaTTC7byH2sZKd5lBVROIuRWyjXDFkVb2nO1VCuAFhRTyXfyA8CJg4kbAwAA" target="_blank">Try on XnaFiddle.NET</a>
 {% endtab %}
 {% endtabs %}
 

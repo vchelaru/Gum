@@ -29,6 +29,7 @@ button.Click += (s, e) =>
     listBox.ScrollIntoView(newItem);
 };
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2PX0vDMBTF3wv9DpfgQ4ejjKEIjopughbEBy3-gbzUNbiLaQLtrR2WfneTLNNsecr55eSec4c4AmB5e9fV7BKo6cTUEVRIWEr8EQaz77IBiS0t9RYyUKKHh51KJguu_Et6U1WFftKaDuib-XE-C8D7MXjFijYGns1Cei_wc0MGzx3mypb46Ii08h2WTriwHT9q4OFfAa9t_vwiAIXY2hzOzHcgvd-Ns3_LSuL6C04zSNopiAlkV1wNXIE5tpZpk5OozZATztxt2K9hVZuudKdohGsYbksSBdYifdT96CLskEO36ZH4kXaP0PC8brSUuSL9gqIPXeOCxdEYR78IY1Gh0gEAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/13_09 05 48.gif" alt=""><figcaption><p>Adding items to a ListBox by clicking a button</p></figcaption></figure>
 
@@ -64,6 +65,7 @@ addStringButton.Click += (not, used) =>
     listBox.Items.Add("Hello " + DateTime.Now.Ticks);
 };
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACpWP0WvCMBDG3wv-D0eeUiyhe91wMDvYhCFD-5iX0hwaTC_QXlEm_u-LttAOdWBeLvnu7pfvO04iALFoPtpKPAPXLSYXxZJlWzj7g0EWay7K3XdB6KAZrjMg3Mv4RdMgqjdjcr_ynq8aVG59LbuiMiTG-jyi6cs2PPcHcH29x8221hnZT3WrmuYtsycojFkQ948BMJZVjgcOPS0CC4KMG6y1uPPNePOKlDlb7mA6A0meE2gbNDHMXjUdNUE4vUe1YKyaM1MGQ7AqyPhKxmoZjMg0gac0jc_s0yXLkGTNtaXNrTDjzt88Xee_OOPdW7jHQ2nxic754ACm8F4w5rZCtfR7lQdU00UTk-g0iX4ByUNramgCAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/26_21 44 00.gif" alt=""><figcaption><p>Items added to a ListBox</p></figcaption></figure>
 
@@ -94,6 +96,7 @@ for(int i  = 0; i < 5; i++)
     listBox.Items.Add(item);
 }
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACnVRy07DMBC8R8o_rHxKVJRy4ULhQCtRKiGBSuGUi4mXZqm7Ro5THlX_HdtJKZUgkjPOeGZ2s96mCYCYNdN2Lc7B2RZPIkNMjqSmL_S0uKXGjc0H6B4vgfE9y0cl90xxpdTCzI1xxyxXtbFZB8UE2aEN5yW_eJrYAYEPOx15vIAzD4NBXvK2ZPBPX3XmcA0UXoey4ThQxeObkg4X5u75FSuXlSKqSwEDoK5SkG6khQ01rdQ-I_uV-xTJPEZ1-4MnfhbXxuLSmpbVxGhjvT9icU-86hvplTe0rLVfDtVYVqu_THNUx54H1L7t_w1Ti8g_LQ2HIJUCV-N-NnEsiqwP0Z-daD_78HtNuJcsiMIsdiJNdmnyDb5bbQrzAQAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/26_21 51 15.gif" alt=""><figcaption><p>ListBoxItems directly added</p></figcaption></figure>
 
@@ -143,6 +146,7 @@ for(int i = 0; i < 10; i++)
 
 listBox.DragDropReorderMode = DragDropReorderMode.Immediate;
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm2MwQrCMAyG74O9Q-hpYzL06vSgDGSgl-Gxl0KjBNZGuk7FsXe3nXozlz_5knxjmgCIpj8MRqzBuwEXMyFLnlRHLwxY3JWDjnq_5ydsweIDjp8pyytpv5typ_WZW2Y_U2kv7DKyHij8LKsQG1jFLIpc2lFaCPX7bTyaPhoyKWIPUkABFEVTdP3uaqeuteNbi-w0uhNrDPY_tGyMQU3KYyXSZEqTN_BbeGDqAAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/13_09 06 43.gif" alt=""><figcaption><p>ListBoxItems reordering</p></figcaption></figure>
 
