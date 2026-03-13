@@ -1449,6 +1449,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public void RefreshUi()
     {
         _collapseToggleService.Clear();
+        var expandedPaths = _collapseToggleService.SaveExpandedPaths(ObjectTreeView);
         RecordSelection();
         // brackets are used simply to indicate the recording and selection should
         // go around the rest of the function:
@@ -1463,6 +1464,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         }
         SelectRecordedSelection();
+        _collapseToggleService.RestoreExpandedPaths(ObjectTreeView, expandedPaths);
     }
 
 
