@@ -262,9 +262,10 @@ namespace Gum.Managers
                 }
                 _guiCommands.RefreshElementTreeView();
 
+                element = ObjectFinder.Self.GetElementSave(relativeToFolderForType);
+
                 if(refreshingSelected)
                 {
-                    element = ObjectFinder.Self.GetElementSave(file.StandardizedNoPathNoExtension);
                     _selectedState.SelectedElement = element;
                 }
                 _pluginManager.ElementReloaded(element);

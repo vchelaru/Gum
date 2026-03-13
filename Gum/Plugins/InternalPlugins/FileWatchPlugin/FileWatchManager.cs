@@ -241,7 +241,24 @@ public class FileWatchManager : IFileWatchManager
         changesToIgnore.Clear();
     }
 
-    public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromSeconds(2)) - DateTime.Now;
+    public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromMilliseconds(500)) - DateTime.Now;
+
+    /// <summary>
+    /// Returns true if the file can be opened for reading, meaning it is not currently
+    /// locked by another process (e.g. git writing it to disk).
+    /// </summary>
+    private bool IsFileReady(FilePath file)
+    {
+        try
+        {
+            using var stream = File.Open(file.Standardized, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return true;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+    }
 
     /// <summary>
     /// Attempts to processes all queued file changes
@@ -257,10 +274,16 @@ public class FileWatchManager : IFileWatchManager
 
         IsFlushing = true;
 
-        var filesToProcess = _changedFilesWaitingForFlush.Keys.ToList();
-        foreach (var file in filesToProcess)
+        var candidateFiles = _changedFilesWaitingForFlush.Keys.ToList();
+        var filesToProcess = new List<FilePath>();
+        foreach (var file in candidateFiles)
         {
-            _changedFilesWaitingForFlush.TryRemove(file, out _);
+            if (IsFileReady(file))
+            {
+                _changedFilesWaitingForFlush.TryRemove(file, out _);
+                filesToProcess.Add(file);
+            }
+            // else: file still locked (e.g. git is writing it); leave in queue and retry next cycle
         }
 
         foreach (var file in filesToProcess)
