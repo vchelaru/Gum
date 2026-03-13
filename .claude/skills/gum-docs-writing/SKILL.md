@@ -117,6 +117,8 @@ For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle
 ## Code Sample Rules
 
 - **No reflection** — never use `GetType()`, `typeof()`, `MemberInfo`, or any `System.Reflection` APIs in doc code samples. Use `is` pattern matching instead: `if (device is MonoGameGum.Input.Keyboard)`.
+- **Fully qualify non-Gum types** — any type that is not part of the Gum API must use its fully qualified name. For example, use `System.DateTime` not `DateTime`. Do not rely on implicit `using` statements for non-Gum types.
+- **No debug/console output** — never use `System.Diagnostics.Debug.WriteLine` (breaks in NetFiddle) or `System.Console.WriteLine` (requires user to open the diagnostics window). Instead, show side effects directly in the sample itself — e.g., update a visible label or change a property on a displayed object.
 
 ## Gotchas
 
