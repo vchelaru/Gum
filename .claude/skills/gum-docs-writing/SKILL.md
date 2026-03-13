@@ -110,6 +110,10 @@ protected override void Initialize()
 
 **Platform-agnostic by default:** prefer `// Initialize` over MonoGame-specific phrasing unless the page is explicitly MonoGame-only. This supports Raylib and other runtimes.
 
+## XnaFiddle Links
+
+For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle.md).
+
 ## Gotchas
 
 - SUMMARY.md indentation is 2 spaces per level — wrong indentation breaks nesting visually in GitBook.

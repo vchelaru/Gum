@@ -20,7 +20,7 @@ Read the relevant source code, then distill it into a tight, high-signal skill f
 - Name: use kebab-case noun phrases (e.g., `gum-tool-undo`, `gum-forms-controls`).
 - Front matter `description`: third person, specific. State what the skill covers AND when to load it.
 - Structure with `##` sections. Use tables for key-file maps and event/class lists. Use prose for relationships and non-obvious behavior.
-- Progressive disclosure: put high-level architecture at the top. Reference separate detail files for advanced content rather than inlining everything.
+- Progressive disclosure: put high-level architecture at the top. Reference separate detail files for advanced content rather than inlining everything. Detail files live inside the skill's own folder (e.g., `.claude/skills/gum-docs-writing/xnafiddle.md`) and are linked from SKILL.md with a note like "For XnaFiddle links, see [xnafiddle.md](xnafiddle.md)."
 
 # What to Include
 
