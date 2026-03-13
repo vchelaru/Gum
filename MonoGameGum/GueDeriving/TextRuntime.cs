@@ -2,8 +2,12 @@
 #define XNALIKE
 #endif
 using Gum.DataTypes;
+#if RAYLIB
+using Gum.Renderables;
+#else
 using Gum.Graphics;
 using Gum.RenderingLibrary;
+#endif
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -168,9 +172,8 @@ public class TextRuntime : InteractiveGue
 #endif
 
 
-#if !RAYLIB
     /// <summary>
-    /// The maximum number of lines to display. This can be used to 
+    /// The maximum number of lines to display. This can be used to
     /// limit how many lines of text are displayed at one time.
     /// </summary>
     public int? MaxNumberOfLines
@@ -178,7 +181,6 @@ public class TextRuntime : InteractiveGue
         get => ContainedText.MaxNumberOfLines;
         set => ContainedText.MaxNumberOfLines = value;
     }
-#endif
 
 #if RAYLIB
     public Font CustomFont
@@ -188,7 +190,7 @@ public class TextRuntime : InteractiveGue
     }
 #endif
 
-#if !SKIA
+#if !RAYLIB && !SKIA
     public BitmapFont BitmapFont
     {
         get => ContainedText.BitmapFont;
@@ -212,7 +214,7 @@ public class TextRuntime : InteractiveGue
     /// Setting this value to a value other than 1 scales the text accordingly. This is
     /// a scalue value applied to the existing font, so a value larger than 1 can result
     /// in the font appearing pixellated.
-    /// 
+    ///
     /// Since this value does not affect the underlying Font, it can be changed without
     /// requiring a dedicated font asset.
     /// </remarks>
@@ -235,6 +237,7 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+#if !RAYLIB
     public float LineHeightMultiplier
     {
         get => ContainedText.LineHeightMultiplier;
@@ -248,7 +251,7 @@ public class TextRuntime : InteractiveGue
             }
         }
     }
-
+#endif
 
     bool useCustomFont;
     /// <summary>
@@ -283,7 +286,7 @@ public class TextRuntime : InteractiveGue
 
     string font;
     /// <summary>
-    /// The font name, such as "Arial", which is used to load fonts from 
+    /// The font name, such as "Arial", which is used to load fonts from
     /// </summary>
     public string Font
     {
@@ -292,7 +295,7 @@ public class TextRuntime : InteractiveGue
     }
 
     /// <summary>
-    /// The font name, such as "Arial", which is used to load fonts from 
+    /// The font name, such as "Arial", which is used to load fonts from
     /// </summary>
     public string FontFamily
     {
@@ -349,6 +352,7 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+#if !RAYLIB
     /// <summary>
     /// Gets or sets the text rendering position mode to use for the contained text, overriding the default behavior if
     /// specified.
@@ -361,6 +365,7 @@ public class TextRuntime : InteractiveGue
         get => ContainedText.OverrideTextRenderingPositionMode;
         set => ContainedText.OverrideTextRenderingPositionMode = value;
     }
+#endif
 
     /// <summary>
     /// Gets or sets the raw text content displayed by the control. This is the value before line wrapping and bbcode parsing has been applied.
@@ -380,7 +385,7 @@ public class TextRuntime : InteractiveGue
             var heightBefore = ContainedText.WrappedTextHeight;
             if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
             {
-                if(this.MaxWidth == null)
+                if (this.MaxWidth == null)
                 {
                     // make it have no line wrap width before assignign the text:
                     ContainedText.Width = null;
@@ -400,7 +405,7 @@ public class TextRuntime : InteractiveGue
             if (shouldUpdate)
             {
                 UpdateLayout(
-                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren | 
+                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
                     Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
             }
         }
@@ -416,7 +421,7 @@ public class TextRuntime : InteractiveGue
         var heightBefore = ContainedText.WrappedTextHeight;
         if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
         {
-            if(this.MaxWidth == null)
+            if (this.MaxWidth == null)
             {
                 ContainedText.Width = null;
             }
@@ -443,15 +448,15 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
 
+#if !RAYLIB
     public OverlapDirection OverlapDirection
     {
         get => ContainedText.OverlapDirection;
         set => ContainedText.OverlapDirection = value;
     }
+#endif
 
     #region Defaults
-
-
 
     // todo - add more here
     public static string DefaultFont = "Arial";
@@ -486,13 +491,15 @@ public class TextRuntime : InteractiveGue
 
     public TextRuntime(bool fullInstantiation = true, SystemManagers? systemManagers = null)
     {
-        if(fullInstantiation)
+        if (fullInstantiation)
         {
             this.SuspendLayout();
             var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
+#if !RAYLIB
             textRenderable.RenderBoundary = false;
+#endif
             mContainedText = textRenderable;
-            
+
             SetContainedObject(textRenderable);
 
             Width = DefaultWidth;
@@ -522,11 +529,12 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     // We should phase this out, so not adding it to raylib. Instead, add to root
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer:null);
 #endif
 
+#if !RAYLIB
     /// <summary>
     /// Returns the index of the character at the specified screen position. This returns the index
     /// within the WrappedText, so to index in, you need to loop through each line.
@@ -535,5 +543,5 @@ public class TextRuntime : InteractiveGue
     /// <param name="screenY">The screen y position, usually obtained by Cursor.YRespectingGumZoomAndBounds()</param>
     /// <returns>The index in the WrappedText</returns>
     public int GetCharacterIndexAtPosition(float screenX, float screenY) => ContainedText.GetCharacterIndexAtPosition(screenX, screenY);
-
+#endif
 }

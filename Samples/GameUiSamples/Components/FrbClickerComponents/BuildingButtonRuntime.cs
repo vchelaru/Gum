@@ -38,6 +38,7 @@ internal class BuildingButtonRuntime : InteractiveGue
     public BuildingButtonRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : 
         base(new InvisibleRenderable())
     {
+        HasEvents = true;
         if(fullInstantiation)
         {
             this.Width = 0;

@@ -140,6 +140,25 @@ public class TextRuntimeTests : BaseTestClass
 
     #endregion
 
+    #region FontSize
+
+    [Fact]
+    public void FontSize_ShouldDefaultTo18()
+    {
+        TextRuntime sut = new();
+        sut.FontSize.ShouldBe(18);
+    }
+
+    [Fact]
+    public void FontSize_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.FontSize = 24;
+        sut.FontSize.ShouldBe(24);
+    }
+
+    #endregion
+
     #region HeightUnits
 
     [Fact]
@@ -147,6 +166,83 @@ public class TextRuntimeTests : BaseTestClass
     {
         TextRuntime sut = new();
         sut.HeightUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.RelativeToChildren);
+    }
+
+    #endregion
+
+    #region IsBold
+
+    [Fact]
+    public void IsBold_ShouldDefaultToFalse()
+    {
+        TextRuntime sut = new();
+        sut.IsBold.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsBold_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.IsBold = true;
+        sut.IsBold.ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region IsItalic
+
+    [Fact]
+    public void IsItalic_ShouldDefaultToFalse()
+    {
+        TextRuntime sut = new();
+        sut.IsItalic.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsItalic_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.IsItalic = true;
+        sut.IsItalic.ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region MaxNumberOfLines
+
+    [Fact]
+    public void MaxNumberOfLines_ShouldBeNullByDefault()
+    {
+        TextRuntime sut = new();
+        sut.MaxNumberOfLines.ShouldBeNull();
+    }
+
+    [Fact]
+    public void MaxNumberOfLines_WhenSetToOne_ShouldLimitWrappedTextToOneLine()
+    {
+        TextRuntime sut = new();
+        sut.Text = "Line1\nLine2\nLine3";
+        sut.MaxNumberOfLines = 1;
+        sut.WrappedText.Count.ShouldBe(1);
+    }
+
+    #endregion
+
+    #region OutlineThickness
+
+    [Fact]
+    public void OutlineThickness_ShouldDefaultToZero()
+    {
+        TextRuntime sut = new();
+        sut.OutlineThickness.ShouldBe(0);
+    }
+
+    [Fact]
+    public void OutlineThickness_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.OutlineThickness = 2;
+        sut.OutlineThickness.ShouldBe(2);
     }
 
     #endregion
@@ -186,6 +282,46 @@ public class TextRuntimeTests : BaseTestClass
     {
         TextRuntime sut = new();
         sut.WidthUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.RelativeToChildren);
+    }
+
+    #endregion
+
+    #region SetTextNoTranslate
+
+    [Fact]
+    public void SetTextNoTranslate_ShouldUpdateTextProperty()
+    {
+        TextRuntime sut = new();
+        sut.SetTextNoTranslate("Translated Text");
+        sut.Text.ShouldBe("Translated Text");
+    }
+
+    [Fact]
+    public void SetTextNoTranslate_WhenNull_ShouldSetTextToNull()
+    {
+        TextRuntime sut = new();
+        sut.Text = "Some text";
+        sut.SetTextNoTranslate(null);
+        sut.Text.ShouldBeNull();
+    }
+
+    #endregion
+
+    #region UseFontSmoothing
+
+    [Fact]
+    public void UseFontSmoothing_ShouldDefaultToTrue()
+    {
+        TextRuntime sut = new();
+        sut.UseFontSmoothing.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UseFontSmoothing_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.UseFontSmoothing = false;
+        sut.UseFontSmoothing.ShouldBeFalse();
     }
 
     #endregion

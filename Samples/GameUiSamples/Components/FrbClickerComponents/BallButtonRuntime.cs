@@ -16,7 +16,7 @@ internal class BallButtonRuntime : InteractiveGue
     {
         if (fullInstantiation)
         {
-
+            HasEvents = true;
             this.Width = 350;
             this.Height = 350;
             this.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
