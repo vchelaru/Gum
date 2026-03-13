@@ -114,6 +114,10 @@ protected override void Initialize()
 
 For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle.md).
 
+## Code Sample Rules
+
+- **No reflection** — never use `GetType()`, `typeof()`, `MemberInfo`, or any `System.Reflection` APIs in doc code samples. Use `is` pattern matching instead: `if (device is MonoGameGum.Input.Keyboard)`.
+
 ## Gotchas
 
 - SUMMARY.md indentation is 2 spaces per level — wrong indentation breaks nesting visually in GitBook.

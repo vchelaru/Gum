@@ -63,7 +63,19 @@ button.Click += (_, _) =>
 
 ## Clicking Programmatically
 
-Clicking can be performed programmatically by calling PerformClick. The following example shows how to click a button when the Enter key is pressed:
+Clicking can be performed programmatically by calling `PerformClick`. The following example shows how to click a button when the Enter key is pressed. The Click handler updates the button text with the current time:
+
+```csharp
+// Initialize
+button.Click += HandleClick;
+
+// ...
+
+void HandleClick(object sender, EventArgs args)
+{
+    button.Text = $"Clicked at {DateTime.Now:T}";
+}
+```
 
 ```csharp
 // Update
@@ -73,12 +85,36 @@ if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
     button.PerformClick();
 }
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2RwWoCMRCG74LvMOS0UlntoZeKB1u0ShGkWGohl-xmdFN3J5LMalvx3ZvdtSjmkDBfZubPPzm2WwBi5l_KQjwCuxK7NSmwSND5wMRTyWwJkvoYSJK0t0bDVJHO8Tk36TayyRemDB5Jo-vCeI_EI7fxoMLWkXSUBGH1epDVVZBWZZJOolEzZNio3PxiJdgowRAID9CoR50g3PB4pPXSvlnL13AV0h_6l_jzJv4wmrPA7vtXcIpmk_FN5hK_KyRFbQ3mKMXlsmF3w2v3g7OJcqcV1wb2ysEWfxKrnA6tJtYV_p1NHkyij1_PN6GrWUf_eRVelD5DHc1N6qy3a45XpOKJUwUerNvGM9qVXOX5eEyMrnOZ7Pl5C3TrINZ8SjWdk2i3Tu3WH3KJQcHmAQAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAACCmVRUU_CMBD-K5fFhy0hzSTxBcIDCAoxGqJLxGQv3XqDytaS9jpUwn-3bFMJ9qHNXb_77vvuDsHC3rsqGJBx2AsqrDI0NhgEE0ekFWTNM0xVqmotBcy5EiXeljLfhjp7x5zAohJoejCrUdHYrC1wf0WpOqQK_GkpWIIfBCO4Sl0c9_sNAwrgBIcpJ0xkhexJ7wfJsQX4lsegF0glSfJSfqHX1DJ5EoV7aAWGkQd2HcZCJPpZazpPrjz8Jv6L3y7iVylo43PX8VlyjnK9oQtkZ6CVtzRoLcwUoQHSkJ_s_ArvChqPLX4yOp_c0BtzO-Fte1M1N7DFz0xzIzy9X8YLmlrmyKZYcFcSe-h-PbMswh_sKb10doMifJS50VYXxFaKszvDK9xrs2ULtXNNuWWN0ujfUpZoCm2qdp9RM_PjN-gHLUoTAgAA" target="_blank">Try on XnaFiddle.NET</a>
 
-Optionally you can pass the input device to the PerformClick method:
+Optionally you can pass the input device to the `PerformClick` method. The input device is then available in the Click handler through `InputEventArgs`, which is useful to determine how the button was activated:
+
+```csharp
+// Initialize
+button.Click += HandleClick;
+
+// ...
+
+void HandleClick(object sender, EventArgs args)
+{
+    var device = "Unknown";
+    if (args is Gum.Wireframe.InputEventArgs inputEventArgs)
+    {
+        if (inputEventArgs.InputDevice is MonoGameGum.Input.Keyboard)
+            device = "Keyboard";
+        else if (inputEventArgs.InputDevice is MonoGameGum.Input.GamePad)
+            device = "GamePad";
+    }
+    button.Text = $"Clicked at {DateTime.Now:T} via {device}";
+}
+```
 
 ```csharp
 // Update
-button.PerformClick(keyboard);
+var keyboard = GumService.Default.Keyboard;
+if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+{
+    button.PerformClick(keyboard);
+}
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2QzWrDMBCE7wa_w6JTTEOSHnqpySEtaVNKoZSUpqCLbG1iNbZUpLX7E_Lula0Um-ggsd_u7DA6xBEAe3D3dcWugWyN445UWGVonWfspiYyGrLuSbnmujFKwkpoWeJtqfL9yGQfmBM41BLtGJYNalrYnQPhr4TrA9fgz3QKRaeCvJVxfWTBTWlFSpTqF1vD4ARz0PgFwX2UeOPAJwsp1-bFGBrCjR-_mvX1-1n9piQVnl3OBnCFalfQ2eQav1vEWRcNnpCzvhnYxXyYPj2FqD-loC5AIyzs8Sczwkq_6s7Yyr2SKn1IdJPHU6ff-ox262fCX_4Lk5TF0TGO_gD1L_hFogEAAA" target="_blank">Try on XnaFiddle.NET</a>
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAACCp1TTWvjMBD9K4PpwYZg0sJeEnpom36xdAnblLbgi2KNG23sUZFkZ9vg_96R5dRJLgurg82Mn968mXneRvf2tq6iiTM1jqIKqyUaG02iy9o5TbDsXtOMMmq0knAnSJZ4Vap8HevlH8wdWCSJZgTXDZK7MG8WBD-SjLYZAZ9GGJDYqBzhHLJ6PD47e6I16Q2FYBpgqoDYXwRlgRWlz8pgYUSF6T29125gVwdhEm73tXZEh5jAMAsamP5Bk75lZl-m-5T-xI-lFkYmA40_R7J3qAPd_mBp8b_q-mgu_lG2Bx1UbcMrrCdd4F_H8JMA6baDEoSD7Uw4XCge4i-9mSxaaJSAbeBvvwnbaBQpUk6JUn0iLz_QMiPhBoIT4oSBfbkLKRf6t9ZuP_nC8B_jIX49ip-VdCvOnY73kneo3lbuCNl3E-TNDVoL1-TQgNOQ-96-hfcXuoYD_vJ836JTbqx-lzwDbsr7cN1vkOl5CY9o_CDSGRaiLgcXMLMq4h3Wp-e1XaGMH1RutNWFS19IpDfenRtt1oOJbNopTQb39xLnaAptqvDj7JiTbvbtFxjUizmEAwAA" target="_blank">Try on XnaFiddle.NET</a>
