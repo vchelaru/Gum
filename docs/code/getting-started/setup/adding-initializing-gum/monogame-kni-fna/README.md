@@ -226,6 +226,8 @@ Gum can be tested by adding a Button after Gum is initialized. To do so, add cod
     // additional code omitted
 </code></pre>
 
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA6tW8ix2L81VsiopKk3VUcrMyyzJTMzJrEpVslIqSyxSSCotKcnPU7BVyEstV3ACczQ0rWPyIOJ6jikpIflB-fklyILOOZnJ2QoxpQYGRk62ChrxOvGaCrYgrrErXE1IakUJ0FSwIiOwhtQUhcSSmJg8iBBUu4JLYklqSGZuqp5ffrm1Ui0AnK-bSK8AAAA)
+
 <figure><img src="../../../../../.gitbook/assets/13_06 56 07.gif" alt=""><figcaption></figcaption></figure>
 
 If everything is initialized correctly, you should see a clickable button at the top-left of the screen. Keep in mind that this is simply a test to make sure Gum is working properly. You may want to delete this button once you begin working on your game.

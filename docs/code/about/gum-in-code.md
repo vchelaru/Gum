@@ -31,25 +31,25 @@ public class Game1 : Game
     protected override void Initialize()
     {
 <strong>        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-</strong><strong>
-</strong><strong>        var stackPanel = new StackPanel();
+</strong>
+<strong>        var stackPanel = new StackPanel();
 </strong><strong>        stackPanel.AddToRoot();
 </strong><strong>        stackPanel.Spacing = 6;
 </strong><strong>        stackPanel.Anchor(Anchor.Center);
-</strong><strong>
-</strong><strong>        var button = new Button();
+</strong>
+<strong>        var button = new Button();
 </strong><strong>        stackPanel.AddChild(button);
 </strong><strong>        button.Text = "Click Me";
 </strong><strong>        button.Click += (s, e) => 
 </strong><strong>        {
 </strong><strong>            button.Text = DateTime.Now.ToString();
 </strong><strong>        };
-</strong><strong>
-</strong><strong>        var textBox = new TextBox();
+</strong>
+<strong>        var textBox = new TextBox();
 </strong><strong>        textBox.Width = 150;
 </strong><strong>        stackPanel.AddChild(textBox);
-</strong><strong>
-</strong><strong>        var listBox = new ListBox();
+</strong>
+<strong>        var listBox = new ListBox();
 </strong><strong>        stackPanel.AddChild(listBox);
 </strong><strong>        for(int i = 0; i &#x3C; 10; i++)
 </strong><strong>        {
@@ -77,6 +77,8 @@ public class Game1 : Game
 
 </code></pre>
 
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA3VQwU4CMRD9laanJSHNgtEDhIOsxpCoMbKJB9dD3R1kwm5r2lkhEv7ddltAiexh2zfvzUzf2_KZvWsbPiLTQp-3FtWH5aNX7oriBQ0sjGyAv_U5KiSUNX4DH_EvaZglWa6epIKaTZiCNZsfCklvXKgjL66rKtfPWtMpMf-UpdvoBlyddKhyqU0SDpGBIjC-1y9-b4m0ikunHfhnYbbEukqC1rPhJnLYkGst2jQdDrMayxV7gICOolDvqtMJS2yfQY9NPL64LdS2UMx9fwfeSIIcGxCPei1yPSfjfHXP2sVnkxNO9Sa-Ow-oU0TG5V3R0vGDy_SMnajcJ1Gj_TXyPqCzWUS1pxcuW1TE0LWmY3d03jI28CD4Dv_ewW7sFjOCxvqhSUjN4xhnTIxhZ5vvfgAhBmriXQIAAA)
+
 <figure><img src="../../.gitbook/assets/15_07 52 36.gif" alt=""><figcaption><p>Code-only Gum Controls</p></figcaption></figure>
 
 ## Gum Tool Projects in Code
@@ -103,16 +105,16 @@ The following code can be used to load and interact with the controls:
     protected override void Initialize()
     {
 <strong>        GumUI.Initialize(this, "GumProject/GumProject.gumx");
-</strong><strong>
-</strong><strong>        var screen = new ExampleScreen();
+</strong>
+<strong>        var screen = new ExampleScreen();
 </strong><strong>        screen.AddToRoot();
-</strong><strong>
-</strong><strong>        screen.ButtonStandardInstance.Click += (s,e) =>
+</strong>
+<strong>        screen.ButtonStandardInstance.Click += (s,e) =>
 </strong><strong>        {
 </strong><strong>            screen.ButtonStandardInstance.Text = DateTime.Now.ToString();
 </strong><strong>        };
-</strong><strong>
-</strong><strong>        for(int i = 0; i &#x3C; 10; i++)
+</strong>
+<strong>        for(int i = 0; i &#x3C; 10; i++)
 </strong><strong>        {
 </strong><strong>            screen.ListBoxInstance.Items.Add("Item " + (i + 1));
 </strong><strong>        }
@@ -152,18 +154,18 @@ Generated code is optional - code can access Gum objects without any generated c
     protected override void Initialize()
     {
 <strong>        GumUI.Initialize(this, "GumProject/GumProject.gumx");
-</strong><strong>
-</strong><strong>        var screen = ObjectFinder.Self.GumProjectSave.Screens
+</strong>
+<strong>        var screen = ObjectFinder.Self.GumProjectSave.Screens
 </strong><strong>            .First().ToGraphicalUiElement();
 </strong><strong>        screen.AddToRoot();
-</strong><strong>
-</strong><strong>        var button = screen.GetFrameworkElementByName&#x3C;Button>("ButtonStandardInstance");
+</strong>
+<strong>        var button = screen.GetFrameworkElementByName&#x3C;Button>("ButtonStandardInstance");
 </strong><strong>        button.Click += (s,e) =>
 </strong><strong>        {
 </strong><strong>            button.Text = DateTime.Now.ToString();
 </strong><strong>        };
-</strong><strong>
-</strong><strong>        var listBox = screen.GetFrameworkElementByName&#x3C;ListBox>("ListBoxInstance");
+</strong>
+<strong>        var listBox = screen.GetFrameworkElementByName&#x3C;ListBox>("ListBoxInstance");
 </strong><strong>        for (int i = 0; i &#x3C; 10; i++)
 </strong><strong>        {
 </strong><strong>            listBox.Items.Add("Item " + (i + 1));
