@@ -311,7 +311,7 @@ public class SetVariableLogic : ISetVariableLogic
 
             ReactIfChangedMemberIsDefaultChildContainer(parentElement, instance, rootVariableName, oldValue);
 
-            _variableReferenceLogic.ReactIfChangedMemberIsVariableReference(parentElement, instance, stateSave, rootVariableName, oldValue);
+            _variableReferenceLogic.ReactIfChangedMemberIsVariableReference(instance, stateSave, rootVariableName, oldValue);
         }
         ReactIfChangedBaseType(instanceContainer, instance, stateSave, rootVariableName, oldValue);
 
@@ -974,6 +974,7 @@ public class SetVariableLogic : ISetVariableLogic
                 return renameResponse;
             }
             _pluginManager.InstanceRename(null, instance, (string)oldValue);
+            _pluginManager.BehaviorInstanceRename(behavior, instance);
         }
         return GeneralResponse.SuccessfulResponse;
     }

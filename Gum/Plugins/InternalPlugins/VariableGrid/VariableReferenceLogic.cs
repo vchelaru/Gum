@@ -44,7 +44,7 @@ public class VariableReferenceLogic
         _fileCommands = fileCommands;
     }
 
-    public AssignmentExpressionSyntax GetAssignmentSyntax(string item)
+    public AssignmentExpressionSyntax? GetAssignmentSyntax(string item)
     {
         item = EvaluatedSyntax.ConvertToCSharpSyntax(item);
 
@@ -54,7 +54,7 @@ public class VariableReferenceLogic
         return assignment;
     }
 
-    private static AssignmentExpressionSyntax GetAssignmentRoot(SyntaxNode sourceNode)
+    private static AssignmentExpressionSyntax? GetAssignmentRoot(SyntaxNode sourceNode)
     {
 
         if(sourceNode is AssignmentExpressionSyntax assignment)
@@ -80,7 +80,7 @@ public class VariableReferenceLogic
 
     #region Validation (failures)
 
-    private List<(string, GeneralResponse)> GetIndividualFailures(ElementSave parentElement, InstanceSave leftSideInstance, VariableListSave newDirectValue)
+    private List<(string, GeneralResponse)> GetIndividualFailures(ElementSave parentElement, InstanceSave? leftSideInstance, VariableListSave newDirectValue)
     {
         var values = newDirectValue.ValueAsIList;
 
@@ -94,7 +94,7 @@ public class VariableReferenceLogic
         return failures;
     }
 
-    private void AddFailureForLine(ElementSave parentElement, InstanceSave leftSideInstance, List<(string, GeneralResponse)> failures, string line)
+    private void AddFailureForLine(ElementSave parentElement, InstanceSave? leftSideInstance, List<(string, GeneralResponse)> failures, string line)
     {
         if (line.StartsWith("//") || string.IsNullOrEmpty(line))
         {
@@ -220,7 +220,7 @@ public class VariableReferenceLogic
         }
     }
 
-    private GeneralResponse CheckIfVariableTypesMatch(VariableSave leftSideVariable, ElementSave parentElement, InstanceSave leftSideInstance, EvaluatedSyntax assignment)
+    private GeneralResponse CheckIfVariableTypesMatch(VariableSave leftSideVariable, ElementSave parentElement, InstanceSave? leftSideInstance, EvaluatedSyntax assignment)
     {
         var leftSideType = leftSideVariable.Type;
         string rightSideType = null;
@@ -294,7 +294,7 @@ public class VariableReferenceLogic
         return GeneralResponse.SuccessfulResponse;
     }
 
-    private GeneralResponse<VariableSave> CheckLeftSideVariableExistence(ElementSave parentElement, InstanceSave instance, AssignmentExpressionSyntax syntax)
+    private GeneralResponse<VariableSave> CheckLeftSideVariableExistence(ElementSave parentElement, InstanceSave? instance, AssignmentExpressionSyntax syntax)
     {
         var element = instance != null ? ObjectFinder.Self.GetElementSave(instance) : parentElement;
 
@@ -317,7 +317,7 @@ public class VariableReferenceLogic
     #region Assignment Reactions
 
 
-    public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave leftSideInstance, string unqualifiedMember,
+    public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave? leftSideInstance, string unqualifiedMember,
         StateSave stateSave, string qualifiedName, bool trySave)
     {
         if (unqualifiedMember == "VariableReferences")
@@ -393,7 +393,7 @@ public class VariableReferenceLogic
         }
     }
 
-    private static bool DoVariableReferenceReactionOnInstanceVariableSet(ElementSave container, InstanceSave instance, StateSave stateSave, string unqualifiedVariableName, object newValue)
+    private static bool DoVariableReferenceReactionOnInstanceVariableSet(ElementSave container, InstanceSave? instance, StateSave stateSave, string unqualifiedVariableName, object newValue)
     {
         var didAssignDeepReference = false;
         ElementSave instanceElement = null;
@@ -486,7 +486,7 @@ public class VariableReferenceLogic
     }
 
 
-    public void ReactIfChangedMemberIsVariableReference(ElementSave parentElement, InstanceSave instance, StateSave stateSave, string changedMember, object oldValue)
+    public void ReactIfChangedMemberIsVariableReference(InstanceSave? instance, StateSave stateSave, string changedMember, object? oldValue)
     {
         ///////////////////// Early Out/////////////////////////////////////
         if (changedMember != "VariableReferences") return;
@@ -515,7 +515,7 @@ public class VariableReferenceLogic
     #region Line Assignment Expansion / Modifications
 
     static char[] equalsArray = new char[] { '=' };
-    bool ModifyLines(object oldValue, List<string> newValueAsList, InstanceSave selectedInstance)
+    bool ModifyLines(object? oldValue, List<string> newValueAsList, InstanceSave? selectedInstance)
     {
         var oldValueAsList = oldValue as List<string>;
 

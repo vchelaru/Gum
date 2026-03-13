@@ -84,7 +84,7 @@ public class VariableReferenceLogicTests : BaseTestClass
         StateSave stateSave = BuildStateWithVariableReferences("VariableReferences", "Background.Color");
 
         _sut.ReactIfChangedMemberIsVariableReference(
-            parentElement: null, instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
+            instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
 
         var varList = (List<string>)stateSave.GetVariableListSave("VariableReferences").ValueAsIList;
         varList.Count.ShouldBe(3);
@@ -100,7 +100,7 @@ public class VariableReferenceLogicTests : BaseTestClass
         StateSave stateSave = BuildStateWithVariableReferences("VariableReferences", "Background.Width");
 
         _sut.ReactIfChangedMemberIsVariableReference(
-            parentElement: null, instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
+            instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
 
         var varList = (List<string>)stateSave.GetVariableListSave("VariableReferences").ValueAsIList;
         varList[0].ShouldBe("Width = Background.Width");
@@ -112,7 +112,7 @@ public class VariableReferenceLogicTests : BaseTestClass
         StateSave stateSave = BuildStateWithVariableReferences("VariableReferences", "X=Y");
 
         _sut.ReactIfChangedMemberIsVariableReference(
-            parentElement: null, instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
+            instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
 
         _guiCommandsMock.Verify(x => x.RefreshVariables(It.IsAny<bool>()), Times.Once);
     }
@@ -124,7 +124,7 @@ public class VariableReferenceLogicTests : BaseTestClass
         StateSave stateSave = BuildStateWithVariableReferences("VariableReferences", "X=Y");
 
         _sut.ReactIfChangedMemberIsVariableReference(
-            parentElement: null, instance: null, stateSave, changedMember: "VariableReferences", oldValue: oldValue);
+            instance: null, stateSave, changedMember: "VariableReferences", oldValue: oldValue);
 
         _guiCommandsMock.Verify(x => x.RefreshVariables(It.IsAny<bool>()), Times.Never);
     }
@@ -135,7 +135,7 @@ public class VariableReferenceLogicTests : BaseTestClass
         StateSave stateSave = new StateSave();
 
         _sut.ReactIfChangedMemberIsVariableReference(
-            parentElement: null, instance: null, stateSave, changedMember: "Width", oldValue: null);
+            instance: null, stateSave, changedMember: "Width", oldValue: null);
 
         _guiCommandsMock.Verify(x => x.RefreshVariables(It.IsAny<bool>()), Times.Never);
     }
@@ -147,7 +147,7 @@ public class VariableReferenceLogicTests : BaseTestClass
         StateSave stateSave = BuildStateWithVariableReferences("VariableReferences", "Instance.Width=OtherInstance.Width");
 
         _sut.ReactIfChangedMemberIsVariableReference(
-            parentElement: null, instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
+            instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
 
         var varList = (List<string>)stateSave.GetVariableListSave("VariableReferences").ValueAsIList;
         varList[0].ShouldBe("Width=OtherInstance.Width");
@@ -161,7 +161,7 @@ public class VariableReferenceLogicTests : BaseTestClass
         StateSave stateSave = BuildStateWithVariableReferences("myInstance.VariableReferences", "Width=SomeVar");
 
         _sut.ReactIfChangedMemberIsVariableReference(
-            parentElement: null, instance, stateSave, changedMember: "VariableReferences", oldValue: null);
+            instance, stateSave, changedMember: "VariableReferences", oldValue: null);
 
         var varList = (List<string>)stateSave.GetVariableListSave("myInstance.VariableReferences").ValueAsIList;
         varList[0].ShouldContain("myInstance.SomeVar");

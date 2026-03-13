@@ -124,6 +124,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IFileWatchManager>(provider => provider.GetRequiredService<FileWatchManager>());
         services.AddSingleton<ReorderLogic>();
         services.AddSingleton<IReorderLogic>(provider => provider.GetRequiredService<ReorderLogic>());
+        services.AddSingleton<InheritanceLogic>();
 
         services.AddSingleton<IUserProjectSettingsManager, UserProjectSettingsManager>();
         services.AddSingleton<ProjectServices.ITypeResolver>(provider =>

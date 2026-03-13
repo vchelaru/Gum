@@ -320,6 +320,11 @@ public class HotkeyManager : IHotkeyManager
                 });
                 e.Handled = true;
             }
+            else if(_selectedState.SelectedBehavior is { } selectedBehavior)
+            {
+                _editCommands.AskToRenameBehavior(selectedBehavior);
+                e.Handled = true;
+            }
         }
     }
 
