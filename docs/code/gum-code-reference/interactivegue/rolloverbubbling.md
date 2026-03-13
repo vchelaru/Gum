@@ -16,7 +16,7 @@ The following code shows how to implement ListBox scrolling using the cursor whe
 // ListBox, ItemsControl, and ScrollViewer
 listBox.Visual.RollOverBubbling += (sender, args) =>
 {
-    var cursor = FormsUtilities.Cursor;
+    var cursor = GumService.Default.Cursor;
 
     // Only handle this if the crusor is pressed
     if (cursor.PrimaryDown)

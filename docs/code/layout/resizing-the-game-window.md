@@ -155,4 +155,4 @@ Gum can be drawn to a RenderTarget2D which can then be drawn with a SpriteBatch.
 
 ## FrameworkElement PopupRoot and ModalRoot
 
-The FrameworkElement object has two InteractiveGues: PopupRoot and ModalRoot. These are typically created automatically by FormsUtilities but can be assigned manually. In either case, the size of these two containers is automatically managed by FormsUtilities in its Update call so you do not need to update these manually.
+The FrameworkElement object has two InteractiveGues: PopupRoot and ModalRoot. These are typically created automatically by GumService but can be assigned manually. In either case, the size of these two containers is automatically managed by GumService in its Update call so you do not need to update these manually.

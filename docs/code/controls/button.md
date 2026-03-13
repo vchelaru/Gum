@@ -67,7 +67,7 @@ Clicking can be performed programmatically by calling PerformClick. The followin
 
 ```csharp
 // Update
-var keyboard = FormsUtilities.Keyboard;
+var keyboard = GumService.Default.Keyboard;
 if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
 {
     button.PerformClick();
