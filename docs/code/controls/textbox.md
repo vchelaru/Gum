@@ -24,6 +24,7 @@ textBox2.Width = 200;
 textBox2.Placeholder = "Placeholder Text...";
 panel.AddChild(textBox2);
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqWOsQrCMBiE90LfIWRqQUIJuFgc1EHcii2okCU0wQZjUmqqRfHdTWotFXVy_O7-_-5uvgcAXJ2W9RFOgKlqPmoVoYQRVIortzI80wqUVHEJpkDxC0gNzQ-JE4IwJqq1UFrSXKi9PRn32tZR1OPuHWeMZXqttWlTiHI1hjdmrpuuKHtS63cO2ghmCuvjyCW91ETSnBdaMl5Zj8AhuxSEEIHD5kUhJAu6949-_HsA_r4A_zkBhzH0vfsDBYYAXJEBAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/13_09 57 01.gif" alt=""><figcaption><p>Interacting with TextBoxes</p></figcaption></figure>
 
@@ -66,6 +67,7 @@ textBox.PreviewTextInput += (sender, args) =>
 };
 panel.AddChild(textBox);
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACmVRz0vDMBS-D_Y_PHNq2ChevDgqTAUteBhuB4VcYvPsgt1rSdNtOvq_m5eVqphTvu99P3jJaToBEHn70O3ENXjX4Twylqy3urJfGGix1w4aTVhBBoQHWHtdfKyYSORCURyl60YXlsoguRq5F0aXI3z9C5fGbOrnuvYxRRHXVPptrHni-6-GoL_b2sokUfTj8Xj0t_VxcG3OKPqGSbpyuLd44FFOTedhlkHSIhl0c9CubCVkN4pOiiCcGJ-yOEQq8ajJVLwZpwUMs2iJgtDBDvsOycilS_pMrMddyISLYqtdmrf3trQ-slLKs2lo4xO9sQdN6OR_GJJ7Rf3_Bxj2kgsxnfTfIVhYOMQBAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/13_09 58 12.gif" alt=""><figcaption><p>TextBox only allowing numbers</p></figcaption></figure>
 
@@ -89,6 +91,7 @@ textBox.IsReadOnly = true;
 textBox.Text = "This is read-only text";
 panel.AddChild(textBox);
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAAClWOMQvCMBSEd6H_4ZGpBS1FcLE4qIN0UmpBhSzBBBqMibSpVsX_bl6sUuEtd9-9457BAIBk9ao5kynYqhFD70gtrWRKPoSzyZVVcGFaKJiBFjfYWnY8bdAIo5Rqj-K9g5PkJw__cs55YXJjrP-gGiutaO3CtF1p8VGedyTeSW5Lx8cJNn3drM4F42ut7g7h5h7DFudSUpSyBneVi44MZjFCSX_RspSKh91rlJJg8HoD3z5OohEBAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/13_09 59 12.gif" alt=""><figcaption><p>TextBox with IsReadOnly set to true responding to mouse click+drag and double-click</p></figcaption></figure>
 
@@ -181,10 +184,11 @@ textBox.CaretIndexChanged += (_, _) =>
 
 void UpdateLabelToTextBox(Label label, TextBox textBox)
 {
-    label.Text = "Text box text: " + textBox.Text + 
+    label.Text = "Text box text: " + textBox.Text +
         " with caret index " + textBox.CaretIndex;
 }
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1Q30vDMBB-H-x_OPLU0VIm6MukgvZBBz6IVnQQGNkS2mBNSs1ccex_N7k0XYfm6e77cXdfDtMJAFl-3e8-yQJMuxMJIlJJI1ktf4SFyTdroWFK1JCBEnt4MWz78eSAaHZNFVLpuyWv5kO7Om9vOS_0s9YGHVS5kTXbDCMfXT2aZvV5JWseoejkMaIzd7rrXYXv0NczqcPeWtY0UpVWNm5TV4ykD0KWlbGii8v53829yu8Olpy1wiwVF11eMVUKDnEG0TqB9QyyG6oOVIF9rw1nRmCoQocrMUoSIri5R59LS_6_A1v_T0kIO_iHZchjbhuFEiw2vXBhAYiDx4ti8D73LLuXpoKtywXSBTt3nAK7e8l0cvwFIohkSDQCAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/14_06 03 52.gif" alt=""><figcaption><p>CaretIndexChanged is invoked whenever the caret index changes, which updates the Label's text.</p></figcaption></figure>
 
@@ -204,6 +208,7 @@ textBox.Anchor(Anchor.Center);
 textBox.Width = 250;
 textBox.Placeholder = "Enter Name...";
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZVCUitKnPIrFEqgtK1CXmq5hqZ1TB5URM8xJSUkPyg_vwRVNC85I79IA0LpOacCJYqQ5cMzU0oygKYZmRogiQbkJCanZuTnpKQWAeVilFxB2hT8EnNT9fT0YpSslXi5agFpeX6AuAAAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 Placeholder can be removed by assigning an empty string:
 
@@ -221,6 +226,7 @@ The `TextWrapping` property can be used to set whether the TextBox wraps text. B
 var textBox = new TextBox();
 textBox.AddToRoot();
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUSlIrSpzyKxRsFfJSyxVCIDwNTeuYPKiMnmNKSkh-UH5-CVBUiZerFgAyeZ9_XAAAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/14_06 09 11.gif" alt=""><figcaption><p><code>TextWrapping.NoWrap</code> causes text to scroll</p></figcaption></figure>
 
@@ -234,6 +240,7 @@ wrappedTextBox.TextWrapping = TextWrapping.Wrap;
  // If you have set up your TextBox in code, you may need to make it taller:
  wrappedTextBox.Height = 140;
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1OwQqCQBS8C_7D4KlArKCT0qEu5TWCLl2W9qVLuivbU7Po31uloKjTm5k3b-bdfQ8I0su6LoMYbGsKB0VpxUoU6kZODhph0VpRVSR3dOWVuWIBTS1ebDRODvrbEC2l3JmtMfxv2c99LymduahPGvXAXUwmSE_oTI1cNIQLMeqq5_bdCqVxNJLCwVWKzr1EEmwcPhMUg0VRkI1_6jekspxd8Ww-TQLfezwBuTkzGgcBAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/14_06 11 31.gif" alt=""><figcaption><p><code>TextWrapping.Wrap</code> causes text to wrap</p></figcaption></figure>
 
@@ -248,6 +255,7 @@ wrappedTextBox.TextWrapping = TextWrapping.Wrap;
 wrappedTextBox.Height = 140;
 wrappedTextBox.AcceptsReturn = true;
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1QywrCMBC8F_yHoScF8QGeWjzoRb0WwYuX0KxtsCYl3dQX_ruJKCj2tDuzszvD3nsREG-alTvFCdg6Gr4YpRUrUakbeTpuhcXZiromuaULL80Fc2g64436g3SvfwWjhZRbkxnDXcNQd4FSuvCnvuEoNH5jPMbmgKtxKEVLaIjh6oDtxxVKIzeShi_VSVx9JJJg4_sjQTFYVBXZ5M9-Taoo2RtPZ5OO5HlONTcZsbPai8JX0rgXPZ5dWeYvLQEAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/14_06 12 55.gif" alt=""><figcaption><p>Manually adding newlines by pressing the return (enter) key</p></figcaption></figure>
 

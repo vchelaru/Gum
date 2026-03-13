@@ -21,9 +21,10 @@ slider.IsSnapToTickEnabled = true;
 slider.Width = 250;
 slider.ValueChanged += (_, _) => 
     Debug.WriteLine($"Value: {slider.Value}");
-slider.ValueChangeCompleted += (_, _) => 
+slider.ValueChangeCompleted += (_, _) =>
     Debug.WriteLine($"Finished setting Value: {slider.Value}");
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACo2QW0vDQBCF3wP5D8PiQ4qleMGXSgSpVgr6YoNVCJRtd0gGk926F2-l_91pFLIIgvt2vjlzDrPbNAEQM3cTWjEGbwMOO0KaPMmGPpGxeJUWXEMKLeSg8Q3mncgG56X-5qNLpQpzb4yP4SPbz456_fRL33FNG1qmMZTvP_A0ogWtn93U4ktAvf7g4XE_m7m5lpvC7D3XWq4aVGzYH9N7FqR8zfQk7n-QTcBJLXXFG4c5ZMshLAeQX0Cpgd8VrkI1WljyeEsas4NSdCtj2MYJu1JER0ehE9NuGvT_Dp_yf7ia7Q69J13Bn20iTXZp8gWAUmp9vgEAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/13_09 53 58.gif" alt=""><figcaption><p>Slider reporting its value whenever the value changes or when the change completes</p></figcaption></figure>
 

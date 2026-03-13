@@ -34,5 +34,6 @@ for (int i = 0; i < 10; i++)
 }
 
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACpVQTU8CMRC896-Y9FSyZiObeBE9oEYh8WDEYy_NboEJZUrawQ8I_90WuxJIjNpDp_PmzZvp2xYAYhwe1ktxCezX5iwBSMioLW5MRMWr9hBYN4snTcbCNZB5g8k3IHsDRYd6NVnpBmkWef3jwrBtX9yzc7zvUJR0LQa-ce9Z9PErO1WMjbdztK3M7FSeOi-RGDC2ng9iuIJ-imXZU7RVBPFkejVmswxJRSqRRkACQAkoAZPWrtsmrCwyG9_9Mac_7tPx9_X8ru5cs5Dpqu7R2pHzuHHE2tqPI9rI4GzOcdLFqRn1_9yosx3wVz_q3w0Rxa74BA785tMbAgAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/13_09 55 13.gif" alt=""><figcaption></figcaption></figure>

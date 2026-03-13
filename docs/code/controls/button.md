@@ -33,6 +33,7 @@ void HandleClick(object sender, EventArgs args)
     button.Text = $"Clicked {clickCount} times";
 }
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2QP2vDMBDFd4O_w1V0SHAo6dClJkMaStyhSwm0BS22dSRqpRNYclpq_N2rP4aYaJB0Pz09vdOQZwDsxe57zR7BdT2uItGoG-ysZ-ypd84QNHEpOUly0CrZfu9M77cbWHvI6WykgKomoXAXThem-cLWgUUS2K3g-Yzktt3RQu2nJaeBE_hxsSqKMqH01N0Bf4P9LWfREAUMF_EITmq0nPk7I0uhJUknayX_MOROLt6A8AdSE4ulV0_uWyEO5s0YN4cfXv4Q-pnqz6v6XQp38ux-PYMVyuMpJJ0rp_CcVaiUgVdDZl9rvImBJ01sC4rN_NtKlmdjnv0DxahSepgBAAA" target="_blank">Try on XnaFiddle.NET</a>
 {% endtab %}
 
 {% tab title="Lambda" %}
@@ -52,6 +53,7 @@ button.Click += (_, _) =>
     button.Text = $"Clicked {clickCount} times";
 };
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACl3NMYvCQBAF4D6Q__BuuUJJEK-wUSLcWaiFjQinsCDRDGa4ZBd0omLIf79NLBLdat_He0zpe4BaXuZFrsaQc0FhI2xYOM74QY7VNT7jUIhYgwiGbvhpQq8_0ebpg-8k2di1tdLFrauPhm3eveVfTiR19jXs4IL4lMpbc0P3mrRaUJZZrKyx8zinD61ch43gmPHxb2YL943QGc5qRxChtw-x7yOaalNqA_faSRC4QU2v1z61auaUoGzLFYRzujSXq4nyvcr3_gEi64GGRwEAAA" target="_blank">Try on XnaFiddle.NET</a>
 {% endtab %}
 {% endtabs %}
 
@@ -71,6 +73,7 @@ if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
     button.PerformClick();
 }
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2RwWoCMRCG74LvMOS0UlntoZeKB1u0ShGkWGohl-xmdFN3J5LMalvx3ZvdtSjmkDBfZubPPzm2WwBi5l_KQjwCuxK7NSmwSND5wMRTyWwJkvoYSJK0t0bDVJHO8Tk36TayyRemDB5Jo-vCeI_EI7fxoMLWkXSUBGH1epDVVZBWZZJOolEzZNio3PxiJdgowRAID9CoR50g3PB4pPXSvlnL13AV0h_6l_jzJv4wmrPA7vtXcIpmk_FN5hK_KyRFbQ3mKMXlsmF3w2v3g7OJcqcV1wb2ysEWfxKrnA6tJtYV_p1NHkyij1_PN6GrWUf_eRVelD5DHc1N6qy3a45XpOKJUwUerNvGM9qVXOX5eEyMrnOZ7Pl5C3TrINZ8SjWdk2i3Tu3WH3KJQcHmAQAA" target="_blank">Try on XnaFiddle.NET</a>
 
 Optionally you can pass the input device to the PerformClick method:
 
@@ -78,3 +81,4 @@ Optionally you can pass the input device to the PerformClick method:
 // Update
 button.PerformClick(keyboard);
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2QzWrDMBCE7wa_w6JTTEOSHnqpySEtaVNKoZSUpqCLbG1iNbZUpLX7E_Lula0Um-ggsd_u7DA6xBEAe3D3dcWugWyN445UWGVonWfspiYyGrLuSbnmujFKwkpoWeJtqfL9yGQfmBM41BLtGJYNalrYnQPhr4TrA9fgz3QKRaeCvJVxfWTBTWlFSpTqF1vD4ARz0PgFwX2UeOPAJwsp1-bFGBrCjR-_mvX1-1n9piQVnl3OBnCFalfQ2eQav1vEWRcNnpCzvhnYxXyYPj2FqD-loC5AIyzs8Sczwkq_6s7Yyr2SKn1IdJPHU6ff-ox262fCX_4Lk5TF0TGO_gD1L_hFogEAAA" target="_blank">Try on XnaFiddle.NET</a>

@@ -16,6 +16,7 @@ checkBox.Text = "Checkbox";
 checkBox.Checked += (_,_) => Debug.WriteLine($"IsChecked:{checkBox.IsChecked}");
 checkBox.Unchecked += (_, _) => Debug.WriteLine($"IsChecked:{checkBox.IsChecked}");
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUkjNSk7Od8isUbBXyUssVnKFcDU3rmDyYnJ5jSkpIflB-fgmqcARQk6kBskgkhkhIakUJUDBGCWxyUn5FjBKyNFg0NUVB21ZBI14nXlPB1k7BJTWpNF0vvCizJNUnMy9VQyUG6BOoQqtquFa4WG2MEoqzQiFMuKkKFBirxMtVy8sFAIkpn4VPAQAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/13_08 55 15.gif" alt=""><figcaption><p>CheckBox responding to Checked and Unchecked events by printing output</p></figcaption></figure>
 

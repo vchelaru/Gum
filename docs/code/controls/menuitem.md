@@ -38,6 +38,7 @@ var editMenuItem = new MenuItem();
 editMenuItem.Header = "Edit";
 menu.Items.Add(editMenuItem);
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACn1RsW7CMBDd8xUnT4mCUFkbOjDQFol2QIxeovqQTkpsKThFKuLfexeCfCDAy9nvvXvvbB8zALPaf_SteYXY9TgRgDxFqhv6Q0bNb91Bi76HN_B4gC_e5kVlvWDThXPbsAkhDpD1It5Rg6JaRWxVkxwHleann1g77FhmzTvj1lychd2Lf671KYVtHwWMlPb-xsNgfZWdIsaO5N6E2m3wB328F5BYnbFmFM7ws6zUfI7bhS4nziE2eam4zGEmtSwL64_WAy8ZiR7cVnjhbp-SC5RAo0KNnEaRNrE4Xa6NjuKzr9O8zlsyfu_rtL6oTHbK_gHw63H0cgIAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 ## IsSelected
 
@@ -64,5 +65,6 @@ if(keyboard.IsAltDown)
 }
 
 ```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACp1Sy2rDMBC85yuETjYUfUBLD4HErSmB0vTQgy-KtSYishT0iGmD_71axzYKmB6qi9iZ2ZnVouuKEFq6l9DSR-JtgAcEWmgPYF2E6A50KD20pJAKpuKp0jO-FdLPOB3apZZeciV_AB0u3JI2Csgz0dAR1GZ5dECMrYX4NB_G-AGqdJqSNGA5KFKevQIXYKOsoohXdHJF1qF3lupvCem8SwkpnyYgvpSQ6vNxAeEsuJ8ff4Lvg-FWRJu45z3Yi6yBbaDhQXn2NrLDcLLJJjUr3Vr5jel0XulrpUk8KR373oM7gsh2srbGmcazL81ZYXkLnbEnVupzGPwdK_Jogg6jEZ67VZZuDwpqDzgl_oM4Dor62wXKwf_Ttwvpd2v-I72nq371C1TJ1z6mAgAA" target="_blank">Try on XnaFiddle.NET</a>
 
 By default MenuItems in a Menu are not selected unless the user clicks on the MenuItem. Once an item is selected, the user can hover over any menu item (either in the Menu itself, or a child MenuItem) to automatically expand the MenuItem.
