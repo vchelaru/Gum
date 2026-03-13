@@ -178,6 +178,16 @@ public abstract class PluginBase : IPlugin
     /// </summary>
     public event Action<BehaviorSave, BehaviorInstanceSave>? BehaviorInstanceAdd;
 
+    /// <summary>
+    /// Event raised whenever an instance is removed from a behavior's RequiredInstances list.
+    /// </summary>
+    public event Action<BehaviorSave, BehaviorInstanceSave>? BehaviorInstanceDelete;
+
+    /// <summary>
+    /// Event raised whenever an instance in a behavior's RequiredInstances list is renamed.
+    /// </summary>
+    public event Action<BehaviorSave, BehaviorInstanceSave>? BehaviorInstanceRename;
+
     public event Action? RefreshBehaviorView;
     public event Action<bool>? RefreshVariableView;
 
@@ -451,6 +461,8 @@ public abstract class PluginBase : IPlugin
     public void CallInstanceAdd(ElementSave elementSave, InstanceSave instance) => InstanceAdd?.Invoke(elementSave, instance);
 
     public void CallBehaviorInstanceAdd(BehaviorSave behavior, BehaviorInstanceSave instance) => BehaviorInstanceAdd?.Invoke(behavior, instance);
+    public void CallBehaviorInstanceDelete(BehaviorSave behavior, BehaviorInstanceSave instance) => BehaviorInstanceDelete?.Invoke(behavior, instance);
+    public void CallBehaviorInstanceRename(BehaviorSave behavior, BehaviorInstanceSave instance) => BehaviorInstanceRename?.Invoke(behavior, instance);
 
     public void CallBehaviorReferencesChanged(ElementSave element) => BehaviorReferencesChanged?.Invoke(element);
 

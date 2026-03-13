@@ -89,6 +89,10 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
         this.StateAdd += HandleStateAdd;
         this.StateDelete += HandleStateDelete;
         this.CategoryDelete += HandleCategoryDelete;
+        this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+        this.BehaviorInstanceAdd += HandleBehaviorInstanceAdd;
+        this.BehaviorInstanceDelete += HandleBehaviorInstanceDelete;
+        this.BehaviorInstanceRename += HandleBehaviorInstanceRename;
     }
 
     private void HandleElementReloaded(ElementSave save)
@@ -311,6 +315,38 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     {
         _elementTreeViewManager.RefreshUi();
         RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
+    }
+
+    private void HandleBehaviorReferencesChanged(ElementSave elementSave)
+    {
+        RefreshErrorIndicatorsForElement(elementSave);
+    }
+
+    private void HandleBehaviorInstanceAdd(BehaviorSave behavior, BehaviorInstanceSave instance)
+    {
+        RefreshErrorIndicatorsForElementsReferencingBehavior(behavior);
+    }
+
+    private void HandleBehaviorInstanceDelete(BehaviorSave behavior, BehaviorInstanceSave instance)
+    {
+        RefreshErrorIndicatorsForElementsReferencingBehavior(behavior);
+    }
+
+    private void HandleBehaviorInstanceRename(BehaviorSave behavior, BehaviorInstanceSave instance)
+    {
+        RefreshErrorIndicatorsForElementsReferencingBehavior(behavior);
+    }
+
+    private void RefreshErrorIndicatorsForElementsReferencingBehavior(BehaviorSave behavior)
+    {
+        var project = _projectState.GumProjectSave;
+        if (project == null) return;
+        var referencingElements = project.Components
+            .Where(c => c.Behaviors.Any(b => b.BehaviorName == behavior.Name));
+        foreach (var element in referencingElements)
+        {
+            RefreshErrorIndicatorsForElement(element);
+        }
     }
 
     private void SaveTreeViewState()

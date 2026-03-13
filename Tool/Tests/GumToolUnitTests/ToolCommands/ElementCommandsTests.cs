@@ -1,5 +1,6 @@
 ﻿using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers;
@@ -119,6 +120,52 @@ public class ElementCommandsTests
 
         // act
         string name = _sut.GetUniqueNameForNewInstance(text, component);
+
+        // assert
+        name.ShouldBe("TextInstance1");
+    }
+
+    [Fact]
+    public void GetUniqueNameForNewInstance_WithBehaviorSave_ShouldReturnDefaultName()
+    {
+        GumProjectSave project = new GumProjectSave();
+        _objectFinder.GumProjectSave = project;
+
+        StandardElementSave text = new()
+        {
+            Name = "Text"
+        };
+        _objectFinder.GumProjectSave.StandardElements.Add(text);
+
+        BehaviorSave behavior = new();
+
+        // act
+        string name = _sut.GetUniqueNameForNewInstance(text, behavior);
+
+        // assert
+        name.ShouldBe("TextInstance");
+    }
+
+    [Fact]
+    public void GetUniqueNameForNewInstance_WithBehaviorSave_ShouldIncrement_OnMatchingName()
+    {
+        GumProjectSave project = new GumProjectSave();
+        _objectFinder.GumProjectSave = project;
+
+        StandardElementSave text = new()
+        {
+            Name = "Text"
+        };
+        _objectFinder.GumProjectSave.StandardElements.Add(text);
+
+        BehaviorSave behavior = new();
+        behavior.RequiredInstances.Add(new BehaviorInstanceSave
+        {
+            Name = "TextInstance"
+        });
+
+        // act
+        string name = _sut.GetUniqueNameForNewInstance(text, behavior);
 
         // assert
         name.ShouldBe("TextInstance1");

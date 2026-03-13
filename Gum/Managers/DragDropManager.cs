@@ -270,7 +270,7 @@ public class DragDropManager : IDragDropManager
             }
 #endif
 
-            string name = GetUniqueNameForNewInstance(draggedElement, behavior);
+            string name = _elementCommands.GetUniqueNameForNewInstance(draggedElement, behavior);
 
             // Capture the pre-change state for undo. We bypass the undo lock here because
             // OnNodeSortingDropped already holds a lock, which would normally block
@@ -366,21 +366,6 @@ public class DragDropManager : IDragDropManager
         return errorMessage;
     }
 
-
-    private string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, BehaviorSave container)
-    {
-#if DEBUG
-        if (elementSaveForNewInstance == null)
-        {
-            throw new ArgumentNullException(nameof(elementSaveForNewInstance));
-        }
-#endif
-        // remove the path - we dont want folders to be part of the name
-        string name = FileManager.RemovePath(elementSaveForNewInstance.Name) + "Instance";
-        IEnumerable<string> existingNames = container.RequiredInstances.Select(i => i.Name);
-
-        return StringFunctions.MakeStringUnique(name, existingNames);
-    }
 
     #endregion
 

@@ -321,6 +321,8 @@ public partial class ElementTreeViewManager
                 if (selectedBehaviors.Count == 1)
                 {
                     AddMenuItem("Rename", () => _editCommands.AskToRenameBehavior(_selectedState.SelectedBehavior));
+                    AddSeparator();
+                    AddCreateBehaviorInstanceMenuItems("Add object to " + _selectedState.SelectedBehavior.Name);
                 }
                 AddSeparator();
                 var behaviorDeleteText = selectedBehaviors.Count > 1
@@ -475,6 +477,41 @@ public partial class ElementTreeViewManager
                     viewModel.TypeToCreate = type;
                     viewModel.Value = name;
                     viewModel.OnAffirmative();
+                }
+            };
+        }
+    }
+
+    private void AddCreateBehaviorInstanceMenuItems(string itemText)
+    {
+        var parentMenuItem = new MenuItem { Header = itemText };
+        _contextMenu.Items.Add(parentMenuItem);
+
+        var types = new[] {
+            "Circle",
+            "ColoredRectangle",
+            "Container",
+            "NineSlice",
+            "Polygon",
+            "Rectangle",
+            "Sprite",
+            "Text"
+        };
+
+        foreach (var type in types)
+        {
+            var menuItem = new MenuItem { Header = type };
+            parentMenuItem.Items.Add(menuItem);
+
+            menuItem.Click += (_, _) =>
+            {
+                var selectedBehavior = _selectedState.SelectedBehavior;
+                if (selectedBehavior != null)
+                {
+                    var typeElement = ObjectFinder.Self.GetElementSave(type)!;
+                    var name = _elementCommands.GetUniqueNameForNewInstance(typeElement, selectedBehavior);
+                    _undoManager.RecordBehaviorState(selectedBehavior);
+                    _elementCommands.AddInstance(selectedBehavior, name, type);
                 }
             };
         }
