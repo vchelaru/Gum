@@ -17,7 +17,15 @@ C:\Users\vchel\Documents\GitHub\XnaFiddle\tools\xnafiddle-encode.exe
 ..\XnaFiddle\tools\xnafiddle-encode.exe
 ```
 
-Usage: `xnafiddle-encode.exe <mode> <input>` where mode is `snippet` or `code`, input is an inline string or `--file <path>`. **Always use `--file` when input contains quotes or newlines.** The tool prints the complete URL to stdout.
+Usage: `xnafiddle-encode.exe <mode> <input>` where mode is `snippet` or `code`, input is an inline string or `--file <path>`. **Always use `--file` when input contains quotes or newlines.** The tool prints one complete URL per item to stdout.
+
+**Batch encoding (preferred):** Pass multiple mode+input pairs in a single call — the tool outputs one URL per line:
+
+```bash
+xnafiddle-encode.exe snippet --file a.json snippet --file b.json snippet --file c.json
+```
+
+When adding links to multiple code blocks, **always batch**: write all JSON files first, then encode all in one Bash call, capture the output lines, then insert all links. This avoids one tool call per snippet.
 
 ## Two URL formats
 
@@ -28,17 +36,30 @@ Usage: `xnafiddle-encode.exe <mode> <input>` where mode is `snippet` or `code`, 
 
 ## Snippet JSON schema
 
-All fields optional: `IsGum`, `usings`, `members`, `initialize`, `loadContent`, `update`, `draw`.
+All fields optional: `IsGum`, `IsMonoGameExtended`, `IsAposShapes`, `members`, `initialize`, `loadContent`, `update`, `draw`.
 
-`"IsGum": true` generates all Gum usings, the `GumUI` member, constructor setup, and wraps each method body with `GumUI.Initialize` / `GumUI.Update` / `GumUI.Draw` calls.
+| Flag | Effect |
+|---|---|
+| `"IsGum": true` | Injects Gum usings, `GumUI` member, and init/update/draw boilerplate. Does **not** create any UI controls. |
+| `"IsMonoGameExtended": true` | Injects `SpriteBatch _spriteBatch` and its `LoadContent` init. |
+| `"IsAposShapes": true` | Injects `ShapeBatch _shapeBatch`, its init, and `Begin()`/`End()` wrappers. |
 
 **JSON escaping inside string values:** newlines → `\n`, double quotes → `\"`, backslashes → `\\`. Curly braces `{}` do **not** need escaping in JSON (only in shell strings).
 
+## Implied variables
+
+Doc code samples in a tutorial often reference variables that were established in a prior page or earlier in the same page (e.g. a container, a label used across multiple snippets). These are **implied variables** — present in the reader's running project but absent from the snippet itself.
+
+Before encoding a fiddle, scan the code block for any variable that is used but never declared within that block. Every implied variable **must** be declared in the fiddle's `initialize` field or the fiddle will fail to compile.
+
+Also evaluate whether the implied variable should be made explicit in the **doc sample itself**. If a reader could reasonably copy the snippet and be confused about where a variable comes from, add its declaration to the doc code block too.
+
 ## Workflow
 
-1. Write snippet JSON (or full `.cs` for `#code=`) to a temp file.
-2. Run `xnafiddle-encode.exe snippet --file mysnippet.json` (or `code --file MyGame.cs`).
-3. Place the output URL **immediately after** the closing triple-backtick, before any `<figure>` or blank line.
+1. Write **all** snippet JSON files (or `.cs` files for `#code=`) to temp files.
+2. Encode all in **one Bash call**: `xnafiddle-encode.exe snippet --file a.json snippet --file b.json ...` — captures all URLs at once.
+3. Place each output URL **immediately after** the closing triple-backtick of its code block, before any `<figure>` or blank line.
+4. Prefer a single `Write` to rewrite the whole doc over multiple `Edit` calls when inserting many links.
 
 ## Link format
 
