@@ -3,7 +3,9 @@ fileVersion=1
 
 # font settings
 fontName=FontNameVariable
-charSet=0
+# DEFAULT_CHARSET (1) lets Windows select the correct charset for the font name.
+# ANSI_CHARSET (0) restricts lookup to Latin fonts, which breaks CJK fonts like Kosugi Maru.
+charSet=1
 fontSize=-FontSizeVariable
 aa=1
 scaleH=100
