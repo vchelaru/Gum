@@ -3,7 +3,9 @@
 ## Criteria — only include a link when
 
 - The example needs **no content files** (no PNG, font, .achx, etc.)
-- The example is **self-contained** (single file, no helper classes)
+- The example is **self-contained** (all code fits in one file — custom classes are fine via `#code=` format, but no external file dependencies)
+
+> **Custom files not supported:** If the example requires any custom content files (textures, fonts, animation chains, etc.), an XnaFiddle link cannot be created — skip the link entirely.
 
 ## Encoding
 
@@ -32,7 +34,69 @@ When adding links to multiple code blocks, **always batch**: write all JSON file
 | Format | When to use |
 |---|---|
 | `#snippet=` | Preferred. Input is a JSON object; XnaFiddle wraps it in a full `Game` class automatically. |
-| `#code=` | Complete, compilable C# source file. Use when the example has multiple types or complex structure. |
+| `#code=` | Complete, compilable C# source file. **Must include an explicit `Game1 : Game` class.** Use when the example has multiple types or complex structure. |
+
+### `#code=` requirements
+
+Every `#code=` file **must** contain a complete `Game1` class that inherits from `Microsoft.Xna.Framework.Game`, with `Initialize`, `Update`, and `Draw` overrides. XnaFiddle does not inject any boilerplate for `#code=` — unlike `#snippet=`, nothing is added automatically.
+
+If the fiddle demonstrates a custom class (e.g. `TextInputDialog`), the file should contain:
+1. The custom class definition(s)
+2. A `Game1 : Game` class that instantiates and uses the custom class
+
+Example skeleton:
+
+**Rules for `#code=` files:**
+- Always include `using MonoGameGum;` and `using Gum.Forms;` — never `MonoGameGum.Forms.*` (obsolete)
+- Always include `using Gum.Forms.DefaultVisuals.V3;` — **never** `using Gum.Forms.DefaultVisuals;` (the non-V3 namespace is obsolete and must not be used)
+- Always declare `GumService GumUI => GumService.Default;` as a property on `Game1`
+- Always fully qualify `Anchor` and `Dock` arguments: `Gum.Wireframe.Anchor.Center`, `Gum.Wireframe.Dock.Fill`
+- `GumUI.Update` takes only `gameTime` — **not** `this`
+
+```csharp
+using MonoGameGum;
+using Gum.Forms;
+using Gum.Forms.Controls;
+using MonoGameGum.GueDeriving;
+using Gum.Forms.DefaultVisuals.V3;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+public class MyCustomControl : Panel
+{
+    // ...class body using Gum.Wireframe.Dock.Fill, Gum.Wireframe.Anchor.Center...
+}
+
+public class Game1 : Game
+{
+    GraphicsDeviceManager graphics;
+    GumService GumUI => GumService.Default;
+
+    public Game1() { graphics = new GraphicsDeviceManager(this); }
+
+    protected override void Initialize()
+    {
+        GumUI.Initialize(this, DefaultVisualsVersion.V3);
+        var control = new MyCustomControl();
+        control.AddToRoot();
+        control.Anchor(Gum.Wireframe.Anchor.Center);
+        base.Initialize();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        GumUI.Update(gameTime);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumUI.Draw();
+        base.Draw(gameTime);
+    }
+}
+```
 
 ## Snippet JSON schema
 
@@ -58,8 +122,8 @@ Also evaluate whether the implied variable should be made explicit in the **doc 
 
 1. Write **all** snippet JSON files (or `.cs` files for `#code=`) to temp files.
 2. Encode all in **one Bash call**: `xnafiddle-encode.exe snippet --file a.json snippet --file b.json ...` — captures all URLs at once.
-3. Place each output URL **immediately after** the closing triple-backtick of its code block, before any `<figure>` or blank line.
-4. Prefer a single `Write` to rewrite the whole doc over multiple `Edit` calls when inserting many links.
+3. Substitute all new URLs into the doc content in memory, then rewrite the file with a single `Write` call.
+4. **Never use `Edit`** to replace XnaFiddle links — encoded URLs are long and fragile to match, causing failed-match round-trips.
 
 ## Link format
 
