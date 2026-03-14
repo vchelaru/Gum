@@ -65,7 +65,7 @@ public class BaseTestClass : IDisposable
         });
 
         // just to remove any mocks:
-        FrameworkElement.MainCursor = new Cursor();
+        FrameworkElement.MainCursor = new Cursor(null);
 
         InteractiveGue.CurrentInputReceiver = null;
 

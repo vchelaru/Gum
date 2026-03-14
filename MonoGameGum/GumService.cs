@@ -333,12 +333,14 @@ public class GumService
 
 #if XNALIKE
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
+        FormsUtilities.InitializeDefaults(game:game, systemManagers: this.SystemManagers,
+            defaultVisualsVersion: defaultVisualsVersion);
 #elif RAYLIB
+        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
+            defaultVisualsVersion: defaultVisualsVersion);
         this.SystemManagers.Initialize();
 #endif
 
-        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
-            defaultVisualsVersion: defaultVisualsVersion);
 
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();

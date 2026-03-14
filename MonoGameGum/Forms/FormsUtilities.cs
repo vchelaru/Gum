@@ -216,7 +216,11 @@ public class FormsUtilities
 #endif
         }
 
+#if XNALIKE
+        cursor = new Cursor(game?.Window);
+#else
         cursor = new Cursor();
+#endif
 
 #if !FRB
         // This was added to MonoGame/raylib on 1/22/2026 to support
