@@ -7,7 +7,7 @@
 		<LangVersion>12.0</LangVersion>
 		<AssemblyName>gumcli</AssemblyName>
 
-		<Version>2026.3.4.1</Version>
+		<Version>2026.3.14.1</Version>
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>gumcli</ToolCommandName>
 		<PackageId>GumCli</PackageId>
