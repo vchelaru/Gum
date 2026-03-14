@@ -6,7 +6,7 @@ The Splitter control can be used to control the size of two controls, usually in
 
 ## Code Example: Changing ListBox Sizes with a Splitter
 
-The following code creates two ListBoxes with a Splitter inbetween them. The Splitter can be used to adjust the ListBox sizes.
+The following code creates two ListBoxes with a Splitter in between them. The Splitter can be used to adjust the ListBox sizes.
 
 ```csharp
 // Initialize
@@ -34,6 +34,7 @@ for (int i = 0; i < 10; i++)
 }
 
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACpVQTU8CMRC896-Y9FSyZiObeBE9oEYh8WDEYy_NboEJZUrawQ8I_90WuxJIjNpDp_PmzZvp2xYAYhwe1ktxCezX5iwBSMioLW5MRMWr9hBYN4snTcbCNZB5g8k3IHsDRYd6NVnpBmkWef3jwrBtX9yzc7zvUJR0LQa-ce9Z9PErO1WMjbdztK3M7FSeOi-RGDC2ng9iuIJ-imXZU7RVBPFkejVmswxJRSqRRkACQAkoAZPWrtsmrCwyG9_9Mac_7tPx9_X8ru5cs5Dpqu7R2pHzuHHE2tqPI9rI4GzOcdLFqRn1_9yosx3wVz_q3w0Rxa74BA785tMbAgAA" target="_blank">Try on XnaFiddle.NET</a>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA51QPU_DMBD9KydPqVRFaRBLKgZSBK3EgCgSA2GwErc91bEr-8JHq_537NgFBYmheLjPd-_O78AW9q5rWUGmE2PWWVRry4oX5orpMxqxMrwV7HXMUCEhl7gXrGBv3IAlXm8fuBISrkCJd1h-F5LRtFI__XS547UjdrjJsHHdNE_6UWvqJzyrREul_oiU9yH7zefGZhuUTRLRvr3SJkFFgG40mzpXdVl2MYOJT3ycl8GOKnWoFLgXp9MFidZ60qRH5H4r-CKEPLgS0O85hjvtTiKRMKe_x_TPS0_4vh_j9EbX28Sb9BalnGuDe62IS_k5gM0FrjfkNl0ORcrPUymPMsE_dcrPFIodvwADbIY3XgIAAA)
 
 <figure><img src="../../.gitbook/assets/13_09 55 13.gif" alt=""><figcaption></figcaption></figure>

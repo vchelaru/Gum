@@ -33,7 +33,8 @@ button.Click += (_, _) =>
 };
 
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RXWuDMBSG7_0VB68s66T7uFpx0Dq2CrsqMhkIJepZDU1yRoy1rPS_L1ppXTeWu_Pk5c3Dyd4BcKPqpZbuAxhd47gFXHHDmeBfaKm7ZRoargpqIACFDSTd4I2mqTpyf6bykrRna_yEa_zQTGIP_RCVQT0IJ7wwpa26m0zOcIF8XRpLb4d0VhQxLYlM91iqWhWDOxOpyjCVYy_0yjIUXWR46T9RvrlwapEf0-ev7Hv79P0lje1gL1J3gUIQRMAkMJBYVWyNkNEudX_IhiUXhTesOHtntTGkeuN5N3TKR_7vCudkI3IQbm2vb9pF9eAkGgqq8E-rPvnGq5qJQVcoeL6BqwC81RhWIwgeU7VPFdjTVyxR0hafNcnTVxymrnNwvgF3GhpjPgIAAA" target="_blank">Try on XnaFiddle.NET</a>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RXWuDMBSG7_0VB68s66T7uFpx0Dq2CrsqMhkIJepZDU1yRoy1rPS_L1ppXTeWu_Pk5c3Dyd4BcKPqpZbuAxhd47gFXHHDmeBfaKm7ZRoargpqIACFDSTd4I2mqTpyf6bykrRna_yEa_zQTGIP_RCVQT0IJ7wwpa26m0zOcIF8XRpLb4d0VhQxLYlM91iqWhWDOxOpyjCVYy_0yjIUXWR46T9RvrlwapEf0-ev7Hv79P0lje1gL1J3gUIQRMAkMJBYVWyNkNEudX_IhiUXhTesOHtntTGkeuN5N3TKR_7vCudkI3IQbm2vb9pF9eAkGgqq8E-rPvnGq5qJQVcoeL6BqwC81RhWIwgeU7VPFdjTVyxR0hafNcnTVxymrnNwvgF3GhpjPgIAAA)
 
 <figure><img src="../../.gitbook/assets/14_06 14 56.gif" alt=""><figcaption><p>Window responding to move and resize actions</p></figcaption></figure>
 
@@ -55,7 +56,7 @@ Window movement and resizing can be restricted by removing or modifying the IsEn
 
 Any of these objects can be disabled to prevent the user from moving or resizing a window.
 
-Note that changing any of these values will not update the visual appearance of the Window. These values only control the behavior of the control. Any changes to apperance must be either performed through the Visual object, or by creating a custom Window implementation.
+Note that changing any of these values will not update the visual appearance of the Window. These values only control the behavior of the control. Any changes to appereance must be either performed through the Visual object, or by creating a custom Window implementation.
 
 ## Code Example: Disabling Resizing with ResizeMode
 
@@ -67,7 +68,8 @@ var window = new Window();
 window.AddToRoot();
 window.ResizeMode = ResizeMode.NoResize;
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvmUlBQ8ix2L81VslIoKSpN1QEJZOZllmQm5mRWpQJFlcoSixTKM_NS8ssVbBXyUssVwsEcDU3rmDyIuJ5jSkpIflB-fgmyYFBqMdAE3_yUVKA-BEfPLx_CsVbiquUCAI5YsKWBAAAA" target="_blank">Try on XnaFiddle.NET</a>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvmUlBQ8ix2L81VslIoKSpN1QEJZOZllmQm5mRWpQJFlcoSixTKM_NS8ssVbBXyUssVwsEcDU3rmDyIuJ5jSkpIflB-fgmyYFBqMdAE3_yUVKA-BEfPLx_CsVbiquUCAI5YsKWBAAAA)
 
 ## Code Example: Forced Docking
 
@@ -80,7 +82,7 @@ The following code shows how to force dock a window to the right side of the scr
 var window = new Window();
 window.AddToRoot();
 
-window.Dock(Dock.Right);
+window.Dock(Gum.Wireframe.Dock.Right);
 
 var windowVisual = (WindowVisual)window.Visual;
 
@@ -97,7 +99,8 @@ windowVisual.BorderTopInstance.IsEnabled = false;
 windowVisual.BorderBottomInstance.IsEnabled = false;
 windowVisual.BorderRightInstance.IsEnabled = false;
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACp2QMU_DMBCF9_yKU6ZUQuneioEIVEViqiK6sBzJhVh1fJV9aUoR_x3XLtABqNrF0r2n7947vycAaekWQ5_OQOxANwdBGSUKtdqTV9MtWhiVaXiEWzA0wioM2WT-bKKe3zVNxUtmCeK3fM_1Ojs8-VK9dhK9n3VPyg2o_dJsdTJPjnCcAjKdQo9rAiXgGKQjGBxZqNEYFrDkfFNgCz1vKdhxRQBpV9NGoPV2x1bt2Qhq_Tb7Khlj8kqJpgJtaZygqSkv3YPBF02N79eidnRy2JEp2DZkK948Uiv_gr9j4VMu5QoW4f6axEieD_2r7nV5l1Ln-qXJR_IJz-IpZ7YCAAA" target="_blank">Try on XnaFiddle.NET</a>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA52PQUvDQBCF_0qYUwplL94iPRiqEvBUQnNQD2t30g5udsrurAHF_-42K1q8SHN8j_nee_MBTbiPA1TiIy4hBnL7ANUjJFPdsR-CWmOvo5UthahtUNsreF4CORLSlt4RKnjTvhjJGR6LVeFwLLpJlIvrJ5d9dWNMyxtmOTfXvHstT0Udeey9HnCy1Ib2Bznd_Qbn9hRfdmd68R2U1U9wlqolsVhr37gg2u1QNeHW6ReLJuX06Rf8S9TsDfqWjw_YywxsGn4pV7MID3MaMzmrNI2d13Yp9d86-PwCD4OhIIMCAAA)
 {% endtab %}
 
 {% tab title="General" %}
@@ -106,7 +109,7 @@ windowVisual.BorderRightInstance.IsEnabled = false;
 var window = new Window();
 window.AddToRoot();
 
-window.Dock(Dock.Right);
+window.Dock(Gum.Wireframe.Dock.Right);
 
 // make it so the user cannot resize or move the window
 // except for horizontally:
@@ -121,7 +124,8 @@ window.GetFrameworkElement("BorderTopInstance").IsEnabled = false;
 window.GetFrameworkElement("BorderBottomInstance").IsEnabled = false;
 window.GetFrameworkElement("BorderRightInstance").IsEnabled = false;
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACq2QMWvDMBCFd_-KQ5MDxdlTOtQ0DYZOwdDFi2qfa2FJF07nuE3pf68jQ-hQqAcvB3oPfffefSUAqgiHwakdCA94dxWMN2K0NRecVHXWDKPxDY3wAB5HeI2PdHNf-VnPHpumpCORRPEmP1Hdp9eRHc17J7O33YLTPYIRCATSIQwBGWrtPQkwhmktEIOjM0Z7hsWP-FHjSaCd7I7YXMiLtvZzd9t4QHlm7XAk7vcWHXpJK1UasZhrLnwQ7Wus1CYrwt7rN4vNVKrVNuDv4H9jcuIGuaTTC7byH2sZKd5lBVROIuRWyjXDFkVb2nO1VCuAFhRTyXfyA8CJg4kbAwAA" target="_blank">Try on XnaFiddle.NET</a>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA62PMQuDMBBG_4pkUigijpYOlbYidBLBxSU1ZxtMciWeFVr632t1cXTImJfj8b4Py_ts0CwhO8COSSNJciXfwBL24tYbpRE4egfPwOhV88MP9rVZeHgUosQCkdbwhE3nT9KwkhZayzXMKCzk_UGruwzo8v8d0XZnBRoM-fUQRXFcSlKQcpubnrhpYKFBmPdnw28KxBTUctXDFlmKVoAt8XmFltwa50UOlSkSoXbcuUhdp07rnTc6FG6cy74_Ts_NlgEDAAA)
 {% endtab %}
 {% endtabs %}
 

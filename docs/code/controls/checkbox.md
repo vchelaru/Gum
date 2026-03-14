@@ -13,12 +13,13 @@ checkBox.AddToRoot();
 checkBox.X = 50;
 checkBox.Y = 50;
 checkBox.Text = "Checkbox";
-checkBox.Checked += (_,_) => Debug.WriteLine($"IsChecked:{checkBox.IsChecked}");
-checkBox.Unchecked += (_, _) => Debug.WriteLine($"IsChecked:{checkBox.IsChecked}");
+checkBox.Checked += (_,_) => checkBox.Text = $"IsChecked:{checkBox.IsChecked}";
+checkBox.Unchecked += (_, _) => checkBox.Text = $"IsChecked:{checkBox.IsChecked}";
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUkjNSk7Od8isUbBXyUssVnKFcDU3rmDyYnJ5jSkpIflB-fgmqcARQk6kBskgkhkhIakUJUDBGCWxyUn5FjBKyNFg0NUVB21ZBI14nXlPB1k7BJTWpNF0vvCizJNUnMy9VQyUG6BOoQqtquFa4WG2MEoqzQiFMuKkKFBirxMtVy8sFAIkpn4VPAQAA" target="_blank">Try on XnaFiddle.NET</a>
 
-<figure><img src="../../.gitbook/assets/13_08 55 15.gif" alt=""><figcaption><p>CheckBox responding to Checked and Unchecked events by printing output</p></figcaption></figure>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA6tW8ix2L81VsiopKk3VUcrMyyzJTMzJrEpVslIqSyxSSM5ITc52yq9QsFXISy1XcIZyNTStY_JgcnqOKSkh-UH5-SWowhFATaYGyCKRGCIhqRUlQMGYUgMDIyOw6Un5FRAesjKwTGoKRJ2TrYJGvE68poItiGvsqoBumgrEAM9iqDarargKuFgtpiWhECaqNQpUskepFgDci7UfawEAAA)
+
+<figure><img src="../../.gitbook/assets/13_21 40 32.gif" alt=""><figcaption><p>CheckBox responding to Checked and Unchecked events by printing output</p></figcaption></figure>
 
 ## CheckBox Width and Height
 
@@ -31,8 +32,11 @@ The text within the CheckBox draws and wraps according to the bounds of the Chec
 ```csharp
 // Initialize
 var checkBox = new CheckBox();
+checkBox.Y = 24;
 checkBox.Text = "This is some longer text";
-stackPanel.AddChild(checkBox);
+checkBox.AddToRoot();
 ```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA6tW8ix2L81VsiopKk3VUcrMyyzJTMzJrEpVslIqSyxSSM5ITc52yq9QsFXISy1XcIZyNTStY_JgcnqRQFkjE2SRkNSKEqBgTKmBgZFRSEZmsQIQFefnpirk5OelpxYplAAVQGSRtTmmpITkB-XnlwDNV6oFAAAIwCycAAAA)
 
 <figure><img src="../../.gitbook/assets/13_08 56 16.png" alt=""><figcaption><p>ComboBox with wrapped text</p></figcaption></figure>

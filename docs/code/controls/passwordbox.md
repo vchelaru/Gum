@@ -25,8 +25,9 @@ button.AddToRoot();
 button.X = 50;
 button.Y = 90;
 button.Text = "Get Password";
-button.Click += (_, _) => Debug.WriteLine(passwordBox.Password.ToString());
+button.Click += (_, _) => button.Text = passwordBox.Password.ToString();
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm2PQUvDQBCF7_kVw54SLKFYPWiJYG1phR6KBqqwUNLukAymu2UzaYvif3fTrtpGb_O-95Z97yMAEI_VuF6LW2BbY6cBpIkpK-kdHRXbzMImq6qdsWpg9pCAxh3MfkkY9aU-ScT3SqXmyRj-47y419fdFnz9D85JceGMy27bmSDlBTurd9VyZmW2wsKUCq2zpRhpdtd3UylcXOpmzrJmNtovGRzEoeqRt_p7-FPd66b1zYlOcd-UkmKMfP6nDzyUtHqDiwTCRQcWESR3MMRlncdzS4xT0hiejfF3nJpntqTzMIr6IvgMvgDQN6x3tAEAAA" target="_blank">Try on XnaFiddle.NET</a>
 
-<figure><img src="../../.gitbook/assets/13_09 34 46.gif" alt=""><figcaption><p>Password entered in a PasswordBox</p></figcaption></figure>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA22PXwuCMBTFv8rYU0GIaD1k-JAh1VuUUIEgq40c2RbzWlH03Zu5_mlvO-d37-45NzzNx8UBe6AK1sFccOAk41eGPXwiCh1Jnp-looG8IB8Jdkazj9NqD2LxNWENKY3kXEpokJXe7tk1c_3PXHIKqQaOXScTxncpaOR2a2SWkS1LZUaZ0jgubNtxQgFavdJWnl4rS20KAClMn-ApnoErv9bCmO8CRpfZ-186Yhd43x4zaF42g6OMb_fVXOCjVtJBSRv5pXZD9PvZT0XztiK5AMXFTofD9wcMCTaCvwEAAA)
+
+<figure><img src="../../.gitbook/assets/13_22 15 31.gif" alt=""><figcaption><p>Password entered in a PasswordBox</p></figcaption></figure>

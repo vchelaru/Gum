@@ -1,4 +1,4 @@
-﻿# RadioButton
+# RadioButton
 
 ## Introduction
 
@@ -25,7 +25,8 @@ var hardRadioButton = new RadioButton();
 stackPanel.AddChild(hardRadioButton);
 hardRadioButton.Text = "Hard";
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACp2NuwrCMBSG90Lf4ZCpgvQBFAcVUQdBascswQQ82CbQnnjFdzcp0pbUqev3X753HAGwfb21JZsBVVZNG4IaCUWBL-Uwu4kKahLn61FoVcACtLrDqQXJZM51l6dLKXOTGUNNwLWfK1E_MyHRrCyR0b-PHvlzsr5gIZNg6WsBSnP1IPfI2cYFnLXSUkm05TjtYOuLA9ipD03Uk19EJcepg6WvBajT7lzgpCyOPnH0BaJP-5HOAQAA" target="_blank">Try on XnaFiddle.NET</a>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACp2NuwrCMBSG90Lf4ZCpgvQBFAcVUQdBascswQQ82CbQnnjFdzcp0pbUqev3X753HAGwfb21JZsBVVZNG4IaCUWBL-Uwu4kKahLn61FoVcACtLrDqQXJZM51l6dLKXOTGUNNwLWfK1E_MyHRrCyR0b-PHvlzsr5gIZNg6WsBSnP1IPfI2cYFnLXSUkm05TjtYOuLA9ipD03Uk19EJcepg6WvBajT7lzgpCyOPnH0BaJP-5HOAQAA)
 
 <figure><img src="../../.gitbook/assets/13_09 42 01.gif" alt=""><figcaption></figcaption></figure>
 
@@ -58,16 +59,20 @@ var hardRadioButton = new RadioButton();
 stackPanel.AddChild(hardRadioButton);
 hardRadioButton.Text = "Hard";
 
+var label = new Label();
+stackPanel.AddChild(label);
+
 easyRadioButton.Checked += (sender, _) =>
 {
-    System.Console.WriteLine("Easy selected");
+    label.Text = "Easy selected";
 };
 hardRadioButton.Checked += (sender, _) =>
 {
-    System.Console.WriteLine("Hard selected");
+    label.Text = "Hard selected";
 };
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqWPQWsCMRCF74L_YchppbI_oGUFuxQVPIgKvQQkbAY2GCeQzNZa8b83saKSempzfG_e-16O_R6AmIVJtxPPwL7D4VkxZNgoa74wyuJDeQismu1CEVqogHAPq6tQDF4k3fxyrPXaLZ3jsyEpxVGFw1Jp4147ZkeXjjvlQUndGquLLJnOMqlc4yfHRineoiHFFdoqr_8GzZLpLJNu0Gk0LtB8WN1is0UNTxUUAUmjH8JmANVI0lESxLc6BMZdWTsKzmL57g3j3BAWP5-BgBYbxghIG04PdvyLkbb_Yoh-7_QNwOpGWxkCAAA" target="_blank">Try on XnaFiddle.NET</a>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA6WQzQrCMBCEX2XJqQUpUm9KDypFBQ-iHgsSm4UGYwJN6i--u01brK31ojktM7vzZfdOFnqWHcnQpBn2CJfccCr4DcmQnGgK2tD4sKISBQQg8Qybl-C4o0jWvjdmbKvWSpnCsMNI9XVNGVeTzBglq4Q3pSNimnDBnNakbWtJ3hYvJk-Msn7f98PcLKsKndCU_YZuTdq2ltREz3OzgRZ0_7rW0tZfUUVn127TBOMDspIwCcDRKBmmPdi5EFhxEEbyHknIXxHyeQ3QKDA2WP_t0bHJnyC7exeIPJ5Cn-U6WAIAAA)
 
 ## Reading IsChecked
 
@@ -86,18 +91,21 @@ var hardRadioButton = new RadioButton();
 stackPanel.AddChild(hardRadioButton);
 hardRadioButton.Text = "Hard";
 
+var label = new Label();
+stackPanel.AddChild(label);
+
 var button = new Button();
-button.AddToRoot();
-button.Y = 100;
+stackPanel.AddChild(button);
 button.Text = "Check selection";
 button.Click += (_, _) =>
 {
     if(easyRadioButton.IsChecked == true)
-        System.Console.WriteLine("Easy is selected");
+        label.Text = "Easy is selected";
     else if(hardRadioButton.IsChecked == true)
-        System.Console.WriteLine("Hard is selected");
+        label.Text = "Hard is selected";
     else
-        System.Console.WriteLine("Nothing selected");
+        label.Text = "Nothing selected";
 };
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACp2RUUvDMBSF3wf7D5c-tTjKfHVUmEV0ICLbQITAiMvVXpYl0KTqHPvvJm1pS1CQ5fHcc8-XnBzHI4BoYe6qfXQFtqxwUiukyBKX9I1Ojj54Ccby7e6JK5SQgcJPWHVCnMyY6ufpXIi1Xmpt6wFTfh25OSy5IH1TWatVmzFQfgnJC5IiDja9LZDSNX5Zl8iiWzdgUQcteCnOgwab3hZIPfTeDQbQ1yFrgGn0oJxWfHH2y-m0F7rwvMDtDgxK3FrSqua0nlySG11kEG8msEkgu2bqyBS4Q29hbenC1FEoIMvqj04aqz-rg7G4T3OtjJaYPpdk8YEUxk2jQKa9AbqH-mv7JZQGPSjs5UyQb_Fv0L8iHrUtSL0HEadZNB6dfgAYHhTD6QIAAA" target="_blank">Try on XnaFiddle.NET</a>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA51SXWvCMBT9K5c8tSBF3JuSh1lkE8YYzseCpM3dejFLoEn3Jf73NbWrGp1jy1Ny7zn3nJxkw-b2pn5hY1fVOGCkyZFQ9IlszF5FBdaJYv0gNCrgoPENHvtCFE8yve8n11IuzcIY1zY8GYX9WAhJZlo7Z3Q34aByZkRakpJRwPSwoJQs8d01E7N6OByNZk1zt-ukS1HJ_0kHTA8LSsfSt03zSFqJvE_rzu9_lGqR32Hlh0Z_8Zj31vIzjtISizVYVFg4Mro312FTRU27rU45RKsBrGLg_nw1y_Qm09AsegrfIJnbdjBK4Bz8d4l3UL_am5w-CZDtfOA-I49HZdFrhMn-UcNnf1HjIvveuJL08yl7O2HbL25P9ikZAwAA)

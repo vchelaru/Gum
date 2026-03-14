@@ -27,11 +27,12 @@ for (int i = 0; i < 10; i++)
         button.Text = DateTime.Now.ToString();
 }
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm2PUUvDMBSF3wv9D5c-tXSEquiDs4JOUF9EtoIOCiOucb2svYH21qlj_90kdY6qeUnud07OSba-BxDct7ddHZwDN50aOYKEjLLCT2Vw8CYbaFku14-SVAUpkNrA7AeE0Tingy6uiiLTU635t_Bsrp4mQzb_hz1hwaXhx4kVcrL9jaRC1_vuj5ZVLaaOuZZX3UCIxIDGkozNdgFHdo_jKKdtTmCWzXnpmDV951y7wQVYffiHSYlVEfb-vaOfRKbe2UTkQR9gDhADDj13CleldZ2cDYVJhcs1xCmEixEsIkgvodf_FtxIVhnWSjzojcj0jBuklXvuLvC9ne99ARnmnl_AAQAA" target="_blank">Try on XnaFiddle.NET</a>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACm2PUUvDMBSF3wv9D5c-tXSEquiDs4JOUF9EtoIOCiOucb2svYH21qlj_90kdY6qeUnud07OSba-BxDct7ddHZwDN50aOYKEjLLCT2Vw8CYbaFku14-SVAUpkNrA7AeE0Tingy6uiiLTU635t_Bsrp4mQzb_hz1hwaXhx4kVcrL9jaRC1_vuj5ZVLaaOuZZX3UCIxIDGkozNdgFHdo_jKKdtTmCWzXnpmDV951y7wQVYffiHSYlVEfb-vaOfRKbe2UTkQR9gDhADDj13CleldZ2cDYVJhcs1xCmEixEsIkgvodf_FtxIVhnWSjzojcj0jBuklXvuLvC9ne99ARnmnl_AAQAA)
 
 ## Stack Panel Sizing
 
-By defaut StackPanels contain a Visual with the following properties:
+By default `StackPanels` contain a `Visual` with the following properties:
 
 * WidthUnits = Absolute
 * HeightUnits = RelativeToChildren
@@ -74,7 +75,8 @@ secondButton.Click += (_, _) =>
     secondInternalStackPanel.AddChild(label);
 };
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACr2R3UrDQBCF7wN5h2HxIsUSiuCNEkErSEFENKDCQlm7K11MdiWZWDHk3d3d2DQ_hiKCuUrmzJz5Jqf0PQCyyK-KlJwAZoWYuopUEiVL5KcwZfLOMkiZVPfIVq-3TIkEIlBiA7tCMDmlqtsTnnMe6zut8Sfx0Vgcz4b1p5H6g-S4NtrRzIpUWaYXmeW4UCgyxZLfw83XMuHBiIkdaXZcFIhaffvWH86zJYax-EDTQYlxBtT1IOTWEN6sIyW9ieYkd-8IRw-0Hu3vnifSbDmMIFhOYTmB6Iyqkiowj70hYc_NX7m27w7eqk7Zoh84dsGBIZSXDEUsUxHe6E3l0G3_XkhnaN2rJqVcrLTif41pzGWbU62PBdVWB0nV4iCqzkw3qzGYPu4urY7Zv8W1n7OVF_G9yve-AA6oIAUSBAAA" target="_blank">Try on XnaFiddle.NET</a>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACr2R3UrDQBCF7wN5h2HxIsUSiuCNEkErSEFENKDCQlm7K11MdiWZWDHk3d3d2DQ_hiKCuUrmzJz5Jqf0PQCyyK-KlJwAZoWYuopUEiVL5KcwZfLOMkiZVPfIVq-3TIkEIlBiA7tCMDmlqtsTnnMe6zut8Sfx0Vgcz4b1p5H6g-S4NtrRzIpUWaYXmeW4UCgyxZLfw83XMuHBiIkdaXZcFIhaffvWH86zJYax-EDTQYlxBtT1IOTWEN6sIyW9ieYkd-8IRw-0Hu3vnifSbDmMIFhOYTmB6Iyqkiowj70hYc_NX7m27w7eqk7Zoh84dsGBIZSXDEUsUxHe6E3l0G3_XkhnaN2rJqVcrLTif41pzGWbU62PBdVWB0nV4iCqzkw3qzGYPu4urY7Zv8W1n7OVF_G9yve-AA6oIAUSBAAA)
 
 <figure><img src="../../.gitbook/assets/13_09 51 57.gif" alt=""><figcaption></figcaption></figure>
 

@@ -10,6 +10,11 @@ The following code creates a Slider which allows the user to select a value betw
 
 ```csharp
 // Initialize
+var label = new Label();
+label.AddToRoot();
+label.X = 50;
+label.Y = 24;
+
 var slider = new Slider();
 slider.AddToRoot();
 slider.X = 50;
@@ -20,13 +25,14 @@ slider.TicksFrequency = 1;
 slider.IsSnapToTickEnabled = true;
 slider.Width = 250;
 slider.ValueChanged += (_, _) => 
-    Debug.WriteLine($"Value: {slider.Value}");
-slider.ValueChangeCompleted += (_, _) =>
-    Debug.WriteLine($"Finished setting Value: {slider.Value}");
+    label.Text = $"Value: {slider.Value}";
+slider.ValueChangeCompleted += (_, _) => 
+    label.Text = $"Finished setting Value: {slider.Value}";
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACo2QW0vDQBCF3wP5D8PiQ4qleMGXSgSpVgr6YoNVCJRtd0gGk926F2-l_91pFLIIgvt2vjlzDrPbNAEQM3cTWjEGbwMOO0KaPMmGPpGxeJUWXEMKLeSg8Q3mncgG56X-5qNLpQpzb4yP4SPbz456_fRL33FNG1qmMZTvP_A0ogWtn93U4ktAvf7g4XE_m7m5lpvC7D3XWq4aVGzYH9N7FqR8zfQk7n-QTcBJLXXFG4c5ZMshLAeQX0Cpgd8VrkI1WljyeEsas4NSdCtj2MYJu1JER0ehE9NuGvT_Dp_yf7ia7Q69J13Bn20iTXZp8gWAUmp9vgEAAA" target="_blank">Try on XnaFiddle.NET</a>
 
-<figure><img src="../../.gitbook/assets/13_09 53 58.gif" alt=""><figcaption><p>Slider reporting its value whenever the value changes or when the change completes</p></figcaption></figure>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA5WQUWvCMBSF_0oIe1CQ0dXtpaMPm6gI7mWWbYIg0VxsME20STY38b_vJnYaZAz21vPdc85N756OzNBVNLO1gw4VSljBpPgCmtF3VhPJFiBJThR8kLH_brXvZyrQ6wfOC_2stY3YG3rvkpOcokxvUfouIwWHuimbBBGSR35R18BTX6OnF_oJX1y5CmkM2a6B3YgWYrk2gxq2DtTyE4c359nITBTbFNp7-ootJHA0-JucPa-C29L_T7z_hUkHvZKpFSZmLknSx5y05h0yb5Pc627_5xYF7CzGr4IrDcGM7OOew3H0a3tPVxsJ9p9bBngeU2LIgLVCrchfa-nhGwhOLWwOAgAA)
+
+<figure><img src="../../.gitbook/assets/13_22 30 10.gif" alt=""><figcaption><p>Slider reporting its value whenever the value changes or when the change completes</p></figcaption></figure>
 
 ## Value
 
