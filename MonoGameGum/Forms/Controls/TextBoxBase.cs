@@ -1,4 +1,7 @@
-﻿using Gum.Wireframe;
+﻿#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+using Gum.Wireframe;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
@@ -1008,7 +1011,7 @@ public abstract class TextBoxBase :
         }
 #endif
 
-#if MONOGAME && !FRB
+#if XNALIKE && !FRB
         base.HandleKeyboardFocusUpdate();
 #endif
     }
