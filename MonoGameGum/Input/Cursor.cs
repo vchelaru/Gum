@@ -1,4 +1,8 @@
-﻿using Gum.Forms.Controls;
+﻿#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+
+using Gum.Forms.Controls;
 using Gum.Wireframe;
 using System;
 
@@ -405,6 +409,9 @@ public partial class Cursor : ICursor
     TouchCollection _lastFrameTouchCollection = new TouchCollection();
 
     public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
+#if XNALIKE
+    private readonly GameWindow? _gameWindow;
+#endif
     double mLastPrimaryClickTime = -999;
     public double LastPrimaryClickTime => mLastPrimaryClickTime;
     double mLastPrimaryPushTime = -999;
@@ -412,10 +419,19 @@ public partial class Cursor : ICursor
     double mLastSecondaryClickTime = -999;
     double mLastMiddleClickTime = -999;
 
+#if XNALIKE
+public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
+    {
+        _gameWindow = gameWindow;
+
+    }
+#else
     public Cursor()
     {
-        // empty for now, but maybe we'll need something here in the future?
+
     }
+#endif
+
 
     public void ClearInputValues()
     {
@@ -440,9 +456,8 @@ public partial class Cursor : ICursor
 
         int? x = null;
         int? y = null;
-
-        var supportsMouse =
-            !System.OperatingSystem.IsAndroid() && !System.OperatingSystem.IsIOS();
+        var isMobile = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS();
+        var supportsMouse = !isMobile;
 
         if(supportsMouse)
         {
@@ -480,15 +495,27 @@ public partial class Cursor : ICursor
         {
             LastInputDevice = InputDevice.TouchScreen;
 
-            if(_touchCollection.Count > 0)
+            // In MonoGame, the mouse is returned relative to screen space. Top left
+            // is top left. On mobile, touch collection sare relative to the client bounds
+            // which adjust on mobile to account for different aspect ratios. We need to consider
+            // this to address problems with offsets which were reported when working on the Dungeon
+            // Slime MonoGame mobile tutorial.
+#if XNALIKE
+            int xOffset = isMobile && _gameWindow != null ? _gameWindow.ClientBounds.X : 0;
+            int yOffset = isMobile && _gameWindow != null ? _gameWindow.ClientBounds.Y : 0;
+#else
+            int xOffset = 0;
+            int yOffset = 0;
+#endif
+            if (_touchCollection.Count > 0)
             {
-                x = (int)_touchCollection[0].Position.X;
-                y = (int)_touchCollection[0].Position.Y;
+                x = (int)_touchCollection[0].Position.X + xOffset;
+                y = (int)_touchCollection[0].Position.Y + yOffset;
             }
             else if(_lastFrameTouchCollection.Count > 0)
             {
-                x = (int)_lastFrameTouchCollection[0].Position.X;
-                y = (int)_lastFrameTouchCollection[0].Position.Y;
+                x = (int)_lastFrameTouchCollection[0].Position.X + xOffset;
+                y = (int)_lastFrameTouchCollection[0].Position.Y + yOffset;
             }
         }
 
