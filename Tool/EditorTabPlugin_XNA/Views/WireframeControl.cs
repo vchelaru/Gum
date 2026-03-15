@@ -32,6 +32,9 @@ public class WireframeControl : GraphicsDeviceControl
 {
     #region Fields
 
+    private readonly IDialogService _dialogService;
+    private readonly IOutputManager _outputManager;
+
     private IHotkeyManager _hotkeyManager;
     private IProjectManager _projectManager;
     private SelectionManager _selectionManager;
@@ -69,6 +72,12 @@ public class WireframeControl : GraphicsDeviceControl
     public SystemManagers SystemManagers => SystemManagers.Default;
 
     #endregion
+
+    public WireframeControl()
+    {
+        _dialogService = Locator.GetRequiredService<IDialogService>();
+        _outputManager = Locator.GetRequiredService<IOutputManager>();
+    }
 
     #region Properties
 
@@ -157,7 +166,12 @@ public class WireframeControl : GraphicsDeviceControl
 
             _cameraController = new CameraController();
 
-            LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
+            LoaderManager.Self.Initialize(null, "Content/TestFont.fnt", Services, null);
+            if (Text.DefaultBitmapFont == null)
+            {
+                _outputManager.AddError(
+                    "Default font file 'Content/TestFont.fnt' was not found. Text in the wireframe editor may not render correctly.");
+            }
             _cameraController.Initialize(Camera, editorViewModel, Width, Height, hotkeyManager);
             _cameraController.CameraChanged += () => CameraChanged?.Invoke();
 
@@ -203,7 +217,8 @@ public class WireframeControl : GraphicsDeviceControl
         }
         catch (Exception exception)
         {
-            Locator.GetRequiredService<IDialogService>().ShowMessage("Error initializing the wireframe control\n\n" + exception);
+            var message = "Error initializing the wireframe control\n\n" + exception;
+            _dialogService.ShowMessage(message);
         }
     }
 
@@ -306,7 +321,7 @@ public class WireframeControl : GraphicsDeviceControl
 #if DEBUG
             catch (Exception e)
             {
-                Locator.GetRequiredService<IDialogService>().ShowMessage(e.ToString());
+                _dialogService.ShowMessage(e.ToString());
             }
 #endif
         }
