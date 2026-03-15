@@ -221,6 +221,7 @@
   * [ListBox](code/controls/listbox.md)
   * [ListBoxItem](code/controls/listboxitem/README.md)
     * [Styling in Gum Tool](code/controls/listboxitem/styling-in-gum-tool.md)
+  * [Menu](code/controls/menu.md)
   * [MenuItem](code/controls/menuitem.md)
   * [PasswordBox](code/controls/passwordbox.md)
   * [RadioButton](code/controls/radiobutton.md)
