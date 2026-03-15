@@ -167,7 +167,7 @@ public class WireframeControl : GraphicsDeviceControl
             _cameraController = new CameraController();
 
             LoaderManager.Self.Initialize(null, "Content/TestFont.fnt", Services, null);
-            if (Text.DefaultBitmapFont == null)
+            if (global::RenderingLibrary.Graphics.Text.DefaultBitmapFont == null)
             {
                 _outputManager.AddError(
                     "Default font file 'Content/TestFont.fnt' was not found. Text in the wireframe editor may not render correctly.");
