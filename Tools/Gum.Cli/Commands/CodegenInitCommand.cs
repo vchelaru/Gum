@@ -25,24 +25,30 @@ public static class CodegenInitCommand
             "--force",
             "Overwrite existing ProjectCodeSettings.codsj without prompting.");
 
+        var csprojOption = new Option<string?>(
+            "--csproj",
+            "Explicit path to the .csproj file. When omitted, the nearest .csproj above the .gumx file is used.");
+
         var command = new Command("codegen-init",
             "Auto-configure code generation settings by locating the nearest .csproj above the .gumx file.")
         {
             projectArgument,
-            forceOption
+            forceOption,
+            csprojOption
         };
 
         command.SetHandler((InvocationContext context) =>
         {
             string projectPath = context.ParseResult.GetValueForArgument(projectArgument);
             bool force = context.ParseResult.GetValueForOption(forceOption);
-            context.ExitCode = Execute(projectPath, force);
+            string? csprojPath = context.ParseResult.GetValueForOption(csprojOption);
+            context.ExitCode = Execute(projectPath, force, csprojPath);
         });
 
         return command;
     }
 
-    private static int Execute(string projectPath, bool force)
+    private static int Execute(string projectPath, bool force, string? explicitCsprojPath)
     {
         string fullPath = Path.GetFullPath(projectPath);
 
@@ -68,7 +74,9 @@ public static class CodegenInitCommand
         }
 
         ICodeGenerationAutoSetupService autoSetupService = new CodeGenerationAutoSetupService();
-        AutoSetupResult result = autoSetupService.Run(fullPath);
+        AutoSetupResult result = explicitCsprojPath != null
+            ? autoSetupService.Run(fullPath, explicitCsprojPath)
+            : autoSetupService.Run(fullPath);
 
         if (!result.Success)
         {

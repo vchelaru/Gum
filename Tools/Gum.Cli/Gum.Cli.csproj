@@ -25,6 +25,18 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+		<!-- FUTURE: When a second rendering backend is added (e.g. Gum.ProjectServices.Skia), both
+		     backends compile copies of shared types (RenderingLibrary, SystemManagers, etc.) from
+		     GumCommon into their own assemblies, and both share static singletons (ObjectFinder.Self,
+		     SystemManagers.Default) via GumCommon. Referencing both directly from Gum.Cli will not
+		     cause compile errors (Gum.Cli only uses IScreenshotService), but loading both into the
+		     same process risks static-state collisions if they are ever initialized concurrently.
+
+		     The intended long-term architecture is to load backend assemblies dynamically via a custom
+		     AssemblyLoadContext with AssemblyDependencyResolver, so each backend's dependencies are
+		     isolated and only one backend is loaded per process run. Switch to that pattern when a
+		     second backend is introduced. -->
+		<ProjectReference Include="..\Gum.ProjectServices.MonoGame\Gum.ProjectServices.MonoGame.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -83,6 +83,22 @@ gumcli codegen MyProject.gumx --element Button --element Slider
 - Warnings are printed to stderr but do not block generation
 - Exit code `0` = success, `1` = elements blocked by errors, `2` = load failure or missing configuration
 
+### `gumcli screenshot <project.gumx> <element> [--output <path>] [--width <px>] [--height <px>]`
+
+Renders a Gum Screen or Component to a PNG file using MonoGame (DesktopGL), producing pixel-accurate output that matches a live MonoGame game.
+
+```
+gumcli screenshot MyProject.gumx MainMenu
+gumcli screenshot MyProject.gumx MainMenu --output screenshots/MainMenu.png
+gumcli screenshot MyProject.gumx MainMenu --width 1280 --height 720
+```
+
+- `<element>` is the Screen or Component name (without folder prefix or extension, e.g. `MainMenu` not `Screens/MainMenu.gusx`)
+- `--output` path for the PNG file; defaults to `<element>.png` in the current directory
+- `--width` / `--height` override the render dimensions; default to the project canvas size (800×600 if canvas size is not set)
+- Uses MonoGame rendering to match the exact visual output of a MonoGame game — fonts, textures, and anti-aliasing are identical
+- Exit code `0` = success, `1` = render error, `2` = project file not found
+
 ### `gumcli fonts <project.gumx>`
 
 Generates all missing bitmap font files (.fnt + .png) referenced by text elements in a Gum project.
@@ -103,5 +119,5 @@ gumcli fonts path/to/MyProject.gumx
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| 1 | Errors found (check) or elements blocked (codegen) or font generation error |
-| 2 | Project could not be loaded, invalid arguments, or non-Windows platform (fonts) |
+| 1 | Errors found (check) or elements blocked (codegen) or font generation error or render error (screenshot) |
+| 2 | Project could not be loaded, invalid arguments, non-Windows platform (fonts), or project file not found (screenshot) |

@@ -296,8 +296,27 @@ public class GumService
     }
 
 #if XNALIKE
-    [Obsolete("Initialize passing Game as the first parameter rather than GraphicsDevice. Using this method does not support non-(EN-US) keyboard layouts, and " +
-        "does not support ALT+numeric key codes for accents in TextBoxes. This method will be removed in June 2026")]
+    /// <summary>
+    /// Initializes Gum without a <see cref="Microsoft.Xna.Framework.Game"/> instance.
+    /// <para>
+    /// This overload is intended for non-interactive scenarios such as CLI tools, screenshot
+    /// generation, and headless rendering pipelines where a <c>Game</c> object is not available.
+    /// </para>
+    /// <para>
+    /// Input handling is NOT supported in this mode. This includes keyboard input, cursor/mouse
+    /// input, gamepad input, non-EN-US keyboard layouts, and ALT+numeric key codes for accented
+    /// characters in <c>TextBox</c> controls.
+    /// </para>
+    /// <para>
+    /// Interactive games should use <see cref="Initialize(Microsoft.Xna.Framework.Game, string?)"/>
+    /// instead, which wires up full input support.
+    /// </para>
+    /// </summary>
+    /// <param name="graphicsDevice">The <see cref="GraphicsDevice"/> to use for rendering.</param>
+    /// <param name="gumProjectFile">
+    /// Optional path to a <c>.gumx</c> project file to load. Pass <c>null</c> to skip project loading.
+    /// </param>
+    /// <returns>The loaded <see cref="GumProjectSave"/>, or <c>null</c> if no project file was specified.</returns>
     public GumProjectSave? Initialize(GraphicsDevice graphicsDevice, string? gumProjectFile = null)
     {
         return InitializeInternal(null, graphicsDevice, gumProjectFile);
