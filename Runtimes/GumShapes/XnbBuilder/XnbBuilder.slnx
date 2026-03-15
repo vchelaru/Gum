@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="XnbBuilderBlazorGL/XnbBuilderBlazorGL.csproj" />
+  <Project Path="XnbBuilderDesktopGL/XnbBuilderDesktopGL.csproj" />
+  <Project Path="XnbBuilderDirectX/XnbBuilderDirectX.csproj" />
+</Solution>

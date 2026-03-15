@@ -20,8 +20,12 @@
 	<ItemGroup>
 	  <Compile Remove="bin\**" />
 	  <Compile Remove="obj\**" />
+	  <Compile Remove="XnbBuilder\**" />
+	  <Compile Remove="XnbTest\**" />
 	  <EmbeddedResource Remove="bin\**" />
 	  <EmbeddedResource Remove="obj\**" />
+	  <EmbeddedResource Remove="XnbBuilder\**" />
+	  <EmbeddedResource Remove="XnbTest\**" />
 	  <None Remove="bin\**" />
 	  <None Remove="obj\**" />
 	</ItemGroup>

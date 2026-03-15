@@ -41,5 +41,8 @@ dist/
 
 # Windows NUL file artifact (created by incorrect output redirection)
 nul
+# XNB test harnesses (not needed in repo, used for local verification only)
+Runtimes/GumShapes/XnbTest/
+
 /.claude/designs
 *.setj
