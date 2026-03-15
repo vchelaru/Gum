@@ -65,7 +65,7 @@ The following code disabled resizing by setting ResizeMode:
 // Initialize
 var window = new Window();
 window.AddToRoot();
-window.ResizeMode = ResizeMode.NoResize;
+window.ResizeMode = Gum.Forms.ResizeMode.NoResize;
 ```
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvmUlBQ8ix2L81VslIoKSpN1QEJZOZllmQm5mRWpQJFlcoSixTKM_NS8ssVbBXyUssVwsEcDU3rmDyIuJ5jSkpIflB-fgmyYFBqMdAE3_yUVKA-BEfPLx_CsVbiquUCAI5YsKWBAAAA)

@@ -43,8 +43,8 @@ protected override void Initialize()
     innerPanel.AddChild(bottomAlignedContainer);
     bottomAlignedContainer.Dock(Dock.Bottom);
     bottomAlignedContainer.Height = 0;
-    bottomAlignedContainer.HeightUnits = DimensionUnitType.RelativeToChildren;
-    bottomAlignedContainer.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+    bottomAlignedContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+    bottomAlignedContainer.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
 
     var button = new Button();
     panel.AddChild(button);
@@ -62,16 +62,16 @@ protected override void Initialize()
 void FillAndExpandVertically(GraphicalUiElement visual)
 {
     // let it expand...
-    visual.HeightUnits = DimensionUnitType.RelativeToChildren;
+    visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
     // then measure:
     if(visual.GetAbsoluteHeight() > visual.Parent.GetAbsoluteHeight())
     {
-        visual.HeightUnits = DimensionUnitType.RelativeToChildren;
+        visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
     }
     else
     {
-        visual.HeightUnits = DimensionUnitType.RelativeToParent;
+        visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
     }
 }
 ```

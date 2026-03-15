@@ -45,7 +45,7 @@ However, each control also wraps a Visual object which gives you full layout con
 // Initialize
 // assuming MyButton is a valid Button:
 MyButton.Visual.Width = 0;
-MyButton.Visual.WidthUnits = DimensionUnitType.RelativeToContainer;
+MyButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
 ```
 
 For more information about all of the properties available to GraphicalUiElement, see the [General Properties](../../../../gum-tool/gum-elements/general-properties/) section of the Gum tool - all properties in the tool are also available in code.

@@ -50,7 +50,7 @@ var buttonVisual = (ButtonVisual)button.Visual;
 var coloredRectangle = new ColoredRectangleRuntime();
 buttonVisual.TextInstance.AddChild(coloredRectangle);
 // So the text area doesn't fill the whole button:
-buttonVisual.TextInstance.WidthUnits = DimensionUnitType.RelativeToChildren;
+buttonVisual.TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 coloredRectangle.Color = Color.Red;
 coloredRectangle.Dock(Dock.Bottom);
 coloredRectangle.Height = 2;
@@ -70,7 +70,7 @@ button.Anchor(Anchor.Center);
 // if we remove the TextInstanc, we need to make sure the height of the button
 // is absolute and no longer depends on its children:
 button.Height = 32;
-button.HeightUnits = DimensionUnitType.Absolute;
+button.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
 var buttonVisual = (ButtonVisual)button.Visual;
 // setting Parent to null removes a child from its parent:
@@ -88,7 +88,7 @@ button.Anchor(Anchor.Center);
 // if we remove the TextInstanc, we need to make sure the height of the button
 // is absolute and no longer depends on its children:
 button.Height = 32;
-button.HeightUnits = DimensionUnitType.Absolute;
+button.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
 var buttonVisual = (ButtonVisual)button.Visual;
 // setting Parent to null removes a child from its parent:

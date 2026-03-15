@@ -51,14 +51,14 @@ Button smallerBackgroundButton = new();
 panel.AddChild(smallerBackgroundButton);
 smallerBackgroundButton.Text = "Smaller Background";
 var background = ((ButtonVisual)smallerBackgroundButton.Visual).Background;
-background.WidthUnits = DimensionUnitType.RelativeToParent;
+background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 background.Width = -30;
 
 Button largerBackgroundButton = new();
 panel.AddChild(largerBackgroundButton);
 largerBackgroundButton.Text = "Larger Background";
 var background2 = ((ButtonVisual)largerBackgroundButton.Visual).Background;
-background2.WidthUnits = DimensionUnitType.RelativeToParent;
+background2.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 background2.Width = 30;
 ```
 
@@ -89,7 +89,7 @@ for(int i = 0; i < 5; i++)
     button.X = 20;
     button.Y = 20 + i * 40;
     button.Height = 36;
-    button.HeightUnits = DimensionUnitType.Absolute;
+    button.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 }
 ```
 
@@ -125,7 +125,7 @@ for(int i = 0; i < 5; i++)
     button.X = 20;
     button.Y = 20 + i * 40;
     button.Height = 36;
-    button.HeightUnits = DimensionUnitType.Absolute;
+    button.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 }
 ```
 
