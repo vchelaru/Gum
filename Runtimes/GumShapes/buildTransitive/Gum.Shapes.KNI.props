@@ -19,11 +19,15 @@
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <!-- BlazorGL/WebGL -->
-  <ItemGroup Condition="'$(KniPlatform)' == 'BlazorGL'">
-    <Content Include="$(MSBuildThisFileDirectory)Content/BlazorGL/apos-shapes.xnb"
-             Link="wwwroot/Content/apos-shapes.xnb" />
-  </ItemGroup>
+  <!-- BlazorGL/WebGL: copy XNB to project's wwwroot/Content/ at build time,
+       matching how the KNI content pipeline outputs BlazorGL content -->
+  <Target Name="CopyAposShapesXnbToWwwroot" BeforeTargets="BeforeBuild"
+          Condition="'$(KniPlatform)' == 'BlazorGL'">
+    <MakeDir Directories="$(MSBuildProjectDirectory)/wwwroot/Content" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)Content/BlazorGL/apos-shapes.xnb"
+          DestinationFolder="$(MSBuildProjectDirectory)/wwwroot/Content"
+          SkipUnchangedFiles="true" />
+  </Target>
 
   <!-- All other platforms: Apos.Shapes compiles the shader normally -->
 
