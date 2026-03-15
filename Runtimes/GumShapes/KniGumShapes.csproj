@@ -20,8 +20,12 @@
 	<ItemGroup>
 		<Compile Remove="bin\**" />
 		<Compile Remove="obj\**" />
+		<Compile Remove="XnbBuilder\**" />
+		<Compile Remove="XnbTest\**" />
 		<EmbeddedResource Remove="bin\**" />
 		<EmbeddedResource Remove="obj\**" />
+		<EmbeddedResource Remove="XnbBuilder\**" />
+		<EmbeddedResource Remove="XnbTest\**" />
 		<None Remove="bin\**" />
 		<None Remove="obj\**" />
 	</ItemGroup>
@@ -47,6 +51,13 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="buildTransitive\Gum.Shapes.KNI.props" Pack="true" PackagePath="buildTransitive\" />
+		<None Include="buildTransitive\Content\DesktopGL\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\Content\DesktopGL\" />
+		<None Include="buildTransitive\Content\Windows\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\Content\Windows\" />
+		<None Include="buildTransitive\Content\BlazorGL\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\Content\BlazorGL\" />
 	</ItemGroup>
 
 </Project>

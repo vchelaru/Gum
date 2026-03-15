@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+	<!--
+		Builds the Apos.Shapes shader XNB for BlazorGL (WebGL).
+		This project is never run - only built.
+	-->
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<KniPlatform>BlazorGL</KniPlatform>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\Program.cs" Link="Program.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.8" />
+		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="4.2.9001" />
+		<PackageReference Include="nkast.Kni.Platform.Blazor.GL" Version="4.2.9001.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.17" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,30 @@
+<Project>
+
+  <!-- Skip Apos.Shapes content compilation for platforms with pre-built XNBs -->
+  <PropertyGroup Condition="'$(KniPlatform)' == 'DesktopGL' OR '$(KniPlatform)' == 'Windows' OR '$(KniPlatform)' == 'BlazorGL'">
+    <SkipAposShapeContent>true</SkipAposShapeContent>
+  </PropertyGroup>
+
+  <!-- DesktopGL -->
+  <ItemGroup Condition="'$(KniPlatform)' == 'DesktopGL'">
+    <Content Include="$(MSBuildThisFileDirectory)Content/DesktopGL/apos-shapes.xnb"
+             Link="Content/apos-shapes.xnb"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Windows/DirectX -->
+  <ItemGroup Condition="'$(KniPlatform)' == 'Windows'">
+    <Content Include="$(MSBuildThisFileDirectory)Content/Windows/apos-shapes.xnb"
+             Link="Content/apos-shapes.xnb"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- BlazorGL/WebGL -->
+  <ItemGroup Condition="'$(KniPlatform)' == 'BlazorGL'">
+    <Content Include="$(MSBuildThisFileDirectory)Content/BlazorGL/apos-shapes.xnb"
+             Link="wwwroot/Content/apos-shapes.xnb" />
+  </ItemGroup>
+
+  <!-- All other platforms: Apos.Shapes compiles the shader normally -->
+
+</Project>
