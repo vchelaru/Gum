@@ -110,10 +110,12 @@ public class NineSlice : SpriteBatchRenderableBase,
 
     public Rectangle? SourceRectangle;
 
+    bool _isTilingMiddleSections;
+
     bool ITextureCoordinate.Wrap
     {
         get => false;
-        set { }// do nothing, wrapping is not supported yet
+        set { } // NineSlice does not use texture wrapping; use IsTilingMiddleSections instead
     }
 
     public float? TextureWidth => this.mSprites[0].Texture?.Width;
@@ -310,9 +312,15 @@ public class NineSlice : SpriteBatchRenderableBase,
 
 
 
-    public bool Wrap
+    /// <summary>
+    /// Whether to tile (repeat) the middle sections instead of stretching them.
+    /// When true, the Top, Bottom, Left, Right, and Center sections are rendered
+    /// as repeating tiles at their natural texture size scaled by BorderScale.
+    /// </summary>
+    public bool IsTilingMiddleSections
     {
-        get { return false; }
+        get { return _isTilingMiddleSections; }
+        set { _isTilingMiddleSections = value; }
     }
 
     public float X
@@ -649,19 +657,57 @@ public class NineSlice : SpriteBatchRenderableBase,
                 Render(mSprites[(int)NineSliceSections.TopLeft], systemManagers, spriteRenderer);
                 if (mSprites[(int)NineSliceSections.Center].Width > 0)
                 {
-                    Render(mSprites[(int)NineSliceSections.Top], systemManagers, spriteRenderer);
-                    Render(mSprites[(int)NineSliceSections.Bottom], systemManagers, spriteRenderer);
+                    if (_isTilingMiddleSections)
+                    {
+                        RenderTiled(mSprites[(int)NineSliceSections.Top], systemManagers, spriteRenderer,
+                            mSprites[(int)NineSliceSections.Center].Width,
+                            mSprites[(int)NineSliceSections.Top].Height,
+                            tileHorizontally: true, tileVertically: false, right, up);
+                        RenderTiled(mSprites[(int)NineSliceSections.Bottom], systemManagers, spriteRenderer,
+                            mSprites[(int)NineSliceSections.Center].Width,
+                            mSprites[(int)NineSliceSections.Bottom].Height,
+                            tileHorizontally: true, tileVertically: false, right, up);
+                    }
+                    else
+                    {
+                        Render(mSprites[(int)NineSliceSections.Top], systemManagers, spriteRenderer);
+                        Render(mSprites[(int)NineSliceSections.Bottom], systemManagers, spriteRenderer);
+                    }
 
                     if (mSprites[(int)NineSliceSections.Center].Height > 0)
                     {
-                        Render(mSprites[(int)NineSliceSections.Center], systemManagers, spriteRenderer);
+                        if (_isTilingMiddleSections)
+                        {
+                            RenderTiled(mSprites[(int)NineSliceSections.Center], systemManagers, spriteRenderer,
+                                mSprites[(int)NineSliceSections.Center].Width,
+                                mSprites[(int)NineSliceSections.Center].Height,
+                                tileHorizontally: true, tileVertically: true, right, up);
+                        }
+                        else
+                        {
+                            Render(mSprites[(int)NineSliceSections.Center], systemManagers, spriteRenderer);
+                        }
                     }
 
                 }
                 if (mSprites[(int)NineSliceSections.Center].Height > 0)
                 {
-                    Render(mSprites[(int)NineSliceSections.Left], systemManagers, spriteRenderer);
-                    Render(mSprites[(int)NineSliceSections.Right], systemManagers, spriteRenderer);
+                    if (_isTilingMiddleSections)
+                    {
+                        RenderTiled(mSprites[(int)NineSliceSections.Left], systemManagers, spriteRenderer,
+                            mSprites[(int)NineSliceSections.Left].Width,
+                            mSprites[(int)NineSliceSections.Center].Height,
+                            tileHorizontally: false, tileVertically: true, right, up);
+                        RenderTiled(mSprites[(int)NineSliceSections.Right], systemManagers, spriteRenderer,
+                            mSprites[(int)NineSliceSections.Right].Width,
+                            mSprites[(int)NineSliceSections.Center].Height,
+                            tileHorizontally: false, tileVertically: true, right, up);
+                    }
+                    else
+                    {
+                        Render(mSprites[(int)NineSliceSections.Left], systemManagers, spriteRenderer);
+                        Render(mSprites[(int)NineSliceSections.Right], systemManagers, spriteRenderer);
+                    }
                 }
 
                 Render(mSprites[(int)NineSliceSections.TopRight], systemManagers, spriteRenderer);
@@ -931,8 +977,102 @@ public class NineSlice : SpriteBatchRenderableBase,
         var rotation = sprite.Rotation;
 
 
-        Sprite.Render(managers, spriteRenderer, sprite, texture, color, 
+        Sprite.Render(managers, spriteRenderer, sprite, texture, color,
             sourceRectangle, flipVertical, rotation, treat0AsFullDimensions:false);
+    }
+
+    void RenderTiled(
+        Sprite sprite,
+        SystemManagers systemManagers,
+        SpriteRenderer spriteRenderer,
+        float fillWidth,
+        float fillHeight,
+        bool tileHorizontally,
+        bool tileVertically,
+        Vector3 right,
+        Vector3 up)
+    {
+        if (sprite.Texture == null || sprite.SourceRectangle == null)
+        {
+            return;
+        }
+
+        var originalSourceRect = sprite.SourceRectangle.Value;
+        float originalX = sprite.X;
+        float originalY = sprite.Y;
+        float originalWidth = sprite.Width;
+        float originalHeight = sprite.Height;
+
+        float tileRenderWidth = tileHorizontally
+            ? originalSourceRect.Width * _borderScale
+            : fillWidth;
+        float tileRenderHeight = tileVertically
+            ? originalSourceRect.Height * _borderScale
+            : fillHeight;
+
+        if (tileRenderWidth <= 0 || tileRenderHeight <= 0)
+        {
+            return;
+        }
+
+        float currentY = 0;
+        while (currentY < fillHeight)
+        {
+            float remainingHeight = fillHeight - currentY;
+            float thisHeight = tileVertically
+                ? System.Math.Min(tileRenderHeight, remainingHeight)
+                : fillHeight;
+
+            float currentX = 0;
+            while (currentX < fillWidth)
+            {
+                float remainingWidth = fillWidth - currentX;
+                float thisWidth = tileHorizontally
+                    ? System.Math.Min(tileRenderWidth, remainingWidth)
+                    : fillWidth;
+
+                // For partial tiles, reduce the source rectangle proportionally.
+                // Use Math.Max(1, ...) so the last tile always renders at least 1 source
+                // pixel, preventing sub-pixel gaps when the remaining space is very small.
+                int srcW = tileHorizontally && thisWidth < tileRenderWidth
+                    ? System.Math.Max(1, MathFunctions.RoundToInt(originalSourceRect.Width * (thisWidth / tileRenderWidth)))
+                    : originalSourceRect.Width;
+                int srcH = tileVertically && thisHeight < tileRenderHeight
+                    ? System.Math.Max(1, MathFunctions.RoundToInt(originalSourceRect.Height * (thisHeight / tileRenderHeight)))
+                    : originalSourceRect.Height;
+
+                if (srcW > 0 && srcH > 0)
+                {
+                    sprite.SourceRectangle = new Rectangle(
+                        originalSourceRect.X, originalSourceRect.Y, srcW, srcH);
+                    sprite.Width = thisWidth;
+                    sprite.Height = thisHeight;
+                    sprite.X = originalX + currentX * right.X + currentY * up.X;
+                    sprite.Y = originalY + currentX * right.Y + currentY * up.Y;
+
+                    Render(sprite, systemManagers, spriteRenderer);
+                }
+
+                if (!tileHorizontally)
+                {
+                    break;
+                }
+                currentX += thisWidth;
+            }
+
+            if (!tileVertically)
+            {
+                break;
+            }
+            currentY += thisHeight;
+        }
+
+        // Restore sprite state
+        sprite.X = originalX;
+        sprite.Y = originalY;
+        sprite.Width = originalWidth;
+        sprite.Height = originalHeight;
+        sprite.SourceRectangle = originalSourceRect;
     }
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
