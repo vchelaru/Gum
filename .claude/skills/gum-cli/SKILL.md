@@ -17,9 +17,9 @@ description: Reference guide for GumCli — the headless command-line tool for G
 | Command | Purpose |
 |---------|---------|
 | `gumcli new <path> [--template]` | Create a new project. Templates: `forms` (default, includes all Forms UI controls) or `empty` (minimal). |
-| `gumcli check <project.gumx> [--json]` | Validate all elements. Human-readable or JSON output. |
+| `gumcli check <project.gumx> [--json]` | Validate all elements (.gusx, .gutx, .gucx) that belong to the project. Human-readable or JSON output. Use this for post-write validation of any element file, not just the .gumx. |
 | `gumcli codegen <project.gumx> [--element <name>...]` | Generate C# code. Requires `ProjectCodeSettings.codsj`. Per-element error check gates generation. |
-| `gumcli codegen-init <project.gumx> [--force]` | Auto-detect `.csproj`, derive namespace and output library, write `ProjectCodeSettings.codsj`. |
+| `gumcli codegen-init <project.gumx> [--force] [--csproj <path>]` | Auto-detect `.csproj`, derive namespace and output library, write `ProjectCodeSettings.codsj`. Use `--csproj` when the Gum project is not inside the MonoGame project directory. |
 | `gumcli fonts <project.gumx>` | Generate missing bitmap font files (.fnt + .png). Windows-only (bmfont.exe). |
 
 **Exit codes:** 0 = success, 1 = errors found / generation blocked, 2 = load failure, bad args, or non-Windows (fonts).
@@ -67,6 +67,10 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 `ProjectLoader` runs `DetectSilentlyDroppedContent` after deserialization to catch incorrect XML element names (e.g., `<States>` instead of `<State>`, `<InstanceSave>` instead of `<Instance>`) that `XmlSerializer` silently ignores. Without this, AI-generated files with wrong structure load as empty elements with no error.
 
 `CodeGenerationAutoSetupService` detects MonoGame vs non-MonoGame projects by scanning for `<PackageReference Include="MonoGame.Framework.` or `nkast.Xna.Framework` in the `.csproj`, then sets `OutputLibrary` accordingly. Namespace falls back to the `.csproj` filename (dots/dashes/spaces replaced with underscores) when `<RootNamespace>` is absent.
+
+`CodeGenerationAutoSetupService` has two `Run` overloads: `Run(gumxFilePath)` for auto-detection, and `Run(gumxFilePath, explicitCsprojPath)` for when the caller already knows the `.csproj` path. The explicit overload validates the file exists and skips directory walking entirely; all namespace/OutputLibrary derivation logic is shared via the private `BuildResultFromCsprojDirectory` helper.
+
+Font files are named like `Font18Arial.fnt` and `Font18Arial_0.png` (size+name convention, zero-indexed). Always use `gumcli fonts <project.gumx>` to generate missing bitmap fonts — never create `.fnt` files manually.
 
 ## Codegen Flow (non-obvious details)
 

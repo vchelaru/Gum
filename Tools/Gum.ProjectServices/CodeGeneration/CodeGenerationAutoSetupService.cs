@@ -48,6 +48,40 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
             };
         }
 
+        return BuildResultFromCsprojDirectory(gumxDirectory, csprojDirectory, explicitCsprojPath: null);
+    }
+
+    /// <inheritdoc/>
+    public AutoSetupResult Run(string gumxFilePath, string explicitCsprojPath)
+    {
+        string fullCsprojPath = Path.GetFullPath(explicitCsprojPath);
+
+        if (!File.Exists(fullCsprojPath))
+        {
+            return new AutoSetupResult
+            {
+                Success = false,
+                ErrorMessage = $"Specified .csproj file not found: {fullCsprojPath}"
+            };
+        }
+
+        string gumxDirectory = Path.GetDirectoryName(Path.GetFullPath(gumxFilePath))
+            ?? Path.GetFullPath(gumxFilePath);
+
+        if (!gumxDirectory.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+        {
+            gumxDirectory += Path.DirectorySeparatorChar;
+        }
+
+        string csprojDirectory = Path.GetDirectoryName(fullCsprojPath)
+            ?? Path.GetFullPath(fullCsprojPath);
+
+        return BuildResultFromCsprojDirectory(gumxDirectory, csprojDirectory, explicitCsprojPath: fullCsprojPath);
+    }
+
+    private static AutoSetupResult BuildResultFromCsprojDirectory(
+        string gumxDirectory, string csprojDirectory, string? explicitCsprojPath)
+    {
         string codeProjectRoot = Path.GetRelativePath(gumxDirectory, csprojDirectory);
         if (codeProjectRoot == ".")
         {
@@ -67,7 +101,7 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
 
         settings.SetDefaults();
 
-        string? csprojPath = Directory
+        string? csprojPath = explicitCsprojPath ?? Directory
             .EnumerateFiles(csprojDirectory, "*.csproj", SearchOption.TopDirectoryOnly)
             .FirstOrDefault();
 
