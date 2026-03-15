@@ -23,15 +23,22 @@ public static class LoaderManagerExtensionMethods
 
         if (defaultFontLocation.EndsWith(".fnt"))
         {
-            Text.DefaultBitmapFont = new BitmapFont(defaultFontLocation);
-            // Remove the loaded contnet from the loaderManager so it is never accidentally disposed
-            // when we clear cache
-            LoaderManager.Self.RemoveWithoutDisposing(Text.DefaultBitmapFont);
-            foreach(var texture in Text.DefaultBitmapFont.Textures)
+            if (FileManager.FileExists(defaultFontLocation))
             {
-                LoaderManager.Self.RemoveWithoutDisposing(texture);
-            }
+                Text.DefaultBitmapFont = new BitmapFont(defaultFontLocation);
 
+                // Remove the loaded contnet from the loaderManager so it is never accidentally disposed
+                // when we clear cache
+                LoaderManager.Self.RemoveWithoutDisposing(Text.DefaultBitmapFont);
+                foreach(var texture in Text.DefaultBitmapFont.Textures)
+                {
+                    LoaderManager.Self.RemoveWithoutDisposing(texture);
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Default font file '{defaultFontLocation}' not found. Text rendering may not work correctly.");
+            }
         }
     }
 
