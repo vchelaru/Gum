@@ -26,15 +26,14 @@ var button = new Button();
 button.Anchor(Gum.Wireframe.Anchor.Bottom);
 button.Y = -10;
 button.Text = "Close";
-window.AddChild(button.Visual);
+window.AddChild(button);
 button.Click += (_, _) =>
 {
     window.RemoveFromRoot();
 };
 
 ```
-
-[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RXWuDMBSG7_0VB68s66T7uFpx0Dq2CrsqMhkIJepZDU1yRoy1rPS_L1ppXTeWu_Pk5c3Dyd4BcKPqpZbuAxhd47gFXHHDmeBfaKm7ZRoargpqIACFDSTd4I2mqTpyf6bykrRna_yEa_zQTGIP_RCVQT0IJ7wwpa26m0zOcIF8XRpLb4d0VhQxLYlM91iqWhWDOxOpyjCVYy_0yjIUXWR46T9RvrlwapEf0-ev7Hv79P0lje1gL1J3gUIQRMAkMJBYVWyNkNEudX_IhiUXhTesOHtntTGkeuN5N3TKR_7vCudkI3IQbm2vb9pF9eAkGgqq8E-rPvnGq5qJQVcoeL6BqwC81RhWIwgeU7VPFdjTVyxR0hafNcnTVxymrnNwvgF3GhpjPgIAAA)
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RTWvCQBCG74L_YcgpUhvsx6mSgqa0BnqSgAgB2SRTs7i7UzYbIxX_ezcfaGpL9zbPvDvzsHscDgCcsHgrpfMERpc4bghX3HAm-Bda7OyZhoqrjCrwQWEFq6ZwR9NYtdybqTQn7do53opr_NBMYge9AJVB3QuveGZyO-phMrnABfJtbiy979NZlkW0JDLNsljVKgYPJlSFYSrFTuidJSiaSL_pvVC6u3KqkRfR56_sul79eE0jW9hG7CxQCIIQmAQGEouCbRESOsTOD9kg5yJz-yMu3klpDKnOeN4UjXLL_33COdmI7IVr29u7-qE6cBYNBBX4p1Wb7A0JBE93cOODuxnDZgT-c6yOsQJ7urtLlLTHV03y_AenqTMcnL4BEzWh8zkCAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/14_06 14 56.gif" alt=""><figcaption><p>Window responding to move and resize actions</p></figcaption></figure>
 
