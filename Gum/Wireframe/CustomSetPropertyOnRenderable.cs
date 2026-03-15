@@ -106,9 +106,9 @@ public class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnSprite(renderableSprite, graphicalUiElement, propertyName, value);
         }
-        else if (renderableIpso is NineSlice)
+        else if (renderableIpso is NineSlice nineSlice)
         {
-            handled = TrySetPropertyOnNineSlice(renderableIpso, graphicalUiElement, propertyName, value, handled);
+            handled = TrySetPropertyOnNineSlice(nineSlice, graphicalUiElement, propertyName, value, handled);
         }
         else if (renderableIpso is InvisibleRenderable)
         {
@@ -237,9 +237,8 @@ public class CustomSetPropertyOnRenderable
         return didSet;
     }
 
-    private static bool TrySetPropertyOnNineSlice(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
+    private static bool TrySetPropertyOnNineSlice(NineSlice nineSlice, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
     {
-        var nineSlice = renderableIpso as NineSlice;
 
         if (propertyName == "SourceFile")
         {
@@ -300,6 +299,11 @@ public class CustomSetPropertyOnRenderable
         else if(propertyName == nameof(NineSlice.BorderScale))
         {
             nineSlice.BorderScale = (float)value;
+            handled = true;
+        }
+        else if(propertyName == nameof(NineSlice.IsTilingMiddleSections))
+        {
+            nineSlice.IsTilingMiddleSections = (bool)value;
             handled = true;
         }
 

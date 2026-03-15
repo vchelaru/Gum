@@ -213,6 +213,17 @@ namespace MonoGameGum.GueDeriving
             set => ContainedNineSlice.CustomFrameTextureCoordinateWidth = value;
         }
 
+        /// <summary>
+        /// Whether to tile (repeat) the middle sections instead of stretching them.
+        /// When true, the Top, Bottom, Left, Right, and Center sections are rendered
+        /// as repeating tiles at their natural texture size scaled by BorderScale.
+        /// </summary>
+        public bool IsTilingMiddleSections
+        {
+            get => ContainedNineSlice.IsTilingMiddleSections;
+            set => ContainedNineSlice.IsTilingMiddleSections = value;
+        }
+
 #if XNALIKE
         public float BorderScale
         {

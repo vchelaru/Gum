@@ -496,6 +496,7 @@ public class StandardElementsManager
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateWidth", Category = "Source" });
 
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsTilingMiddleSections", Category = "Source" });
 
             AddVariableReferenceList(stateSave);
 
