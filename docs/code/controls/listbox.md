@@ -52,7 +52,7 @@ stackPanel.AddChild(listBox);
 Button addIntButton = new();
 addIntButton.Text = "Add Integer";
 stackPanel.AddChild(addIntButton);
-addIntButton.Click += (not, used) =>
+addIntButton.Click += (_, _) =>
 {
     listBox.Items.Add(new Random().Next(0, 100));
 };
@@ -60,7 +60,7 @@ addIntButton.Click += (not, used) =>
 Button addStringButton = new();
 addStringButton.Text = "Add String";
 stackPanel.AddChild(addStringButton);
-addStringButton.Click += (not, used) =>
+addStringButton.Click += (_, _) =>
 {
     listBox.Items.Add("Hello " + DateTime.Now.Ticks);
 };
@@ -102,6 +102,41 @@ for(int i  = 0; i < 5; i++)
 
 <figure><img src="../../.gitbook/assets/26_21 51 15.gif" alt=""><figcaption><p>ListBoxItems directly added</p></figcaption></figure>
 
+### Removing Items
+
+Items can be removed by reference with `Remove`, by index with `RemoveAt`, or all at once with `Clear`.
+
+The following code adds a remove button that deletes the currently selected item from the ListBox.
+
+```csharp
+// Initialize
+var listBox = new ListBox();
+listBox.AddToRoot();
+listBox.X = 50;
+listBox.Y = 50;
+listBox.Width = 400;
+listBox.Height = 200;
+
+for (int i = 0; i < 10; i++)
+{
+    listBox.Items.Add("Item " + i);
+}
+
+var removeButton = new Button();
+removeButton.AddToRoot();
+removeButton.X = 50;
+removeButton.Y = 270;
+removeButton.Text = "Remove Selected";
+removeButton.Click += (_, _) =>
+{
+    if (listBox.SelectedObject != null)
+    {
+        listBox.Items.Remove(listBox.SelectedObject);
+    }
+};
+```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACnWQW0vDMBSA3wf7D8c8pXRIHYpgreB80IEgzMEUAmOumTuaJtCmczj63z3pZbQd9uU037nkfDkMBwBsmj3mCbsBm-ZyVBLUaHGl8FcSZrtVCgozOzF7iEDLH3iuTtwLha4z5_dxPDczY2yHvlHHVdAC732wwNhuCV4Gbfok8XNrCY9LLPTGpMBRW0CCQUjhFi5c9H1P6IPQQF_TPbUyydxGXDD3D4KBD-gWK9wwZ5TKxOzkJLfW6FqrOpT7t7M9tU7q6NehTnJ8fYLncu-UBJuVFF6lkmsrY8H6lQ8K19_gR8CXI1h6EN0dHXEDvPFsBrx8fFGEM9LIlaL3cIV1_em7VLf_M8QZuhZ6pyJkw0HxB_VbbiUkAgAA" target="_blank">Try on XnaFiddle.NET</a>
+
 ## Selection
 
 ListBox items can be selected. The ListBox class provides a number of ways to work with the selection.
@@ -118,6 +153,13 @@ Item can also be selected by the reference itself, assuming the referenced item 
 ```csharp
 // Initialize
 listBox.SelectedObject = "English";
+```
+
+Selection can be cleared by setting `SelectedIndex` to -1:
+
+```csharp
+// Initialize
+listBox.SelectedIndex = -1;
 ```
 
 Whenever the selection changes, the SelectionChanged event is raised:
