@@ -151,7 +151,18 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
     {
         if (game?.Window != null && windowTextInputBuffer == null)
         {
-#if !FNA
+#if FNA
+            try
+            {
+                Microsoft.Xna.Framework.Input.TextInputEXT.TextInput += HandleFnaTextInput;
+                Microsoft.Xna.Framework.Input.TextInputEXT.StartTextInput();
+                windowTextInputBuffer = new StringBuilder();
+            }
+            catch
+            {
+
+            }
+#else
             var succeeded = false;
             try
             {
@@ -190,6 +201,19 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
                 windowTextInputBuffer.Append(e.Character);
             }
 
+        }
+    }
+#endif
+
+#if FNA
+    private void HandleFnaTextInput(char character)
+    {
+        lock (windowTextInputBuffer)
+        {
+            if (ignoredWindowTextInputCharacters.Contains(character) == false)
+            {
+                windowTextInputBuffer.Append(character);
+            }
         }
     }
 #endif
