@@ -23,6 +23,7 @@ public class Program
         rootCommand.AddCommand(CodegenCommand.Create());
         rootCommand.AddCommand(CodegenInitCommand.Create());
         rootCommand.AddCommand(FontsCommand.Create());
+        rootCommand.AddCommand(ScreenshotCommand.Create());
 
         return rootCommand.Invoke(args);
     }
