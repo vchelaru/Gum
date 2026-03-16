@@ -897,7 +897,7 @@ public class ObjectFinder : IObjectFinder
         var targetInstanceComponent = ObjectFinder.Self.GetComponent(targetInstance);
         if (targetInstanceComponent != null)
         {
-            var instanceContainer = ObjectFinder.Self.GetContainerOf(targetInstance);
+            var instanceContainer = ObjectFinder.Self.GetElementContainerOf(targetInstance);
 
             var recursiveVariableFinder = new RecursiveVariableFinder(stateSave ?? instanceContainer?.DefaultState);
             defaultChild = recursiveVariableFinder.GetValue<string>($"{targetInstance.Name}.DefaultChildContainer");
