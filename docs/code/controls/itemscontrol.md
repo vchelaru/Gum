@@ -28,3 +28,20 @@ for(int i = 0; i < 10; i++)
 <a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUMktSc4ud8_NKivJzFGwV8lLLFTyRhDQ0rWOAehACeo4pKSH5Qfn5JWCptPwijcy8EoVMoF4DayBlo2AIorW1NWPyqmPyFIAARTvYcJAhGpkg_bVKvFy1vFwA64IJNbAAAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/19_05 28 54.png" alt=""><figcaption><p>ItemsControl with ten items</p></figcaption></figure>
+
+## Code Example: Fixed-Size Scrollable List
+
+Setting explicit `Width` and `Height` values gives the ItemsControl a fixed size so that its content scrolls when it overflows. This is useful for displaying a non-selectable scrollable list in a fixed area.
+
+```csharp
+// Initialize
+var itemsControl = new ItemsControl();
+itemsControl.AddToRoot();
+itemsControl.Width = 200;
+itemsControl.Height = 150;
+for(int i = 0; i < 20; i++)
+{
+    itemsControl.Items.Add("Item " + i);
+}
+```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACmWOPwvCMBDF90K_w5EppSJRcLE6iIN2FcElSyHRHrQJpFcFS7-7ly7-u-Udv8e7e0OaAIiyO_StWAOF3s4mgg4JqwaflrG4VwGQbNvtvaPgG9iCsw8oP5DMCs2ZN5jvjDn7k_f0b13QUM1Hlkr9WkeLt5rYW6yid_VBoiNAJqpg2XCINc8z7QbtgOcrP3WKv6UWcQctIAeMFUaRJuML5gZQPvEAAAA" target="_blank">Try on XnaFiddle.NET</a>
