@@ -1217,11 +1217,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// Note that this does not return all objects contained in the element, only direct children. 
     /// </summary>
 
-    ObservableCollection<IRenderableIpso>? IRenderableIpso.Children
+    private static readonly ObservableCollection<IRenderableIpso> EmptyIpsoChildren =
+        new FrozenObservableCollection<IRenderableIpso>();
+
+    ObservableCollection<IRenderableIpso> IRenderableIpso.Children
     {
         get
         {
-            return mContainedObjectAsIpso?.Children;
+            return mContainedObjectAsIpso?.Children ?? EmptyIpsoChildren;
         }
     }
 

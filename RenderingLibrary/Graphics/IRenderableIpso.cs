@@ -45,6 +45,24 @@ public static class IRenderableIpsoExtensions
     }
 }
 
+/// <summary>
+/// An ObservableCollection that throws on any mutation attempt.
+/// Used as a shared empty sentinel so callers never receive null.
+/// </summary>
+public class FrozenObservableCollection<T> : ObservableCollection<T>
+{
+    protected override void InsertItem(int index, T item) =>
+        throw new NotSupportedException("Collection is read-only.");
+    protected override void RemoveItem(int index) =>
+        throw new NotSupportedException("Collection is read-only.");
+    protected override void SetItem(int index, T item) =>
+        throw new NotSupportedException("Collection is read-only.");
+    protected override void ClearItems() =>
+        throw new NotSupportedException("Collection is read-only.");
+    protected override void MoveItem(int oldIndex, int newIndex) =>
+        throw new NotSupportedException("Collection is read-only.");
+}
+
 public class ObservableCollectionNoReset<T> : ObservableCollection<T>
 {
     protected override void ClearItems()
