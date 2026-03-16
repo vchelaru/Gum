@@ -1629,7 +1629,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         public IRenderableIpso? NewValue { get; set; }
     };
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
     protected virtual void NotifyPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null)
     {
         if (PropertyChanged != null)

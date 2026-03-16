@@ -757,10 +757,10 @@ public static class StateSaveExtensionMethods
     /// <param name="instanceSave">The instance that owns this variable.  This may be null.</param>
     /// <param name="variableType">The type of the variable.  This is only needed if the value is null.</param>
     private static VariableSave AssignVariableSave(this StateSave stateSave, string variableName, object value,
-        InstanceSave instanceSave, string variableType = null)
+        InstanceSave instanceSave, string? variableType = null)
     {
         // Not a reserved variable, so use the State's variables
-        VariableSave variableSave = stateSave.GetVariableSave(variableName);
+        VariableSave? variableSave = stateSave.GetVariableSave(variableName);
 
         if (variableSave == null)
         {

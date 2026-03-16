@@ -296,7 +296,7 @@ public partial class InteractiveGue : GraphicalUiElement
     public void CallRightClick() => RightClick?.Invoke(this, EventArgs.Empty);  
 
     // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
-    public void TryCallRollOff(ICursor cursor = null)
+    public void TryCallRollOff(ICursor? cursor = null)
     {
         InputEventArgs args = new InputEventArgs { InputDevice = cursor };
         RollOff?.Invoke(this, args);
@@ -324,13 +324,13 @@ public partial class InteractiveGue : GraphicalUiElement
 
     #endregion
 
-    private bool DoUiActivityRecursively(ICursor cursor, Layer layer, HandledActions handledActions = null)
+    private bool DoUiActivityRecursively(ICursor cursor, Layer layer, HandledActions? handledActions = null)
     {
         return DoUiActivityRecursively(cursor, handledActions, this, layer);
 
     }
 
-    internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions, GraphicalUiElement currentItem, Layer? layer)
+    internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions? handledActions, GraphicalUiElement currentItem, Layer? layer)
     {
         handledActions = handledActions ?? new HandledActions();
         bool handledByChild = false;
