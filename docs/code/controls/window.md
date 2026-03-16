@@ -37,6 +37,36 @@ button.Click += (_, _) =>
 
 <figure><img src="../../.gitbook/assets/14_06 14 56.gif" alt=""><figcaption><p>Window responding to move and resize actions</p></figcaption></figure>
 
+## Setting Title Text
+
+The Window control does not have a built-in `Title` property. The title bar area (`TitleBarInstance`) is a Panel used for dragging, so adding title text requires placing a Label inside it. The following code adds a centered title Label to the title bar.
+
+
+```csharp
+using Gum.Forms.DefaultVisuals.V3;
+
+// Initialize
+var window = new Window();
+window.Anchor(Gum.Wireframe.Anchor.Center);
+window.Width = 300;
+window.Height = 200;
+window.AddToRoot();
+
+var windowVisual = (WindowVisual)window.Visual;
+var titleLabel = new Label();
+titleLabel.Dock(Gum.Wireframe.Dock.Fill);
+titleLabel.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+titleLabel.Visual.Y = 0;
+titleLabel.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+titleLabel.Text = "My Window";
+windowVisual.TitleBarInstance.AddChild(titleLabel);
+```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1RTWsCMRC9F_wPS04rlCD1VunBKlpBaZGtUro9xM24OzSbyCTrR0v_e7MfdK14y7z35s3kzXfnJgjYzE6LnN0Hjgq4rZDCok6th96Zp_jEUG75GLaiUG6FthDK8lWffdRq1OhQKPwC38H2goIDamkOwUOg4RCsqyLsDmJd43yok8xQWFqvkWBLIocG5CPQDuhMvEbpMm_V7_Va8AkwzZxH787RoZSRWRrjqmGxblepl_b6cH1Wd5u-uhrUDQ6dgrnYgGr2r96VY0vxsUk-Lz5QQnyCSl1Ia3f-9kyYovamS9ASyCc8xw0JOvEpiV2Gic8UyGEi1FBhqnOfRBPHdUNvVX7-CvPqL2I9XS44MnrvbYEsn4IGEqpko9MO-AseQdkJmXyBUir4bxbBsUw4ZotTc8OY_WXdTIpK-aOgmbZO6MRfUcpRhkqGrVF3wDo3P7-mtNJOawIAAA" target="_blank">Try on XnaFiddle.NET</a>
+
+{% hint style="info" %}
+Note that `AddChild` on a Window adds children to the inner content area below the title bar. To add a Label to the title bar itself, add it to `TitleBarInstance` as shown above.
+{% endhint %}
+
 ## Preventing Sizing and Moving
 
 Resizing can be disabled by setting a Window's `ResizeMode` to `ResizeMode.NoResize`. By default this value is set to `ResizeMode.CanResize`. Note that the ResizeMode property does not affect whether a window can be moved by its title bar.
@@ -76,6 +106,10 @@ The following code shows how to force dock a window to the right side of the scr
 
 {% tabs %}
 {% tab title="Code-only" %}
+```csharp
+using Gum.Forms.DefaultVisuals.V3;
+```
+
 ```csharp
 // Initialize
 var window = new Window();
