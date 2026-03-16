@@ -1201,10 +1201,6 @@ public static class GueInteractiveExtensionMethods
 
         if(visualOverBefore != cursor.VisualOver)
         {
-            string GetInfoFor(InteractiveGue interactive)
-            {
-                return interactive?.Name + " " + interactive?.GetType();
-            }
             if (visualOverBefore is InteractiveGue interactiveBefore)
             {
                 interactiveBefore.TryCallRollOff(cursor);
