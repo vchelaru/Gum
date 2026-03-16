@@ -8,7 +8,7 @@ namespace Gum.StateAnimation.SaveClasses;
 
 public class AnimatedStateSave
 {
-    public string StateName { get; set; }
+    public string StateName { get; set; } = string.Empty;
 
     public float Time { get; set; }
 
