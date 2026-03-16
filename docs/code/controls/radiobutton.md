@@ -42,6 +42,56 @@ At runtime, the RadioButtons in each StackPanel are mutually exclusive.
 
 <figure><img src="../../.gitbook/assets/31_06 18 57.gif" alt=""><figcaption><p>Each RadioButton is mutually exclusive with the other RadioButtons in the same column</p></figcaption></figure>
 
+The following code creates two independent RadioButton groups side by side, one for difficulty and one for game mode. Selecting a RadioButton in one group does not affect the other group.
+
+```csharp
+// Initialize
+var outerPanel = new StackPanel();
+outerPanel.Orientation = Orientation.Horizontal;
+outerPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+outerPanel.Spacing = 20;
+outerPanel.AddToRoot();
+
+var difficultyPanel = new StackPanel();
+outerPanel.AddChild(difficultyPanel);
+
+var difficultyLabel = new Label();
+difficultyPanel.AddChild(difficultyLabel);
+difficultyLabel.Text = "Difficulty:";
+
+var easyRadioButton = new RadioButton();
+difficultyPanel.AddChild(easyRadioButton);
+easyRadioButton.Text = "Easy";
+
+var mediumRadioButton = new RadioButton();
+difficultyPanel.AddChild(mediumRadioButton);
+mediumRadioButton.Text = "Medium";
+
+var hardRadioButton = new RadioButton();
+difficultyPanel.AddChild(hardRadioButton);
+hardRadioButton.Text = "Hard";
+
+var modePanel = new StackPanel();
+outerPanel.AddChild(modePanel);
+
+var modeLabel = new Label();
+modePanel.AddChild(modeLabel);
+modeLabel.Text = "Mode:";
+
+var soloRadioButton = new RadioButton();
+modePanel.AddChild(soloRadioButton);
+soloRadioButton.Text = "Solo";
+
+var coopRadioButton = new RadioButton();
+modePanel.AddChild(coopRadioButton);
+coopRadioButton.Text = "Co-op";
+
+var pvpRadioButton = new RadioButton();
+modePanel.AddChild(pvpRadioButton);
+pvpRadioButton.Text = "PvP";
+```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqWSzU7DMBCE75X6DlFORYIIcSziAC2iSCCqNsAlFxO7dIXjjRIn0CLenbUPieNG_LS3enZmvnXqz-EgCMLb8qbKwnGgi0ocWwUUaGAStoLksGZFgJUWxZwpIYOLQIn3YKlZ-maF0dF5otp59FCAUJppQEVe5xTNsIAt0kl2E09QVkxGz8D1-pHQJeVopWjKNIs3uSijKWRCldRhxkaKFkJSaS1inKxB8kKobucyZymoV2o6O-1OLjmPcYGo7eKJMtfjsFpBWkm9-dsdqcNiR16wr_GOvTSN9rct84J9jdbc9VopisWHpsIknDaDcRI2aMHKzYJxwKtKa_snGLSj_LyAFzdeT2oXuKaBQ84Ehyo7gL1TYNw7Ysu_tyNngzUr-AF8L268ntSyZzRw745c_PPxNJH22Rip_8E05m6-eSTNwfk6JLkPo0SJv3-cHpAXNC5PaqFLGjjMFDHfi-kFjcuTWuYETzB3oHm9H7ObM6au0hLn9Zx44XDw9Q1Cki1wRAUAAA" target="_blank">Try on XnaFiddle.NET</a>
+
 ## Checked and Unchecked Events
 
 `RadioButton` inherits `Checked` and `Unchecked` events from `ToggleButton`. `Checked` fires when a RadioButton becomes selected; `Unchecked` fires when it is deselected because another RadioButton in the same group was chosen.
