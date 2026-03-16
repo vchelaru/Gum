@@ -83,6 +83,7 @@ public class VariableSave
     }
     
     public string StandardizedName { get; set; } = string.Empty;
+    public bool ShouldSerializeStandardizedName() => !string.IsNullOrEmpty(StandardizedName);
 
     public object? Value
     {
@@ -127,6 +128,7 @@ public class VariableSave
         get;
         set;
     } = string.Empty;
+    public bool ShouldSerializeCategory() => !string.IsNullOrEmpty(Category);
 
     /// <summary>
     /// Determines whether a null value should be set, or whether the variable is

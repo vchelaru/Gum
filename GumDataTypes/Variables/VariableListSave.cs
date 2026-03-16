@@ -46,6 +46,7 @@ namespace Gum.DataTypes.Variables
             get;
             set;
         } = string.Empty;
+        public bool ShouldSerializeCategory() => !string.IsNullOrEmpty(Category);
 
         public bool IsFile
         {
