@@ -1750,4 +1750,45 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     #endregion
+
+    #region IRenderableIpso.Children frozen empty collection
+
+    [Fact]
+    public void IpsoChildren_ShouldThrowOnAdd_WhenNoContainedRenderable()
+    {
+        GraphicalUiElement sut = new();
+        IRenderableIpso ipso = sut;
+
+        Should.Throw<NotSupportedException>(() => ipso.Children.Add(sut));
+    }
+
+    [Fact]
+    public void IpsoChildren_ShouldNotThrowOnAdd_WhenContainedRenderableExists()
+    {
+        GraphicalUiElement sut = new(new InvisibleRenderable());
+        IRenderableIpso ipso = sut;
+
+        GraphicalUiElement child = new(new InvisibleRenderable());
+
+        // Should not throw - the contained renderable has a real mutable collection
+        ipso.Children.Add(child);
+        ipso.Children.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void IpsoChildren_FrozenCollection_ShouldNotLeakAcrossInstances()
+    {
+        GraphicalUiElement first = new();
+        GraphicalUiElement second = new();
+        IRenderableIpso firstIpso = first;
+        IRenderableIpso secondIpso = second;
+
+        // Attempt to add to the first instance's frozen children (will throw)
+        Should.Throw<NotSupportedException>(() => firstIpso.Children.Add(first));
+
+        // The second instance's children should still be empty
+        secondIpso.Children.Count.ShouldBe(0);
+    }
+
+    #endregion
 }

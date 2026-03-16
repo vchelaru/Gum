@@ -44,7 +44,7 @@ public class VariableSave
     {
         get;
         set;
-    }
+    } = string.Empty;
 
     // rootName and sourceObject are used so frequently that storing them off 
     // should save in performance.
@@ -82,7 +82,7 @@ public class VariableSave
         }
     }
     
-    public string StandardizedName { get; set; }
+    public string StandardizedName { get; set; } = string.Empty;
 
     public object? Value
     {
@@ -126,7 +126,7 @@ public class VariableSave
     {
         get;
         set;
-    }
+    } = string.Empty;
 
     /// <summary>
     /// Determines whether a null value should be set, or whether the variable is
@@ -162,7 +162,7 @@ public class VariableSave
     {
         get;
         set;
-    }
+    } = new List<object>();
 
     [XmlIgnore]
     public TypeConverter CustomTypeConverter
@@ -192,7 +192,7 @@ public class VariableSave
     // If adding stuff here, make sure to add to the Clone method!
 
     [XmlIgnore]
-    public string DetailText { get; set; }
+    public string DetailText { get; set; } = string.Empty;
 
     [XmlIgnore]
     public string? ToolTipText { get; set; }

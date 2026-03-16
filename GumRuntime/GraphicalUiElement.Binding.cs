@@ -25,7 +25,7 @@ public partial class GraphicalUiElement
 
         public Delegate Delegate;
 
-        public string ToStringFormat;
+        public string? ToStringFormat;
 
         public override string ToString()
         {
@@ -208,7 +208,7 @@ public partial class GraphicalUiElement
 
     public event Action<object, BindingContextChangedEventArgs> BindingContextChanged;
 
-    object EffectiveBindingContext => mBindingContext ?? InheritedBindingContext;
+    object? EffectiveBindingContext => mBindingContext ?? InheritedBindingContext;
 
     private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -219,7 +219,7 @@ public partial class GraphicalUiElement
         UpdateToVmProperty(e.PropertyName);
     }
 
-    public void SetBinding(string uiProperty, string vmProperty, string toStringFormat = null)
+    public void SetBinding(string uiProperty, string vmProperty, string? toStringFormat = null)
     {
         if (uiProperty == nameof(BindingContext))
         {
@@ -283,7 +283,7 @@ public partial class GraphicalUiElement
 
             var vmProperty = bindingContextObjectType?.GetProperty(vmPropertyName);
 
-            FieldInfo vmField = null;
+            FieldInfo? vmField = null;
 
             if (vmProperty == null)
             {
@@ -302,8 +302,8 @@ public partial class GraphicalUiElement
             }
             else
             {
-                var vmValue = vmField != null ? vmField.GetValue(bindingContextObjectToUse) :
-                    vmProperty.GetValue(bindingContextObjectToUse, null);
+                var vmValue = vmField != null ? vmField?.GetValue(bindingContextObjectToUse) :
+                    vmProperty?.GetValue(bindingContextObjectToUse, null);
 
 
                 if (vmPropertyName == BindingContextBinding)
@@ -352,7 +352,7 @@ public partial class GraphicalUiElement
         return updated;
     }
 
-    private void BindEvent(string vmPropertyName, object bindingContextObjectToUse, EventInfo foundEvent)
+    private void BindEvent(string vmPropertyName, object? bindingContextObjectToUse, EventInfo foundEvent)
     {
         var binding = vmPropsToUiProps[vmPropertyName];
 
@@ -360,7 +360,7 @@ public partial class GraphicalUiElement
 
         if (!isAlreadyBound)
         {
-            var delegateInstance = Delegate.CreateDelegate(foundEvent.EventHandlerType, this, binding.UiProperty);
+            var delegateInstance = Delegate.CreateDelegate(foundEvent.EventHandlerType!, this, binding.UiProperty);
 
             vmEventsToUiMethods.Add(vmPropertyName, new VmToUiProperty { UiProperty = binding.UiProperty, VmProperty = vmPropertyName, Delegate = delegateInstance });
 
@@ -418,9 +418,9 @@ public partial class GraphicalUiElement
         }
     }
 
-    public static object ConvertValue(object value, Type desiredType, string format)
+    public static object? ConvertValue(object? value, Type desiredType, string? format)
     {
-        object convertedValue = value;
+        object? convertedValue = value;
         if (desiredType == typeof(string))
         {
             if (!string.IsNullOrEmpty(format))

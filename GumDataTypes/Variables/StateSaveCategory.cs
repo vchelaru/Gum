@@ -9,14 +9,14 @@ public class StateSaveCategory
     {
         get;
         set;
-    }
+    } = string.Empty;
 
     [XmlElement("State")]
     public List<StateSave> States
     {
         get;
         set;
-    }
+    } = new List<StateSave>();
 
 
     public StateSaveCategory()

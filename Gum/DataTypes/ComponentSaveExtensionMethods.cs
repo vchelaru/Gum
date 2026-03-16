@@ -46,17 +46,6 @@ namespace Gum.DataTypes
             // type doesn't wipe out old values.
             //componentSave.Initialize(null);
 
-            StateSave defaultStateSave = null;
-
-            // We used to call initialize with the default state for the given component base type (which is usually a container)
-            // But this copies all the variables from the container to this, which seems redundant...why do we do this if it inherits
-            // from a container which has its own state? Most of the time the user won't change the defaults and it just adds bloat.
-            //StandardElementSave ses = ObjectFinder.Self.GetRootStandardElementSave(componentSave);
-            //if (ses != null)
-            //{
-            //    defaultStateSave = ses.DefaultState;
-            //}
-
             componentSave.Initialize(new StateSave { Name = "Default" });
 
             componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"));

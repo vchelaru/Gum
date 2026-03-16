@@ -1217,11 +1217,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// Note that this does not return all objects contained in the element, only direct children. 
     /// </summary>
 
-    ObservableCollection<IRenderableIpso>? IRenderableIpso.Children
+    private static readonly ObservableCollection<IRenderableIpso> EmptyIpsoChildren =
+        new FrozenObservableCollection<IRenderableIpso>();
+
+    ObservableCollection<IRenderableIpso> IRenderableIpso.Children
     {
         get
         {
-            return mContainedObjectAsIpso?.Children;
+            return mContainedObjectAsIpso?.Children ?? EmptyIpsoChildren;
         }
     }
 
@@ -1629,8 +1632,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         public IRenderableIpso? NewValue { get; set; }
     };
 
-    public event PropertyChangedEventHandler PropertyChanged;
-    protected virtual void NotifyPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null)
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected virtual void NotifyPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null!)
     {
         if (PropertyChanged != null)
         {
@@ -1645,7 +1648,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public static Action<IRenderableIpso, ISystemManagers, Layer>? AddRenderableToManagers;
     public static Action<string, GraphicalUiElement>? ApplyMarkup;
 
-    public static Action<IRenderableIpso, GraphicalUiElement, string, object> SetPropertyOnRenderable =
+    public static Action<IRenderableIpso, GraphicalUiElement, string, object?> SetPropertyOnRenderable =
         // This is the default fallback to make Gum work. Specific rendering libraries can change this to provide
         // better performance.
         SetPropertyThroughReflection;
@@ -1666,7 +1669,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         mIsLayoutSuspended = false;
     }
 
-    public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis = null)
+    public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement? whatContainsThis = null)
     {
         mIsLayoutSuspended = true;
         Width = 32;
@@ -5563,7 +5566,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     partial void CustomRemoveFromManagers();
 
-    public void MoveToLayer(Layer layer)
+    public void MoveToLayer(Layer? layer)
     {
         var layerToRemoveFrom = mLayer;
         if (mLayer == null && mManagers != null)
@@ -5574,17 +5577,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         var layerToAddTo = layer;
         if (layerToAddTo == null)
         {
-            layerToAddTo = mManagers.Renderer.Layers[0];
+            layerToAddTo = mManagers?.Renderer.Layers[0];
         }
 
-        bool isScreen = mContainedObjectAsIpso == null;
-        if (!isScreen)
+        bool hasContainedObject = mContainedObjectAsIpso == null;
+        if (hasContainedObject)
         {
+            if(layerToAddTo == null)
+            {
+                throw new InvalidOperationException($"Cannot move {this} to a different layer because it is not currently on a layer and no layer was provided");
+            }
             if (layerToRemoveFrom != null)
             {
-                layerToRemoveFrom.Remove(mContainedObjectAsIpso);
+                layerToRemoveFrom.Remove(mContainedObjectAsIpso!);
             }
-            layerToAddTo.Add(mContainedObjectAsIpso);
+            layerToAddTo.Add(mContainedObjectAsIpso!);
         }
         else
         {
@@ -5615,7 +5622,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         // if mManagers is null, then it was never added to the managers
         if (mManagers != null)
         {
-            RemoveRenderableFromManagers?.Invoke(mContainedObjectAsIpso, mManagers);
+            RemoveRenderableFromManagers?.Invoke(mContainedObjectAsIpso!, mManagers);
 
             CustomRemoveFromManagers();
 
@@ -5709,7 +5716,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     // This is made public so that specific implementations can fall back to it if needed:
     public static void SetPropertyThroughReflection(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
-        System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsIpso.GetType().GetProperty(propertyName);
+        System.Reflection.PropertyInfo? propertyInfo = mContainedObjectAsIpso.GetType().GetProperty(propertyName);
 
         if (propertyInfo != null && propertyInfo.CanWrite)
         {
@@ -5784,7 +5791,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    private bool TrySetValueOnThis(string propertyName, object value)
+    private bool TrySetValueOnThis(string propertyName, object? value)
     {
         bool toReturn = false;
         try
@@ -5792,19 +5799,19 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             switch (propertyName)
             {
                 case "AutoGridHorizontalCells":
-                    this.AutoGridHorizontalCells = (int)value;
+                    this.AutoGridHorizontalCells = (int)value!;
                     break;
                 case "AutoGridVerticalCells":
-                    this.AutoGridVerticalCells = (int)value;
+                    this.AutoGridVerticalCells = (int)value!;
                     break;
                 case "ChildrenLayout":
                 case "Children Layout":
-                    this.ChildrenLayout = (ChildrenLayout)value;
+                    this.ChildrenLayout = (ChildrenLayout)value!;
                     toReturn = true;
                     break;
                 case "ClipsChildren":
                 case "Clips Children":
-                    this.ClipsChildren = (bool)value;
+                    this.ClipsChildren = (bool)value!;
                     toReturn = true;
                     break;
 #if !FRB && NET6_0_OR_GREATER
@@ -5812,14 +5819,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         if (this is InteractiveGue interactiveGue)
                         {
-                            interactiveGue.ExposeChildrenEvents = (bool)value;
+                            interactiveGue.ExposeChildrenEvents = (bool)value!;
                             toReturn = true;
                         }
                     }
                     break;
 #endif
                 case "FlipHorizontal":
-                    this.FlipHorizontal = (bool)value;
+                    this.FlipHorizontal = (bool)value!;
                     toReturn = true;
                     break;
 #if !FRB && NET6_0_OR_GREATER
@@ -5827,23 +5834,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         if (this is InteractiveGue interactiveGue)
                         {
-                            interactiveGue.HasEvents = (bool)value;
+                            interactiveGue.HasEvents = (bool)value!;
                             toReturn = true;
                         }
                     }
                     break;
 #endif
                 case "Height":
-                    this.Height = (float)value;
+                    this.Height = (float)value!;
                     toReturn = true;
                     break;
                 case "HeightUnits":
                 case "Height Units":
-                    this.HeightUnits = (DimensionUnitType)value;
+                    this.HeightUnits = (DimensionUnitType)value!;
                     toReturn = true;
                     break;
                 case nameof(IgnoredByParentSize):
-                    this.IgnoredByParentSize = (bool)value;
+                    this.IgnoredByParentSize = (bool)value!;
                     toReturn = true;
                     break;
                 case nameof(MaxHeight):
@@ -5864,7 +5871,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     break;
                 case "Parent":
                     {
-                        string valueAsString = (string)value;
+                        string valueAsString = (string)value!;
 
                         if (!string.IsNullOrEmpty(valueAsString) && mWhatContainsThis != null)
                         {
@@ -5878,98 +5885,98 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     }
                     break;
                 case "Rotation":
-                    this.Rotation = (float)value;
+                    this.Rotation = (float)value!;
                     toReturn = true;
                     break;
                 case "StackSpacing":
-                    this.StackSpacing = (float)value;
+                    this.StackSpacing = (float)value!;
                     toReturn = true;
                     break;
                 case "TextureLeft":
                 case "Texture Left":
-                    this.TextureLeft = (int)value;
+                    this.TextureLeft = (int)value!;
                     toReturn = true;
                     break;
                 case "TextureTop":
                 case "Texture Top":
-                    this.TextureTop = (int)value;
+                    this.TextureTop = (int)value!;
                     toReturn = true;
                     break;
                 case "TextureWidth":
                 case "Texture Width":
-                    this.TextureWidth = (int)value;
+                    this.TextureWidth = (int)value!;
                     toReturn = true;
                     break;
                 case "TextureHeight":
                 case "Texture Height":
-                    this.TextureHeight = (int)value;
+                    this.TextureHeight = (int)value!;
                     toReturn = true;
 
                     break;
                 case "TextureWidthScale":
                 case "Texture Width Scale":
-                    this.TextureWidthScale = (float)value;
+                    this.TextureWidthScale = (float)value!;
                     toReturn = true;
                     break;
                 case "TextureHeightScale":
                 case "Texture Height Scale":
-                    this.TextureHeightScale = (float)value;
+                    this.TextureHeightScale = (float)value!;
                     toReturn = true;
                     break;
                 case "TextureAddress":
                 case "Texture Address":
-                    this.TextureAddress = (Gum.Managers.TextureAddress)value;
+                    this.TextureAddress = (Gum.Managers.TextureAddress)value!;
                     toReturn = true;
                     break;
                 case "Visible":
-                    this.Visible = (bool)value;
+                    this.Visible = (bool)value!;
                     toReturn = true;
                     break;
                 case "Width":
-                    this.Width = (float)value;
+                    this.Width = (float)value!;
                     toReturn = true;
                     break;
                 case "WidthUnits":
                 case "Width Units":
-                    this.WidthUnits = (DimensionUnitType)value;
+                    this.WidthUnits = (DimensionUnitType)value!;
                     toReturn = true;
                     break;
                 case "X":
-                    this.X = (float)value;
+                    this.X = (float)value!;
                     toReturn = true;
                     break;
                 case "XOrigin":
                 case "X Origin":
-                    this.XOrigin = (HorizontalAlignment)value;
+                    this.XOrigin = (HorizontalAlignment)value!;
                     toReturn = true;
                     break;
                 case "XUnits":
                 case "X Units":
-                    this.XUnits = UnitConverter.ConvertToGeneralUnit(value);
+                    this.XUnits = UnitConverter.ConvertToGeneralUnit(value!);
                     toReturn = true;
                     break;
                 case "Y":
-                    this.Y = (float)value;
+                    this.Y = (float)value!;
                     toReturn = true;
                     break;
                 case "YOrigin":
                 case "Y Origin":
-                    this.YOrigin = (VerticalAlignment)value;
+                    this.YOrigin = (VerticalAlignment)value!;
                     toReturn = true;
                     break;
                 case "YUnits":
                 case "Y Units":
 
-                    this.YUnits = UnitConverter.ConvertToGeneralUnit(value);
+                    this.YUnits = UnitConverter.ConvertToGeneralUnit(value!);
                     toReturn = true;
                     break;
                 case "Wrap":
-                    this.Wrap = (bool)value;
+                    this.Wrap = (bool)value!;
                     toReturn = true;
                     break;
                 case "WrapsChildren":
                 case "Wraps Children":
-                    this.WrapsChildren = (bool)value;
+                    this.WrapsChildren = (bool)value!;
                     toReturn = true;
                     break;
             }
@@ -6286,7 +6293,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             var prefix = name.Substring(0, indexOfDot);
 
-            GraphicalUiElement container = null;
+            GraphicalUiElement? container = null;
             for (int i = mWhatThisContains.Count - 1; i > -1; i--)
             {
                 var item = mWhatThisContains[i];
