@@ -13,21 +13,21 @@ public class StateSave
     {
         get;
         set;
-    }
+    } = string.Empty;
 
     [XmlElement("Variable")]
     public List<VariableSave> Variables
     {
         get;
         set;
-    }
+    } = new List<VariableSave>();
 
     [XmlElement("VariableList")]
     public List<VariableListSave> VariableLists
     {
         get;
         set;
-    }
+    } = new List<VariableListSave>();
 
     [XmlIgnore]
     public ElementSave ParentContainer

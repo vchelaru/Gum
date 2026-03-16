@@ -24,13 +24,13 @@ namespace Gum.DataTypes.Variables
         {
             get;
             set;
-        }
+        } = string.Empty;
 
         public string Name
         {
             get;
             set;
-        }
+        } = string.Empty;
 
         [XmlIgnore]
         public string SourceObject
@@ -45,7 +45,7 @@ namespace Gum.DataTypes.Variables
         {
             get;
             set;
-        }
+        } = string.Empty;
 
         public bool IsFile
         {
@@ -123,7 +123,7 @@ namespace Gum.DataTypes.Variables
         {
             get;
             set;
-        }
+        } = new List<T>();
 
         public new VariableListSave<T> Clone()
         {

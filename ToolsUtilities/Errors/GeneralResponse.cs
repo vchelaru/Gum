@@ -9,7 +9,7 @@
             new GeneralResponse { Succeeded = false, Message = message };
 
         public bool Succeeded { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
 
         public void Fail(string failureMessage)
         {
