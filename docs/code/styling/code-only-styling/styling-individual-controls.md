@@ -95,10 +95,10 @@ var panel = new Panel();
 panel.AddToRoot();
 panel.Anchor(Anchor.Center);
 panel.Width = 720;
-panel.WidthUnits = DimensionUnitType.Absolute;
+panel.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 panel.Height = 220;
-panel.HeightUnits = DimensionUnitType.Absolute;
-panel.Visual.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+panel.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+panel.Visual.ChildrenLayout = Gum.Managers.ChildrenLayout.AutoGridHorizontal;
 panel.Visual.AutoGridHorizontalCells = 4;
 panel.Visual.AutoGridVerticalCells = 4;
 

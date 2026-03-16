@@ -26,17 +26,46 @@ var button = new Button();
 button.Anchor(Gum.Wireframe.Anchor.Bottom);
 button.Y = -10;
 button.Text = "Close";
-window.AddChild(button.Visual);
+window.AddChild(button);
 button.Click += (_, _) =>
 {
     window.RemoveFromRoot();
 };
 
 ```
-
-[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RXWuDMBSG7_0VB68s66T7uFpx0Dq2CrsqMhkIJepZDU1yRoy1rPS_L1ppXTeWu_Pk5c3Dyd4BcKPqpZbuAxhd47gFXHHDmeBfaKm7ZRoargpqIACFDSTd4I2mqTpyf6bykrRna_yEa_zQTGIP_RCVQT0IJ7wwpa26m0zOcIF8XRpLb4d0VhQxLYlM91iqWhWDOxOpyjCVYy_0yjIUXWR46T9RvrlwapEf0-ev7Hv79P0lje1gL1J3gUIQRMAkMJBYVWyNkNEudX_IhiUXhTesOHtntTGkeuN5N3TKR_7vCudkI3IQbm2vb9pF9eAkGgqq8E-rPvnGq5qJQVcoeL6BqwC81RhWIwgeU7VPFdjTVyxR0hafNcnTVxymrnNwvgF3GhpjPgIAAA)
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RTWvCQBCG74L_YcgpUhvsx6mSgqa0BnqSgAgB2SRTs7i7UzYbIxX_ezcfaGpL9zbPvDvzsHscDgCcsHgrpfMERpc4bghX3HAm-Bda7OyZhoqrjCrwQWEFq6ZwR9NYtdybqTQn7do53opr_NBMYge9AJVB3QuveGZyO-phMrnABfJtbiy979NZlkW0JDLNsljVKgYPJlSFYSrFTuidJSiaSL_pvVC6u3KqkRfR56_sul79eE0jW9hG7CxQCIIQmAQGEouCbRESOsTOD9kg5yJz-yMu3klpDKnOeN4UjXLL_33COdmI7IVr29u7-qE6cBYNBBX4p1Wb7A0JBE93cOODuxnDZgT-c6yOsQJ7urtLlLTHV03y_AenqTMcnL4BEzWh8zkCAAA" target="_blank">Try on XnaFiddle.NET</a>
 
 <figure><img src="../../.gitbook/assets/14_06 14 56.gif" alt=""><figcaption><p>Window responding to move and resize actions</p></figcaption></figure>
+
+## Setting Title Text
+
+The Window control does not have a built-in `Title` property. The title bar area (`TitleBarInstance`) is a Panel used for dragging, so adding title text requires placing a Label inside it. The following code adds a centered title Label to the title bar.
+
+
+```csharp
+using Gum.Forms.DefaultVisuals.V3;
+
+// Initialize
+var window = new Window();
+window.Anchor(Gum.Wireframe.Anchor.Center);
+window.Width = 300;
+window.Height = 200;
+window.AddToRoot();
+
+var windowVisual = (WindowVisual)window.Visual;
+var titleLabel = new Label();
+titleLabel.Dock(Gum.Wireframe.Dock.Fill);
+titleLabel.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+titleLabel.Visual.Y = 0;
+titleLabel.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+titleLabel.Text = "My Window";
+windowVisual.TitleBarInstance.AddChild(titleLabel);
+```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1RTWsCMRC9F_wPS04rlCD1VunBKlpBaZGtUro9xM24OzSbyCTrR0v_e7MfdK14y7z35s3kzXfnJgjYzE6LnN0Hjgq4rZDCok6th96Zp_jEUG75GLaiUG6FthDK8lWffdRq1OhQKPwC38H2goIDamkOwUOg4RCsqyLsDmJd43yok8xQWFqvkWBLIocG5CPQDuhMvEbpMm_V7_Va8AkwzZxH787RoZSRWRrjqmGxblepl_b6cH1Wd5u-uhrUDQ6dgrnYgGr2r96VY0vxsUk-Lz5QQnyCSl1Ia3f-9kyYovamS9ASyCc8xw0JOvEpiV2Gic8UyGEi1FBhqnOfRBPHdUNvVX7-CvPqL2I9XS44MnrvbYEsn4IGEqpko9MO-AseQdkJmXyBUir4bxbBsUw4ZotTc8OY_WXdTIpK-aOgmbZO6MRfUcpRhkqGrVF3wDo3P7-mtNJOawIAAA" target="_blank">Try on XnaFiddle.NET</a>
+
+{% hint style="info" %}
+Note that `AddChild` on a Window adds children to the inner content area below the title bar. To add a Label to the title bar itself, add it to `TitleBarInstance` as shown above.
+{% endhint %}
 
 ## Preventing Sizing and Moving
 
@@ -66,7 +95,7 @@ The following code disabled resizing by setting ResizeMode:
 // Initialize
 var window = new Window();
 window.AddToRoot();
-window.ResizeMode = ResizeMode.NoResize;
+window.ResizeMode = Gum.Forms.ResizeMode.NoResize;
 ```
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvmUlBQ8ix2L81VslIoKSpN1QEJZOZllmQm5mRWpQJFlcoSixTKM_NS8ssVbBXyUssVwsEcDU3rmDyIuJ5jSkpIflB-fgmyYFBqMdAE3_yUVKA-BEfPLx_CsVbiquUCAI5YsKWBAAAA)
@@ -77,6 +106,10 @@ The following code shows how to force dock a window to the right side of the scr
 
 {% tabs %}
 {% tab title="Code-only" %}
+```csharp
+using Gum.Forms.DefaultVisuals.V3;
+```
+
 ```csharp
 // Initialize
 var window = new Window();

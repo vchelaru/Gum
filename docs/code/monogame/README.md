@@ -106,9 +106,9 @@ child.Y = 0;
 child.YUnits = GeneralUnitType.PixelsFromMiddle;
 child.YOrigin = VerticalAlignment.Center;
 child.Width = -16;
-child.WidthUnits = DimensionUnitType.RelativeToContainer;
+child.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
 child.Height = -16;
-child.HeightUnits = DimensionUnitType.RelativeToContainer;
+child.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
 ```
 
 Similarly, the following could be done in the Gum UI tool::

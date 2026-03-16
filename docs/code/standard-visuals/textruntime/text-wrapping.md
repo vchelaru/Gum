@@ -23,7 +23,7 @@ The following code creates a Text instance which wraps its text. Since its `Widt
 var text = new TextRuntime();
 text.Text = "This text is long enough that it should wrap to multiple lines";
 text.Width = 100;
-text.WidthUnits = DimensionUnitType.Absolute;
+text.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 mainPanel.AddChild(text);
 ```
 
@@ -35,7 +35,7 @@ TextRuntime treats its internal letters as children. If WidthUnits is changed to
 // Initialize
 var text = new TextRuntime();
 text.Text = "This text is long, but it should no longer wrap because WidthUnits=RelativeToChildren";
-text.WidthUnits = DimensionUnitType.RelativeToChildren;
+text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 // Width no longer affects wrapping, but it may still be needed to add padding
 // if anything else depends on the Text instance's width
 mainPanel.AddChild(text);

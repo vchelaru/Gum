@@ -85,3 +85,25 @@ secondButton.Click += (_, _) =>
 StackPanel Orientation controls whether items in a StackPanel are positioned top-to-bottom or left-to-right. Changing the StackPanel Orientation property changes the internal visual's ChildrenLayout property. For more information on ChildrenLayout see the [ChildrenLayout page](../../gum-tool/gum-elements/container/children-layout.md).
 
 WidthUnits and HeightUnits are not changed when changing Orientation. If you want the StackPanel instance to grow horizontally when changing Orientation to Horizontal, you need to modify the WidthUnits and HeightUnits.
+
+The following code creates a horizontal StackPanel with buttons stacked left-to-right.
+
+```csharp
+// Initialize
+var stackPanel = new StackPanel();
+stackPanel.AddToRoot();
+stackPanel.X = 50;
+stackPanel.Y = 50;
+stackPanel.Orientation = Orientation.Horizontal;
+stackPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+stackPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+stackPanel.Height = 50;
+
+for (int i = 0; i < 5; i++)
+{
+    var button = new Button();
+    stackPanel.AddChild(button);
+    button.Text = "Button " + i;
+}
+```
+<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACo1QTU_DMAy9T9p_sHrqNBTtsguDw2AS4wQa5UvqJaOGWmQOatwBm_bfcVoNKNqBXJz3nv0Sv22_B5Bchot6lRyDVDUeNQwxCVlHG1Q6WdsKgtin12vL6OAUGN_h5ptIB5Ocf3QzLYrML7yXv8KDjo5HXe7xAHdVEbJYIc-q_kJm7ivaeEWuO3FHobbO3FMh5a3-Peic7mRmVmz2-YbBzGiFHNQjypEyC3RqusbMn5fkigr5oOcc6aWU_5pOl8G7WrBr1XrsN8352VeQEguQcqOJlhMYaxkOBzlvcwY9MfRlLdJkEAM_a0CTadS7gTcrpG3_vqNFJsOP-HSetAZ6gSGQ9uySfm_3BWmf8YcCAgAA" target="_blank">Try on XnaFiddle.NET</a>

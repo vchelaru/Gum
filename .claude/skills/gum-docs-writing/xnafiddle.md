@@ -100,13 +100,15 @@ public class Game1 : Game
 
 ## Snippet JSON schema
 
-All fields optional: `IsGum`, `IsMonoGameExtended`, `IsAposShapes`, `members`, `initialize`, `loadContent`, `update`, `draw`.
+All fields optional: `IsGum`, `IsMonoGameExtended`, `IsAposShapes`, `usings`, `members`, `initialize`, `loadContent`, `update`, `draw`.
 
 | Flag | Effect |
 |---|---|
 | `"IsGum": true` | Injects Gum usings, `GumUI` member, and init/update/draw boilerplate. Does **not** create any UI controls. |
 | `"IsMonoGameExtended": true` | Injects `SpriteBatch _spriteBatch` and its `LoadContent` init. |
 | `"IsAposShapes": true` | Injects `ShapeBatch _shapeBatch`, its init, and `Begin()`/`End()` wrappers. |
+
+**Visual classes in snippets:** Classes like `WindowVisual`, `ButtonVisual`, etc. are defined in versioned namespaces. The `IsGum` flag injects common Gum usings but does **not** inject the visual namespace. If a snippet references any visual class (e.g. `WindowVisual`, `ListBoxVisual`), add `"usings": ["Gum.Forms.DefaultVisuals.V3"]` to the snippet JSON. All current visuals use V3. **Never** put `using` statements in the `initialize` or `members` fields — they must go in the `usings` array to appear at file scope.
 
 **JSON escaping inside string values:** newlines → `\n`, double quotes → `\"`, backslashes → `\\`. Curly braces `{}` do **not** need escaping in JSON (only in shell strings).
 

@@ -19,8 +19,8 @@ mainPanel.AddChild(label);
 
 mainPanel.Visual.Width = 100;
 mainPanel.Visual.Height = 100;
-mainPanel.Visual.WidthUnits = DimensionUnitType.Absolute;
-mainPanel.Visual.HeightUnits = DimensionUnitType.Absolute;
+mainPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+mainPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 // If this is false, then no events are raised when the cursor is 
 // outside of the bounds of mainPanel
 mainPanel.Visual.RaiseChildrenEventsOutsideOfBounds = false;
@@ -48,8 +48,8 @@ mainPanel.AddChild(label);
 
 mainPanel.Visual.Width = 100;
 mainPanel.Visual.Height = 100;
-mainPanel.Visual.WidthUnits = DimensionUnitType.Absolute;
-mainPanel.Visual.HeightUnits = DimensionUnitType.Absolute;
+mainPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+mainPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 // If this is false, then no events are raised when the cursor is
 // outside of the bounds of mainPanel
 mainPanel.Visual.RaiseChildrenEventsOutsideOfBounds = true;
