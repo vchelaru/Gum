@@ -142,6 +142,18 @@ namespace Gum.DataTypes
 
         public List<ElementBehaviorReference> Behaviors { get; set; } = new List<ElementBehaviorReference>();
 
+        /// <summary>
+        /// Variable names listed here are hidden in the Variables tab when editing an instance of this element,
+        /// unless the variable has been explicitly set on that instance in the current state.
+        /// Checked recursively up the inheritance chain via <see cref="IObjectFinder.IsVariableHiddenRecursively"/>.
+        /// </summary>
+        public List<string> VariablesHiddenFromInstances { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Controls XML serialization — suppresses the property when the list is empty to avoid bloating saved files.
+        /// </summary>
+        public bool ShouldSerializeVariablesHiddenFromInstances() => VariablesHiddenFromInstances?.Count > 0;
+
 
 
         #endregion

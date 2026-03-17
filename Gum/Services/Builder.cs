@@ -133,6 +133,7 @@ file static class ServiceCollectionExtensions
             new ProjectServices.HeadlessErrorChecker(provider.GetRequiredService<ProjectServices.ITypeResolver>()));
         services.AddSingleton<ErrorChecker>();
         services.AddSingleton<IErrorChecker>(provider => provider.GetRequiredService<ErrorChecker>());
+        services.AddSingleton<IVariableSaveLogic, VariableSaveLogic>();
         services.AddSingleton<VariableReferenceLogic>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();
         services.AddSingleton<IRenameLogic, RenameLogic>();

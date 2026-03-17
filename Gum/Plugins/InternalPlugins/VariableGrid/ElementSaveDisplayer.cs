@@ -41,7 +41,7 @@ public class ElementSaveDisplayer
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
     private readonly TypeManager _typeManager;
-    private readonly VariableSaveLogic _variableSaveLogic;
+    private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
     private readonly IPluginManager _pluginManager;
     private readonly StandardElementsManager _standardElementsManager;
@@ -69,13 +69,14 @@ public class ElementSaveDisplayer
         TypeManager typeManager,
         ISelectedState selectedState,
         IUndoManager undoManager,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IVariableSaveLogic variableSaveLogic)
     {
         _subtextLogic = subtextLogic;
         _selectedState = selectedState;
         _undoManager = undoManager;
         _typeManager = typeManager;
-        _variableSaveLogic = new VariableSaveLogic();
+        _variableSaveLogic = variableSaveLogic;
         _categorySortAndColorLogic = new CategorySortAndColorLogic();
         _pluginManager = pluginManager;
         _standardElementsManager = StandardElementsManager.Self;
@@ -780,6 +781,20 @@ public class ElementSaveDisplayer
 
         shouldInclude &= !addedNames.Contains(defaultVariable.Name);
 
+        if (shouldInclude && instanceSave != null)
+        {
+            if (ObjectFinder.Self.IsVariableHiddenRecursively(elementSave, defaultVariable.Name))
+            {
+                var qualifiedName = instanceSave.Name + "." + defaultVariable.Name;
+                var currentState = _selectedState.SelectedStateSave;
+                var isExplicitlySet = currentState?.Variables.Any(v => v.Name == qualifiedName) == true;
+                if (!isExplicitlySet)
+                {
+                    shouldInclude = false;
+                }
+            }
+        }
+
         var isState = defaultVariable.IsState(elementSave, out ElementSave categoryContainer, out StateSaveCategory categorySave);
 
         if(isState && shouldInclude)
@@ -845,6 +860,14 @@ public class ElementSaveDisplayer
 
 
             var propertySubtext = _subtextLogic.GetDefaultSubtext(defaultVariable, subtext, name, elementSave, instanceSave);
+
+            if (instanceSave == null && elementSave.VariablesHiddenFromInstances?.Contains(defaultVariable.Name) == true)
+            {
+                var hiddenText = "Hidden from instances";
+                propertySubtext = string.IsNullOrEmpty(propertySubtext)
+                    ? hiddenText
+                    : propertySubtext + "\n" + hiddenText;
+            }
 
             return new PropertyData(name, type, customAttributes, typeConverter, category, forceReadOnly, isAssignedByReference, propertySubtext,
                 ToolTipText: defaultVariable.ToolTipText);

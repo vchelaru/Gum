@@ -36,7 +36,7 @@ public class EditCommandsTests : BaseTestClass
         _projectManager.Setup(m => m.GumProjectSave).Returns(_gumProject);
 
         // Use the real NameVerifier to avoid mocking out parameters
-        _mocker.Use<INameVerifier>(new NameVerifier());
+        _mocker.Use<INameVerifier>(new NameVerifier(new Mock<IVariableSaveLogic>().Object));
 
         // Default: GetFullPathXmlFile returns a non-existent path so no file deletion occurs
         _fileCommands

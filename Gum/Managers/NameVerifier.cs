@@ -136,16 +136,16 @@ public class NameVerifier : INameVerifier
     ];
 
     private readonly StandardElementsManager _standardElementsManager;
-    private readonly VariableSaveLogic _variableSaveLogic;
+    private readonly IVariableSaveLogic _variableSaveLogic;
     
     #endregion
     
     #region Folder
     
-    public NameVerifier()
+    public NameVerifier(IVariableSaveLogic variableSaveLogic)
     {
         _standardElementsManager = StandardElementsManager.Self;
-        _variableSaveLogic = new VariableSaveLogic();
+        _variableSaveLogic = variableSaveLogic;
     }
     public bool IsFolderNameValid(string? folderName, out string whyNotValid)
     {

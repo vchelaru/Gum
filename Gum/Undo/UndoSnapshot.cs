@@ -31,6 +31,9 @@ public class UndoComparison
     public List<VariableSave> ExposedVariables;
     public List<VariableSave> UnexposedVariables;
 
+    public List<string> HiddenFromInstancesVariables;
+    public List<string> ShownOnInstancesVariables;
+
     public override string ToString()
     {
         string toReturn = "";
@@ -123,7 +126,17 @@ public class UndoComparison
             if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
             toReturn += $"Un-exposed variables: {string.Join(", ", UnexposedVariables.Select(item => item.Name))}";
         }
-        
+        if (HiddenFromInstancesVariables?.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+            toReturn += $"Hidden from instances: {string.Join(", ", HiddenFromInstancesVariables)}";
+        }
+        if (ShownOnInstancesVariables?.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+            toReturn += $"Shown on instances: {string.Join(", ", ShownOnInstancesVariables)}";
+        }
+
         return toReturn;
     }
 }
@@ -174,6 +187,8 @@ public class UndoSnapshot
 
         AddBehaviorModifications(currentElement, snapshotToApply, toReturn);
 
+        AddHiddenVariableModifications(currentElement, snapshotToApply, toReturn);
+
         AddCategoryModifications(currentElement, snapshotToApply, toReturn);
 
         toReturn.ModifiedStates = new List<StateSave>();
@@ -212,6 +227,20 @@ public class UndoSnapshot
         }
 
         return toReturn;
+    }
+
+    private static void AddHiddenVariableModifications(ElementSave currentElement, ElementSave snapshotToApply, UndoComparison toReturn)
+    {
+        var current = currentElement.VariablesHiddenFromInstances;
+        var snapshot = snapshotToApply.VariablesHiddenFromInstances;
+
+        if (current == null || snapshot == null) return;
+
+        var hidden = snapshot.Except(current).ToList();
+        var shown = current.Except(snapshot).ToList();
+
+        if (hidden.Count > 0) toReturn.HiddenFromInstancesVariables = hidden;
+        if (shown.Count > 0) toReturn.ShownOnInstancesVariables = shown;
     }
 
     private static void AddBehaviorModifications(ElementSave currentElement, ElementSave snapshotToApply, UndoComparison toReturn)
