@@ -403,13 +403,14 @@ public class ElementSaveDisplayer
         var properties = GetProperties(instanceOwner, instance, stateSave);
 
         StateSave defaultState;
+        ElementSave? instanceElementSave = null;
         if(instance == null)
         {
             defaultState = GetRecursiveStateFor(instanceOwner);
         }
         else
         {
-            GetDefaultState(instance, out ElementSave elementSave, out defaultState);
+            GetDefaultState(instance, out instanceElementSave, out defaultState);
         }
 
 
@@ -449,6 +450,20 @@ public class ElementSaveDisplayer
 
             bool shouldInclude = GetIfShouldInclude(variableList, instanceOwner, instance)
                 && !variableList.IsHiddenInPropertyGrid;
+
+            if (shouldInclude && instance != null && instanceElementSave != null)
+            {
+                if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElementSave, variableList.Name))
+                {
+                    var qualifiedName = instance.Name + "." + variableList.Name;
+                    var currentState = _selectedState.SelectedStateSave;
+                    var isExplicitlySet = currentState?.VariableLists.Any(vl => vl.Name == qualifiedName) == true;
+                    if (!isExplicitlySet)
+                    {
+                        shouldInclude = false;
+                    }
+                }
+            }
 
             if (shouldInclude)
             {
