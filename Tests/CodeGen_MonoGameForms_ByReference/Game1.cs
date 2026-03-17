@@ -1,7 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using CodeGenProject.Screens;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum;
+using MonoGameGum.Input;
 
 namespace CodeGenProject
 {
@@ -9,7 +11,7 @@ namespace CodeGenProject
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-
+        FormsScreenWithVariablesSet screen;
         GumService GumUI => GumService.Default;
         public Game1()
         {
@@ -24,7 +26,8 @@ namespace CodeGenProject
 
             GumUI.Initialize(this, "GumProject/CodeGenTestProject.gumx");
 
-            var screen= new Screens.GameScreenHud();
+            screen= new Screens.FormsScreenWithVariablesSet();
+            screen.AddToRoot();
 
             base.Initialize();
         }
@@ -38,10 +41,13 @@ namespace CodeGenProject
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
             // TODO: Add your update logic here
+            GumUI.Update(gameTime);
+
+            var cursor = GumUI.Cursor;
+            System.Diagnostics.Debug.WriteLine(cursor.FrameworkElementOver);
+            var failureReason = cursor.GetEventFailureReason(screen.TextBoxInstance);
+            System.Diagnostics.Debug.WriteLine(failureReason);
 
             base.Update(gameTime);
         }
@@ -51,6 +57,7 @@ namespace CodeGenProject
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             // TODO: Add your drawing code here
+            GumUI.Draw();
 
             base.Draw(gameTime);
         }

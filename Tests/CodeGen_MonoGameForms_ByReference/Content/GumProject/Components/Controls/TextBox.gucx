@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Controls/TextBox</Name>
   <BaseType>Container</BaseType>
@@ -141,6 +141,18 @@
       <Type>bool</Type>
       <Name>ClipContainer.ClipsChildren</Name>
       <Value xsi:type="xsd:boolean">true</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>ClipContainer.ExposeChildrenEvents</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>ClipContainer.HasEvents</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

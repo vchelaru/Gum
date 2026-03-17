@@ -24,12 +24,7 @@ public class TextBox : TextBoxBase
     /// <summary>
     /// Gets and sets the displayed Text. If the text exceeds MaxLength, it will be truncated.
     /// </summary>
-    // Note: This is not marked virtual because it has additional logic
-    // beyond just getting/setting the core text object.
-    // Making this virtual would eliminate the OnTextChanged call.
-    // We need to come up with a good solution for this so that codegen
-    // TextBoxes do not have warnings
-    public string? Text
+    public virtual string? Text
     {
         get => coreTextObject.RawText;
         set
