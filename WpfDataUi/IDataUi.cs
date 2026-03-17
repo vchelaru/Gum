@@ -24,6 +24,13 @@ namespace WpfDataUi
         ApplyValueResult TryGetValueOnUi(out object result);
         ApplyValueResult TrySetValueOnUi(object value);
 
+        /// <summary>
+        /// Called when the control is returned to the pool.
+        /// Override to reset any state that was set via
+        /// PropertiesToSetOnDisplayer or other external configuration
+        /// so the control doesn't leak state to its next consumer.
+        /// </summary>
+        void ResetForPooling() { }
     }
 
 }
