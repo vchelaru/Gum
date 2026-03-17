@@ -170,6 +170,7 @@ public class StandardWireframeEditor : WireframeEditor
         _context.IsYMovementEnabled = true;
         _context.IsWidthChangeEnabled = true;
         _context.IsHeightChangeEnabled = true;
+        _context.IsRotationEnabled = true;
 
 
         if (item == null) return;
@@ -223,7 +224,29 @@ public class StandardWireframeEditor : WireframeEditor
                     {
                         _context.IsHeightChangeEnabled = false;
                     }
+                    if (variable == "Rotation")
+                    {
+                        _context.IsRotationEnabled = false;
+                    }
                 }
+            }
+        }
+
+        if (tag is InstanceSave instanceSave)
+        {
+            var instanceElement = ObjectFinder.Self.GetElementSave(instanceSave);
+            if (instanceElement != null)
+            {
+                if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "X"))
+                    _context.IsXMovementEnabled = false;
+                if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "Y"))
+                    _context.IsYMovementEnabled = false;
+                if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "Width"))
+                    _context.IsWidthChangeEnabled = false;
+                if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "Height"))
+                    _context.IsHeightChangeEnabled = false;
+                if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "Rotation"))
+                    _context.IsRotationEnabled = false;
             }
         }
     }
@@ -237,6 +260,8 @@ public class StandardWireframeEditor : WireframeEditor
     {
         this.selectedObjects.Clear();
         this.selectedObjects.AddRange(selectedObjects);
+
+        UpdateLockedVariables(selectedObjects);
 
         // Base class handles updating context, visuals, and handlers
         base.UpdateToSelection(selectedObjects);
