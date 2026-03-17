@@ -99,6 +99,11 @@ namespace WpfDataUi
                 // reused from the pool (a UIElement can only have one visual parent).
                 Grid.Children.Remove(UserControl);
 
+                if (UserControl is IDataUi dataUi)
+                {
+                    dataUi.ResetForPooling();
+                }
+
                 var type = UserControl.GetType();
                 if (!_controlPool.TryGetValue(type, out var stack))
                     _controlPool[type] = stack = new Stack<UserControl>();

@@ -88,6 +88,11 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
 
     #endregion
 
+    public virtual void ResetForPooling()
+    {
+        ComboBox.IsEditable = false;
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ComboBoxDisplay()

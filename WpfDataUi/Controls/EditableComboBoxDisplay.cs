@@ -14,5 +14,11 @@ namespace WpfDataUi.Controls
         {
             IsEditable = true;
         }
+
+        public override void ResetForPooling()
+        {
+            // Intentionally do not reset IsEditable — this
+            // subclass is always editable by design.
+        }
     }
 }
