@@ -643,6 +643,16 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
                         }
                     }
 
+                    // Fix enum assignment coming from dropdown UI
+                    if (unqualifiedMember == "TextureAddress" && value is string stringValue)
+                    {
+                        if (Enum.TryParse(typeof(Gum.Managers.TextureAddress), stringValue, out var parsed))
+                        {
+                            value = parsed;
+                            state.SetValue(qualifiedName, parsed);
+                        }
+                    }
+
                     gue.SetProperty(unqualifiedMember, value);
 
                     _wireframeObjectManager.RootGue?.ApplyVariableReferences(state);

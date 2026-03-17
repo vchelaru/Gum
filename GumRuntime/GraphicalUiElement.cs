@@ -5738,6 +5738,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <param name="value">The value, casted to the correct type.</param>
     public void SetProperty(string propertyName, object? value)
     {
+        if (value is string stringValue)
+        {
+            if (propertyName == "TextureAddress")
+            {
+                if (Enum.TryParse(typeof(Gum.Managers.TextureAddress), stringValue, out var parsed))
+                {
+                    value = parsed;
+                }
+            }
+        }
 
         if (mExposedVariables.ContainsKey(propertyName))
         {

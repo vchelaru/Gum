@@ -752,6 +752,26 @@ public class StateReferencingInstanceMember : InstanceMember
                     var rootVariable = ObjectFinder.Self.GetRootVariable(this.Name, elementSave);
                     variableType = rootVariable?.Type;
                 }
+
+                // Convert enum values coming from dropdown UI
+                if (newValue is string s && !string.IsNullOrEmpty(variableType))
+                {
+                    var enumType = Type.GetType($"Gum.Managers.{variableType}")
+                                   ?? Type.GetType(variableType);
+
+                    if (enumType != null && enumType.IsEnum)
+                    {
+                        try
+                        {
+                            newValue = Enum.Parse(enumType, s);
+                        }
+                        catch
+                        {
+                            // ignore if not valid enum value
+                        }
+                    }
+                }
+
                 // ...set variable after getting it from base, or else we'd get the variable we just set...
                 stateSave.SetValue(Name, newValue, instanceSave, variableType);
                 if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName) && variableDefinedInThisOrBase != null)
