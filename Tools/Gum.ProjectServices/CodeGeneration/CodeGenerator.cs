@@ -706,6 +706,15 @@ public class CodeGenerator
         }
         //////////////End Early Out///////////////////
 
+        ///////////////Early Out//////////////////////
+        // If the base Forms control already defines this property, skip generation
+        // so the generated code does not hide the inherited member.
+        if (GetIfExposedVariableIsDefinedOnFormsBase(exposedVariable, context))
+        {
+            return;
+        }
+        //////////////End Early Out///////////////////
+
         var sourceObject = exposedVariable.SourceObject!;
 
         var bindingBehavior = GetBindingBehavior(container, sourceObject);
@@ -969,7 +978,6 @@ public class CodeGenerator
 
             if(formsType != null)
             {
-                // eventually this will be Gum.Forms.Controls, but for now...
                 if(formsType.StartsWith("global::"))
                 {
                     formsType = formsType.Substring("global::".Length);
@@ -981,6 +989,35 @@ public class CodeGenerator
                 var doTypesMatch =
                     _typeStringResolver?.GetTypeFromString(exposedVariable.Type) == property?.PropertyType;
                 return isVirtual && doTypesMatch;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Checks whether the exposed variable matches a property already defined on the
+    /// base Forms control type. When true, the generated code should skip emitting
+    /// the property so it does not hide the inherited member.
+    /// </summary>
+    private bool GetIfExposedVariableIsDefinedOnFormsBase(VariableSave exposedVariable, CodeGenerationContext context)
+    {
+        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && exposedVariable.ExposedAsName != null)
+        {
+            GetGumFormsTypeFromBehaviors(context.Element, out string? formsType, out _);
+
+            if(formsType != null)
+            {
+                if(formsType.StartsWith("global::"))
+                {
+                    formsType = formsType.Substring("global::".Length);
+                }
+                var type = this.GetType().Assembly.GetType(formsType);
+                var property = type?.GetProperty(exposedVariable.ExposedAsName);
+
+                if(property != null)
+                {
+                    return true;
+                }
             }
         }
         return false;

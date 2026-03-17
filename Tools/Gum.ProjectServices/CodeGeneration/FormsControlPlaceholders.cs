@@ -1,20 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-// As of September 21, 2025, this project is using .NET 4.7.
-// As such, it cannot link MonoGameGum .dll where Forms controls
-// exist, but this needs access to those forms controls to know if
-// an exposed variable should be override. This could eventually get
-// resolved in a few ways:
-// 1. Move to .NET 8+, but this is a long road
-// 2. Move Forms controls to GumCommon, which may happen but this requires
-//    FlatRedBall to update its dependencies first.
-// In the meantime, these classes exists as a placeholder to allow code generation
-// to properly override classes
-// Update December 9, 2025: (1) and (2) are done, so we can probably get rid of this:
+// These placeholder classes mirror the public properties of the real Forms controls
+// in MonoGameGum. Gum.ProjectServices cannot reference MonoGameGum directly (it
+// depends on MonoGame), so code generation uses reflection against these types to
+// determine whether an exposed variable already exists on the base Forms class.
+//
+// When a match is found the generated code skips emitting the property so it does
+// not hide the inherited member.
+//
+// If a Forms control gains a new public property that users commonly expose,
+// add it here so code generation knows about it.
+//
+// Eventually the Forms controls may move to GumCommon (or a shared abstraction
+// layer), which would let us reflect against the real types and remove these
+// placeholders. That is a large architectural change and not expected soon.
 
 namespace Gum.Forms.Controls
 {
@@ -24,11 +21,43 @@ namespace Gum.Forms.Controls
         public virtual string Text { get; set; } = string.Empty;
     }
 
+    public class CheckBox
+    {
+        public string Text { get; set; } = string.Empty;
+    }
+
+    public class ComboBox
+    {
+        public string Text { get; set; } = string.Empty;
+    }
+
+    public class Label
+    {
+        public string Text { get; set; } = string.Empty;
+    }
+
     public class MenuItem
     {
         public virtual string Header { get; set; } = string.Empty;
     }
 
+    public class PasswordBox
+    {
+        public string Password { get; set; } = string.Empty;
+        public char PasswordChar { get; set; }
+    }
+
+    public class RadioButton
+    {
+        public string Text { get; set; } = string.Empty;
+    }
+
+    public class TextBox
+    {
+        public virtual string Text { get; set; } = string.Empty;
+        public virtual string Placeholder { get; set; } = string.Empty;
+        public virtual int? MaxLettersToShow { get; set; }
+        public virtual int? MaxNumberOfLines { get; set; }
+    }
+
 }
-
-

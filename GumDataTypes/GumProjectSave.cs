@@ -167,14 +167,17 @@ public class GumProjectSave
     }
 
     public List<string> FavoriteComponents { get; set; } = new List<string>();
+    public bool ShouldSerializeFavoriteComponents() => FavoriteComponents.Count > 0;
 
     /// <summary>
     /// The folder of the root of the parent project if this Gum project is part of a larger project (like a game project or android app).
     /// This is a relative path like "../../"
     /// </summary>
     public string ParentProjectRoot { get; set; } = string.Empty;
+    public bool ShouldSerializeParentProjectRoot() => !string.IsNullOrEmpty(ParentProjectRoot);
 
     public string LocalizationFile { get; set; } = string.Empty;
+    public bool ShouldSerializeLocalizationFile() => !string.IsNullOrEmpty(LocalizationFile);
 
     public bool ShowLocalizationInGum { get; set; } = true;
 
@@ -281,6 +284,7 @@ public class GumProjectSave
     } = new List<BehaviorReference>();
 
     public string SinglePixelTextureFile { get; set; } = string.Empty;
+    public bool ShouldSerializeSinglePixelTextureFile() => !string.IsNullOrEmpty(SinglePixelTextureFile);
 
     public int? SinglePixelTextureTop { get; set; }
     public int? SinglePixelTextureLeft { get; set; }

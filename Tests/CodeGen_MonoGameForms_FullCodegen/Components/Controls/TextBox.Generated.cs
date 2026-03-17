@@ -134,23 +134,8 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         set => PlaceholderTextInstance.Text = value;
     }
 
-    public int? MaxLettersToShow
-    {
-        get => TextInstance.MaxLettersToShow;
-        set => TextInstance.MaxLettersToShow = value;
-    }
 
-    public int? MaxNumberOfLines
-    {
-        get => TextInstance.MaxNumberOfLines;
-        set => TextInstance.MaxNumberOfLines = value;
-    }
 
-    public string Text
-    {
-        get => TextInstance.Text;
-        set => TextInstance.Text = value;
-    }
 
     public TextBox(InteractiveGue visual) : base(visual)
     {
