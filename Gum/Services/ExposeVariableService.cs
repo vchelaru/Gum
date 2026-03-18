@@ -38,7 +38,7 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
-    private readonly VariableSaveLogic _variableSaveLogic;
+    private readonly IVariableSaveLogic _variableSaveLogic;
 
     public ExposeVariableService(
         IUndoManager undoManager,
@@ -47,7 +47,8 @@ internal class ExposeVariableService : IExposeVariableService
         IRenameLogic renameLogic,
         ISelectedState selectedState,
         INameVerifier nameVerifier,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IVariableSaveLogic variableSaveLogic)
     {
         _undoManager = undoManager;
         _guiCommands = guiCommands;
@@ -56,7 +57,7 @@ internal class ExposeVariableService : IExposeVariableService
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _dialogService = dialogService;
-        _variableSaveLogic = new();
+        _variableSaveLogic = variableSaveLogic;
     }
 
     public OptionallyAttemptedGeneralResponse<VariableSave> HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName)

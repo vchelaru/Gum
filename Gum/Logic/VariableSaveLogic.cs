@@ -2,7 +2,6 @@
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
-using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System.Collections.Generic;
@@ -10,11 +9,19 @@ using System.Linq;
 
 namespace Gum.Logic;
 
-public class VariableSaveLogic
+/// <inheritdoc/>
+public class VariableSaveLogic : IVariableSaveLogic
 {
-    private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
+    private readonly ISelectedState _selectedState;
+    private readonly IPluginManager _pluginManager;
 
-    
+    public VariableSaveLogic(ISelectedState selectedState, IPluginManager pluginManager)
+    {
+        _selectedState = selectedState;
+        _pluginManager = pluginManager;
+    }
+
+    /// <inheritdoc/>
     public bool GetIfVariableIsActive(VariableSave defaultVariable, ElementSave container, InstanceSave? currentInstance)
     {
         bool shouldInclude = GetIfShouldIncludeAccordingToDefaultState(defaultVariable, container, currentInstance);
@@ -95,7 +102,7 @@ public class VariableSaveLogic
                 }
             }
 
-            shouldInclude = !PluginManager.Self.ShouldExclude(defaultVariable, rvf);
+            shouldInclude = !_pluginManager.ShouldExclude(defaultVariable, rvf);
         }
 
         return shouldInclude;
@@ -151,6 +158,7 @@ public class VariableSaveLogic
         return toReturn;
     }
 
+    /// <inheritdoc/>
     public bool GetShouldIncludeBasedOnBaseType(VariableListSave variableList, ElementSave container, StandardElementSave rootElementSave)
     {
         bool shouldInclude = false;
@@ -275,5 +283,17 @@ public class VariableSaveLogic
             shouldInclude = _selectedState.SelectedInstance != null || !string.IsNullOrEmpty(defaultVariable.ExposedAsName);
         }
         return shouldInclude;
+    }
+
+    /// <inheritdoc/>
+    public bool IsVariableHiddenForInstance(string variableName, InstanceSave instance)
+    {
+        var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+        if (instanceElement == null)
+        {
+            return false;
+        }
+
+        return ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, variableName);
     }
 }

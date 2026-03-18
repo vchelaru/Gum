@@ -41,7 +41,7 @@ public class ElementSaveDisplayer
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
     private readonly TypeManager _typeManager;
-    private readonly VariableSaveLogic _variableSaveLogic;
+    private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
     private readonly IPluginManager _pluginManager;
     private readonly StandardElementsManager _standardElementsManager;
@@ -69,13 +69,14 @@ public class ElementSaveDisplayer
         TypeManager typeManager,
         ISelectedState selectedState,
         IUndoManager undoManager,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IVariableSaveLogic variableSaveLogic)
     {
         _subtextLogic = subtextLogic;
         _selectedState = selectedState;
         _undoManager = undoManager;
         _typeManager = typeManager;
-        _variableSaveLogic = new VariableSaveLogic();
+        _variableSaveLogic = variableSaveLogic;
         _categorySortAndColorLogic = new CategorySortAndColorLogic();
         _pluginManager = pluginManager;
         _standardElementsManager = StandardElementsManager.Self;
@@ -402,13 +403,14 @@ public class ElementSaveDisplayer
         var properties = GetProperties(instanceOwner, instance, stateSave);
 
         StateSave defaultState;
+        ElementSave? instanceElementSave = null;
         if(instance == null)
         {
             defaultState = GetRecursiveStateFor(instanceOwner);
         }
         else
         {
-            GetDefaultState(instance, out ElementSave elementSave, out defaultState);
+            GetDefaultState(instance, out instanceElementSave, out defaultState);
         }
 
 
@@ -448,6 +450,20 @@ public class ElementSaveDisplayer
 
             bool shouldInclude = GetIfShouldInclude(variableList, instanceOwner, instance)
                 && !variableList.IsHiddenInPropertyGrid;
+
+            if (shouldInclude && instance != null && instanceElementSave != null)
+            {
+                if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElementSave, variableList.Name))
+                {
+                    var qualifiedName = instance.Name + "." + variableList.Name;
+                    var currentState = _selectedState.SelectedStateSave;
+                    var isExplicitlySet = currentState?.VariableLists.Any(vl => vl.Name == qualifiedName) == true;
+                    if (!isExplicitlySet)
+                    {
+                        shouldInclude = false;
+                    }
+                }
+            }
 
             if (shouldInclude)
             {
@@ -780,6 +796,23 @@ public class ElementSaveDisplayer
 
         shouldInclude &= !addedNames.Contains(defaultVariable.Name);
 
+        if (shouldInclude && instanceSave != null)
+        {
+            var hiddenCheckName = !string.IsNullOrEmpty(defaultVariable.ExposedAsName)
+                ? defaultVariable.ExposedAsName
+                : defaultVariable.Name;
+            if (ObjectFinder.Self.IsVariableHiddenRecursively(elementSave, hiddenCheckName))
+            {
+                var qualifiedName = instanceSave.Name + "." + defaultVariable.Name;
+                var currentState = _selectedState.SelectedStateSave;
+                var isExplicitlySet = currentState?.Variables.Any(v => v.Name == qualifiedName) == true;
+                if (!isExplicitlySet)
+                {
+                    shouldInclude = false;
+                }
+            }
+        }
+
         var isState = defaultVariable.IsState(elementSave, out ElementSave categoryContainer, out StateSaveCategory categorySave);
 
         if(isState && shouldInclude)
@@ -845,6 +878,17 @@ public class ElementSaveDisplayer
 
 
             var propertySubtext = _subtextLogic.GetDefaultSubtext(defaultVariable, subtext, name, elementSave, instanceSave);
+
+            var hiddenIndicatorName = !string.IsNullOrEmpty(defaultVariable.ExposedAsName)
+                ? defaultVariable.ExposedAsName
+                : defaultVariable.Name;
+            if (instanceSave == null && elementSave.VariablesHiddenFromInstances?.Contains(hiddenIndicatorName) == true)
+            {
+                var hiddenText = "Hidden from instances";
+                propertySubtext = string.IsNullOrEmpty(propertySubtext)
+                    ? hiddenText
+                    : propertySubtext + "\n" + hiddenText;
+            }
 
             return new PropertyData(name, type, customAttributes, typeConverter, category, forceReadOnly, isAssignedByReference, propertySubtext,
                 ToolTipText: defaultVariable.ToolTipText);

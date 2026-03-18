@@ -274,6 +274,31 @@ public class TextureCoordinateDisplayController : IDisposable
             mainControl.InnerControl.CanChangeY = true;
             mainControl.InnerControl.CanChangeWidth = true;
             mainControl.InnerControl.CanChangeHeight = true;
+
+            var instance = _selectedState.SelectedInstance;
+            if (instance != null)
+            {
+                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                if (instanceElement != null)
+                {
+                    if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "TextureLeft"))
+                    {
+                        mainControl.InnerControl.CanChangeX = false;
+                    }
+                    if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "TextureTop"))
+                    {
+                        mainControl.InnerControl.CanChangeY = false;
+                    }
+                    if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "TextureWidth"))
+                    {
+                        mainControl.InnerControl.CanChangeWidth = false;
+                    }
+                    if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "TextureHeight"))
+                    {
+                        mainControl.InnerControl.CanChangeHeight = false;
+                    }
+                }
+            }
         }
 
         RefreshSelector(Logic.RefreshType.OnlyIfGrabbed);
@@ -374,6 +399,16 @@ public class TextureCoordinateDisplayController : IDisposable
     public void HandleRegionDoubleClicked(ImageRegionSelectionControl control)
     {
         if (_currentExposedSource != null) return;
+
+        var doubleClickInstance = _selectedState.SelectedInstance;
+        if (doubleClickInstance != null)
+        {
+            var doubleClickElement = ObjectFinder.Self.GetElementSave(doubleClickInstance);
+            if (doubleClickElement != null && ObjectFinder.Self.IsVariableHiddenRecursively(doubleClickElement, "TextureAddress"))
+            {
+                return;
+            }
+        }
 
         using var undoLock = _undoManager.RequestLock();
 
@@ -659,7 +694,7 @@ public class TextureCoordinateDisplayController : IDisposable
 
                     selector.Visible = true;
                     selector.ShowHandles = true;
-                    selector.ShowMoveCursorWhenOver = true;
+                    selector.ShowMoveCursorWhenOver = mainControl.InnerControl.CanChangeX || mainControl.InnerControl.CanChangeY;
 
                     this.CenterCameraOnSelection();
 

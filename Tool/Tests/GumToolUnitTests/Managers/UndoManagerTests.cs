@@ -397,6 +397,61 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void PerformRedo_OnHideVariable_ShouldRestoreHiddenVariable()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        var variableName = "ButtonCategoryState";
+
+        _undoManager.RecordState();
+
+        component.VariablesHiddenFromInstances.Add(variableName);
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        component.VariablesHiddenFromInstances.Count.ShouldBe(0);
+
+        _undoManager.PerformRedo();
+
+        component.VariablesHiddenFromInstances.Count.ShouldBe(1);
+        component.VariablesHiddenFromInstances[0].ShouldBe(variableName);
+    }
+
+    [Fact]
+    public void PerformUndo_OnHideVariable_ShouldRemoveVariableFromHiddenList()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        var variableName = "ButtonCategoryState";
+
+        _undoManager.RecordState();
+
+        component.VariablesHiddenFromInstances.Add(variableName);
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        component.VariablesHiddenFromInstances.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void PerformUndo_OnShowVariable_ShouldRestoreVariableToHiddenList()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        var variableName = "ButtonCategoryState";
+        component.VariablesHiddenFromInstances.Add(variableName);
+
+        _undoManager.RecordState();
+
+        component.VariablesHiddenFromInstances.Remove(variableName);
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        component.VariablesHiddenFromInstances.Count.ShouldBe(1);
+        component.VariablesHiddenFromInstances[0].ShouldBe(variableName);
+    }
+
+    [Fact]
     public void PerformUndo_ShouldRemoveState_WhenStateAddedToBehavior()
     {
         var behavior = new BehaviorSave { Name = "MyBehavior" };

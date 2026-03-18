@@ -55,7 +55,7 @@ public class RotationHandleVisual : EditorVisualBase
             return;
         }
 
-        if (Context.IsSelectionLocked())
+        if (Context.IsSelectionLocked() || !Context.IsRotationEnabled)
         {
             Visible = false;
             return;

@@ -51,10 +51,22 @@ The undo system records changes to:
 ## How Recording Works
 
 The system uses a two-phase record approach:
-1. **`RecordState()`** — Captures a snapshot of the element's current state before a change begins (called on element selection, state selection, etc.)
-2. **`RecordUndo()`** — Compares the current state against the recorded snapshot; if anything changed, saves an undo action
+1. **`RecordState()`** — Captures a snapshot of the element's current state before a change begins. Called automatically by `UndoPlugin` on element selection, state selection, etc. Do NOT call this manually from feature code.
+2. **`RecordUndo()`** — Compares the current state against the recorded snapshot; if anything changed, saves an undo action. Called automatically when an `UndoLock` is disposed.
 
-An **UndoLock** mechanism prevents intermediate states from being recorded during complex multi-step operations. The lock is released once the full operation completes, triggering a single `RecordUndo()`.
+## Correct Pattern for Recording Undos
+
+Always use `RequestLock()` — never call `RecordState()` or `RecordUndo()` manually:
+
+```csharp
+using var undoLock = _undoManager.RequestLock();
+// make your changes here
+// lock disposal fires RecordUndo() automatically
+```
+
+`RequestLock()` adds an `UndoLock` to `UndoLocks`. When the lock is disposed (end of `using` block), it removes itself; when `UndoLocks` reaches 0, `HandleUndoLockChanged` fires `RecordUndo()`. The `RecordState()` baseline is already set by the framework when the user selected the element.
+
+**Why not `RecordState()` manually?** `RecordState()` is a no-op when any locks are held, and calling it outside of that flow risks overwriting the correct baseline snapshot.
 
 ## Snapshots Are Deep Copies
 

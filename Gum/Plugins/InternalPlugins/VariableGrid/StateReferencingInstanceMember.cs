@@ -443,6 +443,8 @@ public class StateReferencingInstanceMember : InstanceMember
 
         TryAddExposeVariableMenuOptions(instanceSave);
 
+        TryAddHideFromInstancesMenuOptions(instanceSave, stateListCategoryContainer);
+
         TryAddCopyVariableReferenceMenuOptions();
 
         _editVariablesService.TryAddEditVariableOptions(this, VariableSave, stateListCategoryContainer);
@@ -604,6 +606,52 @@ public class StateReferencingInstanceMember : InstanceMember
     {
         _exposeVariableService.HandleExposeVariableClick(_selectedState.SelectedInstance,
             this.RootVariableName);
+    }
+
+    #endregion
+
+    #region Hide from Instances
+
+    private void TryAddHideFromInstancesMenuOptions(InstanceSave? instanceSave, IStateContainer stateListCategoryContainer)
+    {
+        if (instanceSave != null)
+        {
+            return;
+        }
+
+        if (stateListCategoryContainer is not ComponentSave and not ScreenSave)
+        {
+            return;
+        }
+
+        if (RootVariableName == "Name" || RootVariableName == "BaseType")
+        {
+            return;
+        }
+
+        var element = stateListCategoryContainer as ElementSave;
+        var rootVariableName = RootVariableName;
+
+        if (element.VariablesHiddenFromInstances.Contains(rootVariableName))
+        {
+            ContextMenuEvents.Add("Show on Instances", (_, _) =>
+            {
+                using var undoLock = _undoManager.RequestLock();
+                element.VariablesHiddenFromInstances.Remove(rootVariableName);
+                _fileCommands.TryAutoSaveCurrentElement();
+                _guiCommands.RefreshVariables(force: true);
+            });
+        }
+        else
+        {
+            ContextMenuEvents.Add("Hide from Instances", (_, _) =>
+            {
+                using var undoLock = _undoManager.RequestLock();
+                element.VariablesHiddenFromInstances.Add(rootVariableName);
+                _fileCommands.TryAutoSaveCurrentElement();
+                _guiCommands.RefreshVariables(force: true);
+            });
+        }
     }
 
     #endregion

@@ -336,6 +336,8 @@ public class UndoManager : IUndoManager
         bool doTypesDiffer = oldElement.BaseType != newElement.BaseType;
         bool doNamesDiffer = oldElement.Name != newElement.Name;
         bool doBehaviorsDiffer = FileManager.AreSaveObjectsEqual(oldElement.Behaviors, newElement.Behaviors) == false;
+        bool doVariablesHiddenFromInstancesDiffer =
+            FileManager.AreSaveObjectsEqual(oldElement.VariablesHiddenFromInstances, newElement.VariablesHiddenFromInstances) == false;
 
         // Why do we care if the user selected a different state?
         // This seems to cause bugs, and we don't care about undoing selections...
@@ -346,7 +348,7 @@ public class UndoManager : IUndoManager
         UndoSnapshot? snapshotToAdd = null;
 
         bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer ||
-            doBehaviorsDiffer
+            doBehaviorsDiffer || doVariablesHiddenFromInstancesDiffer
             //|| doesSelectedStateDiffer
             ;
         if (didAnythingChange)
@@ -376,6 +378,10 @@ public class UndoManager : IUndoManager
             if(!doBehaviorsDiffer)
             {
                 clone.Behaviors = null;
+            }
+            if (!doVariablesHiddenFromInstancesDiffer)
+            {
+                clone.VariablesHiddenFromInstances = null;
             }
 
             snapshotToAdd = new UndoSnapshot
@@ -425,6 +431,10 @@ public class UndoManager : IUndoManager
             if(elementSave.Behaviors == null)
             {
                 cloned.Behaviors = null;
+            }
+            if (elementSave.VariablesHiddenFromInstances == null)
+            {
+                cloned.VariablesHiddenFromInstances = null;
             }
 
             foreach (var state in cloned.AllStates)
@@ -805,6 +815,12 @@ public class UndoManager : IUndoManager
             AddAndRemoveBehaviors(elementInUndoSnapshot.Behaviors, toApplyTo.Behaviors, toApplyTo);
             shouldRefreshStateTreeView = true;
             shouldRefreshBehaviorView = true;
+        }
+
+        if (elementInUndoSnapshot.VariablesHiddenFromInstances != null)
+        {
+            toApplyTo.VariablesHiddenFromInstances.Clear();
+            toApplyTo.VariablesHiddenFromInstances.AddRange(elementInUndoSnapshot.VariablesHiddenFromInstances);
         }
 
         AddedAndRemovedInstances? addedAndRemovedInstances = null;

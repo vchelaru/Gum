@@ -53,7 +53,7 @@ public class ResizeHandlesVisual : EditorVisualBase
             return;
         }
 
-        if (Context.IsSelectionLocked())
+        if (Context.IsSelectionLocked() || (!Context.IsWidthChangeEnabled && !Context.IsHeightChangeEnabled))
         {
             Visible = false;
             return;
