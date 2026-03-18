@@ -4,6 +4,8 @@
 
 This document shows how to build a Settings screen using binding. The approach shown here could be used in a code-only project or a project that uses the Gum UI tool to create a screen. It creates a settings screen and a matching view model which stores properties for volume and full screen.
 
+<a href="https://xnafiddle.net/#code=H4sIAAAAAAAACrVW30_bMBB-719h8ZRKKAImNIkOJChrhUSliULHHt3k2lo4NnKclG3if9_ZSRznB215WF_q3H2-7-5853OWMrEmMynklCYwzZLRILMiXIYTqZK0IwjHUmgleY_mFlY043rB0ozyNFx88SGzPG9Y_8kUrBSyVsIZi5RM5UqHz4KGE6PaSvWyRx1OFX3dsMi54wUTTjO4BcVylI8Gg9dsyVlEIk7TlMxBaxSnCwbbmYyBkwvi1oO_A4K_csOKS6rJDM1HC8mzBKyygJjfGjS5vCJT0N8s9CoYjpwyLZRIF-SUZ1Cq3gddhvnq7T_ZX0rJyV06yTifRwpAfMxgoIcRvH-Q0YIB0-nO6DuHBIQuszrnLAZloi1WI19qs-zLxxuIXm7kG6mdt6KlfBs1YmzSB0N0YElTCARsiSlZygSoh0xolkAwHLYyMFZANdzT3zLTfvSF_IaJGG0HreRiZaGS5JLFLQMt63rDsDtk9BI0Kt-KwgnjHA07cE4VeaUCK_KSGOfnmkYvP4zAd8yavI7j8YbxOLB4T2u_w2sRbaRqcRbCcIwHAqrNy-nS8d6bddA1WnFarKe23-EjvGG9kKP55JkU1Xxx5JG4U6-Csx87WNwGD-JkGFasN2jq7OSkFUliCun-E-HUGzxMLXSB2Qr1QuuB_kLc6ZnnkFfVh8btbfFAnvSD2LttUjJWjbSDs7vXw3aVLiVGRQrd0c4NVWJ2N5HrtlYX1ceOvV6BnNb8BBa4XNU1Ey7sjXXcC2oPgNDdv0O_LfyU7-H1oZ9i9mZLg7snhXtc6Nlxl9olxId64w8K407_dW9m7Clesua_vNmrUXwLOYtgRgVdY8Gv3YC2mCyZgzJ6s3y6s3PHyaonRPNqt1R4o_91tsqa7iUMzNU4HOG8m8ksBXyNsCUH3KFVBqO67qSGSENMZA5K4ZkVJXgnmGaUsz_QqT_rb-gBDNExab56FqBSJgU-ftp3a1rMxbL_W9PKm7dWYpryUT5IaadRw07uXixNU-4Ae6yVJWPmYNGzzkgNzbuNgMDzkz6EV7CI-Xreh_HLqMp-HYmZzX4u26O1_3SeXmO8IAJTEI84x8m6XPQfVYl2oNpLy96v3uPBraLbA_gbhRmOOVAVjCU3g1cqgc-4Laib-jVV-2zttz21wo6f74N_0eiNgL8LAAA" target="_blank">Try the completed example on XnaFiddle.NET</a>
+
 ## Defining SettingsViewModel
 
 The ViewModel is responsible for storing properties related to the game's settings. A typical game may have dozens of properties for settings, but this example includes a small number to keep the tutorial shorter.
@@ -42,7 +44,7 @@ The uses `Gum.Mvvm.ViewModel` as its base class. This is not a requirement - if 
 Our code above uses the built-in `Get` and `Set` methods which are specific to Gum's ViewModel class. These properties provide the following functionality:
 
 * Notification of change whenever the Set method is called. This notification is necessary so that UI knows when to update what it is displaying.
-* Property dependency using the `DependsOn` attribute - this is discusses in the [Binding Deep Dive](binding-deep-dive.md) page.
+* Property dependency using the `DependsOn` attribute - this is discusses in the [View Model Property Dependency](view-model-property-dependency.md) page.
 
 If any additional properties need to be added, they should also use `Get` and `Set` calls.
 

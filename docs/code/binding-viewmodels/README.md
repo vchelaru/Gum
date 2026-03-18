@@ -42,6 +42,53 @@ Binding is initially established when two properties are associated, and when a 
 
 After that point, if the view model's property changes (such as by direct assignment in code), the view also immediately updates in response. Similarly, if a property on the view changes (such as by the user clicking on a CheckBox), the ViewModel is notified and updates immediately as well.
 
+## Quick Example
+
+The following example shows binding in action. A `TextBox` and a `Label` are both bound to the same `Name` property on a ViewModel. Typing in the TextBox automatically updates the Label.
+
+First, define a ViewModel with a `Name` property:
+
+```csharp
+class ExampleViewModel : ViewModel
+{
+    public string Name
+    {
+        get => Get<string>();
+        set => Set(value);
+    }
+}
+```
+
+Then create the controls and bind them:
+
+```csharp
+// Initialize
+var panel = new StackPanel();
+panel.AddToRoot();
+panel.Anchor(Gum.Wireframe.Anchor.Center);
+
+var textBox = new TextBox();
+panel.AddChild(textBox);
+textBox.Width = 250;
+
+var mirrorLabel = new Label();
+panel.AddChild(mirrorLabel);
+
+var viewModel = new ExampleViewModel();
+panel.BindingContext = viewModel;
+
+textBox.SetBinding(
+    nameof(TextBox.Text),
+    nameof(ExampleViewModel.Name));
+
+mirrorLabel.SetBinding(
+    nameof(Label.Text),
+    nameof(ExampleViewModel.Name));
+```
+<a href="https://xnafiddle.net/#code=H4sIAAAAAAAACqVUXY_aMBB851es7ilIp6gfqlQd5aQCPYR0VFXhaF9NshDrHDtaO4H2xH-v7YQQQnS0al7i7Ex2Ztde55rLLcyVVFOW4jRPB73ch-wyfFCU6otAOFbSkBIdyAQ3LBdmxXXOhA5X75uUeVGcZf_BCTdkVY_BOY9IabUx4U_JwgcH7RQ9X4HDKbEs4ZG108vyteARRIJpDV_2LM0Erjju5ipGAXdQr3svPbBPxdeGnMBXm9GHS9A9WzQwvIcpmk8l6T7oD2pUl-gCTVAwkWMFHXqHlhXX27dW370r6aPrCRY8wjmTbIsE27oWz8nTBZLD3fJp5q3UsWO3bd2NWrxU0IeXOhcMQeKuWzAwCdf9Acz0XOXa9krztUD7h6EcB7aSMjUpg5HBGFSBRDxGKBSPYSa54Uzw3xj0W43zfsMGwQndwvkBWSFprqQ9J7Zz9a8FI8iYtBtWGl8YFj1_c4Fm7z0j_BzHS_VdKdMByShRFJSvcIzSIF2QFhmL3NYP4WPLgWDr2sGjW3eKjxMu4sBzG7D_Dpe4t8cDbpa_MgQuwSQIa7UHi6nd3U1Lz1j2yKKl4rL8ekWz4jcIVcTOVWwSm-fdhzctjZQTKXr8h8oaf7S3qKjnqkzVHrfLrCMuY9tsd32UralTNFIfq7BDVfGDGnOPtOdbbYKqQb7J_dsuRttP6Ma736yiUdw1uZL0P2JrprE5D_Vd8eqEPWUxMxi4oV7yFGFbLbrHrWLXpNMGePVu-IqDCbHdX-ifXS7hWCCjYKyEmzxFcmNPPNLodEWePPv8bac-eOHz0PsDETdjda4GAAA" target="_blank">Try on XnaFiddle.NET</a>
+
+Both controls stay in sync because they are bound to the same property. Typing in the TextBox updates the ViewModel, which notifies the Label to update. This two-way sync happens automatically.
+
 ## Built-in ViewModel Class
 
 Any class which implements `INotifyPropertyChanged` can be used for binding, so developers familiar with binding and MVVM can use any implementation.

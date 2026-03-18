@@ -122,10 +122,22 @@ Also evaluate whether the implied variable should be made explicit in the **doc 
 
 ## Workflow
 
+**CRITICAL: Never type or regenerate encoded URLs from memory.** LLMs hallucinate single characters in long base64 strings, silently corrupting the URL. Always read the encoder output from a file and use that exact content.
+
 1. Write **all** snippet JSON files (or `.cs` files for `#code=`) to temp files.
-2. Encode all in **one Bash call**: `xnafiddle-encode.exe snippet --file a.json snippet --file b.json ...` — captures all URLs at once.
-3. Substitute all new URLs into the doc content in memory, then rewrite the file with a single `Write` call.
-4. **Never use `Edit`** to replace XnaFiddle links — encoded URLs are long and fragile to match, causing failed-match round-trips.
+2. Encode all in **one Bash call**, redirecting output to a file:
+   ```bash
+   xnafiddle-encode.exe code --file a.cs code --file b.cs > urls.txt
+   ```
+3. **Read `urls.txt`** with the Read tool to bring the exact URLs into context.
+4. Build the `<a href="...">` tag using the URL exactly as read — do not retype, abbreviate, or reconstruct it.
+5. Insert the link into the doc using Edit (for adding a single link) or Write (for multiple links or large rewrites).
+6. **Verify after insertion:** extract the URL from the doc file using grep and diff it against the encoder output file to confirm no corruption occurred:
+   ```bash
+   grep -o 'https://xnafiddle[^"]*' doc.md > check.txt
+   diff <(tr -d '\r\n' < check.txt) <(tr -d '\r\n' < urls.txt)
+   ```
+   If they differ, fix immediately — even one character breaks the fiddle.
 
 ## Link format
 
