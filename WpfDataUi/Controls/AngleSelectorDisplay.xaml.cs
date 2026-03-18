@@ -118,14 +118,14 @@ namespace WpfDataUi.Controls
                 mTextBoxLogic.InstanceMember = value;
 
                 bool valueChanged = _instanceMember != value;
+                var oldInstanceMember = _instanceMember;
 
                 _instanceMember = value;
 
-                if (_instanceMember != null && valueChanged)
+                if (oldInstanceMember != null && valueChanged)
                 {
-                    _instanceMember.PropertyChanged -= HandlePropertyChange;
+                    oldInstanceMember.PropertyChanged -= HandlePropertyChange;
                 }
-                _instanceMember = value;
 
                 if (_instanceMember != null && valueChanged)
                 {
@@ -341,8 +341,8 @@ namespace WpfDataUi.Controls
             ApplyValueResult toReturn = ApplyValueResult.NotSupported;
             if (value is float asFloat)
             {
-                var isOver = this.IsMouseOver && Mouse.LeftButton == MouseButtonState.Pressed;
-                if(!isOver)
+                var isBeingDragged = Mouse.Captured == EllipseInstance;
+                if (!isBeingDragged)
                 {
                     if (TypeToPushToInstance == AngleType.Radians)
                     {

@@ -60,6 +60,7 @@ public class EditorContext
     public bool IsYMovementEnabled { get; set; } = true;
     public bool IsWidthChangeEnabled { get; set; } = true;
     public bool IsHeightChangeEnabled { get; set; } = true;
+    public bool IsRotationEnabled { get; set; } = true;
     public bool RestrictToUnitValues { get; set; }
 
     #endregion

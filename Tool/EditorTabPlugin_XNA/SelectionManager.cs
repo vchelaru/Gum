@@ -454,72 +454,52 @@ public class SelectionManager : ISelectionManager
             }
             else
             {
-                // Check rectangle selector cursor first (for shift+drag mode indication)
                 if (_rectangleSelector != null)
                 {
                     var rectangleCursor = _rectangleSelector.GetCursorToShow();
                     if (rectangleCursor != null)
-                    {
                         cursorToSet = rectangleCursor;
-                    }
                 }
 
-                if (WireframeEditor != null)
-                {
-                    cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
-                }
-
-                #region Selecting element activity
-
+                // Cursor and IsOverBody are determined by which of four mutually exclusive
+                // states we're in: highlight suppressed, over a resize/rotation handle,
+                // dragging a body already grabbed, or hovering over the body.
                 if (forceNoHighlight)
                 {
                     IsOverBody = false;
+                    if (WireframeEditor != null)
+                        cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
                 }
-
-                if (forceNoHighlight == false)
+                else if (WireframeEditor?.HasCursorOverHandles == true)
                 {
+                    representationOver = _wireframeObjectManager.GetSelectedRepresentation();
+                    IsOverBody = false;
+                    cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
+                }
+                else if (IsOverBody && Cursor.PrimaryDown)
+                {
+                    representationOver = _wireframeObjectManager.GetSelectedRepresentation();
+                    var selectedIsLocked = _selectedState.SelectedInstance?.Locked == true;
+                    if (!selectedIsLocked && WireframeEditor != null)
+                        cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
+                }
+                else
+                {
+                    var elementStack = new List<ElementWithState> { new ElementWithState(_selectedState.SelectedElement) };
+                    representationOver = GetRepresentationAt(worldXAt, worldYAt, IsComponentNoInstanceSelected, elementStack);
 
-                    if (WireframeEditor?.HasCursorOverHandles == true)
+                    if (representationOver != null)
                     {
-                        representationOver = _wireframeObjectManager.GetSelectedRepresentation();
-                        IsOverBody = false;
+                        var isRepresentationLocked = (representationOver as GraphicalUiElement)?.Tag is InstanceSave lockedInst && lockedInst.Locked;
+                        IsOverBody = !isRepresentationLocked;
+                        if (!isRepresentationLocked && WireframeEditor != null)
+                            cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
                     }
                     else
                     {
-                        if (IsOverBody && Cursor.PrimaryDown)
-                        {
-                            var selectedIsLocked = _selectedState.SelectedInstance?.Locked == true;
-                            if (!selectedIsLocked)
-                            {
-                                cursorToSet = System.Windows.Forms.Cursors.SizeAll;
-                            }
-                            representationOver = _wireframeObjectManager.GetSelectedRepresentation();
-                        }
-                        else
-                        {
-                            List<ElementWithState> elementStack = new List<ElementWithState>();
-                            elementStack.Add(new ElementWithState(_selectedState.SelectedElement));
-
-                            representationOver =
-                                GetRepresentationAt(worldXAt, worldYAt, IsComponentNoInstanceSelected, elementStack);
-
-                            if (representationOver != null)
-                            {
-                                var isRepresentationLocked = (representationOver as GraphicalUiElement)?.Tag is InstanceSave lockedInst && lockedInst.Locked;
-                                if (!isRepresentationLocked)
-                                {
-                                    cursorToSet = System.Windows.Forms.Cursors.SizeAll;
-                                }
-                                IsOverBody = true;
-                            }
-                            else
-                            {
-                                IsOverBody = false;
-                            }
-                        }
+                        IsOverBody = false;
                     }
                 }
-                #endregion
             }
 
 
@@ -788,9 +768,22 @@ public class SelectionManager : ISelectionManager
     List<GraphicalUiElement> _emptyGraphicalUiElementList = new List<GraphicalUiElement>();
     private void UpdateEditorsToSelection()
     {
-        if (SelectedGues.Count == 1 &&
-            SelectedGue?.Tag is InstanceSave instanceSaveTag &&
-            ObjectFinder.Self.GetRootStandardElementSave(instanceSaveTag)?.Name == "Polygon")
+        var isPolygon = false;
+        if(SelectedGues.Count == 1)
+        {
+            if(SelectedGue?.Tag is InstanceSave instanceSaveTag)
+            {
+                isPolygon =
+                    ObjectFinder.Self.GetRootStandardElementSave(instanceSaveTag)?.Name == "Polygon";
+            }
+            else if(SelectedGue?.Tag is ComponentSave componentSave)
+            {
+                isPolygon =
+                    ObjectFinder.Self.GetRootStandardElementSave(componentSave)?.Name == "Polygon";
+            }
+        }
+
+        if (isPolygon)
         {
             // use the Polygon wireframe editor
             if (WireframeEditor is PolygonWireframeEditor == false)
@@ -806,7 +799,6 @@ public class SelectionManager : ISelectionManager
         {
             var tag = SelectedGue.Tag as ElementSave;
 
-            var isPolygon = false;
             if (ObjectFinder.Self.GetRootStandardElementSave(tag)?.Name == "Polygon")
             {
                 isPolygon = true;

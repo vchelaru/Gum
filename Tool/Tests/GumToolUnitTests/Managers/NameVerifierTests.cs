@@ -1,7 +1,9 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Logic;
 using Gum.Managers;
+using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -17,7 +19,7 @@ public class NameVerifierTests : BaseTestClass
 
     public NameVerifierTests()
     {
-        _nameVerifier = new NameVerifier();
+        _nameVerifier = new NameVerifier(new Mock<IVariableSaveLogic>().Object);
     }
 
     #region ElementSave

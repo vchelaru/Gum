@@ -34,7 +34,13 @@ public class MoveInputHandler : InputHandlerBase
     {
         if (Context.SelectionManager.IsOverBody)
         {
-            return System.Windows.Forms.Cursors.SizeAll;
+            bool canX = Context.IsXMovementEnabled;
+            bool canY = Context.IsYMovementEnabled;
+
+            if (canX && canY) return System.Windows.Forms.Cursors.SizeAll;
+            if (canX) return System.Windows.Forms.Cursors.SizeWE;
+            if (canY) return System.Windows.Forms.Cursors.SizeNS;
+            return null;
         }
         return null;
     }
