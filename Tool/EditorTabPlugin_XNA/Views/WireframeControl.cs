@@ -237,6 +237,12 @@ public class WireframeControl : GraphicsDeviceControl
         ElementSaveExtensions.RegisterGueInstantiation(
             "Sprite",
             () => new SpriteRuntime());
+
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Polygon",
+            () => new PolygonRuntime());
+
     }
 
     public void ShareLayerReferences(LayerService layerService)
