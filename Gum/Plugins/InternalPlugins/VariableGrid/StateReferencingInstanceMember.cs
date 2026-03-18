@@ -391,7 +391,23 @@ public class StateReferencingInstanceMember : InstanceMember
             {
                 var defaultState = StandardElementsManager.Self.GetDefaultStateFor(standardElement.Name);
                 definingVariableList = defaultState?.VariableLists.FirstOrDefault(item => item.Name == standardVariableList.Name);
+            }
 
+            // Fallback: when the container is a Screen or Component (not a StandardElementSave),
+            // search all standard elements for a matching variable list definition (e.g. VariableReferences).
+            if (definingVariableList == null && standardVariableList != null)
+            {
+                var rootName = standardVariableList.GetRootName();
+                foreach (var se in _objectFinder.GumProjectSave?.StandardElements ?? Enumerable.Empty<StandardElementSave>())
+                {
+                    var defaultState = StandardElementsManager.Self.GetDefaultStateFor(se.Name);
+                    var match = defaultState?.VariableLists.FirstOrDefault(vl => vl.GetRootName() == rootName);
+                    if (match != null)
+                    {
+                        definingVariableList = match;
+                        break;
+                    }
+                }
             }
 
             if(definingVariableList != null)
@@ -400,8 +416,7 @@ public class StateReferencingInstanceMember : InstanceMember
                 {
                     this.PreferredDisplayer = definingVariableList.PreferredDisplayer;
                 }
-                // eventually VariableLists will have these same properties. When they do, add this code
-                //this.DetailText = definingVariableList.DetailText;
+                this.DetailText = definingVariableList.DetailText;
 
                 //foreach (var kvp in definingVariableList.PropertiesToSetOnDisplayer)
                 //{

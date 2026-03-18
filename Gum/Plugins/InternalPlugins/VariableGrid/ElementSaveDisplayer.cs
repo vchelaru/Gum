@@ -521,6 +521,14 @@ public class ElementSaveDisplayer
                     srim.PreferredDisplayer = typeof(ListBoxDisplay);
                 }
 
+                if (instance == null && instanceOwner.VariablesHiddenFromInstances?.Contains(variableList.Name) == true)
+                {
+                    var hiddenText = "Hidden from instances";
+                    srim.DetailText = string.IsNullOrEmpty(srim.DetailText)
+                        ? hiddenText
+                        : srim.DetailText + "\n" + hiddenText;
+                }
+
                 string? category = variableList.Category;
 
                 var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
