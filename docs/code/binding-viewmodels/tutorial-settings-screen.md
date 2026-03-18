@@ -2,7 +2,9 @@
 
 ## Introduction
 
-This document shows how to build a Settings screen using binding. The approach shown here could be used in a code-only project or a project that uses the Gum UI tool to create a screen. It creates a settings screen and a matching view model which stores properties for volume and full screen.
+This document shows how to build a Settings screen using binding. The approach shown here could be used in a code-only project or a project that uses the Gum UI tool to create a screen. It creates a settings screen and a matching view model which stores properties for volume.
+
+<a href="https://xnafiddle.net/#code=H4sIAAAAAAAACq1W32_TMBB-719hIR4SCUUdCCGtbBJrWTWJAlq3AkI8uMm1tebale2kwLT_nbOTOk6asg7Rlzp3n-873w-fc83EkkykkGO6hnG-HvRyJ8JlcinVWu8JkqEURkneoRnBgubczJjOKdfJ7FUImRRFw_oXpmChkHUnnLBUSS0XJvkqaHJpVVup7h5RJ2NFNyuWeneCwyTjHEagWIHyQa-3yeecpSTlVGsyBWNQrGcMthOZASenxK979z2Cv2rDgktqyATNpzPJ8zU4ZQmxvyUYcnZOxmDeOuh5FA-8UpdKpIsKynOoVA-9fYbp4uf_tv99BBsQmf4kIoExkYvIk8Txj9AFbZSNnlePmN5w-svafv5sevn1lNx73enH_sOzwSGGIFDdHAGgweLkyBPoK6aHA8mbpgpAYOZ8ObznsAZhqgROOctA2UOVqzI2H-gc021PYwPmvgYh3PHvbyjdCraER2t6FMXo05xqiARsiW0YygSo61wYtoYojlsZHiqgBs3-krkJk1vKL5jI0HbUKh2sa1SSQrKsZaBl3awY9qZM76JG3zlRcsk4R8MeXFBFNlTgec-IdX5qaHr32QpCx5zJd1k2XDGeRQ4faN138k6kK6lanKUwGWKOQLV5uYtzyetiHO0b3XE6bKB238kN_MR2ILZgSVVBu0J1Cd4Vwu5w7uMvLH5DAPEyPFZmVmjqZb_fJKmr5MjTNPa0w7K2hfcUa_WGAFMLfZRcRQdx6oB-Q9zJy8ChoDmODWKwJQAF0gOBbDXckYdv7Xq0aXx3tbqmTjP29g7ktfZX36gV0LHGLzpB7XGTBBfxoeI5gjkA26w-mby6gBs-hJl5xIMQ-qTTN4bE4Zwfxf-PMdgfQ7EvlvbAsQ-KE7zT7X81W3bvjhEULIUJFXSJLbH0rxGHyddTUFZvl7dXbox72e691JwkjgoHyL23VRV-J2Fkb-J4QK70ROYa8OnF5hxwh1E5DOqylwZSAxmRBSiF6So74Eowwyhnv2Gv_J2_SQCwRC9I84k3A6WZFPjSa99ZupzM1Q3RGo7B68VJbPPeyGsp3fBr2Cn886xpyqexw1pVMHbslhedN1JDi_1WQODrfhciKBTEvHkduGhnfBik9m3THfbbTYYXT2QzfYPvAbKsFt05qNAeVLvo2LvVj3gwUnR7BH-j4pIhB6qioeR2gEsl8DG6BXVRPzprn539tqdOuOfnQ-8PaDoJ_4UMAAA" target="_blank">Try the completed example on XnaFiddle.NET</a>
 
 ## Defining SettingsViewModel
 
@@ -27,11 +29,11 @@ public class SettingsViewModel : ViewModel
         set => Set(value);
     }
 
-    public bool IsFullScreen
-    {
-        get => Get<bool>();
-        set => Set(value);
-    }
+    [DependsOn(nameof(SfxVolume))]
+    public string SfxVolumeDisplay => $"SFX: {SfxVolume:N0}";
+
+    [DependsOn(nameof(MusicVolume))]
+    public string MusicVolumeDisplay => $"Music: {MusicVolume:N0}";
 }
 ```
 
@@ -42,7 +44,7 @@ The uses `Gum.Mvvm.ViewModel` as its base class. This is not a requirement - if 
 Our code above uses the built-in `Get` and `Set` methods which are specific to Gum's ViewModel class. These properties provide the following functionality:
 
 * Notification of change whenever the Set method is called. This notification is necessary so that UI knows when to update what it is displaying.
-* Property dependency using the `DependsOn` attribute - this is discusses in the [Binding Deep Dive](binding-deep-dive.md) page.
+* Property dependency using the `DependsOn` attribute - this is discusses in the [View Model Property Dependency](view-model-property-dependency.md) page.
 
 If any additional properties need to be added, they should also use `Get` and `Set` calls.
 
@@ -56,9 +58,9 @@ This section shows how to set up binding in a `SettingsScreen` class. The bindin
 public class SettingsScreen : FrameworkElement
 {
     Slider SfxSlider;
+    Label SfxValueLabel;
     Slider MusicSlider;
-    CheckBox FullScreenCheckbox;
-    Button BackToMainMenuButton;
+    Label MusicValueLabel;
 
     public SettingsScreen() : base(new ContainerRuntime())
     {
@@ -83,6 +85,9 @@ public class SettingsScreen : FrameworkElement
         panel.AddChild(SfxSlider);
         SfxSlider.Width = 200;
 
+        SfxValueLabel = new Label();
+        panel.AddChild(SfxValueLabel);
+
         var musicLabel = new Label();
         panel.AddChild(musicLabel);
         musicLabel.Text = "Music Volume:";
@@ -93,17 +98,8 @@ public class SettingsScreen : FrameworkElement
         panel.AddChild(MusicSlider);
         MusicSlider.Width = 200;
 
-        FullScreenCheckbox = new CheckBox();
-        panel.AddChild(FullScreenCheckbox);
-        FullScreenCheckbox.Text = "Full Screen";
-        // Add some padding:
-        FullScreenCheckbox.Y = 12;
-
-        BackToMainMenuButton = new Button();
-        panel.AddChild(BackToMainMenuButton);
-        BackToMainMenuButton.Text = "Back to Main Menu";
-        // Add some padding:
-        BackToMainMenuButton.Y = 12;
+        MusicValueLabel = new Label();
+        panel.AddChild(MusicValueLabel);
     }
 
     private void CreateBinding()
@@ -112,13 +108,17 @@ public class SettingsScreen : FrameworkElement
             nameof(SfxSlider.Value),
             nameof(SettingsViewModel.SfxVolume));
 
+        SfxValueLabel.SetBinding(
+            nameof(SfxValueLabel.Text),
+            nameof(SettingsViewModel.SfxVolumeDisplay));
+
         MusicSlider.SetBinding(
             nameof(MusicSlider.Value),
             nameof(SettingsViewModel.MusicVolume));
 
-        FullScreenCheckbox.SetBinding(
-            nameof(FullScreenCheckbox.IsChecked),
-            nameof(SettingsViewModel.IsFullScreen));
+        MusicValueLabel.SetBinding(
+            nameof(MusicValueLabel.Text),
+            nameof(SettingsViewModel.MusicVolumeDisplay));
     }
 }
 ```
@@ -134,13 +134,17 @@ public partial class SettingsScreen
             nameof(SfxSlider.Value),
             nameof(SettingsViewModel.SfxVolume));
 
+        SfxValueLabel.SetBinding(
+            nameof(SfxValueLabel.Text),
+            nameof(SettingsViewModel.SfxVolumeDisplay));
+
         MusicSlider.SetBinding(
             nameof(MusicSlider.Value),
             nameof(SettingsViewModel.MusicVolume));
 
-        FullScreenCheckbox.SetBinding(
-            nameof(FullScreenCheckbox.IsChecked),
-            nameof(SettingsViewModel.IsFullScreen));
+        MusicValueLabel.SetBinding(
+            nameof(MusicValueLabel.Text),
+            nameof(SettingsViewModel.MusicVolumeDisplay));
     }
 }
 ```
@@ -177,13 +181,17 @@ SfxSlider.SetBinding(
     nameof(SfxSlider.Value),
     nameof(ViewModel.SfxVolume));
 
+SfxValueLabel.SetBinding(
+    nameof(SfxValueLabel.Text),
+    nameof(ViewModel.SfxVolumeDisplay));
+
 MusicSlider.SetBinding(
     nameof(MusicSlider.Value),
     nameof(ViewModel.MusicVolume));
 
-FullScreenCheckbox.SetBinding(
-    nameof(FullScreenCheckbox.IsChecked),
-    nameof(ViewModel.IsFullScreen));
+MusicValueLabel.SetBinding(
+    nameof(MusicValueLabel.Text),
+    nameof(ViewModel.MusicVolumeDisplay));
 ```
 
 This approach can also be used to handle events as shown in the [Task Screen tutorial](tutorial-task-screen.md).
@@ -201,30 +209,12 @@ var viewModel = new SettingsViewModel();
 screen.BindingContext = viewModel;
 viewModel.SfxVolume = 50;
 viewModel.MusicVolume = 75;
-viewModel.IsFullScreen = true;
 ```
 
-We only needed to set the `BindingContext` on the `SettingsScreen`, which is the parent of the other controls. All children inherit the `BindingContext` of their parent, so we do not need to explicitly assign the `BindingContext` on each `Slider` and `CheckBox`.
+We only needed to set the `BindingContext` on the `SettingsScreen`, which is the parent of the other controls. All children inherit the `BindingContext` of their parent, so we do not need to explicitly assign the `BindingContext` on each `Slider`.
 
 <figure><img src="../../.gitbook/assets/14_08 03 38.png" alt=""><figcaption><p>Values set from the ViewModel</p></figcaption></figure>
 
-Changes to the UI also immediately update the view model. For example, we can modify the ViewModel's `SfxVolume` to print output whenever it changes.
-
-```csharp
-public float SfxVolume
-{
-    get => Get<float>();
-    set
-    {
-        // Set returns a true if the value changed
-        if (Set(value))
-        {
-            System.Diagnostics.Debug.WriteLine($"SfxVolume set to {SfxVolume}");
-        }
-    }
-}
-```
-
-Any change to the value results in output.
+Changes to the UI also immediately update the view model. The value labels next to each slider display the current value using `DependsOn` properties on the ViewModel. When the user drags a slider, the ViewModel's volume property updates, which triggers the display property to recalculate, which updates the label — all automatically through binding.
 
 <figure><img src="../../.gitbook/assets/14_08 09 21.gif" alt=""><figcaption><p>Changing the slider updates the value on the ViewModel</p></figcaption></figure>

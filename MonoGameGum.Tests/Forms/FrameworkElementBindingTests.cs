@@ -1,4 +1,5 @@
-﻿using Gum.Forms.Controls;
+﻿using System.Collections.ObjectModel;
+using Gum.Forms.Controls;
 using Gum.Forms.Data;
 using Shouldly;
 using Xunit;
@@ -461,6 +462,173 @@ public class FrameworkElementBindingTests : BaseTestClass
     }
 
     [Fact]
+    public void ComplexPath_Mode_OneWay_OnlyUpdatesTarget()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Child = new() { Text = "FromVM" }
+        };
+        TextBox element = new() { BindingContext = vm };
+
+        Binding binding = new("Child.Text")
+        {
+            Mode = BindingMode.OneWay
+        };
+
+        // Act
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - initial pull from source
+        element.Text.ShouldBe("FromVM");
+
+        // Target change should NOT propagate back to source
+        element.Text = "FromUI";
+        vm.Child!.Text.ShouldBe("FromVM");
+
+        // Source change should propagate to target
+        vm.Child.Text = "Updated";
+        element.Text.ShouldBe("Updated");
+    }
+
+    [Fact]
+    public void ComplexPath_Mode_OneWayToSource_OnlyUpdatesSource()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Child = new() { Text = "FromVM" }
+        };
+        TextBox element = new() { BindingContext = vm };
+
+        Binding binding = new("Child.Text")
+        {
+            Mode = BindingMode.OneWayToSource
+        };
+
+        // Act
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - OneWayToSource should NOT pull initial value from source
+        element.Text.ShouldNotBe("FromVM");
+
+        // Target change should propagate to source
+        element.Text = "FromUI";
+        vm.Child!.Text.ShouldBe("FromUI");
+
+        // Source change should NOT propagate to target
+        vm.Child.Text = "ShouldNotPropagate";
+        element.Text.ShouldBe("FromUI");
+    }
+
+    [Fact]
+    public void ComplexPath_UpdateSourceTrigger_LostFocus()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Child = new() { Text = "Initial" }
+        };
+        TextBox element = new() { BindingContext = vm };
+
+        Binding binding = new("Child.Text")
+        {
+            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+        };
+
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Act / Assert
+        element.IsFocused = true;
+        element.Text = "Changed";
+        vm.Child!.Text.ShouldBe("Initial");
+
+        element.IsFocused = false;
+        vm.Child.Text.ShouldBe("Changed");
+    }
+
+    [Fact]
+    public void ComplexPath_WithConverter()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Child = new() { IsChecked = true }
+        };
+        TextBox element = new() { BindingContext = vm };
+
+        Binding binding = new("Child.IsChecked")
+        {
+            Converter = new TestStringBoolConverter()
+        };
+
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - initial value converted to string
+        element.Text.ShouldBe("Yes");
+
+        // Target-to-source with converter
+        element.Text = "No";
+        vm.Child!.IsChecked.ShouldBe(false);
+
+        // Source-to-target with converter
+        vm.Child.IsChecked = true;
+        element.Text.ShouldBe("Yes");
+    }
+
+    [Fact]
+    public void ComplexPath_WithFallbackValue_WhenIntermediateIsNull()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Child = new() { Text = "Valid" }
+        };
+        TextBox element = new() { BindingContext = vm };
+
+        Binding binding = new("Child.Text")
+        {
+            FallbackValue = "Fallback"
+        };
+
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - initial value resolves
+        element.Text.ShouldBe("Valid");
+
+        // Act - nulling the root intermediate triggers fallback
+        vm.Child = null;
+
+        // Assert
+        element.Text.ShouldBe("Fallback");
+    }
+
+    [Fact]
+    public void ComplexPath_WithStringFormat()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Child = new() { FloatValue = 0.5f }
+        };
+        Label label = new() { BindingContext = vm };
+
+        Binding binding = new("Child.FloatValue")
+        {
+            StringFormat = "Val: {0:F2}"
+        };
+
+        label.SetBinding(nameof(Label.Text), binding);
+
+        // Assert - initial format
+        label.Text.ShouldBe(string.Format("Val: {0:F2}", 0.5f));
+
+        // Act - source update should re-format
+        vm.Child!.FloatValue = 1.25f;
+        label.Text.ShouldBe(string.Format("Val: {0:F2}", 1.25f));
+    }
+
+    [Fact]
     public void InvalidPath_DoesNoHarm()
     {
         TestViewModel vm = new();
@@ -468,6 +636,457 @@ public class FrameworkElementBindingTests : BaseTestClass
         Binding binding = new("Invalid.Path");
 
         element.SetBinding(nameof(TextBox.Text), binding);
+    }
+
+    [Fact]
+    public void IndexBinding_Lambda_Parameterless()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "Closure" }
+            }
+        };
+        TextBox textBox = new() { BindingContext = vm };
+
+        // Act
+        textBox.SetBinding(nameof(TextBox.Text), () => vm.Items[0].Text);
+
+        // Assert
+        textBox.Text.ShouldBe("Closure");
+    }
+
+    [Fact]
+    public void IndexBinding_Lambda_Typed()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "Lambda" }
+            }
+        };
+        TextBox textBox = new() { BindingContext = vm };
+
+        // Act
+        textBox.SetBinding<TestViewModel>(nameof(TextBox.Text), vm => vm.Items[0].Text);
+
+        // Assert
+        textBox.Text.ShouldBe("Lambda");
+    }
+
+    [Fact]
+    public void IndexBinding_NotifyCollectionChanged_ReplaceAtBoundIndex()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "Original" },
+                new() { Text = "Other" }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        element.SetBinding(nameof(TextBox.Text), new Binding("Items[0].Text"));
+
+        element.Text.ShouldBe("Original");
+
+        // Act — replace the item at the bound index
+        vm.Items[0] = new TestViewModel { Text = "Replaced" };
+
+        // Assert
+        element.Text.ShouldBe("Replaced");
+    }
+
+    [Fact]
+    public void IndexBinding_NotifyCollectionChanged_InsertBeforeBoundIndex()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "A" },
+                new() { Text = "B" }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        element.SetBinding(nameof(TextBox.Text), new Binding("Items[1].Text"));
+
+        element.Text.ShouldBe("B");
+
+        // Act — insert before bound index, shifting what's at [1]
+        vm.Items.Insert(0, new TestViewModel { Text = "Inserted" });
+
+        // Assert — Items[1] is now "A" (the old [0])
+        element.Text.ShouldBe("A");
+    }
+
+    [Fact]
+    public void IndexBinding_NotifyCollectionChanged_RemoveAtBoundIndex()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "A" },
+                new() { Text = "B" },
+                new() { Text = "C" }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        element.SetBinding(nameof(TextBox.Text), new Binding("Items[1].Text"));
+
+        element.Text.ShouldBe("B");
+
+        // Act — remove at bound index
+        vm.Items.RemoveAt(1);
+
+        // Assert — Items[1] is now "C" (shifted up)
+        element.Text.ShouldBe("C");
+    }
+
+    [Fact]
+    public void IndexBinding_NotifyCollectionChanged_Clear()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "A" }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+
+        Binding binding = new("Items[0].Text")
+        {
+            FallbackValue = "Fallback"
+        };
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        element.Text.ShouldBe("A");
+
+        // Act — clear the collection (index 0 no longer exists)
+        vm.Items.Clear();
+
+        // Assert — should use fallback since Items[0] throws
+        element.Text.ShouldBe("Fallback");
+    }
+
+    [Fact]
+    public void IndexBinding_NotifyCollectionChanged_AddToEmptyCollection()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>()
+        };
+        TextBox element = new() { BindingContext = vm };
+
+        Binding binding = new("Items[0].Text")
+        {
+            FallbackValue = "Empty"
+        };
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        element.Text.ShouldBe("Empty");
+
+        // Act — add first item
+        vm.Items.Add(new TestViewModel { Text = "Added" });
+
+        // Assert
+        element.Text.ShouldBe("Added");
+    }
+
+    [Fact]
+    public void IndexBinding_ReplaceIntermediateCollection()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "Old" }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        Binding binding = new("Items[0].Text");
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - initial value
+        element.Text.ShouldBe("Old");
+
+        // Act - replace the entire collection
+        vm.Items = new ObservableCollection<TestViewModel>
+        {
+            new() { Text = "New" }
+        };
+
+        // Assert
+        element.Text.ShouldBe("New");
+    }
+
+    [Fact]
+    public void IndexBinding_String_DirectIndex()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { IsChecked = true }
+            }
+        };
+        CheckBox checkBox = new() { BindingContext = vm };
+        Binding binding = new("Items[0].IsChecked");
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), binding);
+
+        // Assert - initial value
+        checkBox.IsChecked.ShouldBe(true);
+
+        // Act - source update propagates to target
+        vm.Items[0].IsChecked = false;
+        checkBox.IsChecked.ShouldBe(false);
+    }
+
+    [Fact]
+    public void IndexBinding_String_NestedPath()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Child = new()
+            {
+                Items = new ObservableCollection<TestViewModel>
+                {
+                    new() { Text = "Deep" }
+                }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        Binding binding = new("Child.Items[0].Text");
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - initial value
+        element.Text.ShouldBe("Deep");
+
+        // Act - source update propagates to target
+        vm.Child!.Items[0].Text = "Updated";
+        element.Text.ShouldBe("Updated");
+    }
+
+    [Fact]
+    public void IndexBinding_String_OneWay()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "A" }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        Binding binding = new("Items[0].Text")
+        {
+            Mode = BindingMode.OneWay
+        };
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - initial pull from source
+        element.Text.ShouldBe("A");
+
+        // Target change should NOT propagate back to source
+        element.Text = "FromUI";
+        vm.Items[0].Text.ShouldBe("A");
+
+        // Source change should propagate to target
+        vm.Items[0].Text = "Updated";
+        element.Text.ShouldBe("Updated");
+    }
+
+    [Fact]
+    public void IndexBinding_String_OneWayToSource()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "A" }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        Binding binding = new("Items[0].Text")
+        {
+            Mode = BindingMode.OneWayToSource
+        };
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - OneWayToSource should NOT pull initial value from source
+        element.Text.ShouldNotBe("A");
+
+        // Target change should propagate to source
+        element.Text = "FromUI";
+        vm.Items[0].Text.ShouldBe("FromUI");
+
+        // Source change should NOT propagate to target
+        vm.Items[0].Text = "NoPropagate";
+        element.Text.ShouldBe("FromUI");
+    }
+
+    [Fact]
+    public void IndexBinding_String_SecondIndex()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "A" },
+                new() { Text = "B" },
+                new() { Text = "C" }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        Binding binding = new("Items[1].Text");
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - initial value
+        element.Text.ShouldBe("B");
+
+        // Act - source update propagates to target
+        vm.Items[1].Text = "Updated";
+        element.Text.ShouldBe("Updated");
+    }
+
+    [Fact]
+    public void IndexBinding_String_TwoWay()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "A" },
+                new() { Text = "B" }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        Binding binding = new("Items[0].Text");
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - initial pull from source
+        element.Text.ShouldBe("A");
+
+        // Target-to-source
+        element.Text = "FromUI";
+        vm.Items[0].Text.ShouldBe("FromUI");
+
+        // Source-to-target
+        vm.Items[0].Text = "FromVM";
+        element.Text.ShouldBe("FromVM");
+    }
+
+    [Fact]
+    public void IndexBinding_String_WithConverter()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { IsChecked = true }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        Binding binding = new("Items[0].IsChecked")
+        {
+            Converter = new TestStringBoolConverter()
+        };
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - initial value converted
+        element.Text.ShouldBe("Yes");
+
+        // Target-to-source with converter
+        element.Text = "No";
+        vm.Items[0].IsChecked.ShouldBe(false);
+    }
+
+    [Fact]
+    public void IndexBinding_String_WithFallbackValue_NullCollection()
+    {
+        // Arrange
+        TestViewModel vm = new();
+        TextBox element = new() { BindingContext = vm };
+        Binding binding = new("Items[0].Text")
+        {
+            FallbackValue = "Fallback"
+        };
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Assert - collection is null, so fallback is used
+        element.Text.ShouldBe("Fallback");
+    }
+
+    [Fact]
+    public void IndexBinding_String_WithStringFormat()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { FloatValue = 3.14f }
+            }
+        };
+        Label label = new() { BindingContext = vm };
+        Binding binding = new("Items[0].FloatValue")
+        {
+            StringFormat = "V:{0:F1}"
+        };
+        label.SetBinding(nameof(Label.Text), binding);
+
+        // Assert - initial formatted value
+        label.Text.ShouldBe(string.Format("V:{0:F1}", 3.14f));
+
+        // Act - source update should re-format
+        vm.Items[0].FloatValue = 2.0f;
+        label.Text.ShouldBe(string.Format("V:{0:F1}", 2.0f));
+    }
+
+    [Fact]
+    public void IndexBinding_UpdateSourceTrigger_LostFocus()
+    {
+        // Arrange
+        TestViewModel vm = new()
+        {
+            Items = new ObservableCollection<TestViewModel>
+            {
+                new() { Text = "Initial" }
+            }
+        };
+        TextBox element = new() { BindingContext = vm };
+        Binding binding = new("Items[0].Text")
+        {
+            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+        };
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Act / Assert
+        element.IsFocused = true;
+        element.Text = "Changed";
+        vm.Items[0].Text.ShouldBe("Initial");
+
+        element.IsFocused = false;
+        vm.Items[0].Text.ShouldBe("Changed");
     }
 
     [Fact]

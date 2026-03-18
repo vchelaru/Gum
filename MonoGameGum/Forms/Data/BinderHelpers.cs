@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -15,9 +16,59 @@ namespace Gum.Forms.Data;
 
 #endif
 
+/// <summary>
+/// Represents a single segment of a binding path, consisting of a property/field name
+/// and an optional integer index (e.g. "Items[0]" has Name="Items", Index=0).
+/// </summary>
+internal readonly struct PathSegment
+{
+    public string Name { get; }
+    public int? Index { get; }
+
+    public PathSegment(string name, int? index = null)
+    {
+        Name = name;
+        Index = index;
+    }
+}
 
 internal static class BinderHelpers
 {
+    /// <summary>
+    /// Parses a binding path string into an array of <see cref="PathSegment"/> values.
+    /// Supports dotted property access and integer indexers (e.g. "Items[0].Text").
+    /// </summary>
+    public static PathSegment[] ParseSegments(string path)
+    {
+        string[] dotParts = path.Split('.');
+        PathSegment[] result = new PathSegment[dotParts.Length];
+
+        for (int i = 0; i < dotParts.Length; i++)
+        {
+            string part = dotParts[i];
+            int bracketStart = part.IndexOf('[');
+            if (bracketStart >= 0)
+            {
+                int bracketEnd = part.IndexOf(']', bracketStart);
+                if (bracketEnd < 0)
+                {
+                    throw new FormatException($"Missing closing bracket in path segment '{part}'.");
+                }
+
+                string name = part.Substring(0, bracketStart);
+                string indexStr = part.Substring(bracketStart + 1, bracketEnd - bracketStart - 1);
+                int index = int.Parse(indexStr);
+                result[i] = new PathSegment(name, index);
+            }
+            else
+            {
+                result[i] = new PathSegment(part);
+            }
+        }
+
+        return result;
+    }
+
     public static bool CanWritePath(Type targetType, string path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -25,20 +76,41 @@ internal static class BinderHelpers
             return false;
         }
 
-        string[] segments = path.Split('.');
+        PathSegment[] segments = ParseSegments(path);
         Type currentType = targetType;
 
         for (int i = 0; i < segments.Length - 1; i++)
         {
-            if (!TryGetMember(currentType, segments[i], out _, out Type? memberType))
+            if (!TryGetMember(currentType, segments[i].Name, out _, out Type? memberType))
             {
                 return false;
             }
 
-            currentType = memberType;
+            if (segments[i].Index.HasValue)
+            {
+                currentType = GetElementType(memberType);
+            }
+            else
+            {
+                currentType = memberType;
+            }
         }
 
-        if (!TryGetMember(currentType, segments[^1], out MemberInfo? leafMember, out _))
+        PathSegment leaf = segments[^1];
+
+        if (leaf.Index.HasValue)
+        {
+            // The leaf is an indexed access like "Items[0]" — check the indexer has a setter
+            if (!TryGetMember(currentType, leaf.Name, out _, out Type? collectionType))
+            {
+                return false;
+            }
+
+            PropertyInfo? indexer = FindIntIndexer(collectionType);
+            return indexer is not null && indexer.SetMethod is not null && indexer.SetMethod.IsPublic;
+        }
+
+        if (!TryGetMember(currentType, leaf.Name, out MemberInfo? leafMember, out _))
         {
             return false;
         }
@@ -82,11 +154,11 @@ internal static class BinderHelpers
         Expression current = Expression.Convert(instanceParam, targetType);
 
         // walk down each segment in the dotted path
-        string[] segments = path.Split('.');
-        foreach (string segment in segments)
+        PathSegment[] segments = ParseSegments(path);
+        foreach (PathSegment segment in segments)
         {
             // raw access to the next property/field
-            Expression rawAccess = Expression.PropertyOrField(current, segment);
+            Expression rawAccess = Expression.PropertyOrField(current, segment.Name);
             Type segmentType = rawAccess.Type;
 
             // If this is a non-nullable value type, just take it
@@ -102,6 +174,12 @@ internal static class BinderHelpers
                 Expression ifNull = Expression.Default(segmentType);
                 Expression ifNotNull = rawAccess;
                 current = Expression.Condition(testNull, ifNull, ifNotNull);
+            }
+
+            // If the segment has an index, apply indexer access
+            if (segment.Index.HasValue)
+            {
+                current = BuildIndexAccess(current, segment.Index.Value);
             }
         }
 
@@ -141,13 +219,13 @@ internal static class BinderHelpers
         Expression current = Expression.Convert(instanceParam, targetType);
 
         // walk all but last segment, propagating nulls
-        string[] segments = path.Split('.');
+        PathSegment[] segments = ParseSegments(path);
         for (int i = 0; i < segments.Length - 1; i++)
         {
-            Expression rawAccess = Expression.PropertyOrField(current, segments[i]);
+            Expression rawAccess = Expression.PropertyOrField(current, segments[i].Name);
             if (rawAccess.Type.IsValueType)
             {
-                // value types can’t be null ⇒ just take it
+                // value types can't be null ⇒ just take it
                 current = rawAccess;
             }
             else
@@ -159,13 +237,53 @@ internal static class BinderHelpers
                     ifFalse: rawAccess
                 );
             }
+
+            // If the intermediate segment has an index, apply indexer access with null propagation
+            if (segments[i].Index.HasValue)
+            {
+                current = BuildIndexAccessWithNullPropagation(current, segments[i].Index.Value);
+            }
+        }
+
+        PathSegment lastSegment = segments[segments.Length - 1];
+
+        if (lastSegment.Index.HasValue)
+        {
+            // The leaf is an indexed access like "Items[0]" — set via indexer
+            Expression rawAccess = Expression.PropertyOrField(current, lastSegment.Name);
+            if (!rawAccess.Type.IsValueType)
+            {
+                rawAccess = Expression.Condition(
+                    test: Expression.Equal(current, Expression.Constant(null, current.Type)),
+                    ifTrue: Expression.Constant(null, rawAccess.Type),
+                    ifFalse: rawAccess
+                );
+            }
+
+            Expression collection = rawAccess;
+            Type elementType = GetElementType(collection.Type);
+
+            Expression valueExpr = BuildValueConversion(valueParam, elementType);
+
+            Expression indexerSet = BuildIndexSetExpression(collection, lastSegment.Index.Value, valueExpr);
+
+            // guard: collection != null
+            Expression guard = Expression.NotEqual(
+                collection,
+                Expression.Constant(null, collection.Type)
+            );
+            Expression ifAssign = Expression.IfThen(guard, indexerSet);
+
+            return Expression
+                .Lambda<Action<object, object?>>(ifAssign, instanceParam, valueParam)
+                .Compile();
         }
 
         // now 'current' owns the final member
-        string lastName = segments[segments.Length - 1];
+        string lastName = lastSegment.Name;
         MemberExpression memberExpr = Expression.PropertyOrField(current, lastName);
 
-        // figure out the member’s declared type
+        // figure out the member's declared type
         Type memberType = memberExpr.Member switch
         {
             PropertyInfo pi => pi.PropertyType,
@@ -173,55 +291,59 @@ internal static class BinderHelpers
             _ => throw new InvalidOperationException()
         };
 
-        
-        Expression valueExpr;
-
-        if (memberType.IsValueType && Nullable.GetUnderlyingType(memberType) == null)
-        {
-            // T is a non-nullable value type
-            Expression isNullValue = Expression.Equal(
-                valueParam,
-                Expression.Constant(null, typeof(object))
-            );
-            Expression defaultValue = Expression.Default(memberType);
-            Expression converted = Expression.Convert(valueParam, memberType);
-            valueExpr = Expression.Condition(isNullValue, defaultValue, converted);
-        }
-        else
-        {
-            // nullable<T> or reference: just convert
-            valueExpr = Expression.Convert(valueParam, memberType);
-        }
+        Expression leafValueExpr = BuildValueConversion(valueParam, memberType);
 
         // assignment
-        Expression assign = Expression.Assign(memberExpr, valueExpr);
+        Expression assign = Expression.Assign(memberExpr, leafValueExpr);
 
         // guard: owner != null (for reference‐type owners); for value-type owner this is always true
-        Expression guard = Expression.NotEqual(
+        Expression ownerGuard = Expression.NotEqual(
             current,
             Expression.Constant(null, current.Type)
         );
-        Expression ifAssign = Expression.IfThen(guard, assign);
+        Expression ifSetAssign = Expression.IfThen(ownerGuard, assign);
 
         // compile to Action<object, object?>
         return Expression
-            .Lambda<Action<object, object?>>(ifAssign, instanceParam, valueParam)
+            .Lambda<Action<object, object?>>(ifSetAssign, instanceParam, valueParam)
             .Compile();
     }
-    
+
     public static string ExtractPath(LambdaExpression expression)
     {
         Expression? body = expression.Body;
-        
+
         if (body is UnaryExpression { NodeType: ExpressionType.Convert } unary)
+        {
             body = unary.Operand;
+        }
 
         Stack<string> segments = new();
 
-        while (body is MemberExpression member)
+        while (body is MemberExpression || IsIndexerAccess(body))
         {
-            segments.Push(member.Member.Name);
-            body = member.Expression;
+            if (body is MemberExpression member)
+            {
+                segments.Push(member.Member.Name);
+                body = member.Expression;
+            }
+            else
+            {
+                // Indexer access: get_Item(int) call, IndexExpression, or ArrayIndex
+                int index = ExtractIndexFromExpression(body!);
+                Expression inner = GetObjectFromExpression(body!);
+
+                if (inner is MemberExpression collectionMember)
+                {
+                    segments.Push($"{collectionMember.Member.Name}[{index}]");
+                    body = collectionMember.Expression;
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        "Unsupported expression. Indexer must be applied to a property or field.");
+                }
+            }
         }
 
         return body switch
@@ -234,4 +356,224 @@ internal static class BinderHelpers
 
     public static string ExtractPath<T>(Expression<Func<T, object?>> expression) =>
         ExtractPath((LambdaExpression)expression);
+
+    #region Private helpers
+
+    private static bool IsIndexerAccess(Expression? expr)
+    {
+        if (expr is MethodCallExpression mce && mce.Method.Name == "get_Item"
+            && mce.Arguments.Count == 1 && mce.Arguments[0] is ConstantExpression ce
+            && ce.Type == typeof(int))
+        {
+            return true;
+        }
+
+        if (expr is IndexExpression idx && idx.Arguments.Count == 1
+            && idx.Arguments[0] is ConstantExpression ce2 && ce2.Type == typeof(int))
+        {
+            return true;
+        }
+
+        if (expr is BinaryExpression { NodeType: ExpressionType.ArrayIndex } bin
+            && bin.Right is ConstantExpression ce3 && ce3.Type == typeof(int))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static int ExtractIndexFromExpression(Expression expr)
+    {
+        if (expr is MethodCallExpression mce)
+        {
+            return (int)((ConstantExpression)mce.Arguments[0]).Value!;
+        }
+
+        if (expr is IndexExpression idx)
+        {
+            return (int)((ConstantExpression)idx.Arguments[0]).Value!;
+        }
+
+        if (expr is BinaryExpression bin)
+        {
+            return (int)((ConstantExpression)bin.Right).Value!;
+        }
+
+        throw new InvalidOperationException("Unsupported indexer expression type.");
+    }
+
+    private static Expression GetObjectFromExpression(Expression expr)
+    {
+        if (expr is MethodCallExpression mce)
+        {
+            return mce.Object!;
+        }
+
+        if (expr is IndexExpression idx)
+        {
+            return idx.Object!;
+        }
+
+        if (expr is BinaryExpression bin)
+        {
+            return bin.Left;
+        }
+
+        throw new InvalidOperationException("Unsupported indexer expression type.");
+    }
+
+    /// <summary>
+    /// Builds an expression that accesses an element by integer index, with null propagation
+    /// on the collection. If the collection is null, the result is default(elementType).
+    /// </summary>
+    private static Expression BuildIndexAccess(Expression collection, int index)
+    {
+        Type collectionType = collection.Type;
+        ConstantExpression indexExpr = Expression.Constant(index);
+
+        Expression rawAccess;
+        Type elementType;
+
+        if (collectionType.IsArray)
+        {
+            elementType = collectionType.GetElementType()!;
+            rawAccess = Expression.ArrayIndex(collection, indexExpr);
+        }
+        else
+        {
+            PropertyInfo? indexer = FindIntIndexer(collectionType);
+            if (indexer == null)
+            {
+                throw new InvalidOperationException(
+                    $"Type '{collectionType.Name}' does not have an integer indexer.");
+            }
+            elementType = indexer.PropertyType;
+            rawAccess = Expression.MakeIndex(collection, indexer, new[] { indexExpr });
+        }
+
+        // Null propagation on the collection
+        if (!collectionType.IsValueType)
+        {
+            Expression testNull = Expression.Equal(collection, Expression.Constant(null, collectionType));
+            Expression ifNull = Expression.Default(elementType);
+            return Expression.Condition(testNull, ifNull, rawAccess);
+        }
+
+        return rawAccess;
+    }
+
+    private static Expression BuildIndexAccessWithNullPropagation(Expression collection, int index)
+    {
+        Type collectionType = collection.Type;
+        ConstantExpression indexExpr = Expression.Constant(index);
+
+        Expression rawAccess;
+        Type elementType;
+
+        if (collectionType.IsArray)
+        {
+            elementType = collectionType.GetElementType()!;
+            rawAccess = Expression.ArrayIndex(collection, indexExpr);
+        }
+        else
+        {
+            PropertyInfo? indexer = FindIntIndexer(collectionType);
+            if (indexer == null)
+            {
+                throw new InvalidOperationException(
+                    $"Type '{collectionType.Name}' does not have an integer indexer.");
+            }
+            elementType = indexer.PropertyType;
+            rawAccess = Expression.MakeIndex(collection, indexer, new[] { indexExpr });
+        }
+
+        // Null propagation: if collection is null, return null (for ref types) or default
+        if (!collectionType.IsValueType)
+        {
+            Expression testNull = Expression.Equal(collection, Expression.Constant(null, collectionType));
+            Expression ifNull = Expression.Default(elementType);
+            return Expression.Condition(testNull, ifNull, rawAccess);
+        }
+
+        return rawAccess;
+    }
+
+    private static Expression BuildIndexSetExpression(Expression collection, int index, Expression value)
+    {
+        Type collectionType = collection.Type;
+        ConstantExpression indexExpr = Expression.Constant(index);
+
+        if (collectionType.IsArray)
+        {
+            Expression arrayAccess = Expression.ArrayAccess(collection, indexExpr);
+            return Expression.Assign(arrayAccess, value);
+        }
+        else
+        {
+            PropertyInfo? indexer = FindIntIndexer(collectionType);
+            if (indexer == null)
+            {
+                throw new InvalidOperationException(
+                    $"Type '{collectionType.Name}' does not have an integer indexer.");
+            }
+            MethodInfo setter = indexer.SetMethod
+                ?? throw new InvalidOperationException(
+                    $"Indexer on type '{collectionType.Name}' does not have a setter.");
+            return Expression.Call(collection, setter, indexExpr, value);
+        }
+    }
+
+    private static Expression BuildValueConversion(ParameterExpression valueParam, Type memberType)
+    {
+        if (memberType.IsValueType && Nullable.GetUnderlyingType(memberType) == null)
+        {
+            // T is a non-nullable value type
+            Expression isNullValue = Expression.Equal(
+                valueParam,
+                Expression.Constant(null, typeof(object))
+            );
+            Expression defaultValue = Expression.Default(memberType);
+            Expression converted = Expression.Convert(valueParam, memberType);
+            return Expression.Condition(isNullValue, defaultValue, converted);
+        }
+        else
+        {
+            // nullable<T> or reference: just convert
+            return Expression.Convert(valueParam, memberType);
+        }
+    }
+
+    private static PropertyInfo? FindIntIndexer(Type type)
+    {
+        // Look for a property with an int index parameter (the standard C# indexer named "Item")
+        foreach (PropertyInfo prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+        {
+            ParameterInfo[] indexParams = prop.GetIndexParameters();
+            if (indexParams.Length == 1 && indexParams[0].ParameterType == typeof(int))
+            {
+                return prop;
+            }
+        }
+
+        return null;
+    }
+
+    private static Type GetElementType(Type collectionType)
+    {
+        if (collectionType.IsArray)
+        {
+            return collectionType.GetElementType()!;
+        }
+
+        PropertyInfo? indexer = FindIntIndexer(collectionType);
+        if (indexer != null)
+        {
+            return indexer.PropertyType;
+        }
+
+        return typeof(object);
+    }
+
+    #endregion
 }
