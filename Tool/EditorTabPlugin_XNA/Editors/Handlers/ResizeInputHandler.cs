@@ -54,6 +54,8 @@ public class ResizeInputHandler : InputHandlerBase
 
     public override Cursor? GetCursorToShow(float worldX, float worldY)
     {
+        if (IsSideEffectivelyDisabled(_sideOver)) return null;
+
         return _sideOver switch
         {
             ResizeSide.TopLeft or ResizeSide.BottomRight => System.Windows.Forms.Cursors.SizeNWSE,
@@ -62,6 +64,37 @@ public class ResizeInputHandler : InputHandlerBase
             ResizeSide.Left or ResizeSide.Right => System.Windows.Forms.Cursors.SizeWE,
             _ => null
         };
+    }
+
+    /// <summary>
+    /// Returns true if dragging the given side would produce no change, using the exact
+    /// same shouldDisableX/shouldDisableY logic as OnDrag. Accounts for object origin
+    /// (e.g. a Right handle on a left-origin object has changeXMultiplier=0, so X locking
+    /// does not disable it).
+    /// </summary>
+    private bool IsSideEffectivelyDisabled(ResizeSide side)
+    {
+        if (side == ResizeSide.None) return false;
+
+        var elementStack = Context.SelectedState.GetTopLevelElementStack();
+        var instanceSave = Context.SelectedState.SelectedInstance;
+
+        CalculateMultipliers(side, instanceSave, elementStack,
+            out float changeXMultiplier, out float changeYMultiplier,
+            out float widthMultiplier, out float heightMultiplier);
+
+        var shouldDisableX = (Context.IsXMovementEnabled == false && changeXMultiplier != 0) ||
+            (Context.IsWidthChangeEnabled == false && widthMultiplier != 0);
+        var shouldDisableY = (Context.IsYMovementEnabled == false && changeYMultiplier != 0) ||
+            (Context.IsHeightChangeEnabled == false && heightMultiplier != 0);
+
+        // A side is disabled if all of its affected axes would be zeroed out.
+        // For sides that only affect one axis (Left/Right or Top/Bottom) the other
+        // axis multipliers are 0, so we must treat "not affected" as "not a problem".
+        bool xFullyDisabled = shouldDisableX || (changeXMultiplier == 0 && widthMultiplier == 0);
+        bool yFullyDisabled = shouldDisableY || (changeYMultiplier == 0 && heightMultiplier == 0);
+
+        return xFullyDisabled && yFullyDisabled;
     }
 
     public override void UpdateHover(float worldX, float worldY)
@@ -290,6 +323,17 @@ public class ResizeInputHandler : InputHandlerBase
         out float changeXMultiplier,
         out float changeYMultiplier,
         out float widthMultiplier,
+        out float heightMultiplier) =>
+        CalculateMultipliers(_sideGrabbed, instanceSave, elementStack,
+            out changeXMultiplier, out changeYMultiplier, out widthMultiplier, out heightMultiplier);
+
+    private void CalculateMultipliers(
+        ResizeSide side,
+        InstanceSave? instanceSave,
+        List<ElementWithState> elementStack,
+        out float changeXMultiplier,
+        out float changeYMultiplier,
+        out float widthMultiplier,
         out float heightMultiplier)
     {
         changeXMultiplier = 0;
@@ -303,7 +347,7 @@ public class ResizeInputHandler : InputHandlerBase
 
         if (ipso == null) return;
 
-        switch (_sideGrabbed)
+        switch (side)
         {
             case ResizeSide.TopLeft:
                 changeXMultiplier = GetXMultiplierForLeft(instanceSave, ipso);

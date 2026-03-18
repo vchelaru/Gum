@@ -798,7 +798,10 @@ public class ElementSaveDisplayer
 
         if (shouldInclude && instanceSave != null)
         {
-            if (ObjectFinder.Self.IsVariableHiddenRecursively(elementSave, defaultVariable.Name))
+            var hiddenCheckName = !string.IsNullOrEmpty(defaultVariable.ExposedAsName)
+                ? defaultVariable.ExposedAsName
+                : defaultVariable.Name;
+            if (ObjectFinder.Self.IsVariableHiddenRecursively(elementSave, hiddenCheckName))
             {
                 var qualifiedName = instanceSave.Name + "." + defaultVariable.Name;
                 var currentState = _selectedState.SelectedStateSave;
@@ -876,7 +879,10 @@ public class ElementSaveDisplayer
 
             var propertySubtext = _subtextLogic.GetDefaultSubtext(defaultVariable, subtext, name, elementSave, instanceSave);
 
-            if (instanceSave == null && elementSave.VariablesHiddenFromInstances?.Contains(defaultVariable.Name) == true)
+            var hiddenIndicatorName = !string.IsNullOrEmpty(defaultVariable.ExposedAsName)
+                ? defaultVariable.ExposedAsName
+                : defaultVariable.Name;
+            if (instanceSave == null && elementSave.VariablesHiddenFromInstances?.Contains(hiddenIndicatorName) == true)
             {
                 var hiddenText = "Hidden from instances";
                 propertySubtext = string.IsNullOrEmpty(propertySubtext)
