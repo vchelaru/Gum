@@ -3,12 +3,6 @@
   <Name>Component</Name>
   <State>
     <Name>Default</Name>
-    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true">
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>

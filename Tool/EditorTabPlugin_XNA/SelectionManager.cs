@@ -11,15 +11,12 @@ using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe.Editors;
-using HarfBuzzSharp;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.RightsManagement;
 using System.Windows.Forms;
 using System.Windows.Input;
 using Color = System.Drawing.Color;
@@ -38,26 +35,6 @@ public interface ISelectionManager
 
 public class SelectionManager : ISelectionManager
 {
-    #region GetFocusedControl interop implementation
-
-    [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.Winapi)]
-    internal static extern IntPtr GetFocus();
-
-    private Control GetFocusedControl()
-    {
-        Control focusedControl = null;
-        // To get hold of the focused control:
-        IntPtr focusedHandle = GetFocus();
-        if (focusedHandle != IntPtr.Zero)
-            // Note that if the focused Control is not a .Net control, then this will return null.
-            focusedControl = Control.FromHandle(focusedHandle);
-        return focusedControl;
-    }
-
-
-
-    #endregion
-
     #region Fields
 
     LayerService _layerService;
@@ -73,7 +50,7 @@ public class SelectionManager : ISelectionManager
     private RectangleSelector? _rectangleSelector;
 
     List<GraphicalUiElement> mSelectedIpsos = new List<GraphicalUiElement>();
-    IPositionedSizedObject? mHighlightedIpso;
+    GraphicalUiElement? mHighlightedIpso;
 
     public event Action<IPositionedSizedObject?>? HighlightedIpsoChanged;
 
@@ -155,7 +132,7 @@ public class SelectionManager : ISelectionManager
         }
     }
 
-    public IPositionedSizedObject? HighlightedIpso
+    public GraphicalUiElement? HighlightedIpso
     {
         get
         {
@@ -168,12 +145,12 @@ public class SelectionManager : ISelectionManager
             {
                 if (mHighlightedIpso != null)
                 {
-                    highlightManager.UnhighlightIpso(mHighlightedIpso as GraphicalUiElement);
+                    highlightManager.UnhighlightIpso(mHighlightedIpso);
                 }
 
                 mHighlightedIpso = value;
 
-                mGraphicalOutline.HighlightedIpso = mHighlightedIpso as GraphicalUiElement;
+                mGraphicalOutline.HighlightedIpso = mHighlightedIpso;
 
                 HighlightedIpsoChanged?.Invoke(value);
             }
@@ -446,7 +423,7 @@ public class SelectionManager : ISelectionManager
             float worldXAt = Cursor.GetWorldX();
             float worldYAt = Cursor.GetWorldY();
 
-            IPositionedSizedObject representationOver = null;
+            GraphicalUiElement? representationOver = null;
 
             if (_editingManager.ContextMenu?.IsOpen == true)
             {
@@ -490,7 +467,7 @@ public class SelectionManager : ISelectionManager
 
                     if (representationOver != null)
                     {
-                        var isRepresentationLocked = (representationOver as GraphicalUiElement)?.Tag is InstanceSave lockedInst && lockedInst.Locked;
+                        var isRepresentationLocked = representationOver?.Tag is InstanceSave lockedInst && lockedInst.Locked;
                         IsOverBody = !isRepresentationLocked;
                         if (!isRepresentationLocked && WireframeEditor != null)
                             cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
@@ -503,12 +480,12 @@ public class SelectionManager : ISelectionManager
             }
 
 
-            if (representationOver != null && representationOver is NineSlice)
+            if (representationOver != null && representationOver.RenderableComponent is NineSlice nineslice)
             {
                 // This function updates the sizes and texture coordinates of the 
                 // highlighted representation if it's a NineSlice.  This is needed before
                 // we set the HighlightedIpso and before we update the highlight objects
-                (representationOver as NineSlice).RefreshTextureCoordinatesAndSpriteSizes();
+                nineslice.RefreshTextureCoordinatesAndSpriteSizes();
             }
 
 
@@ -1010,6 +987,22 @@ public class SelectionManager : ISelectionManager
                 {
                     _rectangleSelector.HandleRelease();
                 }
+            }
+        }
+
+        // Handle off-canvas drag/release while a rectangle selection is in progress.
+        // cursor.PrimaryDown and PrimaryClick both require IsInWindow, so neither fires
+        // once the cursor leaves the canvas. Detect that state here and either continue
+        // updating the rectangle bounds or finalise the selection.
+        if (_rectangleSelector?.IsActive == true && !cursor.IsInWindow)
+        {
+            if (cursor.PrimaryDownIgnoringIsInWindow)
+            {
+                _rectangleSelector.HandleDrag(isHandlerActive: false);
+            }
+            else
+            {
+                _rectangleSelector.HandleRelease();
             }
         }
     }

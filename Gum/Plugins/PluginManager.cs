@@ -591,7 +591,7 @@ public class PluginManager : IPluginManager
         CallMethodOnPlugin(plugin => plugin.CallReactToFileChanged(filePath));
     
 
-    public void SetHighlightedIpso(IPositionedSizedObject? positionedSizedObject) =>
+    public void SetHighlightedIpso(GraphicalUiElement? positionedSizedObject) =>
         CallMethodOnPlugin(plugin => plugin.CallSetHighlightedIpso(positionedSizedObject));
 
     public void HighlightTreeNode(IPositionedSizedObject? positionedSizedObject) =>

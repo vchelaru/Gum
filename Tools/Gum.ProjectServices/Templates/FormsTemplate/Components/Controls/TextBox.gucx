@@ -131,10 +131,6 @@
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
     </Variable>
-    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
     <Variable Type="LineModeCategory" Name="LineModeCategoryState" SetsValue="false" />
     <Variable Type="ColorCategory" Name="PlaceholderTextInstance.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Gray</Value>
@@ -400,4 +396,10 @@
       <BehaviorName>TextBoxBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>LineModeCategoryState</string>
+    <string>TextBoxCategoryState</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>

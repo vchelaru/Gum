@@ -164,12 +164,6 @@
     <Variable Type="PositionUnitType" Name="IconInstance3.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
     <Variable Type="float" Name="Key0.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -1856,4 +1850,9 @@
       <BehaviorName>OnScreenKeyboardBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>CursorMoveCategoryState</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>

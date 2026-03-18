@@ -209,10 +209,6 @@
     <Variable Type="PositionUnitType" Name="InnerPanelInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
     <Variable Type="ItemsControlCategory" Name="ItemsControlCategoryState" SetsValue="false" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="string" Name="VerticalScrollBarInstance.Parent" SetsValue="true">
@@ -276,4 +272,9 @@
       <BehaviorName>ItemsControlBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ItemsControlCategoryState</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>

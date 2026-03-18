@@ -72,10 +72,6 @@
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
-    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
@@ -212,4 +208,9 @@
       <BehaviorName>ButtonBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ButtonCategoryState</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>

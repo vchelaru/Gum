@@ -13,7 +13,6 @@
     <Variable Type="DimensionUnitType" Name="HeightUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="StyleCategory" Name="StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Strong</Value>
@@ -30,4 +29,8 @@
       <BehaviorName>LabelBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>

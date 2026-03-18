@@ -15,7 +15,7 @@ namespace Gum.Wireframe
         #region Fields
 
         List<LineRectangle> mHighlightRectangles = new List<LineRectangle>();
-        GraphicalUiElement mHighlightedIpso;
+        GraphicalUiElement? mHighlightedIpso;
         Layer mUiLayer;
         #endregion
 
@@ -27,7 +27,7 @@ namespace Gum.Wireframe
             set;
         }
 
-        public GraphicalUiElement HighlightedIpso
+        public GraphicalUiElement? HighlightedIpso
         {
             set
             {

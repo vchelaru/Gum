@@ -146,10 +146,6 @@
     <Variable Type="DimensionUnitType" Name="InnerPanelInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
     <Variable Type="ScrollBarVisibility" Name="ScrollBarVisibilityState" SetsValue="false" />
     <Variable Type="ScrollViewerCategory" Name="ScrollViewerCategoryState" SetsValue="true" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
@@ -289,4 +285,8 @@
       <BehaviorName>ScrollViewerBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>

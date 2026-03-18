@@ -121,10 +121,6 @@
     <Variable Type="PositionUnitType" Name="IconInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="float" Name="VerticalLinesInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -191,4 +187,9 @@
   <Instance Name="CautionLinesInstance" BaseType="Elements/CautionLines" />
   <Instance Name="VerticalLinesInstance" BaseType="Elements/VerticalLines" />
   <Behaviors />
+  <VariablesHiddenFromInstances>
+    <string>BarDecorCategoryState</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>

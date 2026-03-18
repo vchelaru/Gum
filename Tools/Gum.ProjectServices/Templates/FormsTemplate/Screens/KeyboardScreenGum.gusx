@@ -3,10 +3,6 @@
   <Name>KeyboardScreenGum</Name>
   <State>
     <Name>Default</Name>
-    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
     <Variable Type="float" Name="KeyboardInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">221</Value>
     </Variable>

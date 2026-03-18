@@ -159,7 +159,7 @@ public class VariableSaveLogic : IVariableSaveLogic
     }
 
     /// <inheritdoc/>
-    public bool GetShouldIncludeBasedOnBaseType(VariableListSave variableList, ElementSave container, StandardElementSave rootElementSave)
+    public bool GetShouldIncludeBasedOnBaseType(VariableListSave variableList, ElementSave container, StandardElementSave? rootElementSave)
     {
         bool shouldInclude = false;
 

@@ -10,10 +10,6 @@
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">16</Value>
     </Variable>
-    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true" />
     <Variable Type="int" Name="LinesSprite.Alpha" ExposedAsName="LineAlpha" SetsValue="false" />
     <Variable Type="ColorCategory" Name="LinesSprite.ColorCategoryState" ExposedAsName="LineColor" SetsValue="false" />
     <Variable IsFile="true" Type="string" Name="LinesSprite.SourceFile" SetsValue="true">
@@ -57,4 +53,8 @@
   </State>
   <Instance Name="LinesSprite" BaseType="Sprite" />
   <Behaviors />
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>
