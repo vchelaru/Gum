@@ -50,7 +50,6 @@
   <RestrictToUnitValues>true</RestrictToUnitValues>
   <RestrictFileNamesForAndroid>false</RestrictFileNamesForAndroid>
   <Guides />
-  <FavoriteComponents />
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
   <StandardElementReference Name="Circle" />

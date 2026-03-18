@@ -39,6 +39,9 @@
     <Variable Type="bool" Name="IgnoredByParentSize" Category="Parent" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="bool" Name="IsTilingMiddleSections" Category="Source" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="float?" Name="MaxHeight" Category="Dimensions" SetsValue="true" />
     <Variable Type="float?" Name="MaxWidth" Category="Dimensions" SetsValue="true" />
     <Variable Type="float?" Name="MinHeight" Category="Dimensions" SetsValue="true" />
