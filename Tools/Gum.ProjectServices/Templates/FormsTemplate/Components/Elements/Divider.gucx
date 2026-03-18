@@ -290,4 +290,8 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>

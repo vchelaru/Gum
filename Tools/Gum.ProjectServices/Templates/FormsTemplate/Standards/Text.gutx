@@ -50,12 +50,6 @@
     <Variable Type="bool" Name="IsItalic" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
-    <Variable Type="bool" Name="IsOverrideInCodeGen" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="bool" Name="IsXamarinFormsControl" Category="Xamarin Forms" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
     <Variable Type="float" Name="LineHeightMultiplier" Category="Text" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
