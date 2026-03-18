@@ -99,8 +99,8 @@ public partial class ListBoxDisplay : UserControl, IDataUi
             });
 
 
-            //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
-            //HintTextBlock.Text = InstanceMember?.DetailText;
+            HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
+            HintTextBlock.Text = InstanceMember?.DetailText;
             TrySetValueOnUi(InstanceMember?.Value);
             RefreshIsEnabled();
 
@@ -473,10 +473,10 @@ public partial class ListBoxDisplay : UserControl, IDataUi
 
     private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(InstanceMember.Value))
+        if (e.PropertyName == nameof(InstanceMember.Value) ||
+            e.PropertyName == nameof(InstanceMember.DetailText))
         {
             this.Refresh();
-
         }
     }
 
