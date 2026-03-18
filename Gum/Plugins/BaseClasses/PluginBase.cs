@@ -222,7 +222,7 @@ public abstract class PluginBase : IPlugin
     // Parameters are: extension, parentElement, instance, changedMember
     public event Func<string, ElementSave, InstanceSave, string, bool>? IsExtensionValid;
 
-    public event Action<IPositionedSizedObject?>? SetHighlightedIpso;
+    public event Action<GraphicalUiElement?>? SetHighlightedIpso;
     public event Action<IPositionedSizedObject?>? HighlightTreeNode;
     public event Action<IPositionedSizedObject?>? IpsoSelected;
     public event Func<IEnumerable<IPositionedSizedObject>?> GetSelectedIpsos;
@@ -521,7 +521,7 @@ public abstract class PluginBase : IPlugin
     public bool CallIsExtensionValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember) =>
         IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;
 
-    public void CallSetHighlightedIpso(IPositionedSizedObject? element) =>
+    public void CallSetHighlightedIpso(GraphicalUiElement? element) =>
         SetHighlightedIpso?.Invoke(element);
 
     public void CallHighlightTreeNode(IPositionedSizedObject? ipso) =>

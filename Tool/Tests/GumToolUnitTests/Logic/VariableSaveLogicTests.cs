@@ -115,7 +115,7 @@ public class VariableSaveLogicTests : BaseTestClass
     public void IsVariableHiddenForInstance_HiddenListEmpty_ReturnsFalse()
     {
         ComponentSave component = new ComponentSave { Name = "Button" };
-        ObjectFinder.Self.GumProjectSave.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave!.Components.Add(component);
 
         InstanceSave instance = new InstanceSave { Name = "ButtonInstance", BaseType = "Button" };
 
@@ -129,7 +129,7 @@ public class VariableSaveLogicTests : BaseTestClass
     {
         ComponentSave component = new ComponentSave { Name = "Button" };
         component.VariablesHiddenFromInstances.Add("ButtonCategoryState");
-        ObjectFinder.Self.GumProjectSave.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave!.Components.Add(component);
 
         InstanceSave instance = new InstanceSave { Name = "ButtonInstance", BaseType = "Button" };
 

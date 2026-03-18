@@ -174,6 +174,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _uiSettingsService = Locator.GetRequiredService<IUiSettingsService>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
 
+        _layerService = new Services.LayerService();
+
         _selectionManager = new SelectionManager(
             _selectedState,
             undoManager,
@@ -393,7 +395,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     }
 
-    private void HandleSetHighlightedElement(IPositionedSizedObject? whatToHighlight)
+    private void HandleSetHighlightedElement(GraphicalUiElement? whatToHighlight)
     {
         _selectionManager.HighlightedIpso = whatToHighlight;
     }
@@ -688,7 +690,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     {
         _scrollbarService.HandleWireframeInitialized(_wireframeControl, gumEditorPanel);
 
-        _layerService = new Services.LayerService();
 
         _wireframeControl.Initialize(
             gumEditorPanel, 
