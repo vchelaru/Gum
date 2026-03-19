@@ -397,6 +397,34 @@ public abstract class RenderableShapeBase : RenderableBase
         }
     }
 
+    float _strokeDashLength;
+    /// <summary>
+    /// Length of each dash segment in pixels when using a dashed stroke.
+    /// A value of 0 (the default) produces a solid stroke.
+    /// </summary>
+    public float StrokeDashLength
+    {
+        get => _strokeDashLength;
+        set
+        {
+            _strokeDashLength = value;
+        }
+    }
+
+    float _strokeGapLength;
+    /// <summary>
+    /// Length of each gap between dashes in pixels when using a dashed stroke.
+    /// Ignored when <see cref="StrokeDashLength"/> is 0.
+    /// </summary>
+    public float StrokeGapLength
+    {
+        get => _strokeGapLength;
+        set
+        {
+            _strokeGapLength = value;
+        }
+    }
+
     public override void PreRender()
     {
         //do nothing?

@@ -458,6 +458,42 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         }
     }
 
+    float _strokeDashLength;
+    /// <summary>
+    /// Length of each dash segment in pixels when using a dashed stroke.
+    /// A value of 0 (the default) produces a solid stroke.
+    /// </summary>
+    public float StrokeDashLength
+    {
+        get => _strokeDashLength;
+        set
+        {
+            if (value != _strokeDashLength)
+            {
+                _strokeDashLength = value;
+                ClearCachedPaint();
+            }
+        }
+    }
+
+    float _strokeGapLength;
+    /// <summary>
+    /// Length of each gap between dashes in pixels when using a dashed stroke.
+    /// Ignored when <see cref="StrokeDashLength"/> is 0.
+    /// </summary>
+    public float StrokeGapLength
+    {
+        get => _strokeGapLength;
+        set
+        {
+            if (value != _strokeGapLength)
+            {
+                _strokeGapLength = value;
+                ClearCachedPaint();
+            }
+        }
+    }
+
     #region Dropshadow
 
     SKColor _dropshadowColor;
@@ -726,6 +762,12 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         if (UseGradient)
         {
             ApplyGradientToPaint(boundingRect, paint, absoluteRotation);
+        }
+
+        if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0)
+        {
+            paint.PathEffect = SKPathEffect.CreateDash(
+                new[] { StrokeDashLength, StrokeGapLength }, phase: 0);
         }
 
         return paint;

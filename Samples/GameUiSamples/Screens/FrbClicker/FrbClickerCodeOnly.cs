@@ -15,7 +15,6 @@ namespace GameUiSamples.Screens.FrbClicker;
 public class FrbClickerCodeOnly : Panel, IUpdateScreen
 {
     FrbScreenViewModel ViewModel => (FrbScreenViewModel)BindingContext;
-    Button ManualClickButton;
     ToolTip toolTip = new ToolTip();
     BallButtonRuntime BallButton;
 

@@ -60,7 +60,7 @@ namespace Gum.DataTypes
             foreach (ScreenSave screenSave in gumProjectSave.Screens)
             {
                 var stateSave = StandardElementsManager.Self.GetDefaultStateFor("Screen");
-                wasModified = screenSave.Initialize(stateSave) || wasModified;
+                wasModified = screenSave.Initialize(stateSave, tolerateMissingDefaultStates) || wasModified;
             }
 
 
@@ -263,7 +263,7 @@ namespace Gum.DataTypes
         {
             foreach (var element in gumProjectSave.StandardElements)
             {
-                var defaultState = StandardElementsManager.Self.GetDefaultStateFor(element.Name);
+                var defaultState = StandardElementsManager.Self.GetDefaultStateFor(element.Name, throwExceptionOnMissing:false);
                 if(defaultState != null)
                 {
                     foreach (var variable in defaultState.Variables)

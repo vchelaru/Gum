@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace FnaSample.Screens
 {
-    partial class MainScreenRuntime : Gum.Wireframe.BindableGue
+    partial class MainScreenRuntime 
     {
         partial void CustomInitialize()
         {

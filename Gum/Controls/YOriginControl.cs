@@ -3,7 +3,6 @@ using Gum.Managers;
 using RenderingLibrary.Graphics;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Media.Imaging;
 using static WpfDataUi.Controls.ToggleButtonOptionDisplay;
 
 namespace Gum.Controls
@@ -48,54 +47,32 @@ namespace Gum.Controls
 
         private static void CreateCachedOptions()
         {
-            BitmapImage topBitmap =
-                CreateBitmapFromFile("Content/Icons/Origins/TopOrigin.png");
-
-            BitmapImage centerBitmap =
-                CreateBitmapFromFile("Content/Icons/Origins/CenterOrigin.png");
-
-            BitmapImage bottomBitmap =
-                CreateBitmapFromFile("Content/Icons/Origins/BottomOrigin.png");
-
-            BitmapImage baselineBitmap =
-                CreateBitmapFromFile("Content/Icons/Origins/Baseline.png");
-
             cachedOptions = new Option[]
             {
                     new Option
                     {
                         Name = "Top",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                        Image = topBitmap,
-                        IconName = "AlignTop",
                         GumIconName = "YOriginStart"
-
                     },
                     new Option
                     {
                         Name = "Center",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                        Image = centerBitmap,
-                        IconName = "AlignCenterHorizontal",
                         GumIconName = "YOriginCenter"
                     },
                     new Option
                     {
                         Name = "Bottom",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                        Image = bottomBitmap,
-                        IconName = "AlignBottom",
                         GumIconName = "YOriginEnd"
                     },
                     new Option
                     {
                         Name = "Baseline",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.TextBaseline,
-                        Image = baselineBitmap,
-                        IconName = "TextboxAlignBottom",
                         GumIconName = "YOriginBaseline"
                     }
-
             };
         }
     }
