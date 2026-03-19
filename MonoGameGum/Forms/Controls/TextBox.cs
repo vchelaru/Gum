@@ -73,10 +73,12 @@ public class TextBox : TextBoxBase
         }
     }
 
-#if !RAYLIB
     /// <summary>
-    /// The maximum letters to display. This can be used to 
-    /// create an effect where the text prints out letter-by-letter.
+    /// The maximum number of characters to display visually. Characters beyond this count
+    /// are hidden but remain in the <see cref="Text"/> string. This is a display-only
+    /// property useful for typewriter-style effects where text prints out letter-by-letter.
+    /// It does <em>not</em> restrict how many characters the user can type.
+    /// To limit input length, use <see cref="MaxLength"/> instead.
     /// </summary>
     public virtual int? MaxLettersToShow
     {
@@ -89,7 +91,6 @@ public class TextBox : TextBoxBase
             }
         }
     }
-#endif
 
     /// <summary>
     /// The maximum number of lines to display. This can be used to 

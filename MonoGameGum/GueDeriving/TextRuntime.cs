@@ -156,10 +156,11 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.VerticalAlignment = value;
     }
 
-#if !RAYLIB && !SKIA
+#if !SKIA
     /// <summary>
-    /// The maximum letters to display. This can be used to 
-    /// create an effect where the text prints out letter-by-letter.
+    /// The maximum number of characters to display visually. Characters beyond this count
+    /// are hidden but remain in the text string. This is a display-only
+    /// property useful for typewriter-style effects where text prints out letter-by-letter.
     /// </summary>
     public int? MaxLettersToShow
     {

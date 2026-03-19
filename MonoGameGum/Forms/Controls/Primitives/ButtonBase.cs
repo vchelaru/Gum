@@ -78,7 +78,11 @@ public class ButtonBase :
     /// The "push" terminology comes from the Cursor's PrimaryPush property.
     /// </summary>
     public event EventHandler Push;
-    public event Action<IInputReceiver> FocusUpdate;
+    /// <summary>
+    /// Raised every frame while this control has input focus. Can be used
+    /// to perform custom per-frame logic while the control is focused.
+    /// </summary>
+    public event Action<IInputReceiver>? FocusUpdate;
 
     /// <summary>
     /// Event raised when any button is pressed on an Xbox360GamePad which is being used by the 
