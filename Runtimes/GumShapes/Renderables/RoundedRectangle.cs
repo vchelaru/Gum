@@ -19,6 +19,7 @@ public class RoundedRectangle : RenderableShapeBase
 
         var absoluteLeft = this.GetAbsoluteLeft();
         var absoluteTop = this.GetAbsoluteTop();
+        var rotationRadians = MathHelper.ToRadians(-this.GetAbsoluteRotation());
 
         var size = new Microsoft.Xna.Framework.Vector2(Width, Height);
 
@@ -32,24 +33,27 @@ public class RoundedRectangle : RenderableShapeBase
             dropshadowSize.X -= DropshadowBlurX;
             dropshadowSize.Y -= DropshadowBlurX;
 
-            RenderInternal(sb, shadowLeft, shadowTop, dropshadowSize, 
-                MathFunctions.RoundToInt(DropshadowBlurX), 
+            RenderInternal(sb, shadowLeft, shadowTop, dropshadowSize,
+                MathFunctions.RoundToInt(DropshadowBlurX),
                 StrokeWidth - DropshadowBlurX,
+                rotationRadians,
                 forcedColor: DropshadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, size, 1, StrokeWidth);
+        RenderInternal(sb, absoluteLeft, absoluteTop, size, 1, StrokeWidth, rotationRadians);
     }
 
-    private void RenderInternal(Apos.Shapes.ShapeBatch sb, 
-        float absoluteLeft, 
-        float absoluteTop, 
-        Vector2 size, 
-        int antiAliasSize, 
+    private void RenderInternal(Apos.Shapes.ShapeBatch sb,
+        float absoluteLeft,
+        float absoluteTop,
+        Vector2 size,
+        int antiAliasSize,
         float strokeWidth,
+        float rotationRadians,
         Color? forcedColor = null)
     {
-        var position = new Microsoft.Xna.Framework.Vector2(absoluteLeft, absoluteTop);
+        var position = AdjustPositionForCenterRotation(
+            new Vector2(absoluteLeft, absoluteTop), size, rotationRadians);
 
         int thickness = 1;
 
@@ -71,7 +75,7 @@ public class RoundedRectangle : RenderableShapeBase
                     gradient,
                     thickness,
                     CornerRadius,
-                    0,
+                    rotationRadians,
                     antiAliasSize);
             }
             else
@@ -83,7 +87,7 @@ public class RoundedRectangle : RenderableShapeBase
                     forcedColor ?? Color,
                     thickness,
                     CornerRadius,
-                    0,
+                    rotationRadians,
                     antiAliasSize);
             }
         }
@@ -104,7 +108,7 @@ public class RoundedRectangle : RenderableShapeBase
                     gradient,
                     strokeWidth,
                     CornerRadius,
-                    0,
+                    rotationRadians,
                     antiAliasSize);
             }
             else
@@ -120,7 +124,7 @@ public class RoundedRectangle : RenderableShapeBase
                     color,
                     strokeWidth,
                     CornerRadius,
-                    0,
+                    rotationRadians,
                     antiAliasSize);
             }
         }

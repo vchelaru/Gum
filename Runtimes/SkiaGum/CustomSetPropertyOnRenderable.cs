@@ -199,6 +199,17 @@ public class CustomSetPropertyOnRenderable
         return false;
     }
 
+    private static bool TrySetPropertyOnLine(Line asLine, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        switch (propertyName)
+        {
+            case nameof(Line.IsRounded):
+                asLine.IsRounded = (bool)value;
+                return true;
+        }
+        return false;
+    }
+
     private static bool TrySetPropertyOnRoundedRectangle(RoundedRectangle asRoundedRectangle, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         switch (propertyName) 
@@ -254,6 +265,31 @@ public class CustomSetPropertyOnRenderable
             if(!handled)
             {
                 handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
+            }
+        }
+        else if (containedObjectAsIpso is Line asLine)
+        {
+            switch (propertyName)
+            {
+                case nameof(LineRuntime.StrokeWidth):
+                    if (graphicalUiElement is LineRuntime asLineRuntime)
+                    {
+                        asLineRuntime.StrokeWidth = (float)value;
+                    }
+                    else
+                    {
+                        asLine.StrokeWidth = (float)value;
+                    }
+                    handled = true;
+                    break;
+            }
+            if (!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asLine, graphicalUiElement, propertyName, value);
+            }
+            if (!handled)
+            {
+                handled = TrySetPropertyOnLine(asLine, graphicalUiElement, propertyName, value);
             }
         }
         else if (containedObjectAsIpso is Circle asCircle)

@@ -37,6 +37,10 @@ public abstract class AposShapeRuntime : GraphicalUiElement
             () => new ColoredCircleRuntime());
 
         ElementSaveExtensions.RegisterGueInstantiation(
+            "Line",
+            () => new LineRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
             "RoundedRectangle",
             () => new RoundedRectangleRuntime());
 
@@ -55,6 +59,8 @@ public abstract class AposShapeRuntime : GraphicalUiElement
                 return StandardElementsManager.GetArcState();
             case "ColoredCircle":
                 return StandardElementsManager.GetColoredCircleState();
+            case "Line":
+                return StandardElementsManager.GetLineState();
             case "RoundedRectangle":
                 return StandardElementsManager.GetRoundedRectangleState();
 
