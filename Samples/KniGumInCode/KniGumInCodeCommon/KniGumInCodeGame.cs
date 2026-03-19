@@ -122,12 +122,20 @@ public class KniGumInCodeGame : Game
         var stackPanel = new StackPanel();
         stackPanel.AddToRoot();
         stackPanel.X = 300;
+        stackPanel.Spacing = 4;
 
-        for(int i = 0; i < 4; i++)
+        for(int i = 0; i < 2; i++)
         {
             var textBox = new TextBox();
             stackPanel.AddChild(textBox);
             textBox.Width = 250;
+        }
+
+        var comboBox = new ComboBox();
+        stackPanel.AddChild(comboBox);
+        for(int i = 0; i < 5; i++)
+        {
+            comboBox.Items.Add("Option " + (i + 1));
         }
 
     }
