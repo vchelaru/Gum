@@ -37,6 +37,7 @@
 		     isolated and only one backend is loaded per process run. Switch to that pattern when a
 		     second backend is introduced. -->
 		<ProjectReference Include="..\Gum.ProjectServices.MonoGame\Gum.ProjectServices.MonoGame.csproj" />
+		<ProjectReference Include="..\Gum.ProjectServices.SkiaGum\Gum.ProjectServices.SkiaGum.csproj" />
 	</ItemGroup>
 
 </Project>

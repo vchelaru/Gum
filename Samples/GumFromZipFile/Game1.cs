@@ -20,7 +20,7 @@ namespace GumFromZipFile
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-        GraphicalUiElement Root;
+        GumService GumUI => GumService.Default;
 
         Dictionary<string, byte[]> zipFileBytes = new Dictionary<string, byte[]>();
 
@@ -37,10 +37,9 @@ namespace GumFromZipFile
 
             FileManager.CustomGetStreamFromFile = GetStreamForFile;
 
-            GumService.Default.Initialize(this, "GumProject/FromZipFileGumProject.gumx");
+            GumUI.Initialize(this, "GumProject/FromZipFileGumProject.gumx");
 
-            Root = ObjectFinder.Self.GumProjectSave.Screens.First().ToGraphicalUiElement(
-                SystemManagers.Default, addToManagers: true);
+            var screen = ObjectFinder.Self.GumProjectSave.Screens.First().ToGraphicalUiElement();
 
             base.Initialize();
         }
@@ -90,7 +89,7 @@ namespace GumFromZipFile
 
         protected override void Update(GameTime gameTime)
         {
-            GumService.Default.Update(gameTime, Root);
+            GumUI.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -99,7 +98,7 @@ namespace GumFromZipFile
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            GumService.Default.Draw();
+            GumUI.Draw();
 
             base.Draw(gameTime);
         }
