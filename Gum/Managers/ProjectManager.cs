@@ -239,7 +239,9 @@ public class ProjectManager : IProjectManager
             ObjectFinder.Self.EnableCache();
             {
 
-                wasModified = _gumProjectSave.Initialize();
+                wasModified = _gumProjectSave.Initialize(
+                    // tolerate this so we don't immediately crash the tool
+                    tolerateMissingDefaultStates:true);
                 _standardElementsManagerGumTool.FixCustomTypeConverters(_gumProjectSave);
                 RecreateMissingStandardElements();
 

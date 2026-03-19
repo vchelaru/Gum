@@ -39,7 +39,7 @@ namespace Gum.DataTypes
             return found;
         }
 
-        public static void Initialize(this InstanceSave instanceSave, ElementSave parent, ref bool wasModified)
+        public static void Initialize(this InstanceSave instanceSave, ElementSave parent, ref bool wasModified, bool throwExceptionOnMissing = true)
         {
             var baseElementType = ObjectFinder.Self.GetRootStandardElementSave(instanceSave);
 
@@ -47,7 +47,7 @@ namespace Gum.DataTypes
             {
                 StateSave? baseDefault = null;
 
-                baseDefault = StandardElementsManager.Self.TryGetDefaultStateFor(baseElementType.Name);
+                baseDefault = StandardElementsManager.Self.TryGetDefaultStateFor(baseElementType.Name, throwExceptionOnMissing);
 
                 // todo - eventually we may want to look at plugins here, but for now we'll do the built-in standards
                 if (baseDefault != null)
