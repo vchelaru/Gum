@@ -2313,6 +2313,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         if (mContainedObjectAsIpso is IText asText)
                         {
+                            // Note: UpdateWidth's equivalent text path wraps WrappedTextWidth in a
+                            // try/catch for BadImageFormatException (Skia platform bug). If a similar
+                            // crash is ever observed here for WrappedTextHeight, add the same handling.
                             var oldWidth = mContainedObjectAsIpso.Width;
                             if (WidthUnits == DimensionUnitType.RelativeToChildren)
                             {
