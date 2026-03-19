@@ -220,15 +220,37 @@ public abstract class TextBoxBase :
         }
     }
 
+    /// <summary>
+    /// Gets or sets the placeholder text displayed when the text box is empty.
+    /// Setting this property applies localization if a <see cref="Gum.Localization.LocalizationService"/> is registered.
+    /// To bypass localization, use <see cref="SetPlaceholderNoTranslate"/>.
+    /// </summary>
     public virtual string? Placeholder
     {
         get => placeholderTextObject?.RawText;
         set
         {
-            if (placeholderTextObject != null)
+            if (placeholderComponent != null)
             {
-                placeholderTextObject.RawText = value;
+                // go through the component instead of the renderable to apply localization and force a layout refresh
+                placeholderComponent.SetProperty("Text", value);
             }
+        }
+    }
+
+    /// <summary>
+    /// Sets the placeholder text without applying localization/translation.
+    /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable — only the final string is stored.
+    /// Use this for placeholder text that should not be localized.
+    /// </remarks>
+    public void SetPlaceholderNoTranslate(string? value)
+    {
+        if (placeholderComponent != null)
+        {
+            placeholderComponent.SetProperty("TextNoTranslate", value);
         }
     }
 

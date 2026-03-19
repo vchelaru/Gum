@@ -20,6 +20,11 @@ public class CheckBox : ToggleButton
 
     private global::RenderingLibrary.Graphics.IText? coreTextObject;
 
+    /// <summary>
+    /// Gets or sets the checkbox label text. Setting this property applies localization
+    /// if a <see cref="Gum.Localization.LocalizationService"/> is registered.
+    /// To bypass localization, use <see cref="SetTextNoTranslate"/>.
+    /// </summary>
     public string? Text
     {
         get
@@ -37,6 +42,19 @@ public class CheckBox : ToggleButton
             // go through the component instead of the core text object to force a layout refresh if necessary
             textComponent?.SetProperty("Text", value);
         }
+    }
+
+    /// <summary>
+    /// Sets the checkbox text without applying localization/translation.
+    /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable — only the final string is stored.
+    /// Use this for text that should not be localized.
+    /// </remarks>
+    public void SetTextNoTranslate(string? value)
+    {
+        textComponent?.SetProperty("TextNoTranslate", value);
     }
 
 

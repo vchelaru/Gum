@@ -312,9 +312,14 @@ public class TextRuntime : GraphicalUiElement
     /// <summary>
     /// Gets or sets the raw text content displayed by the control. This is the value before line wrapping and bbcode parsing has been applied.
     /// </summary>
-    /// <remarks>Setting this property updates the displayed text and may trigger layout changes if the text
+    /// <remarks>
+    /// Setting this property updates the displayed text and may trigger layout changes if the text
     /// size affects the control's dimensions. If the control's width is set relative to its children and no maximum
-    /// width is specified, the text will not be line-wrapped.</remarks>
+    /// width is specified, the text will not be line-wrapped.
+    /// If a <see cref="Gum.Localization.LocalizationService"/> is registered, the assigned value is passed through
+    /// <see cref="Gum.Localization.LocalizationService.Translate"/> before being applied. To bypass translation
+    /// (for example, for user-entered text), use <see cref="SetTextNoTranslate"/> instead.
+    /// </remarks>
     public string? Text
     {
         get
@@ -357,6 +362,12 @@ public class TextRuntime : GraphicalUiElement
     /// Sets the text without applying localization/translation. Equivalent to calling
     /// <c>SetProperty("TextNoTranslate", value)</c>.
     /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable — only the final string is stored. A corresponding getter would
+    /// have no way to distinguish translated from untranslated text, so a property would be misleading.
+    /// Use this for text that should not be localized, such as user-entered input in a TextBox.
+    /// </remarks>
     public void SetTextNoTranslate(string? value)
     {
         var widthBefore = ContainedText.WrappedTextWidth;
