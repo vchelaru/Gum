@@ -225,6 +225,18 @@ public abstract class SkiaShapeRuntime : GraphicalUiElement
         set;
     }
 
+    public float StrokeDashLength
+    {
+        get => ContainedRenderable.StrokeDashLength;
+        set => ContainedRenderable.StrokeDashLength = value;
+    }
+
+    public float StrokeGapLength
+    {
+        get => ContainedRenderable.StrokeGapLength;
+        set => ContainedRenderable.StrokeGapLength = value;
+    }
+
     #endregion
 
     #region Dropshadow

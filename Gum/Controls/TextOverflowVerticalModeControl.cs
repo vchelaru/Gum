@@ -11,23 +11,18 @@ namespace Gum.Controls
         {
             if (cachedOptions == null)
             {
-                var spillVertical = CreateBitmapFromFile("Content/Icons/TextOverflow/SpillVertical.png");
-                var truncateLine = CreateBitmapFromFile("Content/Icons/TextOverflow/TruncateLine.png");
-
                 cachedOptions = new Option[]
                 {
                     new Option
                     {
                         Name = "Spill",
                         Value = TextOverflowVerticalMode.SpillOver,
-                        Image = spillVertical,
                         GumIconName = "TextOverflowVerticalSpill"
                     },
                     new Option
                     {
                         Name = "Truncate Line",
                         Value = TextOverflowVerticalMode.TruncateLine,
-                        Image = truncateLine,
                         GumIconName = "TextOverflowVerticalTruncateLine"
                     }
                 };

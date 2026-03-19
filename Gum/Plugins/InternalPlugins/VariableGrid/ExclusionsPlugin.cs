@@ -31,9 +31,9 @@ public class ExclusionsPlugin : InternalPlugin
 
     private void HandleVariableSet(ElementSave save1, InstanceSave save2, string variableName, object oldValue)
     {
-        if(variableName == "ChildrenLayout")
+        if(variableName == "ChildrenLayout" || variableName == "IsFilled")
         {
-            // Changing children layout can result in different values being shown in the property grid
+            // Changing these can result in different values being shown in the property grid
             _guiCommands.RefreshVariables(force:true);
         }
     }
@@ -59,6 +59,10 @@ public class ExclusionsPlugin : InternalPlugin
                 return GetIfOverflowHorizontalModeExcluded(finder);
             case "Wrap":
                 return GetIfWrapIsExcluded(finder);
+            case "StrokeWidth":
+            case "StrokeDashLength":
+            case "StrokeGapLength":
+                return GetIfStrokeVariableIsExcluded(finder);
 
 
         }
@@ -178,6 +182,16 @@ public class ExclusionsPlugin : InternalPlugin
             isStack = childrenLayout == ChildrenLayout.LeftToRightStack || childrenLayout == ChildrenLayout.TopToBottomStack;
         }
         return !isStack;
+    }
+
+    private bool GetIfStrokeVariableIsExcluded(RecursiveVariableFinder finder)
+    {
+        var isFilled = finder.GetVariable("IsFilled")?.Value;
+        if (isFilled is true)
+        {
+            return true;
+        }
+        return false;
     }
 
     private bool GetIfAutoGridIsExcluded(RecursiveVariableFinder finder)

@@ -180,6 +180,12 @@ public class CustomSetPropertyOnRenderable
             case nameof(RenderableShapeBase.StrokeWidth):
                 renderableBase.StrokeWidth = (float)value;
                 return true;
+            case nameof(RenderableShapeBase.StrokeDashLength):
+                renderableBase.StrokeDashLength = (float)value;
+                return true;
+            case nameof(RenderableShapeBase.StrokeGapLength):
+                renderableBase.StrokeGapLength = (float)value;
+                return true;
             case nameof(RenderableShapeBase.UseGradient):
                 renderableBase.UseGradient = (bool)value;
                 return true;

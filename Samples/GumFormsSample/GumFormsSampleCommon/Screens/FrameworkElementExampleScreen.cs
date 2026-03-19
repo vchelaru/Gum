@@ -356,7 +356,7 @@ namespace GumFormsSample.Screens
             var zoomInButton = new Button();
             zoomInButton.Text = "Zoom layer in";
             zoomInButton.Width = 0;
-            zoomInButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            zoomInButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             zoomInButton.Height = 100;
             zoomInButton.Click += (_,_) =>
             {
@@ -368,7 +368,7 @@ namespace GumFormsSample.Screens
             var zoomOutButton = new Button();
             zoomOutButton.Text = "Zoom layer out";
             zoomOutButton.Width = 0;
-            zoomOutButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            zoomOutButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             zoomOutButton.Height = 100;
             zoomOutButton.Click += (_, _) =>
             {

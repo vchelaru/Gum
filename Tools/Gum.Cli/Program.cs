@@ -24,6 +24,7 @@ public class Program
         rootCommand.AddCommand(CodegenInitCommand.Create());
         rootCommand.AddCommand(FontsCommand.Create());
         rootCommand.AddCommand(ScreenshotCommand.Create());
+        rootCommand.AddCommand(SvgCommand.Create());
 
         return rootCommand.Invoke(args);
     }

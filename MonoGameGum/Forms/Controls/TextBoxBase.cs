@@ -151,8 +151,8 @@ public abstract class TextBoxBase :
 
     TextWrapping textWrapping = TextWrapping.NoWrap;
     /// <summary>
-    /// Gets or sets the text wrapping behavior. When set to <see cref="Controls.TextWrapping.Wrap"/>,
-    /// text wraps to multiple lines. Defaults to <see cref="Controls.TextWrapping.NoWrap"/>.
+    /// Gets or sets the text wrapping behavior. When set to <see cref="Gum.Forms.TextWrapping.Wrap"/>,
+    /// text wraps to multiple lines. Defaults to <see cref="Gum.Forms.TextWrapping.NoWrap"/>.
     /// </summary>
     public TextWrapping TextWrapping
     {
@@ -325,7 +325,7 @@ public abstract class TextBoxBase :
     public event Action<GamepadButton> ControllerButtonPushed;
     /// <summary>
     /// Raised before new text is inserted (by typing or pasting). Set
-    /// <see cref="TextCompositionEventArgs.Handled"/> to <c>true</c> to cancel the insertion.
+    /// <see cref="RoutedEventArgs.Handled"/> to <c>true</c> to cancel the insertion.
     /// Similar to WPF's <c>PreviewTextInput</c>.
     /// </summary>
     public event Action<object, TextCompositionEventArgs> PreviewTextInput;

@@ -9,9 +9,9 @@ namespace GumFormsSample.Screens
 {
     internal class GumFormsSampleScreenFactory
     {
-        public BindableGue DefaultScreen => CreateScreen(1);
+        public GraphicalUiElement DefaultScreen => CreateScreen(1);
 
-        private readonly Dictionary<int, Func<BindableGue>> _screenCreators = new()
+        private readonly Dictionary<int, Func<GraphicalUiElement>> _screenCreators = new()
         {
             { 1, () => new DemoScreenGumRuntime() },
             { 2, () => new FrameworkElementExampleScreen() },
@@ -21,7 +21,7 @@ namespace GumFormsSample.Screens
             { 6, () => new TestScreenRuntime() }
         };
 
-        public BindableGue CreateScreen(int screenNumber)
+        public GraphicalUiElement CreateScreen(int screenNumber)
         {
             if (_screenCreators.TryGetValue(screenNumber, out var creator))
                 return creator();

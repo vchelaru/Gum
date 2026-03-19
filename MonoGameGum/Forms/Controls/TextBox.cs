@@ -78,7 +78,7 @@ public class TextBox : TextBoxBase
     /// are hidden but remain in the <see cref="Text"/> string. This is a display-only
     /// property useful for typewriter-style effects where text prints out letter-by-letter.
     /// It does <em>not</em> restrict how many characters the user can type.
-    /// To limit input length, use <see cref="MaxLength"/> instead.
+    /// To limit input length, use <see cref="TextBoxBase.MaxLength"/> instead.
     /// </summary>
     public virtual int? MaxLettersToShow
     {

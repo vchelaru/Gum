@@ -77,10 +77,11 @@ public class Slider : RangeBase, IInputReceiver
     public event Action<IInputReceiver>? FocusUpdate;
 
     public event Action<GamepadButton> ControllerButtonPushed;
-
+#if FRB
     public event Action<int> GenericGamepadButtonPushed;
+#endif
 
-    #endregion
+#endregion
 
     #region Initialize
 

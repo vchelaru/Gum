@@ -65,9 +65,9 @@ partial class Hotbar
     }
 
 
-    private void HandleItemSlotClicked(object sender, EventArgs args)
+    private void HandleItemSlotClicked(object? sender, EventArgs args)
     {
-        var frameworkEement = (sender as InteractiveGue).FormsControlAsObject;
+        var frameworkEement = ((InteractiveGue)sender!).FormsControlAsObject;
         var index = ItemSlotContainer.Children.IndexOf((FrameworkElement)frameworkEement);
         SelectedIndex = index;
     }
