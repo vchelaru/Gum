@@ -6785,4 +6785,651 @@ public class LayoutUnitTests : BaseTestClass
     }
 
     #endregion
+
+    #region RelativeToMaxParentOrChildren - Basic
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Width_ShouldUseParent_WhenParentIsLarger()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 400;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Width = 100;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child);
+
+        // Parent (400) > child (100), so element uses parent size
+        parent.GetAbsoluteWidth().ShouldBe(400);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Width_ShouldUseChildren_WhenChildrenAreLarger()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 200;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Width = 500;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child);
+
+        // Child (500) > parent (200), so element uses children size
+        parent.GetAbsoluteWidth().ShouldBe(500);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Height_ShouldUseParent_WhenParentIsLarger()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Height = 400;
+        grandparent.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Height = 100;
+        child.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child);
+
+        parent.GetAbsoluteHeight().ShouldBe(400);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Height_ShouldUseChildren_WhenChildrenAreLarger()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Height = 200;
+        grandparent.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Height = 500;
+        child.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child);
+
+        parent.GetAbsoluteHeight().ShouldBe(500);
+    }
+
+    #endregion
+
+    #region RelativeToMaxParentOrChildren - Padding
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Width_ShouldApplyPaddingToChildrenSize()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 200;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 20;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Width = 300;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child);
+
+        // Value (20) acts as padding added to children bounds.
+        // childrenBased: 300 + 20 = 320
+        // parentBased: 200
+        // max(200, 320) = 320
+        parent.GetAbsoluteWidth().ShouldBe(320);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Width_ShouldNotApplyPaddingToParentSize()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 400;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 20;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Width = 100;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child);
+
+        // childrenBased: 100 + 20 = 120
+        // parentBased: 400
+        // max(400, 120) = 400
+        parent.GetAbsoluteWidth().ShouldBe(400);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Width_PaddingShouldExpandChildrenBeyondParent()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 400;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 50;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Width = 380;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child);
+
+        // childrenBased: 380 + 50 = 430
+        // parentBased: 400
+        // max(400, 430) = 430 — children + padding wins
+        parent.GetAbsoluteWidth().ShouldBe(430);
+
+        // Now make child smaller so parent wins
+        child.Width = 300;
+        // childrenBased: 300 + 50 = 350
+        // parentBased: 400
+        // max(400, 350) = 400
+        parent.GetAbsoluteWidth().ShouldBe(400);
+    }
+
+    #endregion
+
+    #region RelativeToMaxParentOrChildren - No Children
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Width_ShouldFallBackToParent_WhenNoChildren()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 400;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        // No children, so max(400, 0) = 400
+        parent.GetAbsoluteWidth().ShouldBe(400);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Height_ShouldFallBackToParent_WhenNoChildren()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Height = 300;
+        grandparent.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        parent.GetAbsoluteHeight().ShouldBe(300);
+    }
+
+    #endregion
+
+    #region RelativeToMaxParentOrChildren - Invisible Children
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_ShouldIgnoreInvisibleChildren()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 200;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Width = 500;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        child.Visible = false;
+        parent.AddChild(child);
+
+        // Invisible child excluded, falls back to parent size
+        parent.GetAbsoluteWidth().ShouldBe(200);
+    }
+
+    #endregion
+
+    #region RelativeToMaxParentOrChildren - Parent-Dependent Children Excluded
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_ShouldIgnoreChildWithPercentageOfParent()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 300;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime absoluteChild = new();
+        absoluteChild.Width = 100;
+        absoluteChild.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(absoluteChild);
+
+        ContainerRuntime percentChild = new();
+        percentChild.Width = 200;
+        percentChild.WidthUnits = DimensionUnitType.PercentageOfParent;
+        parent.AddChild(percentChild);
+
+        // PercentageOfParent child excluded from children measurement (circular dep).
+        // Only absoluteChild (100) contributes. max(300, 100) = 300
+        parent.GetAbsoluteWidth().ShouldBe(300);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_ShouldIgnoreChildWithRelativeToParent()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 300;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime absoluteChild = new();
+        absoluteChild.Width = 100;
+        absoluteChild.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(absoluteChild);
+
+        ContainerRuntime relativeChild = new();
+        relativeChild.Width = -50;
+        relativeChild.WidthUnits = DimensionUnitType.RelativeToParent;
+        parent.AddChild(relativeChild);
+
+        // RelativeToParent child excluded. Only absoluteChild (100) counts.
+        // max(300, 100) = 300
+        parent.GetAbsoluteWidth().ShouldBe(300);
+    }
+
+    #endregion
+
+    #region RelativeToMaxParentOrChildren - With Ratio Siblings
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_ShouldBeSubtractedFromRatioSpace()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 600;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime maxChild = new();
+        maxChild.Width = 0;
+        maxChild.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(maxChild);
+
+        ContainerRuntime innerChild = new();
+        innerChild.Width = 200;
+        innerChild.WidthUnits = DimensionUnitType.Absolute;
+        maxChild.AddChild(innerChild);
+
+        // maxChild: max(600, 200) = 600. Its absolute width is 600.
+
+        ContainerRuntime ratioChild = new();
+        ratioChild.Width = 1;
+        ratioChild.WidthUnits = DimensionUnitType.Ratio;
+        grandparent.AddChild(ratioChild);
+
+        // Ratio sibling should subtract maxChild's absolute width (600) from parent (600).
+        // Remaining = 0
+        ratioChild.GetAbsoluteWidth().ShouldBe(0);
+    }
+
+    #endregion
+
+    #region RelativeToMaxParentOrChildren - In Stack
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_InTopToBottomStack_ShouldWorkCorrectly()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 300;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+        grandparent.Height = 400;
+        grandparent.HeightUnits = DimensionUnitType.Absolute;
+        grandparent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime element = new();
+        element.Width = 0;
+        element.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        element.Height = 100;
+        element.HeightUnits = DimensionUnitType.Absolute;
+        grandparent.AddChild(element);
+
+        ContainerRuntime wideChild = new();
+        wideChild.Width = 500;
+        wideChild.WidthUnits = DimensionUnitType.Absolute;
+        wideChild.Height = 50;
+        wideChild.HeightUnits = DimensionUnitType.Absolute;
+        element.AddChild(wideChild);
+
+        // Width: max(300, 500) = 500
+        element.GetAbsoluteWidth().ShouldBe(500);
+        // Height is absolute 100
+        element.GetAbsoluteHeight().ShouldBe(100);
+    }
+
+    #endregion
+
+    #region RelativeToMaxParentOrChildren - Dynamic Updates
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_ShouldUpdate_WhenChildResizes()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 300;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Width = 100;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child);
+
+        // Initially parent wins: max(300, 100) = 300
+        parent.GetAbsoluteWidth().ShouldBe(300);
+
+        // Now child grows larger than parent
+        child.Width = 500;
+
+        // Children win: max(300, 500) = 500
+        parent.GetAbsoluteWidth().ShouldBe(500);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_ShouldUpdate_WhenParentResizes()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 200;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Width = 300;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child);
+
+        // Initially children win: max(200, 300) = 300
+        parent.GetAbsoluteWidth().ShouldBe(300);
+
+        // Now grandparent grows
+        grandparent.Width = 500;
+
+        // Parent wins: max(500, 300) = 500
+        parent.GetAbsoluteWidth().ShouldBe(500);
+    }
+
+    #endregion
+
+    #region RelativeToMaxParentOrChildren - Multiple Children
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_ShouldUseWidestChild()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Width = 200;
+        grandparent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child1 = new();
+        child1.Width = 100;
+        child1.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Width = 350;
+        child2.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Width = 150;
+        child3.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        // Widest child is 350. max(200, 350) = 350
+        parent.GetAbsoluteWidth().ShouldBe(350);
+    }
+
+    #endregion
+
+    #region RelativeToMaxParentOrChildren - Nested
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Nested_BothUsingMaxParentOrChildren()
+    {
+        ContainerRuntime root = new();
+        root.Width = 400;
+        root.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime outer = new();
+        outer.Width = 0;
+        outer.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        root.AddChild(outer);
+
+        ContainerRuntime inner = new();
+        inner.Width = 0;
+        inner.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        outer.AddChild(inner);
+
+        // inner depends on outer (parent), but inner also uses MaxParentOrChildren.
+        // inner's children measurement: no children -> 0
+        // inner's parent (outer) size: outer = max(400, inner?)
+        // Since inner depends on parent, it's excluded from outer's children measurement.
+        // outer = max(400, 0) = 400
+        // inner = max(400, 0) = 400
+        outer.GetAbsoluteWidth().ShouldBe(400);
+        inner.GetAbsoluteWidth().ShouldBe(400);
+    }
+
+    #endregion
+
+    #region RelativeToMaxParentOrChildren - Parent is RelativeToChildren
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_WithRelativeToChildrenParent_ShouldExpandAllRowsToWidest()
+    {
+        // This is the key use case: a list of items where the widest one
+        // defines the width and all others fill to match.
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime row1 = new();
+        row1.Width = 0;
+        row1.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        row1.Height = 40;
+        row1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(row1);
+
+        ContainerRuntime row1Child = new();
+        row1Child.Width = 120;
+        row1Child.WidthUnits = DimensionUnitType.Absolute;
+        row1Child.Height = 30;
+        row1Child.HeightUnits = DimensionUnitType.Absolute;
+        row1.AddChild(row1Child);
+
+        ContainerRuntime row2 = new();
+        row2.Width = 0;
+        row2.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        row2.Height = 40;
+        row2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(row2);
+
+        ContainerRuntime row2Child = new();
+        row2Child.Width = 300;
+        row2Child.WidthUnits = DimensionUnitType.Absolute;
+        row2Child.Height = 30;
+        row2Child.HeightUnits = DimensionUnitType.Absolute;
+        row2.AddChild(row2Child);
+
+        ContainerRuntime row3 = new();
+        row3.Width = 0;
+        row3.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        row3.Height = 40;
+        row3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(row3);
+
+        ContainerRuntime row3Child = new();
+        row3Child.Width = 200;
+        row3Child.WidthUnits = DimensionUnitType.Absolute;
+        row3Child.Height = 30;
+        row3Child.HeightUnits = DimensionUnitType.Absolute;
+        row3.AddChild(row3Child);
+
+        // Parent should size to widest child's children-based size: 300
+        parent.GetAbsoluteWidth().ShouldBe(300);
+
+        // All rows should be max(parent=300, ownChild) = 300
+        row1.GetAbsoluteWidth().ShouldBe(300);
+        row2.GetAbsoluteWidth().ShouldBe(300);
+        row3.GetAbsoluteWidth().ShouldBe(300);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_WithRelativeToChildrenParent_PaddingShouldExpandAllRows()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime row1 = new();
+        row1.Width = 30;
+        row1.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        row1.Height = 40;
+        row1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(row1);
+
+        ContainerRuntime row1Child = new();
+        row1Child.Width = 120;
+        row1Child.WidthUnits = DimensionUnitType.Absolute;
+        row1.AddChild(row1Child);
+
+        ContainerRuntime row2 = new();
+        row2.Width = 30;
+        row2.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        row2.Height = 40;
+        row2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(row2);
+
+        ContainerRuntime row2Child = new();
+        row2Child.Width = 600;
+        row2Child.WidthUnits = DimensionUnitType.Absolute;
+        row2.AddChild(row2Child);
+
+        ContainerRuntime row3 = new();
+        row3.Width = 30;
+        row3.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        row3.Height = 40;
+        row3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(row3);
+
+        ContainerRuntime row3Child = new();
+        row3Child.Width = 400;
+        row3Child.WidthUnits = DimensionUnitType.Absolute;
+        row3.AddChild(row3Child);
+
+        // Widest child is 600. With 30 padding: 600 + 30 = 630.
+        // Parent sizes to widest row's children-based size: 630.
+        // All rows: max(parent=630, ownChild+30) = 630.
+        parent.GetAbsoluteWidth().ShouldBe(630);
+        row1.GetAbsoluteWidth().ShouldBe(630);
+        row2.GetAbsoluteWidth().ShouldBe(630);
+        row3.GetAbsoluteWidth().ShouldBe(630);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_WithRelativeToChildrenParent_ShouldUpdateWhenChildGrows()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime row1 = new();
+        row1.Width = 0;
+        row1.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        row1.Height = 40;
+        row1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(row1);
+
+        ContainerRuntime row1Child = new();
+        row1Child.Width = 200;
+        row1Child.WidthUnits = DimensionUnitType.Absolute;
+        row1.AddChild(row1Child);
+
+        ContainerRuntime row2 = new();
+        row2.Width = 0;
+        row2.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        row2.Height = 40;
+        row2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(row2);
+
+        ContainerRuntime row2Child = new();
+        row2Child.Width = 200;
+        row2Child.WidthUnits = DimensionUnitType.Absolute;
+        row2.AddChild(row2Child);
+
+        // Both rows 200, parent 200, all rows 200
+        parent.GetAbsoluteWidth().ShouldBe(200);
+        row1.GetAbsoluteWidth().ShouldBe(200);
+        row2.GetAbsoluteWidth().ShouldBe(200);
+
+        // Now row1's child grows
+        row1Child.Width = 500;
+
+        // Parent should expand to 500, both rows should follow
+        parent.GetAbsoluteWidth().ShouldBe(500);
+        row1.GetAbsoluteWidth().ShouldBe(500);
+        row2.GetAbsoluteWidth().ShouldBe(500);
+    }
+
+    #endregion
 }

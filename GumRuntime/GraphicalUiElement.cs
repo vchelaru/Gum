@@ -1992,18 +1992,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var widthDependencyType = this.WidthUnits.GetDependencyType();
             var heightDependencyType = this.HeightUnits.GetDependencyType();
 
-            var hasChildDependency = widthDependencyType == HierarchyDependencyType.DependsOnChildren ||
-                heightDependencyType == HierarchyDependencyType.DependsOnChildren;
+            var widthDependsOnChildren = widthDependencyType == HierarchyDependencyType.DependsOnChildren ||
+                this.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren;
+            var heightDependsOnChildren = heightDependencyType == HierarchyDependencyType.DependsOnChildren ||
+                this.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren;
+            var hasChildDependency = widthDependsOnChildren || heightDependsOnChildren;
 
-            if (widthDependencyType != HierarchyDependencyType.DependsOnChildren && heightDependencyType != HierarchyDependencyType.DependsOnChildren)
+            if (!widthDependsOnChildren && !heightDependsOnChildren)
             {
                 UpdateDimensions(parentWidth, parentHeight, null, true);
             }
-            else if (widthDependencyType != HierarchyDependencyType.DependsOnChildren)
+            else if (!widthDependsOnChildren)
             {
                 UpdateDimensions(parentWidth, parentHeight, XOrY.X, considerWrappedStacked: false);
             }
-            if (heightDependencyType != HierarchyDependencyType.DependsOnChildren)
+            if (!heightDependsOnChildren)
             {
                 UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
             }
@@ -2048,11 +2051,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // This will update according to all absolute children
             // Now that the children have been updated, we can do any dimensions that still need updating based on the children changes:
 
-            if (widthDependencyType == HierarchyDependencyType.DependsOnChildren)
+            if (widthDependsOnChildren)
             {
                 UpdateDimensions(parentWidth, parentHeight, XOrY.X, considerWrappedStacked: false);
             }
-            if (heightDependencyType == HierarchyDependencyType.DependsOnChildren)
+            if (heightDependsOnChildren)
             {
                 UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
             }
@@ -2061,8 +2064,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 // Now we can update all children that are wrapped:
                 UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped, skipIgnoreByParentSize: false);
-                if (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
-                    this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren)
+                if (widthDependsOnChildren || heightDependsOnChildren)
                 {
                     UpdateDimensions(parentWidth, parentHeight, xOrY, considerWrappedStacked: true);
                 }
@@ -2134,7 +2136,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             UpdateChildren(childrenUpdateDepth, ChildType.All, skipIgnoreByParentSize: false, alreadyUpdated: fullyUpdatedChildren);
 
             var sizeDependsOnChildren = this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                this.HeightUnits == DimensionUnitType.RelativeToChildren;
+                this.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren ||
+                this.HeightUnits == DimensionUnitType.RelativeToChildren ||
+                this.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren;
 
             var canOneDimensionChangeOtherDimension = false;
 
@@ -2546,7 +2550,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                         gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
                                         gue.HeightUnits == DimensionUnitType.PercentageOfSourceFile ||
                                         gue.HeightUnits == DimensionUnitType.MaintainFileAspectRatio ||
-                                        gue.HeightUnits == DimensionUnitType.ScreenPixel)
+                                        gue.HeightUnits == DimensionUnitType.ScreenPixel ||
+                                        gue.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren)
                                     {
                                         var childAbsoluteWidth = gue.GetAbsoluteHeight();
                                         heightToSplit -= childAbsoluteWidth;
@@ -2586,6 +2591,26 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
                 break;
                 #endregion
+
+            #region RelativeToMaxParentOrChildren
+
+            case DimensionUnitType.RelativeToMaxParentOrChildren:
+                {
+                    float parentBasedSize = parentHeight;
+
+                    float childrenBasedSize = 0;
+                    if (this.mContainedObjectAsIpso != null)
+                    {
+                        childrenBasedSize = GetMaxCellHeight(considerWrappedStacked, childrenBasedSize);
+                    }
+                    // mHeight acts as padding on children, matching RelativeToChildren behavior
+                    childrenBasedSize += mHeight;
+
+                    pixelHeightToSet = System.Math.Max(parentBasedSize, childrenBasedSize);
+                }
+                break;
+
+            #endregion
         }
 
 
@@ -2935,7 +2960,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                         gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
                                         gue.WidthUnits == DimensionUnitType.PercentageOfSourceFile ||
                                         gue.WidthUnits == DimensionUnitType.MaintainFileAspectRatio ||
-                                        gue.WidthUnits == DimensionUnitType.ScreenPixel)
+                                        gue.WidthUnits == DimensionUnitType.ScreenPixel ||
+                                        gue.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren)
                                     {
                                         var childAbsoluteWidth = gue.GetAbsoluteWidth();
                                         widthToSplit -= childAbsoluteWidth;
@@ -2977,6 +3003,26 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
                 break;
                 #endregion
+
+            #region RelativeToMaxParentOrChildren
+
+            case DimensionUnitType.RelativeToMaxParentOrChildren:
+                {
+                    float parentBasedSize = parentWidth;
+
+                    float childrenBasedSize = 0;
+                    if (this.mContainedObjectAsIpso != null)
+                    {
+                        childrenBasedSize = GetMaxCellWidth(considerWrappedStacked, childrenBasedSize);
+                    }
+                    // mWidth acts as padding on children, matching RelativeToChildren behavior
+                    childrenBasedSize += mWidth;
+
+                    pixelWidthToSet = System.Math.Max(parentBasedSize, childrenBasedSize);
+                }
+                break;
+
+            #endregion
         }
 
 
@@ -3330,7 +3376,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         bool isScreen = ElementSave != null && ElementSave is ScreenSave;
         return !isScreen &&
             (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
-            this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
+            this.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren ||
+            this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
+            this.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren);
     }
 
     #endregion
@@ -3381,14 +3429,22 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (xOrY == XOrY.X)
         {
             var widthUnitDependencyType = mWidthUnit.GetDependencyType();
-            isAbsolute = (widthUnitDependencyType != HierarchyDependencyType.DependsOnParent || this.WidthUnits.GetDependencyType() == HierarchyDependencyType.NoDependency) &&
+            // RelativeToMaxParentOrChildren can compute a meaningful children-based size
+            // without the parent, so treat it as Absolute for parent sizing purposes.
+            var isNotParentDependent = widthUnitDependencyType != HierarchyDependencyType.DependsOnParent ||
+                this.WidthUnits.GetDependencyType() == HierarchyDependencyType.NoDependency ||
+                mWidthUnit == DimensionUnitType.RelativeToMaxParentOrChildren;
+            isAbsolute = isNotParentDependent &&
                 (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
                     mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
 
         }
         else // Y
         {
-            isAbsolute = (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || this.HeightUnits.GetDependencyType() == HierarchyDependencyType.NoDependency) &&
+            var isNotParentDependent = mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent ||
+                this.HeightUnits.GetDependencyType() == HierarchyDependencyType.NoDependency ||
+                mHeightUnit == DimensionUnitType.RelativeToMaxParentOrChildren;
+            isAbsolute = isNotParentDependent &&
                 (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
                     mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
                     mYUnits == GeneralUnitType.PixelsFromBaseline);
@@ -3412,7 +3468,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         unitType == DimensionUnitType.PercentageOfOtherDimension ||
         unitType == DimensionUnitType.PercentageOfSourceFile ||
         unitType == DimensionUnitType.MaintainFileAspectRatio ||
-        unitType == DimensionUnitType.ScreenPixel;
+        unitType == DimensionUnitType.ScreenPixel ||
+        unitType == DimensionUnitType.RelativeToMaxParentOrChildren;
 
     private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, HashSet<GraphicalUiElement>? alreadyUpdated = null, HashSet<GraphicalUiElement>? newlyUpdated = null)
     {
