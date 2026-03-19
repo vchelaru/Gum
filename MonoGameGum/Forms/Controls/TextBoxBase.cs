@@ -257,6 +257,14 @@ public abstract class TextBoxBase :
     protected abstract string CategoryName { get; }
 
     int? maxLength;
+    /// <summary>
+    /// The maximum number of characters the user can enter. When set, typing, pasting, and
+    /// programmatic text assignment are all truncated to this length. A value of <c>null</c>
+    /// (the default) means no limit. This is equivalent to WPF's
+    /// <c>TextBox.MaxLength</c>.
+    /// To limit how many characters are <em>displayed</em> without restricting input,
+    /// see <see cref="TextBox.MaxLettersToShow"/> instead.
+    /// </summary>
     public int? MaxLength
     {
         get => maxLength;

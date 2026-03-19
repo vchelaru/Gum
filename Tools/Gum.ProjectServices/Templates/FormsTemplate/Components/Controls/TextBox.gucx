@@ -215,7 +215,7 @@
     <Variable Type="HorizontalAlignment" Name="TextInstance.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="int?" Name="TextInstance.MaxLettersToShow" ExposedAsName="MaxLettersToShow" SetsValue="false" />
+    <Variable Type="int?" Name="TextInstance.MaxLettersToShow" SetsValue="false" />
     <Variable Type="int?" Name="TextInstance.MaxNumberOfLines" ExposedAsName="MaxNumberOfLines" SetsValue="false" />
     <Variable Type="string" Name="TextInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ClipContainer</Value>
