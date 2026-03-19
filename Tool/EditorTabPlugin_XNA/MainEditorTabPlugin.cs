@@ -221,7 +221,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         AssignEvents();
 
-        var menuItem = AddMenuItem("File", "Export as Image");
+        var menuItem = AddMenuItem("File", "Export", "Export as Image");
         _screenshotService.InitializeMenuItem(menuItem);
         BeforeRender += _screenshotService.HandleBeforeRender;
         AfterRender += _screenshotService.HandleAfterRender;
