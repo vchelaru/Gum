@@ -216,6 +216,7 @@ public static class DefaultStateManager
     {
         Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetArcState());
         Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetColoredCircleState());
+        Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetLineState());
         Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetRoundedRectangleState());
 
         Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(GetCanvasState());

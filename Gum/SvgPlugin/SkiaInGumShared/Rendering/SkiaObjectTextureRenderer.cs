@@ -36,10 +36,10 @@ namespace SkiaGum.Renderables
 #if FAST_GL_SKIA_RENDERING
         public bool ClearCanvasOnRender { get; set; } = true;
 
-        int ISkiaRenderable.TargetWidth => (int)Math.Min(2048, _drawable.Width + _drawable.XSizeSpillover * 2);
-        int ISkiaRenderable.TargetHeight => (int)Math.Min(2048, _drawable.Height + _drawable.YSizeSpillover * 2);
+        int ISkiaRenderable.TargetWidth => (int)Math.Max(1, Math.Min(2048, _drawable.Width + _drawable.XSizeSpillover * 2));
+        int ISkiaRenderable.TargetHeight => (int)Math.Max(1, Math.Min(2048, _drawable.Height + _drawable.YSizeSpillover * 2));
         SKColorType ISkiaRenderable.TargetColorFormat => SKColorType.Rgba8888;
-        bool ISkiaRenderable.ShouldRender => NeedsUpdate && _drawable.Width > 0 && _drawable.Height > 0;
+        bool ISkiaRenderable.ShouldRender => NeedsUpdate && (_drawable.CanRenderAt0Dimension || (_drawable.Width > 0 && _drawable.Height > 0));
 
         void ISkiaRenderable.NotifyDrawnTexture(Texture2D texture)
         {
@@ -76,7 +76,7 @@ namespace SkiaGum.Renderables
         public void PreRender()
         {
 #if !FAST_GL_SKIA_RENDERING
-            if (NeedsUpdate && _drawable.Width > 0 && _drawable.Height > 0)
+            if (NeedsUpdate && (_drawable.CanRenderAt0Dimension || (_drawable.Width > 0 && _drawable.Height > 0)))
             {
                 if (Texture != null)
                 {
@@ -86,8 +86,8 @@ namespace SkiaGum.Renderables
 
                 var colorType = SKImageInfo.PlatformColorType;
 
-                var widthToUse = Math.Min(2048, _drawable.Width + _drawable.XSizeSpillover * 2);
-                var heightToUse = Math.Min(2048, _drawable.Height + _drawable.YSizeSpillover * 2);
+                var widthToUse = Math.Max(1, Math.Min(2048, _drawable.Width + _drawable.XSizeSpillover * 2));
+                var heightToUse = Math.Max(1, Math.Min(2048, _drawable.Height + _drawable.YSizeSpillover * 2));
 
                 var imageInfo = new SKImageInfo((int)widthToUse, (int)heightToUse, colorType, SKAlphaType.Premul);
                 using (var surface = SKSurface.Create(imageInfo))

@@ -40,6 +40,7 @@
     <EmbeddedResource Include="Embedded\ColoredCircle.gutx" />
     <EmbeddedResource Include="Embedded\RoundedRectangle.gutx" />
     <EmbeddedResource Include="Embedded\Arc.gutx" />
+    <EmbeddedResource Include="Embedded\Line.gutx" />
     <EmbeddedResource Include="Embedded\LottieAnimation.gutx" />
     <EmbeddedResource Include="Embedded\Canvas.gutx" />
   </ItemGroup>
@@ -77,6 +78,9 @@
     </Compile>
     <Compile Include="..\..\Runtimes\SkiaGum\Renderables\Circle.cs">
       <Link>Renderables\Circle.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\Line.cs">
+      <Link>Renderables\Line.cs</Link>
     </Compile>
     <Compile Include="..\..\Runtimes\SkiaGum\Renderables\RoundedRectangle.cs">
       <Link>Renderables\RoundedRectangle.cs</Link>
