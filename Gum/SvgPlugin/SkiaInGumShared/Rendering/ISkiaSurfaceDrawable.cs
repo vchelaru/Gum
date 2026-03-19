@@ -31,6 +31,12 @@ namespace SkiaGum.Renderables
 
         ColorOperation ColorOperation { get; set; }
 
+        /// <summary>
+        /// Whether this drawable can render when Width or Height is zero or negative.
+        /// When true, the texture renderer must still allocate enough space for the stroke.
+        /// </summary>
+        bool CanRenderAt0Dimension { get; }
+
         void DrawToSurface(SKSurface surface);
 
         void PreRender();
