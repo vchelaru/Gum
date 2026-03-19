@@ -66,6 +66,11 @@ public class MenuItem : ItemsControl
 
     internal bool SelectOnHighlight { get; set; } = false;
 
+    /// <summary>
+    /// Gets or sets the menu item header text. Setting this property applies localization
+    /// if a <see cref="Gum.Localization.LocalizationService"/> is registered.
+    /// To bypass localization, use <see cref="SetHeaderNoTranslate"/>.
+    /// </summary>
     public virtual string? Header
     {
         get
@@ -82,8 +87,25 @@ public class MenuItem : ItemsControl
 #endif
             if (value != coreText!.RawText)
             {
-                coreText.RawText = value;
+                // go through the component instead of the core text object to apply localization and force a layout refresh
+                text?.SetProperty("Text", value);
             }
+        }
+    }
+
+    /// <summary>
+    /// Sets the menu item header text without applying localization/translation.
+    /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable — only the final string is stored.
+    /// Use this for header text that should not be localized.
+    /// </remarks>
+    public void SetHeaderNoTranslate(string? value)
+    {
+        if (value != coreText!.RawText)
+        {
+            text?.SetProperty("TextNoTranslate", value);
         }
     }
 

@@ -23,6 +23,11 @@ public class Label :
 
     public GraphicalUiElement TextComponent => textComponent;
 
+    /// <summary>
+    /// Gets or sets the label text. Setting this property applies localization
+    /// if a <see cref="Gum.Localization.LocalizationService"/> is registered.
+    /// To bypass localization, use <see cref="SetTextNoTranslate"/>.
+    /// </summary>
     public string? Text
     {
         get
@@ -47,6 +52,23 @@ public class Label :
             }
 
 
+        }
+    }
+
+    /// <summary>
+    /// Sets the label text without applying localization/translation.
+    /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable — only the final string is stored.
+    /// Use this for text that should not be localized.
+    /// </remarks>
+    public void SetTextNoTranslate(string? value)
+    {
+        if (value != Text)
+        {
+            textComponent.SetProperty("TextNoTranslate", value);
+            PushValueToViewModel();
         }
     }
 

@@ -73,6 +73,11 @@ public class ComboBox :
         }
     }
 
+    /// <summary>
+    /// Gets or sets the displayed text for the selected item. This property is data-driven
+    /// (typically set from the selected item's ToString) and intentionally does not apply
+    /// localization. To localize ComboBox items, translate values before adding them to the Items collection.
+    /// </summary>
     public string? Text
     {
         get => coreTextObject.RawText;
