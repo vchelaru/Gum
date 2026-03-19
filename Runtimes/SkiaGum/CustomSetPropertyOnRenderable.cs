@@ -199,7 +199,14 @@ public class CustomSetPropertyOnRenderable
         switch(propertyName)
         {
             case nameof(Arc.Thickness):
-                asArc.Thickness = (float)value;
+                if (graphicalUiElement is ArcRuntime arcRuntime)
+                {
+                    arcRuntime.Thickness = (float)value;
+                }
+                else
+                {
+                    asArc.Thickness = (float)value;
+                }
                 return true;
         }
         return false;
