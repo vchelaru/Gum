@@ -346,6 +346,18 @@ public class Text : IVisible, IRenderableIpso,
         }
     }
 
+    int? maxLettersToShow;
+    /// <summary>
+    /// The maximum number of characters to display visually. Characters beyond this count
+    /// are hidden but remain in the <see cref="RawText"/> string. This is a display-only
+    /// property useful for typewriter-style effects where text prints out letter-by-letter.
+    /// </summary>
+    public int? MaxLettersToShow
+    {
+        get => maxLettersToShow;
+        set => maxLettersToShow = value;
+    }
+
     int? maxNumberOfLines;
     private int _fontSize = 12;
 
@@ -626,9 +638,26 @@ public class Text : IVisible, IRenderableIpso,
             origin.Y = FontScale * mPreRenderHeight ?? 0;
         }
 
+        int lettersShown = 0;
+
         for(int i = 0; i < WrappedText.Count; i++)
         {
             var line = WrappedText[i];
+
+            if (maxLettersToShow.HasValue)
+            {
+                var lettersRemaining = maxLettersToShow.Value - lettersShown;
+                if (lettersRemaining <= 0)
+                {
+                    break;
+                }
+                if (lettersRemaining < line.Length)
+                {
+                    line = line.Substring(0, lettersRemaining);
+                }
+                lettersShown += line.Length;
+            }
+
             origin.X = 0;
             position.X = absoluteLeft;
 

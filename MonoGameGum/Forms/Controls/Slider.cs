@@ -70,7 +70,11 @@ public class Slider : RangeBase, IInputReceiver
 
     #region Events
 
-    public event Action<IInputReceiver> FocusUpdate;
+    /// <summary>
+    /// Raised every frame while this control has input focus. Can be used
+    /// to perform custom per-frame logic while the control is focused.
+    /// </summary>
+    public event Action<IInputReceiver>? FocusUpdate;
 
     public event Action<GamepadButton> ControllerButtonPushed;
 
@@ -497,6 +501,8 @@ public class Slider : RangeBase, IInputReceiver
 
         base.HandleKeyboardFocusUpdate();
 #endif
+
+        FocusUpdate?.Invoke(this);
     }
 
     public void OnGainFocus()
