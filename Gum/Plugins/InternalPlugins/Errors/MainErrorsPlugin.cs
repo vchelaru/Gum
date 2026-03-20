@@ -87,6 +87,7 @@ public class MainErrorsPlugin : InternalPlugin
     {
         this.ElementSelected += HandleElementSelected;
         this.ElementReloaded += HandleElementReloaded;
+        this.ElementImported += HandleElementImported;
         this.InstanceSelected += HandleInstanceSelected;
 
         this.InstanceAdd += HandleInstanceAdd;
@@ -121,6 +122,11 @@ public class MainErrorsPlugin : InternalPlugin
     }
 
     private void HandleElementReloaded(ElementSave element)
+    {
+        UpdateErrorsForElement(element);
+    }
+
+    private void HandleElementImported(ElementSave element)
     {
         UpdateErrorsForElement(element);
     }
