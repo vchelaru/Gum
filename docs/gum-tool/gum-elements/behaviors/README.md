@@ -25,7 +25,7 @@ As of February 2026, forms controls are not implemented in Skia-based runtimes. 
 
 By default, empty projects contain no behaviors. If your project has added forms components, then it should contain a set of default behaviors matching the forms control types.
 
-<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>Default behavior types</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Default behavior types</p></figcaption></figure>
 
 {% hint style="info" %}
 Future versions of Gum may add or remove behavior types, so don't worry if your list is different than the screenshot above.

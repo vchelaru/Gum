@@ -12,7 +12,7 @@ These methods match the Anchor and Dock actions which can be performed in the Gu
 
 <figure><img src="../../.gitbook/assets/15_16 56 39.png" alt=""><figcaption><p>Nine standard anchor values</p></figcaption></figure>
 
-`Anchor` has 2 other values `CenterHorizontally` and `CenterVertically`. &#x20;
+`Anchor` has 2 other values `CenterHorizontally` and `CenterVertically`.
 
 1. `CenterHorizontally` sets the X related variables only, leaving the Y related variables unchanged.
 2. `CenterVertically` sets the Y related variables only, leaving the X related variables unchanged.
@@ -242,7 +242,7 @@ button2.Text = "Bottom Docked Button";
 button2.Click += (_, _) => panel.Height -= 20;
 </code></pre>
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1).png" alt=""><figcaption><p>Buttons with 0 width, wrapping their text</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Buttons with 0 width, wrapping their text</p></figcaption></figure>
 
 We can resolve this by bringing back the code to make `panel` be sized with absolute units (pixels), or we can size everything bottom-up as shown in the next section.
 

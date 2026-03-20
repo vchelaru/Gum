@@ -18,7 +18,7 @@ Gum is an open source project so you can run it from source instead of running t
 
 ## Running the code
 
-1. Locate the Gum.sln file&#x20;
+1. Locate the Gum.sln file
    1. If you downloaded the .zip, it is in the root folder of the zip
    2. If you cloned the repository, it is at the root of the Gum folder
 2. Double-click it to open Visual Studio, or open Visual Studio and load the .sln
@@ -31,3 +31,18 @@ Once the project has been built, you can run (with or without a debugger attache
 Gum depends on a number of plugins for its functionality. By default if you build the project and run it (such as by pressing F5 in Visual Studio), then plugins are not automatically built. To build plugins, you need to explicitly build all plugin projects. The easiest way to do this is to select the Build -> Rebuild Solution option in Visual Studio.
 
 <figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Build -> Rebuild Solution in Visual Studio</p></figcaption></figure>
+
+## Troubleshooting
+
+### A project with an Output Type of Class Library cannot be started directly
+
+<figure><img src="../../.gitbook/assets/20_09 20 07.png" alt=""><figcaption></figcaption></figure>
+
+If you have this popup, you need to set Gum as the startup project.
+
+In Visual Studio:
+
+1. Right-click on the **Gum** project (not the solution)
+2. Select **Set as Startup Project**
+
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
