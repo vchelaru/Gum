@@ -69,10 +69,18 @@ public enum DimensionUnitType
     AbsoluteMultipliedByFontScale = 8,
 
     /// <summary>
-    /// Width and Height values are measured in screen pixels. If the Camera is zoomed 100% then 
+    /// Width and Height values are measured in screen pixels. If the Camera is zoomed 100% then
     /// values are the same as Absolute. Zooming the camera affects absolute size.
     /// </summary>
-    ScreenPixel = 9
+    ScreenPixel = 9,
+
+    /// <summary>
+    /// The dimension is the larger of the parent's size or the children's bounds plus padding.
+    /// The value acts as pixel padding applied to the children-based calculation, similar to
+    /// RelativeToChildren. A value of 0 means the element is exactly the max of its parent's
+    /// size and its children's bounds.
+    /// </summary>
+    RelativeToMaxParentOrChildren = 10
 }
 
 public enum HierarchyDependencyType
@@ -92,12 +100,12 @@ public static class DimensionUnitTypeExtensions
     /// <returns>Whether one unit represents one pixel.</returns>
     public static bool GetIsPixelBased(this DimensionUnitType unitType)
     {
-        return unitType == DimensionUnitType.Absolute || 
+        return unitType == DimensionUnitType.Absolute ||
             unitType == DimensionUnitType.RelativeToParent ||
             unitType == DimensionUnitType.RelativeToChildren ||
             unitType == DimensionUnitType.AbsoluteMultipliedByFontScale ||
-            unitType == DimensionUnitType.ScreenPixel
-
+            unitType == DimensionUnitType.ScreenPixel ||
+            unitType == DimensionUnitType.RelativeToMaxParentOrChildren
             ;
     }
 
@@ -114,6 +122,7 @@ public static class DimensionUnitTypeExtensions
                 return HierarchyDependencyType.NoDependency;
             case DimensionUnitType.PercentageOfParent:
             case DimensionUnitType.RelativeToParent:
+            case DimensionUnitType.RelativeToMaxParentOrChildren:
                 return HierarchyDependencyType.DependsOnParent;
             case DimensionUnitType.RelativeToChildren:
                 return HierarchyDependencyType.DependsOnChildren;

@@ -226,6 +226,20 @@ public class WireframeControl : GraphicsDeviceControl
     private void InitializeDefaultTypeInstantiation()
     {
         ElementSaveExtensions.RegisterGueInstantiation(
+            "ColoredRectangle",
+            () => new ColoredRectangleRuntime());
+
+
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Polygon",
+            () => new PolygonRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Sprite",
+            () => new SpriteRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
             "Text",
             () =>
             {
@@ -234,14 +248,6 @@ public class WireframeControl : GraphicsDeviceControl
                 return new TextRuntime(systemManagers: this.SystemManagers);
             });
 
-        ElementSaveExtensions.RegisterGueInstantiation(
-            "Sprite",
-            () => new SpriteRuntime());
-
-
-        ElementSaveExtensions.RegisterGueInstantiation(
-            "Polygon",
-            () => new PolygonRuntime());
 
     }
 

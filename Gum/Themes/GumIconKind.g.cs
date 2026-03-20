@@ -15,6 +15,7 @@ public enum GumIconKind
     ChildrenLayoutLeftToRightStack, // ChildrenLayoutLeftToRightStack
     ChildrenLayoutRegular, // ChildrenLayoutRegular
     ChildrenLayoutTopToBottomStack, // ChildrenLayoutTopToBottomStack
+    HeightRelativeToMaxChildrenOrParent, // HeightRelativeToMaxChildrenOrParent
     HeightUnitsAbsolute, // HeightUnitsAbsolute
     HeightUnitsAbsoluteMultipliedByFontScale, // HeightUnitsAbsoluteMultipliedByFontScale
     HeightUnitsMaintainFileAspectRatio, // HeightUnitsMaintainFileAspectRatio
@@ -28,6 +29,7 @@ public enum GumIconKind
     TextOverflowHorizontalTruncateWord, // TextOverflowHorizontalTruncateWord
     TextOverflowVerticalSpill, // TextOverflowVerticalSpill
     TextOverflowVerticalTruncateLine, // TextOverflowVerticalTruncateLine
+    WidthRelativeToMaxChildrenOrParent, // WidthRelativeToMaxChildrenOrParent
     WidthUnitsAbsolute, // WidthUnitsAbsolute
     WidthUnitsAbsoluteMultipliedByFontScale, // WidthUnitsAbsoluteMultipliedByFontScale
     WidthUnitsMaintainFileAspectRatio, // WidthUnitsMaintainFileAspectRatio
@@ -64,6 +66,7 @@ public static class GumIconKindMap
         "ChildrenLayoutLeftToRightStack",
         "ChildrenLayoutRegular",
         "ChildrenLayoutTopToBottomStack",
+        "HeightRelativeToMaxChildrenOrParent",
         "HeightUnitsAbsolute",
         "HeightUnitsAbsoluteMultipliedByFontScale",
         "HeightUnitsMaintainFileAspectRatio",
@@ -77,6 +80,7 @@ public static class GumIconKindMap
         "TextOverflowHorizontalTruncateWord",
         "TextOverflowVerticalSpill",
         "TextOverflowVerticalTruncateLine",
+        "WidthRelativeToMaxChildrenOrParent",
         "WidthUnitsAbsolute",
         "WidthUnitsAbsoluteMultipliedByFontScale",
         "WidthUnitsMaintainFileAspectRatio",
