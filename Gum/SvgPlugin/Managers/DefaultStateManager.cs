@@ -129,7 +129,8 @@ public static class DefaultStateManager
 
         var shouldRefresh = rootName == "UseGradient" ||
             rootName == "GradientType" ||
-            rootName == "HasDropshadow";
+            rootName == "HasDropshadow" ||
+            rootName == "IsFilled";
 
         if (shouldRefresh)
         {
@@ -204,6 +205,19 @@ public static class DefaultStateManager
             var hasDropshadow = recursiveVariableFinder.GetValue(prefix + "HasDropshadow");
             var effectiveHasDropshadow = hasDropshadow is bool asBool && asBool;
             return !effectiveHasDropshadow;
+        }
+
+        #endregion
+
+        #region Stroke and Fill
+
+        if (rootName == "StrokeWidth" || rootName == "StrokeDashLength" || rootName == "StrokeGapLength")
+        {
+            var isFilled = recursiveVariableFinder.GetValue(prefix + "IsFilled");
+            if (isFilled is true)
+            {
+                return true;
+            }
         }
 
         #endregion
