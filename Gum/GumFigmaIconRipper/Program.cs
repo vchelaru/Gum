@@ -17,12 +17,14 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        string gumDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..\Gum\"));
+        string gumDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), @"..\"));
         string inputDir = Path.Combine(gumDirectory, @"Content\Svg\");
         string outputXaml = Path.Combine(gumDirectory, @"Themes\", "GumIcons.xaml");
         string enumOut = Path.Combine(gumDirectory, @"Themes\", "GumIconKind.g.cs");
         string enumNs = "Gum.Themes";
         string enumName = "GumIconKind";
+
+        Console.WriteLine($"Looking for SVGs in: {inputDir}");
 
         if (!Directory.Exists(inputDir))
         {
@@ -31,7 +33,17 @@ public static class Program
         }
 
         var svgFiles = Directory.GetFiles(inputDir, "*.svg").OrderBy(p => p).ToList();
-        if (svgFiles.Count == 0) { Console.Error.WriteLine("No .svg files found."); return 3; }
+        if (svgFiles.Count == 0)
+        {
+            Console.Error.WriteLine("No .svg files found.");
+            return 3;
+        }
+
+        Console.WriteLine($"Found {svgFiles.Count} SVG file(s):");
+        foreach (var file in svgFiles)
+        {
+            Console.WriteLine($"  {Path.GetFileName(file)}");
+        }
 
         var dict = new ResourceDictionary();
         var items = new List<(string FileNameNoExt, string ResourceKey, string EnumToken)>();
@@ -103,6 +115,7 @@ public static class Program
         using (var xw = System.Xml.XmlWriter.Create(fs, xsettings))
         {
             xw.WriteComment("Auto-generated icon geometries. Keys are filenames. Two-tone: add .Secondary.");
+            xw.WriteComment("This file is created by GumFigmaIconRipper.");
             XamlWriter.Save(dict, xw);
         }
 

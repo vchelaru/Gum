@@ -133,7 +133,7 @@ namespace Gum.Controls
                     {
                         Name = "Relative to Max of Children or Parent",
                         Value  = DimensionUnitType.RelativeToMaxParentOrChildren,
-                        GumIconName = "WidthUnitsAbsoluteMultipliedByFontScale"
+                        GumIconName = "WidthRelativeToMaxChildrenOrParent"
                     }
             };
         }

@@ -109,6 +109,12 @@ namespace Gum.Controls
                         Name = "Absolute Multiplied by Font Scale",
                         Value = DimensionUnitType.AbsoluteMultipliedByFontScale,
                         GumIconName = "HeightUnitsAbsoluteMultipliedByFontScale"
+                    },
+                    new Option
+                    {
+                        Name = "Relative to Max of Children or Parent",
+                        Value  = DimensionUnitType.RelativeToMaxParentOrChildren,
+                        GumIconName = "HeightRelativeToMaxChildrenOrParent"
                     }
             };
         }
