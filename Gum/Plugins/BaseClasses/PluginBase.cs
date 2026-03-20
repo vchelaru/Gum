@@ -50,6 +50,10 @@ public abstract class PluginBase : IPlugin
     public event Action<ElementSave>? ElementAdd;
     public event Action<ElementSave>? ElementDelete;
     /// <summary>
+    /// Raised when an element (screen or component) is imported into the project.
+    /// </summary>
+    public event Action<ElementSave>? ElementImported;
+    /// <summary>
     /// Raised when an element is duplicated. First argument is the old element, second is the new.
     /// </summary>
     public event Action<ElementSave, ElementSave>? ElementDuplicate;
@@ -389,6 +393,8 @@ public abstract class PluginBase : IPlugin
         ElementAdd?.Invoke(element);
     public void CallElementDelete(ElementSave element) =>
         ElementDelete?.Invoke(element);
+    public void CallElementImported(ElementSave element) =>
+        ElementImported?.Invoke(element);
     public void CallElementDuplicate(ElementSave oldElement, ElementSave newElement) =>
         ElementDuplicate?.Invoke(oldElement, newElement);
     public void CallElementRename(ElementSave elementSave, string oldName) =>

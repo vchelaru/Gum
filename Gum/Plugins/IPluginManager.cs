@@ -51,6 +51,8 @@ public interface IPluginManager
 
     void ElementDelete(ElementSave element);
 
+    void ElementImported(ElementSave element);
+
     void ElementDuplicate(ElementSave oldElement, ElementSave newElement);
 
     void ElementReloaded(ElementSave element);
