@@ -176,6 +176,7 @@ namespace SkiaPlugin
                 case "Canvas": return new SkiaTexturedRenderable(new RenderableCanvas());
 
                 case "ColoredCircle": return new SkiaTexturedRenderable(new RenderableShapeAdapter(new Circle()));
+                case "Line": return new SkiaTexturedRenderable(new RenderableShapeAdapter(new Line()));
                 case "LottieAnimation": return new SkiaTexturedRenderable(new RenderableLottieAnimation());
                 case "RoundedRectangle": return new SkiaTexturedRenderable(new RenderableShapeAdapter(new RoundedRectangle()));
                 case "Svg": return new SkiaTexturedRenderable(new RenderableSvg());
@@ -191,6 +192,7 @@ namespace SkiaPlugin
                 case "Arc": return StandardElementsManager.GetArcState();
                 case "Canvas": return DefaultStateManager.GetCanvasState();
                 case "ColoredCircle": return StandardElementsManager.GetColoredCircleState();
+                case "Line": return StandardElementsManager.GetLineState();
                 case "LottieAnimation": return DefaultStateManager.GetLottieAnimationState();
                 case "RoundedRectangle": return StandardElementsManager.GetRoundedRectangleState();
                 case "Svg": return DefaultStateManager.GetSvgState();

@@ -50,6 +50,8 @@ namespace SkiaGum.Renderables
 
         public bool ShouldApplyColorOnSpriteRender => _shape.ShouldApplyColorOnSpriteRender;
 
+        public bool CanRenderAt0Dimension => _shape.CanRenderAt0Dimension;
+
         public float XSizeSpillover => _shape.XSizeSpillover;
 
         public float YSizeSpillover => _shape.YSizeSpillover;

@@ -535,6 +535,36 @@ public abstract class RenderableShapeBase : RenderableBase
 
     }
 
+    /// <summary>
+    /// Adjusts a top-left position so that Apos.Shapes' center-based rotation
+    /// produces the same result as rotating around the top-left corner.
+    /// </summary>
+    protected static Vector2 AdjustPositionForCenterRotation(Vector2 topLeft, Vector2 size, float rotationRadians)
+    {
+        if (rotationRadians == 0)
+        {
+            return topLeft;
+        }
+
+        var halfW = size.X / 2.0f;
+        var halfH = size.Y / 2.0f;
+
+        // Center relative to top-left (unrotated)
+        var cx = halfW;
+        var cy = halfH;
+
+        // Rotate center around origin (top-left corner)
+        var cos = (float)System.Math.Cos(rotationRadians);
+        var sin = (float)System.Math.Sin(rotationRadians);
+        var rotatedCx = cx * cos - cy * sin;
+        var rotatedCy = cx * sin + cy * cos;
+
+        // New top-left = original top-left + rotated center - half size
+        return new Vector2(
+            topLeft.X + rotatedCx - halfW,
+            topLeft.Y + rotatedCy - halfH);
+    }
+
     public override string BatchKey => "Apos.Shapes";
 
     public override void StartBatch(ISystemManagers systemManagers)

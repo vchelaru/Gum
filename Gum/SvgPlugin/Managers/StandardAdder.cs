@@ -24,6 +24,7 @@ namespace SkiaPlugin.Managers
             AddStandard("Arc", StandardElementsManager.GetArcState());
             AddStandard("Canvas", DefaultStateManager.GetCanvasState());
             AddStandard("ColoredCircle", StandardElementsManager.GetColoredCircleState());
+            AddStandard("Line", StandardElementsManager.GetLineState());
             AddStandard("LottieAnimation", DefaultStateManager.GetLottieAnimationState());
             AddStandard("RoundedRectangle", StandardElementsManager.GetRoundedRectangleState());
             AddStandard("Svg", DefaultStateManager.GetSvgState());
