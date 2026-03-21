@@ -62,7 +62,7 @@ public class SetVariableLogic : ISetVariableLogic
 
     private readonly VariableReferenceLogic _variableReferenceLogic;
     private readonly ICircularReferenceManager _circularReferenceManager;
-    private readonly FontManager _fontManager;
+    private readonly IFontManager _fontManager;
     private readonly IFileCommands _fileCommands;
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
@@ -86,7 +86,7 @@ public class SetVariableLogic : ISetVariableLogic
         WireframeCommands wireframeCommands,
         VariableReferenceLogic variableReferenceLogic,
         IGuiCommands guiCommands,
-        FontManager fontManager,
+        IFontManager fontManager,
         IFileCommands fileCommands,
         ICircularReferenceManager circularReferenceManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,

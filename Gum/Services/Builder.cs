@@ -31,6 +31,7 @@ using Gum.Settings;
 using ToolsUtilities;
 using Gum.Logic.FileWatch;
 using Gum.Reflection;
+using Gum.ProjectServices.FontGeneration;
 using Gum.Services.Fonts;
 using Gum.Localization;
 
@@ -102,7 +103,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IDeleteLogic, DeleteLogic>();
         services.AddSingleton<FileLocations>();
         services.AddSingleton<FileWatchLogic>();
-        services.AddSingleton<FontManager>();
+        services.AddSingleton<IFontGenerationCallbacks, ToolFontGenerationCallbacks>();
+        services.AddSingleton<IHeadlessFontGenerationService>(provider =>
+            new HeadlessFontGenerationService(provider.GetRequiredService<IFontGenerationCallbacks>()));
+        services.AddSingleton<IFontManager, FontManager>();
         services.AddSingleton<IHotkeyManager, HotkeyManager>();
         services.AddSingleton<LocalizationService>();
         services.AddSingleton<ISelectedState, SelectedState>();

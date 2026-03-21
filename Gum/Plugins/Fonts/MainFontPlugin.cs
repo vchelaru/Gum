@@ -18,14 +18,14 @@ public class MainFontPlugin : InternalPlugin
 {
 
     private readonly IGuiCommands _guiCommands;
-    private readonly FontManager _fontManager;
+    private readonly IFontManager _fontManager;
     private readonly IDialogService _dialogService;
     private readonly IProjectState _projectState;
 
     public MainFontPlugin()
     {
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fontManager = Locator.GetRequiredService<FontManager>();
+        _fontManager = Locator.GetRequiredService<IFontManager>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _projectState = Locator.GetRequiredService<IProjectState>();
     }

@@ -39,7 +39,6 @@
 		<EmbeddedResource Include="Content\Fonts\Font18Arial_o1.fnt">
 		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</EmbeddedResource>
-		<EmbeddedResource Include="Libraries\bmfont.exe" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />

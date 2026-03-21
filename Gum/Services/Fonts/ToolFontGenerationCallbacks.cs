@@ -11,7 +11,7 @@ namespace Gum.Services.Fonts;
 /// Tool-specific implementation of <see cref="IFontGenerationCallbacks"/> that routes output
 /// to <see cref="IGuiCommands"/> and file-change suppression to <see cref="IFileWatchManager"/>.
 /// </summary>
-internal class ToolFontGenerationCallbacks : IFontGenerationCallbacks
+public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
 {
     private readonly IGuiCommands _guiCommands;
     private readonly IFileWatchManager _fileWatchManager;

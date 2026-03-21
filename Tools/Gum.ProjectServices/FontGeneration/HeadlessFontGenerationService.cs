@@ -88,6 +88,21 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     }
 
     /// <inheritdoc/>
+    public GeneralResponse CreateFontIfNecessary(BmfcSave bmfcSave, string projectDirectory, bool autoSizeFontOutputs)
+    {
+        ThrowIfNotWindows();
+        EnsureToolsExtracted();
+
+        // Run synchronously (createTask: false) — used by property-setting code paths.
+        Task<GeneralResponse> task = TryCreateFontFor(bmfcSave, force: false, showSpinner: false,
+            createTask: false, projectDirectory, autoSizeFontOutputs);
+
+        // TryCreateFontFor with createTask: false completes synchronously,
+        // so .Result is safe here and will not deadlock.
+        return task.Result;
+    }
+
+    /// <inheritdoc/>
     public BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave, string fontRanges,
         int spacingHorizontal, int spacingVertical, StateSave? forcedValues)
     {
