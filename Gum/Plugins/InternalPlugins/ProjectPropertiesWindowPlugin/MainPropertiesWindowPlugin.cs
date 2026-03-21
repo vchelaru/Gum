@@ -256,6 +256,22 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 }
 
                 break;
+            case nameof(viewModel.FontGenerator):
+                try
+                {
+                    _fontManager.DeleteFontCacheFolder();
+                }
+                catch (System.IO.IOException exception)
+                {
+                    _dialogService.ShowMessage(
+                        "Attempted to delete font cache folder to re-create it with the new font generator " +
+                        $"but was unable to do so:\n\n{exception}");
+                    break;
+                }
+
+                await _fontManager.CreateAllMissingFontFiles(_projectState.GumProjectSave);
+                shouldReloadContent = true;
+                break;
             case nameof(viewModel.ShowCheckerBackground):
                 // Checkerboard visibility is handled via WireframePropertyChanged,
                 // so skip the wireframe refresh to avoid resetting the texture
