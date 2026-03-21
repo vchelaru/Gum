@@ -32,6 +32,12 @@ public interface IHeadlessFontGenerationService
         int spacingHorizontal, int spacingVertical, StateSave? forcedValues);
 
     /// <summary>
+    /// Synchronously creates a single font file if it does not already exist in the project directory.
+    /// Intended for use from synchronous code paths such as property setting.
+    /// </summary>
+    GeneralResponse CreateFontIfNecessary(BmfcSave bmfcSave, string projectDirectory, bool autoSizeFontOutputs);
+
+    /// <summary>
     /// Determines the smallest texture size that keeps the font on a single page.
     /// </summary>
     Task<GeneralResponse<Point>> GetOptimizedSizeFor(BmfcSave bmfcSave, bool forceMonoSpacedNumber, Action<string>? callback);

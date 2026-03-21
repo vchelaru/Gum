@@ -93,22 +93,33 @@ namespace WpfDataUi
 
         private void HandleUnloaded(object? sender, RoutedEventArgs e)
         {
-            if (UserControl != null)
+            if (UserControl == null)
             {
-                // Detach from this Grid first so the control can be re-parented when
-                // reused from the pool (a UIElement can only have one visual parent).
-                Grid.Children.Remove(UserControl);
-
-                if (UserControl is IDataUi dataUi)
-                {
-                    dataUi.ResetForPooling();
-                }
-
-                var type = UserControl.GetType();
-                if (!_controlPool.TryGetValue(type, out var stack))
-                    _controlPool[type] = stack = new Stack<UserControl>();
-                stack.Push(UserControl);
+                return;
             }
+
+            // Only pool when the container is being discarded by a grid rebuild
+            // (DataContext goes null or changes). When a tab is merely hidden,
+            // the DataContext stays the same and we should keep the control
+            // attached so it reappears intact when the tab is shown again.
+            if (this.DataContext != null)
+            {
+                return;
+            }
+
+            Grid.Children.Remove(UserControl);
+
+            if (UserControl is IDataUi dataUi)
+            {
+                dataUi.ResetForPooling();
+            }
+
+            var type = UserControl.GetType();
+            if (!_controlPool.TryGetValue(type, out var stack))
+            {
+                _controlPool[type] = stack = new Stack<UserControl>();
+            }
+            stack.Push(UserControl);
         }
 
         static UserControl? TryGetFromPool(Type type)

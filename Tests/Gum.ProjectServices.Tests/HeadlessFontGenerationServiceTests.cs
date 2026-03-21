@@ -508,6 +508,30 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     // Windows gate
     // -------------------------------------------------------------------------
 
+    #region CreateFontIfNecessary
+
+    [Fact]
+    public void CreateFontIfNecessary_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        BmfcSave bmfcSave = new BmfcSave();
+        bmfcSave.FontName = "Arial";
+        bmfcSave.FontSize = 24;
+
+        Should.Throw<PlatformNotSupportedException>(
+            () => _sut.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false));
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
+    // Windows gate
+    // -------------------------------------------------------------------------
+
     #region Windows gate
 
     [Fact]

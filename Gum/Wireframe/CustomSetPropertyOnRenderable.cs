@@ -33,6 +33,7 @@ using MonoGameGum.GueDeriving;
 
 #if GUM
 using Gum.Services;
+using Gum.Services.Fonts;
 using Gum.ToolStates;
 #endif
 
@@ -55,7 +56,7 @@ public class CustomSetPropertyOnRenderable
     public static ILocalizationService? LocalizationService { get; set; }
 
 #if GUM
-    private static readonly FontManager _fontManager;
+    private static readonly IFontManager _fontManager;
 #endif
 
     public static event Action<string>? PropertyAssignmentError;
@@ -63,7 +64,7 @@ public class CustomSetPropertyOnRenderable
     static CustomSetPropertyOnRenderable()
     {
 #if GUM
-        _fontManager = Builder.Get<FontManager>();
+        _fontManager = Builder.Get<IFontManager>();
 #endif
     }
 
@@ -1119,19 +1120,20 @@ public class CustomSetPropertyOnRenderable
                     // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
                     try
                     {
-                        var projectState = Locator.GetRequiredService<IProjectState>();
-                        BmfcSave.CreateBitmapFontFilesIfNecessary(
-                            fontSizeStack.Peek(),
-                            fontNameStack.Peek(),
-                            outlineThicknessStack.Peek(),
-                            useFontSmoothingStack.Peek(),
-                            isItalicStack.Peek(),
-                            isBoldStack.Peek(),
-                            projectState.GumProjectSave?.FontRanges,
-                            projectState.GumProjectSave?.FontSpacingHorizontal ?? 1,
-                            projectState.GumProjectSave?.FontSpacingVertical ?? 1
+                        IProjectState projectState = Locator.GetRequiredService<IProjectState>();
 
-                            );
+                        BmfcSave bmfcSave = new BmfcSave();
+                        bmfcSave.FontSize = fontSizeStack.Peek();
+                        bmfcSave.FontName = fontNameStack.Peek();
+                        bmfcSave.OutlineThickness = outlineThicknessStack.Peek();
+                        bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
+                        bmfcSave.IsItalic = isItalicStack.Peek();
+                        bmfcSave.IsBold = isBoldStack.Peek();
+                        bmfcSave.Ranges = projectState.GumProjectSave?.FontRanges ?? BmfcSave.DefaultRanges;
+                        bmfcSave.SpacingHorizontal = projectState.GumProjectSave?.FontSpacingHorizontal ?? 1;
+                        bmfcSave.SpacingVertical = projectState.GumProjectSave?.FontSpacingVertical ?? 1;
+
+                        _fontManager.CreateFontIfNecessary(bmfcSave);
                     }
                     catch
                     {

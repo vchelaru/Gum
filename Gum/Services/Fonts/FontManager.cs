@@ -1,8 +1,8 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.Logic.FileWatch;
 using Gum.ProjectServices.FontGeneration;
+using Gum.ToolStates;
 using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Drawing;
@@ -16,24 +16,22 @@ namespace Gum.Services.Fonts;
 /// <see cref="IHeadlessFontGenerationService"/> and wires tool-specific UI feedback
 /// through <see cref="ToolFontGenerationCallbacks"/>.
 /// </summary>
-public class FontManager
+public class FontManager : IFontManager
 {
     private readonly IFileCommands _fileCommands;
     private readonly IHeadlessFontGenerationService _fontGenerationService;
+    private readonly IProjectState _projectState;
 
-    /// <summary>
-    /// The absolute path to the font cache folder for the currently loaded project.
-    /// </summary>
+    /// <inheritdoc/>
     public string AbsoluteFontCacheFolder => _fileCommands.ProjectDirectory + "FontCache/";
 
-    public FontManager(IGuiCommands guiCommands,
-        IFileCommands fileCommands,
-        IFileWatchManager fileWatchManager)
+    public FontManager(IFileCommands fileCommands,
+        IProjectState projectState,
+        IHeadlessFontGenerationService fontGenerationService)
     {
         _fileCommands = fileCommands;
-
-        ToolFontGenerationCallbacks callbacks = new ToolFontGenerationCallbacks(guiCommands, fileWatchManager);
-        _fontGenerationService = new HeadlessFontGenerationService(callbacks);
+        _projectState = projectState;
+        _fontGenerationService = fontGenerationService;
     }
 
     /// <summary>
@@ -52,20 +50,23 @@ public class FontManager
         await _fontGenerationService.CreateAllMissingFontFiles(project, _fileCommands.ProjectDirectory.FullPath, forceRecreate);
     }
 
-    /// <summary>
-    /// Creates fonts referenced by the changed instance and propagates to dependent elements.
-    /// </summary>
-    internal void ReactToFontValueSet(InstanceSave instance, GumProjectSave gumProject,
+    /// <inheritdoc/>
+    public void ReactToFontValueSet(InstanceSave instance, GumProjectSave gumProject,
         StateSave stateSave, StateSave forcedValues)
     {
         _fontGenerationService.ReactToFontValueSet(instance, gumProject, stateSave, forcedValues,
             _fileCommands.ProjectDirectory.FullPath);
     }
 
-    /// <summary>
-    /// Builds a <see cref="BmfcSave"/> describing the font for the given instance/state,
-    /// or <c>null</c> if no font is configured.
-    /// </summary>
+    /// <inheritdoc/>
+    public void CreateFontIfNecessary(BmfcSave bmfcSave)
+    {
+        _fontGenerationService.CreateFontIfNecessary(bmfcSave,
+            _fileCommands.ProjectDirectory.FullPath,
+            _projectState.GumProjectSave?.AutoSizeFontOutputs ?? false);
+    }
+
+    /// <inheritdoc/>
     public BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave, string fontRanges,
         int spacingHorizontal, int spacingVertical, StateSave? forcedValues)
     {

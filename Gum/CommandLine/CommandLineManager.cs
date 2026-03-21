@@ -15,7 +15,7 @@ namespace Gum.CommandLine
 {
     public class CommandLineManager : Singleton<CommandLineManager>
     {
-        private readonly FontManager _fontManager;
+        private readonly IFontManager _fontManager;
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
         private readonly IMessenger _messenger;
@@ -42,7 +42,7 @@ namespace Gum.CommandLine
 
         public CommandLineManager()
         {
-            _fontManager = Locator.GetRequiredService<FontManager>();
+            _fontManager = Locator.GetRequiredService<IFontManager>();
             _guiCommands = Locator.GetRequiredService<IGuiCommands>();
             _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _messenger = Locator.GetRequiredService<IMessenger>();
