@@ -71,6 +71,9 @@ public class KernSmithFileGenerator : IFontFileGenerator
         FontGeneratorOptions options = new FontGeneratorOptions();
 
         options.Size = bmfcSave.FontSize;
+        // Gum always uses "match character height" mode (negative fontSize in .bmfc),
+        // which scales the font so the tallest glyph matches the requested pixel size.
+        options.MatchCharHeight = true;
         options.Bold = bmfcSave.IsBold;
         options.Italic = bmfcSave.IsItalic;
         options.AntiAlias = bmfcSave.UseSmoothing ? AntiAliasMode.Grayscale : AntiAliasMode.None;
