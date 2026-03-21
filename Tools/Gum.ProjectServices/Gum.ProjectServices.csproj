@@ -26,6 +26,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\..\KernSmith\src\KernSmith\KernSmith.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -2,7 +2,6 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.Runtime.InteropServices;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.ProjectServices;
@@ -13,7 +12,7 @@ namespace Gum.Cli.Commands;
 
 /// <summary>
 /// Defines the <c>gumcli fonts</c> command which generates missing bitmap font files for a project.
-/// Windows-only: bmfont.exe is a Windows-only application.
+/// Supports both bmfont.exe (Windows-only) and KernSmith (cross-platform) backends.
 /// </summary>
 public static class FontsCommand
 {
@@ -26,7 +25,7 @@ public static class FontsCommand
             "project",
             "Path to the .gumx project file.");
 
-        Command command = new Command("fonts", "Generate missing bitmap font files for a Gum project. Windows-only.")
+        Command command = new Command("fonts", "Generate missing bitmap font files for a Gum project.")
         {
             projectArgument
         };
@@ -42,12 +41,6 @@ public static class FontsCommand
 
     private static async System.Threading.Tasks.Task<int> Execute(string projectPath)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Console.Error.WriteLine("error: Font generation requires Windows (bmfont.exe is a Windows-only application).");
-            return 2;
-        }
-
         string fullPath = Path.GetFullPath(projectPath);
 
         IProjectLoader loader = new ProjectLoader();
@@ -72,7 +65,8 @@ public static class FontsCommand
         FileManager.RelativeDirectory = projectDirectory;
 
         IFontGenerationCallbacks callbacks = new ConsoleFontGenerationCallbacks();
-        IHeadlessFontGenerationService fontService = new HeadlessFontGenerationService(callbacks);
+        IFontFileGenerator fontFileGenerator = CreateFontFileGenerator(project, callbacks);
+        IHeadlessFontGenerationService fontService = new HeadlessFontGenerationService(fontFileGenerator, callbacks);
 
         try
         {
@@ -85,6 +79,18 @@ public static class FontsCommand
         }
 
         return 0;
+    }
+
+    /// <summary>
+    /// Selects the appropriate font file generator based on the project's <see cref="GumProjectSave.FontGenerator"/> setting.
+    /// </summary>
+    private static IFontFileGenerator CreateFontFileGenerator(GumProjectSave project, IFontGenerationCallbacks callbacks)
+    {
+        return project.FontGenerator switch
+        {
+            FontGeneratorType.KernSmith => new KernSmithFileGenerator(callbacks),
+            _ => new BmFontExeFileGenerator(callbacks)
+        };
     }
 
     /// <summary>

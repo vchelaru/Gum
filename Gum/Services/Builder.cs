@@ -104,8 +104,19 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<FileLocations>();
         services.AddSingleton<FileWatchLogic>();
         services.AddSingleton<IFontGenerationCallbacks, ToolFontGenerationCallbacks>();
+        services.AddSingleton<IFontFileGenerator>(provider =>
+        {
+            IFontGenerationCallbacks callbacks = provider.GetRequiredService<IFontGenerationCallbacks>();
+            BmFontExeFileGenerator bmFont = new BmFontExeFileGenerator(callbacks);
+            KernSmithFileGenerator kernSmith = new KernSmithFileGenerator(callbacks);
+            IProjectState projectState = provider.GetRequiredService<IProjectState>();
+            return new FontFileGeneratorSelector(bmFont, kernSmith,
+                () => projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont);
+        });
         services.AddSingleton<IHeadlessFontGenerationService>(provider =>
-            new HeadlessFontGenerationService(provider.GetRequiredService<IFontGenerationCallbacks>()));
+            new HeadlessFontGenerationService(
+                provider.GetRequiredService<IFontFileGenerator>(),
+                provider.GetRequiredService<IFontGenerationCallbacks>()));
         services.AddSingleton<IFontManager, FontManager>();
         services.AddSingleton<IHotkeyManager, HotkeyManager>();
         services.AddSingleton<LocalizationService>();
