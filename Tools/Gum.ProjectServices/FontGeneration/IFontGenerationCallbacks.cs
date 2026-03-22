@@ -22,6 +22,12 @@ public interface IFontGenerationCallbacks
     IDisposable? ShowSpinner() => null;
 
     /// <summary>
+    /// Called to report font generation progress. <paramref name="completed"/> is the number of fonts
+    /// finished so far and <paramref name="total"/> is the total number to generate.
+    /// </summary>
+    void OnFontProgress(int completed, int total) { }
+
+    /// <summary>
     /// Called before a font-related file is written so that file-watch listeners can ignore the change.
     /// </summary>
     void OnIgnoreFileChange(FilePath filePath) { }

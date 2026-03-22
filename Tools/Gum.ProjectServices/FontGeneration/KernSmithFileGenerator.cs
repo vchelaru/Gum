@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using KernSmith;
@@ -29,7 +30,17 @@ public class KernSmithFileGenerator : IFontFileGenerator
     }
 
     /// <inheritdoc/>
-    public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
+    public async Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
+    {
+        if (createTask)
+        {
+            return await Task.Run(() => GenerateFontCore(bmfcSave, outputFntPath));
+        }
+
+        return GenerateFontCore(bmfcSave, outputFntPath);
+    }
+
+    private GeneralResponse GenerateFontCore(BmfcSave bmfcSave, string outputFntPath)
     {
         GeneralResponse response = new GeneralResponse();
 
@@ -37,7 +48,7 @@ public class KernSmithFileGenerator : IFontFileGenerator
         {
             FontGeneratorOptions options = BuildOptions(bmfcSave);
 
-            _callbacks.OnOutput($"KernSmith: generating \"{bmfcSave.FontName}\" size {bmfcSave.FontSize} -> {outputFntPath}");
+            var stopwatch = Stopwatch.StartNew();
 
             BmFontResult result = BmFont.GenerateFromSystem(bmfcSave.FontName, options);
 
@@ -45,10 +56,13 @@ public class KernSmithFileGenerator : IFontFileGenerator
             string basePath = Path.ChangeExtension(outputFntPath, null);
             result.ToFile(basePath);
 
+            stopwatch.Stop();
+
             if (File.Exists(outputFntPath))
             {
                 response.Succeeded = true;
                 response.Message = string.Empty;
+                _callbacks.OnOutput($"KernSmith ({stopwatch.ElapsedMilliseconds}ms) : generated \"{bmfcSave.FontName}\" size {bmfcSave.FontSize} -> {outputFntPath} ");
             }
             else
             {
@@ -63,7 +77,7 @@ public class KernSmithFileGenerator : IFontFileGenerator
             _callbacks.OnOutput($"KernSmith error: {ex.Message}");
         }
 
-        return Task.FromResult(response);
+        return response;
     }
 
     private static FontGeneratorOptions BuildOptions(BmfcSave bmfcSave)

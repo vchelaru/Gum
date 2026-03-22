@@ -1,25 +1,61 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Gum.Controls;
+
 /// <summary>
-/// Interaction logic for Spinner.xaml
+/// A progress dialog shown during font generation.
 /// </summary>
 public partial class Spinner : Window
 {
+    private int _completed;
+    private int _total;
+
     public Spinner()
     {
+        try
+        {
+            Window? mainWindow = Application.Current.MainWindow;
+            if (mainWindow != null && mainWindow.IsLoaded)
+            {
+                Owner = mainWindow;
+            }
+            else
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
+        }
+        catch
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+
         InitializeComponent();
+    }
+
+    /// <summary>
+    /// Sets the total number of fonts to generate and resets the progress bar.
+    /// Must be called from the UI thread.
+    /// </summary>
+    public void SetTotal(int total)
+    {
+        _total = total;
+        _completed = 0;
+        FontProgressBar.Maximum = total;
+        FontProgressBar.Value = 0;
+        CountLabel.Text = $"0/{total}";
+    }
+
+    /// <summary>
+    /// Increments the completed count by one and updates the progress bar and label.
+    /// Safe to call from any thread; dispatches to the UI thread automatically.
+    /// </summary>
+    public void IncrementProgress()
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            _completed++;
+            FontProgressBar.Value = _completed;
+            CountLabel.Text = $"{_completed}/{_total}";
+        });
     }
 }

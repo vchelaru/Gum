@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -303,11 +304,20 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
         List<Task> tasks = new List<Task>();
 
+        int completed = 0;
+        _callbacks.OnFontProgress(0, bitmapFonts.Count);
+
         foreach (KeyValuePair<string, BmfcSave> item in bitmapFonts)
         {
             System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
-            tasks.Add(TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true,
-                projectDirectory, project.AutoSizeFontOutputs));
+            Task task = TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true,
+                projectDirectory, project.AutoSizeFontOutputs)
+                .ContinueWith(_ =>
+                {
+                    int current = Interlocked.Increment(ref completed);
+                    _callbacks.OnFontProgress(current, bitmapFonts.Count);
+                });
+            tasks.Add(task);
         }
 
         try

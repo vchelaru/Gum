@@ -1,14 +1,29 @@
-﻿<Window
+<Window
     x:Class="Gum.Controls.Spinner"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Gum.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Width="200"
-    Height="150"
+    Title="Font Generation"
+    Width="300"
+    SizeToContent="Height"
+    Background="Transparent"
+    Foreground="{DynamicResource Frb.Brushes.Foreground}"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterOwner"
+    WindowStyle="None"
+    AllowsTransparency="True"
     mc:Ignorable="d">
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Label>Please wait...</Label>
+    <Border Background="{DynamicResource Frb.Surface01}"
+            BorderBrush="{DynamicResource Frb.Brushes.Border}" BorderThickness="1" CornerRadius="4">
+    <StackPanel Margin="16,12,16,16">
+        <TextBlock Text="Generating fonts..." Margin="0,0,0,8"
+                   Foreground="{DynamicResource Frb.Brushes.Foreground}" />
+        <ProgressBar x:Name="FontProgressBar" Height="20" Minimum="0" Maximum="1" Value="0"
+                     Background="{DynamicResource Frb.Brushes.Background}" />
+        <TextBlock x:Name="CountLabel" Margin="0,6,0,0" HorizontalAlignment="Center" Text="0/0"
+                   Foreground="{DynamicResource Frb.Brushes.Foreground}" />
     </StackPanel>
+    </Border>
 </Window>

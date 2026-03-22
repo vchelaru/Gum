@@ -47,9 +47,7 @@ public class BmFontExeFileGenerator : IFontFileGenerator
         info.Arguments = "-c \"" + bmfcFileToSave + "\"" + " -o \"" + outputFntPath + "\"";
         info.UseShellExecute = true;
 
-        string filenameAndArgs = $"{info.FileName} {info.Arguments}";
-        System.Diagnostics.Debug.WriteLine($"Running: {filenameAndArgs}");
-        _callbacks.OnOutput(filenameAndArgs);
+        var stopwatch = Stopwatch.StartNew();
 
         Process? process = Process.Start(info);
 
@@ -65,6 +63,8 @@ public class BmFontExeFileGenerator : IFontFileGenerator
             }
         }
 
+        stopwatch.Stop();
+
         GeneralResponse toReturn = new GeneralResponse();
 
         if (process == null)
@@ -76,6 +76,7 @@ public class BmFontExeFileGenerator : IFontFileGenerator
         {
             toReturn.Succeeded = true;
             toReturn.Message = string.Empty;
+            _callbacks.OnOutput($"bmfont ({stopwatch.ElapsedMilliseconds}ms) : generated \"{bmfcSave.FontName}\" size {bmfcSave.FontSize} -> {outputFntPath} ");
         }
         else
         {
