@@ -10,7 +10,8 @@ Install `Gum.MonoGame`. This single package pulls in everything needed for code-
 
 ```csharp
 using MonoGameGum;                    // GumService
-using MonoGameGum.Forms.Controls;     // Button, TextBox, StackPanel, etc.
+using Gum.Forms;                      // DefaultVisualsVersion
+using Gum.Forms.Controls;             // Button, TextBox, StackPanel, etc.
 using Gum.Wireframe;                  // Anchor, Dock enums
 ```
 
@@ -20,13 +21,16 @@ This is the minimal working Game1 class with Gum UI:
 
 ```csharp
 using MonoGameGum;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms;
+using Gum.Forms.Controls;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 public class Game1 : Game
 {
+    private static GumService GumUI => GumService.Default;
+
     private GraphicsDeviceManager _graphics;
 
     public Game1()
@@ -38,7 +42,8 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumService.Default.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+        GumUI.Initialize(this, DefaultVisualsVersion.V3);
+        GumUI.UseKeyboardDefaults();
 
         // Create UI here
         var stackPanel = new StackPanel();
@@ -55,14 +60,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        GumService.Default.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumService.Default.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }
@@ -70,7 +75,7 @@ public class Game1 : Game
 
 ## Forms Controls Are the Default
 
-Use Forms controls for all standard UI. They handle visuals, input, and states automatically. Available controls in `MonoGameGum.Forms.Controls`:
+Use Forms controls for all standard UI. They handle visuals, input, and states automatically. Available controls in `Gum.Forms.Controls`:
 
 - **Layout:** `StackPanel`, `Panel`, `ScrollViewer`
 - **Input:** `Button`, `TextBox`, `CheckBox`, `RadioButton`, `Slider`, `ComboBox`

@@ -24,7 +24,7 @@ This document teaches AI agents how to use Gum Forms controls to build interacti
 | `TextBox` | Editable text input |
 | `ToggleButton` | Button that stays pressed/unpressed |
 
-All controls live in `MonoGameGum.Forms.Controls`.
+All controls live in `Gum.Forms.Controls`.
 
 ## Creating and Parenting
 
