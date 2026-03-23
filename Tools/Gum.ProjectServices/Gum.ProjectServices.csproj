@@ -22,11 +22,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="KernSmith" Version="0.9.5" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-		<ProjectReference Include="..\..\..\KernSmith\src\KernSmith\KernSmith.csproj" />
 	</ItemGroup>
 
 </Project>
