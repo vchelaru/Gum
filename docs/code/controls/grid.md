@@ -17,37 +17,62 @@ The following code creates a simple 2×2 grid with two rows and two columns, the
 ```csharp
 // Initialize
 var grid = new Grid();
+// Grid fills its parent by default
 grid.AddToRoot();
-grid.X = 50;
-grid.Y = 50;
-grid.Width = 400;
-grid.Height = 300;
 
-grid.RowDefinitions.Add(new RowDefinition());
-grid.RowDefinitions.Add(new RowDefinition());
-grid.ColumnDefinitions.Add(new ColumnDefinition());
-grid.ColumnDefinitions.Add(new ColumnDefinition());
+// Three columns showing the three main sizing types
+grid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(1, GridUnitType.Star)));
+grid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(2, GridUnitType.Star)));
+grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
 
-var topLeft = new Button();
-topLeft.Text = "Row 0, Col 0";
-grid.AddChild(topLeft, row: 0, column: 0);
+// Two rows with different proportions
+grid.RowDefinitions.Add(new RowDefinition(new GridLength(2, GridUnitType.Star)));
+grid.RowDefinitions.Add(new RowDefinition(new GridLength(1, GridUnitType.Star)));
 
-var topRight = new Button();
-topRight.Text = "Row 0, Col 1";
-grid.AddChild(topRight, row: 0, column: 1);
+// Colors for each column — makes proportions immediately visible
+Color[] columnColors = [
+    new Color(180, 100, 100), // red-ish
+      new Color(100, 150, 180), // blue-ish
+      new Color(100, 170, 120), // green-ish
+  ];
+string[] columnLabels = ["1*", "2*", "Auto"];
+string[] rowLabels = ["2*", "1*"];
 
-var bottomLeft = new Button();
-bottomLeft.Text = "Row 1, Col 0";
-grid.AddChild(bottomLeft, row: 1, column: 0);
+for (int row = 0; row < 2; row++)
+{
+    for (int col = 0; col < 3; col++)
+    {
+        var background = new ColoredRectangleRuntime();
 
-var bottomRight = new Button();
-bottomRight.Text = "Row 1, Col 1";
-grid.AddChild(bottomRight, row: 1, column: 1);
+        float brightness = row == 0 ? 1.0f : 0.6f;
+        var cellColor = new Color(
+            (int)(columnColors[col].R * brightness),
+            (int)(columnColors[col].G * brightness),
+            (int)(columnColors[col].B * brightness)
+        );
+
+        background.Color = cellColor;
+        background.Dock(Dock.Fill);
+        grid.AddChild(background, row: row, column: col);
+
+        var label = new Label();
+        label.Text = $"Col {columnLabels[col]}\nRow {rowLabels[row]}";
+        label.XUnits = GeneralUnitType.PixelsFromMiddle;
+        label.YUnits = GeneralUnitType.PixelsFromMiddle;
+        label.X = 0;
+        label.Y = 0;
+        label.XOrigin = HorizontalAlignment.Center;
+        label.YOrigin = VerticalAlignment.Center;
+        grid.AddChild(label, row: row, column: col);
+    }
+}
 ```
 
-Add XnaFiddle Here
+XnaFiddle.NET sample coming soon...
 
-Add Image Here
+<figure><img src="../../.gitbook/assets/23_10 11 48.png" alt=""><figcaption><p>Grid displaying rows and columns</p></figcaption></figure>
+
+
 
 ## Row and Column Sizing
 
