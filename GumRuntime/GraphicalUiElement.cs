@@ -120,7 +120,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         get
         {
-            var toReturn = currentDirtyState.ParentUpdateType;
+            var toReturn = currentDirtyState?.ParentUpdateType ?? ParentUpdateType.None;
 
             if(GetIfParentHasRatioChildren())
             {

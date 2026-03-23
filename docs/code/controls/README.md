@@ -29,6 +29,7 @@ For details on these shared members, see the [FrameworkElement](frameworkelement
 * [CheckBox](checkbox.md)
 * [ComboBox](combobox.md)
 * [FrameworkElement](frameworkelement/)
+* [Grid](grid.md)
 * [ItemsControl](itemscontrol.md)
 * [Label](label.md)
 * [ListBox](listbox.md)

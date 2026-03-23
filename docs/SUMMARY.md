@@ -216,6 +216,7 @@
     * [IsEnabled](code/controls/frameworkelement/isenabled.md)
     * [IsFocused](code/controls/frameworkelement/isfocused.md)
     * [SetBinding](code/controls/frameworkelement/setbinding.md)
+  * [Grid](code/controls/grid.md)
   * [ItemsControl](code/controls/itemscontrol.md)
   * [Label](code/controls/label.md)
   * [ListBox](code/controls/listbox.md)

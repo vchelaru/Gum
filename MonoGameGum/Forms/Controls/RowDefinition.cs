@@ -17,10 +17,30 @@ public class RowDefinition
     public GridLength Height { get; set; }
 
     /// <summary>
+    /// The minimum height of this row in pixels. Applied to Absolute and Auto rows.
+    /// Defaults to 0 (no minimum).
+    /// </summary>
+    public float MinHeight { get; set; } = 0f;
+
+    /// <summary>
+    /// The maximum height of this row in pixels. Applied to Absolute and Auto rows.
+    /// Defaults to no maximum.
+    /// </summary>
+    public float MaxHeight { get; set; } = float.PositiveInfinity;
+
+    /// <summary>
     /// Creates a new RowDefinition with a default height of 1 Star.
     /// </summary>
     public RowDefinition()
     {
         Height = new GridLength(1, GridUnitType.Star);
+    }
+
+    /// <summary>
+    /// Creates a new RowDefinition with the specified height.
+    /// </summary>
+    public RowDefinition(GridLength height)
+    {
+        Height = height;
     }
 }
