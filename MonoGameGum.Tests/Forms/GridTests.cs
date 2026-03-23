@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Managers;
 using Gum.Wireframe;
+using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
@@ -85,6 +86,26 @@ public class GridTests : BaseTestClass
         GraphicalUiElement cell = (GraphicalUiElement)lastRow.Children[0];
 
         cell.Children.Contains(child.Visual).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AddChild_FrameworkElementRendersBeforeGue_WhenAddedFirst()
+    {
+        Grid grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition());
+        grid.ColumnDefinitions.Add(new ColumnDefinition());
+
+        Panel panel = new Panel();
+        ColoredRectangleRuntime gue = new ColoredRectangleRuntime();
+
+        grid.AddChild(panel, row: 0, column: 0);
+        grid.AddChild(gue, row: 0, column: 0);
+
+        GraphicalUiElement rowContainer = (GraphicalUiElement)grid.Visual.Children[0];
+        GraphicalUiElement cell = (GraphicalUiElement)rowContainer.Children[0];
+
+        cell.Children.IndexOf(panel.Visual).ShouldBe(0);
+        cell.Children.IndexOf(gue).ShouldBe(1);
     }
 
     [Fact]
@@ -261,6 +282,72 @@ public class GridTests : BaseTestClass
         Grid grid = new Grid();
         GraphicalUiElement child = null!;
         Should.Throw<ArgumentNullException>(() => grid.AddChild(child, row: 0, column: 0));
+    }
+
+    [Fact]
+    public void AddChild_GueRendersBeforeFrameworkElement_WhenAddedFirst()
+    {
+        Grid grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition());
+        grid.ColumnDefinitions.Add(new ColumnDefinition());
+
+        ColoredRectangleRuntime gue = new ColoredRectangleRuntime();
+        Panel panel = new Panel();
+
+        grid.AddChild(gue, row: 0, column: 0);
+        grid.AddChild(panel, row: 0, column: 0);
+
+        GraphicalUiElement rowContainer = (GraphicalUiElement)grid.Visual.Children[0];
+        GraphicalUiElement cell = (GraphicalUiElement)rowContainer.Children[0];
+
+        cell.Children.IndexOf(gue).ShouldBe(0);
+        cell.Children.IndexOf(panel.Visual).ShouldBe(1);
+    }
+
+    [Fact]
+    public void AddChild_MultipleFrameworkElementsInCell_PreservesInsertionOrder()
+    {
+        Grid grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition());
+        grid.ColumnDefinitions.Add(new ColumnDefinition());
+
+        Panel panel1 = new Panel();
+        Panel panel2 = new Panel();
+        Panel panel3 = new Panel();
+
+        grid.AddChild(panel1, row: 0, column: 0);
+        grid.AddChild(panel2, row: 0, column: 0);
+        grid.AddChild(panel3, row: 0, column: 0);
+
+        GraphicalUiElement rowContainer = (GraphicalUiElement)grid.Visual.Children[0];
+        GraphicalUiElement cell = (GraphicalUiElement)rowContainer.Children[0];
+
+        cell.Children.IndexOf(panel1.Visual).ShouldBe(0);
+        cell.Children.IndexOf(panel2.Visual).ShouldBe(1);
+        cell.Children.IndexOf(panel3.Visual).ShouldBe(2);
+    }
+
+    [Fact]
+    public void AddChild_MultipleGuesInCell_PreservesInsertionOrder()
+    {
+        Grid grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition());
+        grid.ColumnDefinitions.Add(new ColumnDefinition());
+
+        ColoredRectangleRuntime gue1 = new ColoredRectangleRuntime();
+        ColoredRectangleRuntime gue2 = new ColoredRectangleRuntime();
+        ColoredRectangleRuntime gue3 = new ColoredRectangleRuntime();
+
+        grid.AddChild(gue1, row: 0, column: 0);
+        grid.AddChild(gue2, row: 0, column: 0);
+        grid.AddChild(gue3, row: 0, column: 0);
+
+        GraphicalUiElement rowContainer = (GraphicalUiElement)grid.Visual.Children[0];
+        GraphicalUiElement cell = (GraphicalUiElement)rowContainer.Children[0];
+
+        cell.Children.IndexOf(gue1).ShouldBe(0);
+        cell.Children.IndexOf(gue2).ShouldBe(1);
+        cell.Children.IndexOf(gue3).ShouldBe(2);
     }
 
     [Fact]
