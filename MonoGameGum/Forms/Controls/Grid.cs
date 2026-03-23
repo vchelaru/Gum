@@ -34,8 +34,8 @@ public class Grid :
     private bool _isRefreshingLayout;
     private Dictionary<GraphicalUiElement, EventHandler> _sizeChangedHandlers;
     private Dictionary<GraphicalUiElement, EventHandler<GraphicalUiElement.ParentChangedEventArgs>> _parentChangedHandlers;
-    private Dictionary<FrameworkElement, (int Row, int Column)> _cellPlacements;
-    private Dictionary<GraphicalUiElement, (int Row, int Column)> _gueCellPlacements;
+    private Dictionary<GraphicalUiElement, (int Row, int Column)> _cellPlacements;
+    private List<GraphicalUiElement> _insertionOrder;
     private List<InteractiveGue> _rowContainers;
 
     /// <summary>
@@ -59,8 +59,8 @@ public class Grid :
         _isRefreshingLayout = false;
         _sizeChangedHandlers = new Dictionary<GraphicalUiElement, EventHandler>();
         _parentChangedHandlers = new Dictionary<GraphicalUiElement, EventHandler<GraphicalUiElement.ParentChangedEventArgs>>();
-        _cellPlacements = new Dictionary<FrameworkElement, (int Row, int Column)>();
-        _gueCellPlacements = new Dictionary<GraphicalUiElement, (int Row, int Column)>();
+        _cellPlacements = new Dictionary<GraphicalUiElement, (int Row, int Column)>();
+        _insertionOrder = new List<GraphicalUiElement>();
         _rowContainers = new List<InteractiveGue>();
 
         ColumnDefinitions = new ObservableCollection<ColumnDefinition>();
@@ -87,8 +87,8 @@ public class Grid :
         _isRefreshingLayout = false;
         _sizeChangedHandlers = new Dictionary<GraphicalUiElement, EventHandler>();
         _parentChangedHandlers = new Dictionary<GraphicalUiElement, EventHandler<GraphicalUiElement.ParentChangedEventArgs>>();
-        _cellPlacements = new Dictionary<FrameworkElement, (int Row, int Column)>();
-        _gueCellPlacements = new Dictionary<GraphicalUiElement, (int Row, int Column)>();
+        _cellPlacements = new Dictionary<GraphicalUiElement, (int Row, int Column)>();
+        _insertionOrder = new List<GraphicalUiElement>();
         _rowContainers = new List<InteractiveGue>();
 
         ColumnDefinitions = new ObservableCollection<ColumnDefinition>();
@@ -133,7 +133,11 @@ public class Grid :
             throw new ArgumentOutOfRangeException(nameof(column), "Column index cannot be negative.");
         }
 
-        _cellPlacements[child] = (row, column);
+        _cellPlacements[child.Visual] = (row, column);
+        if (!_insertionOrder.Contains(child.Visual))
+        {
+            _insertionOrder.Add(child.Visual);
+        }
         SubscribeToChildEvents(child.Visual);
         RefreshLayout();
     }
@@ -149,8 +153,9 @@ public class Grid :
             throw new ArgumentNullException(nameof(child));
         }
 
-        if (_cellPlacements.Remove(child))
+        if (_cellPlacements.Remove(child.Visual))
         {
+            _insertionOrder.Remove(child.Visual);
             UnsubscribeFromChildEvents(child.Visual);
             if (child.Visual.Parent != null)
             {
@@ -181,7 +186,11 @@ public class Grid :
             throw new ArgumentOutOfRangeException(nameof(column), "Column index cannot be negative.");
         }
 
-        _gueCellPlacements[child] = (row, column);
+        _cellPlacements[child] = (row, column);
+        if (!_insertionOrder.Contains(child))
+        {
+            _insertionOrder.Add(child);
+        }
         SubscribeToChildEvents(child);
         RefreshLayout();
     }
@@ -197,8 +206,9 @@ public class Grid :
             throw new ArgumentNullException(nameof(child));
         }
 
-        if (_gueCellPlacements.Remove(child))
+        if (_cellPlacements.Remove(child))
         {
+            _insertionOrder.Remove(child);
             UnsubscribeFromChildEvents(child);
             if (child.Parent != null)
             {
@@ -300,36 +310,21 @@ public class Grid :
 
                 ApplyColumnWidth(cellContainer, columnWidth, minWidth, maxWidth);
 
-                // Find children placed in this cell. Row/column values beyond the
-                // defined count are clamped to the last valid index, matching WPF behavior.
-                foreach (KeyValuePair<FrameworkElement, (int Row, int Column)> kvp in _cellPlacements)
+                // Find children placed in this cell in insertion order. Row/column values
+                // beyond the defined count are clamped to the last valid index, matching WPF behavior.
+                foreach (GraphicalUiElement child in _insertionOrder)
                 {
-                    int clampedRow = Math.Min(kvp.Value.Row, rowCount - 1);
-                    int clampedColumn = Math.Min(kvp.Value.Column, columnCount - 1);
+                    (int Row, int Column) placement = _cellPlacements[child];
+                    int clampedRow = Math.Min(placement.Row, rowCount - 1);
+                    int clampedColumn = Math.Min(placement.Column, columnCount - 1);
 
                     if (clampedRow == r && clampedColumn == c)
                     {
-                        // Remove from previous parent if needed
-                        if (kvp.Key.Visual.Parent != null)
+                        if (child.Parent != null)
                         {
-                            kvp.Key.Visual.Parent.Children.Remove(kvp.Key.Visual);
+                            child.Parent.Children.Remove(child);
                         }
-                        cellContainer.Children.Add(kvp.Key.Visual);
-                    }
-                }
-
-                foreach (KeyValuePair<GraphicalUiElement, (int Row, int Column)> kvp in _gueCellPlacements)
-                {
-                    int clampedRow = Math.Min(kvp.Value.Row, rowCount - 1);
-                    int clampedColumn = Math.Min(kvp.Value.Column, columnCount - 1);
-
-                    if (clampedRow == r && clampedColumn == c)
-                    {
-                        if (kvp.Key.Parent != null)
-                        {
-                            kvp.Key.Parent.Children.Remove(kvp.Key);
-                        }
-                        cellContainer.Children.Add(kvp.Key);
+                        cellContainer.Children.Add(child);
                     }
                 }
 
@@ -554,23 +549,8 @@ public class Grid :
         GraphicalUiElement childVisual = (GraphicalUiElement)sender;
         UnsubscribeFromChildEvents(childVisual);
 
-        // Remove from FrameworkElement placements
-        FrameworkElement? feToRemove = null;
-        foreach (KeyValuePair<FrameworkElement, (int Row, int Column)> kvp in _cellPlacements)
-        {
-            if (kvp.Key.Visual == childVisual)
-            {
-                feToRemove = kvp.Key;
-                break;
-            }
-        }
-        if (feToRemove != null)
-        {
-            _cellPlacements.Remove(feToRemove);
-        }
-
-        // Remove from GUE placements
-        _gueCellPlacements.Remove(childVisual);
+        _cellPlacements.Remove(childVisual);
+        _insertionOrder.Remove(childVisual);
 
         RefreshLayout();
     }
