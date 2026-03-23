@@ -57,18 +57,18 @@ for (int row = 0; row < 2; row++)
 
         var label = new Label();
         label.Text = $"Col {columnLabels[col]}\nRow {rowLabels[row]}";
-        label.XUnits = GeneralUnitType.PixelsFromMiddle;
-        label.YUnits = GeneralUnitType.PixelsFromMiddle;
+        label.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        label.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         label.X = 0;
         label.Y = 0;
-        label.XOrigin = HorizontalAlignment.Center;
-        label.YOrigin = VerticalAlignment.Center;
+        label.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
+        label.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
         grid.AddChild(label, row: row, column: col);
     }
 }
 ```
 
-XnaFiddle.NET sample coming soon...
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA61UUW_aMBD-K1a0h6TK3EC1rQJNE6Uqm9RqU8Y2JuAhJEewauzKcUpbxH-fzwmEAK26Cj-cffZ9n-_Od14637JePndaWuXgO3nGRJo5raFjNukfpmCqojk4Y99hgmkWcfYETsu5jxRJFUvIZyJgQXpm6XrtkcA92kmSvgyl1NVWV_J8Li5halmkyNDIRejuibvmuwaR6pnb8K32y5z2H--A_tSR8rwjEDePRlyR0k6uZcURysUhgtr2f7r1FsrnU2hCkWo4JrENyWqZedLhSBAzymClchvngU8aQSE8n5yeEgXJe5bN9iyt0QcU56XlhOfwvOknFM3SNFUAorAdG_cyrUw5bvy7jibAC__yIGg2GyfF7JNibu7o-BjFqkam5GKXaRe5ZkbcVCriMqERZxBB2y7w_KxLmlazxheF9EZiWUS6ARrvCyAuSuCZ1XaAiCrBOLDJJlF8myqZi3Wr2dxBEkKsI5FyCHOh2Rxsq1XQKZeRJhPF0pkWkGGo1n3jBvlCGjSYkhYJ6Mdpu35dDJzbG7ZvcysbHBiT526XzNAoYxqSk60bPf91qN6bUBd1VAWqp6HKHl1HtYmwfdDsUsa3Lgp6xTj3tozWX1t3xnjiVhAfM9tC4Zd12sK57gjmlmPRlXm1Behu09tT2ocHbUzeFeVn_CTL7dq3wa9GI2H6nSw3hTw0K7NtMXuUA-x7LAD80btS3IPSoDLaAwEq4ptf4Qd7MFRXSs5vWJJw2CP6eyyige2GPfqDu4Pv5pWZMGchiASwha_ZREXqkfZUdDdjcUa_SsWepNAR73CWijkITbtGgNq_5BV0v01cLH6RrF4LlvqFMkDEaiRWzuofTIfR6W4HAAA)
 
 <figure><img src="../../.gitbook/assets/23_10 11 48.png" alt=""><figcaption><p>Grid displaying rows and columns</p></figcaption></figure>
 
