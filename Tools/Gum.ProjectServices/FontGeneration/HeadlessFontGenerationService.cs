@@ -63,13 +63,11 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     /// files exist on disk even if the user never views those elements before closing the tool.
     ///
     /// Single-font on-demand creation is handled by the shared code in
-    /// CustomSetPropertyOnRenderable.UpdateToFontValues via IRuntimeFontService.
+    /// CustomSetPropertyOnRenderable.UpdateToFontValues via IFontManager.
     /// </summary>
     public void GenerateMissingFontsForReferencingElements(GumProjectSave gumProject,
         StateSave stateSave, string projectDirectory)
     {
-        ThrowIfNotWindows();
-
         var container = stateSave.ParentContainer;
 
         if (container != null)
