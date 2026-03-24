@@ -31,7 +31,7 @@ FontManager (tool facade)
 
 ## Generation Flow
 
-1. **Property collection**: `TryGetBmfcSaveFor` reads font properties from a `StateSave` (with optional instance prefix and forced overrides) and returns a `BmfcSave` or null.
+1. **Property collection**: `TryGetBmfcSaveFor` reads font properties from a `StateSave` (with optional instance prefix and forced overrides) and returns a `BmfcSave` or null. For direct Text instances this is sufficient, but for component instances containing Text, `CollectFontsFromNestedTextInstances` recursively descends using `RecursiveVariableFinder` to resolve font properties through exposed variables and inheritance.
 2. **Deduplication**: `CollectRequiredFonts` iterates all elements/states/instances and deduplicates by `FontCacheFileName` (a deterministic name encoding all font parameters).
 3. **Size estimation**: Before generating, `AssignEstimatedNeededSizeOn` either runs a binary-search optimization (`GetOptimizedSizeFor`, controlled by `AutoSizeFontOutputs` project setting) or uses a heuristic lookup table (`EstimateBlocksNeeded`) based on effective font size.
 4. **Template expansion**: `BmfcSave.Save()` loads `Content/BmfcTemplate.bmfc`, replaces placeholders, and writes the `.bmfc` file alongside the target `.fnt` path.
@@ -74,9 +74,15 @@ The heuristic fallback (`EstimateBlocksNeeded`) uses a lookup table mapping effe
 
 `GumProjectFontGenerator` is a standalone console app that loads a `.gumx` project and generates all missing fonts. It uses `HeadlessFontGenerationService` directly with no callbacks.
 
-## Unified Code Path
+## Font Creation Paths
 
-All font generation now routes through `HeadlessFontGenerationService`. The `CustomSetPropertyOnRenderable` call site uses `IFontManager.CreateFontIfNecessary(BmfcSave)` which delegates to `HeadlessFontGenerationService.CreateFontIfNecessary` (synchronous, `createTask: false`). Legacy `BmfcSave` generation methods and the embedded bmfont.exe in RenderingLibrary have been removed.
+All font generation now routes through `HeadlessFontGenerationService`. There are two call sites:
+
+**On-demand:** `CustomSetPropertyOnRenderable` resolves `IFontManager` via DI (`Builder.Get<IFontManager>()`) and calls `CreateFontIfNecessary(BmfcSave)` when a font property changes. The BBCode path (`GetAndCreateFontIfNecessary`) uses the same pattern for inline font tags.
+
+**Bulk (tool-only):** `CreateAllMissingFontFiles` scans the entire project on load or "regenerate fonts" and generates all missing font files in parallel.
+
+Both delegate to `HeadlessFontGenerationService`. Legacy `IRuntimeFontService`, `GenerateMissingFontsForReferencingElements`, and the embedded bmfont.exe in RenderingLibrary have been removed.
 
 ## Key Files
 
