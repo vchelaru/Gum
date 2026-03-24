@@ -12,7 +12,7 @@ namespace Gum.Services.Fonts;
 /// Tool-facing font management service that wraps <see cref="ProjectServices.FontGeneration.IHeadlessFontGenerationService"/>
 /// with project-directory resolution and UI callbacks.
 /// </summary>
-public interface IFontManager
+public interface IFontManager : IRuntimeFontService
 {
     /// <summary>
     /// The absolute path to the font cache folder for the currently loaded project.

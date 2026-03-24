@@ -79,6 +79,7 @@
 		<Compile Include="..\Gum\Mvvm\ViewModel.cs" Link="Mvvm\ViewModel.cs" />
 		<Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="Content\IContentLoader.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Fonts\BmfcSave.cs" Link="Content\BmfcSave.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\Fonts\IRuntimeFontService.cs" Link="Content\IRuntimeFontService.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Fonts\ParsedFontFile.cs" Link="RenderingLibrary\ParsedFontFile.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IAnimatable.cs" Link="RenderingLibrary\IAnimatable.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\InvisibleRenderable.cs" Link="RenderingLibrary\InvisibleRenderable.cs" />

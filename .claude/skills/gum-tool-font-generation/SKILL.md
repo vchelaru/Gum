@@ -76,7 +76,7 @@ The heuristic fallback (`EstimateBlocksNeeded`) uses a lookup table mapping effe
 
 ## Unified Code Path
 
-All font generation now routes through `HeadlessFontGenerationService`. The `CustomSetPropertyOnRenderable` call site uses `IFontManager.CreateFontIfNecessary(BmfcSave)` which delegates to `HeadlessFontGenerationService.CreateFontIfNecessary` (synchronous, `createTask: false`). Legacy `BmfcSave` generation methods and the embedded bmfont.exe in RenderingLibrary have been removed.
+All font generation now routes through `HeadlessFontGenerationService`. The `CustomSetPropertyOnRenderable` call site uses `IFontManager.CreateFontIfNecessary(BmfcSave)` which delegates to `HeadlessFontGenerationService.CreateFontIfNecessary` (synchronous, `createTask: false`). `CustomSetPropertyOnRenderable.FontService` is a static property assigned externally by `EditorTabPlugin_XNA.StartUp()` — the class has no DI dependency. Game runtimes assign their own `IRuntimeFontService` implementation directly. Legacy `BmfcSave` generation methods and the embedded bmfont.exe in RenderingLibrary have been removed.
 
 ## Key Files
 

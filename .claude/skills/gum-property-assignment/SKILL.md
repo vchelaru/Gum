@@ -29,6 +29,10 @@ The delegate `GraphicalUiElement.UpdateFontFromProperties` is wired to the stati
 `CustomSetPropertyOnRenderable.UpdateToFontValues(IText, GUE)` at startup. This is how the
 string path and the instance method path both ultimately call the same font loading logic.
 
+All `CustomSetPropertyOnRenderable` statics (including `FontService`) are wired by
+`EditorTabPlugin_XNA.StartUp()` in the Gum tool. The class itself must not reference DI
+containers or service locators. Game runtimes assign `FontService` directly.
+
 ---
 
 ## Font Deferred-Loading System
@@ -85,3 +89,4 @@ requires solving the cascading layout problem described in `CustomSetPropertyOnR
 | `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` | String-path dispatch + static `UpdateToFontValues(IText, GUE)` |
 | `GumRuntime/ElementSaveExtensions.cs` | `SetVariablesRecursively` — iterates state variables and calls `ApplyState` |
 | `Gum/Wireframe/WireframeObjectManager.cs` | Sets `IsAllLayoutSuspended` around screen load, calls `UpdateFontRecursive` after |
+| `Tool/EditorTabPlugin_XNA/MainEditorTabPlugin.cs` | Wires all `CustomSetPropertyOnRenderable` statics in `StartUp()` |

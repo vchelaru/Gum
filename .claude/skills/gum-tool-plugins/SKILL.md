@@ -1,6 +1,6 @@
 ---
 name: gum-tool-plugins
-description: Reference guide for the Gum tool's plugin system. Load this when working on plugin registration, PluginBase, InternalPlugin, PluginManager, plugin events, or finding which internal plugin owns a feature.
+description: Reference guide for the Gum tool's plugin system, including visualization plugins (EditorTabPlugin_XNA, TextureCoordinateSelectionPlugin). Load this when working on plugin registration, PluginBase, InternalPlugin, PluginManager, plugin events, visualization/rendering concerns, or finding which internal plugin owns a feature.
 ---
 
 # Gum Tool Plugin System Reference
@@ -65,6 +65,16 @@ All events are defined on `PluginBase` — subscribe in `StartUp()`. The full li
 - **Wireframe**: `WireframeRefreshed`, `BeforeRender`, `AfterRender`, `CameraChanged`
 
 **Query events** (plugins return values to intercept behavior): `TryHandleDelete`, `GetSelectedIpsos`, `VariableExcluded`, `GetDeleteStateResponse`, `CreateGraphicalUiElement`
+
+## Visualization Plugins
+
+Visualization/rendering is handled by **external** plugin projects, not by Gum.csproj itself.
+
+**EditorTabPlugin_XNA** (`Tool/EditorTabPlugin_XNA/`) is the primary visualization plugin. It uses KNI (the runtime the Gum tool uses for rendering) and owns all runtime/rendering concerns: creating runtime instances for the wireframe preview, rendering, and wiring all `CustomSetPropertyOnRenderable` statics in its `StartUp()` method (SetPropertyOnRenderable, UpdateFontFromProperties, ThrowExceptionsForMissingFiles, AddRenderableToManagers, RemoveRenderableFromManagers, FontService, PropertyAssignmentError).
+
+**TextureCoordinateSelectionPlugin** (`Gum/TextureCoordinateSelectionPlugin/`) piggybacks on the statics that EditorTabPlugin_XNA sets up — it does not wire its own `CustomSetPropertyOnRenderable` statics.
+
+**Gum.csproj is save-class territory.** It should operate purely on save classes (data model) without runtime/rendering dependencies. Runtime code that still exists in Gum.csproj (like `WireframeObjectManager`) is legacy being actively refactored out to plugins. Do not add new runtime/rendering code to Gum.csproj.
 
 ## Non-Obvious Behaviors
 

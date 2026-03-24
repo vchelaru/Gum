@@ -33,7 +33,6 @@ using MonoGameGum.GueDeriving;
 
 #if GUM
 using Gum.Services;
-using Gum.Services.Fonts;
 using Gum.ToolStates;
 #endif
 
@@ -55,18 +54,15 @@ public class CustomSetPropertyOnRenderable
 {
     public static ILocalizationService? LocalizationService { get; set; }
 
-#if GUM
-    private static readonly IFontManager _fontManager;
+    /// <summary>
+    /// Optional font service used for on-demand font creation. In the Gum tool this is
+    /// assigned at startup; game runtimes can assign their own implementation.
+    /// </summary>
+#if !FRB
+    public static IRuntimeFontService? FontService { get; set; }
 #endif
 
     public static event Action<string>? PropertyAssignmentError;
-
-    static CustomSetPropertyOnRenderable()
-    {
-#if GUM
-        _fontManager = Builder.Get<IFontManager>();
-#endif
-    }
 
     /// <summary>
     /// Additional logic to perform before falling back to reflection. 
@@ -1105,23 +1101,18 @@ public class CustomSetPropertyOnRenderable
                 {
                     fileName = fontFileName;
                 }
-                else
+#if !FRB
+                else if (FontService != null)
                 {
-#if GUM
-                    fileName = _fontManager.AbsoluteFontCacheFolder +
+                    fileName = FontService.AbsoluteFontCacheFolder +
                         ToolsUtilities.FileManager.RemovePath(fontFileName);
-#endif
                 }
 
-#if GUM
-
-                if (!ToolsUtilities.FileManager.FileExists(fileName))
+                if (FontService != null && !ToolsUtilities.FileManager.FileExists(fileName))
                 {
                     // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
                     try
                     {
-                        IProjectState projectState = Locator.GetRequiredService<IProjectState>();
-
                         BmfcSave bmfcSave = new BmfcSave();
                         bmfcSave.FontSize = fontSizeStack.Peek();
                         bmfcSave.FontName = fontNameStack.Peek();
@@ -1129,11 +1120,14 @@ public class CustomSetPropertyOnRenderable
                         bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
                         bmfcSave.IsItalic = isItalicStack.Peek();
                         bmfcSave.IsBold = isBoldStack.Peek();
+#if GUM
+                        IProjectState projectState = Locator.GetRequiredService<IProjectState>();
                         bmfcSave.Ranges = projectState.GumProjectSave?.FontRanges ?? BmfcSave.DefaultRanges;
                         bmfcSave.SpacingHorizontal = projectState.GumProjectSave?.FontSpacingHorizontal ?? 1;
                         bmfcSave.SpacingVertical = projectState.GumProjectSave?.FontSpacingVertical ?? 1;
+#endif
 
-                        _fontManager.CreateFontIfNecessary(bmfcSave);
+                        FontService.CreateFontIfNecessary(bmfcSave);
                     }
                     catch
                     {
