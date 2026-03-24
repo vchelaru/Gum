@@ -99,20 +99,16 @@ public class FontManagerTests : BaseTestClass
     }
 
     [Fact]
-    public void ReactToFontValueSet_ShouldDelegateToHeadlessService()
+    public void GenerateMissingFontsForReferencingElements_ShouldDelegateToHeadlessService()
     {
         GumProjectSave gumProject = new GumProjectSave();
-        InstanceSave instance = new InstanceSave { Name = "Label", BaseType = "Text" };
         StateSave stateSave = new StateSave();
-        StateSave forcedValues = new StateSave();
 
-        _fontManager.ReactToFontValueSet(instance, gumProject, stateSave, forcedValues);
+        _fontManager.GenerateMissingFontsForReferencingElements(gumProject, stateSave);
 
-        _headlessServiceMock.Verify(s => s.ReactToFontValueSet(
-            instance,
+        _headlessServiceMock.Verify(s => s.GenerateMissingFontsForReferencingElements(
             gumProject,
             stateSave,
-            forcedValues,
             _expectedProjectDirectory),
             Times.Once);
     }

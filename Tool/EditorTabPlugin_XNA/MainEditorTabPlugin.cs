@@ -19,6 +19,7 @@ using Gum.Plugins.ScrollBarPlugin;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Services.Fonts;
 using Gum.Settings;
 using Gum.Themes;
 using Gum.ToolCommands;
@@ -217,6 +218,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
         GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
         GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+        CustomSetPropertyOnRenderable.FontService = Locator.GetRequiredService<IFontManager>();
         CustomSetPropertyOnRenderable.PropertyAssignmentError += HandlePropertyAssignmentError;
 
         AssignEvents();
