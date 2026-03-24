@@ -51,11 +51,11 @@ public class FontManager : IFontManager
     }
 
     /// <inheritdoc/>
-    public void ReactToFontValueSet(InstanceSave instance, GumProjectSave gumProject,
-        StateSave stateSave, StateSave forcedValues)
+    public void GenerateMissingFontsForReferencingElements(GumProjectSave gumProject,
+        StateSave stateSave)
     {
-        _fontGenerationService.ReactToFontValueSet(instance, gumProject, stateSave, forcedValues,
-            _fileCommands.ProjectDirectory.FullPath);
+        _fontGenerationService.GenerateMissingFontsForReferencingElements(
+            gumProject, stateSave, _fileCommands.ProjectDirectory.FullPath);
     }
 
     /// <inheritdoc/>
