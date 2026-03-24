@@ -117,6 +117,14 @@ public class GumProjectSave
         // Default to false - it's too expensive for large character sets
         false;
 
+    /// <summary>
+    /// Which font generation backend to use for creating bitmap font files.
+    /// Defaults to <see cref="FontGeneratorType.BmFont"/> for backward compatibility.
+    /// </summary>
+    public FontGeneratorType FontGenerator { get; set; } = FontGeneratorType.BmFont;
+    /// <summary>Suppresses serialization when the value is the default (BmFont).</summary>
+    public bool ShouldSerializeFontGenerator() => FontGenerator != FontGeneratorType.BmFont;
+
     public int Version { get; set; }
 
     public int DefaultCanvasWidth

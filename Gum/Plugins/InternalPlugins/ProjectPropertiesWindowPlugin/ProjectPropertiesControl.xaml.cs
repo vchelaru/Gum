@@ -2,6 +2,7 @@
 using Gum.Managers;
 using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.Services;
+using Gum.DataTypes;
 using Gum.Services.Fonts;
 using RenderingLibrary.Graphics.Fonts;
 using System;
@@ -80,6 +81,18 @@ public partial class ProjectPropertiesControl : UserControl
         DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingVertical), "Font Generation");
 
         DataGrid.MoveMemberToCategory(nameof(ViewModel.AutoSizeFontOutputs), "Font Generation");
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.FontGenerator), "Font Generation");
+
+        var fontGeneratorMember = DataGrid.GetInstanceMember(nameof(ViewModel.FontGenerator));
+        if (fontGeneratorMember != null)
+        {
+            fontGeneratorMember.CustomOptions = new List<object>()
+            {
+                FontGeneratorType.BmFont,
+                FontGeneratorType.KernSmith
+            };
+        }
+
         var autoSizeMember = DataGrid.GetInstanceMember(nameof(ViewModel.AutoSizeFontOutputs));
         if(autoSizeMember != null)
         {

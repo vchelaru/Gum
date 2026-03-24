@@ -46,6 +46,7 @@
 		<Compile Include="..\GumDataTypes\ElementSave.cs" Link="DataTypes\ElementSave.cs" />
 		<Compile Include="..\GumDataTypes\EventSave.cs" Link="DataTypes\EventSave.cs" />
 		<Compile Include="..\GumDataTypes\GuideRectangle.cs" Link="DataTypes\GuideRectangle.cs" />
+		<Compile Include="..\GumDataTypes\FontGeneratorType.cs" Link="DataTypes\FontGeneratorType.cs" />
 		<Compile Include="..\GumDataTypes\GumProjectSave.cs" Link="DataTypes\GumProjectSave.cs" />
 		<Compile Include="..\GumDataTypes\IInstanceContainer.cs" Link="DataTypes\IInstanceContainer.cs" />
 		<Compile Include="..\GumDataTypes\InstanceSave.cs" Link="DataTypes\InstanceSave.cs" />

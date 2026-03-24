@@ -1,7 +1,6 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.ProjectServices.FontGeneration;
-using System.Runtime.InteropServices;
 using ToolsUtilities;
 
 namespace GumProjectFontGenerator;
@@ -18,12 +17,6 @@ internal class Program
 {
     static async Task<int> Main(string[] args)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Console.Error.WriteLine("Font generation requires Windows (bmfont.exe is a Windows-only application).");
-            return RunResponseCodes.NotWindows;
-        }
-
         try
         {
             string projectName = args[0];
@@ -45,7 +38,10 @@ internal class Program
             string projectDirectory = FileManager.GetDirectory(projectName);
             FileManager.RelativeDirectory = projectDirectory;
 
-            IHeadlessFontGenerationService fontGenerationService = new HeadlessFontGenerationService();
+            IFontFileGenerator fontFileGenerator = gumProject.FontGenerator == FontGeneratorType.KernSmith
+                ? new KernSmithFileGenerator()
+                : new BmFontExeFileGenerator();
+            IHeadlessFontGenerationService fontGenerationService = new HeadlessFontGenerationService(fontFileGenerator);
             await fontGenerationService.CreateAllMissingFontFiles(gumProject, projectDirectory);
         }
         catch (Exception e)

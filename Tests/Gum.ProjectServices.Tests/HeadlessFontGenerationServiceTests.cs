@@ -6,6 +6,8 @@ using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using ToolsUtilities;
 
 namespace Gum.ProjectServices.Tests;
 
@@ -15,7 +17,7 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
 
     public HeadlessFontGenerationServiceTests()
     {
-        _sut = new HeadlessFontGenerationService();
+        _sut = new HeadlessFontGenerationService(new NoOpFontFileGenerator());
 
         // Add font defaults to the Text standard element's Default state so
         // inheritance tests can resolve Font/FontSize via GetValueRecursive.
@@ -636,7 +638,7 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     #endregion
 
     // -------------------------------------------------------------------------
-    // Windows gate
+    // CreateFontIfNecessary
     // -------------------------------------------------------------------------
 
     #region CreateFontIfNecessary
@@ -660,10 +662,27 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     #endregion
 
     // -------------------------------------------------------------------------
-    // Windows gate
+    // Windows gate (BmFontExeFileGenerator)
     // -------------------------------------------------------------------------
 
     #region Windows gate
+
+    [Fact]
+    public async Task BmFontExeFileGenerator_GenerateFont_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        BmFontExeFileGenerator generator = new BmFontExeFileGenerator();
+        BmfcSave bmfcSave = new BmfcSave();
+        bmfcSave.FontName = "Arial";
+        bmfcSave.FontSize = 24;
+
+        await Should.ThrowAsync<PlatformNotSupportedException>(
+            () => generator.GenerateFont(bmfcSave, outputFntPath: "/tmp/test.fnt", createTask: true));
+    }
 
     [Fact]
     public async Task CreateAllMissingFontFiles_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
@@ -695,4 +714,20 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     }
 
     #endregion
+
+    // -------------------------------------------------------------------------
+    // No-op generator for pure-logic tests
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// A no-op font file generator that always returns success without performing any I/O.
+    /// </summary>
+    private sealed class NoOpFontFileGenerator : IFontFileGenerator
+    {
+        public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
+        {
+            GeneralResponse response = GeneralResponse.SuccessfulResponse;
+            return Task.FromResult(response);
+        }
+    }
 }

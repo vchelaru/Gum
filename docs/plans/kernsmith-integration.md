@@ -53,8 +53,32 @@ method handles all property types and is never async.
 
 ## Stage 2: Integrate KernSmith (after Stage 1 is merged)
 
-**Goal**: Replace `bmfont.exe` with KernSmith library calls inside
-`HeadlessFontGenerationService`.
+**Goal**: Add KernSmith as an alternative font generator alongside bmfont.exe, selectable
+per-project. KernSmith is experimental initially — bmfont.exe remains the default.
+
+### Architecture: Strategy Pattern
+
+The only part that differs between generators is "given a BmfcSave and output path, produce
+.fnt + .png files." All orchestration (font collection, deduplication, caching, parallelism,
+callbacks) stays in `HeadlessFontGenerationService`.
+
+```
+IFontFileGenerator
+    GeneralResponse GenerateFont(BmfcSave bmfcSave, string outputFntPath)
+
+BmFontExeFileGenerator   — writes .bmfc, launches bmfont.exe (current behavior)
+KernSmithFileGenerator   — calls KernSmith API, writes .fnt + .png to disk
+```
+
+`HeadlessFontGenerationService` takes an `IFontFileGenerator` and delegates the single-font
+generation step to it. The correct implementation is selected based on the project setting.
+
+### Project Setting
+
+Add a `FontGenerator` property to `GumProjectSave`:
+- Values: `BmFont` (default), `KernSmith`
+- Projects without this property default to `BmFont` (backward compatible)
+- Switching generators should prompt the user to regenerate all fonts
 
 ### Framework Decision
 
@@ -76,41 +100,48 @@ KernSmith supports both system fonts (`GenerateFromSystem`) and font file paths
 
 ### Checklist
 
+#### 2a: Extract strategy interface and refactor bmfont.exe into it
+
+- [ ] Create `IFontFileGenerator` interface with `GenerateFont(BmfcSave, string outputFntPath)` method
+- [ ] Create `BmFontExeFileGenerator` implementing `IFontFileGenerator` — extract the bmfont.exe process-launch logic from `HeadlessFontGenerationService.CreateBitmapFontFilesIfNecessaryAsync`
+- [ ] Refactor `HeadlessFontGenerationService` to accept `IFontFileGenerator` and delegate to it
+- [ ] Add `FontGenerator` enum and property to `GumProjectSave` (default: `BmFont`)
+- [ ] Wire up generator selection based on project setting (in DI or factory)
+- [ ] Test: existing bmfont.exe behavior is unchanged with the refactored code
+
+#### 2b: Add KernSmith generator
+
 - [ ] Resolve .NET target framework: multi-target KernSmith, or upgrade Gum.ProjectServices
 - [ ] Add KernSmith source project (`src/KernSmith/KernSmith.csproj`) as a project reference from `Gum.ProjectServices`
 - [ ] Add KernSmith's dependencies (FreeTypeSharp, StbImageWriteSharp) to Gum's package refs
-- [ ] Create a mapping layer: `BmfcSave` properties -> `FontGeneratorOptions`
-  - FontName -> system font name (or .ttf path in future)
-  - FontSize -> Size
-  - IsBold -> Bold
-  - IsItalic -> Italic
-  - UseSmoothing -> AntiAlias (Grayscale vs None)
-  - OutlineThickness -> Outline
-  - Ranges -> CharacterSet.FromRanges()
-  - SpacingHorizontal/Vertical -> Spacing
-  - OutputWidth/Height -> MaxTextureWidth/Height
-- [ ] Replace `CreateBitmapFontFilesIfNecessaryAsync` in `HeadlessFontGenerationService`:
-  - Call `BmFont.GenerateFromSystem()` (or `BmFont.Generate(path)`) instead of launching bmfont.exe
-  - Write `result.FntText` to the `.fnt` file
+- [ ] Create `KernSmithFileGenerator` implementing `IFontFileGenerator`:
+  - Map `BmfcSave` properties → `FontGeneratorOptions`
+    - FontName → system font name (or .ttf path in future)
+    - FontSize → Size
+    - IsBold → Bold
+    - IsItalic → Italic
+    - UseSmoothing → AntiAlias (Grayscale vs None)
+    - OutlineThickness → Outline
+    - Ranges → CharacterSet.FromRanges()
+    - SpacingHorizontal/Vertical → Spacing
+    - OutputWidth/Height → MaxTextureWidth/Height
+  - Call `BmFont.GenerateFromSystem()` (or `BmFont.Generate(path)`)
+  - Write `result.FntText` to `.fnt` file
   - Write `result.GetPngData()` to `.png` file(s)
   - Keep the same FontCache naming convention (`BmfcSave.FontCacheFileName`)
 - [ ] Add support for `.ttf` font file paths (in addition to system font names)
-- [ ] Remove `EnsureToolsExtracted` (no more embedded bmfont.exe)
-- [ ] Remove `.bmfc` file writing from the generation path (no longer needed)
-- [ ] Remove embedded `bmfont.exe` resource from `Gum.ProjectServices`
-- [ ] Remove `BmfcTemplate.bmfc` from `Gum.ProjectServices`
-- [ ] Update texture size optimization to use KernSmith's `AutofitTexture` option instead of binary-search probing
-- [ ] Remove `ThrowIfNotWindows` checks (KernSmith is cross-platform)
-- [ ] Test: font generation in Gum tool matches previous bmfont.exe output
-- [ ] Test: gumcli fonts works cross-platform
+- [ ] Consider using KernSmith's `AutofitTexture` option instead of the binary-search size probing
+- [ ] Remove `ThrowIfNotWindows` from code paths that use KernSmith (it's cross-platform)
+- [ ] Test: font generation produces valid .fnt + .png output
 - [ ] Test: outline fonts render correctly
 - [ ] Test: font smoothing on/off works correctly
 - [ ] Test: bold and italic variants generate correctly
 - [ ] Test: custom font ranges generate correctly
+- [ ] Test: gumcli fonts works with KernSmith setting
 
-### Stage 2b: GumProjectFontGenerator (lower priority)
+#### 2c: GumProjectFontGenerator (lower priority)
 
-- [ ] Update GumProjectFontGenerator to use the KernSmith-backed `HeadlessFontGenerationService`
+- [ ] Update GumProjectFontGenerator to respect the project's generator setting
 - [ ] Consider whether GumProjectFontGenerator is still needed given gumcli covers the same use case
 
 ---
@@ -118,7 +149,10 @@ KernSmith supports both system fonts (`GenerateFromSystem`) and font file paths
 ## Stage 3: Cleanup and Future Features (after Stage 2)
 
 - [ ] Remove KernSmith source link and switch to NuGet package when available
-- [ ] Evaluate removing `BmfcSave` from the tool-side font generation pipeline entirely (replace with a lighter model or use `FontGeneratorOptions` directly)
+- [ ] If KernSmith proves stable, consider making it the default for new projects
+- [ ] Remove bmfont.exe dependency entirely once KernSmith is mature enough
+- [ ] Evaluate removing `BmfcSave` from the tool-side font generation pipeline entirely
+  (replace with a lighter model or use `FontGeneratorOptions` directly)
 - [ ] Explore advanced KernSmith features:
   - Color outlines
   - Gradients
@@ -133,11 +167,14 @@ KernSmith supports both system fonts (`GenerateFromSystem`) and font file paths
 
 | File | Role |
 |---|---|
-| `Gum/Services/Fonts/FontManager.cs` | Tool facade for font generation |
-| `Tools/Gum.ProjectServices/FontGeneration/HeadlessFontGenerationService.cs` | Core generation logic (the one path to modify) |
+| `Gum/Services/Fonts/IFontManager.cs` | Interface for the tool-facing font manager |
+| `Gum/Services/Fonts/FontManager.cs` | Tool facade — delegates to headless service via DI |
+| `Tools/Gum.ProjectServices/FontGeneration/HeadlessFontGenerationService.cs` | Orchestration: font collection, caching, parallelism, delegates to IFontFileGenerator |
 | `Tools/Gum.ProjectServices/FontGeneration/IHeadlessFontGenerationService.cs` | Interface |
-| `RenderingLibrary/Graphics/Fonts/BmfcSave.cs` | Font data model + legacy generation methods |
-| `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` | Divergent call site (Stage 1 fix) |
+| `Tools/Gum.ProjectServices/FontGeneration/IFontFileGenerator.cs` | Strategy interface for single-font generation (Stage 2) |
+| `Tools/Gum.ProjectServices/FontGeneration/BmFontExeFileGenerator.cs` | bmfont.exe implementation (Stage 2) |
+| `Tools/Gum.ProjectServices/FontGeneration/KernSmithFileGenerator.cs` | KernSmith implementation (Stage 2) |
+| `RenderingLibrary/Graphics/Fonts/BmfcSave.cs` | Font data model, cache file naming, range utilities |
 | `Tools/Gum.Cli/Commands/FontsCommand.cs` | CLI font generation |
 | `GumProjectFontGenerator/Program.cs` | Standalone font generator |
 

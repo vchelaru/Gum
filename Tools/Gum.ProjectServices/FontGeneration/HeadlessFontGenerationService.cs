@@ -5,11 +5,8 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
@@ -17,8 +14,7 @@ using ToolsUtilities;
 namespace Gum.ProjectServices.FontGeneration;
 
 /// <summary>
-/// Headless implementation of font generation using bmfont.exe.
-/// Windows-only: throws <see cref="PlatformNotSupportedException"/> on non-Windows platforms.
+/// Headless implementation of font generation that delegates actual file creation to an <see cref="IFontFileGenerator"/>.
 /// Progress and UI feedback are delivered through an optional <see cref="IFontGenerationCallbacks"/> instance.
 /// </summary>
 public class HeadlessFontGenerationService : IHeadlessFontGenerationService
@@ -39,30 +35,25 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         new(8192, 8192)
     };
 
+    private readonly IFontFileGenerator _fontFileGenerator;
     private readonly IFontGenerationCallbacks _callbacks;
 
     /// <summary>
     /// Initializes a new instance of <see cref="HeadlessFontGenerationService"/>.
     /// </summary>
+    /// <param name="fontFileGenerator">Strategy for generating individual font files.</param>
     /// <param name="callbacks">
     /// Optional callbacks for output and spinner display. When <c>null</c>, all feedback is suppressed.
     /// </param>
-    public HeadlessFontGenerationService(IFontGenerationCallbacks? callbacks = null)
+    public HeadlessFontGenerationService(IFontFileGenerator fontFileGenerator, IFontGenerationCallbacks? callbacks = null)
     {
+        _fontFileGenerator = fontFileGenerator;
         _callbacks = callbacks ?? new NoOpFontGenerationCallbacks();
     }
-
-    private string BmFontExeLocation => Path.Combine(AppContext.BaseDirectory, "Libraries", "bmfont.exe");
-
-    // Bulk font generation: scans all elements/instances in the project and generates any
-    // missing .fnt/.png files. Called on project load and from the "regenerate fonts" menu.
-    // Individual font creation during property changes is handled by the shared
-    // CustomSetPropertyOnRenderable.UpdateToFontValues path via IRuntimeFontService.
 
     /// <inheritdoc/>
     public async Task CreateAllMissingFontFiles(GumProjectSave project, string projectDirectory, bool forceRecreate = false)
     {
-        ThrowIfNotWindows();
         await GenerateMissingFontsFor(project, project.AllElements, projectDirectory, forceRecreate);
     }
 
@@ -72,13 +63,11 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     /// files exist on disk even if the user never views those elements before closing the tool.
     ///
     /// Single-font on-demand creation is handled by the shared code in
-    /// CustomSetPropertyOnRenderable.UpdateToFontValues via IRuntimeFontService.
+    /// CustomSetPropertyOnRenderable.UpdateToFontValues via IFontManager.
     /// </summary>
     public void GenerateMissingFontsForReferencingElements(GumProjectSave gumProject,
         StateSave stateSave, string projectDirectory)
     {
-        ThrowIfNotWindows();
-
         var container = stateSave.ParentContainer;
 
         if (container != null)
@@ -91,9 +80,6 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     /// <inheritdoc/>
     public GeneralResponse CreateFontIfNecessary(BmfcSave bmfcSave, string projectDirectory, bool autoSizeFontOutputs)
     {
-        ThrowIfNotWindows();
-        EnsureToolsExtracted();
-
         // Run synchronously (createTask: false) — used by property-setting code paths.
         Task<GeneralResponse> task = TryCreateFontFor(bmfcSave, force: false, showSpinner: false,
             createTask: false, projectDirectory, autoSizeFontOutputs);
@@ -448,17 +434,25 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
         if (bitmapFonts.Count > 0)
         {
-            EnsureToolsExtracted();
             spinner = _callbacks.ShowSpinner();
         }
 
         List<Task> tasks = new List<Task>();
 
+        int completed = 0;
+        _callbacks.OnFontProgress(0, bitmapFonts.Count);
+
         foreach (KeyValuePair<string, BmfcSave> item in bitmapFonts)
         {
             System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
-            tasks.Add(TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true,
-                projectDirectory, project.AutoSizeFontOutputs));
+            Task task = TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true,
+                projectDirectory, project.AutoSizeFontOutputs)
+                .ContinueWith(_ =>
+                {
+                    int current = Interlocked.Increment(ref completed);
+                    _callbacks.OnFontProgress(current, bitmapFonts.Count);
+                });
+            tasks.Add(task);
         }
 
         try
@@ -526,11 +520,8 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
                     spinner = _callbacks.ShowSpinner();
                 }
 
-                FilePath filePathTemporary = desiredFntFile;
-                string bmfcFileToSave = filePathTemporary.RemoveExtension() + ".bmfc";
-                System.Console.WriteLine("Saving: " + bmfcFileToSave);
-
-                _callbacks.OnIgnoreFileChange(bmfcFileToSave);
+                FilePath bmfcFilePath = desiredFntFile.RemoveExtension() + ".bmfc";
+                _callbacks.OnIgnoreFileChange(bmfcFilePath);
                 _callbacks.OnIgnoreFileChange(desiredFntFile);
 
                 FilePath pngFileNameBase = desiredFntFile.RemoveExtension();
@@ -542,46 +533,11 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
                     _callbacks.OnIgnoreFileChange($"{pngFileNameBase}_{i:00}.png");
                 }
 
-                bmfcSave.Save(bmfcFileToSave);
+                GeneralResponse generateResponse = await _fontFileGenerator.GenerateFont(
+                    bmfcSave, desiredFntFile.FullPath, createTask);
 
-                ProcessStartInfo info = new ProcessStartInfo();
-                info.FileName = BmFontExeLocation;
-                info.Arguments = "-c \"" + bmfcFileToSave + "\"" + " -o \"" + desiredFntFile + "\"";
-                info.UseShellExecute = true;
-
-                string filenameAndArgs = $"{info.FileName} {info.Arguments}";
-                System.Diagnostics.Debug.WriteLine($"Running: {filenameAndArgs}");
-                _callbacks.OnOutput(filenameAndArgs);
-
-                Process? process = Process.Start(info);
-
-                if (process != null)
-                {
-                    if (createTask)
-                    {
-                        await WaitForExitAsync(process);
-                    }
-                    else
-                    {
-                        process.WaitForExit();
-                    }
-                }
-
-                if (process == null)
-                {
-                    toReturn.Succeeded = false;
-                    toReturn.Message = "Could not start bmfont.exe process.";
-                }
-                else if (desiredFntFile.Exists())
-                {
-                    toReturn.Succeeded = true;
-                    toReturn.Message = string.Empty;
-                }
-                else
-                {
-                    toReturn.Succeeded = false;
-                    toReturn.Message = "Waited for font to be created, but expected file was not created by bmfont.exe";
-                }
+                toReturn.Succeeded = generateResponse.Succeeded;
+                toReturn.Message = generateResponse.Message;
             }
         }
         finally
@@ -607,43 +563,6 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         }
 
         return FileManager.RelativeDirectory + fntFileName;
-    }
-
-    private void EnsureToolsExtracted()
-    {
-        Assembly assembly = typeof(HeadlessFontGenerationService).Assembly;
-        string baseDir = AppContext.BaseDirectory;
-
-        ExtractResourceIfMissing(assembly,
-            "Gum.ProjectServices.Libraries.bmfont.exe",
-            Path.Combine(baseDir, "Libraries", "bmfont.exe"));
-
-        ExtractResourceIfMissing(assembly,
-            "Gum.ProjectServices.Content.BmfcTemplate.bmfc",
-            Path.Combine(baseDir, "Content", "BmfcTemplate.bmfc"));
-    }
-
-    private static void ExtractResourceIfMissing(Assembly assembly, string resourceName, string destinationPath)
-    {
-        if (File.Exists(destinationPath))
-        {
-            return;
-        }
-
-        string? directory = Path.GetDirectoryName(destinationPath);
-        if (directory != null && !Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        using Stream? resourceStream = assembly.GetManifestResourceStream(resourceName);
-        if (resourceStream == null)
-        {
-            throw new InvalidOperationException($"Embedded resource '{resourceName}' not found in {assembly.FullName}.");
-        }
-
-        using FileStream fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
-        resourceStream.CopyTo(fileStream);
     }
 
     private async Task AssignEstimatedNeededSizeOn(BmfcSave bmfcSave, bool iterativelyDetermineSize,
@@ -768,53 +687,6 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         {
             numberWide = 1;
             numberTall = numberOf256Blocks;
-        }
-    }
-
-    private static async Task<int> WaitForExitAsync(Process process, CancellationToken cancellationToken = default)
-    {
-        TaskCompletionSource<int> tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        void Process_Exited(object? sender, EventArgs e)
-        {
-            tcs.TrySetResult(process.ExitCode);
-        }
-
-        try
-        {
-            process.EnableRaisingEvents = true;
-        }
-        catch (InvalidOperationException) when (process.HasExited)
-        {
-            // Expected when enabling events after the process already exited.
-        }
-
-        using (cancellationToken.Register(() => tcs.TrySetCanceled()))
-        {
-            process.Exited += Process_Exited;
-
-            try
-            {
-                if (process.HasExited)
-                {
-                    tcs.TrySetResult(process.ExitCode);
-                }
-
-                return await tcs.Task.ConfigureAwait(false);
-            }
-            finally
-            {
-                process.Exited -= Process_Exited;
-            }
-        }
-    }
-
-    private static void ThrowIfNotWindows()
-    {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            throw new PlatformNotSupportedException(
-                "Font generation requires Windows (bmfont.exe is a Windows-only application).");
         }
     }
 
