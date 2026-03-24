@@ -9,8 +9,13 @@ using ToolsUtilities;
 namespace Gum.Services.Fonts;
 
 /// <summary>
-/// Tool-facing font management service that wraps <see cref="ProjectServices.FontGeneration.IHeadlessFontGenerationService"/>
-/// with project-directory resolution and UI callbacks.
+/// Tool-facing font management interface. Extends <see cref="IRuntimeFontService"/> with
+/// tool-specific operations (bulk generation, cache cleanup, texture size optimization).
+///
+/// On-demand font creation for individual property changes is handled by the shared code in
+/// CustomSetPropertyOnRenderable.UpdateToFontValues via IRuntimeFontService.CreateFontIfNecessary.
+/// This interface adds bulk operations like <see cref="CreateAllMissingFontFiles"/> that scan
+/// the entire project.
 /// </summary>
 public interface IFontManager : IRuntimeFontService
 {
@@ -30,10 +35,11 @@ public interface IFontManager : IRuntimeFontService
     Task CreateAllMissingFontFiles(GumProjectSave project, bool forceRecreate = false);
 
     /// <summary>
-    /// Creates fonts referenced by the changed instance and propagates to dependent elements.
+    /// Generates missing font files for all elements that recursively reference the element
+    /// containing the given state. Called when a font property changes in the property grid.
     /// </summary>
-    void ReactToFontValueSet(InstanceSave instance, GumProjectSave gumProject,
-        StateSave stateSave, StateSave forcedValues);
+    void GenerateMissingFontsForReferencingElements(GumProjectSave gumProject,
+        StateSave stateSave);
 
     /// <summary>
     /// Synchronously creates a single font file if it does not already exist.

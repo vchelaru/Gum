@@ -53,6 +53,11 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
     private string BmFontExeLocation => Path.Combine(AppContext.BaseDirectory, "Libraries", "bmfont.exe");
 
+    // Bulk font generation: scans all elements/instances in the project and generates any
+    // missing .fnt/.png files. Called on project load and from the "regenerate fonts" menu.
+    // Individual font creation during property changes is handled by the shared
+    // CustomSetPropertyOnRenderable.UpdateToFontValues path via IRuntimeFontService.
+
     /// <inheritdoc/>
     public async Task CreateAllMissingFontFiles(GumProjectSave project, string projectDirectory, bool forceRecreate = false)
     {
@@ -60,23 +65,18 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         await GenerateMissingFontsFor(project, project.AllElements, projectDirectory, forceRecreate);
     }
 
-    /// <inheritdoc/>
-    public void ReactToFontValueSet(InstanceSave instance, GumProjectSave gumProject, StateSave stateSave,
-        StateSave forcedValues, string projectDirectory)
+    /// <summary>
+    /// When a font property changes on an element, all elements that reference it may need
+    /// new font files generated for their overridden font combinations. This ensures those
+    /// files exist on disk even if the user never views those elements before closing the tool.
+    ///
+    /// Single-font on-demand creation is handled by the shared code in
+    /// CustomSetPropertyOnRenderable.UpdateToFontValues via IRuntimeFontService.
+    /// </summary>
+    public void GenerateMissingFontsForReferencingElements(GumProjectSave gumProject,
+        StateSave stateSave, string projectDirectory)
     {
         ThrowIfNotWindows();
-
-        BmfcSave? bmfcSave = TryGetBmfcSaveFor(instance, stateSave,
-            gumProject.FontRanges, gumProject.FontSpacingHorizontal, gumProject.FontSpacingVertical, forcedValues);
-
-        if (bmfcSave != null)
-        {
-            EnsureToolsExtracted();
-
-            // Run synchronously (createTask: false) — this is usually fast enough for real-time feedback.
-            _ = TryCreateFontFor(bmfcSave, force: false, showSpinner: false, createTask: false,
-                projectDirectory, gumProject.AutoSizeFontOutputs);
-        }
 
         var container = stateSave.ParentContainer;
 

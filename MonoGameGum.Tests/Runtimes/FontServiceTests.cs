@@ -122,4 +122,85 @@ public class FontServiceTests : BaseTestClass
     }
 
     #endregion
+
+    #region UpdateToFontValues
+
+    [Fact]
+    public void CreateFontIfNecessary_ShouldBeCalledFromUpdateToFontValues_WhenFontDoesNotExist()
+    {
+        // Arrange
+        CustomSetPropertyOnRenderable.FontService = _mockFontService.Object;
+        List<BmfcSave> capturedCalls = new();
+        _mockFontService.Setup(x => x.CreateFontIfNecessary(It.IsAny<BmfcSave>()))
+            .Callback<BmfcSave>(bmfc => capturedCalls.Add(bmfc));
+
+        TextRuntime textRuntime = new();
+        textRuntime.Font = "Arial";
+
+        // Act — setting FontSize triggers UpdateToFontValues
+        textRuntime.FontSize = 36;
+
+        // Assert
+        capturedCalls.ShouldContain(bmfc => bmfc.FontSize == 36 && bmfc.FontName == "Arial");
+    }
+
+    [Fact]
+    public void CreateFontIfNecessary_ShouldNotBeCalledFromUpdateToFontValues_WhenFontServiceIsNull()
+    {
+        // Arrange
+        CustomSetPropertyOnRenderable.FontService = null;
+
+        TextRuntime textRuntime = new();
+        textRuntime.Font = "Arial";
+
+        // Act — should not throw
+        textRuntime.FontSize = 36;
+
+        // Assert — no exception means success; verify mock was never touched
+        _mockFontService.Verify(x => x.CreateFontIfNecessary(It.IsAny<BmfcSave>()), Times.Never);
+    }
+
+    [Fact]
+    public void CreateFontIfNecessary_ShouldPassBoldAndItalicFromUpdateToFontValues()
+    {
+        // Arrange — use FontSize 24 to avoid the stubbed Arial-18 embedded resources
+        CustomSetPropertyOnRenderable.FontService = _mockFontService.Object;
+        List<BmfcSave> capturedCalls = new();
+        _mockFontService.Setup(x => x.CreateFontIfNecessary(It.IsAny<BmfcSave>()))
+            .Callback<BmfcSave>(bmfc => capturedCalls.Add(bmfc));
+
+        TextRuntime textRuntime = new();
+        textRuntime.Font = "Arial";
+        textRuntime.IsBold = true;
+        textRuntime.IsItalic = true;
+
+        // Act — setting FontSize triggers UpdateToFontValues with the current bold/italic values
+        textRuntime.FontSize = 24;
+
+        // Assert
+        capturedCalls.ShouldContain(bmfc => bmfc.IsBold && bmfc.IsItalic && bmfc.FontSize == 24);
+    }
+
+    [Fact]
+    public void CreateFontIfNecessary_ShouldPassOutlineAndSmoothing_FromUpdateToFontValues()
+    {
+        // Arrange — use FontSize 24 to avoid the stubbed Arial-18 embedded resources
+        CustomSetPropertyOnRenderable.FontService = _mockFontService.Object;
+        List<BmfcSave> capturedCalls = new();
+        _mockFontService.Setup(x => x.CreateFontIfNecessary(It.IsAny<BmfcSave>()))
+            .Callback<BmfcSave>(bmfc => capturedCalls.Add(bmfc));
+
+        TextRuntime textRuntime = new();
+        textRuntime.Font = "Arial";
+        textRuntime.OutlineThickness = 2;
+        textRuntime.UseFontSmoothing = false;
+
+        // Act — setting FontSize triggers UpdateToFontValues with the current outline/smoothing values
+        textRuntime.FontSize = 24;
+
+        // Assert
+        capturedCalls.ShouldContain(bmfc => bmfc.OutlineThickness == 2 && bmfc.UseSmoothing == false);
+    }
+
+    #endregion
 }

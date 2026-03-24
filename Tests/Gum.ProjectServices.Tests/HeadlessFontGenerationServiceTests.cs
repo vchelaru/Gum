@@ -549,7 +549,7 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     }
 
     [Fact]
-    public void ReactToFontValueSet_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
+    public void GenerateMissingFontsForReferencingElements_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -557,11 +557,10 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         }
 
         GumProjectSave project = new GumProjectSave();
-        InstanceSave instance = new InstanceSave { Name = "Label", BaseType = "Text" };
         StateSave state = new StateSave();
 
         Should.Throw<PlatformNotSupportedException>(
-            () => _sut.ReactToFontValueSet(instance, project, state, new StateSave(), projectDirectory: "/tmp/test"));
+            () => _sut.GenerateMissingFontsForReferencingElements(project, state, projectDirectory: "/tmp/test"));
     }
 
     #endregion

@@ -31,10 +31,6 @@ using Gum.Wireframe;
 using MonoGameGum.GueDeriving;
 #endif
 
-#if GUM
-using Gum.Services;
-using Gum.ToolStates;
-#endif
 
 
 
@@ -1120,11 +1116,14 @@ public class CustomSetPropertyOnRenderable
                         bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
                         bmfcSave.IsItalic = isItalicStack.Peek();
                         bmfcSave.IsBold = isBoldStack.Peek();
-#if GUM
-                        IProjectState projectState = Locator.GetRequiredService<IProjectState>();
-                        bmfcSave.Ranges = projectState.GumProjectSave?.FontRanges ?? BmfcSave.DefaultRanges;
-                        bmfcSave.SpacingHorizontal = projectState.GumProjectSave?.FontSpacingHorizontal ?? 1;
-                        bmfcSave.SpacingVertical = projectState.GumProjectSave?.FontSpacingVertical ?? 1;
+#if !FRB
+                        // BBCode inline font creation: when BBCode tags like [FontSize=24] reference a font
+                        // that doesn't exist, create it on demand. This parallels the font creation in
+                        // UpdateToFontValues — both use FontService.CreateFontIfNecessary with the same pattern.
+                        var gumProject = ObjectFinder.Self.GumProjectSave;
+                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.DefaultRanges;
+                        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 #endif
 
                         FontService.CreateFontIfNecessary(bmfcSave);
@@ -1307,6 +1306,42 @@ public class CustomSetPropertyOnRenderable
                 {
                     font = GetFontDisposable(fontName);
                 }
+
+#if !FRB
+                // On-demand font creation: if no cached or embedded font was found, ask the FontService
+                // to generate the .fnt/.png files. This is the primary font creation path for both the
+                // Gum tool and game runtimes. The Gum tool wires FontService to its FontManager (which
+                // delegates to HeadlessFontGenerationService / bmfont.exe). Game runtimes can provide
+                // their own IRuntimeFontService implementation.
+                //
+                // Bulk font generation (e.g., recreating the entire font cache on project load) is handled
+                // separately by IFontManager.CreateAllMissingFontFiles, which is tool-only.
+                if (font == null && FontService != null)
+                {
+                    try
+                    {
+                        BmfcSave bmfcSave = new BmfcSave();
+                        bmfcSave.FontSize = textRuntime.FontSize;
+                        bmfcSave.FontName = textRuntime.Font;
+                        bmfcSave.OutlineThickness = textRuntime.OutlineThickness;
+                        bmfcSave.UseSmoothing = textRuntime.UseFontSmoothing;
+                        bmfcSave.IsItalic = textRuntime.IsItalic;
+                        bmfcSave.IsBold = textRuntime.IsBold;
+
+                        var gumProject = ObjectFinder.Self.GumProjectSave;
+                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.DefaultRanges;
+                        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+                        FontService.CreateFontIfNecessary(bmfcSave);
+                    }
+                    catch
+                    {
+                        // Font creation can fail for many reasons (invalid font name, missing bmfont.exe, etc.)
+                        // Silently fall through to the disk load attempt or default font fallback.
+                    }
+                }
+#endif
 
                 if (font == null || font.Texture?.IsDisposed == true)
                 {
