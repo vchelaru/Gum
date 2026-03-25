@@ -491,6 +491,29 @@ $"chars count=223\r\n";
         inlineVariables[1].CharacterCount.ShouldBe(1);
     }
 
+    [Fact]
+    public void Text_WithBbCode_ShouldReParseInlineVariables_WhenFontSizeChanges()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "[Color=Green]Hello[/Color] World";
+
+        var internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        var originalCount = internalText.InlineVariables.Count;
+        originalCount.ShouldBe(1);
+
+        var originalVariable = internalText.InlineVariables[0];
+
+        // Act — change a font property, which should re-parse the BBCode
+        textRuntime.FontSize = 24;
+
+        // Assert — InlineVariables should be rebuilt, not accumulated or stale
+        internalText.InlineVariables.Count.ShouldBe(originalCount);
+        internalText.InlineVariables[0].ShouldNotBeSameAs(originalVariable);
+        internalText.InlineVariables[0].VariableName.ShouldBe("Color");
+        internalText.InlineVariables[0].StartIndex.ShouldBe(0);
+        internalText.InlineVariables[0].CharacterCount.ShouldBe(5);
+    }
+
     #endregion
 
     #region WrappedText
