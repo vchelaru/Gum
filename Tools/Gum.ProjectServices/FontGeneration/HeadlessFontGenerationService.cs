@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Wireframe;
+using GumRuntime;
 using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
@@ -258,6 +259,12 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         {
             foreach (StateSave state in element.AllStates)
             {
+                // Resolve variable references so that font properties set via references
+                // (e.g. "FontSize = HeaderText.FontSize") are baked into the state before
+                // we read them. In the tool this happens on every edit, but in the headless/CLI
+                // path the references may not have been applied yet.
+                element.ApplyVariableReferences(state);
+
                 BmfcSave? bmfcSave = TryGetBmfcSaveFor(null, state, fontRanges, spacingHorizontal, spacingVertical, forcedValues: null);
                 if (bmfcSave != null)
                 {

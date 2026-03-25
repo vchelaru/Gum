@@ -638,6 +638,105 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     #endregion
 
     // -------------------------------------------------------------------------
+    // CollectRequiredFonts — variable references
+    // -------------------------------------------------------------------------
+
+    #region CollectRequiredFonts — variable references
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldCollectBothFonts_WhenVariableReferenceChangesFontAcrossInstances()
+    {
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave state = AddState(component);
+        AddTextInstance(component, "HeaderText");
+        AddTextInstance(component, "BodyText");
+
+        SetVar(state, "HeaderText.Font", "Impact");
+        SetVar(state, "HeaderText.FontSize", 24);
+        SetVar(state, "BodyText.Font", "Impact"); // hard value from reference
+        SetVar(state, "BodyText.FontSize", 18);
+
+        VariableListSave<string> variableReferences = new VariableListSave<string>
+        {
+            Name = "BodyText.VariableReferences",
+            Type = "string"
+        };
+        variableReferences.ValueAsIList.Add("Font = HeaderText.Font");
+        state.VariableLists.Add(variableReferences);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.Values.ShouldContain(f => f.FontName == "Impact" && f.FontSize == 24);
+        result.Values.ShouldContain(f => f.FontName == "Impact" && f.FontSize == 18);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldCollectFont_WhenFontSizeSetViaVariableReferenceWithHardValue()
+    {
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave state = AddState(component);
+        AddTextInstance(component, "HeaderText");
+        AddTextInstance(component, "BodyText");
+
+        SetVar(state, "HeaderText.Font", "Arial");
+        SetVar(state, "HeaderText.FontSize", 24);
+        SetVar(state, "BodyText.Font", "Arial");
+        SetVar(state, "BodyText.FontSize", 24); // hard value written by tool when reference was applied
+
+        VariableListSave<string> variableReferences = new VariableListSave<string>
+        {
+            Name = "BodyText.VariableReferences",
+            Type = "string"
+        };
+        variableReferences.ValueAsIList.Add("FontSize = HeaderText.FontSize");
+        state.VariableLists.Add(variableReferences);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.Values.ShouldContain(f => f.FontName == "Arial" && f.FontSize == 24);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldResolveFontSizeFromVariableReference_WhenHardValueNotPresent()
+    {
+        // BodyText has a variable reference "FontSize = HeaderText.FontSize" but no hard
+        // FontSize value. CollectRequiredFonts should resolve the reference and collect
+        // Arial@36 for both instances (not Arial@18 from Text standard inheritance).
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave state = AddState(component);
+        AddTextInstance(component, "HeaderText");
+        AddTextInstance(component, "BodyText");
+
+        SetVar(state, "HeaderText.Font", "Arial");
+        SetVar(state, "HeaderText.FontSize", 36);
+        SetVar(state, "BodyText.Font", "Arial");
+        // Note: BodyText.FontSize is intentionally NOT set — simulates a fresh load
+        // where the variable reference has not yet been applied as a hard value.
+
+        VariableListSave<string> variableReferences = new VariableListSave<string>
+        {
+            Name = "BodyText.VariableReferences",
+            Type = "string"
+        };
+        variableReferences.ValueAsIList.Add("FontSize = HeaderText.FontSize");
+        state.VariableLists.Add(variableReferences);
+
+        Project.Components.Add(component);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        // Both instances should resolve to Arial@36. BodyText's FontSize should come
+        // from the variable reference to HeaderText.FontSize, not from Text standard
+        // element inheritance (which would give 18).
+        result.ShouldHaveSingleItem();
+        BmfcSave font = result.Values.Single();
+        font.FontName.ShouldBe("Arial");
+        font.FontSize.ShouldBe(36);
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
     // CreateFontIfNecessary
     // -------------------------------------------------------------------------
 
