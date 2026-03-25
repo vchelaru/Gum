@@ -569,10 +569,6 @@ public class CustomSetPropertyOnRenderable
                 textRuntime.UseCustomFont = (bool)value;
             }
 
-            if (!string.IsNullOrEmpty(textRenderable.StoredMarkupText))
-            {
-                SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
-            }
             ReactToFontValueChange();
         }
 
@@ -1406,6 +1402,16 @@ public class CustomSetPropertyOnRenderable
             {
                 graphicalUiElement.UpdateLayout();
             }
+        }
+
+        // Re-parse BBCode segments so they pick up the new base font values.
+        // Without this, only the non-tagged text updates; segments after BBCode tags
+        // retain old font properties because their InlineVariables still reference
+        // the previous BitmapFont.
+        if (!string.IsNullOrEmpty(asRenderableText.StoredMarkupText))
+        {
+            asRenderableText.InlineVariables.Clear();
+            SetBbCodeText(asRenderableText, graphicalUiElement, asRenderableText.StoredMarkupText);
         }
     }
 
