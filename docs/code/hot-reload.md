@@ -6,8 +6,6 @@ Gum supports hot reload for rapid UI iteration during development. When hot relo
 
 Hot reload watches for changes to Gum project files (`.gumx`, `.gusx`, `.gucx`, `.gutx`) and reconstructs the element tree when changes are detected.
 
-<!-- TODO: Add gif showing hot reload in action — editing in Gum tool and seeing changes in the running game -->
-
 ## Enabling Hot Reload
 
 Call `EnableHotReload` after initializing Gum, passing the absolute path to your **source** `.gumx` file — not the copy in your `bin/Content` folder.
@@ -26,16 +24,18 @@ The path must point to the original `.gumx` file that the Gum tool edits. If you
 
 Once enabled, hot reload is fully automatic. `GumService` processes pending reloads during its `Update` call each frame, so no additional code is needed.
 
+<figure><img src="../.gitbook/assets/26_06 11 12.gif" alt=""><figcaption><p>Gum at runtime (top) updating in realtime to changes in the tool (bottom)</p></figcaption></figure>
+
 ## What Gets Reloaded
 
 Hot reload monitors the following Gum file types:
 
-| Extension | Description |
-|---|---|
-| `.gumx` | Gum project file |
-| `.gusx` | Screen definitions |
-| `.gucx` | Component definitions |
-| `.gutx` | Standard element definitions |
+| Extension | Description                  |
+| --------- | ---------------------------- |
+| `.gumx`   | Gum project file             |
+| `.gusx`   | Screen definitions           |
+| `.gucx`   | Component definitions        |
+| `.gutx`   | Standard element definitions |
 
 When any of these files change, Gum reloads the entire project and reconstructs all children of the root element from the updated definitions. This means changes to layout, styling, states, variables, and component structure are all picked up.
 
