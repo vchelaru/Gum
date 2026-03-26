@@ -18,6 +18,34 @@ File: `GumDataTypes/DimensionUnitType.cs`
   after subtracting absolute-sized children.
 - **AbsoluteMultipliedByFontScale** (8) — Absolute pixels * `GlobalFontScale`.
 - **ScreenPixel** (9) — Screen pixels (affected by camera zoom).
+- **RelativeToMaxParentOrChildren** (10) — `max(parentSize, childrenBounds + value)`.
+  Combines RelativeToParent and RelativeToChildren: fills the parent OR fits
+  content, whichever is larger. Value acts as padding on the children side.
+
+### RelativeToMaxParentOrChildren — Circular Dependency Handling
+
+This unit has `DependsOnParent` dependency type but also depends on children
+(special-cased throughout the layout engine). When the parent uses
+`RelativeToChildren` or `RelativeToMaxParentOrChildren`, a circular dependency
+exists: parent reads child size, child reads parent size.
+
+**Resolution (in `GetMaxCellWidth`/`GetMaxCellHeight`):** When the parent
+computes its children-based size and encounters a child using this unit, it
+reads only the child's children-based size (ignoring the `max(parent, ...)`
+component). This prevents stale parent values from ratcheting upward. The
+child is then re-updated after the parent computes its own size, picking up
+the correct parent width.
+
+Position offsets on `RelativeToMaxParentOrChildren` children are intentionally
+not considered by the parent's children-based sizing. This unit is designed
+for siblings that fill their parent (e.g., menu items, row containers), not
+for positioned children.
+
+**Key locations for this special-case logic:**
+- `GetMaxCellWidth` / `GetMaxCellHeight` — parent reads children-based size
+- `GetChildLayoutType` — treats this unit as `Absolute` for parent sizing
+- `GetIfDimensionsDependOnChildren` — includes this unit
+- `DoesDimensionNeedUpdateFirstForRatio` — includes this unit
 
 ### HierarchyDependencyType
 
@@ -69,3 +97,6 @@ right edge is 10px inward from the parent's right edge.
   (e.g., also RelativeToChildren), ratio children have no space to distribute.
 - **MaintainFileAspectRatio** — requires the other dimension to be calculable
   first; the layout engine resolves dimension order based on this.
+- **RelativeToMaxParentOrChildren + RelativeToChildren parent** — the parent
+  reads only the child's children-based size to avoid circular ratcheting.
+  Position offsets on the child are ignored by the parent's sizing.

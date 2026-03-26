@@ -2638,6 +2638,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 var elementHeight = element.GetRequiredParentHeight();
 
+                // If the child uses RelativeToMaxParentOrChildren, its absolute height
+                // includes max(parentHeight, childrenHeight). Using that here creates a
+                // circular dependency where stale parent values ratchet upward. Instead,
+                // use only the children-based size. Position offsets on the child are
+                // intentionally not considered — RelativeToMaxParentOrChildren is designed
+                // for siblings that fill their parent, not for positioned children.
+                if (element.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren &&
+                    element.mContainedObjectAsIpso != null)
+                {
+                    elementHeight = element.GetMaxCellHeight(considerWrappedStacked, 0) + element.mHeight;
+                }
+
                 if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                 {
                     // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
@@ -3052,6 +3064,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (considerChild && element.Visible)
             {
                 var elementWidth = element.GetRequiredParentWidth();
+
+                // If the child uses RelativeToMaxParentOrChildren, its absolute width
+                // includes max(parentWidth, childrenWidth). Using that here creates a
+                // circular dependency where stale parent values ratchet upward. Instead,
+                // use only the children-based size. Position offsets on the child are
+                // intentionally not considered — RelativeToMaxParentOrChildren is designed
+                // for siblings that fill their parent, not for positioned children.
+                if (element.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren &&
+                    element.mContainedObjectAsIpso != null)
+                {
+                    elementWidth = element.GetMaxCellWidth(considerWrappedStacked, 0) + element.mWidth;
+                }
 
                 if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                 {
