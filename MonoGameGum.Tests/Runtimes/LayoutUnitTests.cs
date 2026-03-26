@@ -7431,5 +7431,209 @@ public class LayoutUnitTests : BaseTestClass
         row2.GetAbsoluteWidth().ShouldBe(500);
     }
 
+    [Fact]
+    public void RelativeToMaxParentOrChildren_WithRelativeToChildrenParent_ShouldNotRatchetWhenPaddingChanges()
+    {
+        // Reproduces the ratchet bug: when the parent's RelativeToChildren padding
+        // is increased then decreased, the stale parent width poisons the child's
+        // RelativeToMaxParentOrChildren calculation, causing the layout to only grow
+        // and never shrink back.
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+
+        ContainerRuntime child = new();
+        child.Width = 0;
+        child.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        parent.AddChild(child);
+
+        ContainerRuntime grandchild = new();
+        grandchild.Width = 50;
+        grandchild.WidthUnits = DimensionUnitType.Absolute;
+        child.AddChild(grandchild);
+
+        // Initial state: everything should be 50
+        parent.GetAbsoluteWidth().ShouldBe(50);
+        child.GetAbsoluteWidth().ShouldBe(50);
+
+        // Increase parent padding to 200: parent = 50 + 200 = 250, child matches parent
+        parent.Width = 200;
+        parent.GetAbsoluteWidth().ShouldBe(250);
+        child.GetAbsoluteWidth().ShouldBe(250);
+
+        // Set parent padding back to 0: should return to 50, not stay at 250
+        parent.Width = 0;
+        parent.GetAbsoluteWidth().ShouldBe(50);
+        child.GetAbsoluteWidth().ShouldBe(50);
+
+        // Another cycle to verify no ratcheting
+        parent.Width = 200;
+        parent.GetAbsoluteWidth().ShouldBe(250);
+        child.GetAbsoluteWidth().ShouldBe(250);
+
+        parent.Width = 0;
+        parent.GetAbsoluteWidth().ShouldBe(50);
+        child.GetAbsoluteWidth().ShouldBe(50);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_Height_WithRelativeToChildrenParent_ShouldNotRatchetWhenPaddingChanges()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+
+        ContainerRuntime child = new();
+        child.Height = 0;
+        child.HeightUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        parent.AddChild(child);
+
+        ContainerRuntime grandchild = new();
+        grandchild.Height = 50;
+        grandchild.HeightUnits = DimensionUnitType.Absolute;
+        child.AddChild(grandchild);
+
+        // Initial state
+        parent.GetAbsoluteHeight().ShouldBe(50);
+        child.GetAbsoluteHeight().ShouldBe(50);
+
+        // Increase then decrease parent padding
+        parent.Height = 200;
+        parent.GetAbsoluteHeight().ShouldBe(250);
+        child.GetAbsoluteHeight().ShouldBe(250);
+
+        parent.Height = 0;
+        parent.GetAbsoluteHeight().ShouldBe(50);
+        child.GetAbsoluteHeight().ShouldBe(50);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_WithRelativeToChildrenParent_ShouldShrinkWhenChildShrinks()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime row1 = new();
+        row1.Width = 0;
+        row1.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        row1.Height = 40;
+        row1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(row1);
+
+        ContainerRuntime row1Child = new();
+        row1Child.Width = 500;
+        row1Child.WidthUnits = DimensionUnitType.Absolute;
+        row1.AddChild(row1Child);
+
+        ContainerRuntime row2 = new();
+        row2.Width = 0;
+        row2.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        row2.Height = 40;
+        row2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(row2);
+
+        ContainerRuntime row2Child = new();
+        row2Child.Width = 200;
+        row2Child.WidthUnits = DimensionUnitType.Absolute;
+        row2.AddChild(row2Child);
+
+        // row1 is widest at 500, all match
+        parent.GetAbsoluteWidth().ShouldBe(500);
+        row1.GetAbsoluteWidth().ShouldBe(500);
+        row2.GetAbsoluteWidth().ShouldBe(500);
+
+        // Shrink row1's child — row2 is now widest at 200
+        row1Child.Width = 100;
+        parent.GetAbsoluteWidth().ShouldBe(200);
+        row1.GetAbsoluteWidth().ShouldBe(200);
+        row2.GetAbsoluteWidth().ShouldBe(200);
+
+        // Shrink to zero
+        row1Child.Width = 0;
+        row2Child.Width = 0;
+        parent.GetAbsoluteWidth().ShouldBe(0);
+        row1.GetAbsoluteWidth().ShouldBe(0);
+        row2.GetAbsoluteWidth().ShouldBe(0);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_WithRelativeToChildrenParent_MixedSiblingUnits()
+    {
+        // Parent is RelativeToChildren with both an Absolute child and a
+        // RelativeToMaxParentOrChildren child. The parent should size to the wider one.
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+
+        ContainerRuntime absoluteChild = new();
+        absoluteChild.Width = 300;
+        absoluteChild.WidthUnits = DimensionUnitType.Absolute;
+        absoluteChild.Height = 30;
+        absoluteChild.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(absoluteChild);
+
+        ContainerRuntime maxChild = new();
+        maxChild.Width = 0;
+        maxChild.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        maxChild.Height = 30;
+        maxChild.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(maxChild);
+
+        ContainerRuntime maxChildInner = new();
+        maxChildInner.Width = 100;
+        maxChildInner.WidthUnits = DimensionUnitType.Absolute;
+        maxChild.AddChild(maxChildInner);
+
+        // Absolute child (300) is wider than maxChild's content (100)
+        // Parent sizes to 300, maxChild fills to 300
+        parent.GetAbsoluteWidth().ShouldBe(300);
+        absoluteChild.GetAbsoluteWidth().ShouldBe(300);
+        maxChild.GetAbsoluteWidth().ShouldBe(300);
+
+        // Now make the maxChild's content wider
+        maxChildInner.Width = 500;
+        parent.GetAbsoluteWidth().ShouldBe(500);
+        absoluteChild.GetAbsoluteWidth().ShouldBe(300);
+        maxChild.GetAbsoluteWidth().ShouldBe(500);
+
+        // Shrink it back — Absolute child dominates again
+        maxChildInner.Width = 100;
+        parent.GetAbsoluteWidth().ShouldBe(300);
+        maxChild.GetAbsoluteWidth().ShouldBe(300);
+    }
+
+    [Fact]
+    public void RelativeToMaxParentOrChildren_WithRelativeToChildrenParent_PositionDoesNotAffectParentSize()
+    {
+        // Position offsets on a RelativeToMaxParentOrChildren child are intentionally
+        // not considered by the parent's RelativeToChildren sizing. The parent sizes
+        // based only on the child's content, not content + position.
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+
+        ContainerRuntime child = new();
+        child.Width = 0;
+        child.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        parent.AddChild(child);
+
+        ContainerRuntime grandchild = new();
+        grandchild.Width = 100;
+        grandchild.WidthUnits = DimensionUnitType.Absolute;
+        child.AddChild(grandchild);
+
+        // At X=0: parent=100, child=100
+        parent.GetAbsoluteWidth().ShouldBe(100);
+        child.GetAbsoluteWidth().ShouldBe(100);
+
+        // Move child to X=100: parent stays at 100 (based on content only),
+        // child stays at 100 (max of parent=100 and content=100)
+        child.X = 100;
+        parent.GetAbsoluteWidth().ShouldBe(100);
+        child.GetAbsoluteWidth().ShouldBe(100);
+    }
+
     #endregion
 }

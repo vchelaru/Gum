@@ -23,9 +23,13 @@ Width or Height value is interpreted. Units fall into dependency categories:
 | Dependency | Units |
 |---|---|
 | No dependency | Absolute, PercentageOfSourceFile, PercentageOfOtherDimension, MaintainFileAspectRatio, AbsoluteMultipliedByFontScale, ScreenPixel |
-| Depends on parent | PercentageOfParent, RelativeToParent |
+| Depends on parent | PercentageOfParent, RelativeToParent, RelativeToMaxParentOrChildren* |
 | Depends on children | RelativeToChildren |
 | Depends on siblings | Ratio |
+
+\* `RelativeToMaxParentOrChildren` is classified as `DependsOnParent` but also
+depends on children — special-cased throughout the layout engine. See
+[dimension-units.md](dimension-units.md) for circular dependency handling.
 
 See [dimension-units.md](dimension-units.md) for detailed descriptions.
 
