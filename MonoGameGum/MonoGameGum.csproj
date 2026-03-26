@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ExcludeIOS)' != 'true'">net8.0;net9.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ExcludeIOS)' == 'true'">net8.0</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>

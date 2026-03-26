@@ -40,9 +40,9 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      # Restore NuGet packages once
+      # Restore NuGet packages once (ExcludeIOS avoids needing the iOS workload)
       - name: Restore
-        run: dotnet restore Gum.sln
+        run: dotnet restore Gum.sln -p:ExcludeIOS=true
 
       # Update AssemblyInfo.cs version dynamically to current date
       - name: Update AssemblyInfo.cs version
@@ -63,7 +63,7 @@ jobs:
 
       # Build GUM TOOL
       - name: Build Gum Tool
-        run: dotnet build Gum.sln -c Release --no-restore
+        run: dotnet build Gum.sln -c Release --no-restore -p:ExcludeIOS=true
       
       # 1) Package the entire directory exactly as-is
       - name: Package entire Release folder
