@@ -149,6 +149,20 @@ For example, setting the `Width Units` to `Relative to Children` and setting the
 
 ![Text with Relative to Children width results in the contents of the Text instance controlling its size](<../../../.gitbook/assets/11_05 52 48.png>)
 
+## Relative to Max of Children or Parent
+
+`Relative to Max of Children or Parent` sizes an element to whichever is larger — its parent's width or the width needed to contain its children. The `Width` value acts as padding on the children side, the same as `Relative to Children`. A `Width` of `0` means the element is exactly the larger of its parent's width or its children's bounds.
+
+This unit is most useful when multiple siblings all use `Relative to Max of Children or Parent`. In this case, the sibling with the widest content drives the parent's width, which in turn sets the width of all narrower siblings. This creates a column of elements that always match each other's width regardless of their individual content.
+
+<figure><img src="../../../.gitbook/assets/26_09 05 58.png" alt=""><figcaption><p>The bottom blue rectangle's effective width is controlled by the wider of its parent (red rectangle) or child (white rectangle)</p></figcaption></figure>
+
+For example, consider a vertical menu where each menu item contains a Text instance. Each menu item uses `Relative to Max of Children or Parent` for its `Width Units`. When one menu item has longer text, that item grows to fit its content. Because the wider item pushes the parent to grow, all other menu items also grow to match — keeping the menu uniform.
+
+<figure><img src="../../../.gitbook/assets/26_09 07 37.gif" alt=""><figcaption><p>Changes to the white rectangle cause size changes in the blue and ultimately red rectangle, which affects the size of sibling blue rectangles</p></figcaption></figure>
+
+Without this unit, you would need to either set a fixed width on all menu items (which cannot adapt to content) or use `Relative to Children` on each item (which makes each item a different width based on its own text).
+
 ## Percentage of Height
 
 `Percentage of Height` adjusts the object's effective width so it remains proportional to the effective height value multiplied by the `Width` value (as a percentage). For example, if a `Width` value of `200` is entered, then the effective width is 200% (2x) of the height.
