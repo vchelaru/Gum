@@ -4185,6 +4185,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         var parentGue = EffectiveParentGue;
 
+        if (parentGue == null)
+        {
+            return;
+        }
+
         if (this.Visible)
         {
 
