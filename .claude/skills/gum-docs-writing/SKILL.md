@@ -129,3 +129,4 @@ For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle
 - Code blocks in docs use `csharp` language identifier: ` ```csharp `.
 - Some README.md section pages contain only a brief intro paragraph and a figure — that is intentional; sub-pages provide detail.
 - Page titles use `# Title` (H1) at the top. Sections within a page use `##` and `###` — avoid jumping heading levels.
+- **Image/gif placeholders must be visible** — never use HTML comments (`<!-- TODO -->`) for placeholders because they are invisible in the rendered docs. Instead use a warning hint block so the placeholder is obvious when browsing the docs.

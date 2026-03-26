@@ -143,6 +143,7 @@
   * [Setting Up Post Build Events](gum-tool/plugins/setting-up-post-build-events.md)
 * [Variables](gum-tool/variables/README.md)
   * [Add Variable](gum-tool/variables/add-variable.md)
+  * [Hide from Instances](gum-tool/variables/hide-from-instances.md)
 * [Bitmap font generator (.fnt)](gum-tool/bitmap-font-generator-.fnt.md)
 * [Upgrading](gum-tool/upgrading/README.md)
   * [Upgrading File (GUMX) Version](gum-tool/upgrading/upgrading-file-gumx-version.md)
