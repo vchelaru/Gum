@@ -74,6 +74,7 @@
   * [NineSlice](gum-tool/gum-elements/nineslice/README.md)
     * [Blend](gum-tool/gum-elements/nineslice/blend.md)
     * [Custom Frame Texture Coordinate Width](gum-tool/gum-elements/nineslice/custom-frame-texture-coordinate-width.md)
+    * [Is Tiling Middle Sections](gum-tool/gum-elements/nineslice/is-tiling-middle-sections.md)
     * [Texture Address](gum-tool/gum-elements/nineslice/nineslice.texture-address.md)
     * [Texture Left](gum-tool/gum-elements/nineslice/texture-left.md)
     * [Texture Top](gum-tool/gum-elements/nineslice/texture-top.md)
