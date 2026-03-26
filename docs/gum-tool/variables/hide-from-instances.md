@@ -2,11 +2,9 @@
 
 ## Introduction
 
-Variables on a component can be hidden from instancesusing the **Hide from Instances** right-click option. When a variable is hidden, it no longer appears in the **Variables** tab when selecting an instance of that component. The variable remains fully functional on the component definition itself — it is only hidden from instances.
+Variables on a component can be hidden from instances using the **Hide from Instances** right-click option. When a variable is hidden, it no longer appears in the **Variables** tab when selecting an instance of that component. The variable remains fully functional on the component definition itself - it is only hidden from instances.
 
-{% hint style="warning" %}
-TODO: Add gif showing right-clicking a variable, selecting Hide from Instances, then showing the variable is no longer visible on an instance of that component.
-{% endhint %}
+<figure><img src="../../.gitbook/assets/26_06 48 12.gif" alt=""><figcaption><p>Rotation variable hidden from instances of the BlueComponent</p></figcaption></figure>
 
 Hiding variables is useful for:
 
@@ -27,9 +25,7 @@ To hide a variable from instances:
 
 The variable displays "Hidden from instances" text beneath it to indicate its status.
 
-{% hint style="warning" %}
-TODO: Add screenshot showing a variable with the "Hidden from instances" label displayed beneath it.
-{% endhint %}
+<figure><img src="../../.gitbook/assets/26_06 49 31.png" alt=""><figcaption><p>Hidden from instances label under a hidden variable</p></figcaption></figure>
 
 ## Showing a Hidden Variable
 
