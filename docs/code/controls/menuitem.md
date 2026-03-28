@@ -38,7 +38,7 @@ var editMenuItem = new MenuItem();
 editMenuItem.Header = "Edit";
 menu.Items.Add(editMenuItem);
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACn1RsW7CMBDd8xUnT4mCUFkbOjDQFol2QIxeovqQTkpsKThFKuLfexeCfCDAy9nvvXvvbB8zALPaf_SteYXY9TgRgDxFqhv6Q0bNb91Bi76HN_B4gC_e5kVlvWDThXPbsAkhDpD1It5Rg6JaRWxVkxwHleann1g77FhmzTvj1lychd2Lf671KYVtHwWMlPb-xsNgfZWdIsaO5N6E2m3wB328F5BYnbFmFM7ws6zUfI7bhS4nziE2eam4zGEmtSwL64_WAy8ZiR7cVnjhbp-SC5RAo0KNnEaRNrE4Xa6NjuKzr9O8zlsyfu_rtL6oTHbK_gHw63H0cgIAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACn1RsW7CMBDd8xUnT4mCUFkbOjDQFol2QIxeovqQTkpsKThFKuLfexeCfCDAy9nvvXvvbB8zALPaf_SteYXY9TgRgDxFqhv6Q0bNb91Bi76HN_B4gC_e5kVlvWDThXPbsAkhDpD1It5Rg6JaRWxVkxwHleann1g77FhmzTvj1lychd2Lf671KYVtHwWMlPb-xsNgfZWdIsaO5N6E2m3wB328F5BYnbFmFM7ws6zUfI7bhS4nziE2eam4zGEmtSwL64_WAy8ZiR7cVnjhbp-SC5RAo0KNnEaRNrE4Xa6NjuKzr9O8zlsyfu_rtL6oTHbK_gHw63H0cgIAAA)
 
 ## IsSelected
 
@@ -65,7 +65,7 @@ if(keyboard.IsAltDown)
 }
 
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACp1Sy2rDMBC85yuETjYUfUBLD4HErSmB0vTQgy-KtSYishT0iGmD_71axzYKmB6qi9iZ2ZnVouuKEFq6l9DSR-JtgAcEWmgPYF2E6A50KD20pJAKpuKp0jO-FdLPOB3apZZeciV_AB0u3JI2Csgz0dAR1GZ5dECMrYX4NB_G-AGqdJqSNGA5KFKevQIXYKOsoohXdHJF1qF3lupvCem8SwkpnyYgvpSQ6vNxAeEsuJ8ff4Lvg-FWRJu45z3Yi6yBbaDhQXn2NrLDcLLJJjUr3Vr5jel0XulrpUk8KR373oM7gsh2srbGmcazL81ZYXkLnbEnVupzGPwdK_Jogg6jEZ67VZZuDwpqDzgl_oM4Dor62wXKwf_Ttwvpd2v-I72nq371C1TJ1z6mAgAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACp1Sy2rDMBC85yuETjYUfUBLD4HErSmB0vTQgy-KtSYishT0iGmD_71axzYKmB6qi9iZ2ZnVouuKEFq6l9DSR-JtgAcEWmgPYF2E6A50KD20pJAKpuKp0jO-FdLPOB3apZZeciV_AB0u3JI2Csgz0dAR1GZ5dECMrYX4NB_G-AGqdJqSNGA5KFKevQIXYKOsoohXdHJF1qF3lupvCem8SwkpnyYgvpSQ6vNxAeEsuJ8ff4Lvg-FWRJu45z3Yi6yBbaDhQXn2NrLDcLLJJjUr3Vr5jel0XulrpUk8KR373oM7gsh2srbGmcazL81ZYXkLnbEnVupzGPwdK_Jogg6jEZ67VZZuDwpqDzgl_oM4Dor62wXKwf_Ttwvpd2v-I72nq371C1TJ1z6mAgAA)
 
 By default MenuItems in a Menu are not selected unless the user clicks on the MenuItem. Once an item is selected, the user can hover over any menu item (either in the Menu itself, or a child MenuItem) to automatically expand the MenuItem.
 
@@ -109,4 +109,4 @@ exitItem.Header = "Exit";
 exitItem.Clicked += (_, _) => statusLabel.Text = "Exit clicked";
 fileMenuItem.Items.Add(exitItem);
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACo2QT0vDQBDF74V-h2FPCZbFgydLBClVC_4B7UUIlDUZYXGzkWRji-J3d3bSNGs1kNvmvTfv_cjXdAIgVvV1U4hzcFWDM1a01U4roz-RZPGhKqidck19q17QQAIWt8DvKJ6nNvDkM7lnp0fiZZ6vy8eydH_ia9w5ukjFExrMHCgo0DagHRZSylRQPLV-n-V2-I6eXOS1o-42_KoN-tSKaoIj_8mp0Jc3qHKsGOKKdN7kZu_Wvj8K8_0K1Q4N7K2w-x63XN1ZC6OzN8zhJIFoM4NNDMkF_Ptr6BKyNs0Nv-h7yH1xz1e-ox0C7LyQ8IE0HjiY4xn97RjIrrqnxJ12Q5SdF1IuSeOFgzme0t-Ooeyq47mYTr5_AOKUkc0lAwAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACo2QT0vDQBDF74V-h2FPCZbFgydLBClVC_4B7UUIlDUZYXGzkWRji-J3d3bSNGs1kNvmvTfv_cjXdAIgVvV1U4hzcFWDM1a01U4roz-RZPGhKqidck19q17QQAIWt8DvKJ6nNvDkM7lnp0fiZZ6vy8eydH_ia9w5ukjFExrMHCgo0DagHRZSylRQPLV-n-V2-I6eXOS1o-42_KoN-tSKaoIj_8mp0Jc3qHKsGOKKdN7kZu_Wvj8K8_0K1Q4N7K2w-x63XN1ZC6OzN8zhJIFoM4NNDMkF_Ptr6BKyNs0Nv-h7yH1xz1e-ox0C7LyQ8IE0HjiY4xn97RjIrrqnxJ12Q5SdF1IuSeOFgzme0t-Ooeyq47mYTr5_AOKUkc0lAwAA)
