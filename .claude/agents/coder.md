@@ -12,6 +12,18 @@ For bugs, you may be given a general bug report or you may be given a call stack
 
 In either case, your job is to produce a focused code change that implements the new feature or fixes the bug, with clear notes explaining what you did and why.
 
+# Bug fix workflow: test-first
+
+When fixing a bug that can be reproduced in a unit test, always write the failing test **before** implementing the fix. The workflow is:
+
+1. Write a unit test that reproduces the reported bug
+2. Run the test and verify it **fails** — this confirms the test actually captures the bug
+3. Implement the fix
+4. Run the test again and verify it **passes**
+5. Run the full related test suite to check for regressions
+
+Never apply a fix based on speculation alone. A test that was written alongside the fix and only ever seen passing proves nothing — it might not even exercise the bug.
+
 # Before editing
 
 (1) Read `.claude/code-style.md` and enforce every rule it contains. All code you write or modify must comply. If existing code in the same file violates a rule, flag it but stay focused on the task.

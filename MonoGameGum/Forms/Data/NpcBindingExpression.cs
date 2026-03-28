@@ -169,7 +169,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void UpdateSource()
     {
-        if (_isUpdatingSource || !ShouldUpdateSource)
+        if (_isUpdatingSource || _isUpdatingTarget || !ShouldUpdateSource)
         {
             return;
         }
