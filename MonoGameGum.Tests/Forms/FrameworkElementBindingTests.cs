@@ -1409,7 +1409,24 @@ public class FrameworkElementBindingTests : BaseTestClass
         // Assert
         textbox.Text.ShouldBe("child text");
     }
-    
+
+    [Fact]
+    public void TwoWayBinding_WithReactiveSource_DoesNotInfinitelyRecurse()
+    {
+        // Arrange — a reactive ViewModel with TwoWay binding would previously
+        // cause infinite recursion: UpdateTarget → set Text → PushValueToViewModel
+        // → UpdateSource → set VM property → NotifyPropertyChanged → UpdateTarget → ...
+        TestViewModel vm = new() { Text = "Hello" };
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), new Binding(nameof(TestViewModel.Text)));
+
+        // Act — changing the source triggers UpdateTarget, which should NOT recurse
+        vm.Text = "Updated";
+
+        // Assert — if we got here, no infinite recursion occurred
+        label.Text.ShouldBe("Updated");
+    }
+
     private class TestStringBoolConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter)
