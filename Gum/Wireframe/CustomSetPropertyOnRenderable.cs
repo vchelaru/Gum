@@ -58,6 +58,14 @@ public class CustomSetPropertyOnRenderable
     public static IRuntimeFontService? FontService { get; set; }
 #endif
 
+    /// <summary>
+    /// Optional in-memory font creator. When set, font generation bypasses disk entirely —
+    /// the creator produces a <see cref="BitmapFont"/> directly from raw pixel data and
+    /// .fnt metadata. If null or if creation fails, falls back to the disk-based
+    /// <see cref="FontService"/> path.
+    /// </summary>
+    public static IInMemoryFontCreator? InMemoryFontCreator { get; set; }
+
     public static event Action<string>? PropertyAssignmentError;
 
     /// <summary>
@@ -1086,23 +1094,9 @@ public class CustomSetPropertyOnRenderable
             // no cache, does it need to be created?
             if (font == null)
             {
-                // this could be a custom font, so let's see if it exists:
-
-                string fileName = String.Empty;
-                if (ToolsUtilities.FileManager.FileExists(fontFileName))
+                // Try in-memory font creation first (no disk I/O)
+                if (InMemoryFontCreator != null)
                 {
-                    fileName = fontFileName;
-                }
-#if !FRB
-                else if (FontService != null)
-                {
-                    fileName = FontService.AbsoluteFontCacheFolder +
-                        ToolsUtilities.FileManager.RemovePath(fontFileName);
-                }
-
-                if (FontService != null && !ToolsUtilities.FileManager.FileExists(fileName))
-                {
-                    // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
                     try
                     {
                         BmfcSave bmfcSave = new BmfcSave();
@@ -1112,35 +1106,83 @@ public class CustomSetPropertyOnRenderable
                         bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
                         bmfcSave.IsItalic = isItalicStack.Peek();
                         bmfcSave.IsBold = isBoldStack.Peek();
-#if !FRB
-                        // BBCode inline font creation: when BBCode tags like [FontSize=24] reference a font
-                        // that doesn't exist, create it on demand. This parallels the font creation in
-                        // UpdateToFontValues — both use FontService.CreateFontIfNecessary with the same pattern.
+
                         var gumProject = ObjectFinder.Self.GumProjectSave;
                         bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.DefaultRanges;
                         bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
                         bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
-#endif
 
-                        FontService.CreateFontIfNecessary(bmfcSave);
+                        font = InMemoryFontCreator.TryCreateFont(bmfcSave);
+                        if (font != null)
+                        {
+                            global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font);
+                        }
                     }
                     catch
                     {
-                        // do nothing?
+                        // Fall through to disk-based path
                     }
                 }
+
+                // Fall back to disk-based font creation
+                if (font == null)
+                {
+                    // this could be a custom font, so let's see if it exists:
+
+                    string fileName = String.Empty;
+                    if (ToolsUtilities.FileManager.FileExists(fontFileName))
+                    {
+                        fileName = fontFileName;
+                    }
+#if !FRB
+                    else if (FontService != null)
+                    {
+                        fileName = FontService.AbsoluteFontCacheFolder +
+                            ToolsUtilities.FileManager.RemovePath(fontFileName);
+                    }
+
+                    if (FontService != null && !ToolsUtilities.FileManager.FileExists(fileName))
+                    {
+                        // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
+                        try
+                        {
+                            BmfcSave bmfcSave = new BmfcSave();
+                            bmfcSave.FontSize = fontSizeStack.Peek();
+                            bmfcSave.FontName = fontNameStack.Peek();
+                            bmfcSave.OutlineThickness = outlineThicknessStack.Peek();
+                            bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
+                            bmfcSave.IsItalic = isItalicStack.Peek();
+                            bmfcSave.IsBold = isBoldStack.Peek();
+#if !FRB
+                            // BBCode inline font creation: when BBCode tags like [FontSize=24] reference a font
+                            // that doesn't exist, create it on demand. This parallels the font creation in
+                            // UpdateToFontValues — both use FontService.CreateFontIfNecessary with the same pattern.
+                            var gumProject = ObjectFinder.Self.GumProjectSave;
+                            bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.DefaultRanges;
+                            bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                            bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 #endif
 
-                if (ToolsUtilities.FileManager.FileExists(fileName))
-                {
-                    font = new BitmapFont(fileName);
+                            FontService.CreateFontIfNecessary(bmfcSave);
+                        }
+                        catch
+                        {
+                            // do nothing?
+                        }
+                    }
+#endif
+
+                    if (ToolsUtilities.FileManager.FileExists(fileName))
+                    {
+                        font = new BitmapFont(fileName);
+                    }
+                    else
+                    {
+                        // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
+                        font = Text.DefaultBitmapFont;
+                    }
+                    global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font);
                 }
-                else
-                {
-                    // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
-                    font = Text.DefaultBitmapFont;
-                }
-                global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font);
             }
 
             return font;
@@ -1303,15 +1345,40 @@ public class CustomSetPropertyOnRenderable
                     font = GetFontDisposable(fontName);
                 }
 
+                // Try in-memory font creation first (no disk I/O)
+                if (font == null && InMemoryFontCreator != null)
+                {
+                    try
+                    {
+                        BmfcSave bmfcSave = new BmfcSave();
+                        bmfcSave.FontSize = textRuntime.FontSize;
+                        bmfcSave.FontName = textRuntime.Font;
+                        bmfcSave.OutlineThickness = textRuntime.OutlineThickness;
+                        bmfcSave.UseSmoothing = textRuntime.UseFontSmoothing;
+                        bmfcSave.IsItalic = textRuntime.IsItalic;
+                        bmfcSave.IsBold = textRuntime.IsBold;
+
+                        var gumProject = ObjectFinder.Self.GumProjectSave;
+                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.DefaultRanges;
+                        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+                        font = InMemoryFontCreator.TryCreateFont(bmfcSave);
+                        if (font != null)
+                        {
+                            loaderManager.AddDisposable(fullFileName, font);
+                        }
+                    }
+                    catch
+                    {
+                        // Fall through to disk-based path
+                    }
+                }
+
 #if !FRB
-                // On-demand font creation: if no cached or embedded font was found, ask the FontService
-                // to generate the .fnt/.png files. This is the primary font creation path for both the
-                // Gum tool and game runtimes. The Gum tool wires FontService to its FontManager (which
-                // delegates to HeadlessFontGenerationService / bmfont.exe). Game runtimes can provide
-                // their own IRuntimeFontService implementation.
-                //
-                // Bulk font generation (e.g., recreating the entire font cache on project load) is handled
-                // separately by IFontManager.CreateAllMissingFontFiles, which is tool-only.
+                // Disk-based font creation: ask FontService to generate .fnt/.png files,
+                // then load from disk. This is the fallback when no InMemoryFontCreator
+                // is available or when in-memory creation fails.
                 if (font == null && FontService != null)
                 {
                     try
