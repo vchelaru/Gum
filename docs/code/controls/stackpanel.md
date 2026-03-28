@@ -106,4 +106,4 @@ for (int i = 0; i < 5; i++)
     button.Text = "Button " + i;
 }
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACo1QTU_DMAy9T9p_sHrqNBTtsguDw2AS4wQa5UvqJaOGWmQOatwBm_bfcVoNKNqBXJz3nv0Sv22_B5Bchot6lRyDVDUeNQwxCVlHG1Q6WdsKgtin12vL6OAUGN_h5ptIB5Ocf3QzLYrML7yXv8KDjo5HXe7xAHdVEbJYIc-q_kJm7ivaeEWuO3FHobbO3FMh5a3-Peic7mRmVmz2-YbBzGiFHNQjypEyC3RqusbMn5fkigr5oOcc6aWU_5pOl8G7WrBr1XrsN8352VeQEguQcqOJlhMYaxkOBzlvcwY9MfRlLdJkEAM_a0CTadS7gTcrpG3_vqNFJsOP-HSetAZ6gSGQ9uySfm_3BWmf8YcCAgAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACo1QTU_DMAy9T9p_sHrqNBTtsguDw2AS4wQa5UvqJaOGWmQOatwBm_bfcVoNKNqBXJz3nv0Sv22_B5Bchot6lRyDVDUeNQwxCVlHG1Q6WdsKgtin12vL6OAUGN_h5ptIB5Ocf3QzLYrML7yXv8KDjo5HXe7xAHdVEbJYIc-q_kJm7ivaeEWuO3FHobbO3FMh5a3-Peic7mRmVmz2-YbBzGiFHNQjypEyC3RqusbMn5fkigr5oOcc6aWU_5pOl8G7WrBr1XrsN8352VeQEguQcqOJlhMYaxkOBzlvcwY9MfRlLdJkEAM_a0CTadS7gTcrpG3_vqNFJsOP-HSetAZ6gSGQ9uySfm_3BWmf8YcCAgAA)

@@ -142,10 +142,10 @@ Also evaluate whether the implied variable should be made explicit in the **doc 
 ## Link format
 
 ```markdown
-<a href="https://xnafiddle.net/#snippet=<encoded>" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=<encoded>)
 ```
 
-- Use an HTML `<a>` tag with `target="_blank"` — standard Markdown links cannot set this. **Do not use `<iframe>` — GitBook does not render iframes.**
+- Use a standard Markdown link. **Do not use HTML `<a>` tags** — GitBook blocks `target="_blank"` so there is no benefit, and Markdown links are consistent with GitBook's own editor output. **Do not use `<iframe>` — GitBook does not render iframes.**
 - Link text is always `Try on XnaFiddle.NET` (`.NET` suffix intentional).
 - Place the link immediately after the closing triple-backtick, before any `<figure>` or blank line.
 - **One link per code block** — keep each fiddle focused and self-contained.

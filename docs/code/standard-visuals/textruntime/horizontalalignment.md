@@ -44,5 +44,34 @@ rightAligned.Y = 100;
 
 <figure><img src="../../../.gitbook/assets/26_11 27 16.png" alt=""><figcaption></figcaption></figure>
 
+## HorizontalAlignment, Anchor, and Dock
 
+The Anchor and Dock methods automatically set HorizontalAlignment on Text elements to match the anchor or dock direction. For example, `Anchor(Anchor.Right)` sets HorizontalAlignment to `Right`, and `Dock(Dock.Top)` sets it to `Center`. This means calling Anchor or Dock **overwrites** any previously set HorizontalAlignment value.
 
+If you need a different alignment than the default, set HorizontalAlignment **after** calling Anchor or Dock to override it. The following example docks a TextRuntime to fill its parent's width (which defaults HorizontalAlignment to `Center`), then overrides it to `Left`:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.AddToRoot();
+text.Text = "Docked to top, but left-aligned";
+// Dock sets HorizontalAlignment to Center by default
+text.Dock(Gum.Wireframe.Dock.Top);
+// Override to left-align the characters within the full-width area
+text.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Left;
+```
+
+The same applies to Anchor. The following example anchors a TextRuntime to the right side of its parent (which defaults HorizontalAlignment to `Right`), then overrides it to `Left`:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.AddToRoot();
+text.Text = "Right-anchored, but left-aligned";
+text.Width = 200;
+text.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+// Anchor sets HorizontalAlignment to Right by default
+text.Anchor(Gum.Wireframe.Anchor.Right);
+// Override to left-align the characters inside the element
+text.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Left;
+```

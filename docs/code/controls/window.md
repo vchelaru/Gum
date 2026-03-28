@@ -33,7 +33,7 @@ button.Click += (_, _) =>
 };
 
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RTWvCQBCG74L_YcgpUhvsx6mSgqa0BnqSgAgB2SRTs7i7UzYbIxX_ezcfaGpL9zbPvDvzsHscDgCcsHgrpfMERpc4bghX3HAm-Bda7OyZhoqrjCrwQWEFq6ZwR9NYtdybqTQn7do53opr_NBMYge9AJVB3QuveGZyO-phMrnABfJtbiy979NZlkW0JDLNsljVKgYPJlSFYSrFTuidJSiaSL_pvVC6u3KqkRfR56_sul79eE0jW9hG7CxQCIIQmAQGEouCbRESOsTOD9kg5yJz-yMu3klpDKnOeN4UjXLL_33COdmI7IVr29u7-qE6cBYNBBX4p1Wb7A0JBE93cOODuxnDZgT-c6yOsQJ7urtLlLTHV03y_AenqTMcnL4BEzWh8zkCAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RTWvCQBCG74L_YcgpUhvsx6mSgqa0BnqSgAgB2SRTs7i7UzYbIxX_ezcfaGpL9zbPvDvzsHscDgCcsHgrpfMERpc4bghX3HAm-Bda7OyZhoqrjCrwQWEFq6ZwR9NYtdybqTQn7do53opr_NBMYge9AJVB3QuveGZyO-phMrnABfJtbiy979NZlkW0JDLNsljVKgYPJlSFYSrFTuidJSiaSL_pvVC6u3KqkRfR56_sul79eE0jW9hG7CxQCIIQmAQGEouCbRESOsTOD9kg5yJz-yMu3klpDKnOeN4UjXLL_33COdmI7IVr29u7-qE6cBYNBBX4p1Wb7A0JBE93cOODuxnDZgT-c6yOsQJ7urtLlLTHV03y_AenqTMcnL4BEzWh8zkCAAA)
 
 <figure><img src="../../.gitbook/assets/14_06 14 56.gif" alt=""><figcaption><p>Window responding to move and resize actions</p></figcaption></figure>
 
@@ -61,7 +61,7 @@ titleLabel.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 titleLabel.Text = "My Window";
 windowVisual.TitleBarInstance.AddChild(titleLabel);
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1RTWsCMRC9F_wPS04rlCD1VunBKlpBaZGtUro9xM24OzSbyCTrR0v_e7MfdK14y7z35s3kzXfnJgjYzE6LnN0Hjgq4rZDCok6th96Zp_jEUG75GLaiUG6FthDK8lWffdRq1OhQKPwC38H2goIDamkOwUOg4RCsqyLsDmJd43yok8xQWFqvkWBLIocG5CPQDuhMvEbpMm_V7_Va8AkwzZxH787RoZSRWRrjqmGxblepl_b6cH1Wd5u-uhrUDQ6dgrnYgGr2r96VY0vxsUk-Lz5QQnyCSl1Ia3f-9kyYovamS9ASyCc8xw0JOvEpiV2Gic8UyGEi1FBhqnOfRBPHdUNvVX7-CvPqL2I9XS44MnrvbYEsn4IGEqpko9MO-AseQdkJmXyBUir4bxbBsUw4ZotTc8OY_WXdTIpK-aOgmbZO6MRfUcpRhkqGrVF3wDo3P7-mtNJOawIAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1RTWsCMRC9F_wPS04rlCD1VunBKlpBaZGtUro9xM24OzSbyCTrR0v_e7MfdK14y7z35s3kzXfnJgjYzE6LnN0Hjgq4rZDCok6th96Zp_jEUG75GLaiUG6FthDK8lWffdRq1OhQKPwC38H2goIDamkOwUOg4RCsqyLsDmJd43yok8xQWFqvkWBLIocG5CPQDuhMvEbpMm_V7_Va8AkwzZxH787RoZSRWRrjqmGxblepl_b6cH1Wd5u-uhrUDQ6dgrnYgGr2r96VY0vxsUk-Lz5QQnyCSl1Ia3f-9kyYovamS9ASyCc8xw0JOvEpiV2Gic8UyGEi1FBhqnOfRBPHdUNvVX7-CvPqL2I9XS44MnrvbYEsn4IGEqpko9MO-AseQdkJmXyBUir4bxbBsUw4ZotTc8OY_WXdTIpK-aOgmbZO6MRfUcpRhkqGrVF3wDo3P7-mtNJOawIAAA)
 
 {% hint style="info" %}
 Note that `AddChild` on a Window adds children to the inner content area below the title bar. To add a Label to the title bar itself, add it to `TitleBarInstance` as shown above.

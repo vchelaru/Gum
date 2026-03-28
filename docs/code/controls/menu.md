@@ -21,6 +21,6 @@ var editMenuItem = new MenuItem();
 editMenuItem.Header = "Edit";
 menu.Items.Add(editMenuItem);
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUclPzShVsFfJSyxV8gUwNTeuYPJCYnmNKSkh-UH5-CVgoJg-kOC0zJxWkyrMkNRdJE4gLVoUsr-eRmpiSWgRUFqPkBhSPUYKZDJItBpmvgaweYUtqSmYJPluQ5ZFtcQWKY7MFWb2mtRIvVy0Ad6gyIB8BAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACqvm5VJQUPIsdi_NVbJSKCkqTdUBi2TmZZZkJuZkVqUChZXKEosUclPzShVsFfJSyxV8gUwNTeuYPJCYnmNKSkh-UH5-CVgoJg-kOC0zJxWkyrMkNRdJE4gLVoUsr-eRmpiSWgRUFqPkBhSPUYKZDJItBpmvgaweYUtqSmYJPluQ5ZFtcQWKY7MFWb2mtRIvVy0Ad6gyIB8BAAA)
 
 For adding sub-items, handling activation events, and keyboard shortcuts, see the [MenuItem](menuitem.md) page.
