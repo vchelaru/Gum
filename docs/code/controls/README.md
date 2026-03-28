@@ -23,6 +23,8 @@ Every Forms control inherits from `FrameworkElement`. It provides the common fou
 
 For details on these shared members, see the [FrameworkElement](frameworkelement/) section.
 
+All controls can be tested on [XnaFiddle](https://xnafiddle.net/), so feel free to try them out there.
+
 ## Available Controls
 
 * [Button](button.md)
