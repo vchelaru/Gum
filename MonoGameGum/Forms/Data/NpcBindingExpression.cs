@@ -19,6 +19,8 @@ internal class NpcBindingExpression : UntypedBindingExpression
     internal PropertyInfo GetTargetProperty() => TargetProperty;
     private object? DefaultTargetValue { get; }
     private object? LastTargetValue { get; set; }
+    private bool _isUpdatingTarget;
+    private bool _isUpdatingSource;
     
     public NpcBindingExpression(
         FrameworkElement target,
@@ -99,7 +101,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void UpdateTarget()
     {
-        if (Binding.Mode is BindingMode.OneWayToSource)
+        if (_isUpdatingTarget || Binding.Mode is BindingMode.OneWayToSource)
         {
             return;
         }
@@ -151,20 +153,36 @@ internal class NpcBindingExpression : UntypedBindingExpression
             value = DefaultTargetValue;
         }
         
+        _isUpdatingTarget = true;
         SuppressAttach = true;
-        TargetProperty.SetValue(TargetElement, value);
-        SuppressAttach = false;
+        try
+        {
+            TargetProperty.SetValue(TargetElement, value);
+        }
+        finally
+        {
+            SuppressAttach = false;
+            _isUpdatingTarget = false;
+        }
         LastTargetValue = value;
     }
 
     public override void UpdateSource()
     {
-        if (!ShouldUpdateSource)
+        if (_isUpdatingSource || !ShouldUpdateSource)
         {
             return;
         }
-        object? targetValue = TargetProperty.GetValue(TargetElement);
-        SetValueToSource(targetValue);
+        _isUpdatingSource = true;
+        try
+        {
+            object? targetValue = TargetProperty.GetValue(TargetElement);
+            SetValueToSource(targetValue);
+        }
+        finally
+        {
+            _isUpdatingSource = false;
+        }
     }
 
     private void SetValueToSource(object? value)
