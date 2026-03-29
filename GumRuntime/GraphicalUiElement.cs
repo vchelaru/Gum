@@ -4226,37 +4226,53 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 parentGue.StackedRowOrColumnDimensions.Add(0);
             }
+
+            float myDimension;
+            if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+            {
+                myDimension = this.Y + this.GetAbsoluteHeight();
+            }
             else
             {
-                if (indexToUpdate >= 0 && indexToUpdate < parentGue.StackedRowOrColumnDimensions.Count)
-                {
-                    parentGue.StackedRowOrColumnDimensions[indexToUpdate] = 0;
-                }
+                myDimension = this.X + this.GetAbsoluteWidth();
             }
-            foreach (GraphicalUiElement child in parentGue.Children)
-            {
-                if (child.Visible)
-                {
-                    if (child.StackedRowOrColumnIndex == indexToUpdate)
-                    {
-                        if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
-                        {
-                            parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
-                                System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                                child.Y + child.GetAbsoluteHeight());
-                        }
-                        else
-                        {
-                            parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
-                                System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                                child.X + child.GetAbsoluteWidth());
-                        }
 
-                        // We don't need to worry about the children after this, because the siblings will get updated in order:
-                        // This can (on average) make this run 2x as fast
-                        if (this == child)
+            float currentMax = parentGue.StackedRowOrColumnDimensions[indexToUpdate];
+
+            if (myDimension >= currentMax)
+            {
+                // This child is the new max (or equal), no need to scan siblings
+                parentGue.StackedRowOrColumnDimensions[indexToUpdate] = myDimension;
+            }
+            else
+            {
+                // This child's dimension is less than the stored max. It may have been
+                // the previous max-holder and shrunk, so we must rescan all siblings
+                // in this row/column up to and including this child to find the true max.
+                parentGue.StackedRowOrColumnDimensions[indexToUpdate] = 0;
+                foreach (GraphicalUiElement child in parentGue.Children)
+                {
+                    if (child.Visible)
+                    {
+                        if (child.StackedRowOrColumnIndex == indexToUpdate)
                         {
-                            break;
+                            if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                            {
+                                parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
+                                    System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
+                                    child.Y + child.GetAbsoluteHeight());
+                            }
+                            else
+                            {
+                                parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
+                                    System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
+                                    child.X + child.GetAbsoluteWidth());
+                            }
+
+                            if (this == child)
+                            {
+                                break;
+                            }
                         }
                     }
                 }
