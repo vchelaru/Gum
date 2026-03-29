@@ -1,6 +1,7 @@
 ﻿using Gum.ProjectServices.CodeGeneration;
 using CodeOutputPlugin.ViewModels;
 using Gum;
+using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Services;
 using Gum.ToolStates;
@@ -44,6 +45,7 @@ public partial class CodeWindow : UserControl
 
     CodeOutputElementSettings? codeOutputElementSettings;
     private readonly IProjectState _projectState;
+    private readonly SyntaxVersionDetectionService _syntaxVersionDetectionService;
 
     public CodeOutputElementSettings? CodeOutputElementSettings
     {
@@ -72,6 +74,8 @@ public partial class CodeWindow : UserControl
     public CodeWindow(CodeWindowViewModel viewModel)
     {
         _projectState = Locator.GetRequiredService<IProjectState>();
+        _syntaxVersionDetectionService = new SyntaxVersionDetectionService(
+            new Manager.ToolCodeGenLogger(Locator.GetRequiredService<IOutputManager>()));
 
         InitializeComponent();
 
@@ -128,6 +132,8 @@ public partial class CodeWindow : UserControl
             // Not sure if this should be here or not...
             projectCategory.Members.Add(CreateGenerateGumDataTypesCode());
         }
+
+        projectCategory.Members.Add(CreateSyntaxVersionMember());
 
         DataGrid.Categories.Add(projectCategory);
     }
@@ -400,6 +406,28 @@ public partial class CodeWindow : UserControl
         member.PreferredDisplayer = typeof(CheckBoxDisplay);
         member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.GenerateGumDataTypes ?? false;
         member.CustomGetTypeEvent += (owner) => typeof(string);
+
+        return member;
+    }
+
+    private InstanceMember CreateSyntaxVersionMember()
+    {
+        var member = new InstanceMember("Syntax Version", this);
+
+        member.CustomGetEvent += (owner) =>
+        {
+            if (CodeOutputProjectSettings == null)
+            {
+                return "N/A";
+            }
+
+            SyntaxVersionResult result = _syntaxVersionDetectionService.Detect(
+                CodeOutputProjectSettings, _projectState.ProjectDirectory);
+
+            return result.Description;
+        };
+        member.CustomGetTypeEvent += (owner) => typeof(string);
+        member.IsReadOnly = true;
 
         return member;
     }
