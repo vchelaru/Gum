@@ -1426,7 +1426,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 treeNode.EnsureVisible();
             }
 
-            ObjectTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNode));
+            if (!SuppressCallAfterClickSelect)
+            {
+                ObjectTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNode));
+            }
         }
     }
 
@@ -1439,7 +1442,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         if (treeNodes.Count != 0)
         {
             treeNodes[0]?.EnsureVisible();
-            ObjectTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNodes[0]));
+
+            if (!SuppressCallAfterClickSelect)
+            {
+                ObjectTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNodes[0]));
+            }
         }
     }
 
@@ -1849,6 +1856,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
     bool IsInUiInitiatedSelection = false;
+
+    /// <summary>
+    /// When true, Select methods update the tree node visually but skip
+    /// CallAfterClickSelect to avoid re-firing the plugin event cascade.
+    /// Used when the tree view is syncing to match a selection that already
+    /// triggered plugin events (e.g. InstanceSelected → tree sync).
+    /// </summary>
+    internal bool SuppressCallAfterClickSelect;
     internal void OnSelect(TreeNode? selectedTreeNode)
     {
         TreeNode? treeNode = ObjectTreeView.SelectedNode;

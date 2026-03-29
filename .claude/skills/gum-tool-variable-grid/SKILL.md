@@ -83,6 +83,20 @@ Selection changed
              → DataUiGrid.Refresh()              ← only updates member values
 ```
 
+### Double-Refresh Guard (Instance Selection)
+
+When an instance is selected, two events fire in sequence: the default state is force-selected first (via `PerformAfterSelectInstanceLogic`), then the instance-selected event fires. Without a guard, the grid rebuilds twice.
+
+```
+Selection changed (instance)
+  → HandleStateSelected()       (state force-selected first)
+  → RefreshEntireGrid(force: true) + sets _stateJustRefreshedGrid
+  → HandleInstanceSelected()    (fires second)
+  → _stateJustRefreshedGrid is true → skip redundant refresh
+```
+
+`_stateJustRefreshedGrid` is cleared by `HandleElementSelected` and `HandleTreeNodeSelected` so it does not suppress legitimate refreshes during unrelated selections.
+
 Variable set by UI:
 ```
 InstanceMember.AfterSetByUi
