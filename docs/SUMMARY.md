@@ -148,6 +148,7 @@
 * [Bitmap font generator (.fnt)](gum-tool/bitmap-font-generator-.fnt.md)
 * [Upgrading](gum-tool/upgrading/README.md)
   * [Upgrading File (GUMX) Version](gum-tool/upgrading/upgrading-file-gumx-version.md)
+  * [Migrating to 2026 April](gum-tool/upgrading/migrating-to-2026-april.md)
   * [Migrating to 2026 March](gum-tool/upgrading/migrating-to-2026-march.md)
   * [Migrating to 2026 February](gum-tool/upgrading/migrating-to-2026-february.md)
   * [Migrating to 2026 January](gum-tool/upgrading/migrating-to-2026-january.md)
