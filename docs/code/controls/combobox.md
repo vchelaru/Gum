@@ -20,6 +20,10 @@ for(int i = 0; i < 10; i++)
 
 <figure><img src="../../.gitbook/assets/27_07 29 52.gif" alt=""><figcaption><p>ComboBox displaying a list of items</p></figcaption></figure>
 
+{% hint style="info" %}
+ComboBox's internal ListBox is hidden until the dropdown opens, so Gum automatically skips layout when adding items. This means adding hundreds of items to a ComboBox is fast without any extra code. If you are adding many items to a visible ListBox or other ItemsControl, see [Reducing Layout Calls](../performance-and-optimization/measuring-layout-calls.md#reducing-layout-calls) for how to suspend layout during bulk adds.
+{% endhint %}
+
 ## Adjusting the Drop-Down ListBox
 
 `ComboBox` provides a `ListBox` property which can be used to customize the ListBox instance.

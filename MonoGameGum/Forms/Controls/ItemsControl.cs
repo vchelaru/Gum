@@ -431,7 +431,7 @@ public class ItemsControl : ScrollViewer
                     if (shouldSuppressLayout)
                     {
                         GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
-                        if (!wasSuppressed)
+                        if (!wasSuppressed && IsVisible)
                         {
                             InnerPanel?.ResumeLayout(recursive: true);
                         }
