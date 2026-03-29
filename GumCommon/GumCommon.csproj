@@ -41,6 +41,7 @@
 		<Compile Include="..\GumDataTypes\ComponentSave.cs" Link="DataTypes\ComponentSave.cs" />
 		<Compile Include="..\GumDataTypes\CustomPropertySave.cs" Link="DataTypes\CustomPropertySave.cs" />
 		<Compile Include="..\GumDataTypes\DimensionUnitType.cs" Link="DataTypes\DimensionUnitType.cs" />
+		<Compile Include="..\GumDataTypes\GumSyntaxVersionAttribute.cs" Link="DataTypes\GumSyntaxVersionAttribute.cs" />
 		<Compile Include="..\GumDataTypes\ElementReference.cs" Link="DataTypes\ElementReference.cs" />
 		<Compile Include="..\GumDataTypes\Serialization\GumFileSerializer.cs" Link="DataTypes\GumFileSerializer.cs" />
 		<Compile Include="..\GumDataTypes\ElementSave.cs" Link="DataTypes\ElementSave.cs" />
