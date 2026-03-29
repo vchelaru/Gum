@@ -7636,4 +7636,631 @@ public class LayoutUnitTests : BaseTestClass
     }
 
     #endregion
+
+    #region Individual Child Changes In Stack
+
+    [Fact]
+    public void LeftToRightStack_LastChildResizes_ShouldNotAffectSiblingPositions()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 400;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+
+        ContainerRuntime[] children = new ContainerRuntime[4];
+        for (int i = 0; i < 4; i++)
+        {
+            children[i] = new ContainerRuntime();
+            children[i].Width = 50;
+            children[i].WidthUnits = DimensionUnitType.Absolute;
+            children[i].Height = 40;
+            children[i].HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(children[i]);
+        }
+
+        children[3].Width = 100;
+
+        children[0].AbsoluteLeft.ShouldBe(0);
+        children[1].AbsoluteLeft.ShouldBe(50);
+        children[2].AbsoluteLeft.ShouldBe(100);
+        children[3].AbsoluteLeft.ShouldBe(150);
+    }
+
+    [Fact]
+    public void LeftToRightStack_MiddleChildBecomesInvisible_ShouldRepositionSubsequentSiblings()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 400;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+
+        ContainerRuntime[] children = new ContainerRuntime[5];
+        for (int i = 0; i < 5; i++)
+        {
+            children[i] = new ContainerRuntime();
+            children[i].Width = 60;
+            children[i].WidthUnits = DimensionUnitType.Absolute;
+            children[i].Height = 40;
+            children[i].HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(children[i]);
+        }
+
+        for (int i = 0; i < 5; i++)
+        {
+            children[i].AbsoluteLeft.ShouldBe(i * 60);
+        }
+
+        children[2].Visible = false;
+
+        children[0].AbsoluteLeft.ShouldBe(0);
+        children[1].AbsoluteLeft.ShouldBe(60);
+        children[3].AbsoluteLeft.ShouldBe(120);
+        children[4].AbsoluteLeft.ShouldBe(180);
+
+        children[2].Visible = true;
+
+        for (int i = 0; i < 5; i++)
+        {
+            children[i].AbsoluteLeft.ShouldBe(i * 60);
+        }
+    }
+
+    [Fact]
+    public void LeftToRightStack_MiddleChildResizes_ShouldRepositionSubsequentSiblings()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 400;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+
+        ContainerRuntime[] children = new ContainerRuntime[5];
+        for (int i = 0; i < 5; i++)
+        {
+            children[i] = new ContainerRuntime();
+            children[i].Width = 50;
+            children[i].WidthUnits = DimensionUnitType.Absolute;
+            children[i].Height = 40;
+            children[i].HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(children[i]);
+        }
+
+        for (int i = 0; i < 5; i++)
+        {
+            children[i].AbsoluteLeft.ShouldBe(i * 50);
+        }
+
+        children[1].Width = 100;
+
+        children[0].AbsoluteLeft.ShouldBe(0);
+        children[1].AbsoluteLeft.ShouldBe(50);
+        children[2].AbsoluteLeft.ShouldBe(150);
+        children[3].AbsoluteLeft.ShouldBe(200);
+        children[4].AbsoluteLeft.ShouldBe(250);
+    }
+
+    [Fact]
+    public void LeftToRightStack_MiddleChildResizes_WithStackSpacing_ShouldRepositionCorrectly()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 600;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.StackSpacing = 10;
+
+        ContainerRuntime[] children = new ContainerRuntime[5];
+        for (int i = 0; i < 5; i++)
+        {
+            children[i] = new ContainerRuntime();
+            children[i].Width = 50;
+            children[i].WidthUnits = DimensionUnitType.Absolute;
+            children[i].Height = 40;
+            children[i].HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(children[i]);
+        }
+
+        children[0].AbsoluteLeft.ShouldBe(0);
+        children[1].AbsoluteLeft.ShouldBe(60);
+        children[2].AbsoluteLeft.ShouldBe(120);
+        children[3].AbsoluteLeft.ShouldBe(180);
+        children[4].AbsoluteLeft.ShouldBe(240);
+
+        children[1].Width = 80;
+
+        children[0].AbsoluteLeft.ShouldBe(0);
+        children[1].AbsoluteLeft.ShouldBe(60);
+        children[2].AbsoluteLeft.ShouldBe(150);
+        children[3].AbsoluteLeft.ShouldBe(210);
+        children[4].AbsoluteLeft.ShouldBe(270);
+    }
+
+    [Fact]
+    public void TopToBottomStack_LastChildResizes_ShouldNotAffectSiblingPositions()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 400;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime[] children = new ContainerRuntime[4];
+        for (int i = 0; i < 4; i++)
+        {
+            children[i] = new ContainerRuntime();
+            children[i].Width = 40;
+            children[i].WidthUnits = DimensionUnitType.Absolute;
+            children[i].Height = 50;
+            children[i].HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(children[i]);
+        }
+
+        children[3].Height = 100;
+
+        children[0].AbsoluteTop.ShouldBe(0);
+        children[1].AbsoluteTop.ShouldBe(50);
+        children[2].AbsoluteTop.ShouldBe(100);
+        children[3].AbsoluteTop.ShouldBe(150);
+    }
+
+    [Fact]
+    public void TopToBottomStack_MiddleChildBecomesInvisible_ShouldRepositionSubsequentSiblings()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 400;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime[] children = new ContainerRuntime[5];
+        for (int i = 0; i < 5; i++)
+        {
+            children[i] = new ContainerRuntime();
+            children[i].Width = 40;
+            children[i].WidthUnits = DimensionUnitType.Absolute;
+            children[i].Height = 60;
+            children[i].HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(children[i]);
+        }
+
+        for (int i = 0; i < 5; i++)
+        {
+            children[i].AbsoluteTop.ShouldBe(i * 60);
+        }
+
+        children[1].Visible = false;
+
+        children[0].AbsoluteTop.ShouldBe(0);
+        children[2].AbsoluteTop.ShouldBe(60);
+        children[3].AbsoluteTop.ShouldBe(120);
+        children[4].AbsoluteTop.ShouldBe(180);
+
+        children[1].Visible = true;
+
+        for (int i = 0; i < 5; i++)
+        {
+            children[i].AbsoluteTop.ShouldBe(i * 60);
+        }
+    }
+
+    [Fact]
+    public void TopToBottomStack_MiddleChildResizes_ShouldRepositionSubsequentSiblings()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 400;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime[] children = new ContainerRuntime[5];
+        for (int i = 0; i < 5; i++)
+        {
+            children[i] = new ContainerRuntime();
+            children[i].Width = 40;
+            children[i].WidthUnits = DimensionUnitType.Absolute;
+            children[i].Height = 50;
+            children[i].HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(children[i]);
+        }
+
+        for (int i = 0; i < 5; i++)
+        {
+            children[i].AbsoluteTop.ShouldBe(i * 50);
+        }
+
+        children[2].Height = 80;
+
+        children[0].AbsoluteTop.ShouldBe(0);
+        children[1].AbsoluteTop.ShouldBe(50);
+        children[2].AbsoluteTop.ShouldBe(100);
+        children[3].AbsoluteTop.ShouldBe(180);
+        children[4].AbsoluteTop.ShouldBe(230);
+    }
+
+    [Fact]
+    public void TopToBottomStack_MiddleChildResizes_WithStackSpacing_ShouldRepositionCorrectly()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 600;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.StackSpacing = 10;
+
+        ContainerRuntime[] children = new ContainerRuntime[5];
+        for (int i = 0; i < 5; i++)
+        {
+            children[i] = new ContainerRuntime();
+            children[i].Width = 40;
+            children[i].WidthUnits = DimensionUnitType.Absolute;
+            children[i].Height = 50;
+            children[i].HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(children[i]);
+        }
+
+        children[0].AbsoluteTop.ShouldBe(0);
+        children[1].AbsoluteTop.ShouldBe(60);
+        children[2].AbsoluteTop.ShouldBe(120);
+        children[3].AbsoluteTop.ShouldBe(180);
+        children[4].AbsoluteTop.ShouldBe(240);
+
+        children[1].Height = 80;
+
+        children[0].AbsoluteTop.ShouldBe(0);
+        children[1].AbsoluteTop.ShouldBe(60);
+        children[2].AbsoluteTop.ShouldBe(150);
+        children[3].AbsoluteTop.ShouldBe(210);
+        children[4].AbsoluteTop.ShouldBe(270);
+    }
+
+    #endregion
+
+    #region StackedRowOrColumnDimensions
+
+    [Fact]
+    public void WrapsChildren_LeftToRight_ChildGrows_ShouldUpdateRowDimension()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.MaxWidth = 200;
+        parent.WrapsChildren = true;
+
+        ContainerRuntime child1 = new();
+        child1.Width = 80;
+        child1.WidthUnits = DimensionUnitType.Absolute;
+        child1.Height = 30;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Width = 80;
+        child2.WidthUnits = DimensionUnitType.Absolute;
+        child2.Height = 50;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Width = 80;
+        child3.WidthUnits = DimensionUnitType.Absolute;
+        child3.Height = 40;
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        // Row1: child1+child2 (80+80=160 < 200), Row2: child3
+        // Row1 max height is 50 (child2), so child3 starts at 50
+        child3.AbsoluteTop.ShouldBe(50);
+
+        // Grow child1 height to 70 — it becomes the tallest in row1
+        child1.Height = 70;
+        child3.AbsoluteTop.ShouldBe(70);
+    }
+
+    [Fact]
+    public void WrapsChildren_LeftToRight_ChildShrinks_ShouldRecalculateRowDimension()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.MaxWidth = 200;
+        parent.WrapsChildren = true;
+
+        ContainerRuntime child1 = new();
+        child1.Width = 80;
+        child1.WidthUnits = DimensionUnitType.Absolute;
+        child1.Height = 30;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Width = 80;
+        child2.WidthUnits = DimensionUnitType.Absolute;
+        child2.Height = 60;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Width = 80;
+        child3.WidthUnits = DimensionUnitType.Absolute;
+        child3.Height = 40;
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        // Row1: child1+child2, Row2: child3
+        // Row1 max height is 60 (child2)
+        child3.AbsoluteTop.ShouldBe(60);
+
+        // Shrink child2 height to 25 — child1 at 30 is now tallest in row1
+        child2.Height = 25;
+        child3.AbsoluteTop.ShouldBe(30);
+    }
+
+    [Fact]
+    public void WrapsChildren_LeftToRight_ChildVisibilityChange_ShouldUpdateRowPositions()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.MaxWidth = 200;
+        parent.WrapsChildren = true;
+
+        ContainerRuntime child1 = new();
+        child1.Width = 80;
+        child1.WidthUnits = DimensionUnitType.Absolute;
+        child1.Height = 50;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Width = 80;
+        child2.WidthUnits = DimensionUnitType.Absolute;
+        child2.Height = 50;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Width = 80;
+        child3.WidthUnits = DimensionUnitType.Absolute;
+        child3.Height = 50;
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        ContainerRuntime child4 = new();
+        child4.Width = 80;
+        child4.WidthUnits = DimensionUnitType.Absolute;
+        child4.Height = 50;
+        child4.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child4);
+
+        // Row1: child1+child2 (160 < 200), Row2: child3+child4
+        child3.AbsoluteTop.ShouldBe(50);
+        child4.AbsoluteTop.ShouldBe(50);
+
+        // Hide child2 — now child1+child3 fit in row1, child4 wraps to row2
+        child2.Visible = false;
+        child3.AbsoluteTop.ShouldBe(0);
+        child4.AbsoluteTop.ShouldBe(50);
+
+        // Show child2 again — back to original layout
+        child2.Visible = true;
+        child3.AbsoluteTop.ShouldBe(50);
+        child4.AbsoluteTop.ShouldBe(50);
+    }
+
+    [Fact]
+    public void WrapsChildren_LeftToRight_ManyChildren_ShouldPositionAllCorrectly()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.MaxWidth = 200;
+        parent.WrapsChildren = true;
+
+        List<ContainerRuntime> children = new List<ContainerRuntime>();
+        for (int i = 0; i < 20; i++)
+        {
+            ContainerRuntime child = new();
+            child.Width = 90;
+            child.WidthUnits = DimensionUnitType.Absolute;
+            child.Height = 40;
+            child.HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(child);
+            children.Add(child);
+        }
+
+        // 2 per row (90+90=180 < 200, 90+90+90=270 > 200)
+        for (int i = 0; i < 20; i++)
+        {
+            children[i].AbsoluteTop.ShouldBe((i / 2) * 40, $"Child {i} AbsoluteTop");
+            children[i].AbsoluteLeft.ShouldBe((i % 2) * 90, $"Child {i} AbsoluteLeft");
+        }
+    }
+
+    [Fact]
+    public void WrapsChildren_LeftToRight_RowDimensionTracksMaxHeight()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.MaxWidth = 200;
+        parent.WrapsChildren = true;
+
+        ContainerRuntime child1 = new();
+        child1.Width = 80;
+        child1.WidthUnits = DimensionUnitType.Absolute;
+        child1.Height = 30;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Width = 80;
+        child2.WidthUnits = DimensionUnitType.Absolute;
+        child2.Height = 70;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Width = 80;
+        child3.WidthUnits = DimensionUnitType.Absolute;
+        child3.Height = 50;
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        ContainerRuntime child4 = new();
+        child4.Width = 80;
+        child4.WidthUnits = DimensionUnitType.Absolute;
+        child4.Height = 20;
+        child4.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child4);
+
+        // Row1: child1+child2 (max height 70), Row2: child3+child4 (max height 50)
+        child1.AbsoluteTop.ShouldBe(0);
+        child2.AbsoluteTop.ShouldBe(0);
+        child3.AbsoluteTop.ShouldBe(70);
+        child4.AbsoluteTop.ShouldBe(70);
+    }
+
+    [Fact]
+    public void WrapsChildren_LeftToRight_WithStackSpacing_ChildShrinks_ShouldRecalculate()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.MaxWidth = 200;
+        parent.WrapsChildren = true;
+        parent.StackSpacing = 10;
+
+        ContainerRuntime child1 = new();
+        child1.Width = 80;
+        child1.WidthUnits = DimensionUnitType.Absolute;
+        child1.Height = 40;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Width = 80;
+        child2.WidthUnits = DimensionUnitType.Absolute;
+        child2.Height = 60;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Width = 80;
+        child3.WidthUnits = DimensionUnitType.Absolute;
+        child3.Height = 30;
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        // Row1: child1+child2 (80+10+80=170 < 200), Row2: child3
+        // child3 top = row1 max height (60) + stack spacing (10)
+        child3.AbsoluteTop.ShouldBe(70);
+
+        // Shrink child2 height to 20 — child1 at 40 is now tallest
+        child2.Height = 20;
+        // child3 top = row1 max height (40) + stack spacing (10)
+        child3.AbsoluteTop.ShouldBe(50);
+    }
+
+    [Fact]
+    public void WrapsChildren_TopToBottom_ChildShrinks_ShouldRecalculateColumnDimension()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.MaxHeight = 200;
+        parent.WrapsChildren = true;
+
+        ContainerRuntime child1 = new();
+        child1.Width = 60;
+        child1.WidthUnits = DimensionUnitType.Absolute;
+        child1.Height = 80;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Width = 40;
+        child2.WidthUnits = DimensionUnitType.Absolute;
+        child2.Height = 80;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Width = 50;
+        child3.WidthUnits = DimensionUnitType.Absolute;
+        child3.Height = 80;
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        // Col1: child1+child2 (80+80=160 < 200), Col2: child3
+        // Col1 max width is 60 (child1)
+        child3.AbsoluteLeft.ShouldBe(60);
+
+        // Shrink child1 width to 30 — child2 at 40 is now widest in col1
+        child1.Width = 30;
+        child3.AbsoluteLeft.ShouldBe(40);
+    }
+
+    [Fact]
+    public void WrapsChildren_TopToBottom_ColumnDimensionTracksMaxWidth()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.MaxHeight = 200;
+        parent.WrapsChildren = true;
+
+        ContainerRuntime child1 = new();
+        child1.Width = 30;
+        child1.WidthUnits = DimensionUnitType.Absolute;
+        child1.Height = 80;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Width = 70;
+        child2.WidthUnits = DimensionUnitType.Absolute;
+        child2.Height = 80;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Width = 50;
+        child3.WidthUnits = DimensionUnitType.Absolute;
+        child3.Height = 80;
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        ContainerRuntime child4 = new();
+        child4.Width = 20;
+        child4.WidthUnits = DimensionUnitType.Absolute;
+        child4.Height = 80;
+        child4.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child4);
+
+        // Col1: child1+child2 (max width 70), Col2: child3+child4 (max width 50)
+        child1.AbsoluteLeft.ShouldBe(0);
+        child2.AbsoluteLeft.ShouldBe(0);
+        child3.AbsoluteLeft.ShouldBe(70);
+        child4.AbsoluteLeft.ShouldBe(70);
+    }
+
+    #endregion
 }

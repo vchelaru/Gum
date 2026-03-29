@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
-public class LayoutTests
+public class DockAnchorTests
 {
     [Fact]
     public void Dock_ShouldSetCorrectValues()
