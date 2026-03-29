@@ -124,7 +124,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ControlsCompatability.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Image.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Menu.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\MenuItem.cs" />
