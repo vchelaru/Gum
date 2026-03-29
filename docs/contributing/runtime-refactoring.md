@@ -431,34 +431,42 @@ The analyzer produces two diagnostics:
 
 #### Rollout plan
 
-**Phase 1 — Infrastructure (target: April 2026 release).** No breaking changes. Get the plumbing in place and shipping so it can be tested in the wild before it matters.
+**Pacing principle:** One refactor per monthly release, even if it's non-breaking. This keeps each change isolated for testing, makes regressions easy to trace to a specific release, and avoids overwhelming users with multiple simultaneous migrations.
 
-- Add `GumSyntaxVersionAttribute` class to a shared location (file-linked via GumCommon from `GumDataTypes/`). **(Done)**
-- Add `[assembly: GumSyntaxVersion(Version = 0)]` to MonoGameGum, RaylibGum, and SkiaGum assemblies. **(Done)**
-- Add `SyntaxVersion` field to `CodeOutputProjectSettings` (in `.codsj`), defaulting to `"*"` (auto-detect).
-- Implement auto-detection logic: parse the game project's `.csproj` to find the Gum reference, then read the syntax version from the NuGet cache DLL (for PackageReference) or from `AssemblyAttributes.cs` source text (for ProjectReference).
-- Display the resolved syntax version and detection method in the Gum tool's codegen UI.
-- Create `docs/gum-tool/upgrading/syntax-versions.md` documenting the version table and what each version means.
-- Create the `Gum.Analyzers` project with the data-driven namespace remapper and code fix provider. Write tests. Wire it into the runtime projects. The mapping table is empty at this point — the analyzer ships but does nothing yet.
+**Phase 1 — Infrastructure (April 2026).** No breaking changes. Get the plumbing in place and shipping so it can be tested in the wild before it matters. **(Done)**
 
-**Phase 2 — Enum namespace unification (target: TBD, after Phase 1 has shipped and been tested).** The first actual breaking change.
+- `GumSyntaxVersionAttribute` class in `GumDataTypes/`, file-linked into GumCommon.
+- `[assembly: GumSyntaxVersion(Version = 0)]` on MonoGameGum, RaylibGum, and SkiaGum.
+- `SyntaxVersion` field in `CodeOutputProjectSettings` (`.codsj`), defaulting to `"*"` (auto-detect).
+- Auto-detection logic: parse the game project's `.csproj` to find the Gum reference, then read the syntax version from the NuGet cache DLL (for PackageReference) or from `AssemblyAttributes.cs` source text (for ProjectReference).
+- Syntax version displayed in the Gum tool's codegen UI.
+- `docs/gum-tool/upgrading/syntax-versions.md` documenting the version table.
+- `Gum.Analyzers` Roslyn project with data-driven namespace remapper and code fix provider. Empty mapping table — ships but does nothing yet. Wired into all three runtime projects.
+
+**Phase 2 — Runtime namespace unification (target: TBD).** Non-breaking change using the compatibility shim pattern.
+
+This uses the same approach that was used for the Forms controls migration: create the runtime class in the new unified namespace, make the old-namespace class inherit from it (adding nothing), and mark the old class `[Obsolete]`. Existing user code keeps working — they're using a derived class that's functionally identical. After a release cycle, promote to `[Obsolete(error: true)]`, then eventually delete the shims.
+
+- Decide on the target namespace (e.g., `Gum.Runtimes`).
+- Create runtime classes in the new namespace.
+- Convert old-namespace classes to thin derived shims marked `[Obsolete]`.
+- Update internal Gum code to use the new namespace.
+- Update code generator to emit new-namespace `using` statements for syntax version >= 1.
+- Bump syntax version to 1.
+
+**Phase 3 — Enum namespace unification (target: TBD, after Phase 2).** Breaking change — requires the analyzer.
+
+Unlike runtime classes, enums cannot use a base/derived compatibility shim because C# enums don't support inheritance. This is a hard break that ships simultaneously with the Roslyn analyzer auto-fix.
 
 - Decide on the target namespace (e.g., `Gum.Layout`).
-- Move the enums to the new namespace in source files. Update all internal Gum code.
+- Move the enums to the new namespace in source files. Guard with `#if !FRB` for FlatRedBall 1 compatibility.
+- Update all internal Gum code.
 - Add the migration mappings to the analyzer.
-- Bump the syntax version to 1. Update the code generator to emit new-style `using` statements when it reads version >= 1.
+- Bump the syntax version to 2. Update the code generator to emit new-style `using` statements when it reads version >= 2.
 - Eliminate Raylib duplicate enum definitions.
 - Update the syntax versions doc.
 
-**Phase 3 — Runtime namespace unification (target: TBD, after Phase 2).** The second breaking change.
-
-- Decide on the target namespace for runtime classes.
-- Move the runtime classes. Update internal code.
-- Add new mappings to the analyzer.
-- Bump the syntax version to 2. Update the code generator.
-- Update the syntax versions doc.
-
-**Future phases** follow the same pattern: move types, add analyzer mappings, bump version, update codegen and docs.
+**Future phases** follow the same pattern: one change per release, assess whether it can use compatibility shims (non-breaking) or requires the analyzer (breaking), update syntax version and codegen.
 
 #### Code generation compatibility
 

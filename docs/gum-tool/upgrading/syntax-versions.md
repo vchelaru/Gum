@@ -21,8 +21,8 @@ The detected version is displayed in the Code tab under "Project-Wide Code Gener
 | Version | Introduced | Changes |
 |---|---|---|
 | 0 | 2026.4.x | Baseline. Attribute system introduced. No breaking changes from prior releases. All existing namespace conventions are preserved. |
-| 1 | TBD | Layout enum namespace unification. Enums like `DimensionUnitType`, `ChildrenLayout`, `HorizontalAlignment`, etc. move to a unified namespace. |
-| 2 | TBD | Runtime class namespace unification. Runtime classes like `TextRuntime`, `SpriteRuntime`, etc. move to a unified namespace. |
+| 1 | TBD | Runtime class namespace unification (non-breaking). Runtime classes like `TextRuntime`, `SpriteRuntime`, etc. become available in a unified namespace. Old namespaces continue to work via compatibility shims marked `[Obsolete]`. |
+| 2 | TBD | Layout enum namespace unification (breaking). Enums like `DimensionUnitType`, `ChildrenLayout`, `HorizontalAlignment`, etc. move to a unified namespace. The bundled Roslyn analyzer provides one-click migration. |
 
 When a new syntax version is introduced, the corresponding monthly migration page will document the specific changes. See the [runtime refactoring plan](../../contributing/runtime-refactoring.md) for full details.
 
