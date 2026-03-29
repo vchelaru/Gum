@@ -1,6 +1,9 @@
-# Layout Engine — Deep Dive
+# Layout Engine — Overview
 
 File: `GumRuntime/GraphicalUiElement.cs`
+
+> For deep internals of the UpdateLayout call chain (debugging, optimizing,
+> extending the engine), see the **gum-layout-engine** skill.
 
 ## UpdateLayout Flow
 

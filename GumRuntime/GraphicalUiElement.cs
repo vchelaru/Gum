@@ -239,6 +239,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     // This is used by the stacking logic to properly sort objects
     public int StackedRowOrColumnIndex { get; set; } = -1;
 
+    // Cached index of this element within its parent's Children list.
+    // Set by UpdateChildren before each child's UpdateLayout call to avoid
+    // an O(n) IndexOf lookup in GetWhatToStackAfter. A value of -1 means
+    // unset; GetWhatToStackAfter will fall back to IndexOf in that case.
+    private int _cachedSiblingIndex = -1;
+
     // null by default, non-null if an object uses
     // stacked layout for its children.
     public List<float> StackedRowOrColumnDimensions { get; private set; }
@@ -3516,6 +3522,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             for (int i = 0; i < mWhatThisContains.Count; i++)
             {
                 var child = mWhatThisContains[i];
+                child._cachedSiblingIndex = i;
                 // Victor Chelaru
                 // January 10, 2017
                 // I think we may not want to update any children which
@@ -3616,6 +3623,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             for (int i = 0; i < this.Children.Count; i++)
             {
                 var child = this.Children[i];
+                child._cachedSiblingIndex = i;
 
                 if ((alreadyUpdated == null || alreadyUpdated.Contains(child) == false))
                 {
@@ -4550,7 +4558,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         /////////////////////////////End Early Out/////////////////////////////////
 
-        thisIndex = siblings.IndexOf(this);
+        if (_cachedSiblingIndex >= 0 && _cachedSiblingIndex < siblings.Count && siblings[_cachedSiblingIndex] == this)
+        {
+            thisIndex = _cachedSiblingIndex;
+        }
+        else
+        {
+            thisIndex = siblings.IndexOf(this);
+        }
 
 
         if (parentGue.StackedRowOrColumnDimensions == null)

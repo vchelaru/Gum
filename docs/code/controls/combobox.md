@@ -47,6 +47,26 @@ for(int i = 0; i < 40; i++)
 
 <figure><img src="../../.gitbook/assets/25_07 59 59.png" alt=""><figcaption><p>ComboBox ListBox with custom Height</p></figcaption></figure>
 
+## Performance with Many Items
+
+If all items in the ComboBox dropdown are the same height (no text wrapping or variable-sized icons), you can improve dropdown open performance by setting `UseFixedStackChildrenSize` on the ListBox's inner panel. This tells the layout engine to measure only the first child and assume all others are the same size, skipping per-child measurement.
+
+```csharp
+// Initialize
+var comboBox = new ComboBox();
+comboBox.AddToRoot();
+comboBox.ListBox.InnerPanel.UseFixedStackChildrenSize = true;
+
+for(int i = 0; i < 800; i++)
+{
+    comboBox.Items.Add($"Item {i}");
+}
+```
+
+{% hint style="warning" %}
+Only use `UseFixedStackChildrenSize` when all items have the same height. If items have different heights (for example, from text wrapping or varying content), this setting produces incorrect layout.
+{% endhint %}
+
 ## SelectedObject and SelectedIndex
 
 Use `SelectedIndex` to select an item by its zero-based position in `Items`, or read it back to find which item is currently selected. Use `SelectedObject` to get or set the selected item directly as an object.
