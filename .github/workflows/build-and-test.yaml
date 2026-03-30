@@ -3,6 +3,7 @@ name: Build and Test Runtimes, Unit Tests, Generated Code Projects
 on:
   pull_request:
     branches: [master]
+  workflow_dispatch:
 
 jobs:
   Build-and-Test:
@@ -21,15 +22,30 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
+      - name: Cache .NET workloads
+        id: cache-workloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\Program Files\dotnet\metadata
+            C:\Program Files\dotnet\packs
+            C:\Program Files\dotnet\sdk-manifests
+            /usr/local/share/dotnet/metadata
+            /usr/local/share/dotnet/packs
+            /usr/local/share/dotnet/sdk-manifests
+          key: workloads-${{ runner.os }}-${{ hashFiles('.github/workflows/build-and-test.yaml') }}
+
       - name: Install workloads
+        if: steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet workload install wasm-tools-net9 ios android maui
 
 
+      # Workload caching IS used above and saves ~2 minutes per run.
       # I tried caching both NuGet packages and also cache on the actions/setup-dotnet@v4
       # In both cases the caching slowed down the total execution time.
       # Actually on further testing, it does seem like the NuGet cache can speed up the Windows
       # build by around 20-30 seconds. However, the script for it is a little confusing and it's
-      # not a huge savings. Let's keep it simple and not use caching. 
+      # not a huge savings. Let's keep it simple and not use NuGet caching.
 
       - name: Build Gum (Windows Only)
         if: runner.os == 'Windows'
@@ -46,7 +62,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           dotnet restore "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln"
-          dotnet build "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0
+          dotnet build "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0 -p:TargetFrameworks=net9.0-windows10.0.19041.0
 
           dotnet restore "Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln"
           dotnet build "Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0
