@@ -9,7 +9,7 @@ Automate building of all Gum Sample solutions in the repository.
 The Gum CI build workflow file is located at .github/workflows/ci.yaml
 
 ## Core Concepts
-- **Event-Driven**: Triggered by GitHub events (push, pull request) on `master` branch.
+- **Event-Driven**: Triggered by GitHub events (push, pull request) on `main` branch.
 - **Modular Jobs**: Separates solution discovery (`list-solutions`) from building (`build`).
 - **Matrix Builds**: Parallelizes builds across multiple .NET versions and solutions.
 - **Error Tolerance**: Failures in one build don’t halt others (`fail-fast: false`).
@@ -35,8 +35,8 @@ The Gum CI build workflow file is located at .github/workflows/ci.yaml
 ## Workflow: Build All
 
 ### Trigger Events
-- **Push**: On `master` branch
-- **Pull Request**: Targeting `master` branch
+- **Push**: On `main` branch
+- **Pull Request**: Targeting `main` branch
 
 ### Jobs
 

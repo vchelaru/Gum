@@ -12,7 +12,7 @@ Gum is an open source project so you can run it from source instead of running t
 
 1. Download the source file from [GitHub](https://github.com/vchelaru/gum)
    1. If you downloaded the .zip file from the GitHub main page, unzip the file
-   2. If you downloaded the file through a Git client, be sure to be on the `master` branch
+   2. If you downloaded the file through a Git client, be sure to be on the `main` branch
 
 <figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum repository in Github Desktop</p></figcaption></figure>
 
