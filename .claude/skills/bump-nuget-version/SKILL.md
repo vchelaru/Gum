@@ -23,11 +23,11 @@ The response has a `versions` array of strings. Filter for entries starting with
 
 ## Step 3: Create the release branch
 
-From master, create and check out the new branch. The branch name includes the full version with underscores:
+From main, create and check out the new branch. The branch name includes the full version with underscores:
 `ReleaseCode_YYYY_M_D_V` (e.g., `ReleaseCode_2026_2_23_2`)
 
 ```bash
-git checkout master
+git checkout main
 git checkout -b ReleaseCode_YYYY_M_D_V
 ```
 

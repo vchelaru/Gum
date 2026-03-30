@@ -129,7 +129,7 @@ jobs:
 
             - Bumps `Gum/Properties/AssemblyInfo.cs` to version **${{ steps.meta.outputs.tag }}**
             - Release title: **${{ steps.meta.outputs.title }}**
-          base: master
+          base: main
           labels: |
             automated
             version-bump

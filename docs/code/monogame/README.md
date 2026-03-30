@@ -18,7 +18,7 @@ If you prefer to dive in and see things working, the Gum repository includes sam
 
 You can clone the repository and open the projects in your favorite IDE (like Visual Studio) and try them out.
 
-The direct link to the samples is here: [https://github.com/vchelaru/Gum/tree/master/Samples](https://github.com/vchelaru/Gum/tree/master/Samples)
+The direct link to the samples is here: [https://github.com/vchelaru/Gum/tree/main/Samples](https://github.com/vchelaru/Gum/tree/main/Samples)
 
 For more information about the Sample projects, see the [Samples page](/broken/pages/j0sr8sjbLY1OWWfXcQwa).
 

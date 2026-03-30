@@ -19,7 +19,7 @@ To upgrade the Gum tool:
 To upgrade the Gum tool, it depends on your current version of gum.
 
 1. Your Gum version < 2026
-   1. Download the latest `setup_gum_linux.sh` script to your home directory [https://github.com/vchelaru/Gum/blob/master/setup\_gum\_linux.sh](../../../setup_gum_linux.sh)
+   1. Download the latest `setup_gum_linux.sh` script to your home directory [https://github.com/vchelaru/Gum/blob/main/setup\_gum\_linux.sh](../../../setup_gum_linux.sh)
    2. Make it executable `chmod +x ./setup_gum_linux.sh`
    3. Re-run the `./setup_gum_linux.sh` script:
       1. It will create a new folder/wine-prefix  `~/.wine_gum_dotnet8`&#x20;

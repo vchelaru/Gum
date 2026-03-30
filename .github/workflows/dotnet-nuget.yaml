@@ -49,7 +49,7 @@ jobs:
     - name: Build solution
       run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore
     
-    # Vic says - why run tests? This seems redundant since we already run tests before merging into master
+    # Vic says - why run tests? This seems redundant since we already run tests before merging into main
     # - name: Run tests
     #  run: dotnet test ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
     

@@ -10,7 +10,7 @@ To create a new MonoGame project, follow the steps in the MonoGame Getting Start
 
 To create a new KNI project, see the KNI project page: [https://github.com/kniEngine/kni](https://github.com/kniEngine/kni)
 
-To create a new FNA project, see the FNA setup guide: [https://fna-xna.github.io/docs/1%3A-Setting-Up-FNA/](https://fna-xna.github.io/docs/1%3A-Setting-Up-FNA/) . Alternatively if you prefer, you can create a copy of the FNA sample project: [https://github.com/vchelaru/Gum/tree/master/Samples/FnaGum](https://github.com/vchelaru/Gum/tree/master/Samples/FnaGum) . Note that the FNA team recommends linking your project against FNA source. The sample project linked above requires that you have the FNA.Core cproj linked to compile your project.
+To create a new FNA project, see the FNA setup guide: [https://fna-xna.github.io/docs/1%3A-Setting-Up-FNA/](https://fna-xna.github.io/docs/1%3A-Setting-Up-FNA/) . Alternatively if you prefer, you can create a copy of the FNA sample project: [https://github.com/vchelaru/Gum/tree/main/Samples/FnaGum](https://github.com/vchelaru/Gum/tree/main/Samples/FnaGum) . Note that the FNA team recommends linking your project against FNA source. The sample project linked above requires that you have the FNA.Core cproj linked to compile your project.
 
 Once you have your project set up, you should have a Game class similar to the following block of code:
 

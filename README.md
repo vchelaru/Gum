@@ -6,7 +6,7 @@
 <div align="center">
   <a href="https://discord.gg/tG5RBgw"><img src="https://img.shields.io/discord/586997072373481494" alt="Join the chat" /></a>
   <a href="https://twitter.com/FlatRedBall"><img src="https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2FFlatRedBall" alt="Twitter"/></a>
-  <img src="https://img.shields.io/github/last-commit/vchelaru/Gum/master" alt="Activity" />
+  <img src="https://img.shields.io/github/last-commit/vchelaru/Gum/main" alt="Activity" />
 </div>
 <br/>
 
