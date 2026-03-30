@@ -37,7 +37,7 @@ You will need these following prerequisites installed on your system, you can ru
 The following commands will go through the steps of downloading and running the `setup_gum_linux.sh` script. This script goes through the steps for you with minimal interaction required to setup your Linux environment to run the GUM tool using WINE. If you would prefer to do this setup manually, please refer to the Manual Setup Steps section below.
 
 1. Download the setup\_gum.linux.sh script\
-   [https://raw.githubusercontent.com/vchelaru/Gum/master/setup\_gum\_linux.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_linux.sh)
+   [https://raw.githubusercontent.com/vchelaru/Gum/main/setup\_gum\_linux.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_linux.sh)
 2. Open a terminal and `cd` to the directory that the script was downloaded to.
 3.  Make the script executable and run the installation.
 
@@ -341,7 +341,7 @@ _**WARNING:**_ After this runs, gum fails to load and crashes.  _We are unable t
 
 
 1. Download the setup\_gum.mac.sh script\
-   [https://raw.githubusercontent.com/vchelaru/Gum/master/setup\_gum\_mac.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_mac.sh)
+   [https://raw.githubusercontent.com/vchelaru/Gum/main/setup\_gum\_mac.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_mac.sh)
 2. Open a terminal and `cd` to the directory that the script was downloaded to
 3. Make the script executable
 

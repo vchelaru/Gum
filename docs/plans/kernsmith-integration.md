@@ -47,7 +47,7 @@ method handles all property types and is never async.
 - [ ] Test: confirm fonts generate correctly in the Gum tool when changing font properties
 - [ ] Test: confirm `gumcli fonts` still generates fonts correctly
 - [ ] Test: confirm "Re-create missing font files" menu item works
-- [ ] Merge to master
+- [ ] Merge to main
 
 ---
 
