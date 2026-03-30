@@ -104,7 +104,7 @@ Label label;
 
 protected override void Initialize()
 {
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     // Enables tabbing with the keyboard
     GumUI.UseKeyboardDefaults();

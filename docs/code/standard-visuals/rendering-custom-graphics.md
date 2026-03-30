@@ -103,7 +103,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+        GumUI.Initialize(this);
 
         FontStashSharpText.Initialize(GraphicsDevice);
 

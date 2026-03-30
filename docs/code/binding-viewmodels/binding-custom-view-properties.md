@@ -78,7 +78,7 @@ protected override void Initialize()
 {
     // either one of these:
     //GumUI.Initialize(this, "GumProject/GumProject.gumx");
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.Newest);
+    GumUI.Initialize(this);
 
     ButtonWithSubtext button = new ();
     button.AddToRoot();

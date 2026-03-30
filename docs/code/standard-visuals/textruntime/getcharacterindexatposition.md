@@ -18,7 +18,7 @@ TextRuntime textRuntime;
 
 protected override void Initialize()
 {
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.Newest);
+    GumUI.Initialize(this);
 
     textRuntime = new TextRuntime();
     textRuntime.AddToRoot();

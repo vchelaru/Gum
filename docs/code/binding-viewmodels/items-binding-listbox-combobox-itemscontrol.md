@@ -308,7 +308,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumUI.Initialize(this, DefaultVisualsVersion.V3);
+        GumUI.Initialize(this);
 
         var viewModel = new TopLevelViewModel();
 

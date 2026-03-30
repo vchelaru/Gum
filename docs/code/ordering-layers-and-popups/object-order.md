@@ -99,7 +99,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumService.Default.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+        GumService.Default.Initialize(this);
         _spriteBatch = new SpriteBatch(this.GraphicsDevice);
         _gumLogoTexture = Texture2D.FromFile(GraphicsDevice, "Content/GumLogo.png");
         _gumBatch  = new GumBatch();
