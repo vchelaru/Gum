@@ -2,7 +2,7 @@ name: Build and Test Runtimes, Unit Tests, Generated Code Projects
 
 on:
   pull_request:
-    branches: [main]
+    branches: [master, main]
 
 jobs:
   Build-and-Test:

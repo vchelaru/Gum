@@ -5,7 +5,7 @@ name: .SonarQube
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master", "main" ]
 
 jobs:
   build:
