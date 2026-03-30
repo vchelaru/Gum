@@ -15,7 +15,7 @@ bool isPrinting = false;
 float numberOfCharacters;
 protected override void Initialize()
 {
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     textRuntime = new TextRuntime();
     textRuntime.AddToRoot();

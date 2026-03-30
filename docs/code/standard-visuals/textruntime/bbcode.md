@@ -116,7 +116,7 @@ GrowShrinkCustomFunction _growShrink;
 
 protected override void Initialize()
 {
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     _growShrink = new GrowShrinkCustomFunction();
     // The function must be registered before it is used

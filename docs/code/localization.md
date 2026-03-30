@@ -88,7 +88,7 @@ using Gum.Localization; // for extension methods
 protected override void Initialize()
 {
     //var project = GumUI.Initialize(this, "GumProject/GumProject.gumx");
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.Newest);
+    GumUI.Initialize(this);
 
     var localizationService = GumUI.LocalizationService;
 
