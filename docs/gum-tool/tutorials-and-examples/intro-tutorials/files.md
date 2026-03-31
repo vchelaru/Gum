@@ -17,7 +17,7 @@ First we'll set up a workspace:
 
 The `Source File` property is the image that the Sprite displays. Usually `Source Files` are of the .png file format. To set the source file:
 
-1. Select  SpriteInstance
+1. Select SpriteInstance
 2. Find `Source File` in the Variables tab
 3. Click the "..." button to bring up a file window
 4. Navigate to the location of the file you would like to load
@@ -26,7 +26,7 @@ The `Source File` property is the image that the Sprite displays. Usually `Sourc
 
 ![SpriteInstance displaying a bear Source File](<../../../.gitbook/assets/14_05 46 12.png>)
 
-If you select a file which is not located in the same folder or a sub folder of your gum project, Gum asks if you would like to reference the file in its original location or create a copy.&#x20;
+If you select a file which is not located in the same folder or a sub folder of your gum project, Gum asks if you would like to reference the file in its original location or create a copy.
 
 <figure><img src="../../../.gitbook/assets/14_05 42 46.png" alt=""><figcaption><p>Gum asks to copy files if they are outside of the project directory</p></figcaption></figure>
 
@@ -42,7 +42,7 @@ For example, the following file contains images for an animated character, groun
 
 If we download this file and set it as our , then the sprite displays the entire file.
 
-<figure><img src="../../../.gitbook/assets/14_05 52 53 (1).png" alt=""><figcaption><p>Sprite displaying entire sprite sheet</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/14_05 52 53.png" alt=""><figcaption><p>Sprite displaying entire sprite sheet</p></figcaption></figure>
 
 We can display a portion of the Sprite rather than the entire file:
 

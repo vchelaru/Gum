@@ -22,6 +22,4 @@ Gradients only fill the solid parts of a shape, so if a shape has Is Filled set 
 
 Dropshadows respect the opaque part of the shape, so changing Is Filled also affects the dropshadow.
 
-
-
-<figure><img src="../../../../.gitbook/assets/30_05 18 22 (1).gif" alt=""><figcaption><p>Changing a ColoredCircle's Is Filled to false results in the dropshadow having a hollow center</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/30_05 18 22.gif" alt=""><figcaption><p>Changing a ColoredCircle's Is Filled to false results in the dropshadow having a hollow center</p></figcaption></figure>

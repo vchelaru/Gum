@@ -28,7 +28,7 @@ Instance properties exist regardless of which Object Instantiation Type is used,
 
 <figure><img src="../../.gitbook/assets/StandardRuntimeInstances.png" alt=""><figcaption><p>MyComponent generates a runtime with properties matching the names of its contained instances</p></figcaption></figure>
 
-The types of these properties match their types in Gum. Instances of standard elements are generated using their corresponding runtime types. For example, a Text instance generates a property of type TextRuntime. For more information about standard element runtime types, see the [Runtime Objects](broken-reference) section.
+The types of these properties match their types in Gum. Instances of standard elements are generated using their corresponding runtime types. For example, a Text instance generates a property of type TextRuntime. For more information about standard element runtime types, see the [Runtime Objects](https://github.com/vchelaru/Gum/blob/master/docs/gum-tool/code-tab/broken-reference/README.md) section.
 
 Instances of components are generated using their corresponding runtime types as well. For example, instances of a component named Button are generated with the type ButtonRuntime.
 
@@ -50,17 +50,17 @@ FindByName is the most common option when using generated code. If this value is
 
 Since the children will have already been created, then the generated code does not instantiate new children. Instead, it searches through the children of the generated element by name and assigns the properties. For example, the following screenshot shows how Button instances are assigned by name:
 
-<figure><img src="../../.gitbook/assets/04_16 06 11.png" alt=""><figcaption><p>OkButton and CancelButton being assigned by searching through children </p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/04_16 06 11.png" alt=""><figcaption><p>OkButton and CancelButton being assigned by searching through children</p></figcaption></figure>
 
 If you intend to use Gum to create elements, but you do not want to load the .gumx file at runtime, you can tell the code generator to fully generate all instances by setting Object Instantiation Type to FullyInCode. In this case the generated runtime class can be instantiated without loading a Gum project. Of course, keep in mind that referenced components must still exist in the project.
 
 The following shows the instantiation of the OkButton and CancelButton when using the FullyInCode setting.
 
-<figure><img src="../../.gitbook/assets/image (150).png" alt=""><figcaption><p>Button instances instantiated in code</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (257).png" alt=""><figcaption><p>Button instances instantiated in code</p></figcaption></figure>
 
 Furthermore, when using the FullyInCode option all variables are assigned in generated code. For example, if the OkButton's position is changed, its X and Y values are assigned in generated code.
 
-<figure><img src="../../.gitbook/assets/image (151).png" alt=""><figcaption><p>Variables assigned in generated code when using FullyInCode</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (258).png" alt=""><figcaption><p>Variables assigned in generated code when using FullyInCode</p></figcaption></figure>
 
 {% hint style="info" %}
 If using the FindByName option, then no variable assignment happens in code - rather the variable assignment happens when creating a new GraphicalUiElement from a Gum element.
@@ -84,13 +84,13 @@ Categories and states generate enums and properties for the enum. Each category 
 
 For example, consider a Button with a category named ButtonCategory with states Enabled, Disabled, Focused, and Pushed. A ButtonCategory enum is generated, and a property named ButtonCategoryState is added to the ButtonRuntime class.
 
-<figure><img src="../../.gitbook/assets/04_16 49 26 (1).png" alt=""><figcaption><p>ButtonCategory and ButtonCategoryState in a generated ButtonRuntime class</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/04_16 49 26.png" alt=""><figcaption><p>ButtonCategory and ButtonCategoryState in a generated ButtonRuntime class</p></figcaption></figure>
 
 ### Creating Runtime Instances with FindByName
 
 As mentioned above, the most common approach for working with Gum is to use the FindByName option in combination with loading a Gum project. When using FindByName, instances of runtimes are usually not created by using the `new` keyword. Rather, instances are created using Gum elements.
 
-We can look at an example component named Button which is generated using FindByName. The simplest way to create an instance of the Button is to add a Button instance to a Screen in Gum, such as a screen named MainMenu.&#x20;
+We can look at an example component named Button which is generated using FindByName. The simplest way to create an instance of the Button is to add a Button instance to a Screen in Gum, such as a screen named MainMenu.
 
 <figure><img src="../../.gitbook/assets/04_16 24 40.png" alt=""><figcaption></figcaption></figure>
 
@@ -124,4 +124,3 @@ var button = (ButtonRuntime)gumProject.Components.First(item => item.Name == "Bu
     .ToGraphicalUiElement();
     
 ```
-

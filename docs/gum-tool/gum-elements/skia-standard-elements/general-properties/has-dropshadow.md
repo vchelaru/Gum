@@ -6,15 +6,15 @@ Has Dropshadow controls whether a dropshadow is drawn below an element. By defau
 
 The following image shows two RoundedRectangles. The left with Has Dropshadow unchecked, the right with Has Dropshadow checked.
 
-<figure><img src="../../../../.gitbook/assets/image (144).png" alt=""><figcaption><p>Two RoundedRectangle instances</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (251).png" alt=""><figcaption><p>Two RoundedRectangle instances</p></figcaption></figure>
 
 Note that if an instance has a dropshadow, the dropshadow renders outside of the bounds of the instance.
 
-<figure><img src="../../../../.gitbook/assets/image (145).png" alt=""><figcaption><p>Dark pixels from a dropshadow rendering below the bounds of a RoundedRectangle</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (252).png" alt=""><figcaption><p>Dark pixels from a dropshadow rendering below the bounds of a RoundedRectangle</p></figcaption></figure>
 
 Dropshadows draw as part of the object, so if multiple objects stack, their dropshadows also stack.
 
-<figure><img src="../../../../.gitbook/assets/image (146).png" alt=""><figcaption><p>Multiple stacked ColoredRectangles with dropshadows</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (253).png" alt=""><figcaption><p>Multiple stacked ColoredRectangles with dropshadows</p></figcaption></figure>
 
 ### Dropshadow Offset X and Y
 

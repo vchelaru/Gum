@@ -37,7 +37,7 @@ First we'll create Screen1:
 5. Set the Text property on the newly created ButtonStandardInstance to **Go to Screen 2**
 6. Arrange the two instances so they are not overlapping
 
-<figure><img src="../../../../.gitbook/assets/image (118).png" alt=""><figcaption><p>Screen1 with a Text and Button</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (221).png" alt=""><figcaption><p>Screen1 with a Text and Button</p></figcaption></figure>
 
 Next we'll create Screen2:
 
@@ -48,7 +48,7 @@ Next we'll create Screen2:
 5. Set the Text property on the newly created ButtonStandardInstance to **Go to Screen 1**
 6. Arrange the two instances so they are not overlapping
 
-<figure><img src="../../../../.gitbook/assets/image (119).png" alt=""><figcaption><p>Screen2 with a Text and Button</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (222).png" alt=""><figcaption><p>Screen2 with a Text and Button</p></figcaption></figure>
 
 ### Modifying Game1
 

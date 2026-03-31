@@ -18,7 +18,7 @@ The following image shows a child ColoredRectangle with `-10` `Relative to Paren
 
 If an instance does not have a parent, then it uses the canvas size when using a `Width Units` of `Relative to Parent`.
 
-<figure><img src="../../../.gitbook/assets/image (70).png" alt=""><figcaption><p>Rectangle using 0 <code>Relative to Parent</code> with no direct parent</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (181).png" alt=""><figcaption><p>Rectangle using 0 <code>Relative to Parent</code> with no direct parent</p></figcaption></figure>
 
 {% hint style="info" %}
 All relationships between parent and children depend only on the direct parent or child. Grandchildren and grandparents are not considered when performing calculations. For more information, see the [Parent](parent.md#children-outside-of-parent-bounds) page.
@@ -32,13 +32,13 @@ The following shows a child ColoredRectangle with `100` `Percentage of Parent` `
 
 If an object does not have a parent, then the width of the canvas is used.
 
-<figure><img src="../../../.gitbook/assets/image (69).png" alt=""><figcaption><p>Rectangle using 100% of the screen when it has no direct parent</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (175).png" alt=""><figcaption><p>Rectangle using 100% of the screen when it has no direct parent</p></figcaption></figure>
 
 ## Ratio of Parent
 
 `Ratio of Parent` can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Parent](height-units.md#ratio-of-parent), but operates horizontally rather than vertically.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Blue rectangle using a ratio value of 2, next to siblings each using a ratio value of 1</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (50).png" alt=""><figcaption><p>Blue rectangle using a ratio value of 2, next to siblings each using a ratio value of 1</p></figcaption></figure>
 
 `Ratio of Parent` is usually used with a parent that has its `Children Layout` set to `Left to Right Stack` or `Top to Bottom Stack`. For more information, see the [Children Layout](../container/children-layout.md) page.
 
@@ -195,7 +195,7 @@ Svgs also support using `Maintain File Aspect Ratio Width`. For more information
 
 When this value is used, a Sprite's `Height` can be changed resulting in its absolute width also changing.
 
-<figure><img src="../../../.gitbook/assets/30_07 10 01 (1).gif" alt=""><figcaption><p>Changing the <code>Height</code> when using <code>Maintain File Aspect Ratio Width</code> also adjusts absolute width</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/30_07 10 01.gif" alt=""><figcaption><p>Changing the <code>Height</code> when using <code>Maintain File Aspect Ratio Width</code> also adjusts absolute width</p></figcaption></figure>
 
 When using `Maintain File Aspect Ratio Width`, the Sprite's effective width depends on the Sprite's `Texture Width` property.
 

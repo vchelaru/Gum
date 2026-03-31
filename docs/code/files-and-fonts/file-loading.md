@@ -14,7 +14,7 @@ If all of your project files are located relative to the .gumx root project file
 
 The Gum runtime library performs all of its loading from-file, so all of your files must be present in the destination directory. As explained in the [Loading .gumx](/broken/pages/PGWmyRmXA6uMwNXuO6Aa) page, all of your files should be set to **Copy if newer** in Visual Studio.
 
-<figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>bear.png file set to Copy if newer</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (98).png" alt=""><figcaption><p>bear.png file set to Copy if newer</p></figcaption></figure>
 
 ### Loading Files Through Runtime Objects
 
@@ -33,6 +33,27 @@ SpriteRuntimeInstance.Texture = MyTexture;
 
 In the case of the SourceFile assignment, the SpriteRuntime loads the Texture2D from disk. By default the file is loaded relative to the Content folder.
 
+### Example - Loading a Font File
+
+You can explicitly load font files if you would like to change fonts in custom code, or if you are using the GumBatch class to do your own Gum rendering.
+
+To load a file, first make sure that your font is added to Visual Studio, usually in the Content folder. In the case of fonts, you should have at least 2 files:
+
+1. A .png file
+2. A .fnt file
+
+Usually both files are added to the same directory. Be sure to mark both files as Copy if Newer.
+
+<figure><img src="../../.gitbook/assets/image (49).png" alt=""><figcaption><p>.fnt file in Visual Studio set to Copy if newer</p></figcaption></figure>
+
+The file can be loaded using the BitmapFont constructor:
+
+```csharp
+// Initialize
+// RelativeDirectory defaults to "Content/" so we leave that off
+var bitmapFont = new BitmapFont("Fonts/Font18Arial.fnt", SystemManagers.Default);
+```
+
 ### Setting FileManager.RelativeDirectory
 
 Whenever a file is assigned on a runtime object, Gum looks for the file in the `ToolsUtilities.FileManager.RelativeDirectory` directory. This directory defaults to your game's Content folder.
@@ -41,11 +62,11 @@ If you call `GumService.Default.Initialize` and pass a .gumx file, then Relative
 
 If your Gum project (.gumx) is located in the Content folder, RelativeDirectory is set to "Content/".
 
-<figure><img src="../../.gitbook/assets/image (44).png" alt=""><figcaption><p>GumProject.gumx located in the Content folder</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (156).png" alt=""><figcaption><p>GumProject.gumx located in the Content folder</p></figcaption></figure>
 
 If your project is located in a subfolder of Content, then RelativeDirectory is set to the folder containing the Gum project. In this case, RelativeDirectory would be set to "Content/gum/"
 
-<figure><img src="../../.gitbook/assets/image (45).png" alt=""><figcaption><p>Gum project in a subfolder</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (157).png" alt=""><figcaption><p>Gum project in a subfolder</p></figcaption></figure>
 
 RelativeDirectory is used whenever files are loaded. These operations include:
 

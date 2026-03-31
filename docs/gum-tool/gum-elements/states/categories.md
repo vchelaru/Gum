@@ -31,7 +31,7 @@ To add states to a category:
 1. Right-click on the desired category
 2.  Select Add State\\
 
-    <figure><img src="../../../.gitbook/assets/05_21 45 50 (1).png" alt=""><figcaption><p>Right click Add State item</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/05_21 45 50.png" alt=""><figcaption><p>Right click Add State item</p></figcaption></figure>
 3. Enter a name for the new state
 
 Once the state has been created it can be selected and variables can be changed to add them to the new state.
@@ -46,7 +46,7 @@ For example, consider a component with a category named ExampleCategory with two
 
 This component is given a variable named Example Category State.
 
-<figure><img src="../../../.gitbook/assets/image (197).png" alt=""><figcaption><p>Example Category State variable</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (276).png" alt=""><figcaption><p>Example Category State variable</p></figcaption></figure>
 
 This value can be assigned in the default state, making the selected state automatically set by default on the component.
 

@@ -6,7 +6,7 @@ The project properties window allows you to modify properties that apply across 
 
 To open the Project Properties tab, select Edit -> Properties.
 
-![](<../.gitbook/assets/image (10) (1) (1).png>)
+![](<../.gitbook/assets/image (111).png>)
 
 ## Canvas Width/Height
 
@@ -26,7 +26,7 @@ The Font Ranges setting controls which characters are included in default fonts.
 
 The default Font Ranges value is `32-126,160-255` which maps to the first page of the Bitmap font generator character set, labeled as **Latin + Latin Supplement**.
 
-![](<../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png>)
+![](<../.gitbook/assets/image (133).png>)
 
 Various websites provide a list of unicode character sets such as [https://unicode-table.com/en/blocks/](https://unicode-table.com/en/blocks/)
 
@@ -68,7 +68,7 @@ Each font has its own range of supported characters. You can open Bitmap Font Ge
 
 Notice that the CJK characters are not supported. By contrast the Batang font face supports CJK Unified Ideographs as shown in the following image:
 
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>CJK Unified Ideographs in the Batang font</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (8).png" alt=""><figcaption><p>CJK Unified Ideographs in the Batang font</p></figcaption></figure>
 
 Gum does not check whether the font range you have added is supported in each of the font faces used in your application. If you are extending your character set, you should verify that the font is supported in Bitmap Font Generator.
 
@@ -85,6 +85,6 @@ The following image shows a portion of an Arial 26 font png zoomed in with Font 
 
 If the Font Spacing Vertical and Font Spacing Horizontal are both increased to 5, then the spacing in between letters increases to 5 pixels, as shown in the following image:
 
-<figure><img src="../.gitbook/assets/image (2).png" alt=""><figcaption><p>Font Horizontal Spacing and Font Vertical Spacing of 5</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (13).png" alt=""><figcaption><p>Font Horizontal Spacing and Font Vertical Spacing of 5</p></figcaption></figure>
 
 Typically the two values should be set equally, and the amount of spacing needed depends on how much blurring (mipmap levels) is needed.

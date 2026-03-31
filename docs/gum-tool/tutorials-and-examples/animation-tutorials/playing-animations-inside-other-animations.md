@@ -28,7 +28,7 @@ The animation we will be creating in our Screen will start with all TextComponen
 7. Set its **HideShow** State to **Hidden**
 8. Repeat setting the State to Hidden for the other TextComponents
 
-![](<../../../.gitbook/assets/MakeAllInvisibleState (1).gif>)
+![](../../../.gitbook/assets/MakeAllInvisibleState.gif)
 
 ## Creating the Animation
 

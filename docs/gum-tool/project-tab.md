@@ -4,7 +4,7 @@
 
 The Project Tab displays all Screens, Components, Standard Elements, and Behaviors in a project. Each element type is organized in its own subfolder.
 
-<figure><img src="../.gitbook/assets/image (98).png" alt=""><figcaption><p>Project tab displaying a Gum project</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (203).png" alt=""><figcaption><p>Project tab displaying a Gum project</p></figcaption></figure>
 
 ### Searching
 
@@ -15,7 +15,7 @@ The search bar can be used to find elements in your project by searching for the
 * Standard Element Names
 * Behavior Names
 
-<figure><img src="../.gitbook/assets/10_10 15 43.gif" alt=""><figcaption><p>Searching for "Button" displays all elements and behaviors with the word "button" </p></figcaption></figure>
+<figure><img src="../.gitbook/assets/10_10 15 43.gif" alt=""><figcaption><p>Searching for "Button" displays all elements and behaviors with the word "button"</p></figcaption></figure>
 
 Additionally, variable values can be searched by checking the **Search variables** checkbox. When checked, variable values are searched for the entered text.
 

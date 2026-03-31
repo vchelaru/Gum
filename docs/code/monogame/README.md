@@ -26,7 +26,7 @@ For more information about the Sample projects, see the [Samples page](/broken/p
 
 The Gum UI Tool (usually called "Gum") is a visual editor for creating layouts using the Gum layout engine. Gum has been used on many commercial games to create all types of UI ranging from standard game HUDs to complex forms-based UIs. Gum can be used for any type of game.
 
-<figure><img src="../../.gitbook/assets/image (33).png" alt=""><figcaption><p>A sample StyleDemo component in the Gum UI Tool</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (146).png" alt=""><figcaption><p>A sample StyleDemo component in the Gum UI Tool</p></figcaption></figure>
 
 The Gum tool is simple to use - you can create your screens by drag+dropping, moving, and resizing objects with the mouse.
 
@@ -34,11 +34,11 @@ The Gum tool is simple to use - you can create your screens by drag+dropping, mo
 
 Gum is an _object oriented_ design tool, so projects can contain reusable components which contain other components and _standard elements_ (text, sprite, container, etc). Gum also provides inheritance, and behaviors (a concept similar to interfaces in C#). For example, the following PauseMenu component inherits from UserControl - a base type defining the standard visuals for a framed UI element.
 
-<figure><img src="../../.gitbook/assets/image (34).png" alt=""><figcaption><p>PauseMenu in Gum</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (147).png" alt=""><figcaption><p>PauseMenu in Gum</p></figcaption></figure>
 
 Gum produces a set of XML files (and PNG/FNT files for fonts) which can be added to any MonoGame project and loaded with a few lines of code. For information on loading projects, see the [Loading .gumx (Gum Project)](/broken/pages/PGWmyRmXA6uMwNXuO6Aa) page.
 
-<figure><img src="../../.gitbook/assets/image (35).png" alt=""><figcaption><p>Example Gum project in Windows Explorer</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (148).png" alt=""><figcaption><p>Example Gum project in Windows Explorer</p></figcaption></figure>
 
 ### What is the Gum Layout Engine
 
@@ -50,11 +50,11 @@ A full list of Gum properties can be found in the [Gum Element General Propertie
 
 By default, Gum elements are positioned relative to the top-left of their parent. Similarly, the origin of a Gum element is also its own top-left corner. Therefore, a rectangle that has an X of 100 and a Y of 50 appears as shown in the following image:
 
-<figure><img src="../../.gitbook/assets/image (36).png" alt=""><figcaption><p>Rectangle with X = 100 and Y = 50</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (149).png" alt=""><figcaption><p>Rectangle with X = 100 and Y = 50</p></figcaption></figure>
 
 The Gum tool helps you visualize the relationship between a child and its parent when the child is selected. Notice that the child draws a line from its origin (its top-left corner) to the top left of its parent. In this case the parent is the entire screen, which has a dotted outline.
 
-<figure><img src="../../.gitbook/assets/image (37).png" alt=""><figcaption><p>Selected rectangle showing its origin and its "units" (relative point on the parent)</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (150).png" alt=""><figcaption><p>Selected rectangle showing its origin and its "units" (relative point on the parent)</p></figcaption></figure>
 
 A child's position is relative to its parent's position, so changing the position of the parent ultimately changes the absolute position of its child as well. The following animation shows a parent container which has a white rectangle as its child. Notice the child can be moved relative to the parent. If the parent is moved, then the child's absolute position changes as well.
 
@@ -64,7 +64,7 @@ This basic type of layout is similar to layouts provided by most visual APIs inc
 
 The Gum layout engine is built around the concept of "units". As mentioned above, by default the X and Y values of an element is measured in units from the top-left corner. In other words, the default X Units is absolute pixels from left for X and absolute pixels from top for Y. The Gum tool exposes this as a set of buttons.
 
-<figure><img src="../../.gitbook/assets/image (38).png" alt=""><figcaption><p>X Units and Y Units in the Gum UI Tool</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (151).png" alt=""><figcaption><p>X Units and Y Units in the Gum UI Tool</p></figcaption></figure>
 
 At runtime, these properties exist as enums which can be changed. For example, to set an element's XUnits to be relative to the horizontal center of its parent, the following code can be used:
 
@@ -93,7 +93,7 @@ This same layout could be achieved in the Gum UI tool by setting the following v
 * X Units = Pixels from Center
 * X Origin = Center
 
-<figure><img src="../../.gitbook/assets/image (39).png" alt=""><figcaption><p>Child centered horizontally by changing X, X Units, and X Origin</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (152).png" alt=""><figcaption><p>Child centered horizontally by changing X, X Units, and X Origin</p></figcaption></figure>
 
 An element's size can also be controlled through units. For example, a child rectangle could set to provide an 8 pixel border inside of its parent container using the following code.
 
@@ -124,7 +124,7 @@ Similarly, the following could be done in the Gum UI tool::
 * Height = -16
 * Height Units = Relative to Container
 
-<figure><img src="../../.gitbook/assets/image (40).png" alt=""><figcaption><p>Child positioned in the center of its parent with 8 pixel border</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (153).png" alt=""><figcaption><p>Child positioned in the center of its parent with 8 pixel border</p></figcaption></figure>
 
 Note that the Width and Height are set to -16, which is twice the desired border. This is because the border of 8 pixels must appear on both the left and right sides for Width and both the top and bottom sides for Height.
 

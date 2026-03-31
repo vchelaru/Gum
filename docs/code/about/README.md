@@ -8,7 +8,7 @@ Gum is a set of technologies for making game UI including a WYSIWYG tool, runtim
 
 The Gum tool is a WYISWYG (what you see is what you get) tool for creating game UI.
 
-<figure><img src="../../.gitbook/assets/image (26).png" alt=""><figcaption><p>Gum UI</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (140).png" alt=""><figcaption><p>Gum UI</p></figcaption></figure>
 
 The Gum tool can be used to create interactive UI and HUDs for your game of any complexity. UI can be created for simple HUD, such as score and health display, or more complex UI such as a lobby for a multi-player game.
 

@@ -14,11 +14,11 @@ Using Skia Standard Elements may limit which platforms can run your Gum project.
 
 Skia standard elements must be explicitly added to gum projects. To add Skia standard elements Select **Plugins** -> **Add Skia Standard Elements.**
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (2) (1).png" alt=""><figcaption><p>Add Skia Standard Elements</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (240).png" alt=""><figcaption><p>Add Skia Standard Elements</p></figcaption></figure>
 
 After clicking this option, Gum adds new standard elements.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (2) (1) (1) (1) (1).png" alt=""><figcaption><p>Skia standard elements in Gum</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (241).png" alt=""><figcaption><p>Skia standard elements in Gum</p></figcaption></figure>
 
 Once these Skia standard elements are added, they can be added to Screens and Components just like any other standard element.
 

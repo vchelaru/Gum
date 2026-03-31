@@ -31,11 +31,11 @@ The Default Implementation property can help runtime libraries determine which c
 
 The Button type is a good example of why this property might be needed because the default Forms components include multiple components which use ButtonBehavior.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1).png" alt=""><figcaption><p>Multiple button components</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (19).png" alt=""><figcaption><p>Multiple button components</p></figcaption></figure>
 
 To resolve this ambiguity, the ButtonBehavior's Default Implementation is automatically set to Controls/ButtonStandard.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>ButtonBehavior using ButtonStandard as the Default Implementation</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (20).png" alt=""><figcaption><p>ButtonBehavior using ButtonStandard as the Default Implementation</p></figcaption></figure>
 
 For more information about whether you should set the Default Implementation, refer to the documentation for your particular runtime.
 

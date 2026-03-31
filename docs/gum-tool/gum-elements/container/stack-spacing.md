@@ -8,7 +8,7 @@ The Stack Spacing variable controls the additional padding between children when
 
 A larger Stack Spacing value increases the spacing between each child. By default Stack Spacing is set to 0 which means that no spacing is added between items in a stack.
 
-<figure><img src="../../../.gitbook/assets/StackSpacing0Green.png" alt=""><figcaption><p>Stack Spacing of 0 results in no space between children</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (114).png" alt=""><figcaption><p>Stack Spacing of 0 results in no space between children</p></figcaption></figure>
 
 Changing the stack spacing adds gaps between each child as shown in the following animation.
 
@@ -31,4 +31,3 @@ Stack Spacing can be used on container instances which stack and wrap their chil
 If wrapping occurs, then stack spacing applies spacing between rows and columns as shown the following animation:
 
 <figure><img src="../../../.gitbook/assets/30_13 06 17.gif" alt=""><figcaption><p>Increasing Stack Spacing results in spacing between children both vertically and horizontally</p></figcaption></figure>
-

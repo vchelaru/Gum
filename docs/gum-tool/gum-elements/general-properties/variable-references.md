@@ -4,7 +4,7 @@
 
 `Variable References` allows any variable on an instance or component to reference other variables. These other variables can be on the same instance or component, a different instance, or even variables from a different component.
 
-<figure><img src="../../../.gitbook/assets/image (158).png" alt=""><figcaption><p>Component setting its Height relative to its Width</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (264).png" alt=""><figcaption><p>Component setting its Height relative to its Width</p></figcaption></figure>
 
 One common use of `Variable References` is to create a centralized style component which can be referenced throughout a Gum project.
 
@@ -169,7 +169,7 @@ X = ColoredRectangleInstance.Red
 Green = ColoredRectangleInstance.Y
 ```
 
-Gum automatically casts any value to a `string`  (text). For example, a Text's Text variable could be assigned to its own Y value:
+Gum automatically casts any value to a `string` (text). For example, a Text's Text variable could be assigned to its own Y value:
 
 ```csharp
 Text=TextInstance.Y
@@ -219,7 +219,7 @@ Instances must qualify their own variables as shown in the following code:
 X = SameInstance.Y
 ```
 
-Gum will automatically qualify assignments when an instance is selected. In other words, `X = Y`  gets qualified to `X = SameInstance.Y` if SameInstance is the owner of the variable. This automatic qualification makes it easy for an instance to reference its own values. The following animation shows how the `Y` and `Height` values become qualified to the instance after tabbing out of the Variable Reference text box.
+Gum will automatically qualify assignments when an instance is selected. In other words, `X = Y` gets qualified to `X = SameInstance.Y` if SameInstance is the owner of the variable. This automatic qualification makes it easy for an instance to reference its own values. The following animation shows how the `Y` and `Height` values become qualified to the instance after tabbing out of the Variable Reference text box.
 
 <figure><img src="../../../.gitbook/assets/01_11 35 26.gif" alt=""><figcaption><p>Tabbing automatically qualifies variables to the selected instance</p></figcaption></figure>
 
@@ -255,13 +255,13 @@ Blue = Components/Styles.PrimaryColor.Blue
 
 As shown above, Variable References can be used to assign one variable to another. If a variable is referenced, then the variable cannot be manually assigned. The Variable Reference takes priority. For example, if an object references the Red, Green, and Blue variables, then those values cannot be manually set on the object. The values appear disabled and text indicates why they are read-only.
 
-<figure><img src="../../../.gitbook/assets/image (20).png" alt=""><figcaption><p>Left-side variables become read-only</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (138).png" alt=""><figcaption><p>Left-side variables become read-only</p></figcaption></figure>
 
 ## Obtaining a Qualified Variable Name
 
 Typing a variable name can be tedious, especially when referencing a variable in a different Screen or Component. Qualified variable names can be obtained by right-clicking on the variable name in Gum and selecting the **Copy Qualified Variable Name** option. This can then be pasted in the Variable References box of any other object.
 
-<figure><img src="../../../.gitbook/assets/07_08 35 17 (1).gif" alt=""><figcaption><p>Right-click to obtain the qualified name of a variable</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/07_08 35 17.gif" alt=""><figcaption><p>Right-click to obtain the qualified name of a variable</p></figcaption></figure>
 
 ## Example - Creating Color Styles
 
@@ -271,7 +271,7 @@ Any component can serve as a centralized location for styling, but we use the na
 
 The Styles component can contain as many objects as are needed to style your project. Additional objects can be added to help indicate how things are used visually. For example, we include a Text object to indicate the red color is the **Primary Color**.
 
-<figure><img src="../../../.gitbook/assets/image (17) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (135).png" alt=""><figcaption></figcaption></figure>
 
 The color value can be referenced by any other object including objects in different screens or components.
 
@@ -279,14 +279,13 @@ To add a variable reference:
 
 1. Select the object which should have a variable reference
 2. Click inside the **Variable References** text box
-3. Type the variable reference. The format of the variable reference is \
+3. Type the variable reference. The format of the variable reference is\
    \
    `{VariableName} = {Components or Screens}/{ComponentOrScreenName}.{InstanceName}.{InstanceVariable}`\
    \
    For example, to reference the Red variable in the Styles component, the syntax is\
    \
-   `Red = Components/Styles.PrimaryColor.Red`\
-
+   `Red = Components/Styles.PrimaryColor.Red`\\
 
 Since color values have three components (Red, Green, and Blue), then all three components must be referenced. In this example, the background can reference the three colors with the following assignment text:
 
@@ -296,11 +295,11 @@ Green = Components/Styles.PrimaryColor.Green
 Blue = Components/Styles.PrimaryColor.Blue
 ```
 
-<figure><img src="../../../.gitbook/assets/image (18).png" alt=""><figcaption><p>Background instance referencing the Styles.PrimaryColor color values</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (136).png" alt=""><figcaption><p>Background instance referencing the Styles.PrimaryColor color values</p></figcaption></figure>
 
 The types of the objects that contain the **Variable References** or which are being referenced do not matter. For example, a Text object could have its color values depend on the color values defined by a ColoredRectangle in the Styles component.
 
-<figure><img src="../../../.gitbook/assets/image (19).png" alt=""><figcaption><p>TextInstance also referencing the PrimaryColor color values</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (137).png" alt=""><figcaption><p>TextInstance also referencing the PrimaryColor color values</p></figcaption></figure>
 
 Once Variable References are set, the referenced instances (instances in Styles) can be changed and the changes will immediately propagate throughout the entire project.
 

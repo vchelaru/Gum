@@ -12,7 +12,7 @@ To create a Component that can display a Silhouette, first create a new componen
 
 Add a ColoredRectangle instance and a Sprite instance. The order matters - the Sprite should be drawn on top of the ColoredRectangle (it should show up 2nd in the Project tree view).
 
-<figure><img src="../../../.gitbook/assets/image (203).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (280).png" alt=""><figcaption></figcaption></figure>
 
 For this example, we will use the Alignment tab to adjust each item:
 

@@ -104,7 +104,7 @@ When making any styling edits, be sure to first check if the variable is modifie
 
 We can tell if a color is modified by a state by looking for whether it has a color-related state that is assigned by a state. For example, the TextBox's Background is assigned through a state as is shown in the Variables tab:
 
-<figure><img src="../../../../.gitbook/assets/image (86).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (295).png" alt=""><figcaption></figcaption></figure>
 
 We can also check the categories to see which variables they assign by clicking on it in the States tab. In this case, the TextBoxCategory modifies the following variables:
 
@@ -197,7 +197,7 @@ The new TextBoxBackground state already references the Styles component, but it 
 
 In my case, the existing variable references are referencing the Accent color.
 
-<figure><img src="../../../../.gitbook/assets/image (193).png" alt=""><figcaption><p>New state referencing old colors</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (273).png" alt=""><figcaption><p>New state referencing old colors</p></figcaption></figure>
 
 I can change these to instead reference the TextBoxBackground color. After these changes are made, press the tab key to apply them. The NineSlice should update its colors immediately.
 
@@ -246,17 +246,17 @@ To make it easier to select, the UiSpritesheet.png aligns all of its art in 8 pi
 
 This file can be viewed in explorer by clicking the folder button.
 
-<figure><img src="../../../../.gitbook/assets/image (195).png" alt=""><figcaption><p>UISpriteSheet.png in folder</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (274).png" alt=""><figcaption><p>UISpriteSheet.png in folder</p></figcaption></figure>
 
 This file is created by default when Forms components are added. The file in your project can be modified to add more styles. This file intentionally includes a lot of blank space so you can make changes for your own game.
 
 Feel free to open this file and add more frames to be used by your NineSlice.
 
-<figure><img src="../../../../.gitbook/assets/image (196).png" alt=""><figcaption><p>Blank space in UISpriteSheet.png</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (275).png" alt=""><figcaption><p>Blank space in UISpriteSheet.png</p></figcaption></figure>
 
 Notice that most of the frames are white so that they can be colored in Gum using the pre-defined color values in the Styles component. If you intend for your borders to be dynamically colored, you should also use the white color. For example, a new rounded rectangle style can be added below the existing styles.
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>New rounded rectangle style</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (9).png" alt=""><figcaption><p>New rounded rectangle style</p></figcaption></figure>
 
 Be sure to save your .png file so it shows up in Gum.
 
@@ -266,11 +266,11 @@ Be sure to save your .png file so it shows up in Gum.
 2. Rename the newly-created style as desired
 3. Use the Texture Coordinate tab to select the new area of the sprite sheet
 
-<figure><img src="../../../../.gitbook/assets/03_07 00 24 (1).png" alt=""><figcaption><p>New RoundedFilled style</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/03_07 00 24.png" alt=""><figcaption><p>New RoundedFilled style</p></figcaption></figure>
 
 Once this style has been added, it can be referenced by any component using a NineSlice background, such as ButtonStandard.
 
-<figure><img src="../../../../.gitbook/assets/03_07 02 29 (1).png" alt=""><figcaption><p>Button using RoundedFilled style</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/03_07 02 29.png" alt=""><figcaption><p>Button using RoundedFilled style</p></figcaption></figure>
 
 {% hint style="info" %}
 As mentioned above, white styles allow for dynamic coloring using the Styles component colors. If you would like to include the color as part of the border, you are free to do so, but this does limit your ability to set color explicitly. Whether you do this depends on your game's design, so as always feel free to experiment.

@@ -28,9 +28,9 @@ var button = screenRuntime.GetFrameworkElementByName<Controls.Button>("PlayButto
 button.Click += (_, _) => System.Diagnostics.Debug.WriteLine("Play was clicked");
 ```
 
-As mentioned above, Gum performs recursive searches for an item by name. If your project potentially includes multiple items with the same name, you can qualify the name of an object by including the name of its parents. For example, consider a situation where `PlayButton` is contained in a parent named `MenuContainer`.&#x20;
+As mentioned above, Gum performs recursive searches for an item by name. If your project potentially includes multiple items with the same name, you can qualify the name of an object by including the name of its parents. For example, consider a situation where `PlayButton` is contained in a parent named `MenuContainer`.
 
-<figure><img src="../../../.gitbook/assets/01_06 33 15 (1).png" alt=""><figcaption><p>PlayButton as a child of MenuContainer</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/01_06 33 15.png" alt=""><figcaption><p>PlayButton as a child of MenuContainer</p></figcaption></figure>
 
 The button can be obtained by qualified name as shown in the following code block:
 
@@ -49,4 +49,3 @@ GetFrameworkElementByName throws informative exceptions if it encounters an erro
 * An item is found but the type does not match the generic type
 
 If your code expects that these items may not exist, you can call `TryGetFrameworkElementByName` instead, which returns `null` instead of throwing exceptions when encountering any of the problems above.
-

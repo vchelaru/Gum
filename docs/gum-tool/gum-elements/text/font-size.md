@@ -32,7 +32,7 @@ For example, consider the font Press Start 2P which can be installed from [https
 
 Font Size can be set to any value, but this font only looks good if Font Size is set to 8.
 
-<figure><img src="../../../.gitbook/assets/image (152).png" alt=""><figcaption><p>Font Size 8 through 15 with Press Start 2P Font</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (259).png" alt=""><figcaption><p>Font Size 8 through 15 with Press Start 2P Font</p></figcaption></figure>
 
 The rendering artifacts are more obvious when zooming in, as shown in the following image:
 
