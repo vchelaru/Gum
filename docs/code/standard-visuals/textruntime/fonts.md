@@ -112,13 +112,12 @@ Registering .ttf files is supported on MonoGame and KNI. SkiaGum uses system fon
 To use a .ttf file with KernSmith:
 
 1. Add the .ttf file to your project's Content folder
-2. Set its **Copy to Output Directory** to **Copy if newer**
+2. Set its **Copy to Output Directory** to **Copy if newer**. For an easier approach that handles all content files at once, see the wildcard .csproj setup in [Loading a Gum Project (.gumx)](../../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
 3. Call `KernSmithFontCreator.RegisterFont` before using the font
 
 ```csharp
 // Initialize
-KernSmithFontCreator.RegisterFont("Bungee",
-    System.IO.File.ReadAllBytes("Content/Fonts/Bungee-Regular.ttf"));
+KernSmithFontCreator.RegisterFont("Bungee", "Content/Fonts/Bungee-Regular.ttf");
 ```
 
 Once registered, use the font by its family name just like a system font:
@@ -136,12 +135,14 @@ You can register multiple fonts, including different styles for the same family:
 
 ```csharp
 // Initialize
-KernSmithFontCreator.RegisterFont("Crimson Pro",
-    System.IO.File.ReadAllBytes("Content/Fonts/CrimsonPro-Regular.ttf"));
-KernSmithFontCreator.RegisterFont("Crimson Pro",
-    System.IO.File.ReadAllBytes("Content/Fonts/CrimsonPro-Bold.ttf"),
+KernSmithFontCreator.RegisterFont("Crimson Pro", "Content/Fonts/CrimsonPro-Regular.ttf");
+KernSmithFontCreator.RegisterFont("Crimson Pro", "Content/Fonts/CrimsonPro-Bold.ttf",
     style: "Bold");
 ```
+
+{% hint style="info" %}
+A `byte[]` overload is also available for fonts loaded from embedded resources, HTTP responses, or other non-file sources. For example: `KernSmithFontCreator.RegisterFont("MyFont", fontBytes)`.
+{% endhint %}
 
 {% hint style="info" %}
 Registered fonts take priority over system fonts. If you register a font with the family name "Arial", KernSmith uses your registered .ttf instead of the system-installed Arial.
@@ -172,7 +173,7 @@ Files are loaded from-file rather than using the content pipeline. This means th
 
 <figure><img src="../../../.gitbook/assets/FontCopyIfNewer.png" alt=""><figcaption><p>Copy if newer property set</p></figcaption></figure>
 
-The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your .csproj. This is explained in the [Loading .gumx (Gum project)](../../../../broken/pages/PGWmyRmXA6uMwNXuO6Aa/#adding-the-gum-project-files-to-your-.csproj) page.
+The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your .csproj. For instructions on setting up wildcards (including Android), see [Loading a Gum Project (.gumx)](../../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
 
 ## Direct BitmapFont Assignment
 
