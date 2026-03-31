@@ -59,13 +59,6 @@ jobs:
         if: steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true'
         run: dotnet workload install wasm-tools-net9 ios android maui
 
-      # On push to main, the only purpose is to seed the workload cache.
-      # If the cache already exists, skip the entire build and test.
-      - name: Check if build should run
-        id: should-build
-        if: github.event_name != 'push' || (steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true')
-        run: echo "run=true" >> $GITHUB_OUTPUT
-
       # Workload caching IS used above and saves ~2 minutes per run.
       # I tried caching both NuGet packages and also cache on the actions/setup-dotnet@v4
       # In both cases the caching slowed down the total execution time.
@@ -73,20 +66,22 @@ jobs:
       # build by around 20-30 seconds. However, the script for it is a little confusing and it's
       # not a huge savings. Let's keep it simple and not use NuGet caching.
 
+      # On push to main, the only purpose is to seed the workload cache.
+      # If the cache already exists, skip the entire build and test.
       - name: Build Gum (Windows Only)
-        if: steps.should-build.outputs.run == 'true' && runner.os == 'Windows'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
         run: |
           dotnet restore "Gum.sln"
           dotnet build "Gum.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
 
       - name: Build AllLibraries
-        if: steps.should-build.outputs.run == 'true'
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: |
           dotnet restore "AllLibraries.sln"
           dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
 
       - name: Build Generated Code Projects (Windows Only)
-        if: steps.should-build.outputs.run == 'true' && runner.os == 'Windows'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
         run: |
           dotnet restore "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln"
           dotnet build "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0 -p:TargetFrameworks=net9.0-windows10.0.19041.0
@@ -101,17 +96,17 @@ jobs:
           dotnet build "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0
 
       - name: MonoGameGum.Tests
-        if: steps.should-build.outputs.run == 'true'
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
         continue-on-error: true
 
       - name: GumToolUnitTests (Windows Only)
-        if: steps.should-build.outputs.run == 'true' && runner.os == 'Windows'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
         run: dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
         continue-on-error: true
 
       - name: Publish Test Results
-        if: steps.should-build.outputs.run == 'true'
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         uses: dorny/test-reporter@v2
         with:
           name: Tests ${{ matrix.os }}
