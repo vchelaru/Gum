@@ -63,7 +63,7 @@ To add Gum Forms components in Gum, select Content -> Add Forms Components
 
 This tutorial will not use the DemoScreenGum, so leave this option unchecked and press OK.
 
-<figure><img src="../../../../.gitbook/assets/image (7) (1).png" alt=""><figcaption><p>Leave Include DemoScreenGum unchecked</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (7) (1) (2).png" alt=""><figcaption><p>Leave Include DemoScreenGum unchecked</p></figcaption></figure>
 
 If asked, click **Yes** when asked about overwriting the default standards.
 
@@ -82,20 +82,20 @@ First, we'll set up our project so all Gum files are copied when the project is 
 1. Right-click on any Gum file in your project, such as GumProject.gumx
 2.  Select the Properties item\\
 
-    <figure><img src="../../../../.gitbook/assets/image (11) (2).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (11) (1).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
 3.  Set the file to Copy if Newer. If using Android, see instructions below.
 
     <figure><img src="../../../../.gitbook/assets/image (12) (1).png" alt=""><figcaption><p>Mark the Gum file as Copy if newer</p></figcaption></figure>
 4.  Double click your game's csproj file to open it in the text editor and find the entry for the file that you marked as Copy if newer.\\
 
-    <figure><img src="../../../../.gitbook/assets/image (13) (1).png" alt=""><figcaption><p>Entry for GumProject.gumx in the csproj file.</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (13) (2).png" alt=""><figcaption><p>Entry for GumProject.gumx in the csproj file.</p></figcaption></figure>
 5.  Modify the code to use a wildcard for all files in the Gum project. In other words, change `Content\GumProject\GumProject.gumx` to `Content\GumProject\**\*.*`\\
 
     <figure><img src="../../../../.gitbook/assets/image (14) (1).png" alt=""><figcaption><p>Wildcard entry for all files in the GumProject folder</p></figcaption></figure>
 
 Now all files in your Gum project will be copied to the output folder whenever your project is built, including any files added later as you continue working in Gum.
 
-<figure><img src="../../../../.gitbook/assets/image (15) (1).png" alt=""><figcaption><p>All Gum files automatically are marked as Copy if newer.</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (15) (2).png" alt=""><figcaption><p>All Gum files automatically are marked as Copy if newer.</p></figcaption></figure>
 
 {% hint style="info" %}
 At the time of this writing, Gum does not use the MonoGame Content Builder to build XNBs for any of its files. This means that referenced image files (.png) will also be copied to the output folder.

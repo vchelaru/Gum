@@ -16,4 +16,4 @@ container.Children.Add(coloredRectangleInstance);
 
 ```
 
-<figure><img src="../../.gitbook/assets/image (158).png" alt=""><figcaption><p>ColoredRectangleRuntime instance created in code</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (46).png" alt=""><figcaption><p>ColoredRectangleRuntime instance created in code</p></figcaption></figure>

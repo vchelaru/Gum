@@ -4,7 +4,7 @@
 
 **`Children Layout`** determines how a container positions its children. The default value is `Regular` which means that children are positioned according to their [X Units](../general-properties/x-units.md) and [Y Units](../general-properties/y-units.md).
 
-<figure><img src="../../../.gitbook/assets/image (159).png" alt=""><figcaption><p>Children Layout with Regular selected</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (47).png" alt=""><figcaption><p>Children Layout with Regular selected</p></figcaption></figure>
 
 `Top to Bottom Stack` results in the children stacking one on top of another, from top to bottom.
 
@@ -58,7 +58,7 @@ When children stack, each child's X or Y depends on the boundary of its previous
 
 For example, the following image shows a Text object with a Y value of 20. Notice that it is positioned 20 units below the item above it.
 
-<figure><img src="../../../.gitbook/assets/image (119).png" alt=""><figcaption><p>A Text's Y value can be used to separate it from its previous sibling in a Top to Bottom Stack</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>A Text's Y value can be used to separate it from its previous sibling in a Top to Bottom Stack</p></figcaption></figure>
 
 This effect is easy to notice when dragging an object inside a stack, as shown in the following animation:
 
@@ -115,7 +115,7 @@ Children of a container which uses the `Top To Bottom Stack` or `Left To Right S
 
 Children can be reordered using the right-click menu on an instance.
 
-![](<../../../.gitbook/assets/ReorderStackedChildren (1).gif>)
+![](<../../../.gitbook/assets/ReorderStackedChildren (1) (1).gif>)
 
 Alternatively, children order can be changed by clicking on the item in the tree view, holding down the ALT key, then pressing the up or down arrows.
 

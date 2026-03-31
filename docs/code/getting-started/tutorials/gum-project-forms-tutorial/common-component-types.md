@@ -12,7 +12,7 @@ StackPanels are used to contain other controls in Forms. StackPanels are similar
 
 By default StackPanels display a dotted outline in the Gum tool, but are invisible at runtime. We can add a stack pane to our screen by drag+dropping the StackPanel component into our Screen.
 
-<figure><img src="../../../../.gitbook/assets/image (272).png" alt=""><figcaption><p>StackPanel in TitleScreen</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (191).png" alt=""><figcaption><p>StackPanel in TitleScreen</p></figcaption></figure>
 
 ## Label
 
@@ -24,7 +24,7 @@ We can add a label to StackPanelInstance by drag+dropping the Label component in
 
 We can change its Text, Color, and Style in the Exposed section in the Variables tab.
 
-<figure><img src="../../../../.gitbook/assets/image (10).png" alt=""><figcaption><p>Common Label properties in Gum</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Common Label properties in Gum</p></figcaption></figure>
 
 We can override these properties in code through the generated instance. For example, we can modify our TitleScreen's CustomInitialize method to change the label text.
 
@@ -64,7 +64,7 @@ All properties available in the Gum tool are also available in code. To keep the
 
 By default Gum provides a variety of Buttons. We'll use ButtonStandard, but feel free to experiment with other button components.
 
-<figure><img src="../../../../.gitbook/assets/31_05 11 58.png" alt=""><figcaption><p>Button components in Gum</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/31_05 11 58 (1).png" alt=""><figcaption><p>Button components in Gum</p></figcaption></figure>
 
 We can add a ButtonStandard to our stack panel by drag+dropping the ButtonStandard component onto the TitleScreen's StackPanelInstance.
 
@@ -338,7 +338,7 @@ RadioButton provides a way to select from a set of options. Unlike CheckBox, whe
 
 We can add multiple RadioButton instances by drag+dropping the RadioButton component onto StackPanelInstance multiple times.
 
-<figure><img src="../../../../.gitbook/assets/31_06 07 08.png" alt=""><figcaption><p>RadioButtons in StackPanelInstance</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/31_06 07 08 (1).png" alt=""><figcaption><p>RadioButtons in StackPanelInstance</p></figcaption></figure>
 
 We can modify the Text property of each instance to differentiate between them.
 

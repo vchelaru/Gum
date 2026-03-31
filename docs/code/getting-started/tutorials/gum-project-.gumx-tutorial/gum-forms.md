@@ -125,13 +125,13 @@ protected override void Initialize()
 
 Forms types such as Button are associated with Gum components based on their category. For example, the following components can be used to create Button instances.
 
-<figure><img src="../../../../.gitbook/assets/image (209).png" alt=""><figcaption><p>Multiple components create Button forms controls</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (105).png" alt=""><figcaption><p>Multiple components create Button forms controls</p></figcaption></figure>
 
 Although the prefix "Button" suggests that these controls are Forms Buttons, the name can change and these would still create buttons. At runtime the type of Forms control associated with a component is determined by the state categories defined in the component.
 
 For example, each of these components has a state category named ButtonCategory.
 
-<figure><img src="../../../../.gitbook/assets/image (210).png" alt=""><figcaption><p>ButtonClose with a ButtonCategory state category</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (106).png" alt=""><figcaption><p>ButtonClose with a ButtonCategory state category</p></figcaption></figure>
 
 Although we won't cover the details in this tutorial, you can customize the existing components or create new components which will map to the Forms types so long as they have the appropriate category. See the next tutorial for details about Forms control customization.
 

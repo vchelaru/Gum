@@ -92,7 +92,7 @@ GumUI.Draw();
 
 We can run our project to see a blank (cornflower blue) screen.
 
-<figure><img src="../../../../.gitbook/assets/image (16).png" alt=""><figcaption><p>Empty MonoGame project</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (2) (1).png" alt=""><figcaption><p>Empty MonoGame project</p></figcaption></figure>
 
 ### Adding Controls
 

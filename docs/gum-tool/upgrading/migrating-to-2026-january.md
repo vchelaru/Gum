@@ -19,11 +19,11 @@ To upgrade the Gum tool:
 To upgrade the Gum tool, it depends on your current version of gum.
 
 1. Your Gum version < 2026
-   1. Download the latest `setup_gum_linux.sh` script to your home directory [https://github.com/vchelaru/Gum/blob/main/setup\_gum\_linux.sh](https://github.com/vchelaru/Gum/blob/master/setup_gum_linux.sh)
+   1. Download the latest `setup_gum_linux.sh` script to your home directory [https://github.com/vchelaru/Gum/blob/main/setup\_gum\_linux.sh](../../../setup_gum_linux.sh)
    2. Make it executable `chmod +x ./setup_gum_linux.sh`
    3. Re-run the `./setup_gum_linux.sh` script:
-      1. It will create a new folder/wine-prefix `~/.wine_gum_dotnet8`
-      2. It will create a new `~/bin/gum` script with an `upgrade` option for future upgrades
+      1. It will create a new folder/wine-prefix  `~/.wine_gum_dotnet8`&#x20;
+      2. It will create a new  `~/bin/gum`  script with an  `upgrade`  option for future upgrades
    4. Errors and Resolutions:
       1. If you get an error about `gum wine prefix directory already exists` then you can either rename your old directory, or install gum to a different wine prefix with `./setup_gum_linux.sh ~/.my_wine_prefix`
 2. Your Gum version >= 2026
@@ -93,7 +93,7 @@ panel.AddChild(button);
 float parentX = button.Visual.Parent.X;
 ```
 
-The old functionality can be preserved, but the calls must be explicit.
+The old functionality can be preserved, but the calls must be explicit.&#x20;
 
 ```csharp
 StackPanel panel = new();
@@ -190,7 +190,7 @@ Previous versions of Gum runtime included a `ContainerRuntime` which has an `Alp
 
 This section lists all deprecated types and members. Projects should migrate to the recommended types and members to avoid breaking changes in future versions.
 
-### GumService.Update
+### GumService.Update&#x20;
 
 In MonoGame/KNI/FNA, GumService, often accessed through the GumUi property, no longer takes a Game instance as its first parameter. All versions of Update which take a Game instance are now obsolete.
 

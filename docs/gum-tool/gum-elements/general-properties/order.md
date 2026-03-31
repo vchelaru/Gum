@@ -2,13 +2,13 @@
 
 ### Introduction
 
-Children in a Screen, Component, or parent instance are drawn top-to-bottom, so that children further down are drawn on top.
+Children in a Screen, Component, or parent instance are drawn top-to-bottom, so that children further down are drawn on top.&#x20;
 
-<figure><img src="../../../.gitbook/assets/image (256).png" alt=""><figcaption><p>Red is the first item drawn, so it is under the other rectangles. Blue is the last, so it appears on top.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (149).png" alt=""><figcaption><p>Red is the first item drawn, so it is under the other rectangles. Blue is the last, so it appears on top.</p></figcaption></figure>
 
 ### Changing Order
 
-Gum provides a number of ways to reorder instances.
+Gum provides a number of ways to reorder instances.&#x20;
 
 Items can be right-clicked in the editor to change their order.
 

@@ -27,15 +27,15 @@ Most examples on this page overlay a Sprite over ColoredRectangles, but the same
 
 If a `Normal` `Blend` Sprite has an `Alpha` of `255`, then the Sprite completely replaces whatever is below.
 
-<figure><img src="../../../.gitbook/assets/image (32).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 255</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 255</p></figcaption></figure>
 
 If a Sprite has an `Alpha` of `128` (roughly half of 255), then it averages its color with whatever is below.
 
-<figure><img src="../../../.gitbook/assets/image (33).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 128</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 128</p></figcaption></figure>
 
 A Sprite with an `Alpha` of `25` (roughly 10%) blends with whatever is below, but its color is given a weight of roughly 10%.
 
-<figure><img src="../../../.gitbook/assets/image (34).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 25</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 25</p></figcaption></figure>
 
 {% hint style="info" %}
 The examples above use the `Alpha` value to apply transparency. Note that if the source file (.png) has transparency as part of the file, the same effect applies.
@@ -47,19 +47,19 @@ The examples above use the `Alpha` value to apply transparency. Note that if the
 
 Since `Additive` `Blend` results in a modification of what is under instead of a replacement, an `Additive` `Blend` Sprite typically appear transparent even when `Alpha` is `255`.
 
-<figure><img src="../../../.gitbook/assets/image (35).png" alt=""><figcaption><p>Additive Blend Sprite with an Alpha of 255</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (3) (1).png" alt=""><figcaption><p>Additive Blend Sprite with an Alpha of 255</p></figcaption></figure>
 
 As `Alpha` is reduced, the brightening effect is reduced. A Sprite with an `Alpha` of `128` only applies roughly half as much of a brightening effect.
 
-<figure><img src="../../../.gitbook/assets/image (36).png" alt=""><figcaption><p>Additive Blend Sprite with an Alpha of 128</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (4) (1).png" alt=""><figcaption><p>Additive Blend Sprite with an Alpha of 128</p></figcaption></figure>
 
 A Sprite with an `Alpha` of `25` applies a slight brightening effect.
 
-<figure><img src="../../../.gitbook/assets/image (37).png" alt=""><figcaption><p>Additive Blend Sprite with an Alpha of 25</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (5).png" alt=""><figcaption><p>Additive Blend Sprite with an Alpha of 25</p></figcaption></figure>
 
 Stacking multiple Sprites with `Additive` `Blend` results in the brightening effect stacking as well.
 
-<figure><img src="../../../.gitbook/assets/image (38).png" alt=""><figcaption><p>Four Additive Blend Sprites with an Alpha of 255</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (6).png" alt=""><figcaption><p>Four Additive Blend Sprites with an Alpha of 255</p></figcaption></figure>
 
 ## Replace Blend
 
@@ -67,15 +67,15 @@ Stacking multiple Sprites with `Additive` `Blend` results in the brightening eff
 
 A Sprite with no transparency in its source file drawn with `Alpha` of `255` looks the same whether it uses `Replace` or `Normal` `Blend`.
 
-<figure><img src="../../../.gitbook/assets/image (39).png" alt=""><figcaption><p>Replace Blend Sprite with an Alpha of 255</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (7).png" alt=""><figcaption><p>Replace Blend Sprite with an Alpha of 255</p></figcaption></figure>
 
 Changing the `Alpha` on a Sprite with `Replace` `Blend` does not affect how it is drawn - it is always drawn at full opacity.
 
-<figure><img src="../../../.gitbook/assets/image (40).png" alt=""><figcaption><p>Replace Blend Sprite with an Alpha of 128</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (8).png" alt=""><figcaption><p>Replace Blend Sprite with an Alpha of 128</p></figcaption></figure>
 
 `Replace` `Blend` results in a Sprite being fully opaque even if its source file has transparency. The following image shows two Sprites displaying the same image.
 
-<figure><img src="../../../.gitbook/assets/image (41).png" alt=""><figcaption><p>Normal and Replace Blend on the same source file.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (9).png" alt=""><figcaption><p>Normal and Replace Blend on the same source file.</p></figcaption></figure>
 
 ## Alpha-Only Blends
 

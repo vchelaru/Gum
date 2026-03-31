@@ -10,7 +10,7 @@ By default this value is false.
 
 If this value is set to true, then additional properties appear for controlling the gradient.
 
-<figure><img src="../../../../.gitbook/assets/image (247).png" alt=""><figcaption><p>RoundedRectangle with Use Gradient set to true showing gradient values</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (140).png" alt=""><figcaption><p>RoundedRectangle with Use Gradient set to true showing gradient values</p></figcaption></figure>
 
 ### Red1 and 2, Green1 and 2, Blue1 and 2
 
@@ -48,4 +48,4 @@ Gradient X and Y values can exist outside of the visual space of the instance, a
 
 Gradient Type controls whether the gradient is linear or radial. Radial gradients place the center of the radial gradient at X1,Y1 and the edge of the radial gradient at X2, Y2.
 
-<figure><img src="../../../../.gitbook/assets/image (248).png" alt=""><figcaption><p>Linear Gradient Type on the left, Radial Gradient Type on the right</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (141).png" alt=""><figcaption><p>Linear Gradient Type on the left, Radial Gradient Type on the right</p></figcaption></figure>

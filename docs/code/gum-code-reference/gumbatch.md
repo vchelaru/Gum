@@ -23,7 +23,7 @@ gumBatch.DrawString(
 gumBatch.End();
 ```
 
-<figure><img src="../../.gitbook/assets/image (171).png" alt=""><figcaption><p>A single text object rendered using DrawString</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (63).png" alt=""><figcaption><p>A single text object rendered using DrawString</p></figcaption></figure>
 
 Multiple strings can be rendered between `Begin` and `End` calls:
 
@@ -42,7 +42,7 @@ for(int i = 0; i < 10; i++)
 gumBatch.End();
 ```
 
-<figure><img src="../../.gitbook/assets/image (172).png" alt=""><figcaption><p>Multiple DrawString calls between Begin and End</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (64).png" alt=""><figcaption><p>Multiple DrawString calls between Begin and End</p></figcaption></figure>
 
 DrawString can accept newlines and color the text:
 
@@ -57,7 +57,7 @@ gumBatch.Begin();
 gumBatch.End();
 ```
 
-<figure><img src="../../.gitbook/assets/image (173).png" alt=""><figcaption><p>Colored text with newlines</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (65).png" alt=""><figcaption><p>Colored text with newlines</p></figcaption></figure>
 
 ### Rendering TextRuntimes
 
@@ -105,7 +105,7 @@ protected override void Draw(GameTime gameTime)
 }
 ```
 
-<figure><img src="../../.gitbook/assets/image (174).png" alt=""><figcaption><p>Rendering a TextRuntime in immediate mode with GumBatch</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (66).png" alt=""><figcaption><p>Rendering a TextRuntime in immediate mode with GumBatch</p></figcaption></figure>
 
 ### Rendering Parent/Child Hierarchy
 
@@ -156,7 +156,7 @@ protected override void Draw(GameTime gameTime)
 }
 ```
 
-<figure><img src="../../.gitbook/assets/image (73).png" alt=""><figcaption><p>buttonRectangle drawn with its child buttonText</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/ButtonTextOverBlueButton.png" alt=""><figcaption><p>buttonRectangle drawn with its child buttonText</p></figcaption></figure>
 
 ### RenderTargets
 
