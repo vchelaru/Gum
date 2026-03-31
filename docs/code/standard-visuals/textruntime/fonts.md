@@ -91,6 +91,62 @@ Dynamic font generation for Raylib is not yet available. Check back for future u
 {% endtab %}
 {% endtabs %}
 
+### System Fonts vs Registered Fonts
+
+By default, KernSmith resolves the `Font` property by looking up fonts installed on the operating system. For example, setting `Font = "Times New Roman"` works because that font is typically installed on Windows.
+
+System fonts are convenient for quick prototyping, but they have drawbacks for shipping a game:
+
+* **Platform differences** — a font installed on your development machine may not exist on a player's machine or on other platforms (Linux, macOS, mobile).
+* **Version inconsistency** — different OS versions may ship different versions of the same font, causing subtle rendering differences.
+* **Licensing** — system fonts may have licenses that restrict redistribution in games.
+
+For these reasons, registering your own .ttf (or .otf) files is recommended for any font you plan to ship with your game. This guarantees every player sees the same font regardless of their operating system.
+
+### Registering Custom .ttf Fonts
+
+{% hint style="info" %}
+Registering .ttf files is supported on MonoGame and KNI. SkiaGum uses system fonts directly and does not currently support `RegisterFont`.
+{% endhint %}
+
+To use a .ttf file with KernSmith:
+
+1. Add the .ttf file to your project's Content folder
+2. Set its **Copy to Output Directory** to **Copy if newer**
+3. Call `KernSmithFontCreator.RegisterFont` before using the font
+
+```csharp
+// Initialize
+KernSmithFontCreator.RegisterFont("Bungee",
+    System.IO.File.ReadAllBytes("Content/Fonts/Bungee-Regular.ttf"));
+```
+
+Once registered, use the font by its family name just like a system font:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Font = "Bungee";
+text.FontSize = 24;
+text.Text = "Hello from a custom font!";
+text.AddToRoot();
+```
+
+You can register multiple fonts, including different styles for the same family:
+
+```csharp
+// Initialize
+KernSmithFontCreator.RegisterFont("Crimson Pro",
+    System.IO.File.ReadAllBytes("Content/Fonts/CrimsonPro-Regular.ttf"));
+KernSmithFontCreator.RegisterFont("Crimson Pro",
+    System.IO.File.ReadAllBytes("Content/Fonts/CrimsonPro-Bold.ttf"),
+    style: "Bold");
+```
+
+{% hint style="info" %}
+Registered fonts take priority over system fonts. If you register a font with the family name "Arial", KernSmith uses your registered .ttf instead of the system-installed Arial.
+{% endhint %}
+
 ## Custom Font File
 
 If you have a specific .fnt file (created with the Gum tool, Bitmap Font Generator, Hiero, or another tool), you can load it directly by setting `UseCustomFont` to `true` and assigning `CustomFontFile`:
