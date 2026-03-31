@@ -6,4 +6,4 @@ The Canvas element creates an instance of a SKCanvas which can be accessed in co
 
 Since the Canvas cannot perform any rendering in Gum, it appears as an empty container.
 
-<figure><img src="../../../.gitbook/assets/image (249).png" alt=""><figcaption><p>Canvas instances in Gum apppear as empty containers</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (142).png" alt=""><figcaption><p>Canvas instances in Gum apppear as empty containers</p></figcaption></figure>

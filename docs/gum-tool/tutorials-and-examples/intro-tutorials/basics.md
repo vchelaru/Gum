@@ -4,30 +4,30 @@
 
 This page walks you through the basics of using the _Gum UI tool,_ which we'll refer to simply as Gum for this and all other documentation.
 
-<figure><img src="../../../.gitbook/assets/image (126).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (10) (3).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
 
 ## Gum Elements
 
 Gum separates its elements into three categories: Screens, Components, and Standard. Behaviors are an advanced topic that we'll skip for these tutorials.
 
-<figure><img src="../../../.gitbook/assets/image (129).png" alt=""><figcaption><p>Screens, Components, and Standard folders</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (15) (1).png" alt=""><figcaption><p>Screens, Components, and Standard folders</p></figcaption></figure>
 
 Standard elements represent the building-blocks for screens and components, and all projects use the same set of standard elements. To see the list of elements, expand the Standard tree item. Clicking on any element displays it in the preview window.
 
-<figure><img src="../../../.gitbook/assets/image (122).png" alt=""><figcaption><p>A Sprite standard element with no source file set</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (5) (2).png" alt=""><figcaption><p>A Sprite standard element with no source file set</p></figcaption></figure>
 
 Sprite element is selected in the image above. Notice that since a **SourceFile** is not set, the Sprite renders as a red X.
 
 ### Standard Types
 
-* ![](<../../../.gitbook/assets/image (161).png>) Circle - circle outline. These are usually not used for UI, but can be used if you are defining collision in your Gum objects for a game.
-* ![](<../../../.gitbook/assets/image (53) (2).png>) ColoredRectangle - filled-in rectangle. These are often used for solid-colored backgrounds and frames.
-* ![](<../../../.gitbook/assets/image (162).png>) Container - invisible object used to contain other objects. These are used to provide margins, change layouts (such as vertical vs horizontal stacking), and to organize your UI.
-* ![](<../../../.gitbook/assets/image (163).png>) NineSlice - visual object which uses nine sprites to create a resizable object from a source PNG (or portion of a PNG). The corner sprites (4) are not resized. The top, bottom, left, and right sprites are stretched on one axis. The middle sprite stretches both horizontally and vertically. These are used to create resizable frames.
-* ![](<../../../.gitbook/assets/image (164).png>) Polygon - polygon outline which can have any number of points. These are usually not used for UI, but can be used if you are defining collision in your Gum objects for a game.
-* ![](<../../../.gitbook/assets/image (165).png>) Rectangle - rectangle outline. These can be used for single-line frames or if you are defining collision in your Gum objects for a game.
-* ![](<../../../.gitbook/assets/image (166).png>) Sprite - a visual object which displays a source PNG (or a portion of a PNG). These are used for icons, backgrounds, and other visual objects which are usually not resized dynamically.
-* ![](<../../../.gitbook/assets/image (167).png>) Text - a visual object which can display characters. These are used for any situation where text needs to be displayed such as labels and paragraphs.
+* ![](<../../../.gitbook/assets/image (51).png>) Circle - circle outline. These are usually not used for UI, but can be used if you are defining collision in your Gum objects for a game.
+* ![](<../../../.gitbook/assets/image (53) (1).png>) ColoredRectangle - filled-in rectangle. These are often used for solid-colored backgrounds and frames.
+* ![](<../../../.gitbook/assets/image (54).png>) Container - invisible object used to contain other objects. These are used to provide margins, change layouts (such as vertical vs horizontal stacking), and to organize your UI.
+* ![](<../../../.gitbook/assets/image (55).png>) NineSlice - visual object which uses nine sprites to create a resizable object from a source PNG (or portion of a PNG). The corner sprites (4) are not resized. The top, bottom, left, and right sprites are stretched on one axis. The middle sprite stretches both horizontally and vertically. These are used to create resizable frames.
+* ![](<../../../.gitbook/assets/image (56).png>) Polygon - polygon outline which can have any number of points. These are usually not used for UI, but can be used if you are defining collision in your Gum objects for a game.
+* ![](<../../../.gitbook/assets/image (57).png>) Rectangle - rectangle outline. These can be used for single-line frames or if you are defining collision in your Gum objects for a game.
+* ![](<../../../.gitbook/assets/image (58).png>) Sprite - a visual object which displays a source PNG (or a portion of a PNG). These are used for icons, backgrounds, and other visual objects which are usually not resized dynamically.
+* ![](<../../../.gitbook/assets/image (59).png>) Text - a visual object which can display characters. These are used for any situation where text needs to be displayed such as labels and paragraphs.
 
 {% hint style="info" %}
 Plugins can add additional standard elements. The list above is the default list of standard elements before plugins have made any changes.
@@ -57,7 +57,7 @@ To create a screen:
 2. Enter the name of the new screen - such as **MainMenu**
 3.  Click OK. The newly-created screen is created and selected
 
-    <figure><img src="../../../.gitbook/assets/image (121).png" alt=""><figcaption><p>The MainMenu screen in Gum</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The MainMenu screen in Gum</p></figcaption></figure>
 
 ## Adding instances
 

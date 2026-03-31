@@ -6,7 +6,7 @@ The `Custom Frame Texture Coordinate Width` property allows a `NineSlice` to cus
 
 By default this value is `null`, which means the `NineSlice` automatically dedicates 1/3 of the texture for the edges.
 
-<figure><img src="../../../.gitbook/assets/image (139).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (22).png" alt=""><figcaption></figcaption></figure>
 
 ## Changing Custom Frame Texture Coordinate Width
 

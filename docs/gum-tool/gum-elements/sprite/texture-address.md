@@ -6,9 +6,9 @@ The texture address property controls the texture address behavior of a sprite. 
 
 ## Entire Texture
 
-If the texture address property is set to **EntireTexture** then the sprite draws its full image. The sprite does not repeat or render only part of the texture. This renders the entire image.
+If the texture address property is set to **EntireTexture** then the sprite draws its full image. The sprite does not repeat or render only part of the texture.  This renders the entire image.
 
-![Sprite with Texture Address set to EntireTexture](../../../.gitbook/assets/gum_texture_address_entire_texture.png)
+![Sprite with Texture Address set to EntireTexture](<../../../.gitbook/assets/gum_texture_address_entire_texture (1).png>)
 
 ## Custom
 
@@ -32,11 +32,11 @@ When using DimensionsBased Texture Address, wrapping is possible. For more infor
 
 #### DimensionsBased Texture Address and Percentage of File Width/Height
 
-If a Sprite uses a **Width Units** of **Percentage of File Width** or a **Height Units** of **Percentage of File Height**, then the Width and Height values represent the size of the sprite relative to the entire source file.
+If a Sprite uses a **Width Units** of **Percentage of File Width** or a **Height Units** of **Percentage of File Height**, then the Width and Height values represent the size of the sprite relative to the entire source file.&#x20;
 
 For example, if a Sprite is displaying a source PNG file with a width of 130 pixels and its Width is 300, then the absolute width of the Sprite is 390 (130 \* 300%). If Wrap is checked, then this indicates the number of times that the image repeats on the Sprite.
 
-<figure><img src="../../../.gitbook/assets/image (255).png" alt=""><figcaption><p>Sprite displaying a PNG with dimensions 130x180 with a Width of 300 and Height of 200</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (148).png" alt=""><figcaption><p>Sprite displaying a PNG with dimensions 130x180 with a Width of 300 and Height of 200</p></figcaption></figure>
 
 #### Texture Width Scale and Texture Height Scale
 

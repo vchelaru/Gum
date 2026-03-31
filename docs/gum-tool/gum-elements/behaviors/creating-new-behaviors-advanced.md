@@ -13,12 +13,12 @@ To add a behavior:
 1. Right-click on the Behaviors folder
 2.  Select **Add Behavior:**
 
-    <figure><img src="../../../.gitbook/assets/image (192).png" alt=""><figcaption><p>Add Behavior menu item</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/image (82).png" alt=""><figcaption><p>Add Behavior menu item</p></figcaption></figure>
 3. Enter the new behavior name. Often time the word **Behavior** is added at the end of the name, such as **ButtonBehavior**
 
 New behaviors appear in the Project tab.
 
-<figure><img src="../../../.gitbook/assets/image (193).png" alt=""><figcaption><p>ButtonBehavior in the Behaviors folder</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (83).png" alt=""><figcaption><p>ButtonBehavior in the Behaviors folder</p></figcaption></figure>
 
 Once a behavior is created, it can be given categories, states, and instances. Components which use this behavior are required to have matching categories and states.
 
@@ -64,7 +64,7 @@ As mentioned above, if a component uses a behavior, then the component is requir
 
 Required states and categories cannot be removed or renamed. Required states cannot be moved to different categories.
 
-<figure><img src="../../../.gitbook/assets/image (21).png" alt=""><figcaption><p>Renaming and deleting states and categories required by behaviors is not allowed</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1).png" alt=""><figcaption><p>Renaming and deleting states and categories required by behaviors is not allowed</p></figcaption></figure>
 
 If a new category or state is added to a behavior, all components which use the behavior also have the new category or state added.
 
@@ -91,7 +91,7 @@ An instance can have its Name changed, Base Type changed, or removed.
 
 If a component is missing a behavior then the Error window provides information about the missing requirement.
 
-<figure><img src="../../../.gitbook/assets/image (231).png" alt=""><figcaption><p>Button component is missing a SpriteInstance which is required by the ButtonBehavior</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (128).png" alt=""><figcaption><p>Button component is missing a SpriteInstance which is required by the ButtonBehavior</p></figcaption></figure>
 
 {% hint style="info" %}
 At this time Gum does not automatically add required instances to components which need them. This may change in future versions of Gum. For now, instances must be manually added to resolve errors.

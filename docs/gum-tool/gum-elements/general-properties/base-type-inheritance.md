@@ -35,15 +35,15 @@ The following shows a ColoredRectangle changed to a Container. Since Container a
 
 All components use inheritance even if their `Base Type` variable is not set explicitly. By default components inherit from the **Container** type.
 
-<figure><img src="../../../.gitbook/assets/image (194).png" alt=""><figcaption><p>Button component inheriting from Container</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (85).png" alt=""><figcaption><p>Button component inheriting from Container</p></figcaption></figure>
 
-By inheriting from the **Container** type, components have access to all **Container** variables such as Children Layout.
+By inheriting from the **Container** type, components have access to all **Container** variables such as Children Layout.&#x20;
 
 ### Inheriting from Standard Types
 
 Components can inherit from standard types. For example, instead of inheriting from **Container** a component may inherit from **ColoredRectangle**. By doing so, it has access to all properties on the **ColoredRectangle** type.
 
-<figure><img src="../../../.gitbook/assets/image (195).png" alt=""><figcaption><p>Component inheriting from ColoredRectangle</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (87).png" alt=""><figcaption><p>Component inheriting from ColoredRectangle</p></figcaption></figure>
 
 {% hint style="info" %}
 Most components inherit from the **Container** type. If a component needs to display visuals, such as a **ColoredRectangle**, typically the ColoredRectangle is added as a child to the component rather than being used as a `Base Type`.
@@ -57,7 +57,7 @@ A component which inherits from another component is often called a _derived_ co
 
 A base component can be used to define instances which the derived component can modify. For example a component named ButtonBase may define that all components have a ColoredRectangle named Background and a Text named TextInstance.
 
-<figure><img src="../../../.gitbook/assets/image (196).png" alt=""><figcaption><p>Example component named ButtonBase</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (88).png" alt=""><figcaption><p>Example component named ButtonBase</p></figcaption></figure>
 
 If another component uses ButtonBase as its `Base Type`, then this component automatically gets Background and TextInstance children which match the base instances.
 
@@ -65,7 +65,7 @@ If another component uses ButtonBase as its `Base Type`, then this component aut
 
 The CancelButton can modify variables on the added children. For example the CancelButton can modify the Text on the TextInstance and the color values on the Background.
 
-<figure><img src="../../../.gitbook/assets/image (197).png" alt=""><figcaption><p>CancelButton with modified children variables (Text and color values)</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (89).png" alt=""><figcaption><p>CancelButton with modified children variables (Text and color values)</p></figcaption></figure>
 
 The derived component has the following restrictions when working with children instances:
 

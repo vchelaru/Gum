@@ -20,7 +20,7 @@ Multiple instances can act as slots. For information on using multiple slots, se
 
 Consider a Component named Frame which has two instances: OuterRectangle and InnerRectangle.
 
-<figure><img src="../../../.gitbook/assets/image (124).png" alt=""><figcaption><p>Frame component with two children</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (3).png" alt=""><figcaption><p>Frame component with two children</p></figcaption></figure>
 
 This Component is designed to keep all of is children inside the InnerRectangle, so that any child automatically respects the margin specified by InnerRectangle.
 

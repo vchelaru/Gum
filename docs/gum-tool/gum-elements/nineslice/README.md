@@ -12,7 +12,7 @@ This image could be used to create nine slices of various sizes without any dist
 
 The NineSlice achieves this effect by splitting the texture into nine pieces, and scales each one differently to prevent distortion. Highlighting a nine slice shows how it is split:
 
-![](../../../.gitbook/assets/NineSliceSplit.png)
+![](<../../../.gitbook/assets/NineSliceSplit (1).png>)
 
 This is achieved by splitting the texture into 1/3 sections wide and tall. The following image shows how the original image will be split:
 

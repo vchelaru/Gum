@@ -38,11 +38,11 @@ To create your own font file:
 2. Select **Options** -> **Font Settings**
 3.  Use the dropdown to select the font you would like to use. All .ttf files installed on the current machine should appear in the dropdown. If you would like to install a new .ttf, restart Bitmap Font Generator after installing the font.
 
-    ![](<../../../.gitbook/assets/image (110).png>)
+    ![](<../../../.gitbook/assets/image (7) (1) (1) (1) (1) (1).png>)
 4. After changing the settings, click **OK**
 5.  Select which characters you would like included in your font. Adding characters can increase the font size, but may be required depending on which characters you intend to use.
 
-    <img src="../../../.gitbook/assets/image (130).png" alt="" data-size="original">
+    <img src="../../../.gitbook/assets/image (12) (1) (1).png" alt="" data-size="original">
 6. Select **Options**->**Export Options**
 7. Select a Bit depth of 32 (or else transparencies won’t come through).
 8. Select the texture width and height. For best performance, select a size which will contain all of the characters you have selected. Also, many game engines prefer textures which are _power of two_ such as 256, 512, 1024, or 2048. Sizes larger than 2048 may not render properly on some hardware.
@@ -77,7 +77,7 @@ To generate a font:
 2. Download and open the Hiero tool
 3. Set the values needed for your font, such as font type, size, and effects. Notice that additional effects can be added beyond what is supported in Gum.
 
-<figure><img src="../../../.gitbook/assets/image (190).png" alt=""><figcaption><p>Font in Hiero tool</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (79).png" alt=""><figcaption><p>Font in Hiero tool</p></figcaption></figure>
 
 4. Select **File** -> **Save BMFont Files (text)...**
 5. Select the location to save the files, such as in your project's Contents folder, or the subfolder which contains your Gum project

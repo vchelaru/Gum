@@ -4,16 +4,11 @@
 
 FontSize is used to adjust the size of the font used by the TextRuntime. Your particular platform may require fonts to be created as .fnt/.png pairs to be loaded, while other platforms can create fonts dynamically.
 
-The following platforms require fonts to be created before, usually in FontCache:
+MonoGame, KNI, and FNA projects can dynamically create fonts at runtime by installing a KernSmith NuGet package. Without KernSmith, these platforms require fonts to be pre-created as .fnt/.png pairs, usually in FontCache.
 
-* FlatRedBall
-* MonoGame / Kni / FNA
+Skia platforms can dynamically create fonts out of the box with no additional setup.
 
-The following platforms can dynamically create fonts:
-
-* Skia
-* Silk.NET
-* raylib
+For more information on font setup, see the [Fonts](fonts.md) page.
 
 ## Example - Setting FontSize
 

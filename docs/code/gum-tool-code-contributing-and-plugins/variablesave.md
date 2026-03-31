@@ -12,7 +12,7 @@ VariableSaves can be of any type, can contain any value, and can hold values eit
 
 By default an instance does not own its variables. Rather, variables exist inside of states which can affect the instance. For example, consider the following image:
 
-<figure><img src="../../.gitbook/assets/image (186).png" alt=""><figcaption><p>TextInstance displaying the text "Hello from Gum"</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (75).png" alt=""><figcaption><p>TextInstance displaying the text "Hello from Gum"</p></figcaption></figure>
 
 In this case, the GameScreenGum is the owner of the variable, not TextInstance. The GameScreenGum has the following:
 

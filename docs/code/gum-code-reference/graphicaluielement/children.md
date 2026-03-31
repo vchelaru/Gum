@@ -12,7 +12,7 @@ If a GraphicalUiElement is loaded in a game project, its Children property conta
 
 For example, consider a component with six children named ColoredRectangleInstance, ColoredRectangleInstance1, ... , ColoredRectangleInstance5:
 
-<figure><img src="../../../.gitbook/assets/image (265).png" alt=""><figcaption><p>ExampleComponent with six stacked children</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (160).png" alt=""><figcaption><p>ExampleComponent with six stacked children</p></figcaption></figure>
 
 If using code generation, these could be accessed by their names. If not using code generation, or if you need to access each item by index, then the component's Children property provides access.
 

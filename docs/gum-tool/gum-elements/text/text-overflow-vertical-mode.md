@@ -8,7 +8,7 @@ Text Overflow Vertical Mode controls whether lines of text can draw outside of t
 
 Spill enables the drawing of text lines outside of the vertical bounds of a Text instance. The following image shows a Text instance with wrapped text using Spill.
 
-<figure><img src="../../../.gitbook/assets/29_11 30 54.png" alt=""><figcaption><p>Text with Text Overflow Vertical Mode set to spill</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/29_11 30 54 (1).png" alt=""><figcaption><p>Text with Text Overflow Vertical Mode set to spill</p></figcaption></figure>
 
 ### Truncate Line
 
