@@ -242,7 +242,7 @@ public class GumService
         InitializeInternal(game, game.GraphicsDevice, systemManagers: systemManagers);
     }
 #else
-    public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
+    public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.Newest)
     {
         InitializeInternal(
             gumProjectFile: null,

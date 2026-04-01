@@ -318,12 +318,36 @@ public class TextRuntime : InteractiveGue
         set { isItalic = value; UpdateToFontValues(); }
     }
 
+#if SKIA
+    float _boldWeight = 1;
+    /// <summary>
+    /// Gets or sets the weight multiplier for bold text rendering.
+    /// A value of 1.0 represents regular weight, while higher values
+    /// increase the thickness of strokes (e.g., 1.5 for bold).
+    /// </summary>
+    public float BoldWeight
+    {
+        get => _boldWeight;
+        set
+        {
+            _boldWeight = value;
+            ContainedText.BoldWeight = value;
+        }
+    }
+
+    public bool IsBold
+    {
+        get => _boldWeight > 1;
+        set { BoldWeight = value ? 1.5f : 1f; }
+    }
+#else
     bool isBold;
     public bool IsBold
     {
         get => isBold;
         set { isBold = value; UpdateToFontValues(); }
     }
+#endif
 
     // Not sure if we need to make this a public value, but we do need to store it
     // Update - yes we do need this to be public so it can be assigned in codegen:
