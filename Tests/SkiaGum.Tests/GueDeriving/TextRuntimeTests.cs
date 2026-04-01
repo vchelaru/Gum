@@ -16,6 +16,34 @@ public class TextRuntimeTests
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
+    #region BoldWeight
+
+    [Fact]
+    public void BoldWeight_ShouldDefaultToOne()
+    {
+        TextRuntime sut = new();
+        sut.BoldWeight.ShouldBe(1f);
+    }
+
+    [Fact]
+    public void BoldWeight_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.BoldWeight = 2.0f;
+        sut.BoldWeight.ShouldBe(2.0f);
+    }
+
+    [Fact]
+    public void BoldWeight_ShouldPushToContainedText()
+    {
+        TextRuntime sut = new();
+        sut.BoldWeight = 1.5f;
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.BoldWeight.ShouldBe(1.5f);
+    }
+
+    #endregion
+
     #region FontFamily
 
     [Fact]
@@ -36,6 +64,25 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region FontSize
+
+    [Fact]
+    public void FontSize_ShouldDefaultTo18()
+    {
+        TextRuntime sut = new();
+        sut.FontSize.ShouldBe(18);
+    }
+
+    [Fact]
+    public void FontSize_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.FontSize = 24;
+        sut.FontSize.ShouldBe(24);
+    }
+
+    #endregion
+
     #region FontScale
 
     [Fact]
@@ -52,6 +99,45 @@ public class TextRuntimeTests
         TextRuntime sut = new();
         sut.FontScale = 3.0f;
         sut.FontScale.ShouldBe(3.0f);
+    }
+
+    #endregion
+
+    #region IsBold
+
+    [Fact]
+    public void IsBold_ShouldDefaultToFalse()
+    {
+        TextRuntime sut = new();
+        sut.IsBold.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsBold_WhenSetTrue_ShouldSetBoldWeightAboveOne()
+    {
+        TextRuntime sut = new();
+        sut.IsBold = true;
+        sut.BoldWeight.ShouldBeGreaterThan(1f);
+    }
+
+    [Fact]
+    public void IsBold_WhenSetFalse_ShouldSetBoldWeightToOne()
+    {
+        TextRuntime sut = new();
+        sut.IsBold = true;
+        sut.IsBold = false;
+        sut.BoldWeight.ShouldBe(1f);
+    }
+
+    [Fact]
+    public void IsBold_ShouldReflectBoldWeight()
+    {
+        TextRuntime sut = new();
+        sut.BoldWeight = 2.0f;
+        sut.IsBold.ShouldBeTrue();
+
+        sut.BoldWeight = 1.0f;
+        sut.IsBold.ShouldBeFalse();
     }
 
     #endregion
