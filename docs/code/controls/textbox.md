@@ -309,7 +309,7 @@ If this value is true, pressing the Tab key inserts a tab `'\t'` character. Note
 
 The TextBox supports entering characters respecting the current keyboard language settings. This includes typing characters with accents, pasting text, and entering alt codes ([https://www.alt-codes.net/](https://www.alt-codes.net/) ).
 
-<figure><img src="../../.gitbook/assets/image (167).png" alt=""><figcaption><p>TextBox displaying the é character</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (167) (1).png" alt=""><figcaption><p>TextBox displaying the é character</p></figcaption></figure>
 
 Characters must be available in the current font to support being written in TextBoxes. If you would like to support more characters, you can explicitly create a font (.fnt) including the desired characters, or change the default character set in Gum.
 

@@ -6,7 +6,7 @@ Start Angle defines the angle of the starting point of the arc. This value is me
 
 The following image shows the an Arc with a Start Angle of 0. The red lines and text are not part of the arc and are added to the screen shot to show the location of the Start Angle.
 
-<figure><img src="../../../../.gitbook/assets/image (139).png" alt=""><figcaption><p>An arc with a Start Angle of 0</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (139) (1).png" alt=""><figcaption><p>An arc with a Start Angle of 0</p></figcaption></figure>
 
 Changing the Start Angle moves one side of the arc. The arc appears to rotate if the Start Angle is changed gradually.
 

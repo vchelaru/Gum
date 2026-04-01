@@ -1,7 +1,7 @@
 # Gum Screens
 
 {% hint style="danger" %}
-This tutorial series represents the old way to add a .gumx project to your MonoGame project. This tutorial was  retired in April 2025, replaced by the new [Gum Project Forms Tutorial](../gum-project-forms-tutorial/).
+This tutorial series represents the old way to add a .gumx project to your MonoGame project. This tutorial was retired in April 2025, replaced by the new [Gum Project Forms Tutorial](../gum-project-forms-tutorial/).
 
 This tutorial is still syntactically valid but it is not recommended as of the April 2025 release:
 
@@ -19,14 +19,14 @@ To add a new Screen:
 1. Open the project in the Gum tool
 2.  Right-click on the Screens folder and select Add Screen
 
-    <figure><img src="../../../../.gitbook/assets/image (99).png" alt=""><figcaption><p>Add Screen right-click item</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (99) (1).png" alt=""><figcaption><p>Add Screen right-click item</p></figcaption></figure>
 3.  Name the screen TitleScreen and click OK
 
-    <figure><img src="../../../../.gitbook/assets/image (100).png" alt=""><figcaption><p>Enter the new screen name and click OK</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (100) (1).png" alt=""><figcaption><p>Enter the new screen name and click OK</p></figcaption></figure>
 
 The newly created TitleScreen is now in the Screens folder.
 
-<figure><img src="../../../../.gitbook/assets/image (101).png" alt=""><figcaption><p>TitleScreen in Gum</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (101) (1).png" alt=""><figcaption><p>TitleScreen in Gum</p></figcaption></figure>
 
 ## Adding Instances
 
@@ -69,7 +69,7 @@ To show the screen in game, modify the Initialize method as shown in the followi
 
 The game now displays the Gum screen.
 
-<figure><img src="../../../../.gitbook/assets/image (103).png" alt=""><figcaption><p>Gum Screen loaded and displayed in a MonoGame project</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (103) (1).png" alt=""><figcaption><p>Gum Screen loaded and displayed in a MonoGame project</p></figcaption></figure>
 
 The new code has the following calls:
 
@@ -110,7 +110,7 @@ We can modify the displayed string by getting an instance of the Text and modify
 }
 </code></pre>
 
-<figure><img src="../../../../.gitbook/assets/image (104).png" alt=""><figcaption><p>Text modified in code</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (104) (1).png" alt=""><figcaption><p>Text modified in code</p></figcaption></figure>
 
 The code above casts TextInstance to a TextRuntime. Each standard type in Gum (such as Text, Sprite, and Container) has a corresponding _runtime_ type (such as TextRuntime, SpriteRuntime, and ContainerRuntime). Therefore, if we wanted to interact with a Text in code, we would cast it to a TextRuntime.
 

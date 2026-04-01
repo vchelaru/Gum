@@ -18,7 +18,7 @@ Objects can be centered by setting their unit and numerical values. The **Alignm
 * Set `Y Units` to `Pixels from Center`
 * Set `Y Origin` to `Center`
 
-<figure><img src="../../../.gitbook/assets/image (120).png" alt=""><figcaption><p>Centering using <code>Y</code>, <code>Y Units</code>, and <code>Y Origin</code></p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (120) (1).png" alt=""><figcaption><p>Centering using <code>Y</code>, <code>Y Units</code>, and <code>Y Origin</code></p></figcaption></figure>
 
 ## Centering with Margins
 
@@ -26,11 +26,11 @@ Centering can be performed with margins by adding an additional container to cre
 
 We may want something similar to the following image:
 
-<figure><img src="../../../.gitbook/assets/image (121).png" alt=""><figcaption><p>Green rectangle is centered in the remaining area below the yellow area</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (121) (1).png" alt=""><figcaption><p>Green rectangle is centered in the remaining area below the yellow area</p></figcaption></figure>
 
 To do this, an additional container can be added as shown in the following image:
 
-<figure><img src="../../../.gitbook/assets/image (122).png" alt=""><figcaption><p>Container inside the blue rectangle defining the centering space</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (122) (1).png" alt=""><figcaption><p>Container inside the blue rectangle defining the centering space</p></figcaption></figure>
 
 In this case, the container has the following relevant properties:
 

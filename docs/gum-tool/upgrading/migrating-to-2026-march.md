@@ -4,13 +4,13 @@
 
 This page discusses breaking changes and other considerations when migrating from `2026 February` to `2026 March` .
 
-## pgrading Gum Tool
+## Upgrading Gum Tool
 
 {% tabs %}
 {% tab title="Windows" %}
 To upgrade the Gum tool:
 
-1. Download Gum.zip from the release on Github: \
+1. Download Gum.zip from the release on Github:\
    [https://github.com/vchelaru/Gum/releases/tag/Release\_March\_28\_2026](https://github.com/vchelaru/Gum/releases/tag/Release_March_28_2026)
 2. Delete the old tool from your machine
 3. Unzip the gum tool to the same location as to not break any file associations
@@ -23,8 +23,8 @@ To upgrade the Gum tool, it depends on your current version of gum.
    1. Download the latest `setup_gum_linux.sh` script to your home directory [https://github.com/vchelaru/Gum/blob/main/setup\_gum\_linux.sh](../../../setup_gum_linux.sh)
    2. Make it executable `chmod +x ./setup_gum_linux.sh`
    3. Re-run the `./setup_gum_linux.sh` script:
-      1. It will create a new folder/wine-prefix  `~/.wine_gum_dotnet8`&#x20;
-      2. It will create a new  `~/bin/gum`  script with an  `upgrade`  option for future upgrades
+      1. It will create a new folder/wine-prefix `~/.wine_gum_dotnet8`
+      2. It will create a new `~/bin/gum` script with an `upgrade` option for future upgrades
    4. Errors and Resolutions:
       1. If you get an error about `gum wine prefix directory already exists` then you can either rename your old directory, or install gum to a different wine prefix with `./setup_gum_linux.sh ~/.my_wine_prefix`
 2. Your Gum version >= 2026

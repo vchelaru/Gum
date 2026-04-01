@@ -4,7 +4,7 @@
 
 `Variable References` allows any variable on an instance or component to reference other variables. These other variables can be on the same instance or component, a different instance, or even variables from a different component.
 
-<figure><img src="../../../.gitbook/assets/image (158).png" alt=""><figcaption><p>Component setting its Height relative to its Width</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (158) (1).png" alt=""><figcaption><p>Component setting its Height relative to its Width</p></figcaption></figure>
 
 One common use of `Variable References` is to create a centralized style component which can be referenced throughout a Gum project.
 
@@ -169,7 +169,7 @@ X = ColoredRectangleInstance.Red
 Green = ColoredRectangleInstance.Y
 ```
 
-Gum automatically casts any value to a `string`  (text). For example, a Text's Text variable could be assigned to its own Y value:
+Gum automatically casts any value to a `string` (text). For example, a Text's Text variable could be assigned to its own Y value:
 
 ```csharp
 Text=TextInstance.Y
@@ -219,7 +219,7 @@ Instances must qualify their own variables as shown in the following code:
 X = SameInstance.Y
 ```
 
-Gum will automatically qualify assignments when an instance is selected. In other words, `X = Y`  gets qualified to `X = SameInstance.Y` if SameInstance is the owner of the variable. This automatic qualification makes it easy for an instance to reference its own values. The following animation shows how the `Y` and `Height` values become qualified to the instance after tabbing out of the Variable Reference text box.
+Gum will automatically qualify assignments when an instance is selected. In other words, `X = Y` gets qualified to `X = SameInstance.Y` if SameInstance is the owner of the variable. This automatic qualification makes it easy for an instance to reference its own values. The following animation shows how the `Y` and `Height` values become qualified to the instance after tabbing out of the Variable Reference text box.
 
 <figure><img src="../../../.gitbook/assets/01_11 35 26.gif" alt=""><figcaption><p>Tabbing automatically qualifies variables to the selected instance</p></figcaption></figure>
 
@@ -255,7 +255,7 @@ Blue = Components/Styles.PrimaryColor.Blue
 
 As shown above, Variable References can be used to assign one variable to another. If a variable is referenced, then the variable cannot be manually assigned. The Variable Reference takes priority. For example, if an object references the Red, Green, and Blue variables, then those values cannot be manually set on the object. The values appear disabled and text indicates why they are read-only.
 
-<figure><img src="../../../.gitbook/assets/image (20).png" alt=""><figcaption><p>Left-side variables become read-only</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (20) (1).png" alt=""><figcaption><p>Left-side variables become read-only</p></figcaption></figure>
 
 ## Obtaining a Qualified Variable Name
 
@@ -279,14 +279,13 @@ To add a variable reference:
 
 1. Select the object which should have a variable reference
 2. Click inside the **Variable References** text box
-3. Type the variable reference. The format of the variable reference is \
+3. Type the variable reference. The format of the variable reference is\
    \
    `{VariableName} = {Components or Screens}/{ComponentOrScreenName}.{InstanceName}.{InstanceVariable}`\
    \
    For example, to reference the Red variable in the Styles component, the syntax is\
    \
-   `Red = Components/Styles.PrimaryColor.Red`\
-
+   `Red = Components/Styles.PrimaryColor.Red`\\
 
 Since color values have three components (Red, Green, and Blue), then all three components must be referenced. In this example, the background can reference the three colors with the following assignment text:
 

@@ -12,7 +12,7 @@ StackPanels are used to contain other controls in Forms. StackPanels are similar
 
 By default StackPanels display a dotted outline in the Gum tool, but are invisible at runtime. We can add a stack pane to our screen by drag+dropping the StackPanel component into our Screen.
 
-<figure><img src="../../../../.gitbook/assets/image (191).png" alt=""><figcaption><p>StackPanel in TitleScreen</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (191) (1).png" alt=""><figcaption><p>StackPanel in TitleScreen</p></figcaption></figure>
 
 ## Label
 
@@ -329,8 +329,6 @@ partial void CustomInitialize()
 {% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/07_06 11 15.gif" alt=""><figcaption></figcaption></figure>
-
-
 
 ## RadioButton
 

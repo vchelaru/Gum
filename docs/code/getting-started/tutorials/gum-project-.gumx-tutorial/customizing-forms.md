@@ -1,7 +1,7 @@
 # Customizing Forms
 
 {% hint style="danger" %}
-This tutorial series represents the old way to add a .gumx project to your MonoGame project. This tutorial was  retired in April 2025, replaced by the new [Gum Project Forms Tutorial](../gum-project-forms-tutorial/).
+This tutorial series represents the old way to add a .gumx project to your MonoGame project. This tutorial was retired in April 2025, replaced by the new [Gum Project Forms Tutorial](../gum-project-forms-tutorial/).
 
 This tutorial is still syntactically valid but it is not recommended as of the April 2025 release:
 
@@ -16,7 +16,7 @@ This tutorial shows how to customize Forms controls
 
 This tutorial continues from previous tutorials, but initially it deletes all instances from the TitleScreen except a single ButtonStandard instance.
 
-<figure><img src="../../../../.gitbook/assets/image (161).png" alt=""><figcaption><p>A single ButtonStandardInstance in TitleScreen</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (161) (1).png" alt=""><figcaption><p>A single ButtonStandardInstance in TitleScreen</p></figcaption></figure>
 
 {% hint style="danger" %}
 This tutorial modifies the default Gum Forms components. You may want to make a copy of your current project or use version control such as Git to undo your changes in case in case you want to start over.
@@ -26,7 +26,7 @@ This tutorial modifies the default Gum Forms components. You may want to make a 
 
 The simplest form of customization is to modify the instance directly in Gum. Since the ButtonStandardInstance is a regular Gum object, any of its properties can be modified as expected. For example we can modify its X, Y, Width, Height, and Button Display Text properties in Gum and these changes show up in game.
 
-<figure><img src="../../../../.gitbook/assets/image (162).png" alt=""><figcaption><p>Button with its instance properties changed</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (162) (1).png" alt=""><figcaption><p>Button with its instance properties changed</p></figcaption></figure>
 
 While we technically have modified variables on the ButtonStandardInstance, this is usually not what we mean by customizing.
 
@@ -34,7 +34,7 @@ While we technically have modified variables on the ButtonStandardInstance, this
 
 We can make modifications to ButtonStandard directly in Gum. We can select the ButtonStandard in Gum to see its individual components.
 
-<figure><img src="../../../../.gitbook/assets/image (163).png" alt=""><figcaption><p>ButtonStandard with its contained instances</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (163) (1).png" alt=""><figcaption><p>ButtonStandard with its contained instances</p></figcaption></figure>
 
 Notice that by default the Default state is selected.
 
@@ -94,6 +94,6 @@ For more information on states and categories, see the [States](../../../../gum-
 
 All Forms components can be customized in Gum. As with the ButtonStandard component, the first thing to check is whether a component has states. For example, to modify TextBox, first check which variables are modified in TextBoxCategory.
 
-<figure><img src="../../../../.gitbook/assets/image (166).png" alt=""><figcaption><p>Variables in TextBoxCategory</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (166) (1).png" alt=""><figcaption><p>Variables in TextBoxCategory</p></figcaption></figure>
 
 After determining which variables are controlled by the TextBoxCategory, make the changes to the TextBox either in the default state (if the variable is not set in TextBoxCategory), or select the desired state in TextBoxCategory (if the variable is in TextBoxCategory).

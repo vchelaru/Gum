@@ -23,7 +23,7 @@ gumBatch.DrawString(
 gumBatch.End();
 ```
 
-<figure><img src="../../.gitbook/assets/image (63).png" alt=""><figcaption><p>A single text object rendered using DrawString</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (63) (1).png" alt=""><figcaption><p>A single text object rendered using DrawString</p></figcaption></figure>
 
 Multiple strings can be rendered between `Begin` and `End` calls:
 
@@ -57,7 +57,7 @@ gumBatch.Begin();
 gumBatch.End();
 ```
 
-<figure><img src="../../.gitbook/assets/image (65).png" alt=""><figcaption><p>Colored text with newlines</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (65) (1).png" alt=""><figcaption><p>Colored text with newlines</p></figcaption></figure>
 
 ### Rendering TextRuntimes
 
@@ -105,7 +105,7 @@ protected override void Draw(GameTime gameTime)
 }
 ```
 
-<figure><img src="../../.gitbook/assets/image (66).png" alt=""><figcaption><p>Rendering a TextRuntime in immediate mode with GumBatch</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (66) (1).png" alt=""><figcaption><p>Rendering a TextRuntime in immediate mode with GumBatch</p></figcaption></figure>
 
 ### Rendering Parent/Child Hierarchy
 

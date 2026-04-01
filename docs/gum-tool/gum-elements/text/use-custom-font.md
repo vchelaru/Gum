@@ -77,7 +77,7 @@ To generate a font:
 2. Download and open the Hiero tool
 3. Set the values needed for your font, such as font type, size, and effects. Notice that additional effects can be added beyond what is supported in Gum.
 
-<figure><img src="../../../.gitbook/assets/image (79).png" alt=""><figcaption><p>Font in Hiero tool</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (79) (1).png" alt=""><figcaption><p>Font in Hiero tool</p></figcaption></figure>
 
 4. Select **File** -> **Save BMFont Files (text)...**
 5. Select the location to save the files, such as in your project's Contents folder, or the subfolder which contains your Gum project
