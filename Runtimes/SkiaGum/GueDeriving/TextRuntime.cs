@@ -15,64 +15,6 @@ namespace SkiaGum.GueDeriving;
 /// </summary>
 public class TextRuntime : InteractiveGue
 {
-    #region Skia-specific properties, which may go away in the future
-    public static int DefaultRed { get; set; } = 69;
-    public static int DefaultGreen { get; set; } = 90;
-    public static int DefaultBlue { get; set; } = 100;
-
-
-    public enum ColorCategory
-    {
-        White,
-        DefaultColor,
-        LightBlue,
-        LightGray
-    }
-
-    [Obsolete("This existed to match Gum, but this should be handled by codegen")]
-    ColorCategory mColorCategoryState;
-    [Obsolete("This existed to match Gum, but this should be handled by codegen")]
-    public ColorCategory ColorCategoryState
-    {
-        get => mColorCategoryState;
-        set
-        {
-            mColorCategoryState = value;
-            switch (value)
-            {
-                case ColorCategory.White:
-                    this.Blue = 255;
-                    this.Green = 255;
-                    this.Red = 255;
-                    break;
-                case ColorCategory.DefaultColor:
-                    this.Blue = 100;
-                    this.Green = 90;
-                    this.Red = 69;
-                    break;
-                case ColorCategory.LightBlue:
-                    this.Blue = 193;
-                    this.Green = 145;
-                    this.Red = 0;
-                    break;
-                case ColorCategory.LightGray:
-                    this.Blue = 227;
-                    this.Green = 226;
-                    this.Red = 226;
-                    break;
-            }
-        }
-    }
-
-    [Obsolete("Use MaxNumberOfLines instead")]
-    public int? MaximumNumberOfLines
-    {
-        get => MaxNumberOfLines;
-        set => MaxNumberOfLines = value;
-    }
-
-    #endregion
-
     Text? mContainedText;
     Text ContainedText
     {
@@ -409,53 +351,42 @@ public class TextRuntime : InteractiveGue
     }
 #endif
 
-    public bool IsBold
-    {
-        get => ContainedText.BoldWeight > 1;
-        set
-        {
-            if(value)
-            {
-                ContainedText.BoldWeight = 1.5f;
-            }
-            else
-            {
-                ContainedText.BoldWeight = 1;
-            }
-        }
-    }
-
+#if SKIA
+    float _boldWeight = 1;
     /// <summary>
     /// Gets or sets the weight multiplier for bold text rendering.
-    /// A value of 1.0 represents regular weight, while higher values 
+    /// A value of 1.0 represents regular weight, while higher values
     /// increase the thickness of strokes (e.g., 1.5 for bold).
     /// </summary>
     public float BoldWeight
     {
-        get => ContainedText.BoldWeight;
-        set => ContainedText.BoldWeight = value;
-    }
-
-    //public SKTypeface FontType
-    //{
-    //    get => ContainedText.Font;
-    //    set => ContainedText.Font = value;
-    //}
-
-    public int FontSize
-    {
-        get => ContainedText.FontSize;
-        // July 10, 2023 - This is causing problems
-        // because the FontSize is not making it to the
-        // underyling object. I'm going to do both for now
-        // as a half-step to removing the usage of the ContainedText...
-        // or maybe we always use both?
-        //set => ContainedText.FontSize = value;
+        get => _boldWeight;
         set
         {
-            ContainedText.FontSize = value;
-            UpdateToFontValues();
+            _boldWeight = value;
+            ContainedText.BoldWeight = value;
         }
+    }
+
+    public bool IsBold
+    {
+        get => _boldWeight > 1;
+        set { BoldWeight = value ? 1.5f : 1f; }
+    }
+#else
+    bool isBold;
+    public bool IsBold
+    {
+        get => isBold;
+        set { isBold = value; UpdateToFontValues(); }
+    }
+#endif
+
+    int fontSize;
+    public int FontSize
+    {
+        get { return fontSize; }
+        set { fontSize = value; UpdateToFontValues(); }
     }
 
     bool useCustomFont;
