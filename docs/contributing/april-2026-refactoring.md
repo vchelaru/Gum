@@ -40,6 +40,10 @@ Changed the base class of all SkiaGum runtimes from `GraphicalUiElement` to `Int
 
 **What this enables:** Future work to add an input pipeline to SkiaGum (ICursor implementation, FormsUtilities integration) will be able to use Forms controls without needing to change the base class of every runtime again.
 
+## ~~Task: Raylib GumService.Initialize defaults to Newest (V3)~~ (Done)
+
+Changed the default on the non-XNALIKE `GumService.Initialize()` overload from `DefaultVisualsVersion.V2` to `DefaultVisualsVersion.Newest`, matching MonoGame behavior.
+
 ## References
 
 - Full refactoring plan: `docs/contributing/runtime-refactoring.md`

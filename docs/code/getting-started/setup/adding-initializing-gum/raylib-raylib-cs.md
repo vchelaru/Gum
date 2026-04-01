@@ -67,7 +67,8 @@ public class Program
         const int screenHeight = 450;
 
         Raylib.InitWindow(screenWidth, screenHeight, "Gum Sample");
-
+<strong>        Raylib.SetTargetFPS(60);
+</strong>
 <strong>        // This tells Gum to use the entire screen
 </strong><strong>        GraphicalUiElement.CanvasWidth = screenWidth;
 </strong><strong>        GraphicalUiElement.CanvasHeight = screenHeight;
@@ -79,7 +80,7 @@ public class Program
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
 
-<strong>            GumUI.Update(0);
+<strong>            GumUI.Update(Raylib.GetTime());
 </strong><strong>            GumUI.Draw();
 </strong>
             Raylib.EndDrawing();
@@ -113,9 +114,8 @@ public static void Main()
 As of August 2025 the raylib implementation is missing a few controls. Specifically the controls that are not present are:
 
 * PasswordBox
-* TextBox
 
 Additionally, raylib Gum does not currently read input from keyboards or gamepads.
 
-If your game needs these capabilities, or if you would like to help contribute to develop them, please post a on our [GitHub issues](https://github.com/vchelaru/Gum/issues) or [join our Discord](https://discord.gg/uQSam6w36d).
+If your game needs these capabilities, or if you would like to help contribute to develop them, please post on our [GitHub issues](https://github.com/vchelaru/Gum/issues) or [join our Discord](https://discord.gg/uQSam6w36d).
 {% endhint %}

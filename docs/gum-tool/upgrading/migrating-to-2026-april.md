@@ -31,3 +31,13 @@ If you migrated to `Gum.Forms` namespaces when the error was introduced, no acti
 | MonoGameGum.Forms.Controls.Primitives | Gum.Forms.Controls.Primitives |
 | MonoGameGum.Forms.Data                | Gum.Forms.Data                |
 | MonoGameGum.Forms.DefaultVisuals      | Gum.Forms.DefaultVisuals      |
+
+### Raylib GumService.Initialize Defaults to V3
+
+The parameterless `GumService.Initialize()` overload used by raylib projects previously defaulted to `DefaultVisualsVersion.V2`. It now defaults to `DefaultVisualsVersion.Newest` (V3), matching MonoGame's behavior.
+
+If you need to keep V2 visuals, pass the version explicitly:
+
+```csharp
+GumUI.Initialize(DefaultVisualsVersion.V2);
+```
