@@ -153,6 +153,8 @@ public class PolygonRuntime : InteractiveGue
     public void InsertPointAt(Vector2 point, int index) => ContainedPolygon.InsertPointAt(point, index);
     public void RemovePointAtIndex(int index) => ContainedPolygon.RemovePointAtIndex(index);
     public void SetPointAt(Vector2 point, int index) => ContainedPolygon.SetPointAt(point, index);
+    /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+    [Obsolete("Use the AddToRoot extension method instead (e.g. myPolygon.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
     public override bool IsPointInside(float worldX, float worldY) =>

@@ -111,6 +111,8 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 
+    /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+    [Obsolete("Use the AddToRoot extension method instead (e.g. myCircle.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
     public CircleRuntime(bool fullInstantiation = true)
