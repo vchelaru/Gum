@@ -7,7 +7,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace SkiaGum.GueDeriving;
 
-public class SpriteRuntime : GraphicalUiElement
+public class SpriteRuntime : InteractiveGue
 {
     Sprite mContainedSprite;
     Sprite ContainedSprite

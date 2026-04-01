@@ -128,3 +128,50 @@ button.Click += (_, _) => button.Text = $"Clicked at {DateTime.Now}";
 {% hint style="info" %}
 By removing the background, the highlighting behavior is no longer functional. This can be fixed by updating states. For more information, see the [Styling Using States](styling-using-states.md) page.
 {% endhint %}
+
+## Adding Backgrounds to Layout Containers
+
+StackPanel and Grid do not include any visuals — they are invisible by default. To create a layout container with a visible background, wrap the StackPanel or Grid inside a Panel, then add a ColoredRectangleRuntime as a sibling of the StackPanel.
+
+The following example creates a Panel with a dark background and a StackPanel containing buttons:
+
+```csharp
+// Initialize
+// Panel to hold both the background and the StackPanel
+var panel = new Panel();
+panel.AddToRoot();
+panel.Anchor(Anchor.Center);
+// Panel defaults to SizeToChildren, so set to Absolute for a fixed size
+panel.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+panel.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+panel.Width = 240;
+panel.Height = 300;
+
+// Background fills the entire Panel
+var background = new ColoredRectangleRuntime();
+background.Dock(Gum.Wireframe.Dock.Fill);
+background.Color = new Color(30, 30, 36);
+panel.AddChild(background);
+
+// StackPanel fills the Panel
+var stack = new StackPanel();
+stack.Dock(Gum.Wireframe.Dock.Fill);
+stack.Spacing = 4;
+panel.AddChild(stack);
+
+for (int i = 0; i < 5; i++)
+{
+    var button = new Button();
+    button.Text = "Button " + i;
+    stack.AddChild(button);
+}
+```
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACp1STW_CMAy98yusnopAHdrXYR-HAdrHbQKmXXoJraERwUFJurEh_vucBFbGDpNWqUr6_Gw_P3fTAkie7EO9TK7AmRq7HpAknRRKfiKjyZswsBKECm6B8B2e_T1tX-cU0OyuLCd6pLU7xKiotEm5bvYqDc6MWOIOzAZIDo3nnpzEYlDiTNTKWXAaxtx2ogeVVKVB6oLVYNH5yN3UalU7hJk2IGAm11iCZfq-66ssXfXC4i1L9b2HwonJxwptNpRLJCs1-bCHsn21b82PKOeV-3d6aM6Jp-e9o5IMnvU8GCbui2IxN7qmkidQimeuENgStim6kZN3fNrQou0DrbTBcoSFEzRXOKo5Z4nB9IacDXWxOPLdQ9k99zqihoqH1dOzXpel8nv5Y71hGWmT2d7PMnaMxRU2sxwMYX1816HhBskh9KfayBqvRCFpzoXOf8sKlKjI_xepJAeSqb1rPm7ggo9Op53TJifgJ3hbO6dpp6sfPoImH4-xbIJrv7c8iWG-QAfkjhNVNcYEii-wTVrb1hcglFRDVAMAAA)
+
+To add padding between the background edge and the content, set a negative Width and Height on the StackPanel after docking. For example, `stack.Width = -16` creates 8 pixels of padding on each side.
+
+This same pattern applies to Grid — wrap it in a Panel with a ColoredRectangleRuntime to give it a visible background.
+
+{% hint style="warning" %}
+Do not add a ColoredRectangleRuntime as a **background** directly inside a StackPanel or Grid. In a stacking or grid layout, every child participates in the layout — a background rectangle would be treated as a stacked item rather than appearing behind the other children. ColoredRectangleRuntime can still be added as a regular child of a StackPanel (for example, as a divider or visual element), but it should not be used as a background inside a stacking container.
+{% endhint %}
