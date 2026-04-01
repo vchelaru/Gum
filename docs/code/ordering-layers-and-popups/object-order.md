@@ -106,9 +106,11 @@ public class Game1 : Game
 
 
         _belowEverythingContainer = new();
+        _belowEverythingContainer.HasEvents = false;
         _belowEverythingContainer.Dock(Dock.Fill);
 
         _aboveEverythingContainer = new();
+        _aboveEverythingContainer.HasEvents = false;
         _aboveEverythingContainer.Dock(Dock.Fill);
 
         Window belowEverythingWindow = new ();
@@ -157,5 +159,6 @@ public class Game1 : Game
 }
 
 ```
+[Try on XnaFiddle.NET](https://xnafiddle.net/#code=H4sIAAAAAAAACp1UTU8bMRC951dYnIKELGjVSylIJYGABJdAgB6d3clmhGMj25sorfjvHe9XvZt4ibqH7Gb8ZubNm_HkFlXGHrTSE7GCSb46H-SFiT75jTYru2PgI62c0XLPyRgWIpfuGW0upOXPX2tIkIBPchiDwTXZwwgvaGBhCNP4YGK01QvHX5XgN_5oo83bJ8d8YsT7EpOG3RRUSulUdo9zI8w2AAze87nEhCVSWMs8vzP2vXgP_gwYPTV0DGtM4EEokYFhWROgwOSrK-GSJcuqj8b8CMa7-c_ZHbu4DGy1UsTBg72iAhWYaa4croDNQerN9RrM1i2JenN-vh8u5noNPXCpDaRTSJxQmYTaK-nYKzKVKIUcw-PCVKrhn7p2dsEUbPYLNCQS9rjMXdMF5fhUazemLidOmy0FOKoOjv5B7-yDzi3QAOFcAmGcyYmXP_qo2BntKAKkjEo2BlNga40pu1PoUEj8DTucC_15APD8Tlh7WJ_BWNSKZjZgXre0rrb6OyRIg-mqWGEjonvXmCd_Jd-zb6c9iF8ecdqHeMHUeb5felG3gNnSfQoriiBU8eZTSIO6YyNa1h_WGUPyW2HJrJyfpgX1AA7wGevkbeh_-A1KGTYidgl2CcWQfYSiPnFCL6hSvemWUlkPV-lnmo6WKNPh3kB7EnaoxhJGK2oS7g0UJpwLC-HFOm5d1cetdbDyQyRpouhyWT4BSoAJv0frflTLQ8gZXktYke6XDMnDPunZeypcdZWa2xa7-iV46BfWk99rWfXR3QOt2HwkQZhQj_YxidAVvFGo16ncNn7X9cJi6gdOZaSqurqok3ascIB8MzrodkNiAo6N2HwuX3vXV_qVm2GkjVqQVmCuZO6T7mxQfgUZqlDu5qTIfoDUjcO1Slsb-NAc3fV2SOyyB4X7_6Q8oMvR1EU_iyg73fwY_AVWYgbkuAkAAA)
 
 <figure><img src="../../.gitbook/assets/08_05 40 56.gif" alt=""><figcaption><p>Two windows, one drawn below and one drawn above a SpriteBatch Draw</p></figcaption></figure>
