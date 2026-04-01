@@ -4,7 +4,7 @@ using SkiaSharp;
 
 namespace SkiaGum.GueDeriving;
 
-public class SolidRectangleRuntime : GraphicalUiElement
+public class SolidRectangleRuntime : InteractiveGue
 {
     SolidRectangle mContainedRectangle;
     SolidRectangle ContainedRectangle

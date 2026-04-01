@@ -305,6 +305,8 @@ public class SpriteRuntime : global::Gum.Wireframe.GraphicalUiElement, IRenderTa
         }
     }
 
+    /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+    [Obsolete("Use the AddToRoot extension method instead (e.g. mySprite.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
 }

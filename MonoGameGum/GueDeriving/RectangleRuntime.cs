@@ -114,6 +114,8 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+        [Obsolete("Use the AddToRoot extension method instead (e.g. myRectangle.AddToRoot()).")]
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
         public RectangleRuntime(bool fullInstantiation = true, SystemManagers systemManagers = null)

@@ -13,7 +13,7 @@ namespace SkiaGum.GueDeriving;
 /// <summary>
 /// A visual text element which can display a string.
 /// </summary>
-public class TextRuntime : GraphicalUiElement
+public class TextRuntime : InteractiveGue
 {
     #region Skia-specific properties, which may go away in the future
     public static int DefaultRed { get; set; } = 69;
@@ -600,8 +600,9 @@ public class TextRuntime : GraphicalUiElement
     }
 
 #if !RAYLIB && !SKIA
-    // We should phase this out, so not adding it to raylib. Instead, add to root
-    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer:null);
+    /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+    [Obsolete("Use the AddToRoot extension method instead (e.g. myText.AddToRoot()).")]
+    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
 
 #if !SKIA

@@ -5388,11 +5388,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     partial void CustomAddToManagers();
 
     /// <summary>
-    /// Adds this as a renderable to the SystemManagers if not already added. If already added
-    /// this does not perform any operations - it can be safely called multiple times.
+    /// Adds this as a renderable to the default SystemManagers if not already added. If already added,
+    /// this does not perform any operations — it can be safely called multiple times.
+    /// This method exists for FlatRedBall compatibility. In all other environments, use the
+    /// <c>AddToRoot</c> extension method instead, which adds this element to the GumService root container.
     /// </summary>
 
 #if NET6_0_OR_GREATER
+#if !FRB
+    [Obsolete("Use the AddToRoot extension method instead (e.g. myElement.AddToRoot()). " +
+        "AddToRoot adds this element to the GumService root container, which is the recommended " +
+        "approach for MonoGame, KNI, FNA, and raylib projects.")]
+#endif
     public virtual void AddToManagers()
     {
 
@@ -5402,11 +5409,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #endif
 
     /// <summary>
-    /// Adds this as a renderable to the SystemManagers on the argument layer if not already added
-    /// to SystemManagers. If already added
-    /// this does not perform any operations - it can be safely called multiple times, but
-    /// calling it multiple times will not move this to a different layer.
+    /// Adds this as a renderable to the specified <paramref name="managers"/> on the given
+    /// <paramref name="layer"/> if not already added. If already added, this does not perform
+    /// any operations — it can be safely called multiple times, but calling it multiple times
+    /// will not move this to a different layer.
+    /// This overload is needed when multiple Gum instances run simultaneously (e.g. SkiaGum),
+    /// each with their own SystemManagers.
     /// </summary>
+    /// <param name="managers">The SystemManagers instance to register with.</param>
+    /// <param name="layer">The layer to add to, or <c>null</c> for the default layer.</param>
     public virtual void AddToManagers(ISystemManagers managers, Layer? layer = null)
     {
 #if FULL_DIAGNOSTICS

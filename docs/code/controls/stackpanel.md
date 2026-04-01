@@ -4,6 +4,10 @@
 
 StackPanel is a container used to for controls which should stack vertically or horizontally, and which supports wrapping. StackPanels do not include any visual so they are always invisible.
 
+## Backgrounds
+
+StackPanels do not include any visuals, so they are always invisible on their own. To add a visible background behind a StackPanel, wrap it in a Panel with a ColoredRectangleRuntime. For details and a code example, see [Adding Backgrounds to Layout Containers](../styling/code-only-styling/adding-and-removing-visual-children.md#adding-backgrounds-to-layout-containers).
+
 ## Code Example: Adding Buttons to a StackPanel
 
 The following code shows how to add Button instances to a StackPanel. Notice that each button is automatically stacked vertically.

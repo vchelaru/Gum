@@ -232,6 +232,8 @@ namespace MonoGameGum.GueDeriving
         }
 #endif
 
+        /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+        [Obsolete("Use the AddToRoot extension method instead (e.g. myNineSlice.AddToRoot()).")]
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
 

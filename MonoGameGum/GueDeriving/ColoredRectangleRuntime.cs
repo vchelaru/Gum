@@ -116,6 +116,8 @@ public class ColoredRectangleRuntime : GraphicalUiElement
         }
     }
 
+    /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+    [Obsolete("Use the AddToRoot extension method instead (e.g. myColoredRectangle.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
     public ColoredRectangleRuntime(bool fullInstantiation = true)

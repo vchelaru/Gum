@@ -90,7 +90,7 @@ Raylib compiles the MonoGame file via file linking (`<Compile Include>` in `Rayl
 
 | Difference | Detail |
 |---|---|
-| Base class | Shared file inherits `InteractiveGue`; SkiaGum inherits `GraphicalUiElement` |
+| Base class | ~~Shared file inherits `InteractiveGue`; SkiaGum inherits `GraphicalUiElement`~~ **Resolved (April 2026)** — all runtimes now inherit `InteractiveGue` |
 | Color type | Shared file uses XNA `Color` (MonoGame) or Raylib `Color`; SkiaGum uses `SKColor` |
 | `BitmapFont` property | Present in MonoGame builds; not applicable to SkiaGum or Raylib |
 | `CustomFont` property | Raylib-only (`Font` type); not applicable to others |
@@ -119,7 +119,7 @@ Raylib compiles the MonoGame file via file linking.
 
 The shared MonoGame+Raylib file has a full set of properties: `Alpha`, `IsRenderTarget`, `BlendState`, `Blend`, `AddToManagers()`, and batch rendering methods (`BeginRenderingAsBatch`/`EndRenderingAsBatch`). It inherits from `InteractiveGue`.
 
-The SkiaGum version is almost empty — it inherits from `GraphicalUiElement` and only has a `Clone()` override. Most container behavior is inherited from the base class.
+The SkiaGum version is almost empty — it inherits from `InteractiveGue` (migrated from `GraphicalUiElement` in April 2026) and only has a `Clone()` override. Most container behavior is inherited from the base class.
 
 ### Remaining Work
 
@@ -228,13 +228,13 @@ SkiaGum has no `NineSliceRuntime` wrapper at all, though the underlying `NineSli
 
 ### Current State
 
-MonoGame has Red/Green/Blue/Alpha and Color properties. It wraps a `LineCircle` renderable and inherits from `GraphicalUiElement` (not `InteractiveGue`).
+MonoGame has Red/Green/Blue/Alpha and Color properties. It wraps a `LineCircle` renderable and inherits from `InteractiveGue`.
 
-SkiaGum inherits from `SkiaShapeRuntime` (a Skia-specific base class that provides color, stroke, and dropshadow properties) and has no public properties of its own beyond what it inherits. It has a `Clone()` override.
+SkiaGum inherits from `SkiaShapeRuntime` (which now inherits `InteractiveGue` as of April 2026, a Skia-specific base class that provides color, stroke, and dropshadow properties) and has no public properties of its own beyond what it inherits. It has a `Clone()` override.
 
 ### Remaining Work
 
-- **Determine unification feasibility.** The SkiaGum version uses a completely different inheritance hierarchy (`SkiaShapeRuntime`). This may make true file-level unification impractical. The alternative is to document this as a legitimate structural difference.
+- **Determine unification feasibility.** The SkiaGum version uses a different inheritance hierarchy (`SkiaShapeRuntime`). Both chains now root at `InteractiveGue`, but the intermediate base class is still different. This may make true file-level unification impractical. The alternative is to document this as a legitimate structural difference.
 - **If unifiable:** Add color properties to SkiaGum explicitly (rather than relying on inheritance), add `#if` guards, and converge.
 - **If not unifiable:** Document why and keep as separate files.
 
@@ -289,7 +289,7 @@ This is a line-rectangle (outline) primitive. It has Red/Green/Blue/Alpha, Color
 
 Gum is used by both FlatRedBall 1 (FRB1) and the new FlatRedBall 2 engine. FRB1 has its own code generation and project structure; updating it for namespace changes is impractical. The `FRB` preprocessor symbol is already used throughout the codebase to guard FRB1-specific code.
 
-For both the layout enum namespace unification and the eventual runtime namespace unification:
+For namespace unification, `[Obsolete]` deprecations, and eventual API removals:
 
 - New namespaces go inside `#if !FRB` blocks.
 - Old namespaces are preserved inside `#else` blocks for FRB1.
@@ -552,9 +552,9 @@ These patterns recur across most runtimes and are expected:
 
 | Difference | Detail |
 |---|---|
-| Base class | MonoGame/Raylib typically inherit `InteractiveGue`; SkiaGum inherits `GraphicalUiElement` (or `SkiaShapeRuntime` for shapes) |
+| Base class | All runtimes inherit `InteractiveGue` (or `SkiaShapeRuntime : InteractiveGue` for SkiaGum shapes). SkiaGum runtimes were migrated from `GraphicalUiElement` to `InteractiveGue` in April 2026 to enable future Forms/input support. |
 | Color type | XNA `Color`, Raylib `Color`, or `SKColor` — use `#if` guards |
 | `BlendState`/`Blend` | XNA-like only |
-| `AddToManagers()` | Legacy pattern, being phased out — do not add to new runtimes |
+| `AddToManagers()` | Marked `[Obsolete]` in all non-FRB builds (April 2026). Users should use `AddToRoot()` instead. FRB keeps it permanently — guarded with `#if !FRB`. The two-parameter `AddToManagers(ISystemManagers, Layer?)` is NOT obsolete and is required for multi-instance scenarios (e.g. SkiaGum). Do not add the parameterless overload to new runtimes. Will be removed from non-FRB builds in a future release. |
 | `Clone()` override | Present in some SkiaGum runtimes but not MonoGame/Raylib — should be unified if needed |
 | Texture types | `Texture2D` (MonoGame), `Texture2D` (Raylib), `SKBitmap`/`SKImage` (SkiaGum) |

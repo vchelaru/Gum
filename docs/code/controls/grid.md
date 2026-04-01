@@ -10,6 +10,10 @@ Grid is an experimental control and its API may change in future releases.
 
 Rows and columns are defined by adding `RowDefinition` and `ColumnDefinition` instances to the `RowDefinitions` and `ColumnDefinitions` collections. Children are placed into a specific cell by calling `AddChild` with a row and column index.
 
+## Backgrounds
+
+Like StackPanel, Grid does not include any visuals and is invisible on its own. To add a visible background behind a Grid, wrap it in a Panel with a ColoredRectangleRuntime. For details and a code example, see [Adding Backgrounds to Layout Containers](../styling/code-only-styling/adding-and-removing-visual-children.md#adding-backgrounds-to-layout-containers).
+
 ## Code Example: Creating a Grid
 
 The following code creates a simple 2×2 grid with two rows and two columns, then places a button in each cell.

@@ -117,6 +117,8 @@ public class ContainerRuntime : InteractiveGue
 
     }
 
+    /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+    [Obsolete("Use the AddToRoot extension method instead (e.g. myContainer.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
     public override string BatchKey => Children?.LastOrDefault()?.BatchKey ?? string.Empty;
