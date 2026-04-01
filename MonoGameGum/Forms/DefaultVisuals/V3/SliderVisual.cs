@@ -39,23 +39,6 @@ public class SliderVisual : InteractiveGue
 
     public StateSaveCategory SliderCategory { get; private set; }
 
-    Color _backgroundColor;
-    public Color BackgroundColor
-    {
-        get => _backgroundColor;
-        set
-        {
-            if (!value.Equals(_backgroundColor))
-            {
-                // Just in case FormsControl hasn't been set yet, do ?. to check for null
-                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
-                // Highlighted or Disabled etc
-                _backgroundColor = value;
-                FormsControl?.UpdateState();
-            }
-        }
-    }
-
     Color _trackBackgroundColor;
     public Color TrackBackgroundColor
     {
@@ -157,7 +140,6 @@ public class SliderVisual : InteractiveGue
         SliderCategory.Name = "SliderCategory";
         this.AddCategory(SliderCategory);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
         TrackBackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
         FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
 
@@ -176,54 +158,52 @@ public class SliderVisual : InteractiveGue
         SliderCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(false, true, TrackBackgroundColor);
+            SetValuesForState(isFocused: false, isEnabled: true);
         };
 
         SliderCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(false, false, TrackBackgroundColor);
+            SetValuesForState(isFocused: false, isEnabled: false);
         };
 
         SliderCategory.States.Add(States.DisabledFocused);
         States.DisabledFocused.Apply = () =>
         {
-            SetValuesForState(true, false, TrackBackgroundColor);
+            SetValuesForState(isFocused: true, isEnabled: false);
         };
 
         SliderCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(true, false, TrackBackgroundColor);
+            SetValuesForState(isFocused: true, isEnabled: true);
         };
 
         SliderCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(false, true, TrackBackgroundColor);
+            SetValuesForState(isFocused: false, isEnabled: true);
         };
 
         SliderCategory.States.Add(States.HighlightedFocused);
         States.HighlightedFocused.Apply = () =>
         {
-            SetValuesForState(true, true, TrackBackgroundColor);
+            SetValuesForState(isFocused: true, isEnabled: true);
         };
 
         SliderCategory.States.Add(States.Pushed);
         States.Pushed.Apply = () =>
         {
-            SetValuesForState(false, true, TrackBackgroundColor);
+            SetValuesForState(isFocused: false, isEnabled: true);
         };
     }
 
-    private void SetValuesForState(bool isFocused, bool isEnabled, Color backgroundColor)
+    private void SetValuesForState(bool isFocused, bool isEnabled)
     {
-        TrackBackground.Color = backgroundColor;
+        TrackBackground.Color = _trackBackgroundColor;
         FocusedIndicator.Visible = isFocused;
         ThumbInstance.IsEnabled = isEnabled;
         FocusedIndicator.Color = _focusedIndicatorColor;
-        TrackBackground.Color = _trackBackgroundColor;
-
     }
 
     public Controls.Slider FormsControl => (Slider)FormsControlAsObject;
