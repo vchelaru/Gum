@@ -142,6 +142,17 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region HasEvents
+
+    [Fact]
+    public void HasEvents_ShouldDefaultToFalse()
+    {
+        TextRuntime sut = new();
+        sut.HasEvents.ShouldBeFalse();
+    }
+
+    #endregion
+
     #region HeightUnits
 
     [Fact]

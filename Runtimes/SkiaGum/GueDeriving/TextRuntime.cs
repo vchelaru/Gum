@@ -495,28 +495,28 @@ public class TextRuntime : InteractiveGue
 
     #endregion
 
-    public TextRuntime (bool fullInstantiation = true)
+    public TextRuntime(bool fullInstantiation = true)
     {
         if(fullInstantiation)
         {
             this.SuspendLayout();
-            SetContainedObject(new Text());
+            var textRenderable = new Text();
+            mContainedText = textRenderable;
 
-            this.Height = 0;
-            this.HeightUnits = DimensionUnitType.RelativeToChildren;
-            this.Width = 0;
-            this.WidthUnits = DimensionUnitType.RelativeToChildren;
+            SetContainedObject(textRenderable);
 
-            // These values are default values matching Gum defaults. Not sure how to handle this - ultimately the Gum project
-            // could change these values, in which case these would no longer be valid. We need a way to push the default states
-            // from Gum here. But...for now at least we'll match defaults:
-            FontSize = 18;
+            Width = DefaultWidth;
+            WidthUnits = DefaultWidthUnits;
+            Height = DefaultHeight;
+            HeightUnits = DefaultHeightUnits;
+            if(AssignFontInConstructor)
+            {
+                this.FontSize = DefaultFontSize;
+                this.Font = DefaultFont;
+            }
+            HasEvents = false;
 
-            Red = 255;
-            Green = 255;
-            Blue = 255;
-
-            this.Text = "Hello";
+            textRenderable.RawText = "Hello World";
             this.ResumeLayout();
         }
     }
