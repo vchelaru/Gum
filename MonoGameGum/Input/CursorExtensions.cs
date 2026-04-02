@@ -98,8 +98,14 @@ public static class CursorExtensions
 
         if(interactiveGue.EffectiveManagers == null)
         {
-            return $"The {NameOrType(interactiveGue)} does not have EffectiveManagers, " +
-                $"which means it was not added to a root object, and it was not added as a descendent of a root object.";
+            if(!IsInLastEventRoots(interactiveGue))
+            {
+                return $"The {NameOrType(interactiveGue)} does not have EffectiveManagers and was not included " +
+                    $"in the roots passed to GumService.Update(). Either add it to managers or include it (or a parent) " +
+                    $"in the roots passed to Update.";
+            }
+            // If it is in the last event roots, it's a GumBatch scenario — skip the managers
+            // check and continue with the remaining diagnostics.
         }
 
 
@@ -161,21 +167,33 @@ public static class CursorExtensions
 
         if(cursor.VisualOver != null && cursor.VisualOver != interactiveGue)
         {
-            return $"The cursor is over {NameOrType(cursor.VisualOver)} instead of {interactiveGue}";
+            if(IsDescendantOf(cursor.VisualOver, interactiveGue))
+            {
+                return $"The cursor is not directly over {NameOrType(interactiveGue)}, " +
+                    $"but is over its child {NameOrType(cursor.VisualOver)}. " +
+                    $"A child is receiving events instead of the parent.\n" +
+                    GetStack(interactiveGue);
+            }
+            return $"The cursor is over {NameOrType(cursor.VisualOver)} instead of {NameOrType(interactiveGue)}";
         }
 
         var rootParent = interactiveGue.GetTopParent();
-        var gumUI = GumService.Default;
-        if(rootParent != gumUI.Root && rootParent != gumUI.PopupRoot && rootParent != gumUI.ModalRoot)
-        {
-            return $"The object must ultimately be added to one of the root objects, but it is not. The top parent {rootParent} is an orphan object";
-        }
+        var isInEventRoots = IsInLastEventRoots(interactiveGue);
 
-        if(rootParent != gumUI.ModalRoot && gumUI.ModalRoot.Children.Count(item => item.Visible) > 0)
+        if(!isInEventRoots)
         {
-            var firstVisible = gumUI.ModalRoot.Children.First(item => item.Visible);
+            var gumUI = GumService.Default;
+            if(rootParent != gumUI.Root && rootParent != gumUI.PopupRoot && rootParent != gumUI.ModalRoot)
+            {
+                return $"The object must ultimately be added to one of the root objects, but it is not. The top parent {rootParent} is an orphan object";
+            }
 
-            return $"There is a modal that is blocking clicks to {interactiveGue}: {firstVisible}";
+            if(rootParent != gumUI.ModalRoot && gumUI.ModalRoot.Children.Count(item => item.Visible) > 0)
+            {
+                var firstVisible = gumUI.ModalRoot.Children.First(item => item.Visible);
+
+                return $"There is a modal that is blocking clicks to {interactiveGue}: {firstVisible}";
+            }
         }
 
         return null;
@@ -295,5 +313,38 @@ public static class CursorExtensions
         {
             return GetNotExposedChildrenEventsParent(visual.Parent as GraphicalUiElement);
         }
+    }
+
+    private static bool IsDescendantOf(GraphicalUiElement possibleDescendant, GraphicalUiElement possibleAncestor)
+    {
+        GraphicalUiElement? current = possibleDescendant.Parent as GraphicalUiElement;
+        while(current != null)
+        {
+            if(current == possibleAncestor)
+            {
+                return true;
+            }
+            current = current.Parent as GraphicalUiElement;
+        }
+        return false;
+    }
+
+    private static bool IsInLastEventRoots(GraphicalUiElement element)
+    {
+        var lastRoots = FormsUtilities.LastEventRoots;
+        if(lastRoots.Count == 0)
+        {
+            return false;
+        }
+
+        var topParent = element.GetTopParent();
+        foreach(var root in lastRoots)
+        {
+            if(root == element || root == topParent)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

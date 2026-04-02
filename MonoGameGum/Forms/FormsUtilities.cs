@@ -315,6 +315,14 @@ public class FormsUtilities
     static List<GraphicalUiElement> innerList = new List<GraphicalUiElement>();
     static List<GraphicalUiElement> innerRootList = new List<GraphicalUiElement>();
 
+    /// <summary>
+    /// The list of root elements that were tested for events in the most recent Update call.
+    /// Used by GetEventFailureReason to provide useful diagnostics in GumBatch scenarios
+    /// where elements are not added to managers.
+    /// </summary>
+    internal static IReadOnlyList<GraphicalUiElement> LastEventRoots => _lastEventRoots;
+    static List<GraphicalUiElement> _lastEventRoots = new List<GraphicalUiElement>();
+
 #if XNALIKE
     [Obsolete("Use the overload which takes a Game as the first argument, and pass the game instance.")]
     public static void Update(GameTime gameTime, GraphicalUiElement rootGue)
@@ -458,6 +466,9 @@ public class FormsUtilities
             keyboard,
             gameTime);
 #endif
+
+        _lastEventRoots.Clear();
+        _lastEventRoots.AddRange(innerList);
 
         var frameworkElementOver =
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
