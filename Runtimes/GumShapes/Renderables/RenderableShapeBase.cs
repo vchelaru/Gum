@@ -397,6 +397,34 @@ public abstract class RenderableShapeBase : RenderableBase
         }
     }
 
+    float _strokeDashLength;
+    /// <summary>
+    /// Length of each dash segment in pixels when using a dashed stroke.
+    /// A value of 0 (the default) produces a solid stroke.
+    /// </summary>
+    public float StrokeDashLength
+    {
+        get => _strokeDashLength;
+        set
+        {
+            _strokeDashLength = value;
+        }
+    }
+
+    float _strokeGapLength;
+    /// <summary>
+    /// Length of each gap between dashes in pixels when using a dashed stroke.
+    /// Ignored when <see cref="StrokeDashLength"/> is 0.
+    /// </summary>
+    public float StrokeGapLength
+    {
+        get => _strokeGapLength;
+        set
+        {
+            _strokeGapLength = value;
+        }
+    }
+
     public override void PreRender()
     {
         //do nothing?
@@ -505,6 +533,36 @@ public abstract class RenderableShapeBase : RenderableBase
         //    effectiveGradientY2 += rectToUse.Top;
         //}
 
+    }
+
+    /// <summary>
+    /// Adjusts a top-left position so that Apos.Shapes' center-based rotation
+    /// produces the same result as rotating around the top-left corner.
+    /// </summary>
+    protected static Vector2 AdjustPositionForCenterRotation(Vector2 topLeft, Vector2 size, float rotationRadians)
+    {
+        if (rotationRadians == 0)
+        {
+            return topLeft;
+        }
+
+        var halfW = size.X / 2.0f;
+        var halfH = size.Y / 2.0f;
+
+        // Center relative to top-left (unrotated)
+        var cx = halfW;
+        var cy = halfH;
+
+        // Rotate center around origin (top-left corner)
+        var cos = (float)System.Math.Cos(rotationRadians);
+        var sin = (float)System.Math.Sin(rotationRadians);
+        var rotatedCx = cx * cos - cy * sin;
+        var rotatedCy = cx * sin + cy * cos;
+
+        // New top-left = original top-left + rotated center - half size
+        return new Vector2(
+            topLeft.X + rotatedCx - halfW,
+            topLeft.Y + rotatedCy - halfH);
     }
 
     public override string BatchKey => "Apos.Shapes";

@@ -280,6 +280,9 @@ public class PluginManager : IPluginManager
     public void ElementDelete(ElementSave element) =>
         CallMethodOnPlugin(plugin => plugin.CallElementDelete(element));
 
+    public void ElementImported(ElementSave element) =>
+        CallMethodOnPlugin(plugin => plugin.CallElementImported(element));
+
     public void ElementDuplicate(ElementSave oldElement, ElementSave newElement) =>
         CallMethodOnPlugin(plugin => plugin.CallElementDuplicate(oldElement, newElement));
 

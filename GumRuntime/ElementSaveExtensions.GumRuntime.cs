@@ -181,7 +181,7 @@ namespace GumRuntime
             return toReturn;
         }
 
-        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, 
+        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave,
             ISystemManagers systemManagers,
             bool addToManagers, string? genericType = null)
         {

@@ -263,7 +263,8 @@ public class PasswordBox : TextBoxBase
         var newText = new string(PasswordChar, SecurePassword.Length);
         if (this.coreTextObject.RawText != newText)
         {
-            textComponent.SetProperty("Text", newText);
+            // Use TextNoTranslate because mask characters (e.g. "●●●●") should never be translated
+            textComponent.SetProperty("TextNoTranslate", newText);
 
             CaretIndex = System.Math.Min(CaretIndex, Password?.Length ?? 0);
 

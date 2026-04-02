@@ -4,7 +4,7 @@
 
 UI events may require interacting with systems that are async by default (return Tasks). MonoGame projects do not have a default synchronization context for keeping async code on the primary thread, but this can be added fairly easily.
 
-This tutorial shows how to add and work with a synchronization context to allow async calls without leaving the primary thread. The MonoGameGumFromFile project shows how to add a synchronization context. You can view this project [here](https://github.com/vchelaru/Gum/tree/master/Samples/MonoGameGumFromFile).
+This tutorial shows how to add and work with a synchronization context to allow async calls without leaving the primary thread. The MonoGameGumFromFile project shows how to add a synchronization context. You can view this project [here](https://github.com/vchelaru/Gum/tree/main/Samples/MonoGameGumFromFile).
 
 ### Why is a Synchronization Context Needed?
 
@@ -29,7 +29,7 @@ Instead, we would like to keep all methods on the primary thread so that we can 
 
 The MonoGameGumFromFile sample includes a class called `SingleThreadSynchronizationContext` which provides a simple synchronization context for keeping all async call continuation on the primary thread. You can download the file and add it to your project from here:
 
-{% embed url="https://github.com/vchelaru/Gum/blob/master/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Managers/SingleThreadSynchronizationContext.cs" %}
+{% embed url="https://github.com/vchelaru/Gum/blob/main/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Managers/SingleThreadSynchronizationContext.cs" %}
 
 Once you have added it to your project, you need to add an instance to your Game class, initialize it in your Initialize method, and call its Update method in the Game's Update, as shown in the following code snippet:
 

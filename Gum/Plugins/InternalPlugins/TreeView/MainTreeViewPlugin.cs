@@ -93,6 +93,7 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
         this.BehaviorInstanceAdd += HandleBehaviorInstanceAdd;
         this.BehaviorInstanceDelete += HandleBehaviorInstanceDelete;
         this.BehaviorInstanceRename += HandleBehaviorInstanceRename;
+        this.ElementImported += HandleElementImported;
     }
 
     private void HandleElementReloaded(ElementSave save)
@@ -183,6 +184,12 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
         RefreshErrorIndicatorsForAllElements();
     }
 
+    private void HandleElementImported(ElementSave save)
+    {
+        _elementTreeViewManager.RefreshUi();
+        RefreshErrorIndicatorsForAllElements();
+    }
+
     private void HandleBehaviorCreated(BehaviorSave save)
     {
         _elementTreeViewManager.RefreshUi();
@@ -206,19 +213,35 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
             {
                 return;
             }
-            _elementTreeViewManager.Select(save);
+            _elementTreeViewManager.SuppressCallAfterClickSelect = true;
+            try
+            {
+                _elementTreeViewManager.Select(save);
+            }
+            finally
+            {
+                _elementTreeViewManager.SuppressCallAfterClickSelect = false;
+            }
         }
     }
 
     private void HandleElementSelected(ElementSave save)
     {
-        if(save != null)
+        _elementTreeViewManager.SuppressCallAfterClickSelect = true;
+        try
         {
-            _elementTreeViewManager.Select(save);
+            if(save != null)
+            {
+                _elementTreeViewManager.Select(save);
+            }
+            else if(save == null && _elementTreeViewManager.SelectedNode?.Tag is ElementSave)
+            {
+                _elementTreeViewManager.SelectedNode = null;
+            }
         }
-        else if(save == null && _elementTreeViewManager.SelectedNode?.Tag is ElementSave)
+        finally
         {
-            _elementTreeViewManager.SelectedNode = null;
+            _elementTreeViewManager.SuppressCallAfterClickSelect = false;
         }
     }
 
@@ -226,18 +249,27 @@ internal class MainTreeViewPlugin : InternalPlugin, IRecipient<ApplicationTeardo
     {
         if(element != null || instance != null)
         {
-            if(instance != null)
+            // The selection already happened and plugin events already fired.
+            // We just need to sync the tree view's visual state — don't re-fire
+            // CallAfterClickSelect which would cause a redundant plugin cascade.
+            _elementTreeViewManager.SuppressCallAfterClickSelect = true;
+            try
             {
+                if(instance != null)
+                {
+                    _elementTreeViewManager.Select(_selectedState.SelectedInstances);
+                }
 
-                _elementTreeViewManager.Select(_selectedState.SelectedInstances);
+                if(instance == null && element != null)
+                {
+                    _elementTreeViewManager.Select(element);
+                }
             }
-
-            if(instance == null && element != null)
+            finally
             {
-                _elementTreeViewManager.Select(element);
+                _elementTreeViewManager.SuppressCallAfterClickSelect = false;
             }
         }
-
     }
 
     void IRecipient<ApplicationTeardownMessage>.Receive(ApplicationTeardownMessage message)

@@ -1,9 +1,6 @@
 ﻿using System.Reflection;
-using System.Diagnostics;
 using ToolsUtilities;
 using System.IO;
-using System.Threading.Tasks;
-using System.Threading;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -134,7 +131,7 @@ public class BmfcSave
         return builder.ToString();
     }
 
-    internal static List<int> ParseCharRanges(string charsStr)
+    public static List<int> ParseCharRanges(string charsStr)
     {
         var allChars = new List<int>();
         var ranges = charsStr.Split(',', StringSplitOptions.RemoveEmptyEntries);
@@ -386,193 +383,6 @@ public class BmfcSave
         fileName = System.IO.Path.Combine("FontCache", fileName);
 
         return fileName;
-    }
-
-
-    /// <summary>
-    /// Waits asynchronously for the process to exit.
-    /// </summary>
-    /// <param name="process">The process to wait for cancellation.</param>
-    /// <param name="cancellationToken">A cancellation token. If invoked, the task will return 
-    /// immediately as canceled.</param>
-    /// <returns>A Task representing waiting for the process to end.</returns>
-    [Obsolete("This is only used when creating bitmap fonts with bitmap font generator's .exe, which is getting moved out of this class")]
-    static async Task<int> WaitForExitAsync(Process process, CancellationToken cancellationToken = default)
-    {
-        var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        void Process_Exited(object? sender, EventArgs e)
-        {
-            tcs.TrySetResult(process.ExitCode);
-        }
-
-        try
-        {
-            process.EnableRaisingEvents = true;
-        }
-        catch (InvalidOperationException) when (process.HasExited)
-        {
-            // This is expected when trying to enable events after the process has already exited.
-            // Simply ignore this case.
-            // Allow the exception to bubble in all other cases.
-        }
-
-        using (cancellationToken.Register(() => tcs.TrySetCanceled()))
-        {
-            process.Exited += Process_Exited;
-
-            try
-            {
-
-                if (process.HasExited)
-                {
-                    tcs.TrySetResult(process.ExitCode);
-                }
-
-                return await tcs.Task.ConfigureAwait(false);
-            }
-            finally
-            {
-                process.Exited -= Process_Exited;
-            }
-        }
-    }
-
-    // tool-necessary implementations
-    public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName, int outline, bool fontSmoothing,
-        bool isItalic = false, bool isBold = false, string fontRanges = DefaultRanges, int spacingHorizontal = 1, int spacingVertical = 1)
-    {
-        BmfcSave bmfcSave = new BmfcSave();
-        bmfcSave.FontSize = fontSize;
-        bmfcSave.FontName = fontName;
-        bmfcSave.OutlineThickness = outline;
-        bmfcSave.UseSmoothing = fontSmoothing;
-        bmfcSave.IsItalic = isItalic;
-        bmfcSave.IsBold = isBold;
-        bmfcSave.Ranges = fontRanges;
-        bmfcSave.SpacingHorizontal = spacingHorizontal;
-        bmfcSave.SpacingVertical = spacingVertical;
-
-        bmfcSave.CreateBitmapFontFilesIfNecessary(bmfcSave.FontCacheFileName, force:false);
-    }
-
-    public bool CreateBitmapFontFilesIfNecessary(string fileName, bool force = false, bool forceMonoSpacedNumber = false)
-    {
-        string resourceName = "RenderingLibrary.Libraries.bmfont.exe";
-
-        string mainExecutablePath = FileManager.GetDirectory( Assembly.GetExecutingAssembly().Location );
-
-
-        string bmFontExeLocation = Path.Combine(mainExecutablePath, "Libraries\\bmfont.exe");
-
-        if (!FileManager.FileExists(bmFontExeLocation))
-        {
-            FileManager.SaveEmbeddedResource(
-                Assembly.GetAssembly(typeof(BmfcSave)),
-                resourceName,
-                bmFontExeLocation);
-
-        }
-
-        string desiredFntFile = FileManager.RelativeDirectory + fileName;
-
-        var didCreate = false;
-
-        if (!FileManager.FileExists(desiredFntFile) || force)
-        {
-
-            string bmfcFileToSave = FileManager.RelativeDirectory + FileManager.RemoveExtension(fileName) + ".bmfc";
-            System.Console.WriteLine("Saving: " + bmfcFileToSave);
-
-            Save(bmfcFileToSave);
-
-
-
-            // Now call the executable
-            ProcessStartInfo info = new ProcessStartInfo();
-            info.FileName = bmFontExeLocation;
-
-
-            info.Arguments = "-c \"" + bmfcFileToSave + "\"" +
-                " -o \"" + FileManager.RelativeDirectory + fileName + "\"";
-
-            System.Diagnostics.Debug.WriteLine("   " + info.FileName + " " + info.Arguments);
-            info.UseShellExecute = true;
-
-            //info.UseShellExecute = false;
-            //info.RedirectStandardError = true;
-            //info.RedirectStandardInput = true;
-            //info.RedirectStandardOutput = true;
-            //info.CreateNoWindow = true;
-
-            Process process = Process.Start(info);
-            process.WaitForExit(60_000);
-            didCreate = true;
-        }
-
-        return didCreate;
-    }
-
-    // todo - this needs to move to Gum Tool and not GumCommon!!
-    [Obsolete("This should be moved to the Gum Tool, not the common library. Do not call this, it will go away in future versions of Guml", error:true)]
-    public async Task<bool> CreateBitmapFontFilesIfNecessaryAsync(string fileName, Assembly assemblyContainingBitmapFontGenerator,
-        bool force = false, 
-        bool forceMonoSpacedNumber = false)
-    {
-        string resourceName = "Gum.Libraries.bmfont.exe";
-
-        string mainExecutablePath = FileManager.GetDirectory(Assembly.GetExecutingAssembly().Location);
-
-
-        string bmFontExeLocation = Path.Combine(mainExecutablePath, "Libraries\\bmfont.exe");
-
-        if (!FileManager.FileExists(bmFontExeLocation))
-        {
-            FileManager.SaveEmbeddedResource(
-                assemblyContainingBitmapFontGenerator,
-                resourceName,
-                bmFontExeLocation);
-
-        }
-
-        string desiredFntFile = FileManager.RelativeDirectory + fileName;
-
-        var didCreate = false;
-
-        if (!FileManager.FileExists(desiredFntFile) || force)
-        {
-
-            string bmfcFileToSave = FileManager.RelativeDirectory + FileManager.RemoveExtension(fileName) + ".bmfc";
-            System.Console.WriteLine("Saving: " + bmfcFileToSave);
-
-            Save(bmfcFileToSave);
-
-
-
-            // Now call the executable
-            ProcessStartInfo info = new ProcessStartInfo();
-            info.FileName = bmFontExeLocation;
-
-            System.Console.WriteLine("Running: " + info.FileName + " " + info.Arguments);
-
-            info.Arguments = "-c \"" + bmfcFileToSave + "\"" +
-                " -o \"" + FileManager.RelativeDirectory + fileName + "\"";
-
-            info.UseShellExecute = true;
-
-            //info.UseShellExecute = false;
-            //info.RedirectStandardError = true;
-            //info.RedirectStandardInput = true;
-            //info.RedirectStandardOutput = true;
-            //info.CreateNoWindow = true;
-
-
-            Process process = Process.Start(info);
-            await WaitForExitAsync(process);
-            didCreate = true;
-        }
-
-        return didCreate;
     }
 
 

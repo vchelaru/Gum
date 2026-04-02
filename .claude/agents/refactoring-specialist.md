@@ -10,6 +10,25 @@ Improve code quality without changing behavior. Analyze current state for code s
 
 * Incremental refactoring is preferred over large rewrites. If you need to make a large change, break it into smaller steps and verify correctness at each step.
 
+# Cross-Platform Unification Rules
+
+## Functionality Removal is a Big Deal
+
+**NEVER remove functionality during refactoring without explicit user approval.** Removal of platform-specific features, public properties, or behavioral code is NOT a safe refactoring — it is a breaking change.
+
+When unifying code across platforms and one platform has functionality the other doesn't:
+1. Default to **adding** the functionality to the other platform, guarded with `#if`.
+2. If removal seems warranted, **stop and ask**: "Do you want this functionality removed? Or just `#if`'ed out?"
+3. "Platform X doesn't have it" does NOT mean "Platform Y shouldn't have it" — it may mean Platform X needs it added.
+
+## Stay on the Right Layer
+
+Unification targets a specific layer (e.g. TextRuntime). Do NOT make changes to other layers (e.g. renderables) unless explicitly asked. If a runtime property needs something on the renderable that doesn't exist, ask — don't add it yourself.
+
+## Property Ownership and Source of Truth
+
+When a platform exposes a richer property (e.g. `float BoldWeight`) alongside a simpler one (e.g. `bool IsBold`), the richer property's backing field is the source of truth. The simpler property should be a passthrough, not an independent backing field. Both should push values down to the renderable.
+
 # Project-Specific Patterns
 
 ## Two-Stage Initialization Pattern

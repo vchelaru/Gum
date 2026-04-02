@@ -30,7 +30,7 @@ The `Styling.ActiveStyle.Color` property includes styles that are used by contro
 ```csharp
 protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     var window = new Window();
     window.AddToRoot();
@@ -100,7 +100,7 @@ We can prefix the following code before creating all of our controls:
 ```csharp
 protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     Styling.ActiveStyle.Colors.Primary = Color.DarkGreen;
     Styling.ActiveStyle.Colors.InputBackground = Color.Black;

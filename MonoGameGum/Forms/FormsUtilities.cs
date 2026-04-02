@@ -122,73 +122,74 @@ public class FormsUtilities
         {
 #if XNALIKE
             case DefaultVisualsVersion.V1:
-                TryAdd(typeof(Button), typeof(DefaultButtonRuntime));
-                TryAdd(typeof(CheckBox), typeof(DefaultCheckboxRuntime));
-                TryAdd(typeof(ComboBox), typeof(DefaultComboBoxRuntime));
-                TryAdd(typeof(Label), typeof(DefaultLabelRuntime));
-                TryAdd(typeof(ListBox), typeof(DefaultListBoxRuntime));
-                TryAdd(typeof(ListBoxItem), typeof(DefaultListBoxItemRuntime));
-                TryAdd(typeof(Menu), typeof(DefaultMenuRuntime));
-                TryAdd(typeof(MenuItem), typeof(DefaultMenuItemRuntime));
-                TryAdd(typeof(PasswordBox), typeof(DefaultPasswordBoxRuntime));
-                TryAdd(typeof(RadioButton), typeof(DefaultRadioButtonRuntime));
-                TryAdd(typeof(ScrollBar), typeof(DefaultScrollBarRuntime));
-                TryAdd(typeof(ScrollViewer), typeof(DefaultScrollViewerRuntime));
-                TryAdd(typeof(TextBox), typeof(DefaultTextBoxRuntime));
-                TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
-                TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
-                TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
+                TryAdd(typeof(Button), (_, c) => new DefaultButtonRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(CheckBox), (_, c) => new DefaultCheckboxRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(ComboBox), (_, c) => new DefaultComboBoxRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(Label), (_, c) => new DefaultLabelRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(ListBox), (_, c) => new DefaultListBoxRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(ListBoxItem), (_, c) => new DefaultListBoxItemRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(Menu), (_, c) => new DefaultMenuRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(MenuItem), (_, c) => new DefaultMenuItemRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(PasswordBox), (_, c) => new DefaultPasswordBoxRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(RadioButton), (_, c) => new DefaultRadioButtonRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(ScrollBar), (_, c) => new DefaultScrollBarRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(ScrollViewer), (_, c) => new DefaultScrollViewerRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(TextBox), (_, c) => new DefaultTextBoxRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(Slider), (_, c) => new DefaultSliderRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(Splitter), (_, c) => new DefaultSplitterRuntime(tryCreateFormsObject: c));
+                TryAdd(typeof(Window), (_, c) => new DefaultWindowRuntime(tryCreateFormsObject: c));
                 Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
                 break;
 #endif
             case DefaultVisualsVersion.V2:
-                TryAdd(typeof(Button), typeof(DefaultVisuals.ButtonVisual));
-                TryAdd(typeof(CheckBox), typeof(DefaultVisuals.CheckBoxVisual));
-                TryAdd(typeof(ComboBox), typeof(DefaultVisuals.ComboBoxVisual));
+                TryAdd(typeof(Button), (_, c) => new DefaultVisuals.ButtonVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(CheckBox), (_, c) => new DefaultVisuals.CheckBoxVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ComboBox), (_, c) => new DefaultVisuals.ComboBoxVisual(tryCreateFormsObject: c));
 #if !RAYLIB
-                TryAdd(typeof(ItemsControl), typeof(DefaultVisuals.ItemsControlVisual));
+                TryAdd(typeof(ItemsControl), (_, c) => new DefaultVisuals.ItemsControlVisual(tryCreateFormsObject: c));
 #endif
-                TryAdd(typeof(Label), typeof(DefaultVisuals.LabelVisual));
-                TryAdd(typeof(ListBox), typeof(DefaultVisuals.ListBoxVisual));
-                TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.ListBoxItemVisual));
+                TryAdd(typeof(Label), (_, c) => new DefaultVisuals.LabelVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ListBox), (_, c) => new DefaultVisuals.ListBoxVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.ListBoxItemVisual(tryCreateFormsObject: c));
 #if !RAYLIB
-                TryAdd(typeof(Menu), typeof(DefaultVisuals.MenuVisual));
-                TryAdd(typeof(MenuItem), typeof(DefaultVisuals.MenuItemVisual));
-                TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.PasswordBoxVisual));
+                TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.MenuVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.MenuItemVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.PasswordBoxVisual(tryCreateFormsObject: c));
 #endif
-                TryAdd(typeof(RadioButton), typeof(DefaultVisuals.RadioButtonVisual));
-                TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.ScrollBarVisual));
-                TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.ScrollViewerVisual));
-                TryAdd(typeof(Slider), typeof(DefaultVisuals.SliderVisual));
-                TryAdd(typeof(Splitter), typeof(DefaultVisuals.SplitterVisual));
+                TryAdd(typeof(RadioButton), (_, c) => new DefaultVisuals.RadioButtonVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ScrollBar), (_, c) => new DefaultVisuals.ScrollBarVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ScrollViewer), (_, c) => new DefaultVisuals.ScrollViewerVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(Slider), (_, c) => new DefaultVisuals.SliderVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(Splitter), (_, c) => new DefaultVisuals.SplitterVisual(tryCreateFormsObject: c));
 #if !RAYLIB
-                TryAdd(typeof(TextBox), typeof(DefaultVisuals.TextBoxVisual));
+                TryAdd(typeof(TextBox), (_, c) => new DefaultVisuals.TextBoxVisual(tryCreateFormsObject: c));
 #endif
-                TryAdd(typeof(Window), typeof(DefaultVisuals.WindowVisual));
+                TryAdd(typeof(Window), (_, c) => new DefaultVisuals.WindowVisual(tryCreateFormsObject: c));
                 Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
 
                 break;
 
             case DefaultVisualsVersion.V3:
-                TryAdd(typeof(Button), typeof(DefaultVisuals.V3.ButtonVisual));
-                TryAdd(typeof(CheckBox), typeof(DefaultVisuals.V3.CheckBoxVisual));
-                TryAdd(typeof(ComboBox), typeof(DefaultVisuals.V3.ComboBoxVisual));
-                TryAdd(typeof(ItemsControl), typeof(DefaultVisuals.V3.ItemsControlVisual));
-                TryAdd(typeof(Label), typeof(DefaultVisuals.V3.LabelVisual));
-                TryAdd(typeof(ListBox), typeof(DefaultVisuals.V3.ListBoxVisual));
-                TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.V3.ListBoxItemVisual));
+                TryAdd(typeof(Button), (_, c) => new DefaultVisuals.V3.ButtonVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(CheckBox), (_, c) => new DefaultVisuals.V3.CheckBoxVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ComboBox), (_, c) => new DefaultVisuals.V3.ComboBoxVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ItemsControl), (_, c) => new DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(Label), (_, c) => new DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ListBox), (_, c) => new DefaultVisuals.V3.ListBoxVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.V3.ListBoxItemVisual(tryCreateFormsObject: c));
 #if !RAYLIB
-                TryAdd(typeof(Menu), typeof(DefaultVisuals.V3.MenuVisual));
-                TryAdd(typeof(MenuItem), typeof(DefaultVisuals.V3.MenuItemVisual));
-                TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.V3.PasswordBoxVisual));
+                TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.V3.MenuVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.V3.MenuItemVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.V3.PasswordBoxVisual(tryCreateFormsObject: c));
 #endif
-                TryAdd(typeof(RadioButton), typeof(DefaultVisuals.V3.RadioButtonVisual));
-                TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.V3.ScrollBarVisual));
-                TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.V3.ScrollViewerVisual));
-                TryAdd(typeof(TextBox), typeof(DefaultVisuals.V3.TextBoxVisual));
-                TryAdd(typeof(Slider), typeof(DefaultVisuals.V3.SliderVisual));
-                TryAdd(typeof(Splitter), typeof(DefaultVisuals.V3.SplitterVisual));
-                TryAdd(typeof(Window), typeof(DefaultVisuals.V3.WindowVisual));
+                TryAdd(typeof(RadioButton), (_, c) => new DefaultVisuals.V3.RadioButtonVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ScrollBar), (_, c) => new DefaultVisuals.V3.ScrollBarVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ScrollViewer), (_, c) => new DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(TextBox), (_, c) => new DefaultVisuals.V3.TextBoxVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(Slider), (_, c) => new DefaultVisuals.V3.SliderVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(Splitter), (_, c) => new DefaultVisuals.V3.SplitterVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(ToggleButton), (_, c) => new DefaultVisuals.V3.ToggleButtonVisual(tryCreateFormsObject: c));
+                TryAdd(typeof(Window), (_, c) => new DefaultVisuals.V3.WindowVisual(tryCreateFormsObject: c));
                 Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = new(uiSpriteSheet);
 
                 break;
@@ -196,11 +197,11 @@ public class FormsUtilities
                 throw new ArgumentOutOfRangeException(nameof(defaultVisualsVersion), defaultVisualsVersion, null);
         }
 
-        void TryAdd(Type formsType, Type runtimeType)
+        void TryAdd(Type formsType, Func<object, bool, GraphicalUiElement> factory)
         {
             if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
             {
-                FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(runtimeType);
+                FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(factory);
             }
 #if XNALIKE
             // This is needed until MonoGameGum.Forms goes away completely. It's now marked as obsolete with error as of November 2025
@@ -210,7 +211,7 @@ public class FormsUtilities
 
                 if (baseType?.FullName.StartsWith("Gum.Forms.") == true && !FrameworkElement.DefaultFormsTemplates.ContainsKey(baseType))
                 {
-                    FrameworkElement.DefaultFormsTemplates[baseType] = new VisualTemplate(runtimeType);
+                    FrameworkElement.DefaultFormsTemplates[baseType] = new VisualTemplate(factory);
                 }
             }
 #endif
@@ -313,6 +314,14 @@ public class FormsUtilities
 
     static List<GraphicalUiElement> innerList = new List<GraphicalUiElement>();
     static List<GraphicalUiElement> innerRootList = new List<GraphicalUiElement>();
+
+    /// <summary>
+    /// The list of root elements that were tested for events in the most recent Update call.
+    /// Used by GetEventFailureReason to provide useful diagnostics in GumBatch scenarios
+    /// where elements are not added to managers.
+    /// </summary>
+    internal static IReadOnlyList<GraphicalUiElement> LastEventRoots => _lastEventRoots;
+    static List<GraphicalUiElement> _lastEventRoots = new List<GraphicalUiElement>();
 
 #if XNALIKE
     [Obsolete("Use the overload which takes a Game as the first argument, and pass the game instance.")]
@@ -457,6 +466,9 @@ public class FormsUtilities
             keyboard,
             gameTime);
 #endif
+
+        _lastEventRoots.Clear();
+        _lastEventRoots.AddRange(innerList);
 
         var frameworkElementOver =
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??

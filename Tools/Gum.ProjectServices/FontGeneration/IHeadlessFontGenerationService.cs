@@ -20,9 +20,11 @@ public interface IHeadlessFontGenerationService
     Task CreateAllMissingFontFiles(GumProjectSave project, string projectDirectory, bool forceRecreate = false);
 
     /// <summary>
-    /// Creates fonts referenced by the changed instance and its dependents.
+    /// Generates missing font files for all elements that recursively reference the element
+    /// containing the given state. Called when a font property changes in the property grid.
     /// </summary>
-    void ReactToFontValueSet(InstanceSave instance, GumProjectSave gumProject, StateSave stateSave, StateSave forcedValues, string projectDirectory);
+    void GenerateMissingFontsForReferencingElements(GumProjectSave gumProject,
+        StateSave stateSave, string projectDirectory);
 
     /// <summary>
     /// Builds a <see cref="BmfcSave"/> describing the font for the given instance/state,
@@ -30,6 +32,12 @@ public interface IHeadlessFontGenerationService
     /// </summary>
     BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave, string fontRanges,
         int spacingHorizontal, int spacingVertical, StateSave? forcedValues);
+
+    /// <summary>
+    /// Synchronously creates a single font file if it does not already exist in the project directory.
+    /// Intended for use from synchronous code paths such as property setting.
+    /// </summary>
+    GeneralResponse CreateFontIfNecessary(BmfcSave bmfcSave, string projectDirectory, bool autoSizeFontOutputs);
 
     /// <summary>
     /// Determines the smallest texture size that keeps the font on a single page.

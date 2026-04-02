@@ -464,4 +464,13 @@
 		<None Remove="GumLogo64Light.png" />
 		<Page Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml" />
 	</ItemGroup>
+	<Target Name="CopyGumCli" AfterTargets="Build">
+		<MSBuild Projects="..\Tools\Gum.Cli\Gum.Cli.csproj" Targets="Build" Properties="Configuration=$(Configuration)" />
+		<ItemGroup>
+			<GumCliFiles Include="..\Tools\Gum.Cli\bin\$(Configuration)\net8.0\**\*.*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(GumCliFiles)"
+			  DestinationFiles="@(GumCliFiles->'$(OutputPath)GumCli\%(RecursiveDir)%(Filename)%(Extension)')"
+			  SkipUnchangedFiles="true" />
+	</Target>
 </Project>

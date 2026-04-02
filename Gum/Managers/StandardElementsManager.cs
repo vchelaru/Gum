@@ -50,6 +50,7 @@ public class StandardElementsManager
 
     static StateSave? arcState;
     static StateSave? filledCircleState;
+    static StateSave? lineState;
     static StateSave? roundedRectangleState;
 
     public const string ScreenBoundsName = "<SCREEN BOUNDS>";
@@ -1020,6 +1021,42 @@ public class StandardElementsManager
 
     #endregion
 
+    #region Line State
+
+    public static StateSave GetLineState()
+    {
+        if (lineState == null)
+        {
+            lineState = new StateSave();
+            lineState.Name = "Default";
+
+            lineState.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Line", Name = "IsRounded", SetsValue = true });
+
+            AddVisibleVariable(lineState);
+
+            StandardElementsManager.AddPositioningVariables(lineState);
+            StandardElementsManager.AddDimensionsVariables(lineState, 64, 0,
+                StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
+            StandardElementsManager.AddColorVariables(lineState);
+
+            lineState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
+            lineState.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = "Stroke and Fill" });
+
+            AddGradientVariables(lineState);
+
+            AddDropshadowVariables(lineState);
+
+            AddBlendVariable(lineState);
+
+            AddVariableReferenceList(lineState);
+            StandardElementsManager.AddEventVariables(lineState);
+        }
+
+        return lineState;
+    }
+
+    #endregion
+
     public static void AddVisibleVariable(StateSave state)
     {
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
@@ -1107,6 +1144,8 @@ public class StandardElementsManager
     {
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "IsFilled", Category = "Stroke and Fill" });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeDashLength", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeGapLength", Category = "Stroke and Fill" });
 
     }
 

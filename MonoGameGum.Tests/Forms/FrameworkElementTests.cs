@@ -35,7 +35,7 @@ public class FrameworkElementTests : BaseTestClass
     {
         var frameworkElement = new FrameworkElement(new ContainerRuntime());
         // so that it has managers which is needed for proper hit detection:
-        frameworkElement.Visual.AddToManagers();
+        frameworkElement.Visual.AddToRoot();
 
         // So it registers a click:
         frameworkElement.Visual.Click += (_, _) => { };

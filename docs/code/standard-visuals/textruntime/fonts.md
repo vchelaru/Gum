@@ -2,82 +2,223 @@
 
 ## Introduction
 
-TextRuntime instances can change their font using the Fonts property. This page discusses how to change Fonts using the Font property.
+TextRuntime instances can change their font. This page discusses how to load and assign fonts in code.
 
-## Fonts
+By default all TextRuntime instances use an Arial 18 point font which is embedded in the Gum libraries.
 
-By default all TextRuntime instances use an Arial 18 point font. To modify a TextRuntime's Font:
+## Dynamic Font Generation (Recommended)
 
 {% tabs %}
-{% tab title="MonoGame/KNI/FNA" %}
-Fonts can be modified a number of ways:
+{% tab title="MonoGame" %}
+The easiest way to use fonts is to install the KernSmith NuGet package, which generates fonts at runtime so you can freely change font properties without managing font files.
 
-1. By setting the `UseCustomFont` property to `true`, then changing the `CustomFontFile` property to a desired .fnt file.
-2. By directly assigning the `BitmapFont` property on the TextRuntime object, bypassing all other properties.
-3. By setting `UseCustomFont` property to `false`, then changing the individual Font values. This approach requires following a specific .fnt naming convention.
+To set up dynamic font generation:
 
-For most projects, the first approach is recommended since it doesn't require specific naming conventions. The second approach also works well if you are directly loading the BitmapFont object yourself. The third approach is convenient if your project is using the Gum tool, and if the Gum tool has already generated fonts for the specific combinations of values you are assigning.
-{% endtab %}
-
-{% tab title="Skia" %}
-Assign the Font, IsItalic, IsBold, and FontSize properties directly on the TextRuntime.
-
-Note that the font must be installed on the system to be used.
-{% endtab %}
-{% endtabs %}
-
-### Assigning CustomFontFile
-
-The following code shows how to load a custom font (the first approach):
+1. Add the `KernSmith.MonoGameGum` NuGet package to your project
+2. Assign the `InMemoryFontCreator` after initializing Gum:
 
 ```csharp
 // Initialize
-var customText = new TextRuntime();
-customText.UseCustomFont = true;
-customText.CustomFontFile = "WhitePeaberryOutline/WhitePeaberryOutline.fnt";
-customText.Text = "Hello, I am using a custom font";
-customText.AddToManagers(SystemManagers.Default, null);
+GumService.Default.Initialize(this);
+
+CustomSetPropertyOnRenderable.InMemoryFontCreator =
+    new KernSmithFontCreator(GraphicsDevice);
+```
+
+Once this is set up, font properties work automatically. Setting `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `UseFontSmoothing` on a TextRuntime generates the needed font in memory without any font files on disk:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "Hello, World!";
+text.Font = "Times New Roman";
+text.FontSize = 24;
+text.IsBold = true;
+text.AddToRoot();
+```
+
+Any combination of font properties can be used and the font is created on demand.
+{% endtab %}
+
+{% tab title="KNI" %}
+The easiest way to use fonts is to install the KernSmith NuGet package, which generates fonts at runtime so you can freely change font properties without managing font files.
+
+To set up dynamic font generation:
+
+1. Add the `KernSmith.KniGum` NuGet package to your project
+2. Assign the `InMemoryFontCreator` after initializing Gum:
+
+```csharp
+// Initialize
+GumService.Default.Initialize(this);
+
+CustomSetPropertyOnRenderable.InMemoryFontCreator =
+    new KernSmithFontCreator(GraphicsDevice);
+```
+
+Once this is set up, font properties work automatically. Setting `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `UseFontSmoothing` on a TextRuntime generates the needed font in memory without any font files on disk:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "Hello, World!";
+text.Font = "Times New Roman";
+text.FontSize = 24;
+text.IsBold = true;
+text.AddToRoot();
+```
+
+Any combination of font properties can be used and the font is created on demand.
+{% endtab %}
+
+{% tab title="Skia" %}
+SkiaGum supports dynamic font generation out of the box. No additional setup is needed — assign the `Font`, `FontSize`, `IsItalic`, `IsBold`, and other font properties directly on the TextRuntime:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "Hello, World!";
+text.Font = "Times New Roman";
+text.FontSize = 24;
+text.IsBold = true;
+```
+
+The font must be installed on the system to be used.
+{% endtab %}
+
+{% tab title="Raylib" %}
+Dynamic font generation for Raylib is not yet available. Check back for future updates.
+{% endtab %}
+{% endtabs %}
+
+### System Fonts vs Registered Fonts
+
+By default, KernSmith resolves the `Font` property by looking up fonts installed on the operating system. For example, setting `Font = "Times New Roman"` works because that font is typically installed on Windows.
+
+System fonts are convenient for quick prototyping, but they have drawbacks for shipping a game:
+
+* **Platform differences** — a font installed on your development machine may not exist on a player's machine or on other platforms (Linux, macOS, mobile).
+* **Version inconsistency** — different OS versions may ship different versions of the same font, causing subtle rendering differences.
+* **Licensing** — system fonts may have licenses that restrict redistribution in games.
+
+For these reasons, registering your own .ttf (or .otf) files is recommended for any font you plan to ship with your game. This guarantees every player sees the same font regardless of their operating system.
+
+### Registering Custom .ttf Fonts
+
+{% hint style="info" %}
+Registering .ttf files is supported on MonoGame and KNI. SkiaGum uses system fonts directly and does not currently support `RegisterFont`.
+{% endhint %}
+
+To use a .ttf file with KernSmith:
+
+1. Add the .ttf file to your project's Content folder
+2. Set its **Copy to Output Directory** to **Copy if newer**. For an easier approach that handles all content files at once, see the wildcard .csproj setup in [Loading a Gum Project (.gumx)](../../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
+3. Call `KernSmithFontCreator.RegisterFont` before using the font
+
+```csharp
+// Initialize
+KernSmithFontCreator.RegisterFont("Bungee", "Content/Fonts/Bungee-Regular.ttf");
+```
+
+Once registered, use the font by its family name just like a system font:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Font = "Bungee";
+text.FontSize = 24;
+text.Text = "Hello from a custom font!";
+text.AddToRoot();
+```
+
+You can register multiple fonts, including different styles for the same family:
+
+```csharp
+// Initialize
+KernSmithFontCreator.RegisterFont("Crimson Pro", "Content/Fonts/CrimsonPro-Regular.ttf");
+KernSmithFontCreator.RegisterFont("Crimson Pro", "Content/Fonts/CrimsonPro-Bold.ttf",
+    style: "Bold");
+```
+
+{% hint style="info" %}
+A `byte[]` overload is also available for fonts loaded from embedded resources, HTTP responses, or other non-file sources. For example: `KernSmithFontCreator.RegisterFont("MyFont", fontBytes)`.
+{% endhint %}
+
+{% hint style="info" %}
+Registered fonts take priority over system fonts. If you register a font with the family name "Arial", KernSmith uses your registered .ttf instead of the system-installed Arial.
+{% endhint %}
+
+## Custom Font File
+
+If you have a specific .fnt file (created with the Gum tool, Bitmap Font Generator, Hiero, or another tool), you can load it directly by setting `UseCustomFont` to `true` and assigning `CustomFontFile`:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.UseCustomFont = true;
+text.CustomFontFile = "WhitePeaberryOutline/WhitePeaberryOutline.fnt";
+text.Text = "Hello, I am using a custom font";
+text.AddToRoot();
 ```
 
 For information on creating your own .fnt file with Bitmap Font Generator, see the [Use Custom Font](../../../gum-tool/gum-elements/text/use-custom-font.md) page.
 
-This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder; however, if UseCustomFont is set to false, then all font loading is performed from the FontCache folder. See the [Font Component Values](fonts.md#font-component-values) section for more information on loading from the FontCache folder. See the [File Loading](../../files-and-fonts/file-loading.md) page for more information about loading files in general.
+This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder. See the [File Loading](../../files-and-fonts/file-loading.md) page for more information about loading files.
 
 Note that .fnt files reference one or more image files, so the image file must also be added to the correct folder. In this case, the WhitePeaberryOutline.fnt file references a WhitePeaberryOutline.png file, so both files are in the same folder.
 
 <figure><img src="../../../.gitbook/assets/WhitePeaberry2FontFiles.png" alt=""><figcaption><p>WhitePeaberryOutline font in the Solution Explorer</p></figcaption></figure>
 
-Also, note that files are loaded from-file rather than using the content pipeline. This means that extensions (such as .fnt) are included in the file path, and that both the .fnt and .png files must have their **Copy to Output Directory** value set to **Copy if newer**.
+Files are loaded from-file rather than using the content pipeline. This means that extensions (such as .fnt) are included in the file path, and that both the .fnt and .png files must have their **Copy to Output Directory** value set to **Copy if newer**.
 
 <figure><img src="../../../.gitbook/assets/FontCopyIfNewer.png" alt=""><figcaption><p>Copy if newer property set</p></figcaption></figure>
 
-The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your .csproj. This is explained in the [Loading .gumx (Gum project)](../../../../broken/pages/PGWmyRmXA6uMwNXuO6Aa/#adding-the-gum-project-files-to-your-.csproj) page.
+The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your .csproj. For instructions on setting up wildcards (including Android), see [Loading a Gum Project (.gumx)](../../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
 
-### Assigning BitmapFont
+## Direct BitmapFont Assignment
 
-The following code shows how to assign the BitmapFont property on a TextRuntime:
+You can load a BitmapFont yourself and assign it directly, bypassing the font property system entirely:
 
 ```csharp
 // Initialize
-var bitmapFont = new BitmapFont("WhitePeaberryOutline/WhitePeaberryOutline.fnt", SystemManagers.Default);
-customText.BitmapFont = bitmapFont;
-// no additional properties such as UseCustomFont or any of the font component values
-// are used once this is assigned. By assigning those, the BitmapFont assignment may
-// get overwritten
+var bitmapFont = new BitmapFont("WhitePeaberryOutline/WhitePeaberryOutline.fnt");
+var text = new TextRuntime();
+text.BitmapFont = bitmapFont;
+text.Text = "Hello, I am using a directly assigned font";
+text.AddToRoot();
 ```
 
-### Font Component Values
+{% hint style="warning" %}
+Once a BitmapFont is assigned directly, do not set font component properties (`Font`, `FontSize`, etc.) or `UseCustomFont` on the same TextRuntime. Those properties trigger the font loading system, which overwrites the directly assigned BitmapFont.
+{% endhint %}
 
-A TextRuntime's font can be controlled by its individual font component values. **Setting these values in code will not produce a .fnt file for you - the .fnt file must already be in your project in the FontCache folder**. The following values are used to determine the font (.fnt) to load:
+## Font Cache (Pre-Built Fonts)
 
-* FontSize
-* Font
-* OutlineThickness
-* UseFontSmoothing
-* IsItalic
-* IsBold
+{% hint style="info" %}
+This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not available. For most projects, [Dynamic Font Generation](fonts.md#dynamic-font-generation-recommended) is the recommended approach.
+{% endhint %}
 
-By default, all fonts will be of the format `Font{Font}{FontSize}.fnt`. Consider the following code:
+If `UseCustomFont` is `false` (the default) and no `InMemoryFontCreator` is registered, a TextRuntime's font is determined by its font component values. These values combine to produce a file name, and the corresponding .fnt file must already exist in a `FontCache` folder.
+
+The following properties determine the font:
+
+* `Font` (or `FontFamily`)
+* `FontSize`
+* `OutlineThickness`
+* `UseFontSmoothing`
+* `IsItalic`
+* `IsBold`
+
+### Font Cache Naming Convention
+
+The generated file name follows the pattern `FontCache/Font{FontSize}{Font}.fnt`, where spaces in the font name are replaced with underscores. The following suffixes are appended in this order when their conditions are met:
+
+* `OutlineThickness` - if greater than 0, then `_o` followed by the value is added. For example, `FontCache/Font24Arial_o3.fnt`
+* `UseFontSmoothing` - if false, then `_noSmooth` is appended. For example, `FontCache/Font24Arial_noSmooth.fnt`
+* `IsItalic` - if true, then `_Italic` is appended. For example, `FontCache/Font24Arial_Italic.fnt`
+* `IsBold` - if true, then `_Bold` is appended. For example, `FontCache/Font24Arial_Bold.fnt`
+
+For example:
 
 ```csharp
 // Initialize
@@ -86,18 +227,9 @@ text.Font = "Arial";
 text.FontSize = 24;
 ```
 
-This results in the TextRuntime object searching for a font named `FontArial24.fnt`.
+This results in the TextRuntime searching for `FontCache/Font24Arial.fnt` relative to the content directory.
 
-As mentioned before, when UseCustomFont is set to false the Gum runtime looks for the font in the FontCache folder. For this particular example the font would be located at `Content/FontCache/FontArial24.fnt`. Note that if your Gum project is not located at the content root, then your FontCache folder will not be directly in the Content folder either. To fix this problem using the FileManager's RelativeDirectory, see the [File Loading](../../files-and-fonts/file-loading.md) page.
-
-The following additional suffixes (in order listed below) are added to the font name.
-
-* OutlineThicknes - if greater than 0, then the suffix `_o` followed by the outline thickness is added. For example, if OutlineThickness is 3, a font might be named `FontArial24_3.fnt`
-* UseFontSmoothing - if false, then \_noSmooth is appended. For example `Font24_noSmooth.fnt`
-* IsItalic - if true, then \_Italic is appended. For example `Font24_Italic.fnt`
-* IsBold - if true, then \_Bold is appended. For example `Font24_Bold.fnt`
-
-The BmfcSave.GetFontCacheFileNameFor method can be called with any combination to obtain the desired font value. For example, the following code coudl be used to determine the desired .fnt file:
+The `BmfcSave.GetFontCacheFileNameFor` method can be called to determine the expected file name for any combination of values:
 
 ```csharp
 // Initialize
@@ -105,17 +237,17 @@ var desiredFntName = BmfcSave.GetFontCacheFileNameFor(
     18, // font size
     "Consolas", // font name
     2, // outline thickness
-    true, // use font smoothing
-    false, // is italic
-    true // is bold
+    useFontSmoothing: true,
+    isItalic: false,
+    isBold: true
     );
 ```
 
 Note that this method does not take into consideration the content folder.
 
-## Creating Fonts
+### Creating Font Cache Files
 
-To create a .fnt file, you have a few options:
+To create .fnt files for the font cache, you have a few options:
 
 1. Open Gum, create a temporary Text instance with the desired properties, then look at the font cache folder
 2. Use Angelcode Bitmap Font Generator. For more information see the [Use Custom Font page](../../../gum-tool/gum-elements/text/use-custom-font.md).
@@ -133,39 +265,39 @@ As you make changes to the Text object, new files are created and added to the f
 
 ## Missing Font Exceptions
 
-By default TextRuntime instances do not throw exceptions for missing font files even if `GraphicalUiElement.ThrowExceptionsForMissingFiles` is set to `CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles`. The reason for this is because a TextRuntime's font is decided by a combination multiple properties.
+By default TextRuntime instances do not throw exceptions for missing font files even if `GraphicalUiElement.ThrowExceptionsForMissingFiles` is set to `CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles`. The reason for this is because a TextRuntime's font is decided by a combination of multiple properties.
 
-If UseCustomFont is set to false, then the font is determined by the combination of font values (as discussed above). If UseCustomFont is set to true, then the font is determined by the CustomFontFile (also as discussed above).
+If `UseCustomFont` is set to `false`, then the font is determined by the combination of font values (as discussed above). If `UseCustomFont` is set to `true`, then the font is determined by the `CustomFontFile` (also as discussed above).
 
 Ultimately the variables which are used for fonts can be assigned in any order, and can be assigned from multiple spots (such as direct assignments, states, or creation from Gum projects).
 
 In other words, the TextRuntime doesn't know when variable assignment is finished. We can address this in a few different ways.
 
-The first is to explicitly load the desired BitmapFont as discussed above. By calling the BitmapFont constructor, missing files will immediately throw an exception.
+The first is to explicitly load the desired BitmapFont as discussed above. By calling the BitmapFont constructor, missing files immediately throw an exception.
 
 Another option is to use the `GraphicalUiElement.ThrowExceptionsForMissingFiles` method to verify if a font is valid.
 
-The following code example shows how to check for invalid fonts using this method:
+The following code example shows how to check for invalid fonts:
 
 ```csharp
 // Initialize
 var textWithValidFont = new TextRuntime();
 textWithValidFont.UseCustomFont = true;
 textWithValidFont.CustomFontFile = "Fonts/ValidFont.fnt";
-textWithValidFont.AddToManagers(SystemManagers.Default, null);
+textWithValidFont.AddToRoot();
 // No errors here:
-GraphicalUiElement.ThrowExceptionsForMissingFiles(text3);
+GraphicalUiElement.ThrowExceptionsForMissingFiles(textWithValidFont);
 
 try
 {
     var textThatHasError = new TextRuntime();
     textThatHasError.UseCustomFont = true;
     textThatHasError.CustomFontFile = "Fonts/InvalidFont.fnt";
-    textWithValidFont.AddToManagers(SystemManagers.Default, null);
+    textThatHasError.AddToRoot();
     GraphicalUiElement.ThrowExceptionsForMissingFiles(textThatHasError);
 }
 catch (FileNotFoundException e)
 {
-    System.Diagnostics.Debug.WriteLine("Yay we got an exception! That's expected");     
+    System.Diagnostics.Debug.WriteLine("Yay we got an exception! That's expected");
 }
 ```

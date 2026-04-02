@@ -348,6 +348,10 @@ namespace WpfDataUi.Controls
                                             value = 0.0;
                                         }
                                     }
+                                    else if (TryParseNumeric(usableString, InstancePropertyType, out var parsed))
+                                    {
+                                        value = parsed;
+                                    }
                                     else
                                     {
                                         value = converter.ConvertFromString(usableString);
@@ -466,6 +470,13 @@ namespace WpfDataUi.Controls
                 instancePropertyType == typeof(decimal?)
                 )
             {
+                // Quick check: if the string has no math operators, there's no point
+                // calling DataTable.Compute which would just throw an EvaluateException.
+                if (!ContainsMathOperator(usableString))
+                {
+                    return null;
+                }
+
                 var result = new DataTable().Compute(usableString, null);
 
                 if (result is float || result is int || result is decimal || result is double)
@@ -483,6 +494,85 @@ namespace WpfDataUi.Controls
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Attempts to parse a string as a common numeric type without throwing exceptions.
+        /// Returns true if the string was successfully parsed, with the result in <paramref name="result"/>.
+        /// Falls through to false for non-numeric types so the caller can use ConvertFromString.
+        /// </summary>
+        private static bool TryParseNumeric(string text, Type targetType, out object result)
+        {
+            result = null;
+
+            if (targetType == typeof(float) || targetType == typeof(float?))
+            {
+                if (float.TryParse(text, out float f))
+                {
+                    result = f;
+                    return true;
+                }
+            }
+            else if (targetType == typeof(int) || targetType == typeof(int?))
+            {
+                if (int.TryParse(text, out int i))
+                {
+                    result = i;
+                    return true;
+                }
+            }
+            else if (targetType == typeof(double) || targetType == typeof(double?))
+            {
+                if (double.TryParse(text, out double d))
+                {
+                    result = d;
+                    return true;
+                }
+            }
+            else if (targetType == typeof(long) || targetType == typeof(long?))
+            {
+                if (long.TryParse(text, out long l))
+                {
+                    result = l;
+                    return true;
+                }
+            }
+            else if (targetType == typeof(decimal) || targetType == typeof(decimal?))
+            {
+                if (decimal.TryParse(text, out decimal m))
+                {
+                    result = m;
+                    return true;
+                }
+            }
+            else if (targetType == typeof(byte) || targetType == typeof(byte?))
+            {
+                if (byte.TryParse(text, out byte b))
+                {
+                    result = b;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool ContainsMathOperator(string text)
+        {
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (c == '+' || c == '*' || c == '/' || c == '%' || c == '(' || c == ')')
+                {
+                    return true;
+                }
+                // Minus is a math operator only if it's not the leading negative sign
+                if (c == '-' && i > 0)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180)) { Opacity = 0.5 };

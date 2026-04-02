@@ -20,6 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\ElementReference.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\ElementSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\EventSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\FontGeneratorType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\GuideRectangle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\GumProjectSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\IInstanceContainer.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BitmapCharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BitmapFont.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BmfcSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\IInMemoryFontCreator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\ParsedFontFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\GradientType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IWrappedText.cs" />

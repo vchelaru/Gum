@@ -20,6 +20,10 @@ for(int i = 0; i < 10; i++)
 
 <figure><img src="../../.gitbook/assets/27_07 29 52.gif" alt=""><figcaption><p>ComboBox displaying a list of items</p></figcaption></figure>
 
+{% hint style="info" %}
+ComboBox's internal ListBox is hidden until the dropdown opens, so Gum automatically skips layout when adding items. This means adding hundreds of items to a ComboBox is fast without any extra code. If you are adding many items to a visible ListBox or other ItemsControl, see [Reducing Layout Calls](../performance-and-optimization/measuring-layout-calls.md#reducing-layout-calls) for how to suspend layout during bulk adds.
+{% endhint %}
+
 ## Adjusting the Drop-Down ListBox
 
 `ComboBox` provides a `ListBox` property which can be used to customize the ListBox instance.
@@ -42,6 +46,26 @@ for(int i = 0; i < 40; i++)
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA12OPQ-CMBCG_0rTOEBiSEUniIMwKImTIXHpglDkEtuaUtRI-O9eBU30hvt43vvqadZuO0kjazoxp6DAQnGBp6ARvRWGlFqedKIfZE2UuJN0Kj0_5uqjBZuqyvVBa_uHVdlo4-H64AhG1KaQYoJBrq8_vXtorYs7AefG4rUVY6jXOA_KEkDCYgy8Y2yZooqFy8Nk9D5XPVcE7bsys0K27jdv9u4JHSD9NLYYRui-GOjwAqrqntIIAQAA)
 
 <figure><img src="../../.gitbook/assets/25_07 59 59.png" alt=""><figcaption><p>ComboBox ListBox with custom Height</p></figcaption></figure>
+
+## Performance with Many Items
+
+If all items in the ComboBox dropdown are the same height (no text wrapping or variable-sized icons), you can improve dropdown open performance by setting `UseFixedStackChildrenSize` on the ListBox's inner panel. This tells the layout engine to measure only the first child and assume all others are the same size, skipping per-child measurement.
+
+```csharp
+// Initialize
+var comboBox = new ComboBox();
+comboBox.AddToRoot();
+comboBox.ListBox.InnerPanel.UseFixedStackChildrenSize = true;
+
+for(int i = 0; i < 800; i++)
+{
+    comboBox.Items.Add($"Item {i}");
+}
+```
+
+{% hint style="warning" %}
+Only use `UseFixedStackChildrenSize` when all items have the same height. If items have different heights (for example, from text wrapping or varying content), this setting produces incorrect layout.
+{% endhint %}
 
 ## SelectedObject and SelectedIndex
 

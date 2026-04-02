@@ -45,7 +45,10 @@ public class GumService
             gumProject.Initialize();
             //    FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 
-            var gumDirectory = FileManager.GetDirectory(FileManager.MakeAbsolute(gumProjectFile));
+            var absolutePath = FileManager.IsRelative(gumProjectFile)
+                ? FileManager.MakeAbsolute(gumProjectFile)
+                : gumProjectFile;
+            var gumDirectory = FileManager.GetDirectory(absolutePath);
 
             FileManager.RelativeDirectory = gumDirectory;
         }

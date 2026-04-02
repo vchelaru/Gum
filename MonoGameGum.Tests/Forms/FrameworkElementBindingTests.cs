@@ -1409,7 +1409,53 @@ public class FrameworkElementBindingTests : BaseTestClass
         // Assert
         textbox.Text.ShouldBe("child text");
     }
-    
+
+    [Fact]
+    public void TwoWayBinding_WithReactiveSource_DoesNotInfinitelyRecurse()
+    {
+        // Arrange — a reactive ViewModel with TwoWay binding would previously
+        // cause infinite recursion: UpdateTarget → set Text → PushValueToViewModel
+        // → UpdateSource → set VM property → NotifyPropertyChanged → UpdateTarget → ...
+        TestViewModel vm = new() { Text = "Hello" };
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), new Binding(nameof(TestViewModel.Text)));
+
+        // Act — changing the source triggers UpdateTarget, which should NOT recurse
+        vm.Text = "Updated";
+
+        // Assert — if we got here, no infinite recursion occurred
+        label.Text.ShouldBe("Updated");
+    }
+
+    [Fact]
+    public void TwoWayBinding_WithStringFormat_DoesNotCorruptSource()
+    {
+        // Arrange — a Label with StringFormat and a TextBox both bound to the same
+        // property. Changing the TextBox should not cause the Label's formatted text
+        // to be pushed back into the source, corrupting it.
+        TestViewModel vm = new() { Text = "Alice" };
+
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), new Binding(nameof(TestViewModel.Text))
+        {
+            StringFormat = "First: {0}"
+        });
+
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), new Binding(nameof(TestViewModel.Text)));
+
+        label.Text.ShouldBe("First: Alice");
+        textBox.Text.ShouldBe("Alice");
+
+        // Act — update the source; both controls should reflect the change correctly
+        vm.Text = "Bob";
+
+        // Assert — source stays clean, Label is formatted, TextBox is raw
+        vm.Text.ShouldBe("Bob");
+        label.Text.ShouldBe("First: Bob");
+        textBox.Text.ShouldBe("Bob");
+    }
+
     private class TestStringBoolConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter)

@@ -41,7 +41,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
     }
     #endregion
 
-    private readonly FontManager _fontManager;
+    private readonly IFontManager _fontManager;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
     private readonly IDispatcher _dispatcher;
@@ -54,7 +54,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
     public MainPropertiesWindowPlugin()
     {
-        _fontManager = Locator.GetRequiredService<FontManager>();
+        _fontManager = Locator.GetRequiredService<IFontManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _dispatcher = Locator.GetRequiredService<IDispatcher>();
@@ -255,6 +255,22 @@ class MainPropertiesWindowPlugin : InternalPlugin
                     shouldSaveAndRefresh = false;
                 }
 
+                break;
+            case nameof(viewModel.FontGenerator):
+                try
+                {
+                    _fontManager.DeleteFontCacheFolder();
+                }
+                catch (System.IO.IOException exception)
+                {
+                    _dialogService.ShowMessage(
+                        "Attempted to delete font cache folder to re-create it with the new font generator " +
+                        $"but was unable to do so:\n\n{exception}");
+                    break;
+                }
+
+                await _fontManager.CreateAllMissingFontFiles(_projectState.GumProjectSave);
+                shouldReloadContent = true;
                 break;
             case nameof(viewModel.ShowCheckerBackground):
                 // Checkerboard visibility is handled via WireframePropertyChanged,

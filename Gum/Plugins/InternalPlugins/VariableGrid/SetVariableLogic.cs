@@ -62,7 +62,7 @@ public class SetVariableLogic : ISetVariableLogic
 
     private readonly VariableReferenceLogic _variableReferenceLogic;
     private readonly ICircularReferenceManager _circularReferenceManager;
-    private readonly FontManager _fontManager;
+    private readonly IFontManager _fontManager;
     private readonly IFileCommands _fileCommands;
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
@@ -86,7 +86,7 @@ public class SetVariableLogic : ISetVariableLogic
         WireframeCommands wireframeCommands,
         VariableReferenceLogic variableReferenceLogic,
         IGuiCommands guiCommands,
-        FontManager fontManager,
+        IFontManager fontManager,
         IFileCommands fileCommands,
         ICircularReferenceManager circularReferenceManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
@@ -293,11 +293,7 @@ public class SetVariableLogic : ISetVariableLogic
         var parentElement = instanceContainer as ElementSave;
         if (parentElement != null)
         {
-            var rfv = new RecursiveVariableFinder(stateSave);
-            var value = rfv.GetValue(changedMemberWithPrefix);
-            List<ElementWithState> elementStack = new List<ElementWithState>();
-            elementStack.Add(new ElementWithState(parentElement) { StateName = stateSave?.Name, InstanceName = instance?.Name });
-            ReactIfChangedMemberIsFont(elementStack, instance, rootVariableName, oldValue, value);
+            ReactIfChangedMemberIsFont(instance, rootVariableName);
 
             ReactIfChangedMemberIsCustomFont(parentElement, rootVariableName, oldValue);
 
@@ -369,71 +365,54 @@ public class SetVariableLogic : ISetVariableLogic
         return toReturn;
     }
 
-    private void ReactIfChangedMemberIsFont(List<ElementWithState> elementStack, InstanceSave? instance, string changedMember, object oldValue, object newValue)
+    /// <summary>
+    /// When a font property changes in the property grid, trigger propagation to generate
+    /// missing font files for all elements that reference the changed element. This ensures
+    /// font files exist on disk even if those elements are never viewed before the tool closes.
+    ///
+    /// The actual font creation for the directly-changed element is handled by the shared
+    /// CustomSetPropertyOnRenderable.UpdateToFontValues path via IRuntimeFontService.
+    ///
+    /// The recursive resolution at the top handles exposed variables: e.g., if a component
+    /// exposes an inner Text's "FontSize" as "LabelFontSize", we must unwrap to the root
+    /// name "FontSize" before checking whether it's a font property.
+    /// </summary>
+    private void ReactIfChangedMemberIsFont(InstanceSave? instance, string changedMember)
     {
-        var handledByInner = false;
+        // Resolve exposed variables to their root font property name. For example, a component
+        // might expose an inner Text instance's "FontSize" as "LabelFontSize". We need to
+        // unwrap to "FontSize" so the check below recognizes it as a font property.
         var instanceElement = instance != null ? ObjectFinder.Self.GetElementSave(instance) : null;
         if (instanceElement != null)
         {
-            var variable = instanceElement.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == changedMember);
+            var variable = instanceElement.DefaultState.Variables
+                .FirstOrDefault(item => item.ExposedAsName == changedMember);
 
             if (variable != null)
             {
                 var innerInstance = instanceElement.GetInstance(variable.SourceObject);
-
-                elementStack.Add(new ElementWithState(instanceElement) { InstanceName = variable.SourceObject });
-
-                ReactIfChangedMemberIsFont(elementStack, innerInstance, variable.GetRootName(), oldValue, newValue);
-                handledByInner = true;
+                ReactIfChangedMemberIsFont(innerInstance, variable.GetRootName());
+                return;
             }
         }
 
-        if (!handledByInner)
+        if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness" ||
+            changedMember == "UseFontSmoothing" || changedMember == "IsItalic" || changedMember == "IsBold")
         {
-            if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness" || changedMember == "UseFontSmoothing" ||
-                changedMember == "IsItalic" || changedMember == "IsBold")
+            StateSave stateSave = _selectedState.SelectedStateSave;
+
+            // If the user has a category selected but no state in the category, then use the default:
+            if (stateSave == null && _selectedState.SelectedStateCategorySave != null)
             {
-                // This will be null if the user is editing the Text StandardElement
-                if (instanceElement != null)
-                {
-                    elementStack.Add(new ElementWithState(instanceElement));
-                }
+                stateSave = _selectedState.SelectedElement.DefaultState;
+            }
 
-                StateSave stateSave = _selectedState.SelectedStateSave;
-
-                var rfv = new RecursiveVariableFinder(elementStack);
-
-                var forcedValues = new StateSave();
-
-                void TryAddForced(string variableName)
-                {
-                    var value = rfv.GetValueByBottomName(variableName);
-                    if (value != null)
-                    {
-                        // these are temporary states, so the type does not need to be set
-                        forcedValues.SetValue(variableName, value);
-                    }
-                }
-
-                TryAddForced("Font");
-                TryAddForced("FontSize");
-                TryAddForced("OutlineThickness");
-                TryAddForced("UseFontSmoothing");
-                TryAddForced("IsItalic");
-                TryAddForced("IsBold");
-
-
-                // If the user has a category selected but no state in the category, then use the default:
-                if (stateSave == null && _selectedState.SelectedStateCategorySave != null)
-                {
-                    stateSave = _selectedState.SelectedElement.DefaultState;
-                }
-
-
-                _fontManager.ReactToFontValueSet(instance, _projectState.GumProjectSave, stateSave, forcedValues);
+            if (stateSave != null)
+            {
+                _fontManager.GenerateMissingFontsForReferencingElements(
+                    _projectState.GumProjectSave, stateSave);
             }
         }
-
     }
 
     private void ReactIfChangedMemberIsCustomFont(ElementSave parentElement, string changedMember, object oldValue)

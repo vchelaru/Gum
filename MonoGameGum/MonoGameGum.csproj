@@ -1,13 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ExcludeIOS)' != 'true'">net8.0;net9.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ExcludeIOS)' == 'true'">net8.0</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.MonoGame</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>2026.3.14.1</Version>
+		<Version>2026.3.28.2</Version>
 
 		<NoWarn>1591</NoWarn>
 		<DefineConstants>MONOGAME</DefineConstants>
@@ -106,6 +107,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\AtlasedTexture.cs" Link="Renderables\AtlasedTexture.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\BitmapCharacterInfo.cs" Link="Renderables\Fonts\BitmapCharacterInfo.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Fonts\BitmapFont.cs" Link="Renderables\Fonts\BitmapFont.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\Fonts\IInMemoryFontCreator.cs" Link="Renderables\Fonts\IInMemoryFontCreator.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IAnimation.cs" Link="Renderables\IAnimation.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
@@ -149,6 +151,9 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\Tools\Gum.Analyzers\Gum.Analyzers.csproj"
+						  OutputItemType="Analyzer"
+						  ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 	<ItemGroup>

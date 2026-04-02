@@ -156,10 +156,11 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.VerticalAlignment = value;
     }
 
-#if !RAYLIB && !SKIA
+#if !SKIA
     /// <summary>
-    /// The maximum letters to display. This can be used to 
-    /// create an effect where the text prints out letter-by-letter.
+    /// The maximum number of characters to display visually. Characters beyond this count
+    /// are hidden but remain in the text string. This is a display-only
+    /// property useful for typewriter-style effects where text prints out letter-by-letter.
     /// </summary>
     public int? MaxLettersToShow
     {
@@ -317,12 +318,36 @@ public class TextRuntime : InteractiveGue
         set { isItalic = value; UpdateToFontValues(); }
     }
 
+#if SKIA
+    float _boldWeight = 1;
+    /// <summary>
+    /// Gets or sets the weight multiplier for bold text rendering.
+    /// A value of 1.0 represents regular weight, while higher values
+    /// increase the thickness of strokes (e.g., 1.5 for bold).
+    /// </summary>
+    public float BoldWeight
+    {
+        get => _boldWeight;
+        set
+        {
+            _boldWeight = value;
+            ContainedText.BoldWeight = value;
+        }
+    }
+
+    public bool IsBold
+    {
+        get => _boldWeight > 1;
+        set { BoldWeight = value ? 1.5f : 1f; }
+    }
+#else
     bool isBold;
     public bool IsBold
     {
         get => isBold;
         set { isBold = value; UpdateToFontValues(); }
     }
+#endif
 
     // Not sure if we need to make this a public value, but we do need to store it
     // Update - yes we do need this to be public so it can be assigned in codegen:
@@ -370,9 +395,14 @@ public class TextRuntime : InteractiveGue
     /// <summary>
     /// Gets or sets the raw text content displayed by the control. This is the value before line wrapping and bbcode parsing has been applied.
     /// </summary>
-    /// <remarks>Setting this property updates the displayed text and may trigger layout changes if the text
+    /// <remarks>
+    /// Setting this property updates the displayed text and may trigger layout changes if the text
     /// size affects the control's dimensions. If the control's width is set relative to its children and no maximum
-    /// width is specified, the text will not be line-wrapped.</remarks>
+    /// width is specified, the text will not be line-wrapped.
+    /// If a <see cref="Gum.Localization.LocalizationService"/> is registered, the assigned value is passed through
+    /// <see cref="Gum.Localization.LocalizationService.Translate"/> before being applied. To bypass translation
+    /// (for example, for user-entered text), use <see cref="SetTextNoTranslate"/> instead.
+    /// </remarks>
     public string? Text
     {
         get
@@ -415,6 +445,12 @@ public class TextRuntime : InteractiveGue
     /// Sets the text without applying localization/translation. Equivalent to calling
     /// <c>SetProperty("TextNoTranslate", value)</c>.
     /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable — only the final string is stored. A corresponding getter would
+    /// have no way to distinguish translated from untranslated text, so a property would be misleading.
+    /// Use this for text that should not be localized, such as user-entered input in a TextBox.
+    /// </remarks>
     public void SetTextNoTranslate(string? value)
     {
         var widthBefore = ContainedText.WrappedTextWidth;
@@ -530,8 +566,9 @@ public class TextRuntime : InteractiveGue
     }
 
 #if !RAYLIB && !SKIA
-    // We should phase this out, so not adding it to raylib. Instead, add to root
-    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer:null);
+    /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+    [Obsolete("Use the AddToRoot extension method instead (e.g. myText.AddToRoot()).")]
+    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
 
 #if !RAYLIB

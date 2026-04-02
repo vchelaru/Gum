@@ -9,10 +9,14 @@ description: Reference guide for writing unit tests in the Gum repository. Load 
 
 | Project | Location | What it tests |
 |---------|----------|---------------|
+| **`MonoGameGum.Tests`** | `MonoGameGum.Tests/` | **Default project for new tests.** MonoGame runtime, Forms controls, rendering, localization, data types — anything not specific to V2/V3 visuals or integration |
 | `Gum.ProjectServices.Tests` | `Tests/Gum.ProjectServices.Tests/` | Headless services: error checking, codegen, font generation, project loading |
 | `Gum.Cli.Tests` | `Tests/Gum.Cli.Tests/` | CLI command exit codes and output |
-| `MonoGameGum.Tests.V2` | `Tests/MonoGameGum.Tests.V2/` | MonoGame Forms controls and runtimes; headless (no GPU required) |
+| `MonoGameGum.Tests.V2` | `Tests/MonoGameGum.Tests.V2/` | Tests specific to V2 default visuals |
+| `MonoGameGum.Tests.V3` | `Tests/MonoGameGum.Tests.V3/` | Tests specific to V3 default visuals |
 | `MonoGameGum.IntegrationTests` | `Tests/MonoGameGum.IntegrationTests/` | Requires a real `GraphicsDevice`: content loading, renderer teardown, full `GumService` lifecycle |
+
+**When in doubt, put tests in `MonoGameGum.Tests/`.** Only use V2/V3 projects for tests that exercise visual-version-specific behavior.
 
 ## Key Rules
 

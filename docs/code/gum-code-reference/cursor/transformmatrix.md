@@ -27,7 +27,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+        GumUI.Initialize(this);
 
         _renderTarget = new RenderTarget2D(GraphicsDevice, 400, 400);
         _spriteBatch = new SpriteBatch(GraphicsDevice);

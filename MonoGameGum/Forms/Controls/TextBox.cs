@@ -23,6 +23,9 @@ public class TextBox : TextBoxBase
 
     /// <summary>
     /// Gets and sets the displayed Text. If the text exceeds MaxLength, it will be truncated.
+    /// Setting this property applies localization if a <see cref="Gum.Localization.LocalizationService"/> is registered.
+    /// To bypass localization (for example, for user-entered text), use <see cref="SetTextNoTranslate"/>.
+    /// Internal typing, paste, and delete operations automatically bypass localization.
     /// </summary>
     public virtual string? Text
     {
@@ -39,19 +42,43 @@ public class TextBox : TextBoxBase
                 // go through the component instead of the core text object to force a layout refresh if necessary
                 // Calling SetProperty.
                 // This bypasses the Text change event so we need to explicitly handle text changing.
-                // Do not set "Text" because that invokes localization which we don't want to do, that would add (loc) suffix
-                //textComponent.SetProperty("Text", value);
-                textComponent.SetProperty("TextNoTranslate", value);
+                textComponent.SetProperty("Text", value);
 
                 OnTextChanged(value);
             }
         }
     }
 
-#if !RAYLIB
     /// <summary>
-    /// The maximum letters to display. This can be used to 
-    /// create an effect where the text prints out letter-by-letter.
+    /// Sets the text box text without applying localization/translation.
+    /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable — only the final string is stored.
+    /// Use this for programmatically setting text that should not be localized, such as user-entered input.
+    /// Internal typing, paste, and delete operations use this method automatically.
+    /// </remarks>
+    public void SetTextNoTranslate(string? value)
+    {
+        if (value != Text)
+        {
+            if (value?.Length > MaxLength)
+            {
+                value = value.Substring(0, MaxLength.Value);
+            }
+
+            textComponent.SetProperty("TextNoTranslate", value);
+
+            OnTextChanged(value);
+        }
+    }
+
+    /// <summary>
+    /// The maximum number of characters to display visually. Characters beyond this count
+    /// are hidden but remain in the <see cref="Text"/> string. This is a display-only
+    /// property useful for typewriter-style effects where text prints out letter-by-letter.
+    /// It does <em>not</em> restrict how many characters the user can type.
+    /// To limit input length, use <see cref="TextBoxBase.MaxLength"/> instead.
     /// </summary>
     public virtual int? MaxLettersToShow
     {
@@ -64,7 +91,6 @@ public class TextBox : TextBoxBase
             }
         }
     }
-#endif
 
     /// <summary>
     /// The maximum number of lines to display. This can be used to 
@@ -193,7 +219,8 @@ public class TextBox : TextBoxBase
                     // set caretIndex before assigning Text so that the events are
                     // raised with the new caretIndex value
                     caretIndex = System.Math.Min(caretIndex + 1, textAfterAdd.Length);
-                    Text = textAfterAdd;
+                    // Use SetTextNoTranslate because this is user-typed input
+                    SetTextNoTranslate(textAfterAdd);
                 }
             }
 
@@ -229,7 +256,8 @@ public class TextBox : TextBoxBase
 
                 var indexToDeleteTo = indexBeforeNullable ?? 0;
 
-                this.Text = Text.Remove(indexToDeleteTo, caretIndex - indexToDeleteTo);
+                // Use SetTextNoTranslate because this is user-initiated editing
+                SetTextNoTranslate(Text.Remove(indexToDeleteTo, caretIndex - indexToDeleteTo));
 
                 caretIndex = indexToDeleteTo;
             }
@@ -240,7 +268,8 @@ public class TextBox : TextBoxBase
                 // caret is at the end of the word, modifying the word will shift the caret to the left, 
                 // and that could cause it to shift over two times.
                 caretIndex--;
-                this.Text = this.Text.Remove(whereToRemoveFrom, 1);
+                // Use SetTextNoTranslate because this is user-initiated editing
+                SetTextNoTranslate(this.Text.Remove(whereToRemoveFrom, 1));
             }
         }
     }
@@ -253,7 +282,8 @@ public class TextBox : TextBoxBase
         }
         else if (caretIndex < (Text?.Length ?? 0))
         {
-            this.Text = this.Text.Remove(caretIndex, 1);
+            // Use SetTextNoTranslate because this is user-initiated editing
+            SetTextNoTranslate(this.Text.Remove(caretIndex, 1));
         }
     }
 
@@ -300,7 +330,8 @@ public class TextBox : TextBoxBase
             }
             foreach (var character in whatToPaste)
             {
-                this.Text = this.Text.Insert(caretIndex, "" + character);
+                // Use SetTextNoTranslate because this is user-pasted input
+                SetTextNoTranslate(this.Text.Insert(caretIndex, "" + character));
                 caretIndex++;
             }
 
@@ -320,7 +351,8 @@ public class TextBox : TextBoxBase
         {
             lengthToRemove = Text.Length - selectionStart;
         }
-        this.Text = Text.Remove(selectionStart, lengthToRemove);
+        // Use SetTextNoTranslate because this is user-initiated editing
+        SetTextNoTranslate(Text.Remove(selectionStart, lengthToRemove));
         CaretIndex = selectionStart;
         SelectionLength = 0;
     }

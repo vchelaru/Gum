@@ -22,7 +22,7 @@ Button button;
 
 protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     button = new Button();
     button.AddToRoot();
@@ -58,7 +58,7 @@ Button button;
 
 protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     button = new Button();
     button.AddToRoot();

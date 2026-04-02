@@ -44,7 +44,7 @@ Label label;
 
 protected override void Initialize()
 {
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     StackPanel panel = new ();
     panel.AddToRoot();
@@ -146,7 +146,7 @@ This `DisabledCursor` class can be assigned to disable all Cursor actions as sho
 ```csharp
 protected override void Initialize()
 {
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     Button button = new();
     button.AddToRoot();

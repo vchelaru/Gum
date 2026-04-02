@@ -30,7 +30,7 @@ By default Gum uses `GraphicsDevice.Viewport` to set its internal resolution on 
     protected override void Initialize()
     {
 <strong>        // Internally this will initialize using the viewport values
-</strong><strong>        GumUi.Initialize(this, DefaultVisualsVersion.V3);
+</strong><strong>        GumUi.Initialize(this);
 </strong>        ...
 </code></pre>
 
@@ -69,7 +69,7 @@ Keep in mind that the `Preferred` properties are not guaranteed, and MonoGame ca
     protected override void Initialize()
     {
         // Internally this will initialize using the viewport values
-        GumUi.Initialize(this, DefaultVisualsVersion.V3);
+        GumUi.Initialize(this);
         ...
 </code></pre>
 

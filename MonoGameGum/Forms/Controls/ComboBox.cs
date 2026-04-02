@@ -73,6 +73,11 @@ public class ComboBox :
         }
     }
 
+    /// <summary>
+    /// Gets or sets the displayed text for the selected item. This property is data-driven
+    /// (typically set from the selected item's ToString) and intentionally does not apply
+    /// localization. To localize ComboBox items, translate values before adding them to the Items collection.
+    /// </summary>
     public string? Text
     {
         get => coreTextObject.RawText;
@@ -219,7 +224,11 @@ public class ComboBox :
     #region Events
 
     public event Action<object, SelectionChangedEventArgs> SelectionChanged;
-    public event Action<IInputReceiver> FocusUpdate;
+    /// <summary>
+    /// Raised every frame while this control has input focus. Can be used
+    /// to perform custom per-frame logic while the control is focused.
+    /// </summary>
+    public event Action<IInputReceiver>? FocusUpdate;
     public event Action<GamepadButton> ControllerButtonPushed;
     public event Action<int> GenericGamepadButtonPushed;
 
@@ -542,6 +551,7 @@ public class ComboBox :
         base.HandleKeyboardFocusUpdate();
 #endif
 
+        FocusUpdate?.Invoke(this);
     }
 
     private void DoOpenDropDownFocusUpdate()

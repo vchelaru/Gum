@@ -46,7 +46,7 @@ For example, consider a component with a category named ExampleCategory with two
 
 This component is given a variable named Example Category State.
 
-<figure><img src="../../../.gitbook/assets/image (197).png" alt=""><figcaption><p>Example Category State variable</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (197) (1).png" alt=""><figcaption><p>Example Category State variable</p></figcaption></figure>
 
 This value can be assigned in the default state, making the selected state automatically set by default on the component.
 

@@ -13,6 +13,12 @@ All save classes live in `GumDataTypes/`.
 
 ---
 
+## Save Classes vs Runtime Classes
+
+The Gum tool's core responsibility is editing and serializing save classes (the data model) to XML — it operates purely on save classes. Visualization (the wireframe preview) requires runtime classes and a Gum runtime; the tool uses KNI for this via the `EditorTabPlugin_XNA` plugin, but other runtimes exist (MonoGame, FNA, Skia, Raylib). `Gum.csproj` should be save-class territory only. Runtime/rendering code that still lives there (e.g. `WireframeObjectManager`) is legacy being actively refactored out to plugins — do not add new runtime code to `Gum.csproj`.
+
+---
+
 ## Class Relationships
 
 `GumProjectSave` is the root. It stores only **references** to elements (screens, components, standards, behaviors) — not the element data itself. The actual element data lives in separate files and is loaded into `[XmlIgnore]` collections after deserialization. This is a deliberate two-phase loading pattern.

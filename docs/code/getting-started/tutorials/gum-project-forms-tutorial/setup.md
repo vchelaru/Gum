@@ -77,7 +77,7 @@ First, we'll set up our project so all Gum files are copied when the project is 
 1. Right-click on any Gum file in your project, such as GumProject.gumx
 2.  Select the Properties item\\
 
-    <figure><img src="../../../../.gitbook/assets/image (11) (1).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (11) (1) (1).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
 3.  Set the file to Copy if Newer. If using Android, see instructions below.\\
 
     <figure><img src="../../../../.gitbook/assets/image (12) (1).png" alt=""><figcaption><p>Mark the Gum file as Copy if newer</p></figcaption></figure>

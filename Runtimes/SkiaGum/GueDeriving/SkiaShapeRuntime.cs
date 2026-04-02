@@ -7,7 +7,7 @@ using SkiaSharp;
 
 namespace SkiaGum.GueDeriving;
 
-public abstract class SkiaShapeRuntime : GraphicalUiElement
+public abstract class SkiaShapeRuntime : InteractiveGue
 {
     protected abstract Renderables.RenderableShapeBase ContainedRenderable { get; }
 
@@ -223,6 +223,18 @@ public abstract class SkiaShapeRuntime : GraphicalUiElement
     {
         get;
         set;
+    }
+
+    public float StrokeDashLength
+    {
+        get => ContainedRenderable.StrokeDashLength;
+        set => ContainedRenderable.StrokeDashLength = value;
+    }
+
+    public float StrokeGapLength
+    {
+        get => ContainedRenderable.StrokeGapLength;
+        set => ContainedRenderable.StrokeGapLength = value;
     }
 
     #endregion

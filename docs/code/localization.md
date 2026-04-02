@@ -56,7 +56,7 @@ protected override void Initialize()
 {% endtab %}
 {% endtabs %}
 
-<figure><img src="../.gitbook/assets/image (1).png" alt=""><figcaption><p>Screen with localization</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Screen with localization</p></figcaption></figure>
 
 ## Localization in a Code-Only Project
 
@@ -82,12 +82,13 @@ T_Greeting,"Welcome, this is a localized project example","Bienvenido, este es u
 ```
 
 ```csharp
+// Initialize
 using Gum.Localization; // for extension methods
 // ...
 protected override void Initialize()
 {
     //var project = GumUI.Initialize(this, "GumProject/GumProject.gumx");
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.Newest);
+    GumUI.Initialize(this);
 
     var localizationService = GumUI.LocalizationService;
 
@@ -118,3 +119,75 @@ protected override void Initialize()
 ```
 
 <figure><img src="../.gitbook/assets/06_06 21 28.png" alt=""><figcaption><p>Label and Buttons displaying localized UI</p></figcaption></figure>
+
+## Forms Control Localization
+
+Forms controls localize text automatically when a `LocalizationService` is active. When you assign a string ID to a control's `Text` property (or `Header` for MenuItem, `Placeholder` for TextBox), Gum translates it at assignment time. Each control that supports localization also provides a no-translate method for setting literal text that should not be translated.
+
+### Localization by Control
+
+The following table shows how each Forms control handles localization:
+
+| Control | Localized Property | No-Translate Method | Notes |
+|---|---|---|---|
+| Button | `Text` | `SetTextNoTranslate()` | |
+| Label | `Text` | `SetTextNoTranslate()` | |
+| CheckBox | `Text` | `SetTextNoTranslate()` | |
+| RadioButton | `Text` | `SetTextNoTranslate()` | |
+| TextBox | `Text` | `SetTextNoTranslate()` | Setting `Text` in code localizes. User-typed text does not localize. See below. |
+| TextBoxBase | `Placeholder` | `SetPlaceholderNoTranslate()` | Placeholder text localizes when set in code. |
+| MenuItem | `Header` | `SetHeaderNoTranslate()` | |
+| PasswordBox | — | — | Mask characters are never localized. |
+| ComboBox | — | — | Text comes from selected item. Pre-translate items before adding. |
+| ListBoxItem | — | — | Text comes from data items. Pre-translate items before adding. |
+| ScrollBar | — | — | No text property. |
+| Slider | — | — | No text property. |
+| ToggleButton | — | — | No text property. |
+
+### TextBox Localization Behavior
+
+TextBox has special behavior because it handles both programmatic text and user-typed input:
+
+* Setting `Text` in code applies localization — use this for initial values that should be translated.
+* Text entered by the user through typing, pasting, or deleting is never localized. TextBox internally uses `SetTextNoTranslate` for all user-initiated edits.
+* The `Placeholder` property (from TextBoxBase) is localized when set in code.
+
+For example, if you set a TextBox's `Text` to a string ID, it displays the translated text. Once the user begins editing, their input is used as-is without translation.
+
+### Data-Driven Controls
+
+ComboBox and ListBoxItem intentionally bypass localization. Their displayed text comes from data objects (via `ToString()`), so translating would attempt to look up the data value as a string ID.
+
+To localize items in a ComboBox or ListBox, translate the values before adding them to the `Items` collection:
+
+```csharp
+// Initialize
+var comboBox = new ComboBox();
+comboBox.AddToRoot();
+
+var localizationService = GumUI.LocalizationService;
+
+comboBox.Items.Add(localizationService.Translate("T_Option1"));
+comboBox.Items.Add(localizationService.Translate("T_Option2"));
+comboBox.Items.Add(localizationService.Translate("T_Option3"));
+```
+
+### Using SetTextNoTranslate
+
+Every localization-aware control provides a method for setting text without translation. This is useful when displaying dynamic values that should not be treated as string IDs:
+
+```csharp
+// Initialize
+var label = new Label();
+label.AddToRoot();
+
+// This localizes — "T_Score" is looked up in the localization database
+label.Text = "T_Score";
+
+// This does NOT localize — the literal string is displayed as-is
+label.SetTextNoTranslate("1,250 pts");
+```
+
+{% hint style="info" %}
+`SetTextNoTranslate` is a method rather than a property because the underlying text component only stores the final string. A `TextNoTranslate` property getter would be misleading since there is no way to distinguish translated from untranslated text after assignment.
+{% endhint %}

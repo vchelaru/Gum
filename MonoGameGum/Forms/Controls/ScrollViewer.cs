@@ -96,9 +96,13 @@ public class ScrollViewer :
     public void HandleCharEntered(char character)
     {
     }
-    public event Action<IInputReceiver> FocusUpdate;
 
 #endif
+    /// <summary>
+    /// Raised every frame while this control has input focus. Can be used
+    /// to perform custom per-frame logic while the control is focused.
+    /// </summary>
+    public event Action<IInputReceiver>? FocusUpdate;
 
     #region Fields/Properties
 
@@ -721,8 +725,7 @@ public class ScrollViewer :
         base.HandleKeyboardFocusUpdate();
 #endif
 
-        // Do we need this event? ListBox has it, but I'm not sure if ScrollViewer should have it
-        //FocusUpdate?.Invoke(this);
+        FocusUpdate?.Invoke(this);
     }
 
     private void DoTopLevelFocusUpdate()

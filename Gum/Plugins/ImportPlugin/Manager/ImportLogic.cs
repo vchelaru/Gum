@@ -5,6 +5,7 @@ using Gum.Services;
 using Gum.ToolStates;
 using System;
 using Gum.Commands;
+using Gum.Plugins;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 using System.Linq;
@@ -19,15 +20,17 @@ public class ImportLogic : IImportLogic
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
     private readonly IProjectManager _projectManager;
+    private readonly IPluginManager _pluginManager;
     private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
 
-    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager, StandardElementsManagerGumTool standardElementsManagerGumTool)
+    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager, IPluginManager pluginManager, StandardElementsManagerGumTool standardElementsManagerGumTool)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _dialogService = dialogService;
         _projectManager = projectManager;
+        _pluginManager = pluginManager;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
     }
 
@@ -115,17 +118,17 @@ public class ImportLogic : IImportLogic
         return toReturn;
     }
 
-    private void DoAfterImportLogic(bool saveProject, ElementSave screenSave)
+    private void DoAfterImportLogic(bool saveProject, ElementSave elementSave)
     {
-        _standardElementsManagerGumTool.FixCustomTypeConverters(screenSave);
+        _standardElementsManagerGumTool.FixCustomTypeConverters(elementSave);
 
         if (saveProject)
         {
-            _guiCommands.RefreshElementTreeView();
-            _selectedState.SelectedElement = screenSave;
+            _selectedState.SelectedElement = elementSave;
             _fileCommands.TryAutoSaveProject();
         }
-        _fileCommands.TryAutoSaveElement(screenSave);
+        _fileCommands.TryAutoSaveElement(elementSave);
+        _pluginManager.ElementImported(elementSave);
     }
 
     private bool DetermineIfShouldAdd(ref FilePath filePath, ref string? desiredDirectory, string screensOrComponents)

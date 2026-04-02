@@ -66,7 +66,7 @@ To enable keyboard input, add the keyboard to the FrameworkElement.KeyboardsForU
 // Initialize
 FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2Qy07DMBBF9_mKwatEVPmAVkGC0KKKTUXKLlLlxoOw4tjVeNzyEP-O41YEdekzZ66v_Z0BiLV_CoOYA1PA2Qi01ayl0V8YqThKgkFqu5EWDVRg8QQNy65PIC8Wrf0bl_dKbd2Lc5z4iuSAJ0f90uCAlstn_Nw7ScqvHL3q2lkml5byWKFBOuoOy0d8k8FM8pg0ltgHZmcvDR7SId1y5uUWPzgOW7Eh9B6ag-wQHMHSMlIrJrE2uuvhtoJ8N4NdAdXdJXqKSAqqm_9r61i6Cx5VNMavun53_a6Nys9ysRDZT_YLwXDrNF4BAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2Qy07DMBBF9_mKwatEVPmAVkGC0KKKTUXKLlLlxoOw4tjVeNzyEP-O41YEdekzZ66v_Z0BiLV_CoOYA1PA2Qi01ayl0V8YqThKgkFqu5EWDVRg8QQNy65PIC8Wrf0bl_dKbd2Lc5z4iuSAJ0f90uCAlstn_Nw7ScqvHL3q2lkml5byWKFBOuoOy0d8k8FM8pg0ltgHZmcvDR7SId1y5uUWPzgOW7Eh9B6ag-wQHMHSMlIrJrE2uuvhtoJ8N4NdAdXdJXqKSAqqm_9r61i6Cx5VNMavun53_a6Nys9ysRDZT_YLwXDrNF4BAAA)
 
 To enable gamepad input, add the gamepad to the FrameworkElement.GamePadsForUiControl list as shown in the following code block:
 
@@ -74,7 +74,7 @@ To enable gamepad input, add the gamepad to the FrameworkElement.GamePadsForUiCo
 // Initialize
 FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2QwU7DMAyG730Kk1Mrpj4AU5FGYdNu1TZulabQeGA1TVDibAjEu5OmFUMc_fv_7N_-ygDE1m_CIO6AXcDFKJAhJqnpE6MqztLBIMk00qCGCgxeYM-y65OQF8vW_LbLlVIHu7OWk752csCLdf2TxgENl5tYN1L5tXXPVFvDziZmJ80r5jHGHt2ZOiwf8SSDnoD3CIzTxiAvgdmaOcVDKtKmSS8P-MGx2YrGofcw07BqxdVTa-p6uK0gPy7gWEB1P0-90smC6uYvto2hu-BRRcf4qf9n12-kVT6Zi6XIvrMfW6v54F0BAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2QwU7DMAyG730Kk1Mrpj4AU5FGYdNu1TZulabQeGA1TVDibAjEu5OmFUMc_fv_7N_-ygDE1m_CIO6AXcDFKJAhJqnpE6MqztLBIMk00qCGCgxeYM-y65OQF8vW_LbLlVIHu7OWk752csCLdf2TxgENl5tYN1L5tXXPVFvDziZmJ80r5jHGHt2ZOiwf8SSDnoD3CIzTxiAvgdmaOcVDKtKmSS8P-MGx2YrGofcw07BqxdVTa-p6uK0gPy7gWEB1P0-90smC6uYvto2hu-BRRcf4qf9n12-kVT6Zi6XIvrMfW6v54F0BAAA)
 
 Notice that both KeyboardsForUiControl and GamePadsForUiControl are lists. If you do not want your game to support keyboard input you can keep the KeyboardsForUiControl empty. You can selectively add gamepads to GamePadsForUiControl depending on whether you only want some of the gamepads to control UI. For example, you may only want to read input from gamepads which have joined the game.
 
@@ -103,7 +103,7 @@ button.Click += (s, e) =>
 button.IsFocused = true;
 mainPanel.AddChild(button);
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm2RwU7DMAyG73sKK-LQqlPFmalIUNg0cZm2ceslaw1ETRyUJhtQ9d1J0okKWE7x59-_bbmfAbB1t3KK3YA1DucBCBJWcCm-0FN25AYUF7ThhBIKIDzBzvK6jSBJFxX9pPO7ptnrrdY28qXhCk_atI8SFZLNn_DzoLlpuqU2z6LUZI2ORYkfYYfmKGrMH_CFOzmJLzqtfLzh_422nF7xklsoePcFwa2isNTBWavpvNF9DOLUgizUUtRtqZ3_FnDt4SjO9_gRSMXKIACFFZuSI8sKSLo5YArFbUV9ReDf5JdlviCg345XZ0tsoJ_EA1ihsItNhqnR2q9du85ri3i1vyco34RsklGcLthsmH0DCVJb0ekBAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACm2RwU7DMAyG73sKK-LQqlPFmalIUNg0cZm2ceslaw1ETRyUJhtQ9d1J0okKWE7x59-_bbmfAbB1t3KK3YA1DucBCBJWcCm-0FN25AYUF7ThhBIKIDzBzvK6jSBJFxX9pPO7ptnrrdY28qXhCk_atI8SFZLNn_DzoLlpuqU2z6LUZI2ORYkfYYfmKGrMH_CFOzmJLzqtfLzh_422nF7xklsoePcFwa2isNTBWavpvNF9DOLUgizUUtRtqZ3_FnDt4SjO9_gRSMXKIACFFZuSI8sKSLo5YArFbUV9ReDf5JdlviCg345XZ0tsoJ_EA1ihsItNhqnR2q9du85ri3i1vyco34RsklGcLthsmH0DCVJb0ekBAAA)
 
 <figure><img src="../../../../.gitbook/assets/13_08 31 15.gif" alt=""><figcaption><p>Button clicks through gamepad A button or keyboard space/enter</p></figcaption></figure>
 
@@ -139,7 +139,7 @@ for(int i = 0; i < 5; i++)
     mainPanel.AddChild(button);
 }
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1STWvCQBC9-yuG0ENEWYTSHmpT2moVKRQxtr3ksiajDia7stloreS_O_moJWguw7437-282RxbAM4kHWeJ8wDWZNgtAFJkScb0i4w6O2kgkaSmUmEMHijcg29luCkBt90P1JkWL1E01zOtbYmPjExwr83mLcYElRXveFhoaaJ0pM0nDbSyRpcil0fw0ewoRDHEpczi_-arTmM-T-Wl0UyqFV5zKwRbFjTn9bcyJLXiWPeMB2qpjUvKAjHS63N5hDsunU47UMdAAX_FPhaZtVrVy3gtD2Xggq84Mccfyw2BM4gp3ECCgdNs-KI0k7H4psiuufG212vyla7jgZt2AdvgPVV0PcblVTf1XRjBMxz9Q2oxEUNpcU4Jig-9z88j5HWlpctJOSrHu-494Q2HWcqeXvmD_BlUpfHwgzXFkVvpimXkTitvnQAwOCC1YgIAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1STWvCQBC9-yuG0ENEWYTSHmpT2moVKRQxtr3ksiajDia7stloreS_O_moJWguw7437-282RxbAM4kHWeJ8wDWZNgtAFJkScb0i4w6O2kgkaSmUmEMHijcg29luCkBt90P1JkWL1E01zOtbYmPjExwr83mLcYElRXveFhoaaJ0pM0nDbSyRpcil0fw0ewoRDHEpczi_-arTmM-T-Wl0UyqFV5zKwRbFjTn9bcyJLXiWPeMB2qpjUvKAjHS63N5hDsunU47UMdAAX_FPhaZtVrVy3gtD2Xggq84Mccfyw2BM4gp3ECCgdNs-KI0k7H4psiuufG212vyla7jgZt2AdvgPVV0PcblVTf1XRjBMxz9Q2oxEUNpcU4Jig-9z88j5HWlpctJOSrHu-494Q2HWcqeXvmD_BlUpfHwgzXFkVvpimXkTitvnQAwOCC1YgIAAA)
 
 <figure><img src="../../../../.gitbook/assets/13_08 33 43.gif" alt=""><figcaption><p>Button stack tabbing and receiving input</p></figcaption></figure>
 
@@ -182,7 +182,7 @@ passwordBox.AcceptsTab = false;
 passwordBox.Placeholder = "";
 mainPanel.AddChild(passwordBox);
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACpWSUU_CMBSF3_kVzZ4gMY1ubxAfEJ0hEkNkmpDs5bJeQkPXkrYD1Pjf7epgCw6Db925595zv7WfHUKCsXks8qBPrC7wqhS45JaD4B_o1GALmuTA5RQkCnJLJO7IzEK29kK3N0jlsUyHjCXqRSnr9VhDjjul1w8Cc5SWPuH7QoFmJlb6lY-UtFr5pq5bYYZ6yzOk97iEQtTmclIqyzUELI4rTMqzT_EqTXBvXSkNYq6NJc8uuZ8Gp8uNVlywru-ox1rXeqf21eDk58uPrip07BbOCoPMecrf1ChNBWS4UoKh9vHnMiv_CUzYThPSN24KEHTu6jfXtXyknMBFkOEvyvA8ZvhfmMZ0nxa100TtNFFNMwVj3Dthf8NEddymaqiv7TDiwNRw0GGW4caaBBbOvARhygtsGi7lbvT0BkHnq_MN1JVhokEDAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACpWSUU_CMBSF3_kVzZ4gMY1ubxAfEJ0hEkNkmpDs5bJeQkPXkrYD1Pjf7epgCw6Db925595zv7WfHUKCsXks8qBPrC7wqhS45JaD4B_o1GALmuTA5RQkCnJLJO7IzEK29kK3N0jlsUyHjCXqRSnr9VhDjjul1w8Cc5SWPuH7QoFmJlb6lY-UtFr5pq5bYYZ6yzOk97iEQtTmclIqyzUELI4rTMqzT_EqTXBvXSkNYq6NJc8uuZ8Gp8uNVlywru-ox1rXeqf21eDk58uPrip07BbOCoPMecrf1ChNBWS4UoKh9vHnMiv_CUzYThPSN24KEHTu6jfXtXyknMBFkOEvyvA8ZvhfmMZ0nxa100TtNFFNMwVj3Dthf8NEddymaqiv7TDiwNRw0GGW4caaBBbOvARhygtsGi7lbvT0BkHnq_MN1JVhokEDAAA)
 
 <figure><img src="../../../../.gitbook/assets/13_08 36 31.gif" alt=""><figcaption><p>Tabbing skips over Labels and moves to the next TextBox or PasswordBox</p></figcaption></figure>
 
@@ -218,7 +218,7 @@ for (int i = 0; i < 3; i++)
     panel2.AddChild(button);
 }
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACsVRwU7CQBC98xWTxkNJTUPrTfSgKIR4IYAxJr2s7CAT2t1m2YJK-Hdnu41grIk3e5nsmzdv3rzuOwDBeDOqiuASrKnw3AGkyJLI6QMZDbbCQCFITYTCHK5B4Q5mVizWNRB2-5n6asc3Us71VGtb40MjCtxps77PsUBl4wd8f9HCyM1Qm0caaGWNrodCtjBDs6UFxne4FFV-JLcqjfg9ET-FpkK9YpuaGyh5wKllyh1VOsfJHy4arCiXoae75lIbCElZIB7u9blcwQWXKOpmap8p4M8teKms1apZMBWS9G2N1BscyRPiJ5J2xbS01_vemOObZfwsC0ZGVyUkoEtLLLmnKDlkQcOmZchO2ErXvxsLJ0JjzmlRbVCymvvNzeDBF3_Z8VI_5Ewy4SSrtD0r34ufuZu4A37LLv3X7NJjdhDBSXqN_bbrg86h8wnFvL2UIwMAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACsVRwU7CQBC98xWTxkNJTUPrTfSgKIR4IYAxJr2s7CAT2t1m2YJK-Hdnu41grIk3e5nsmzdv3rzuOwDBeDOqiuASrKnw3AGkyJLI6QMZDbbCQCFITYTCHK5B4Q5mVizWNRB2-5n6asc3Us71VGtb40MjCtxps77PsUBl4wd8f9HCyM1Qm0caaGWNrodCtjBDs6UFxne4FFV-JLcqjfg9ET-FpkK9YpuaGyh5wKllyh1VOsfJHy4arCiXoae75lIbCElZIB7u9blcwQWXKOpmap8p4M8teKms1apZMBWS9G2N1BscyRPiJ5J2xbS01_vemOObZfwsC0ZGVyUkoEtLLLmnKDlkQcOmZchO2ErXvxsLJ0JjzmlRbVCymvvNzeDBF3_Z8VI_5Ewy4SSrtD0r34ufuZu4A37LLv3X7NJjdhDBSXqN_bbrg86h8wnFvL2UIwMAAA)
 
 <figure><img src="../../../../.gitbook/assets/13_08 37 43.gif" alt=""><figcaption><p>Tabbing between RadioButton groups in nested StackPanels</p></figcaption></figure>
 
@@ -251,7 +251,7 @@ for (int i = 0; i < 3; i++)
     mainPanel.AddChild(button);
 }
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACrVSTUvDQBC991cMwUNKZVEED2oP2lopIpR-gIdcNsnELk1myu6mVUv-u5M0bRX06F6GfW_mvWHf7joAwdg9lUVwA96WeF4Dhow3OjefKGiw0RYKbWiiCXPoA-EWZl4nqwYIu7cRHWl1n6ZznjL7Bh9ZXeCW7eoxxwLJq2f8iFnb1I3YLsyAyVtuhkJZYYZ2YxJUQ8x0mZ-af1Wa61j4ARcxu0agXuuAhN2IdhGBnEnplpgKIZu_mMSy48yrV9LqKKnGtC4bO6eGvKWIqr8sp7hB6_A_nBfr1vf7c87WOjH0JgrXwmRsITTkwQhwcSvlDq6k9Hon1zqtuPSeqY3qobk0cdT8nlNzfPfScBYFex52BnpwWUVB22cysYK--HQPM2NJLSkdpjJY_5W280f4g6XJ03A_UFtWQafqfAE2d5mXZgIAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACrVSTUvDQBC991cMwUNKZVEED2oP2lopIpR-gIdcNsnELk1myu6mVUv-u5M0bRX06F6GfW_mvWHf7joAwdg9lUVwA96WeF4Dhow3OjefKGiw0RYKbWiiCXPoA-EWZl4nqwYIu7cRHWl1n6ZznjL7Bh9ZXeCW7eoxxwLJq2f8iFnb1I3YLsyAyVtuhkJZYYZ2YxJUQ8x0mZ-af1Wa61j4ARcxu0agXuuAhN2IdhGBnEnplpgKIZu_mMSy48yrV9LqKKnGtC4bO6eGvKWIqr8sp7hB6_A_nBfr1vf7c87WOjH0JgrXwmRsITTkwQhwcSvlDq6k9Hon1zqtuPSeqY3qobk0cdT8nlNzfPfScBYFex52BnpwWUVB22cysYK--HQPM2NJLSkdpjJY_5W280f4g6XJ03A_UFtWQafqfAE2d5mXZgIAAA)
 
 `TabKeyCombos` and `TabReverseKeyCombos` are lists and automatically include tab and shift+tab. You can clear these lists if you would like to prevent the tab key from moving focus.
 
@@ -289,7 +289,7 @@ void HandleTabKeyDown(object sender, KeyEventArgs args)
 }
 
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACq2Ry27CMBBF93yFlZWjIi9YtsqC8mhRW6niIXWRjRNPwMUZI9sBtYh_r52kUEG7QbWURL6eO_fEs-8QEk3sQ1VGt8SZCrpBkCid5Ep-glejLTek5BJfOYIiCUHYkZnj-boWaHyX4vGY9YWY66nWrtbHhpew02Y9UlACOvYEH5nmRtixNgs50OiMrk3UI8zAbGUObAgFr9SpOHRKMWBYJQWYb4Z6c5k_WEklaFN6smaVcxpb6329qa2NziaeKK8sCF8R7uF04imGeofkJiGPHIWCOc9a7ffkxnee3PsrundtQq-N0FJc-KjO3iF3xAL6W-gSL4-2fgB9s7SE-1ec4j5F4pcsaBACBUkS8iJzo60uHHtDzo4DZBPcVPVILJvK5cr5BsHdNgmL0vNxx018zI541D9DaTya9FcbSMNPBPeh-YCycAXSMxT_QrTY_OA5RJ1D5wvjsOY0IgMAAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACq2Ry27CMBBF93yFlZWjIi9YtsqC8mhRW6niIXWRjRNPwMUZI9sBtYh_r52kUEG7QbWURL6eO_fEs-8QEk3sQ1VGt8SZCrpBkCid5Ep-glejLTek5BJfOYIiCUHYkZnj-boWaHyX4vGY9YWY66nWrtbHhpew02Y9UlACOvYEH5nmRtixNgs50OiMrk3UI8zAbGUObAgFr9SpOHRKMWBYJQWYb4Z6c5k_WEklaFN6smaVcxpb6329qa2NziaeKK8sCF8R7uF04imGeofkJiGPHIWCOc9a7ffkxnee3PsrundtQq-N0FJc-KjO3iF3xAL6W-gSL4-2fgB9s7SE-1ec4j5F4pcsaBACBUkS8iJzo60uHHtDzo4DZBPcVPVILJvK5cr5BsHdNgmL0vNxx018zI541D9DaTya9FcbSMNPBPeh-YCycAXSMxT_QrTY_OA5RJ1D5wvjsOY0IgMAAA)
 
 <figure><img src="../../../../.gitbook/assets/16_06 37 17.gif" alt=""><figcaption><p>Tabbing with left/right on Button, but using left/right to change Slider value</p></figcaption></figure>
 

@@ -4,6 +4,10 @@
 
 StackPanel is a container used to for controls which should stack vertically or horizontally, and which supports wrapping. StackPanels do not include any visual so they are always invisible.
 
+## Backgrounds
+
+StackPanels do not include any visuals, so they are always invisible on their own. To add a visible background behind a StackPanel, wrap it in a Panel with a ColoredRectangleRuntime. For details and a code example, see [Adding Backgrounds to Layout Containers](../styling/code-only-styling/adding-and-removing-visual-children.md#adding-backgrounds-to-layout-containers).
+
 ## Code Example: Adding Buttons to a StackPanel
 
 The following code shows how to add Button instances to a StackPanel. Notice that each button is automatically stacked vertically.
@@ -106,4 +110,4 @@ for (int i = 0; i < 5; i++)
     button.Text = "Button " + i;
 }
 ```
-<a href="https://xnafiddle.net/#snippet=H4sIAAAAAAAACo1QTU_DMAy9T9p_sHrqNBTtsguDw2AS4wQa5UvqJaOGWmQOatwBm_bfcVoNKNqBXJz3nv0Sv22_B5Bchot6lRyDVDUeNQwxCVlHG1Q6WdsKgtin12vL6OAUGN_h5ptIB5Ocf3QzLYrML7yXv8KDjo5HXe7xAHdVEbJYIc-q_kJm7ivaeEWuO3FHobbO3FMh5a3-Peic7mRmVmz2-YbBzGiFHNQjypEyC3RqusbMn5fkigr5oOcc6aWU_5pOl8G7WrBr1XrsN8352VeQEguQcqOJlhMYaxkOBzlvcwY9MfRlLdJkEAM_a0CTadS7gTcrpG3_vqNFJsOP-HSetAZ6gSGQ9uySfm_3BWmf8YcCAgAA" target="_blank">Try on XnaFiddle.NET</a>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACo1QTU_DMAy9T9p_sHrqNBTtsguDw2AS4wQa5UvqJaOGWmQOatwBm_bfcVoNKNqBXJz3nv0Sv22_B5Bchot6lRyDVDUeNQwxCVlHG1Q6WdsKgtin12vL6OAUGN_h5ptIB5Ocf3QzLYrML7yXv8KDjo5HXe7xAHdVEbJYIc-q_kJm7ivaeEWuO3FHobbO3FMh5a3-Peic7mRmVmz2-YbBzGiFHNQjypEyC3RqusbMn5fkigr5oOcc6aWU_5pOl8G7WrBr1XrsN8352VeQEguQcqOJlhMYaxkOBzlvcwY9MfRlLdJkEAM_a0CTadS7gTcrpG3_vqNFJsOP-HSetAZ6gSGQ9uySfm_3BWmf8YcCAgAA)

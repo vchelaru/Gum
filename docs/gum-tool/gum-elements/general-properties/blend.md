@@ -47,7 +47,7 @@ The examples above use the `Alpha` value to apply transparency. Note that if the
 
 Since `Additive` `Blend` results in a modification of what is under instead of a replacement, an `Additive` `Blend` Sprite typically appear transparent even when `Alpha` is `255`.
 
-<figure><img src="../../../.gitbook/assets/image (3) (1).png" alt=""><figcaption><p>Additive Blend Sprite with an Alpha of 255</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (3) (1) (1).png" alt=""><figcaption><p>Additive Blend Sprite with an Alpha of 255</p></figcaption></figure>
 
 As `Alpha` is reduced, the brightening effect is reduced. A Sprite with an `Alpha` of `128` only applies roughly half as much of a brightening effect.
 

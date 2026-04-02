@@ -24,6 +24,12 @@ public class MainVariableGridPlugin : InternalPlugin
     private readonly VariableReferenceLogic _variableReferenceLogic;
     private readonly ISelectedState _selectedState;
 
+    // When an instance is selected, the default state is force-selected first,
+    // which fires HandleStateSelected → RefreshEntireGrid(force: true).
+    // Then HandleInstanceSelected fires and would refresh again redundantly.
+    // This flag lets us skip the second refresh.
+    bool _stateJustRefreshedGrid;
+
     public MainVariableGridPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
@@ -104,6 +110,7 @@ public class MainVariableGridPlugin : InternalPlugin
 
     private void HandleElementSelected(ElementSave? save)
     {
+        _stateJustRefreshedGrid = false;
         // when an element is selected, so is a state. States
         // also refresh the grid so we don't need to also refresh
         // here.
@@ -117,6 +124,13 @@ public class MainVariableGridPlugin : InternalPlugin
 
     private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
     {
+        if (_stateJustRefreshedGrid)
+        {
+            // HandleStateSelected already refreshed the grid during this
+            // synchronous selection cascade — no need to refresh again.
+            return;
+        }
+
         _propertyGridManager.RefreshEntireGrid(
             // When an instance is selected in a new component, the state and instance are both
             // selected. Don't force it here because if so, it forces a double select on the instance
@@ -138,6 +152,9 @@ public class MainVariableGridPlugin : InternalPlugin
     private void HandleStateSelected(StateSave? save)
     {
         _propertyGridManager.RefreshEntireGrid(force: true);
+        // Signal that the grid was just refreshed, so if HandleInstanceSelected
+        // fires next in the same synchronous cascade it can skip its refresh.
+        _stateJustRefreshedGrid = true;
     }
 
     private void HandleCustomStateSelected(StateSave? save)
@@ -149,6 +166,7 @@ public class MainVariableGridPlugin : InternalPlugin
 
     private void HandleTreeNodeSelected(TreeNode? node)
     {
+        _stateJustRefreshedGrid = false;
         var selectedState = _selectedState;
         var shouldShowButton = (selectedState.SelectedBehavior != null ||
             selectedState.SelectedComponent != null ||

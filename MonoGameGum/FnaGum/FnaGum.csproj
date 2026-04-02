@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.FNA</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>2026.3.14.1</Version>
+		<Version>2026.3.28.2</Version>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
@@ -54,7 +54,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\AtlasedTexture.cs" Link="Renderables\AtlasedTexture.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\BitmapCharacterInfo.cs" Link="Renderables\Fonts\BitmapCharacterInfo.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Fonts\BitmapFont.cs" Link="Renderables\Fonts\BitmapFont.cs" />
-		<Compile Include="..\..\RenderingLibrary\Graphics\Fonts\BmfcSave.cs" Link="Renderables\Fonts\BmfcSave.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Fonts\IInMemoryFontCreator.cs" Link="Renderables\Fonts\IInMemoryFontCreator.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\IAnimation.cs" Link="Renderables\IAnimation.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />

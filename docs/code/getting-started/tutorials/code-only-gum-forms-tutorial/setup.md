@@ -41,7 +41,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumUI.Initialize(this, DefaultVisualsVersion.V3);
+        GumUI.Initialize(this);
             
         var mainPanel = new StackPanel();
         mainPanel.AddToRoot();
@@ -66,12 +66,12 @@ public class Game1 : Game
 
 The code above includes the following sections:
 
-* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project. Note that `DefaultVisualsVersion.V3` is passed as a second parameter, indicating that Version 3 of visuals are used. All new projects should use Version 3 as of November 2025.
+* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project.
 * Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls. By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` on the `StackPanel`.
 
 ```csharp
 // Initialize
-GumUI.Initialize(this, DefaultVisualsVersion.V3);
+GumUI.Initialize(this);
 var mainPanel = new StackPanel();
 mainPanel.AddToRoot();
 ```
@@ -100,7 +100,7 @@ Now that we have Gum running, we can add controls to our `StackPanel` (`mainPane
 
 <pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     var mainPanel = new StackPanel();
     mainPanel.Visual.AddToRoot();

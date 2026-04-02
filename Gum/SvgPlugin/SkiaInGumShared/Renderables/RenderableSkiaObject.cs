@@ -56,6 +56,8 @@ namespace SkiaGum.Renderables
             set => colorOperation = value;
         }
 
+        public bool CanRenderAt0Dimension => false;
+
         protected bool needsUpdate = true;
 
         public bool NeedsUpdate

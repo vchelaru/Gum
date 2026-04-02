@@ -69,11 +69,11 @@ The following shows a simple Game1.cs file which renders Gum Text:
 
 This code produces the following image:
 
-<figure><img src="../../../.gitbook/assets/image (61).png" alt=""><figcaption><p>GumBatch rendering text</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (61) (1).png" alt=""><figcaption><p>GumBatch rendering text</p></figcaption></figure>
 
 Note that this code assumes a font .fnt file (and matching .png) are in the Content/Fonts/ folder. All content is loaded relative to the Content folder, just like normal content in MonoGame. Also note that this content does not use the content pipeline, but must be set to Copy to Output.
 
-<figure><img src="../../../.gitbook/assets/image (62).png" alt=""><figcaption><p>.fnt file copied to output folder</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (62) (1).png" alt=""><figcaption><p>.fnt file copied to output folder</p></figcaption></figure>
 
 For more information on loading FNT files, see the [File Loading](../../files-and-fonts/file-loading.md) documentation.
 

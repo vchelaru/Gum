@@ -22,18 +22,15 @@ First we'll define the component:
 
 Next we'll add a background to our **HealthBar** Component
 
-1.  Drag+drop a **ColoredRectangle** into the **HealthBar**\
-
+1.  Drag+drop a **ColoredRectangle** into the **HealthBar**\\
 
     <figure><img src="../../../.gitbook/assets/image (5) (1) (2).png" alt=""><figcaption><p>Add ColoredRectangle to HealthBar</p></figcaption></figure>
 2. Select the newly-created **ColoredRectangleInstance**
 3. Select the **Alignment** tab
-4.  Click the **Fill Dock** button\
-
+4.  Click the **Fill Dock** button\\
 
     <figure><img src="../../../.gitbook/assets/image (7) (2).png" alt=""><figcaption><p>Fill Dock to make the background take up the entire size of its parent HealthBar component</p></figcaption></figure>
-5.  Change the ColoredRectangleInstance color to black\
-
+5.  Change the ColoredRectangleInstance color to black\\
 
     <figure><img src="../../../.gitbook/assets/image (11) (2) (1).png" alt=""><figcaption></figcaption></figure>
 
@@ -48,7 +45,7 @@ The HealthBar displays its current health with another rectangle. This second re
 3. Enter a **Margin** value of 4
 4. Click the **Fill Dock** button
 
-<figure><img src="../../../.gitbook/assets/image (156).png" alt=""><figcaption><p>Set Margin to 4, then click the Fill Dock button</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (156) (1).png" alt=""><figcaption><p>Set Margin to 4, then click the Fill Dock button</p></figcaption></figure>
 
 Now we have a ContainerInstance with the proper margin
 
@@ -72,19 +69,18 @@ Now, the Width value can change between 0 and 100 to indicate the health percent
 
 <figure><img src="../../../.gitbook/assets/image (8) (2).png" alt=""><figcaption></figcaption></figure>
 
-## Expose Width&#x20;
+## Expose Width
 
 Next we'll expose the inner ColoredRectangle's `Width` property so it can be assigned per HealthBar instance:
 
 1. Select the inner ColoredRectangle instance
-2.  Right-click on its `Width` variable and select **Expose Variable**\
+2.  Right-click on its `Width` variable and select **Expose Variable**\\
 
-
-    <figure><img src="../../../.gitbook/assets/image (157).png" alt=""><figcaption><p>Click Expose Variable</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/image (157) (1).png" alt=""><figcaption><p>Click Expose Variable</p></figcaption></figure>
 3. Enter an appropriate name such as "Percentage" and click OK
 
 Now we can add instances of the HealthBar to a screen and control its fill percentage.
 
 <figure><img src="../../../.gitbook/assets/16_05 29 45.gif" alt=""><figcaption><p>Percentage value updated on a ScrollBar instance</p></figcaption></figure>
 
-\
+\\

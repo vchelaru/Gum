@@ -1,5 +1,6 @@
 ﻿using Gum.Forms.Controls;
 using Gum.Forms.Data;
+using Shouldly;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms.Data;
@@ -20,18 +21,18 @@ public class NpcBindingExpressionTests
         Binding binding = new(() => vm.Text)
         {
             UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
-        };;
+        };
         textBox.SetBinding(nameof(TextBox.Text), binding);
         BindingExpressionBase? sut = BindingOperations.GetBindingExpression(textBox, nameof(TextBox.Text));
-        
+
         // Act
         textBox.Text = "foo";
         string? previousValue = vm.Text;
         sut!.UpdateSource();
-        
+
         // Assert
-        Assert.Null(previousValue);
-        Assert.Equal("foo", vm.Text);
+        previousValue.ShouldBeNull();
+        vm.Text.ShouldBe("foo");
     }
 
     [Fact]
@@ -48,15 +49,15 @@ public class NpcBindingExpressionTests
         Binding binding = new(() => vm.Text);
         textBox.SetBinding(nameof(TextBox.Text), binding);
         BindingExpressionBase? sut = BindingOperations.GetBindingExpression(textBox, nameof(TextBox.Text));
-        
+
         // Act
         vm.Text = "foo";
         string? previousValue = textBox.Text;
         sut!.UpdateTarget();
-        
+
         // Assert
-        Assert.Null(previousValue);
-        Assert.Equal("foo", vm.Text);
+        previousValue.ShouldBeNull();
+        vm.Text.ShouldBe("foo");
     }
     
     /// <summary>

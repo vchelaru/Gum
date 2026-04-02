@@ -19,9 +19,9 @@ internal class ListBoxBindingScreen : ContainerRuntime
         this.ExposeChildrenEvents = true;
 
         this.Width = 0;
-        this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.Height = 0;
-        this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
 
         var listBox = new ListBox();

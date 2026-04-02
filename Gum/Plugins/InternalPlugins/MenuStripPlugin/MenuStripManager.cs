@@ -225,20 +225,26 @@ namespace Gum.Managers
             _fileMenuItem = new MenuItem();
             _fileMenuItem.Header = "File";
 
+            _fileMenuItem.Items.Add(_newProjectMenuItem);
             Add(_fileMenuItem, "Load Project...", () => _projectManager.LoadProject());
+            // Load Recent is inserted at index 2 by MainRecentFilesPlugin
+
+            AddSeparator(_fileMenuItem);
 
             Add(_fileMenuItem, "Save Project", () => SaveProject(saveAll: false));
-
-            Add(_fileMenuItem, "Theming", () =>
-            {
-                _dialogService.Show<ThemingDialogViewModel>();
-            });
-
             _fileMenuItem.Items.Add(_saveAllMenuItem);
-            _fileMenuItem.Items.Add(_newProjectMenuItem);
+
+            AddSeparator(_fileMenuItem);
+
+            Add(_fileMenuItem, "Export", null);
 
             _menu.Items.Add(_fileMenuItem);
             _menu.Items.Add(_editMenuItem);
+
+            Add(_viewMenuItem, "Theming", () =>
+            {
+                _dialogService.Show<ThemingDialogViewModel>();
+            });
             _menu.Items.Add(_viewMenuItem);
             _menu.Items.Add(_contentMenuItem);
             _menu.Items.Add(_pluginsMenuItem);
@@ -358,27 +364,42 @@ namespace Gum.Managers
             }
 #endif
 
-            string menuName = menuAndSubmenus.Last();
+            var parts = menuAndSubmenus.ToList();
+            string menuName = parts.Last();
 
             var menuItem = new MenuItem { Header = menuName };
 
-            string menuNameToAddTo = menuAndSubmenus.First();
+            string topMenuName = parts.First();
 
-            var menuToAddTo =
+            var currentParent =
                 _menu.Items.OfType<MenuItem>().FirstOrDefault(
-                    item => item.Header as string == menuNameToAddTo);
+                    item => item.Header as string == topMenuName);
 
-            if (menuToAddTo == null)
+            if (currentParent == null)
             {
-                menuToAddTo = new MenuItem { Header = menuNameToAddTo };
+                currentParent = new MenuItem { Header = topMenuName };
 
                 // Don't call Add - this will put the menu item after the "Help" menu item, which should be last
                 int indexToInsertAt = _menu.Items.Count - 1;
-                _menu.Items.Insert(indexToInsertAt, menuToAddTo);
+                _menu.Items.Insert(indexToInsertAt, currentParent);
             }
 
+            // Walk through intermediate submenus (e.g., "File" > "Export" > "Export as Image")
+            for (int i = 1; i < parts.Count - 1; i++)
+            {
+                var submenu = currentParent.Items.OfType<MenuItem>()
+                    .FirstOrDefault(item => item.Header as string == parts[i]);
 
-            menuToAddTo.Items.Add(menuItem);
+                if (submenu == null)
+                {
+                    submenu = new MenuItem { Header = parts[i] };
+                    currentParent.Items.Add(submenu);
+                }
+
+                currentParent = submenu;
+            }
+
+            currentParent.Items.Add(menuItem);
             return menuItem;
 
         }

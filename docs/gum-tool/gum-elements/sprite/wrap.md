@@ -22,7 +22,7 @@ If Texture Address is set to Custom then wrapping is available. All examples in 
 
 For more information, see the [Width Unit](../general-properties/width-units.md) and [Height Unit](../general-properties/height-units.md) pages.
 
-<figure><img src="../../../.gitbook/assets/image (131).png" alt=""><figcaption><p>Default Sprite width and height values are used in this section</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (131) (1).png" alt=""><figcaption><p>Default Sprite width and height values are used in this section</p></figcaption></figure>
 
 Toggling wrapping adjusts whether the Sprite wraps or clamps the area defined by the Texture Left, Texture Top, Texture Width, and Texture Height values.
 
@@ -30,7 +30,7 @@ Toggling wrapping adjusts whether the Sprite wraps or clamps the area defined by
 
 A texture is wrapped if its Texture Right or Texture Bottom values are set to be larger than the source texture. For example, the following image shows a Sprite which is using an image that is 200x200. Its Texture Width is set to 500 and Texture Height is set to 300 so the sprite displays wrapping.
 
-<figure><img src="../../../.gitbook/assets/image (129).png" alt=""><figcaption><p>Sprite wrapping its image</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (129) (1).png" alt=""><figcaption><p>Sprite wrapping its image</p></figcaption></figure>
 
 If the Texture Width or Texture Height values are adjusted, then the Sprite's wrapping also adjusts.
 
@@ -43,7 +43,7 @@ If Wrap is set to true, then wrapping happens for any area to the right or botto
 {% hint style="info" %}
 If a Sprite's Texture Left or Texture Top are set to less than 0 then the Sprite clamps this area. This may change to wrap in future versions of Gum so this behavior should not be relied upon.
 
-<img src="../../../.gitbook/assets/image (130).png" alt="" data-size="original">
+<img src="../../../.gitbook/assets/image (130) (1).png" alt="" data-size="original">
 {% endhint %}
 
 ### Wrap and DimensionsBased
@@ -55,7 +55,7 @@ All examples in the DimensionsBased Texture Address section use the following va
 * Width Units = Absolute
 * Height Units = Absolute
 
-<figure><img src="../../../.gitbook/assets/image (134).png" alt=""><figcaption><p>Sprite width and height values used in this section</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (134) (1).png" alt=""><figcaption><p>Sprite width and height values used in this section</p></figcaption></figure>
 
 Toggling wrapping adjusts whether the Sprite wraps or clamps the area defined by the Texture Left, Texture Top, and its size.
 

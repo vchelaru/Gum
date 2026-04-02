@@ -20,8 +20,7 @@ namespace GumFormsSample
         private readonly InputService _inputService = new();
         private readonly RenderService _renderService = new();
         private readonly IGumFormsSampleLogger _logger = new DebugLogger();
-        private BindableGue _currentScreen;
-        private bool _disposed;
+        private GraphicalUiElement _currentScreen;
         GumService GumUI => GumService.Default;
 
         public GumFormsSampleGame()
@@ -71,8 +70,6 @@ namespace GumFormsSample
             {
                 (item as IUpdateScreen)?.Update(gameTime);
             }
-
-            System.Diagnostics.Debug.WriteLine(GumUI.Cursor.WindowOver);
 
             base.Update(gameTime);
         }

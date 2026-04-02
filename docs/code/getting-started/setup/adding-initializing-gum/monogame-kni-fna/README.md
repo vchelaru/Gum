@@ -147,7 +147,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-<strong>        GumUI.Initialize(this, DefaultVisualsVersion.V3);
+<strong>        GumUI.Initialize(this);
 </strong>        base.Initialize();
     }
 
@@ -180,7 +180,7 @@ public class Game1 : Core
     {
         base.Initialize();
 
-<strong>        GumUI.Initialize(Core.GraphicsDevice, DefaultVisualsVersion.V3);
+<strong>        GumUI.Initialize(Core.GraphicsDevice);
 </strong>        
         Scene = new BasicScene();
     }
@@ -202,12 +202,6 @@ public class Game1 : Core
 {% endtab %}
 {% endtabs %}
 
-{% hint style="info" %}
-The code above initializes Gum using _V3_ (version 3) visuals. Future versions of Gum may introduce new versions of visuals.
-
-Old version will continue to be supported when new versions are released, but you may want to upgrade to new versions to take advantage of new features.
-{% endhint %}
-
 ## Adding a Button (Testing the Setup)
 
 Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:
@@ -216,8 +210,8 @@ Gum can be tested by adding a Button after Gum is initialized. To do so, add cod
 {
     base.Initialize();
 
-    GumUI.Initialize(Core.GraphicsDevice, DefaultVisualsVersion.V3);
-    
+    GumUI.Initialize(Core.GraphicsDevice);
+
 <strong>    var button = new Button();
 </strong><strong>    button.AddToRoot();
 </strong><strong>    button.Click += (_,_) =>
@@ -240,7 +234,7 @@ Could not load file or assembly 'MonoGame.Framework, Version=3.8.1.303
 
 If you add the Gum code to your project, you may experience this exception internally from Nez:
 
-<figure><img src="../../../../../.gitbook/assets/image (71).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../../.gitbook/assets/image (71) (1).png" alt=""><figcaption></figcaption></figure>
 
 The reason this is happening is because currently (as of July 2024) Nez links MonoGame 3.8.0 instead of 3.8.1 (the latest).
 
@@ -252,12 +246,12 @@ To do this:
 2. Expand the Dependencies item
 3.  Right-click on Packages and select Manage NuGet Packages\\
 
-    <figure><img src="../../../../../.gitbook/assets/image (73).png" alt=""><figcaption><p>Right-click Manage NuGet Packages... option</p></figcaption></figure>
+    <figure><img src="../../../../../.gitbook/assets/image (73) (1).png" alt=""><figcaption><p>Right-click Manage NuGet Packages... option</p></figcaption></figure>
 4. Click on the Browse tab
 5. Search for MonoGame.Framework
 6.  Select the MonoGame.Framework NuGet package for your particular project type. This is most likely MonoGame.Framework.DesktopGL, but it may be different if you are targeting another platform.\\
 
-    <figure><img src="../../../../../.gitbook/assets/image (74).png" alt=""><figcaption><p>MonoGame.Framework NuGet packages</p></figcaption></figure>
+    <figure><img src="../../../../../.gitbook/assets/image (74) (1).png" alt=""><figcaption><p>MonoGame.Framework NuGet packages</p></figcaption></figure>
 7. Click the Install button to add the NuGet package
 
 After adding MonoGame, your NuGet packages should similar to the following image:

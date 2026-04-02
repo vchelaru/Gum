@@ -11,10 +11,11 @@ namespace Gum.Services.Fonts;
 /// Tool-specific implementation of <see cref="IFontGenerationCallbacks"/> that routes output
 /// to <see cref="IGuiCommands"/> and file-change suppression to <see cref="IFileWatchManager"/>.
 /// </summary>
-internal class ToolFontGenerationCallbacks : IFontGenerationCallbacks
+public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
 {
     private readonly IGuiCommands _guiCommands;
     private readonly IFileWatchManager _fileWatchManager;
+    private Spinner? _currentSpinner;
 
     public ToolFontGenerationCallbacks(IGuiCommands guiCommands, IFileWatchManager fileWatchManager)
     {
@@ -29,7 +30,29 @@ internal class ToolFontGenerationCallbacks : IFontGenerationCallbacks
     public IDisposable? ShowSpinner()
     {
         Spinner spinner = _guiCommands.ShowSpinner();
-        return new SpinnerHandle(spinner);
+        _currentSpinner = spinner;
+        return new SpinnerHandle(this, spinner);
+    }
+
+    /// <inheritdoc/>
+    public void OnFontProgress(int completed, int total)
+    {
+        Spinner? spinner = _currentSpinner;
+        if (spinner == null)
+        {
+            return;
+        }
+
+        if (completed == 0)
+        {
+            // SetTotal must run on the UI thread; use Invoke (synchronous) so the bar
+            // is fully initialized before any IncrementProgress calls arrive.
+            spinner.Dispatcher.BeginInvoke(() => spinner.SetTotal(total));
+        }
+        else
+        {
+            spinner.IncrementProgress();
+        }
     }
 
     /// <inheritdoc/>
@@ -37,13 +60,19 @@ internal class ToolFontGenerationCallbacks : IFontGenerationCallbacks
 
     private sealed class SpinnerHandle : IDisposable
     {
+        private readonly ToolFontGenerationCallbacks _owner;
         private readonly Spinner _spinner;
 
-        public SpinnerHandle(Spinner spinner)
+        public SpinnerHandle(ToolFontGenerationCallbacks owner, Spinner spinner)
         {
+            _owner = owner;
             _spinner = spinner;
         }
 
-        public void Dispose() => _spinner.Hide();
+        public void Dispose()
+        {
+            _owner._currentSpinner = null;
+            _spinner.Hide();
+        }
     }
 }

@@ -88,11 +88,22 @@ public abstract class TextBoxBase :
 
     GraphicalUiElement caretComponent;
 
-    public event Action<IInputReceiver> FocusUpdate;
+    /// <summary>
+    /// Raised every frame while this control has input focus. Can be used
+    /// to perform custom per-frame logic while the control is focused.
+    /// </summary>
+    public event Action<IInputReceiver>? FocusUpdate;
 
+    /// <summary>
+    /// Whether clicking outside the text box causes it to lose focus. Defaults to <c>true</c>.
+    /// </summary>
     public bool LosesFocusWhenClickedOff { get; set; } = true;
 
     protected int caretIndex;
+    /// <summary>
+    /// Gets or sets the zero-based character position of the caret. Setting this value
+    /// updates the caret visual and scrolls the text to keep the caret in view.
+    /// </summary>
     public int CaretIndex
     {
         get => caretIndex; 
@@ -139,6 +150,10 @@ public abstract class TextBoxBase :
     protected abstract string? DisplayedText { get; }
 
     TextWrapping textWrapping = TextWrapping.NoWrap;
+    /// <summary>
+    /// Gets or sets the text wrapping behavior. When set to <see cref="Gum.Forms.TextWrapping.Wrap"/>,
+    /// text wraps to multiple lines. Defaults to <see cref="Gum.Forms.TextWrapping.NoWrap"/>.
+    /// </summary>
     public TextWrapping TextWrapping
     {
         get => textWrapping;
@@ -160,6 +175,9 @@ public abstract class TextBoxBase :
     private int? indexPushed;
 
     protected int selectionStart;
+    /// <summary>
+    /// Gets or sets the zero-based character index of the start of the current selection.
+    /// </summary>
     public int SelectionStart
     {
         get { return selectionStart; }
@@ -174,6 +192,11 @@ public abstract class TextBoxBase :
     }
 
     protected int selectionLength;
+    /// <summary>
+    /// Gets or sets the number of characters in the current selection. A value of 0 means
+    /// nothing is selected. The selection spans from <see cref="SelectionStart"/> to
+    /// <see cref="SelectionStart"/> + <see cref="SelectionLength"/>.
+    /// </summary>
     public int SelectionLength
     {
         get { return selectionLength; }
@@ -220,21 +243,51 @@ public abstract class TextBoxBase :
         }
     }
 
+    /// <summary>
+    /// Gets or sets the placeholder text displayed when the text box is empty.
+    /// Setting this property applies localization if a <see cref="Gum.Localization.LocalizationService"/> is registered.
+    /// To bypass localization, use <see cref="SetPlaceholderNoTranslate"/>.
+    /// </summary>
     public virtual string? Placeholder
     {
         get => placeholderTextObject?.RawText;
         set
         {
-            if (placeholderTextObject != null)
+            if (placeholderComponent != null)
             {
-                placeholderTextObject.RawText = value;
+                // go through the component instead of the renderable to apply localization and force a layout refresh
+                placeholderComponent.SetProperty("Text", value);
             }
+        }
+    }
+
+    /// <summary>
+    /// Sets the placeholder text without applying localization/translation.
+    /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable — only the final string is stored.
+    /// Use this for placeholder text that should not be localized.
+    /// </remarks>
+    public void SetPlaceholderNoTranslate(string? value)
+    {
+        if (placeholderComponent != null)
+        {
+            placeholderComponent.SetProperty("TextNoTranslate", value);
         }
     }
 
     protected abstract string CategoryName { get; }
 
     int? maxLength;
+    /// <summary>
+    /// The maximum number of characters the user can enter. When set, typing, pasting, and
+    /// programmatic text assignment are all truncated to this length. A value of <c>null</c>
+    /// (the default) means no limit. This is equivalent to WPF's
+    /// <c>TextBox.MaxLength</c>.
+    /// To limit how many characters are <em>displayed</em> without restricting input,
+    /// see <see cref="TextBox.MaxLettersToShow"/> instead.
+    /// </summary>
     public int? MaxLength
     {
         get => maxLength;
@@ -245,8 +298,16 @@ public abstract class TextBoxBase :
         }
     }
 
+    /// <summary>
+    /// Whether the text box is read-only. When <c>true</c>, the user cannot type, paste,
+    /// delete, or otherwise modify the text, but can still select and copy.
+    /// </summary>
     public bool IsReadOnly { get; set; }
 
+    /// <summary>
+    /// Whether the caret is visible when <see cref="IsReadOnly"/> is <c>true</c>.
+    /// Defaults to <c>false</c>.
+    /// </summary>
     public bool IsCaretVisibleWhenReadOnly { get; set; }
 
     /// <summary>
@@ -262,7 +323,15 @@ public abstract class TextBoxBase :
     #region Events
 
     public event Action<GamepadButton> ControllerButtonPushed;
+    /// <summary>
+    /// Raised before new text is inserted (by typing or pasting). Set
+    /// <see cref="RoutedEventArgs.Handled"/> to <c>true</c> to cancel the insertion.
+    /// Similar to WPF's <c>PreviewTextInput</c>.
+    /// </summary>
     public event Action<object, TextCompositionEventArgs> PreviewTextInput;
+    /// <summary>
+    /// Raised when the <see cref="CaretIndex"/> changes.
+    /// </summary>
     public event EventHandler CaretIndexChanged;
     protected void RaiseCaretIndexChanged() => CaretIndexChanged?.Invoke(this, EventArgs.Empty);
     public event EventHandler SelectionChanged;
@@ -1014,6 +1083,8 @@ public abstract class TextBoxBase :
 #if XNALIKE && !FRB
         base.HandleKeyboardFocusUpdate();
 #endif
+
+        FocusUpdate?.Invoke(this);
     }
 
     public void OnGainFocus()

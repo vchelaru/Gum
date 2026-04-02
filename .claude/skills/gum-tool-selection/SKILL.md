@@ -1,6 +1,6 @@
 ---
 name: gum-tool-selection
-description: Reference guide for Gum's editor selection system. Load this when working on click/drag selection, the rectangle/marquee selector, input handlers (move, resize, rotate, polygon points), the IsActive flag, locked instance behavior, or SelectionManager coordination.
+description: Reference guide for Gum's editor selection system. Load this when working on click/drag selection, the rectangle/marquee selector, input handlers (move, resize, rotate, polygon points), the IsActive flag, locked instance behavior, SelectionManager coordination, or the selection event cascade (plugin events, forced default state, tree view sync).
 ---
 
 # Gum Editor Selection System Reference
@@ -82,6 +82,36 @@ Locked instances cannot be canvas-clicked or rectangle-selected, but **can alway
 ## `_lastPushWasOnLockedBody`
 
 Tracked in `SelectionManager.ProcessInputForSelection()` — set to `true` when the selected instance is locked and the cursor is over the body. Used in `ProcessRectangleSelection()` to prevent deselection when the user releases the mouse over a locked body without dragging.
+
+## Selection Event Cascade
+
+When the user selects an instance (via tree view or wireframe), `SelectedState` orchestrates a synchronous cascade of plugin events:
+
+```
+User selects instance
+  → SelectedState.HandleSelectedInstances()
+    → PerformAfterSelectInstanceLogic()
+      → SelectedStateSave = element.States[0]  (forced default state)
+        → PluginManager.ReactToStateSaveSelected()  ← fires FIRST
+    → PluginManager.InstanceSelected()               ← fires SECOND
+```
+
+**Key behaviors:**
+- State selection fires BEFORE instance selection (from inside `PerformAfterSelectInstanceLogic`). State is only force-selected when the current state doesn't belong to the new element (checked via `AllStates.Contains`).
+- Both events trigger `RefreshEntireGrid` in `MainVariableGridPlugin`. A `_stateJustRefreshedGrid` flag prevents the double refresh — set by `HandleStateSelected`, checked and consumed by `HandleInstanceSelected`.
+- `MainTreeViewPlugin` responds to `InstanceSelected` by syncing the tree view node. It sets `SuppressCallAfterClickSelect` on `ElementTreeViewManager` so the `Select` methods update the visual tree node without re-firing `CallAfterClickSelect`, which would cause a redundant plugin cascade.
+
+**`IsInUiInitiatedSelection` vs `SuppressCallAfterClickSelect`:** `IsInUiInitiatedSelection` is set during `OnSelect` to prevent programmatic `Select` calls from re-entering while the tree view processes a user-initiated selection — but it's cleared before plugin events fire, so it doesn't prevent the `MainTreeViewPlugin` sync path. `SuppressCallAfterClickSelect` handles that case specifically.
+
+### Cascade Key Files
+
+| File | Purpose |
+|------|---------|
+| `Gum/ToolStates/SelectedState.cs` | `HandleSelectedInstances`, `PerformAfterSelectInstanceLogic`, `HandleStateSaveSelected` |
+| `Gum/Plugins/PluginManager.cs` | `InstanceSelected`, `ReactToStateSaveSelected` event dispatch |
+| `Gum/Plugins/InternalPlugins/TreeView/MainTreeViewPlugin.cs` | Tree view sync with `SuppressCallAfterClickSelect` |
+| `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.cs` | `Select` methods, `CallAfterClickSelect`, both suppression flags |
+| `Gum/Plugins/InternalPlugins/VariableGrid/MainVariableGridPlugin.cs` | `_stateJustRefreshedGrid` double-refresh guard |
 
 ## Key Files Summary
 

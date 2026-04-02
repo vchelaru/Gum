@@ -5,7 +5,7 @@ using System;
 
 namespace SkiaGum.GueDeriving;
 
-public class LottieAnimationRuntime : GraphicalUiElement
+public class LottieAnimationRuntime : InteractiveGue
 {
     //protected override RenderableBase ContainedRenderable => ContainedLottieAnimation;
 

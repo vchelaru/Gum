@@ -28,7 +28,9 @@ public class Button : ButtonBase
 
     /// <summary>
     /// Text displayed by the button. This property requires that the TextInstance instance be present in the Gum component.
-    /// If the TextInstance instance is not present, an exception will be thrown in DEBUG mode
+    /// If the TextInstance instance is not present, an exception will be thrown in DEBUG mode.
+    /// Setting this property applies localization if a <see cref="Gum.Localization.LocalizationService"/> is registered.
+    /// To bypass localization, use <see cref="SetTextNoTranslate"/>.
     /// </summary>
     public virtual string? Text
     {
@@ -47,6 +49,19 @@ public class Button : ButtonBase
             // go through the component instead of the core text object to force a layout refresh if necessary
             textComponent?.SetProperty("Text", value);
         }
+    }
+
+    /// <summary>
+    /// Sets the button text without applying localization/translation.
+    /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable — only the final string is stored.
+    /// Use this for text that should not be localized.
+    /// </remarks>
+    public void SetTextNoTranslate(string? value)
+    {
+        textComponent?.SetProperty("TextNoTranslate", value);
     }
 
 

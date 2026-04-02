@@ -157,7 +157,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
     public bool Wrap => false;
 
-    protected bool CanRenderAt0Dimension { get; set; } = false;
+    public bool CanRenderAt0Dimension { get; protected set; } = false;
     public bool IsOffsetAppliedForStroke { get; set; } = true;
 
     /// <summary>
@@ -169,12 +169,12 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
     /// <summary>
     /// Extra pixels needed on each horizontal side to accommodate effects like dropshadow.
     /// </summary>
-    public float XSizeSpillover => HasDropshadow ? DropshadowBlurX + Math.Abs(DropshadowOffsetX) : 0;
+    public virtual float XSizeSpillover => HasDropshadow ? DropshadowBlurX + Math.Abs(DropshadowOffsetX) : 0;
 
     /// <summary>
     /// Extra pixels needed on each vertical side to accommodate effects like dropshadow.
     /// </summary>
-    public float YSizeSpillover => HasDropshadow ? DropshadowBlurY + Math.Abs(DropshadowOffsetY) : 0;
+    public virtual float YSizeSpillover => HasDropshadow ? DropshadowBlurY + Math.Abs(DropshadowOffsetY) : 0;
 
     /// <summary>
     /// Whether the color should be applied as a multiplier during sprite rendering.
@@ -458,6 +458,42 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         }
     }
 
+    float _strokeDashLength;
+    /// <summary>
+    /// Length of each dash segment in pixels when using a dashed stroke.
+    /// A value of 0 (the default) produces a solid stroke.
+    /// </summary>
+    public float StrokeDashLength
+    {
+        get => _strokeDashLength;
+        set
+        {
+            if (value != _strokeDashLength)
+            {
+                _strokeDashLength = value;
+                ClearCachedPaint();
+            }
+        }
+    }
+
+    float _strokeGapLength;
+    /// <summary>
+    /// Length of each gap between dashes in pixels when using a dashed stroke.
+    /// Ignored when <see cref="StrokeDashLength"/> is 0.
+    /// </summary>
+    public float StrokeGapLength
+    {
+        get => _strokeGapLength;
+        set
+        {
+            if (value != _strokeGapLength)
+            {
+                _strokeGapLength = value;
+                ClearCachedPaint();
+            }
+        }
+    }
+
     #region Dropshadow
 
     SKColor _dropshadowColor;
@@ -726,6 +762,12 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         if (UseGradient)
         {
             ApplyGradientToPaint(boundingRect, paint, absoluteRotation);
+        }
+
+        if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0)
+        {
+            paint.PathEffect = SKPathEffect.CreateDash(
+                new[] { StrokeDashLength, StrokeGapLength }, phase: 0);
         }
 
         return paint;

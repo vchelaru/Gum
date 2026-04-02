@@ -18,7 +18,7 @@ The following image shows a child ColoredRectangle with `-10` `Relative to Paren
 
 If an instance does not have a parent, then it uses the canvas size when using a `Width Units` of `Relative to Parent`.
 
-<figure><img src="../../../.gitbook/assets/image (70).png" alt=""><figcaption><p>Rectangle using 0 <code>Relative to Parent</code> with no direct parent</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (70) (1).png" alt=""><figcaption><p>Rectangle using 0 <code>Relative to Parent</code> with no direct parent</p></figcaption></figure>
 
 {% hint style="info" %}
 All relationships between parent and children depend only on the direct parent or child. Grandchildren and grandparents are not considered when performing calculations. For more information, see the [Parent](parent.md#children-outside-of-parent-bounds) page.
@@ -32,7 +32,7 @@ The following shows a child ColoredRectangle with `100` `Percentage of Parent` `
 
 If an object does not have a parent, then the width of the canvas is used.
 
-<figure><img src="../../../.gitbook/assets/image (69).png" alt=""><figcaption><p>Rectangle using 100% of the screen when it has no direct parent</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (69) (1).png" alt=""><figcaption><p>Rectangle using 100% of the screen when it has no direct parent</p></figcaption></figure>
 
 ## Ratio of Parent
 
@@ -148,6 +148,20 @@ Setting a Text instance's `Width Units` to `Relative to Children` results in the
 For example, setting the `Width Units` to `Relative to Children` and setting the `Width` to `0` results in the Text object automatically adjusting its actual width according to the text it contains.
 
 ![Text with Relative to Children width results in the contents of the Text instance controlling its size](<../../../.gitbook/assets/11_05 52 48.png>)
+
+## Relative to Max of Children or Parent
+
+`Relative to Max of Children or Parent` sizes an element to whichever is larger — its parent's width or the width needed to contain its children. The `Width` value acts as padding on the children side, the same as `Relative to Children`. A `Width` of `0` means the element is exactly the larger of its parent's width or its children's bounds.
+
+This unit is most useful when multiple siblings all use `Relative to Max of Children or Parent`. In this case, the sibling with the widest content drives the parent's width, which in turn sets the width of all narrower siblings. This creates a column of elements that always match each other's width regardless of their individual content.
+
+<figure><img src="../../../.gitbook/assets/26_09 05 58.png" alt=""><figcaption><p>The bottom blue rectangle's effective width is controlled by the wider of its parent (red rectangle) or child (white rectangle)</p></figcaption></figure>
+
+For example, consider a vertical menu where each menu item contains a Text instance. Each menu item uses `Relative to Max of Children or Parent` for its `Width Units`. When one menu item has longer text, that item grows to fit its content. Because the wider item pushes the parent to grow, all other menu items also grow to match — keeping the menu uniform.
+
+<figure><img src="../../../.gitbook/assets/26_09 07 37.gif" alt=""><figcaption><p>Changes to the white rectangle cause size changes in the blue and ultimately red rectangle, which affects the size of sibling blue rectangles</p></figcaption></figure>
+
+Without this unit, you would need to either set a fixed width on all menu items (which cannot adapt to content) or use `Relative to Children` on each item (which makes each item a different width based on its own text).
 
 ## Percentage of Height
 

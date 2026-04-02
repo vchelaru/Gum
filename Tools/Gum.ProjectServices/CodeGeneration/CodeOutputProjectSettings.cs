@@ -70,6 +70,13 @@ using System.Linq;
 
     public bool GenerateGumDataTypes { get; set; }
 
+    /// <summary>
+    /// Controls how the code generator determines the syntax version of the referenced Gum runtime.
+    /// Set to <c>"*"</c> (the default) to auto-detect from the game project's Gum reference.
+    /// Set to a numeric string (e.g., <c>"0"</c>, <c>"1"</c>) to override auto-detection.
+    /// </summary>
+    public string SyntaxVersion { get; set; } = "*";
+
     internal void SetDefaults()
     {
         this.AppendFolderToNamespace = true;

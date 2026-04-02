@@ -242,7 +242,7 @@ public class GumService
         InitializeInternal(game, game.GraphicsDevice, systemManagers: systemManagers);
     }
 #else
-    public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
+    public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.Newest)
     {
         InitializeInternal(
             gumProjectFile: null,
@@ -630,6 +630,14 @@ public class GumService
 #region GraphicalUiElementExtensionMethods Class
 public static class GraphicalUiElementExtensionMethods
 {
+    /// <summary>
+    /// Adds this element as a child of the GumService root container, making it a top-level
+    /// element that will be rendered and receive layout updates. This is the recommended way
+    /// to display a root-level element — prefer this over the obsolete <c>AddToManagers</c>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if GumService has not been initialized.
+    /// </exception>
     public static void AddToRoot(this GraphicalUiElement element)
     {
         if(GumService.Default.IsInitialized == false)
@@ -640,6 +648,10 @@ public static class GraphicalUiElementExtensionMethods
         GumService.Default.Root.Children.Add(element);
     }
 
+    /// <summary>
+    /// Removes this element from its parent, effectively removing it from the visual tree.
+    /// This reverses a previous <see cref="AddToRoot(GraphicalUiElement)"/> call.
+    /// </summary>
     public static void RemoveFromRoot(this GraphicalUiElement element)
     {
         element.Parent = null;
@@ -652,6 +664,14 @@ public static class GraphicalUiElementExtensionMethods
     }
 #endif
 
+    /// <summary>
+    /// Adds this Forms control's underlying visual to the GumService root container, making it
+    /// a top-level element. This is the Forms equivalent of
+    /// <see cref="AddToRoot(GraphicalUiElement)"/>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if GumService has not been initialized.
+    /// </exception>
     public static void AddToRoot(this FrameworkElement element)
     {
         if (GumService.Default.IsInitialized == false)

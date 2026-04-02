@@ -43,7 +43,7 @@ namespace Gum.DataTypes
 
     public static class ElementSaveExtensionMethods
     {
-        public static bool Initialize(this ElementSave elementSave, StateSave? defaultState)
+        public static bool Initialize(this ElementSave elementSave, StateSave? defaultState, bool tolerateMissingDefaultStates = false)
         {
             bool wasModified = false;
 
@@ -63,7 +63,7 @@ namespace Gum.DataTypes
             foreach (InstanceSave instance in elementSave.Instances)
             {
                 instance.ParentContainer = elementSave;
-                instance.Initialize(elementSave, ref wasModified);
+                instance.Initialize(elementSave, ref wasModified, throwExceptionOnMissing : !tolerateMissingDefaultStates);
             }
 
             return wasModified;

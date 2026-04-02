@@ -56,7 +56,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     #region Constructor/Initialize
 
 
-    private readonly FontManager _fontManager;
+    private readonly IFontManager _fontManager;
     private readonly ISelectedState _selectedState;
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
@@ -65,7 +65,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     private readonly PluginManager _pluginManager;
     private readonly IProjectState _projectState;
 
-    public WireframeObjectManager(FontManager fontManager,
+    public WireframeObjectManager(IFontManager fontManager,
         ISelectedState selectedState,
         IDialogService dialogService,
         IGuiCommands guiCommands,

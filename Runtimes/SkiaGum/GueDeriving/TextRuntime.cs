@@ -1,4 +1,4 @@
-﻿#if MONOGAME || KNI || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
 #define XNALIKE
 #endif
 using Gum.DataTypes;
@@ -13,66 +13,8 @@ namespace SkiaGum.GueDeriving;
 /// <summary>
 /// A visual text element which can display a string.
 /// </summary>
-public class TextRuntime : GraphicalUiElement
+public class TextRuntime : InteractiveGue
 {
-    #region Skia-specific properties, which may go away in the future
-    public static int DefaultRed { get; set; } = 69;
-    public static int DefaultGreen { get; set; } = 90;
-    public static int DefaultBlue { get; set; } = 100;
-
-
-    public enum ColorCategory
-    {
-        White,
-        DefaultColor,
-        LightBlue,
-        LightGray
-    }
-
-    [Obsolete("This existed to match Gum, but this should be handled by codegen")]
-    ColorCategory mColorCategoryState;
-    [Obsolete("This existed to match Gum, but this should be handled by codegen")]
-    public ColorCategory ColorCategoryState
-    {
-        get => mColorCategoryState;
-        set
-        {
-            mColorCategoryState = value;
-            switch (value)
-            {
-                case ColorCategory.White:
-                    this.Blue = 255;
-                    this.Green = 255;
-                    this.Red = 255;
-                    break;
-                case ColorCategory.DefaultColor:
-                    this.Blue = 100;
-                    this.Green = 90;
-                    this.Red = 69;
-                    break;
-                case ColorCategory.LightBlue:
-                    this.Blue = 193;
-                    this.Green = 145;
-                    this.Red = 0;
-                    break;
-                case ColorCategory.LightGray:
-                    this.Blue = 227;
-                    this.Green = 226;
-                    this.Red = 226;
-                    break;
-            }
-        }
-    }
-
-    [Obsolete("Use MaxNumberOfLines instead")]
-    public int? MaximumNumberOfLines
-    {
-        get => MaxNumberOfLines;
-        set => MaxNumberOfLines = value;
-    }
-
-    #endregion
-
     Text? mContainedText;
     Text ContainedText
     {
@@ -89,7 +31,7 @@ public class TextRuntime : GraphicalUiElement
 
 #if !RAYLIB && !SKIA
     /// <summary>
-    /// The XNA blend state used when rendering the text. This controls how 
+    /// The XNA blend state used when rendering the text. This controls how
     /// color and alpha values blend with the background.
     /// </summary>
     public Microsoft.Xna.Framework.Graphics.BlendState BlendState
@@ -189,7 +131,7 @@ public class TextRuntime : GraphicalUiElement
 
 #if !RAYLIB && !SKIA
     /// <summary>
-    /// The maximum letters to display. This can be used to 
+    /// The maximum letters to display. This can be used to
     /// create an effect where the text prints out letter-by-letter.
     /// </summary>
     public int? MaxLettersToShow
@@ -282,174 +224,9 @@ public class TextRuntime : GraphicalUiElement
         }
     }
 
-    public TextOverflowHorizontalMode TextOverflowHorizontalMode
-    {
-        // Currently GraphicalUiElement doesn't expose this property so we have to go through setting it by string:
-        get => ContainedText.IsTruncatingWithEllipsisOnLastLine ? TextOverflowHorizontalMode.EllipsisLetter : TextOverflowHorizontalMode.TruncateWord;
-        set
-        {
-            ContainedText.IsTruncatingWithEllipsisOnLastLine = value == TextOverflowHorizontalMode.EllipsisLetter;
-            NotifyPropertyChanged();
-            UpdateLayout();
-        }
-    }
-
-#if !SKIA
-    /// <summary>
-    /// Gets or sets the text rendering position mode to use for the contained text, overriding the default behavior if
-    /// specified.
-    /// </summary>
-    /// <remarks>Set this property to control how text positioning is handled during rendering. If the value
-    /// is <see langword="null"/>, the default rendering position mode is used. Changing this property affects only the
-    /// contained text and does not impact other elements.</remarks>
-    public TextRenderingPositionMode? TextRenderingPositionMode
-    {
-        get => ContainedText.OverrideTextRenderingPositionMode;
-        set => ContainedText.OverrideTextRenderingPositionMode = value;
-    }
-#endif
-
-    /// <summary>
-    /// Gets or sets the raw text content displayed by the control. This is the value before line wrapping and bbcode parsing has been applied.
-    /// </summary>
-    /// <remarks>Setting this property updates the displayed text and may trigger layout changes if the text
-    /// size affects the control's dimensions. If the control's width is set relative to its children and no maximum
-    /// width is specified, the text will not be line-wrapped.</remarks>
-    public string? Text
-    {
-        get
-        {
-            return ContainedText.RawText;
-        }
-        set
-        {
-            var widthBefore = ContainedText.WrappedTextWidth;
-            var heightBefore = ContainedText.WrappedTextHeight;
-            if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
-            {
-                if (this.MaxWidth == null)
-                {
-                    // make it have no line wrap width before assignign the text:
-                    ContainedText.Width = null;
-                }
-                else
-                {
-                    ContainedText.Width = this.MaxWidth;
-                }
-            }
-
-            // Use SetProperty so it goes through the BBCode-checking methods
-            //ContainedText.RawText = value;
-            this.SetProperty("Text", value);
-
-            NotifyPropertyChanged();
-            var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
-            if (shouldUpdate)
-            {
-                UpdateLayout(
-                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
-                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Sets the text without applying localization/translation. Equivalent to calling
-    /// <c>SetProperty("TextNoTranslate", value)</c>.
-    /// </summary>
-    public void SetTextNoTranslate(string? value)
-    {
-        var widthBefore = ContainedText.WrappedTextWidth;
-        var heightBefore = ContainedText.WrappedTextHeight;
-        if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
-        {
-            if (this.MaxWidth == null)
-            {
-                ContainedText.Width = null;
-            }
-            else
-            {
-                ContainedText.Width = this.MaxWidth;
-            }
-        }
-
-        this.SetProperty("TextNoTranslate", value);
-
-        NotifyPropertyChanged(nameof(Text));
-        var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
-        if (shouldUpdate)
-        {
-            UpdateLayout(
-                Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
-                Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
-        }
-    }
-
-#if !SKIA
-    /// <summary>
-    /// The lines of text after wrapping and bbcode parsing have been applied.
-    /// </summary>
-    public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
-
-    public OverlapDirection OverlapDirection
-    {
-        get => ContainedText.OverlapDirection;
-        set => ContainedText.OverlapDirection = value;
-    }
-#endif
-
-    public bool IsBold
-    {
-        get => ContainedText.BoldWeight > 1;
-        set
-        {
-            if(value)
-            {
-                ContainedText.BoldWeight = 1.5f;
-            }
-            else
-            {
-                ContainedText.BoldWeight = 1;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets or sets the weight multiplier for bold text rendering.
-    /// A value of 1.0 represents regular weight, while higher values 
-    /// increase the thickness of strokes (e.g., 1.5 for bold).
-    /// </summary>
-    public float BoldWeight
-    {
-        get => ContainedText.BoldWeight;
-        set => ContainedText.BoldWeight = value;
-    }
-
-    //public SKTypeface FontType
-    //{
-    //    get => ContainedText.Font;
-    //    set => ContainedText.Font = value;
-    //}
-
-    public int FontSize
-    {
-        get => ContainedText.FontSize;
-        // July 10, 2023 - This is causing problems
-        // because the FontSize is not making it to the
-        // underyling object. I'm going to do both for now
-        // as a half-step to removing the usage of the ContainedText...
-        // or maybe we always use both?
-        //set => ContainedText.FontSize = value;
-        set
-        {
-            ContainedText.FontSize = value;
-            UpdateToFontValues();
-        }
-    }
-
     bool useCustomFont;
     /// <summary>
-    /// Whether to use the CustomFontFile to determine the font value. 
+    /// Whether to use the CustomFontFile to determine the font value.
     /// If false, then the font is determiend by looking for an existing
     /// font based on:
     /// * Font
@@ -497,12 +274,50 @@ public class TextRuntime : GraphicalUiElement
         set { font = value; UpdateToFontValues(); }
     }
 
+    int fontSize;
+    public int FontSize
+    {
+        get { return fontSize; }
+        set { fontSize = value; UpdateToFontValues(); }
+    }
+
     bool isItalic;
     public bool IsItalic
     {
         get => isItalic;
         set { isItalic = value; UpdateToFontValues(); }
     }
+
+#if SKIA
+    float _boldWeight = 1;
+    /// <summary>
+    /// Gets or sets the weight multiplier for bold text rendering.
+    /// A value of 1.0 represents regular weight, while higher values
+    /// increase the thickness of strokes (e.g., 1.5 for bold).
+    /// </summary>
+    public float BoldWeight
+    {
+        get => _boldWeight;
+        set
+        {
+            _boldWeight = value;
+            ContainedText.BoldWeight = value;
+        }
+    }
+
+    public bool IsBold
+    {
+        get => _boldWeight > 1;
+        set { BoldWeight = value ? 1.5f : 1f; }
+    }
+#else
+    bool isBold;
+    public bool IsBold
+    {
+        get => isBold;
+        set { isBold = value; UpdateToFontValues(); }
+    }
+#endif
 
     // Not sure if we need to make this a public value, but we do need to store it
     // Update - yes we do need this to be public so it can be assigned in codegen:
@@ -519,6 +334,133 @@ public class TextRuntime : GraphicalUiElement
         get { return outlineThickness; }
         set { outlineThickness = value; UpdateToFontValues(); }
     }
+
+    public TextOverflowHorizontalMode TextOverflowHorizontalMode
+    {
+        // Currently GraphicalUiElement doesn't expose this property so we have to go through setting it by string:
+        get => ContainedText.IsTruncatingWithEllipsisOnLastLine ? TextOverflowHorizontalMode.EllipsisLetter : TextOverflowHorizontalMode.TruncateWord;
+        set
+        {
+            ContainedText.IsTruncatingWithEllipsisOnLastLine = value == TextOverflowHorizontalMode.EllipsisLetter;
+            NotifyPropertyChanged();
+            UpdateLayout();
+        }
+    }
+
+#if !SKIA
+    /// <summary>
+    /// Gets or sets the text rendering position mode to use for the contained text, overriding the default behavior if
+    /// specified.
+    /// </summary>
+    /// <remarks>Set this property to control how text positioning is handled during rendering. If the value
+    /// is <see langword="null"/>, the default rendering position mode is used. Changing this property affects only the
+    /// contained text and does not impact other elements.</remarks>
+    public TextRenderingPositionMode? TextRenderingPositionMode
+    {
+        get => ContainedText.OverrideTextRenderingPositionMode;
+        set => ContainedText.OverrideTextRenderingPositionMode = value;
+    }
+#endif
+
+    /// <summary>
+    /// Gets or sets the raw text content displayed by the control. This is the value before line wrapping and bbcode parsing has been applied.
+    /// </summary>
+    /// <remarks>
+    /// Setting this property updates the displayed text and may trigger layout changes if the text
+    /// size affects the control's dimensions. If the control's width is set relative to its children and no maximum
+    /// width is specified, the text will not be line-wrapped.
+    /// If a <see cref="Gum.Localization.LocalizationService"/> is registered, the assigned value is passed through
+    /// <see cref="Gum.Localization.LocalizationService.Translate"/> before being applied. To bypass translation
+    /// (for example, for user-entered text), use <see cref="SetTextNoTranslate"/> instead.
+    /// </remarks>
+    public string? Text
+    {
+        get
+        {
+            return ContainedText.RawText;
+        }
+        set
+        {
+            var widthBefore = ContainedText.WrappedTextWidth;
+            var heightBefore = ContainedText.WrappedTextHeight;
+            if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+            {
+                if (this.MaxWidth == null)
+                {
+                    // make it have no line wrap width before assignign the text:
+                    ContainedText.Width = null;
+                }
+                else
+                {
+                    ContainedText.Width = this.MaxWidth;
+                }
+            }
+
+            // Use SetProperty so it goes through the BBCode-checking methods
+            //ContainedText.RawText = value;
+            this.SetProperty("Text", value);
+
+            NotifyPropertyChanged();
+            var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
+            if (shouldUpdate)
+            {
+                UpdateLayout(
+                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sets the text without applying localization/translation. Equivalent to calling
+    /// <c>SetProperty("TextNoTranslate", value)</c>.
+    /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable — only the final string is stored. A corresponding getter would
+    /// have no way to distinguish translated from untranslated text, so a property would be misleading.
+    /// Use this for text that should not be localized, such as user-entered input in a TextBox.
+    /// </remarks>
+    public void SetTextNoTranslate(string? value)
+    {
+        var widthBefore = ContainedText.WrappedTextWidth;
+        var heightBefore = ContainedText.WrappedTextHeight;
+        if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+        {
+            if (this.MaxWidth == null)
+            {
+                ContainedText.Width = null;
+            }
+            else
+            {
+                ContainedText.Width = this.MaxWidth;
+            }
+        }
+
+        this.SetProperty("TextNoTranslate", value);
+
+        NotifyPropertyChanged(nameof(Text));
+        var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
+        if (shouldUpdate)
+        {
+            UpdateLayout(
+                Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
+        }
+    }
+
+#if !SKIA
+    /// <summary>
+    /// The lines of text after wrapping and bbcode parsing have been applied.
+    /// </summary>
+    public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
+
+    public OverlapDirection OverlapDirection
+    {
+        get => ContainedText.OverlapDirection;
+        set => ContainedText.OverlapDirection = value;
+    }
+#endif
 
     #region Defaults
 
@@ -553,28 +495,28 @@ public class TextRuntime : GraphicalUiElement
 
     #endregion
 
-    public TextRuntime (bool fullInstantiation = true)
+    public TextRuntime(bool fullInstantiation = true)
     {
         if(fullInstantiation)
         {
             this.SuspendLayout();
-            SetContainedObject(new Text());
+            var textRenderable = new Text();
+            mContainedText = textRenderable;
 
-            this.Height = 0;
-            this.HeightUnits = DimensionUnitType.RelativeToChildren;
-            this.Width = 0;
-            this.WidthUnits = DimensionUnitType.RelativeToChildren;
+            SetContainedObject(textRenderable);
 
-            // These values are default values matching Gum defaults. Not sure how to handle this - ultimately the Gum project
-            // could change these values, in which case these would no longer be valid. We need a way to push the default states
-            // from Gum here. But...for now at least we'll match defaults:
-            FontSize = 18;
+            Width = DefaultWidth;
+            WidthUnits = DefaultWidthUnits;
+            Height = DefaultHeight;
+            HeightUnits = DefaultHeightUnits;
+            if(AssignFontInConstructor)
+            {
+                this.FontSize = DefaultFontSize;
+                this.Font = DefaultFont;
+            }
+            HasEvents = false;
 
-            Red = 255;
-            Green = 255;
-            Blue = 255;
-
-            this.Text = "Hello";
+            textRenderable.RawText = "Hello World";
             this.ResumeLayout();
         }
     }
@@ -589,8 +531,9 @@ public class TextRuntime : GraphicalUiElement
     }
 
 #if !RAYLIB && !SKIA
-    // We should phase this out, so not adding it to raylib. Instead, add to root
-    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer:null);
+    /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+    [Obsolete("Use the AddToRoot extension method instead (e.g. myText.AddToRoot()).")]
+    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
 
 #if !SKIA

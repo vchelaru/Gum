@@ -69,12 +69,21 @@ Always use relative paths — no absolute URLs. Link to a section landing page u
 
 Do not use anchor-only links to other files (e.g., `[foo](other-file.md#section)` is fine, but `[foo](#section)` only works within the same page).
 
+## Tool Docs vs Code Docs
+
+The docs have two top-level sections — **Gum Tool** (`docs/gum-tool/`) and **Code** (`docs/code/`). These must never be mixed:
+
+- **Tool docs** (`gum-tool/`) describe the Gum UI tool — properties, editors, menus, and workflows within the tool. They should not contain C# code samples or reference runtime APIs.
+- **Code docs** (`docs/code/`) describe using Gum at runtime in game code — C# APIs, Forms controls, layout in code, etc. They should not describe how to use the Gum tool UI.
+
+When writing a tool doc page (e.g., a property page under `gum-elements/`), focus entirely on the tool experience: what the property does visually, where it appears in the UI, and screenshots showing the effect. Do not add code examples showing how to set the property in C#. Conversely, code doc pages should not walk through the tool's UI.
+
 ## Tone and Style
 
 - Second person ("you"), present tense, instructional tone.
 - Use numbered lists for procedures; bullet lists for non-sequential items.
-- **Bold** UI element names: menu items, button labels, tab names, property names shown in the tool.
-- Backticks for variable names, property values, file names, and code: `Width Units`, `Relative To Children`.
+- **Bold** UI element names: menu items, button labels, tab names, category names shown in the tool (e.g., **Source** category, **Variables** tab).
+- Backticks for property names, variable names, property values, file names, and code: `Width Units`, `Relative To Children`, `Is Tiling Middle Sections`.
 - Avoid passive voice — prefer "Gum displays a label" over "a label is displayed."
 - Screenshots (`.png`) for single states; animated GIFs (`.gif`) for multi-step interactions. Use them liberally.
 
@@ -129,3 +138,4 @@ For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle
 - Code blocks in docs use `csharp` language identifier: ` ```csharp `.
 - Some README.md section pages contain only a brief intro paragraph and a figure — that is intentional; sub-pages provide detail.
 - Page titles use `# Title` (H1) at the top. Sections within a page use `##` and `###` — avoid jumping heading levels.
+- **Image/gif placeholders must be visible** — never use HTML comments (`<!-- TODO -->`) for placeholders because they are invisible in the rendered docs. Instead use a warning hint block so the placeholder is obvious when browsing the docs.

@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MonoGameGum.Tests.V2.Forms;
-public class MenuItemTests
+public class MenuItemTests : BaseTestClass
 {
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
@@ -60,7 +60,7 @@ public class MenuItemTests
         topItem.Name = "Top Item";
 
         var wasTopClicked = false;
-        topItem.Clicked += (not, used) =>
+        topItem.Clicked += (_, _) =>
         {
             wasTopClicked = true;
         };
@@ -73,7 +73,7 @@ public class MenuItemTests
         subItem.Width = 100;
         subItem.Height = 100;
         topItem.Items.Add(subItem);
-        subItem.Clicked += (not, used) =>
+        subItem.Clicked += (_, _) =>
         {
             wasSubClicked = true;
         };

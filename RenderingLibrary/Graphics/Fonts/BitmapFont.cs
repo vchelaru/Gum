@@ -235,6 +235,26 @@ public class BitmapFont : IDisposable
         SetFontPattern();
     }
 
+    /// <summary>
+    /// Creates a <see cref="BitmapFont"/> entirely in memory from pre-built texture pages
+    /// and .fnt content. No disk I/O is performed. This is intended for runtime font
+    /// generation where a library like KernSmith produces textures and metadata directly.
+    /// </summary>
+    public BitmapFont(Texture2D[] textures, string fntContent)
+    {
+        mTextures = textures;
+
+        mTextureNames = new string[textures.Length];
+        for (int i = 0; i < textures.Length; i++)
+        {
+            mTextureNames[i] = textures[i]?.Name;
+        }
+
+        _ParsedFontFile = new ParsedFontFile(fntContent);
+
+        SetFontPattern();
+    }
+
 
 
     public void AssignCharacterTextureCoordinates(int asciiNumber, out float tVTop, out float tVBottom,

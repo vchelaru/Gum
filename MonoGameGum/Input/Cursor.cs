@@ -482,11 +482,21 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
         {
             _touchCollection = GetTouchCollection();
         }
+        else
+        {
+#if RAYLIB
+            _touchCollection = _touchCollection ?? new TouchCollection();
+#endif
+        }
 
         var lastFrameTouchCollectionCount = 0;
         try
         {
+#if RAYLIB
+            lastFrameTouchCollectionCount = _lastFrameTouchCollection?.Count ?? 0;
+#else
             lastFrameTouchCollectionCount = _lastFrameTouchCollection.Count;
+#endif
         }
         // FNA crashes here (maybe because XNA did?) if lastFrameTouchCollectionCount.GetState has never been called
         catch { }

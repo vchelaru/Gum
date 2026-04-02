@@ -13,7 +13,7 @@ using MonoGameGum.GueDeriving;
 
 namespace FnaSample.Screens
 {
-    public partial class MainScreenRuntime:Gum.Wireframe.BindableGue
+    public partial class MainScreenRuntime:Gum.Wireframe.GraphicalUiElement
     {
         [System.Runtime.CompilerServices.ModuleInitializer]
         public static void RegisterRuntimeType()

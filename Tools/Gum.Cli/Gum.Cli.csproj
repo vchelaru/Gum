@@ -7,7 +7,7 @@
 		<LangVersion>12.0</LangVersion>
 		<AssemblyName>gumcli</AssemblyName>
 
-		<Version>2026.3.14.1</Version>
+		<Version>2026.3.28.2</Version>
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>gumcli</ToolCommandName>
 		<PackageId>GumCli</PackageId>
@@ -37,6 +37,7 @@
 		     isolated and only one backend is loaded per process run. Switch to that pattern when a
 		     second backend is introduced. -->
 		<ProjectReference Include="..\Gum.ProjectServices.MonoGame\Gum.ProjectServices.MonoGame.csproj" />
+		<ProjectReference Include="..\Gum.ProjectServices.SkiaGum\Gum.ProjectServices.SkiaGum.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -8,9 +8,16 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
+/// <summary>
+/// Handles variable exclusions for common (non-plugin) standard element types.
+/// Plugins can add their own exclusions through the VariableExcluded event.
+/// For example, the Skia plugin (MainSkiaPlugin / DefaultStateManager) handles
+/// exclusions for stroke, gradient, and dropshadow variables.
+/// </summary>
 [Export(typeof(PluginBase))]
 public class ExclusionsPlugin : InternalPlugin
 {
@@ -33,14 +40,16 @@ public class ExclusionsPlugin : InternalPlugin
     {
         if(variableName == "ChildrenLayout")
         {
-            // Changing children layout can result in different values being shown in the property grid
+            // Changing these can result in different values being shown in the property grid
             _guiCommands.RefreshVariables(force:true);
         }
     }
 
     private bool HandleGetIfVariableIsExcluded(VariableSave variable, RecursiveVariableFinder finder)
     {
-        switch(variable.Name)
+        var rootName = variable.GetRootName();
+
+        switch(rootName)
         {
             case "Alpha":
                 return GetIfAlphaIsExcluded(finder);
@@ -59,8 +68,18 @@ public class ExclusionsPlugin : InternalPlugin
                 return GetIfOverflowHorizontalModeExcluded(finder);
             case "Wrap":
                 return GetIfWrapIsExcluded(finder);
+        }
 
+        // Sprite texture exclusions
+        if(GetIfSpriteVariableIsExcluded(variable, rootName, finder, out bool spriteExcluded))
+        {
+            return spriteExcluded;
+        }
 
+        // Text font exclusions
+        if(GetIfTextVariableIsExcluded(rootName, finder, out bool textExcluded))
+        {
+            return textExcluded;
         }
 
         return false;
@@ -191,4 +210,67 @@ public class ExclusionsPlugin : InternalPlugin
         }
         return !isAuto;
     }
+
+    #region Sprite Exclusions
+
+    private bool GetIfSpriteVariableIsExcluded(VariableSave variable, string rootName, RecursiveVariableFinder rvf, out bool shouldExclude)
+    {
+        string prefix = string.IsNullOrEmpty(variable.SourceObject) ? "" : variable.SourceObject + ".";
+
+        if(string.IsNullOrEmpty(prefix) && !string.IsNullOrEmpty(rvf.ElementStack.Last().InstanceName) && rvf.ContainerType != RecursiveVariableFinder.VariableContainerType.InstanceSave)
+        {
+            prefix = rvf.ElementStack.Last().InstanceName + ".";
+        }
+
+        if (rootName == "TextureTop" || rootName == "TextureLeft")
+        {
+            var addressMode = rvf.GetValue<TextureAddress>($"{prefix}TextureAddress");
+            shouldExclude = addressMode == TextureAddress.EntireTexture;
+            return true;
+        }
+
+        if (rootName == "TextureWidth" || rootName == "TextureHeight")
+        {
+            var addressMode = rvf.GetValue<TextureAddress>($"{prefix}TextureAddress");
+            shouldExclude = addressMode == TextureAddress.EntireTexture ||
+                addressMode == TextureAddress.DimensionsBased;
+            return true;
+        }
+
+        if (rootName == "TextureWidthScale" || rootName == "TextureHeightScale")
+        {
+            var addressMode = rvf.GetValue<TextureAddress>($"{prefix}TextureAddress");
+            shouldExclude = addressMode == TextureAddress.EntireTexture ||
+                addressMode == TextureAddress.Custom;
+            return true;
+        }
+
+        shouldExclude = false;
+        return false;
+    }
+
+    #endregion
+
+    #region Text Exclusions
+
+    private bool GetIfTextVariableIsExcluded(string rootName, RecursiveVariableFinder rvf, out bool shouldExclude)
+    {
+        if(rootName == "Font" || rootName == "FontSize" || rootName == "OutlineThickness" || rootName == "UseFontSmoothing" || rootName == "IsItalic" || rootName == "IsBold")
+        {
+            bool useCustomFont = rvf.GetValue<bool>("UseCustomFont");
+            shouldExclude = useCustomFont;
+            return true;
+        }
+        else if (rootName == "CustomFontFile")
+        {
+            bool useCustomFont = rvf.GetValue<bool>("UseCustomFont");
+            shouldExclude = !useCustomFont;
+            return true;
+        }
+
+        shouldExclude = false;
+        return false;
+    }
+
+    #endregion
 }

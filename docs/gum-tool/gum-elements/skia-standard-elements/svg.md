@@ -6,7 +6,7 @@ Svgs can display .svg files. Since these files are vector art, they can be resiz
 
 The following is an Svg instance displaying the FlatRedBall logo. Source SVG: [https://github.com/flatredball/FlatRedBallMedia/blob/master/FlatRedBall%20Logos/frb-logo-main.svg](https://github.com/flatredball/FlatRedBallMedia/blob/master/FlatRedBall%20Logos/frb-logo-main.svg)
 
-<figure><img src="../../../.gitbook/assets/image (147).png" alt=""><figcaption><p>Svg displaying the FlatRedBall logo</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (147) (1).png" alt=""><figcaption><p>Svg displaying the FlatRedBall logo</p></figcaption></figure>
 
 ### Source File
 

@@ -6,6 +6,8 @@ using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using ToolsUtilities;
 
 namespace Gum.ProjectServices.Tests;
 
@@ -15,7 +17,7 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
 
     public HeadlessFontGenerationServiceTests()
     {
-        _sut = new HeadlessFontGenerationService();
+        _sut = new HeadlessFontGenerationService(new NoOpFontFileGenerator());
 
         // Add font defaults to the Text standard element's Default state so
         // inheritance tests can resolve Font/FontSize via GetValueRecursive.
@@ -505,10 +507,281 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     #endregion
 
     // -------------------------------------------------------------------------
-    // Windows gate
+    // CollectRequiredFonts — component hierarchy (nested Text instances)
+    // -------------------------------------------------------------------------
+
+    #region CollectRequiredFonts — component hierarchy
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldCollectFontsFromNestedTextInComponent_WhenScreenHasComponentInstance()
+    {
+        // Component "MyButton" has a Text instance "Label" with Font="Courier", FontSize=18.
+        // Screen has an instance of MyButton.
+        // CollectRequiredFonts on the screen should find the Courier@18 font.
+        ComponentSave component = new ComponentSave { Name = "MyButton", BaseType = "Container" };
+        StateSave componentState = AddState(component, "Default");
+        AddTextInstance(component, "Label");
+        SetVar(componentState, "Label.Font", "Courier");
+        SetVar(componentState, "Label.FontSize", 18);
+        Project.Components.Add(component);
+
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        StateSave screenState = AddState(screen, "Default");
+        screen.Instances.Add(new InstanceSave { Name = "ButtonInstance", BaseType = "MyButton" });
+        Project.Screens.Add(screen);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen });
+
+        result.Values.ShouldContain(f => f.FontName == "Courier" && f.FontSize == 18);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldResolveExposedFontSize_WhenScreenOverridesIt()
+    {
+        // Component "MyButton" has Text "Label" with Font="Courier", FontSize=18.
+        // Component exposes Label.FontSize as "FontSize".
+        // Screen instance overrides FontSize to 36.
+        // Should collect Courier@36 (not just Courier@18).
+        ComponentSave component = new ComponentSave { Name = "MyButton", BaseType = "Container" };
+        StateSave componentState = AddState(component, "Default");
+        AddTextInstance(component, "Label");
+        SetVar(componentState, "Label.Font", "Courier");
+        SetVar(componentState, "Label.FontSize", 18);
+        componentState.Variables.Add(new VariableSave
+        {
+            SetsValue = true,
+            Name = "Label.FontSize",
+            Value = 18,
+            ExposedAsName = "FontSize"
+        });
+        Project.Components.Add(component);
+
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        StateSave screenState = AddState(screen, "Default");
+        screen.Instances.Add(new InstanceSave { Name = "ButtonInstance", BaseType = "MyButton" });
+        SetVar(screenState, "ButtonInstance.FontSize", 36);
+        Project.Screens.Add(screen);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen });
+
+        result.Values.ShouldContain(f => f.FontName == "Courier" && f.FontSize == 36);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldCollectAllSizes_WhenMultipleInstancesOverrideFontSize()
+    {
+        // Component "MyButton" has Text "Label" with Font="Courier", FontSize=18, exposes FontSize.
+        // Screen has 3 instances with different FontSize overrides: 12, 24, 36.
+        // Should collect Courier@12, Courier@24, and Courier@36.
+        ComponentSave component = new ComponentSave { Name = "MyButton", BaseType = "Container" };
+        StateSave componentState = AddState(component, "Default");
+        AddTextInstance(component, "Label");
+        SetVar(componentState, "Label.Font", "Courier");
+        SetVar(componentState, "Label.FontSize", 18);
+        componentState.Variables.Add(new VariableSave
+        {
+            SetsValue = true,
+            Name = "Label.FontSize",
+            Value = 18,
+            ExposedAsName = "FontSize"
+        });
+        Project.Components.Add(component);
+
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        StateSave screenState = AddState(screen, "Default");
+        screen.Instances.Add(new InstanceSave { Name = "Button1", BaseType = "MyButton" });
+        screen.Instances.Add(new InstanceSave { Name = "Button2", BaseType = "MyButton" });
+        screen.Instances.Add(new InstanceSave { Name = "Button3", BaseType = "MyButton" });
+        SetVar(screenState, "Button1.FontSize", 12);
+        SetVar(screenState, "Button2.FontSize", 24);
+        SetVar(screenState, "Button3.FontSize", 36);
+        Project.Screens.Add(screen);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen });
+
+        result.Values.ShouldContain(f => f.FontName == "Courier" && f.FontSize == 12);
+        result.Values.ShouldContain(f => f.FontName == "Courier" && f.FontSize == 24);
+        result.Values.ShouldContain(f => f.FontName == "Courier" && f.FontSize == 36);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldResolveFontFromComponent_WhenScreenDoesNotOverrideFont()
+    {
+        // Component "MyButton" has Text "Label" with Font="Verdana", FontSize=18, exposes FontSize.
+        // Screen overrides FontSize=24 but NOT Font.
+        // Should collect Verdana@24 (Font resolved from component, FontSize from screen override).
+        ComponentSave component = new ComponentSave { Name = "MyButton", BaseType = "Container" };
+        StateSave componentState = AddState(component, "Default");
+        AddTextInstance(component, "Label");
+        SetVar(componentState, "Label.Font", "Verdana");
+        SetVar(componentState, "Label.FontSize", 18);
+        componentState.Variables.Add(new VariableSave
+        {
+            SetsValue = true,
+            Name = "Label.FontSize",
+            Value = 18,
+            ExposedAsName = "FontSize"
+        });
+        Project.Components.Add(component);
+
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        StateSave screenState = AddState(screen, "Default");
+        screen.Instances.Add(new InstanceSave { Name = "ButtonInstance", BaseType = "MyButton" });
+        SetVar(screenState, "ButtonInstance.FontSize", 24);
+        Project.Screens.Add(screen);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen });
+
+        result.Values.ShouldContain(f => f.FontName == "Verdana" && f.FontSize == 24);
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
+    // CollectRequiredFonts — variable references
+    // -------------------------------------------------------------------------
+
+    #region CollectRequiredFonts — variable references
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldCollectBothFonts_WhenVariableReferenceChangesFontAcrossInstances()
+    {
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave state = AddState(component);
+        AddTextInstance(component, "HeaderText");
+        AddTextInstance(component, "BodyText");
+
+        SetVar(state, "HeaderText.Font", "Impact");
+        SetVar(state, "HeaderText.FontSize", 24);
+        SetVar(state, "BodyText.Font", "Impact"); // hard value from reference
+        SetVar(state, "BodyText.FontSize", 18);
+
+        VariableListSave<string> variableReferences = new VariableListSave<string>
+        {
+            Name = "BodyText.VariableReferences",
+            Type = "string"
+        };
+        variableReferences.ValueAsIList.Add("Font = HeaderText.Font");
+        state.VariableLists.Add(variableReferences);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.Values.ShouldContain(f => f.FontName == "Impact" && f.FontSize == 24);
+        result.Values.ShouldContain(f => f.FontName == "Impact" && f.FontSize == 18);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldCollectFont_WhenFontSizeSetViaVariableReferenceWithHardValue()
+    {
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave state = AddState(component);
+        AddTextInstance(component, "HeaderText");
+        AddTextInstance(component, "BodyText");
+
+        SetVar(state, "HeaderText.Font", "Arial");
+        SetVar(state, "HeaderText.FontSize", 24);
+        SetVar(state, "BodyText.Font", "Arial");
+        SetVar(state, "BodyText.FontSize", 24); // hard value written by tool when reference was applied
+
+        VariableListSave<string> variableReferences = new VariableListSave<string>
+        {
+            Name = "BodyText.VariableReferences",
+            Type = "string"
+        };
+        variableReferences.ValueAsIList.Add("FontSize = HeaderText.FontSize");
+        state.VariableLists.Add(variableReferences);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.Values.ShouldContain(f => f.FontName == "Arial" && f.FontSize == 24);
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldResolveFontSizeFromVariableReference_WhenHardValueNotPresent()
+    {
+        // BodyText has a variable reference "FontSize = HeaderText.FontSize" but no hard
+        // FontSize value. CollectRequiredFonts should resolve the reference and collect
+        // Arial@36 for both instances (not Arial@18 from Text standard inheritance).
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave state = AddState(component);
+        AddTextInstance(component, "HeaderText");
+        AddTextInstance(component, "BodyText");
+
+        SetVar(state, "HeaderText.Font", "Arial");
+        SetVar(state, "HeaderText.FontSize", 36);
+        SetVar(state, "BodyText.Font", "Arial");
+        // Note: BodyText.FontSize is intentionally NOT set — simulates a fresh load
+        // where the variable reference has not yet been applied as a hard value.
+
+        VariableListSave<string> variableReferences = new VariableListSave<string>
+        {
+            Name = "BodyText.VariableReferences",
+            Type = "string"
+        };
+        variableReferences.ValueAsIList.Add("FontSize = HeaderText.FontSize");
+        state.VariableLists.Add(variableReferences);
+
+        Project.Components.Add(component);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        // Both instances should resolve to Arial@36. BodyText's FontSize should come
+        // from the variable reference to HeaderText.FontSize, not from Text standard
+        // element inheritance (which would give 18).
+        result.ShouldHaveSingleItem();
+        BmfcSave font = result.Values.Single();
+        font.FontName.ShouldBe("Arial");
+        font.FontSize.ShouldBe(36);
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
+    // CreateFontIfNecessary
+    // -------------------------------------------------------------------------
+
+    #region CreateFontIfNecessary
+
+    [Fact]
+    public void CreateFontIfNecessary_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        BmfcSave bmfcSave = new BmfcSave();
+        bmfcSave.FontName = "Arial";
+        bmfcSave.FontSize = 24;
+
+        Should.Throw<PlatformNotSupportedException>(
+            () => _sut.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false));
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
+    // Windows gate (BmFontExeFileGenerator)
     // -------------------------------------------------------------------------
 
     #region Windows gate
+
+    [Fact]
+    public async Task BmFontExeFileGenerator_GenerateFont_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        BmFontExeFileGenerator generator = new BmFontExeFileGenerator();
+        BmfcSave bmfcSave = new BmfcSave();
+        bmfcSave.FontName = "Arial";
+        bmfcSave.FontSize = 24;
+
+        await Should.ThrowAsync<PlatformNotSupportedException>(
+            () => generator.GenerateFont(bmfcSave, outputFntPath: "/tmp/test.fnt", createTask: true));
+    }
 
     [Fact]
     public async Task CreateAllMissingFontFiles_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
@@ -525,7 +798,7 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     }
 
     [Fact]
-    public void ReactToFontValueSet_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
+    public void GenerateMissingFontsForReferencingElements_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -533,12 +806,27 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         }
 
         GumProjectSave project = new GumProjectSave();
-        InstanceSave instance = new InstanceSave { Name = "Label", BaseType = "Text" };
         StateSave state = new StateSave();
 
         Should.Throw<PlatformNotSupportedException>(
-            () => _sut.ReactToFontValueSet(instance, project, state, new StateSave(), projectDirectory: "/tmp/test"));
+            () => _sut.GenerateMissingFontsForReferencingElements(project, state, projectDirectory: "/tmp/test"));
     }
 
     #endregion
+
+    // -------------------------------------------------------------------------
+    // No-op generator for pure-logic tests
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// A no-op font file generator that always returns success without performing any I/O.
+    /// </summary>
+    private sealed class NoOpFontFileGenerator : IFontFileGenerator
+    {
+        public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
+        {
+            GeneralResponse response = GeneralResponse.SuccessfulResponse;
+            return Task.FromResult(response);
+        }
+    }
 }

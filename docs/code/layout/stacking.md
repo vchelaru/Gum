@@ -119,7 +119,7 @@ StackPanel stackPanel;
 
 protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     stackPanel = new StackPanel();
     stackPanel.AddToRoot();
@@ -160,7 +160,7 @@ StackPanel stackPanel;
 
 protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V3);
+    GumUI.Initialize(this);
 
     stackPanel = new StackPanel();
     stackPanel.AddToRoot();
