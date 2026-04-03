@@ -202,6 +202,54 @@ public class Game1 : Core
 {% endtab %}
 {% endtabs %}
 
+## Adding Dynamic Fonts (Optional)
+
+By default, Gum uses pre-built bitmap font (.fnt) files for text rendering. You can enable dynamic in-memory font generation using KernSmith, which lets you set `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `UseFontSmoothing` on any `TextRuntime` without needing .fnt/.png files on disk.
+
+First, add the KernSmith NuGet package for your platform:
+
+{% tabs %}
+{% tab title="MonoGame" %}
+```xml
+<PackageReference Include="KernSmith.MonoGameGum" Version="*" />
+```
+
+Or add through command line:
+
+```bash
+dotnet add package KernSmith.MonoGameGum
+```
+{% endtab %}
+
+{% tab title="KNI" %}
+```xml
+<PackageReference Include="KernSmith.KniGum" Version="*" />
+```
+
+Or add through command line:
+
+```bash
+dotnet add package KernSmith.KniGum
+```
+{% endtab %}
+
+{% tab title="FNA" %}
+KernSmith is not yet available for FNA. If you need dynamic font support on FNA, please reach out on Discord.
+{% endtab %}
+{% endtabs %}
+
+Next, add the following line after `GumUI.Initialize(this)` in your `Initialize` method:
+
+```csharp
+// Initialize
+CustomSetPropertyOnRenderable.InMemoryFontCreator =
+    new KernSmithFontCreator(GraphicsDevice);
+```
+
+{% hint style="info" %}
+For shipping games, you should register custom .ttf fonts rather than relying on system fonts. For more information, see the [Fonts](../../../../standard-visuals/textruntime/fonts.md) page.
+{% endhint %}
+
 ## Adding a Button (Testing the Setup)
 
 Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:
