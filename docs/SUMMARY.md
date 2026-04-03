@@ -304,6 +304,7 @@
   * [File Loading](code/files-and-fonts/file-loading.md)
   * [BitmapFont](code/files-and-fonts/bitmapfont.md)
   * [Content Using Embedded Resources](code/files-and-fonts/content-using-embedded-resources.md)
+  * [Troubleshooting](code/files-and-fonts/troubleshooting.md)
 * [Localization](code/localization.md)
 * [Hot Reload](code/hot-reload.md)
 * [Binding and MVVM](code/binding-viewmodels/README.md)
