@@ -21,10 +21,26 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a ListBoxItem control. Contains a bordered background, a text label,
+/// and a focus indicator bar.
+/// </summary>
 public class ListBoxItemVisual : InteractiveGue
 {
+    /// <summary>
+    /// The bordered background nine-slice. Visibility is toggled by states to indicate selection
+    /// or highlighting.
+    /// </summary>
     public NineSliceRuntime Background { get; private set; }
+
+    /// <summary>
+    /// The text label displaying the item content.
+    /// </summary>
     public TextRuntime TextInstance { get; private set; }
+
+    /// <summary>
+    /// A thin bar displayed at the bottom of the item when focused.
+    /// </summary>
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
     public class ListBoxItemCategoryStates
@@ -38,9 +54,17 @@ public class ListBoxItemVisual : InteractiveGue
 
     public ListBoxItemCategoryStates States;
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory ListBoxItemCategory { get; private set; }
 
     Color _highlightedBackgroundColor;
+
+    /// <summary>
+    /// The background color used when the item is highlighted (hovered). Setting this value
+    /// immediately updates the visual.
+    /// </summary>
     public Color HighlightedBackgroundColor
     {
         get => _highlightedBackgroundColor;
@@ -55,6 +79,11 @@ public class ListBoxItemVisual : InteractiveGue
     }
 
     Color _selectedBackgroundColor;
+
+    /// <summary>
+    /// The background color used when the item is selected. Setting this value immediately
+    /// updates the visual.
+    /// </summary>
     public Color SelectedBackgroundColor
     {
         get => _selectedBackgroundColor;
@@ -69,6 +98,11 @@ public class ListBoxItemVisual : InteractiveGue
     }
 
     Color _foregroundColor;
+
+    /// <summary>
+    /// The base color applied to the text. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale).
+    /// </summary>
     public Color ForegroundColor
     {
         get => _foregroundColor;
@@ -83,6 +117,11 @@ public class ListBoxItemVisual : InteractiveGue
     }
 
     Color _focusedIndicatorColor;
+
+    /// <summary>
+    /// The color of the focus indicator bar shown when the item has focus. Setting this value
+    /// immediately updates the visual.
+    /// </summary>
     public Color FocusedIndicatorColor
     {
         get => _focusedIndicatorColor;
@@ -217,5 +256,8 @@ public class ListBoxItemVisual : InteractiveGue
         FocusedIndicator.Color = _focusedIndicatorColor;
     }
 
+    /// <summary>
+    /// Returns the strongly-typed ListBoxItem Forms control backing this visual.
+    /// </summary>
     public ListBoxItem FormsControl => (ListBoxItem)FormsControlAsObject;
 }

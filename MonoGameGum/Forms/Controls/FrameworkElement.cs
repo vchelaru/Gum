@@ -1431,6 +1431,8 @@ public class FrameworkElement : INotifyPropertyChanged
     public const string PushedStateName = "Pushed";
 
     public const string SelectedStateName = "Selected";
+    // New as of April 3, 2026
+    public const string SelectedHighlightedStateName = "SelectedHighlighted";
 
     // These are used in ScrollBarVisual for the OrientationCategory
     public const string VerticalStateName = "Vertical";

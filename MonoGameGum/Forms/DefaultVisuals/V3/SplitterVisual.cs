@@ -18,12 +18,22 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a Splitter control. Contains a bordered background that can be
+/// dragged to resize adjacent elements.
+/// </summary>
 public class SplitterVisual : InteractiveGue
 {
+    /// <summary>
+    /// The bordered background nine-slice that fills the control.
+    /// </summary>
     public NineSliceRuntime Background { get; private set; }
 
     Color _backgroundColor;
 
+    /// <summary>
+    /// The color applied to the background. Setting this value immediately updates the visual.
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -64,5 +74,8 @@ public class SplitterVisual : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// Returns the strongly-typed Splitter Forms control backing this visual.
+    /// </summary>
     public Splitter FormsControl => (Splitter)FormsControlAsObject;
 }

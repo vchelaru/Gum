@@ -25,10 +25,19 @@ namespace Gum.Forms.DefaultVisuals.V3;
 /// </summary>
 public class ToggleButtonVisual : InteractiveGue
 {
+    /// <summary>
+    /// The bordered background nine-slice that fills the control.
+    /// </summary>
     public NineSliceRuntime Background { get; private set; }
 
+    /// <summary>
+    /// The centered text label displayed on the button.
+    /// </summary>
     public TextRuntime TextInstance { get; private set; }
 
+    /// <summary>
+    /// A thin bar displayed at the bottom of the control when focused.
+    /// </summary>
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
     public class ToggleButtonCategoryStates
@@ -51,9 +60,17 @@ public class ToggleButtonVisual : InteractiveGue
 
     public ToggleButtonCategoryStates States;
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory ToggleCategory { get; private set; }
 
     Color _backgroundColor;
+    /// <summary>
+    /// The base color applied to the background. Setting this value immediately updates the
+    /// visual. States may tint this color (for example, disabled states convert to grayscale
+    /// and darken, and 'On' states darken to indicate the toggle is active).
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -67,6 +84,10 @@ public class ToggleButtonVisual : InteractiveGue
         }
     }
     Color _foregroundColor;
+    /// <summary>
+    /// The base color applied to the text. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color ForegroundColor
     {
         get => _foregroundColor;
@@ -81,6 +102,10 @@ public class ToggleButtonVisual : InteractiveGue
     }
 
     Color _focusedIndicatorColor;
+    /// <summary>
+    /// The color of the focus indicator bar shown when the control has focus. Setting this
+    /// value immediately updates the visual.
+    /// </summary>
     public Color FocusedIndicatorColor
     {
         get => _focusedIndicatorColor;
@@ -240,5 +265,8 @@ public class ToggleButtonVisual : InteractiveGue
         FocusedIndicator.Color = FocusedIndicatorColor;
     }
 
+    /// <summary>
+    /// Returns the strongly-typed ToggleButton Forms control backing this visual.
+    /// </summary>
     public ToggleButton FormsControl => (ToggleButton)FormsControlAsObject;
 }

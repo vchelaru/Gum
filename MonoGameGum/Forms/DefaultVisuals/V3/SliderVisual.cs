@@ -18,11 +18,30 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a Slider control. Contains a track container with a background bar,
+/// a draggable thumb button, and a focus indicator bar.
+/// </summary>
 public class SliderVisual : InteractiveGue
 {
+    /// <summary>
+    /// The container that holds the track background and the draggable thumb.
+    /// </summary>
     public ContainerRuntime TrackInstance { get; private set; }
+
+    /// <summary>
+    /// The bordered nine-slice bar displayed behind the thumb.
+    /// </summary>
     public NineSliceRuntime TrackBackground { get; private set; }
-    public ButtonVisual ThumbInstance { get; private set; }
+
+    /// <summary>
+    /// The draggable button used to set the slider value.
+    /// </summary>
+    public ButtonVisual? ThumbInstance { get; private set; }
+
+    /// <summary>
+    /// A thin bar displayed at the bottom of the control when focused.
+    /// </summary>
     public NineSliceRuntime FocusedIndicator { get; private set; }
     public class SliderCategoryStates
     {
@@ -37,9 +56,16 @@ public class SliderVisual : InteractiveGue
 
     public SliderCategoryStates States;
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory SliderCategory { get; private set; }
 
     Color _trackBackgroundColor;
+    /// <summary>
+    /// The color applied to the track background bar. Setting this value immediately
+    /// updates the visual.
+    /// </summary>
     public Color TrackBackgroundColor
     {
         get => _trackBackgroundColor;
@@ -55,6 +81,10 @@ public class SliderVisual : InteractiveGue
     }
 
     Color _focusedIndicatorColor;
+    /// <summary>
+    /// The color of the focus indicator bar shown when the control has focus. Setting this
+    /// value immediately updates the visual.
+    /// </summary>
     public Color FocusedIndicatorColor
     {
         get => _focusedIndicatorColor;
@@ -107,17 +137,20 @@ public class SliderVisual : InteractiveGue
         TrackBackground.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         TrackInstance.AddChild(TrackBackground);
 
-        ThumbInstance = new ButtonVisual();
-        ThumbInstance.Name = "ThumbInstance";
-        ThumbInstance.TextInstance.Text = "";
-        ThumbInstance.XUnits = GeneralUnitType.Percentage;
-        ThumbInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-        ThumbInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-        ThumbInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-        ThumbInstance.Width = sliderButtonWidth;
-        ThumbInstance.Height = 0f;
-        ThumbInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        TrackInstance.AddChild(ThumbInstance);
+        var thumbButton = new Button();
+        var thumbVisual = thumbButton.Visual;
+
+        thumbVisual.Name = "ThumbInstance";
+        thumbButton.Text = "";
+        thumbVisual.XUnits = GeneralUnitType.Percentage;
+        thumbVisual.YUnits = GeneralUnitType.PixelsFromMiddle;
+        thumbVisual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+        thumbVisual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        thumbVisual.Width = sliderButtonWidth;
+        thumbVisual.Height = 0f;
+        thumbVisual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        TrackInstance.AddChild(thumbVisual);
+        this.ThumbInstance = thumbVisual as ButtonVisual;
 
         FocusedIndicator = new NineSliceRuntime();
         FocusedIndicator.Name = "FocusedIndicator";
@@ -206,5 +239,8 @@ public class SliderVisual : InteractiveGue
         FocusedIndicator.Color = _focusedIndicatorColor;
     }
 
+    /// <summary>
+    /// Returns the strongly-typed Slider Forms control backing this visual.
+    /// </summary>
     public Controls.Slider FormsControl => (Slider)FormsControlAsObject;
 }

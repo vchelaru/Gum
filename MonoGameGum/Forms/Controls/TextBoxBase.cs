@@ -1450,7 +1450,7 @@ public abstract class TextBoxBase :
                 var selection = _selectionInstances[i];
 
                 selection.X = selectionStartEnds[i].XStart;
-                selection.Y = selectionStartEnds[i].Y;
+                selection.Y = selectionStartEnds[i].Y + selectionInstance?.Y ?? 0;
                 selection.Width = selectionStartEnds[i].Width;
                 selection.Visible = true;
                 selection.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;

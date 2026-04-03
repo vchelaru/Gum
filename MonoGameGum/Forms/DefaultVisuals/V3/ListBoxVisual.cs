@@ -20,14 +20,46 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a ListBox control. Contains a bordered background, a focus indicator bar,
+/// a vertical scroll bar, and a clipped scrollable inner panel for list items.
+/// </summary>
 public class ListBoxVisual : InteractiveGue
 {
+    /// <summary>
+    /// The bordered background nine-slice that fills the control.
+    /// </summary>
     public NineSliceRuntime Background { get; private set; }
+
+    /// <summary>
+    /// A thin bar displayed at the bottom of the control when focused.
+    /// </summary>
     public NineSliceRuntime FocusedIndicator { get; private set; }
+
+    /// <summary>
+    /// The container that holds both the scroll bar and the clipped content area.
+    /// </summary>
     public ContainerRuntime ClipAndScrollContainer { get; private set; }
-    public ScrollBarVisual VerticalScrollBarInstance { get; private set; }
+
+    /// <summary>
+    /// The vertical scroll bar for scrolling the list content. May be null if the default
+    /// ScrollBar does not use a visual of type ScrollBarVisual.
+    /// </summary>
+    public ScrollBarVisual? VerticalScrollBarInstance { get; private set; }
+
+    /// <summary>
+    /// The parent container that uses ratio sizing to fill space beside the scroll bar.
+    /// </summary>
     public ContainerRuntime ClipContainerParent { get; private set; }
+
+    /// <summary>
+    /// The container that clips its children to provide scrollable content bounds.
+    /// </summary>
     public ContainerRuntime ClipContainerInstance { get; private set; }
+
+    /// <summary>
+    /// The stacked container that holds the list items. Uses TopToBottomStack children layout.
+    /// </summary>
     public ContainerRuntime InnerPanelInstance { get; private set; }
 
     public class ListBoxCategoryStates
@@ -43,9 +75,17 @@ public class ListBoxVisual : InteractiveGue
 
     public ListBoxCategoryStates States;
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory ListBoxCategory { get; private set; }
 
     Color _backgroundColor;
+
+    /// <summary>
+    /// The base color applied to the background. Setting this value immediately updates the
+    /// visual. States may tint this color.
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -60,6 +100,11 @@ public class ListBoxVisual : InteractiveGue
     }
 
     Color _focusedIndicatorColor;
+
+    /// <summary>
+    /// The color of the focus indicator bar shown when the control has focus. Setting this value
+    /// immediately updates the visual.
+    /// </summary>
     public Color FocusedIndicatorColor
     {
         get => _focusedIndicatorColor;
@@ -132,15 +177,19 @@ public class ListBoxVisual : InteractiveGue
         ClipAndScrollContainer.HasEvents = false;
         this.AddChild(ClipAndScrollContainer);
 
-        VerticalScrollBarInstance = new ScrollBarVisual();
-        VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
-        VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
-        VerticalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-        VerticalScrollBarInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-        VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-        VerticalScrollBarInstance.Height = 0;
-        VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        ClipAndScrollContainer.Children.Add(VerticalScrollBarInstance);
+        var scrollBar = new ScrollBar();
+
+        var scrollBarVisual = scrollBar.Visual;
+
+        scrollBarVisual.Name = "VerticalScrollBarInstance";
+        scrollBarVisual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
+        scrollBarVisual.XUnits = GeneralUnitType.PixelsFromLarge;
+        scrollBarVisual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        scrollBarVisual.YUnits = GeneralUnitType.PixelsFromMiddle;
+        scrollBarVisual.Height = 0;
+        scrollBarVisual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        ClipAndScrollContainer.Children.Add(scrollBarVisual);
+        VerticalScrollBarInstance = scrollBarVisual as ScrollBarVisual;
 
         ClipContainerParent = new ContainerRuntime();
         ClipContainerParent.Name = "ClipContainerParent";
@@ -251,5 +300,8 @@ public class ListBoxVisual : InteractiveGue
 
     }
 
+    /// <summary>
+    /// Returns the strongly-typed ListBox Forms control backing this visual.
+    /// </summary>
     public ListBox FormsControl => (ListBox)FormsControlAsObject;
 }

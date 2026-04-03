@@ -17,12 +17,24 @@ using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a Button control. Contains a bordered background, centered text label, and a focus indicator bar.
+/// </summary>
 public class ButtonVisual : InteractiveGue
 {
+    /// <summary>
+    /// The bordered background nine-slice that fills the control.
+    /// </summary>
     public NineSliceRuntime Background { get; private set; }
 
+    /// <summary>
+    /// The centered text label displayed on the button.
+    /// </summary>
     public TextRuntime TextInstance { get; private set; }
 
+    /// <summary>
+    /// A thin bar displayed at the bottom of the control when focused.
+    /// </summary>
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
     public class ButtonCategoryStates
@@ -38,9 +50,16 @@ public class ButtonVisual : InteractiveGue
 
     public ButtonCategoryStates States;
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory ButtonCategory { get; private set; }
 
     Color _backgroundColor;
+    /// <summary>
+    /// The base color applied to the background. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -57,6 +76,10 @@ public class ButtonVisual : InteractiveGue
         }
     }
     Color _foregroundColor;
+    /// <summary>
+    /// The base color applied to the text. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color ForegroundColor
     {
         get => _foregroundColor;
@@ -74,6 +97,10 @@ public class ButtonVisual : InteractiveGue
     }
 
     Color _focusedIndicatorColor;
+    /// <summary>
+    /// The color of the focus indicator bar shown when the control has focus.
+    /// Setting this value immediately updates the visual.
+    /// </summary>
     public Color FocusedIndicatorColor
     {
         get => _focusedIndicatorColor;
@@ -241,5 +268,8 @@ public class ButtonVisual : InteractiveGue
         FocusedIndicator.Color = FocusedIndicatorColor;
     }
 
+    /// <summary>
+    /// Returns the strongly-typed Button Forms control backing this visual.
+    /// </summary>
     public Button FormsControl => (Button)FormsControlAsObject;
 }

@@ -12,6 +12,9 @@ using Microsoft.Xna.Framework;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a Label control. Extends TextRuntime directly, sized to its text content.
+/// </summary>
 public class LabelVisual : TextRuntime
 {
     public LabelVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation)
@@ -38,5 +41,8 @@ public class LabelVisual : TextRuntime
         }
     }
 
+    /// <summary>
+    /// Returns the strongly-typed Label Forms control backing this visual.
+    /// </summary>
     public Label FormsControl => (Label)FormsControlAsObject;
 }

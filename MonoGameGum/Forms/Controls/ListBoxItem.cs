@@ -1,5 +1,6 @@
 ﻿using Gum.Wireframe;
 using System;
+using System.Linq;
 
 #if FRB
 using FlatRedBall.Gui;
@@ -232,7 +233,21 @@ public class ListBoxItem :
         }
         else if (IsSelected)
         {
-            Visual.SetProperty(category, SelectedStateName);
+            // April 3, 2026
+            // We want to support SelectedHighlighted together
+            // but fall back to Selected if SelectedHighlighted
+            // doesn't exist
+            var stateToSet = SelectedStateName;
+            if (Visual.Categories.ContainsKey(category) && IsHighlighted)
+            {
+                var selectedHighlighted = Visual.Categories[category].States.FirstOrDefault(
+                    item => item.Name == SelectedHighlightedStateName);
+                if(selectedHighlighted != null)
+                {
+                    stateToSet = SelectedHighlightedStateName;
+                }
+            }
+            Visual.SetProperty(category, stateToSet);
         }
         else if (IsHighlighted && (cursor.WindowPushed == null))
         {
