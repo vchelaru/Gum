@@ -49,7 +49,7 @@ The theme provides styled visuals for:
 
 ## PropertyGridVisual
 
-A layout control for displaying labeled controls in a two-column grid:
+A two-column layout control that displays label/control pairs in rows with alternating background colors — similar to a Unity Inspector or WPF PropertyGrid.
 
 ```csharp
 var grid = new PropertyGridVisual();
@@ -60,17 +60,62 @@ grid.WidthUnits = DimensionUnitType.Absolute;
 grid.AddRow("Name", new TextBox());
 grid.AddRow("Visible", new CheckBox());
 grid.AddRow("Speed", new Slider());
+
+// Works with any FrameworkElement, including complex controls
+var comboBox = new ComboBox();
+comboBox.Items.Add("Option A");
+comboBox.Items.Add("Option B");
+grid.AddRow("Mode", comboBox);
 ```
+
+Each row consists of a fixed-width label on the left and the control filling the remaining space on the right. Rows automatically size to fit their content and alternate between two background colors for readability.
 
 ## Expander
 
-A collapsible content control:
+A collapsible header/content control. Clicking the header toggles visibility of the content area. The `Expander` Forms control lives in `Gum.Forms.Controls`.
 
 ```csharp
 var expander = new Expander();
 expander.Header = "Advanced Settings";
 expander.AddContent(new CheckBox());
 expander.AddContent(new Slider());
+```
+
+### Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `Header` | `string` | The text displayed in the header row. |
+| `IsExpanded` | `bool` | Gets or sets whether the content area is visible. Defaults to `false`. |
+
+### Events
+
+| Event | Description |
+|---|---|
+| `Expanded` | Raised when `IsExpanded` changes to `true`. |
+| `Collapsed` | Raised when `IsExpanded` changes to `false`. |
+
+### Programmatic control
+
+```csharp
+// Start expanded
+expander.IsExpanded = true;
+
+// React to expand/collapse
+expander.Expanded += (sender, e) => Console.WriteLine("Opened");
+expander.Collapsed += (sender, e) => Console.WriteLine("Closed");
+```
+
+### Inside a PropertyGridVisual
+
+The Expander works as a row control in a PropertyGridVisual:
+
+```csharp
+var expander = new Expander();
+expander.Header = "More Options";
+expander.AddContent(new CheckBox());
+expander.AddContent(new Slider());
+grid.AddRow("Expander", expander);
 ```
 
 ## Requirements
