@@ -35,7 +35,7 @@ public class ExpanderVisual : InteractiveGue
         this.Children.Add(headerContainer);
 
         // Arrow indicator
-        var arrow = new TextRuntime();
+        var arrow = new Label();
         arrow.Name = "ArrowIndicator";
         arrow.Text = "►";
         arrow.Width = 20;
@@ -45,9 +45,8 @@ public class ExpanderVisual : InteractiveGue
         arrow.YOrigin = VerticalAlignment.Center;
         arrow.Y = 0;
         arrow.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        arrow.HorizontalAlignment = HorizontalAlignment.Center;
-        arrow.Color = new Color(180, 180, 180);
-        headerContainer.Children.Add(arrow);
+        (arrow.Visual as TextRuntime).HorizontalAlignment = HorizontalAlignment.Center;
+        headerContainer.Children.Add(arrow.Visual);
 
         // Header text
         var textInstance = new Label();

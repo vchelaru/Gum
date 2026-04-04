@@ -153,4 +153,13 @@ public class Expander : FrameworkElement
             contentContainer.Children.Add(child.Visual);
         }
     }
+
+    public void AddContent(GraphicalUiElement child)
+    {
+        if (contentContainer != null)
+        {
+            contentContainer.Children.Add(child);
+        }
+
+    }
 }

@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using KernSmith.Gum;
 using GumRuntime;
+using RenderingLibrary.Graphics.Fonts;
 
 namespace Gum.Themes.Editor;
 
@@ -16,6 +17,9 @@ public static class EditorTheme
     {
         CustomSetPropertyOnRenderable.InMemoryFontCreator =
             new KernSmithFontCreator(graphicsDevice);
+
+        // Register special characters used by editor theme visuals (e.g., ExpanderVisual arrows)
+        BmfcSave.AddCharacters("►▼");
 
         var styling = Styling.ActiveStyle;
 
