@@ -444,6 +444,41 @@ public class LayoutUnitTests : BaseTestClass
     }
 
     [Fact]
+    public void HeightRelativeToChildren_ShouldUpdateWhenChildVisibilityToggles_RegularLayout()
+    {
+        ContainerRuntime grandparent = new();
+        grandparent.Height = 0;
+        grandparent.HeightUnits = DimensionUnitType.RelativeToChildren;
+
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        // Explicitly Regular (not TopToBottomStack) — this is the default but
+        // being explicit makes the intent of this test clear.
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.Regular;
+        grandparent.AddChild(parent);
+
+        ContainerRuntime child = new();
+        child.Height = 100;
+        child.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child);
+
+        // Baseline: parent and grandparent should reflect the child's height
+        parent.GetAbsoluteHeight().ShouldBe(100);
+        grandparent.GetAbsoluteHeight().ShouldBe(100);
+
+        // Hide the child — parent and grandparent should shrink to 0
+        child.Visible = false;
+        parent.GetAbsoluteHeight().ShouldBe(0);
+        grandparent.GetAbsoluteHeight().ShouldBe(0);
+
+        // Show the child again — parent and grandparent should restore to 100
+        child.Visible = true;
+        parent.GetAbsoluteHeight().ShouldBe(100);
+        grandparent.GetAbsoluteHeight().ShouldBe(100);
+    }
+
+    [Fact]
     public void WidthRelativeToChildren_ShouldAddPaddingValue()
     {
         ContainerRuntime parent = new();
