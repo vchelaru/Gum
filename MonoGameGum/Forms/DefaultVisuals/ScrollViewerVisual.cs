@@ -21,8 +21,8 @@ namespace Gum.Forms.DefaultVisuals;
 public class ScrollViewerVisual : InteractiveGue
 {
     public NineSliceRuntime Background { get; private set; }
-    public ScrollBarVisual VerticalScrollBarInstance { get; private set; }
-    public ScrollBarVisual HorizontalScrollBarInstance { get; private set; }
+    public GraphicalUiElement? VerticalScrollBarInstance { get; private set; }
+    public GraphicalUiElement? HorizontalScrollBarInstance { get; private set; }
     public ContainerRuntime InnerPanelInstance { get; private set; }
     public ContainerRuntime ClipContainerInstance { get; private set; }
     public ContainerRuntime ScrollAndClipContainer { get; private set; }
@@ -115,26 +115,36 @@ public class ScrollViewerVisual : InteractiveGue
             this.AddChild(ScrollAndClipContainer);
 
             {
-                VerticalScrollBarInstance = new ScrollBarVisual();
-                VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
-                VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
-                VerticalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-                VerticalScrollBarInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-                VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromSmall;
-                VerticalScrollBarInstance.Height = -24;
-                VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                ScrollAndClipContainer.AddChild(VerticalScrollBarInstance);
+                var scrollBar = new ScrollBar();
+                var scrollBarVisual = scrollBar.Visual;
 
-                HorizontalScrollBarInstance = new ScrollBarVisual();
-                HorizontalScrollBarInstance.Name = "HorizontalScrollBarInstance";
-                HorizontalScrollBarInstance.FormsControl.Orientation = Orientation.Horizontal;
-                HorizontalScrollBarInstance.XOrigin = HorizontalAlignment.Left;
-                HorizontalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-                HorizontalScrollBarInstance.YOrigin = VerticalAlignment.Bottom;
-                HorizontalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromLarge;
-                HorizontalScrollBarInstance.Width = -24;
-                HorizontalScrollBarInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                ScrollAndClipContainer.AddChild(HorizontalScrollBarInstance);
+                scrollBarVisual = new ScrollBarVisual();
+                scrollBarVisual.Name = "VerticalScrollBarInstance";
+                scrollBarVisual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
+                scrollBarVisual.XUnits = GeneralUnitType.PixelsFromLarge;
+                scrollBarVisual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+                scrollBarVisual.YUnits = GeneralUnitType.PixelsFromSmall;
+                scrollBarVisual.Height = -24;
+                scrollBarVisual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                ScrollAndClipContainer.AddChild(scrollBarVisual);
+
+                VerticalScrollBarInstance = scrollBar.Visual;
+
+                var horizontalScrollBar = new ScrollBar();
+                var horizontalScrollBarVisual = horizontalScrollBar.Visual;
+
+                horizontalScrollBarVisual = new ScrollBarVisual();
+                horizontalScrollBarVisual.Name = "HorizontalScrollBarInstance";
+                horizontalScrollBar.Orientation = Orientation.Horizontal;
+                horizontalScrollBarVisual.XOrigin = HorizontalAlignment.Left;
+                horizontalScrollBarVisual.XUnits = GeneralUnitType.PixelsFromSmall;
+                horizontalScrollBarVisual.YOrigin = VerticalAlignment.Bottom;
+                horizontalScrollBarVisual.YUnits = GeneralUnitType.PixelsFromLarge;
+                horizontalScrollBarVisual.Width = -24;
+                horizontalScrollBarVisual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                ScrollAndClipContainer.AddChild(horizontalScrollBarVisual);
+
+                HorizontalScrollBarInstance = horizontalScrollBarVisual;
 
 
                 // ClipContainerContainer uses a ratio to fill available space,

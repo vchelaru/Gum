@@ -35,12 +35,12 @@ public class ScrollViewerVisual : InteractiveGue
     /// <summary>
     /// The vertical scroll bar on the right side of the content area.
     /// </summary>
-    public ScrollBarVisual VerticalScrollBarInstance { get; private set; }
+    public GraphicalUiElement VerticalScrollBarInstance { get; private set; }
 
     /// <summary>
     /// The horizontal scroll bar at the bottom of the content area.
     /// </summary>
-    public ScrollBarVisual HorizontalScrollBarInstance { get; private set; }
+    public GraphicalUiElement HorizontalScrollBarInstance { get; private set; }
 
     /// <summary>
     /// The stacked container that holds the scrollable content. Uses TopToBottomStack children layout.
@@ -192,7 +192,8 @@ public class ScrollViewerVisual : InteractiveGue
             this.AddChild(ScrollAndClipContainer);
 
             {
-                VerticalScrollBarInstance = new ScrollBarVisual();
+                var verticalScrollBar = new ScrollBar();
+                VerticalScrollBarInstance = verticalScrollBar.Visual;
                 VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
                 VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
                 VerticalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromLarge;
@@ -202,9 +203,10 @@ public class ScrollViewerVisual : InteractiveGue
                 VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ScrollAndClipContainer.AddChild(VerticalScrollBarInstance);
 
-                HorizontalScrollBarInstance = new ScrollBarVisual();
+                var horizontalScrollBar = new ScrollBar();
+                HorizontalScrollBarInstance = horizontalScrollBar.Visual;
                 HorizontalScrollBarInstance.Name = "HorizontalScrollBarInstance";
-                HorizontalScrollBarInstance.FormsControl.Orientation = Orientation.Horizontal;
+                horizontalScrollBar.Orientation = Orientation.Horizontal;
                 HorizontalScrollBarInstance.XOrigin = HorizontalAlignment.Left;
                 HorizontalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromSmall;
                 HorizontalScrollBarInstance.YOrigin = VerticalAlignment.Bottom;

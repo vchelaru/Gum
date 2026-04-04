@@ -35,5 +35,10 @@ public class ComboBoxVisual : BaseComboBoxVisual
         {
             rectangle.Visible = false;
         };
+
+        this.ListBoxInstance.UseFixedStackChildrenSize = true;
+        var listBoxVisual = this.ListBoxInstance as ListBoxVisual;
+        listBoxVisual?.MakeHeightSizedToChildren();
+        
     }
 }
