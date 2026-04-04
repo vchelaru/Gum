@@ -19,7 +19,12 @@ public class PropertyGridVisual : ContainerRuntime
     private static readonly Color EvenRowColor = new Color(35, 35, 35);
     private static readonly Color OddRowColor = new Color(45, 45, 45);
 
-    private int _rowCount;
+    /// <summary>
+    /// Whether rows are created with alternating background colors.
+    /// Must be set before calling <see cref="AddRow"/>. Defaults to true.
+    /// When false, no background rectangles are created, reducing object count.
+    /// </summary>
+    public bool AlternatingRowColorsEnabled { get; set; } = true;
 
     public PropertyGridVisual()
     {
@@ -30,7 +35,12 @@ public class PropertyGridVisual : ContainerRuntime
         this.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
     }
 
-    public void AddRow(string label, FrameworkElement control)
+    /// <summary>
+    /// Adds a labeled row containing the specified control to the property grid.
+    /// Returns the row container so callers can toggle its Visible property;
+    /// alternating row colors are automatically recalculated when any row's visibility changes.
+    /// </summary>
+    public ContainerRuntime AddRow(string label, FrameworkElement control)
     {
         var (row, content) = CreateRow();
 
@@ -52,8 +62,39 @@ public class PropertyGridVisual : ContainerRuntime
 
         content.AddChild(controlVisual);
 
+        if (AlternatingRowColorsEnabled)
+        {
+            row.VisibleChanged += (_, _) => RestripeRows();
+        }
+
         this.Children.Add(row);
-        _rowCount++;
+
+        if (AlternatingRowColorsEnabled)
+        {
+            RestripeRows();
+        }
+
+        return row;
+    }
+
+    private void RestripeRows()
+    {
+        int visibleIndex = 0;
+        foreach (var child in this.Children)
+        {
+            if (!child.Visible)
+            {
+                continue;
+            }
+
+            var background = child.Children[0] as ColoredRectangleRuntime;
+            if (background != null)
+            {
+                background.Color = visibleIndex % 2 == 0 ? EvenRowColor : OddRowColor;
+            }
+
+            visibleIndex++;
+        }
     }
 
     private (ContainerRuntime row, ContainerRuntime content) CreateRow()
@@ -65,13 +106,14 @@ public class PropertyGridVisual : ContainerRuntime
         row.Height = 4;
         row.HeightUnits = DimensionUnitType.RelativeToChildren;
         row.MinHeight = 34;
-        row.Name = $"Row Container";
+        row.Name = "Row Container";
 
-        // Alternating row background — fills the row
-        var background = new ColoredRectangleRuntime();
-        background.Dock(Gum.Wireframe.Dock.Fill);
-        background.Color = _rowCount % 2 == 0 ? EvenRowColor : OddRowColor;
-        row.Children.Add(background);
+        if (AlternatingRowColorsEnabled)
+        {
+            var background = new ColoredRectangleRuntime();
+            background.Dock(Gum.Wireframe.Dock.Fill);
+            row.Children.Add(background);
+        }
 
         // Content container — stacks label and control left to right.
         var content = new ContainerRuntime();
