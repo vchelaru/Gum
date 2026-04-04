@@ -2,6 +2,10 @@
 
 namespace Gum.Forms.DefaultVisuals.V3
 {
+    /// <summary>
+    /// Default V3 visual for a TextBox control. Extends TextBoxBaseVisual with
+    /// TextBox-specific state category naming.
+    /// </summary>
     public class TextBoxVisual : TextBoxBaseVisual
     {
         protected override string CategoryName => "TextBoxCategory";
@@ -15,6 +19,9 @@ namespace Gum.Forms.DefaultVisuals.V3
             }
         }
 
+        /// <summary>
+        /// Returns the strongly-typed TextBox Forms control backing this visual.
+        /// </summary>
         public TextBox FormsControl => (TextBox)FormsControlAsObject;
     }
 }

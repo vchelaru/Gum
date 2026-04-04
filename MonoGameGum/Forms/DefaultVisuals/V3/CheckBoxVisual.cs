@@ -21,11 +21,26 @@ using RenderingLibrary.Math.Geometry;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a CheckBox control. Contains a bordered checkbox background, an inner check/dash icon, a text label, and a focus indicator bar.
+/// </summary>
 public class CheckBoxVisual : InteractiveGue
 {
+    /// <summary>
+    /// The bordered background nine-slice for the checkbox indicator area.
+    /// </summary>
     public NineSliceRuntime CheckBoxBackground { get; private set; }
+    /// <summary>
+    /// The sprite displayed inside the checkbox background showing the check or dash icon.
+    /// </summary>
     public SpriteRuntime InnerCheck { get; private set; }
+    /// <summary>
+    /// The text label displayed next to the checkbox.
+    /// </summary>
     public TextRuntime TextInstance { get; private set; }
+    /// <summary>
+    /// A thin bar displayed at the bottom of the control when focused.
+    /// </summary>
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
     public class CheckBoxCategoryStates
@@ -56,9 +71,16 @@ public class CheckBoxVisual : InteractiveGue
 
     public CheckBoxCategoryStates States;
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory CheckboxCategory { get; private set; }
 
     Color _backgroundColor;
+    /// <summary>
+    /// The base color applied to the checkbox background. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -72,6 +94,10 @@ public class CheckBoxVisual : InteractiveGue
         }
     }
     Color _foregroundColor;
+    /// <summary>
+    /// The base color applied to the text label. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color ForegroundColor
     {
         get => _foregroundColor;
@@ -86,6 +112,10 @@ public class CheckBoxVisual : InteractiveGue
     }
 
     Color _checkColor;
+    /// <summary>
+    /// The base color applied to the inner check/dash icon. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color CheckColor
     {
         get => _checkColor;
@@ -100,6 +130,10 @@ public class CheckBoxVisual : InteractiveGue
     }
 
     Color _focusedIndicatorColor;
+    /// <summary>
+    /// The color of the focus indicator bar shown when the control has focus.
+    /// Setting this value immediately updates the visual.
+    /// </summary>
     public Color FocusedIndicatorColor
     {
         get => _focusedIndicatorColor;
@@ -353,5 +387,8 @@ public class CheckBoxVisual : InteractiveGue
         FocusedIndicator.Color = _focusedIndicatorColor;
     }
 
+    /// <summary>
+    /// Returns the strongly-typed CheckBox Forms control backing this visual.
+    /// </summary>
     public CheckBox FormsControl => (CheckBox)FormsControlAsObject;
 }

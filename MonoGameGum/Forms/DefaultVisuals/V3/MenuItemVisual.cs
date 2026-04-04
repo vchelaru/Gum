@@ -19,12 +19,28 @@ using Microsoft.Xna.Framework;
 
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a MenuItem control. Contains a solid background, a left-to-right
+/// stacked container with text label and submenu indicator.
+/// </summary>
 public class MenuItemVisual : InteractiveGue
 {
+    /// <summary>
+    /// The solid background nine-slice. Visibility is toggled by states to indicate highlighting or selection.
+    /// </summary>
     public NineSliceRuntime Background { get; private set; }
+    /// <summary>
+    /// The left-to-right stacking container that holds the text and submenu indicator.
+    /// </summary>
     public ContainerRuntime ContainerInstance { get; private set; }
+    /// <summary>
+    /// The text label displaying the menu item text.
+    /// </summary>
     public TextRuntime TextInstance { get; private set; }
 
+    /// <summary>
+    /// The text runtime displaying a '>' character to indicate the item has a submenu.
+    /// </summary>
     public TextRuntime SubmenuIndicatorInstance { get; private set; }
 
     public class MenuItemCategoryStates
@@ -38,10 +54,16 @@ public class MenuItemVisual : InteractiveGue
 
     public MenuItemCategoryStates States;
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory MenuItemCategory { get; private set; }
 
 
     Color _highlightedBackgroundColor;
+    /// <summary>
+    /// The background color used when the item is highlighted (hovered). Setting this value immediately updates the visual.
+    /// </summary>
     public Color HighlightedBackgroundColor
     {
         get => _highlightedBackgroundColor;
@@ -59,6 +81,9 @@ public class MenuItemVisual : InteractiveGue
     }
 
     Color _selectedBackgroundColor;
+    /// <summary>
+    /// The background color used when the item is selected. Setting this value immediately updates the visual.
+    /// </summary>
     public Color SelectedBackgroundColor
     {
         get => _selectedBackgroundColor;
@@ -73,6 +98,10 @@ public class MenuItemVisual : InteractiveGue
     }
 
     Color _foregroundColor;
+    /// <summary>
+    /// The base color applied to the text label. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color ForegroundColor
     {
         get => _foregroundColor;
@@ -90,6 +119,10 @@ public class MenuItemVisual : InteractiveGue
     }
 
     Color _submenuIndicatorColor;
+    /// <summary>
+    /// The base color applied to the submenu indicator. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color SubmenuIndicatorColor
     {
         get => _submenuIndicatorColor;
@@ -245,8 +278,11 @@ public class MenuItemVisual : InteractiveGue
         SubmenuIndicatorInstance.Color = submenuIndicatorColor;
     }
 
-    public override object FormsControlAsObject 
-    { 
+    /// <summary>
+    /// Sets the FormsControlAsObject and configures the MenuItem's scroll viewer visual template.
+    /// </summary>
+    public override object FormsControlAsObject
+    {
         get => base.FormsControlAsObject;
         set
         {
@@ -261,5 +297,8 @@ public class MenuItemVisual : InteractiveGue
     Gum.Forms.VisualTemplate DefaultScrollVisualTemplate => new (() =>
                 new ScrollViewerVisualSizedToChildren(fullInstantiation: true, tryCreateFormsObject: false));
 
+    /// <summary>
+    /// Returns the strongly-typed MenuItem Forms control backing this visual.
+    /// </summary>
     public MenuItem FormsControl => (MenuItem)FormsControlAsObject;
 }

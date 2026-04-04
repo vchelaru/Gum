@@ -19,17 +19,53 @@ using Microsoft.Xna.Framework;
 
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Abstract base visual for text input controls (TextBox, PasswordBox). Contains a bordered
+/// background, a clipped text area with selection highlighting, a text caret, placeholder text,
+/// and a focus indicator bar.
+/// </summary>
 public abstract class TextBoxBaseVisual : InteractiveGue
 {
+    /// <summary>
+    /// The bordered background nine-slice that fills the control.
+    /// </summary>
     public NineSliceRuntime Background { get; private set; }
+
+    /// <summary>
+    /// The container that clips text content to the control bounds.
+    /// </summary>
     public ContainerRuntime ClipContainer { get; private set; }
+
+    /// <summary>
+    /// The nine-slice used to highlight selected text.
+    /// </summary>
     public NineSliceRuntime SelectionInstance { get; private set; }
+
+    /// <summary>
+    /// The text runtime displaying the entered text.
+    /// </summary>
     public TextRuntime TextInstance { get; private set; }
+
+    /// <summary>
+    /// The text runtime displaying placeholder text when the input is empty.
+    /// </summary>
     public TextRuntime PlaceholderTextInstance { get; private set; }
+
+    /// <summary>
+    /// The blinking text caret sprite indicating the cursor position.
+    /// </summary>
     public SpriteRuntime CaretInstance { get; private set; }
+
+    /// <summary>
+    /// A thin bar displayed at the bottom of the control when focused.
+    /// </summary>
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
     Color _backgroundColor;
+    /// <summary>
+    /// The base color applied to the background. Setting this value immediately updates
+    /// the visual. States may tint this color (for example, disabled states darken it).
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -46,6 +82,10 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         }
     }
     Color _foregroundColor;
+    /// <summary>
+    /// The base color applied to the entered text. Setting this value immediately updates
+    /// the visual. States may tint this color.
+    /// </summary>
     public Color ForegroundColor
     {
         get => _foregroundColor;
@@ -63,6 +103,10 @@ public abstract class TextBoxBaseVisual : InteractiveGue
     }
 
     Color _selectionBackgroundColor;
+    /// <summary>
+    /// The color applied to the text selection highlight. Setting this value immediately
+    /// updates the visual.
+    /// </summary>
     public Color SelectionBackgroundColor
     {
         get => _selectionBackgroundColor;
@@ -80,6 +124,10 @@ public abstract class TextBoxBaseVisual : InteractiveGue
     }
 
     Color _placeholderColor;
+    /// <summary>
+    /// The color applied to the placeholder text. Setting this value immediately updates
+    /// the visual.
+    /// </summary>
     public Color PlaceholderColor
     {
         get => _placeholderColor;
@@ -97,6 +145,9 @@ public abstract class TextBoxBaseVisual : InteractiveGue
     }
 
     Color _caretColor;
+    /// <summary>
+    /// The color applied to the text caret. Setting this value immediately updates the visual.
+    /// </summary>
     public Color CaretColor
     {
         get => _caretColor;
@@ -112,6 +163,10 @@ public abstract class TextBoxBaseVisual : InteractiveGue
     }
 
     Color _focusedIndicatorColor;
+    /// <summary>
+    /// The color of the focus indicator bar shown when the control has focus. Setting this
+    /// value immediately updates the visual.
+    /// </summary>
     public Color FocusedIndicatorColor
     {
         get => _focusedIndicatorColor;
@@ -142,7 +197,14 @@ public abstract class TextBoxBaseVisual : InteractiveGue
     }
 
     public TextBoxCategoryStates States;
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory TextboxCategory { get; private set; }
+
+    /// <summary>
+    /// The state category controlling single-line vs multi-line layout.
+    /// </summary>
     public StateSaveCategory LineModeCategory { get; private set; }
 
     public TextBoxBaseVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
@@ -229,6 +291,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         PlaceholderTextInstance.HeightUnits = DimensionUnitType.RelativeToParent;
         PlaceholderTextInstance.Text = "Text Placeholder";
         PlaceholderTextInstance.VerticalAlignment = VerticalAlignment.Center;
+        PlaceholderTextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         ClipContainer.AddChild(PlaceholderTextInstance);
 
         CaretInstance = new SpriteRuntime();

@@ -131,6 +131,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 toReturn = toReturn | ParentUpdateType.IfParentStacks;
             }
+            if(GetIfParentWidthHeightDependOnChildren())
+            {
+                toReturn = toReturn | ParentUpdateType.IfParentWidthHeightDependOnChildren;
+            }
             return toReturn;
         }
     }
@@ -355,10 +359,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         null);
                 }
 
-                if (!absoluteVisible && (GetIfParentStacks() || GetIfParentIsAutoGrid()))
+                if (!absoluteVisible && (GetIfParentStacks() || GetIfParentIsAutoGrid() || GetIfParentWidthHeightDependOnChildren()))
                 {
                     // This updates the parent right away:
-                    Parent?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
+                    Parent?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
 
                 }
                 VisibleChanged?.Invoke(this, EventArgs.Empty);
@@ -4378,6 +4382,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return this.EffectiveParentGue != null &&
             (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.AutoGridHorizontal ||
             this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical);
+    }
+
+    private bool GetIfParentWidthHeightDependOnChildren()
+    {
+        return (this.EffectiveParentGue as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true;
     }
 
     private bool GetIfParentHasRatioChildren()

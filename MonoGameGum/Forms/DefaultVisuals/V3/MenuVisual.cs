@@ -19,14 +19,30 @@ using Microsoft.Xna.Framework;
 
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a Menu control. Contains a solid background and a wrapping
+/// left-to-right stacked inner panel for menu items.
+/// </summary>
 public class MenuVisual : InteractiveGue
 {
+    /// <summary>
+    /// The solid background nine-slice that fills the control.
+    /// </summary>
     public NineSliceRuntime Background {  get; private set; }
+    /// <summary>
+    /// The wrapping left-to-right stacking container that holds the menu items.
+    /// </summary>
     public ContainerRuntime InnerPanelInstance { get; private set; }
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory MenuCategory { get; private set; }
 
     Color _backgroundColor;
+    /// <summary>
+    /// The color applied to the background. Setting this value immediately updates the visual.
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -108,5 +124,8 @@ public class MenuVisual : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// Returns the strongly-typed Menu Forms control backing this visual.
+    /// </summary>
     public Menu FormsControl => (Menu)FormsControlAsObject;
 }

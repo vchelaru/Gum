@@ -24,14 +24,46 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a ScrollBar control. Contains up/down (or left/right) arrow buttons,
+/// a track, and a draggable thumb. Supports both vertical and horizontal orientations via
+/// the OrientationCategory states.
+/// </summary>
 public class ScrollBarVisual : InteractiveGue
 {
-    public ButtonVisual UpButtonInstance { get; private set; }
+    /// <summary>
+    /// The button at the start of the scroll bar (top in vertical, left in horizontal orientation).
+    /// </summary>
+    public ButtonVisual? UpButtonInstance { get; private set; }
+
+    /// <summary>
+    /// The arrow icon sprite inside the up/left button.
+    /// </summary>
     public SpriteRuntime UpButtonIcon { get; private set; }
-    public ButtonVisual DownButtonInstance { get; private set; }
+
+    /// <summary>
+    /// The button at the end of the scroll bar (bottom in vertical, right in horizontal orientation).
+    /// </summary>
+    public ButtonVisual? DownButtonInstance { get; private set; }
+
+    /// <summary>
+    /// The arrow icon sprite inside the down/right button.
+    /// </summary>
     public SpriteRuntime DownButtonIcon { get; private set; }
+
+    /// <summary>
+    /// The container between the up and down buttons that holds the track and draggable thumb.
+    /// </summary>
     public ContainerRuntime ThumbContainer {  get; private set; }
+
+    /// <summary>
+    /// The track nine-slice background behind the thumb.
+    /// </summary>
     public NineSliceRuntime TrackInstance { get; private set; }
+
+    /// <summary>
+    /// The draggable thumb button used to scroll content.
+    /// </summary>
     public ButtonVisual ThumbInstance { get; private set; }
 
     public class ScrollBarStates
@@ -47,10 +79,20 @@ public class ScrollBarVisual : InteractiveGue
 
     public ScrollBarStates States;
 
+    /// <summary>
+    /// The state category controlling vertical vs horizontal layout.
+    /// </summary>
     public StateSaveCategory OrientationCategory { get; private set; }
+
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory ScrollBarCategory { get; private set; }
 
     Color _trackBackgroundColor;
+    /// <summary>
+    /// The color applied to the track background. Setting this value immediately updates the visual.
+    /// </summary>
     public Color TrackBackgroundColor
     {
         get => _trackBackgroundColor;
@@ -68,6 +110,9 @@ public class ScrollBarVisual : InteractiveGue
     }
 
     Color _scrollArrowColor;
+    /// <summary>
+    /// The color applied to the up and down arrow icons. Setting this value immediately updates the visual.
+    /// </summary>
     public Color ScrollArrowColor
     {
         get => _scrollArrowColor;
@@ -112,17 +157,21 @@ public class ScrollBarVisual : InteractiveGue
         UpButtonIcon.Visible = true;
         UpButtonIcon.Rotation = 90;
 
-        UpButtonInstance = new ButtonVisual();
-        UpButtonInstance.Name = "UpButtonInstance";
-        UpButtonInstance.TextInstance.Text = "";
-        UpButtonInstance.Height = 24f;
-        UpButtonInstance.HeightUnits = DimensionUnitType.Absolute;
-        UpButtonInstance.Width = 0;
-        UpButtonInstance.WidthUnits = DimensionUnitType.RelativeToParent;
-        UpButtonInstance.XOrigin = HorizontalAlignment.Left;
-        UpButtonInstance.YOrigin = VerticalAlignment.Top;
-        UpButtonInstance.AddChild(UpButtonIcon);
-        this.AddChild(UpButtonInstance);
+        var upButton = new Button();
+        var upButtonVisual = upButton.Visual;
+
+        upButtonVisual.Name = "UpButtonInstance";
+        upButton.Text = "";
+        upButtonVisual.Height = 24f;
+        upButtonVisual.HeightUnits = DimensionUnitType.Absolute;
+        upButtonVisual.Width = 0;
+        upButtonVisual.WidthUnits = DimensionUnitType.RelativeToParent;
+        upButtonVisual.XOrigin = HorizontalAlignment.Left;
+        upButtonVisual.YOrigin = VerticalAlignment.Top;
+        upButtonVisual.AddChild(UpButtonIcon);
+        this.AddChild(upButtonVisual);
+        this.UpButtonInstance = upButtonVisual as ButtonVisual;
+
 
         DownButtonIcon = new SpriteRuntime();
         DownButtonIcon.Name = "DownButtonIcon";
@@ -141,18 +190,21 @@ public class ScrollBarVisual : InteractiveGue
         DownButtonIcon.Visible = true;
         DownButtonIcon.Rotation = -90;
 
-        DownButtonInstance = new ButtonVisual();
-        DownButtonInstance.Name = "DownButtonInstance";
-        DownButtonInstance.TextInstance.Text = "";
-        DownButtonInstance.Height = 24f;
-        DownButtonInstance.HeightUnits = DimensionUnitType.Absolute;
-        DownButtonInstance.Width = 0f;
-        DownButtonInstance.WidthUnits = DimensionUnitType.RelativeToParent;
-        DownButtonInstance.XOrigin = HorizontalAlignment.Left;
-        DownButtonInstance.YOrigin = VerticalAlignment.Bottom;
-        DownButtonInstance.YUnits = GeneralUnitType.PixelsFromLarge;
-        DownButtonInstance.AddChild(DownButtonIcon);
-        this.AddChild(DownButtonInstance);
+        var downButton = new Button();
+        var downButtonVisual = downButton.Visual;
+
+        downButtonVisual.Name = "DownButtonInstance";
+        downButton.Text = "";
+        downButtonVisual.Height = 24f;
+        downButtonVisual.HeightUnits = DimensionUnitType.Absolute;
+        downButtonVisual.Width = 0f;
+        downButtonVisual.WidthUnits = DimensionUnitType.RelativeToParent;
+        downButtonVisual.XOrigin = HorizontalAlignment.Left;
+        downButtonVisual.YOrigin = VerticalAlignment.Bottom;
+        downButtonVisual.YUnits = GeneralUnitType.PixelsFromLarge;
+        downButtonVisual.AddChild(DownButtonIcon);
+        this.AddChild(downButtonVisual);
+        this.DownButtonInstance = downButtonVisual as ButtonVisual;
 
         ThumbContainer = new ContainerRuntime();
         ThumbContainer.Name = "ThumbContainer";
@@ -294,5 +346,8 @@ public class ScrollBarVisual : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// Returns the strongly-typed ScrollBar Forms control backing this visual.
+    /// </summary>
     public ScrollBar FormsControl => (ScrollBar)this.FormsControlAsObject;
 }

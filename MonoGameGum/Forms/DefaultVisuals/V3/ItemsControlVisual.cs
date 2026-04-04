@@ -7,6 +7,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Gum.Forms.DefaultVisuals.V3;
+
+/// <summary>
+/// Default V3 visual for an ItemsControl. Extends ScrollViewerVisual to provide a scrollable
+/// container for dynamically generated items.
+/// </summary>
 public class ItemsControlVisual : ScrollViewerVisual
 {
     public ItemsControlVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(
@@ -21,5 +26,8 @@ public class ItemsControlVisual : ScrollViewerVisual
         }
     }
 
+    /// <summary>
+    /// Returns the strongly-typed ItemsControl Forms control backing this visual.
+    /// </summary>
     public new ItemsControl? FormsControl => (ItemsControl)FormsControlAsObject;
 }

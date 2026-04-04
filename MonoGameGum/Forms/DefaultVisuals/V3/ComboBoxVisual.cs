@@ -20,14 +20,30 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a ComboBox control. Contains a bordered background, text label showing
+/// the selected item, a dropdown arrow indicator, a focus indicator bar, and an embedded
+/// ListBoxVisual for the dropdown.
+/// </summary>
 public class ComboBoxVisual : InteractiveGue
 {
+    /// <summary>
+    /// The bordered background nine-slice that fills the control.
+    /// </summary>
     public NineSliceRuntime Background {  get; private set; }
+
+    /// <summary>
+    /// The text label displaying the currently selected item.
+    /// </summary>
     public TextRuntime TextInstance { get; private set; }
 
-    ListBoxVisual listBoxInstance;
-    public ListBoxVisual ListBoxInstance 
-    { 
+    GraphicalUiElement listBoxInstance;
+
+    /// <summary>
+    /// The embedded ListBoxVisual used as the dropdown popup. Must be named "ListBoxInstance".
+    /// </summary>
+    public GraphicalUiElement ListBoxInstance
+    {
         get => listBoxInstance;
         set
         {
@@ -42,14 +58,26 @@ public class ComboBoxVisual : InteractiveGue
             }
 #endif
             listBoxInstance = value;
-            this.FormsControl.ListBox = listBoxInstance.FormsControl as ListBox;
+            this.FormsControl.ListBox = (listBoxInstance as InteractiveGue)?.FormsControlAsObject as ListBox;
             PositionAndAttachListBox(listBoxInstance);
         }
     }
+    /// <summary>
+    /// The arrow sprite indicating the dropdown can be opened.
+    /// </summary>
     public SpriteRuntime DropdownIndicator { get; private set; }
+
+    /// <summary>
+    /// A thin bar displayed at the bottom of the control when focused.
+    /// </summary>
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
     Color _backgroundColor;
+
+    /// <summary>
+    /// The base color applied to the background. Setting this value immediately updates the
+    /// visual. States may tint this color.
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -63,6 +91,11 @@ public class ComboBoxVisual : InteractiveGue
         }
     }
     Color _foregroundColor;
+
+    /// <summary>
+    /// The base color applied to the text. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color ForegroundColor
     {
         get => _foregroundColor;
@@ -77,6 +110,11 @@ public class ComboBoxVisual : InteractiveGue
     }
 
     Color _dropdownIndicatorColor;
+
+    /// <summary>
+    /// The base color applied to the dropdown arrow. Setting this value immediately updates the
+    /// visual. States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color DropdownIndicatorColor
     {
         get => _dropdownIndicatorColor;
@@ -91,6 +129,11 @@ public class ComboBoxVisual : InteractiveGue
     }
 
     Color _focusedIndicatorColor;
+
+    /// <summary>
+    /// The color of the focus indicator bar shown when the control has focus. Setting this value
+    /// immediately updates the visual.
+    /// </summary>
     public Color FocusedIndicatorColor
     {
         get => _focusedIndicatorColor;
@@ -117,6 +160,9 @@ public class ComboBoxVisual : InteractiveGue
 
     public ComboBoxCategoryStates States;
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory ComboBoxCategory { get; private set; }
 
     public ComboBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
@@ -162,7 +208,10 @@ public class ComboBoxVisual : InteractiveGue
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Strong);
         this.AddChild(TextInstance);
 
-        listBoxInstance = new ListBoxVisual(tryCreateFormsObject: false);
+        // This forces using V3 visual, but what if a user wants a different kind
+        // of listbox? We should respect that:
+        //listBoxInstance = new ListBoxVisual(tryCreateFormsObject: false);
+        listBoxInstance = new ListBox().Visual;
         PositionAndAttachListBox(listBoxInstance);
 
         DropdownIndicator = new SpriteRuntime();
@@ -277,10 +326,10 @@ public class ComboBoxVisual : InteractiveGue
         FocusedIndicator.Color = _focusedIndicatorColor;
     }
 
-    private void PositionAndAttachListBox(ListBoxVisual listBoxVisual)
+    private void PositionAndAttachListBox(GraphicalUiElement listBoxVisual)
     {
         listBoxVisual.Name = "ListBoxInstance";
-        listBoxVisual.Y = 28f;
+        listBoxVisual.Y = this.GetAbsoluteHeight();
         listBoxVisual.Width = 0f;
         listBoxVisual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         listBoxVisual.Height = 128f;
@@ -288,6 +337,9 @@ public class ComboBoxVisual : InteractiveGue
         this.AddChild(listBoxInstance);
     }
 
+    /// <summary>
+    /// Returns the strongly-typed ComboBox Forms control backing this visual.
+    /// </summary>
     public ComboBox FormsControl => (ComboBox)FormsControlAsObject;
 
 }

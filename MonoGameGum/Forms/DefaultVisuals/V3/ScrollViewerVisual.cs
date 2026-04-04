@@ -21,15 +21,51 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a ScrollViewer control. Contains a bordered background, vertical and
+/// horizontal scroll bars, a clipped content area with an inner panel, and a focus indicator bar.
+/// </summary>
 public class ScrollViewerVisual : InteractiveGue
 {
+    /// <summary>
+    /// The bordered background nine-slice that fills the control.
+    /// </summary>
     public NineSliceRuntime Background { get; private set; }
+
+    /// <summary>
+    /// The vertical scroll bar on the right side of the content area.
+    /// </summary>
     public ScrollBarVisual VerticalScrollBarInstance { get; private set; }
+
+    /// <summary>
+    /// The horizontal scroll bar at the bottom of the content area.
+    /// </summary>
     public ScrollBarVisual HorizontalScrollBarInstance { get; private set; }
+
+    /// <summary>
+    /// The stacked container that holds the scrollable content. Uses TopToBottomStack children layout.
+    /// </summary>
     public ContainerRuntime InnerPanelInstance { get; private set; }
+
+    /// <summary>
+    /// The container that clips its children to provide scrollable content bounds.
+    /// </summary>
     public ContainerRuntime ClipContainerInstance { get; private set; }
+
+    /// <summary>
+    /// The container that holds the scroll bars and the clipped content area.
+    /// </summary>
     public ContainerRuntime ScrollAndClipContainer { get; private set; }
+
+    /// <summary>
+    /// The intermediate container between ScrollAndClipContainer and ClipContainerInstance,
+    /// sized to account for scroll bar width/height.
+    /// </summary>
     public ContainerRuntime ClipContainerContainer { get; private set; }
+
+    /// <summary>
+    /// A thin bar displayed at the bottom of the control when focused.
+    /// </summary>
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
     public class ScrollViewerCategoryStates
@@ -40,9 +76,15 @@ public class ScrollViewerVisual : InteractiveGue
 
     public ScrollViewerCategoryStates States;
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory ScrollViewerCategory { get; private set; }
 
     Color _backgroundColor;
+    /// <summary>
+    /// The color applied to the background. Setting this value immediately updates the visual.
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -57,6 +99,10 @@ public class ScrollViewerVisual : InteractiveGue
     }
 
     Color _focusedIndicatorColor;
+    /// <summary>
+    /// The color of the focus indicator bar shown when the control has focus.
+    /// Setting this value immediately updates the visual.
+    /// </summary>
     public Color FocusedIndicatorColor
     {
         get => _focusedIndicatorColor;
@@ -69,6 +115,10 @@ public class ScrollViewerVisual : InteractiveGue
             }
         }
     }
+    /// <summary>
+    /// Configures the scroll viewer and its containers to size to their children content
+    /// rather than using fixed dimensions.
+    /// </summary>
     public void MakeSizedToChildren()
     {
         Height = 0;
@@ -324,5 +374,8 @@ public class ScrollViewerVisual : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// Returns the strongly-typed ScrollViewer Forms control backing this visual.
+    /// </summary>
     public ScrollViewer FormsControl => (ScrollViewer)this.FormsControlAsObject;
 }

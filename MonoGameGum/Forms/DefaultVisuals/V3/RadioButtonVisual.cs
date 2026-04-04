@@ -23,11 +23,26 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// Default V3 visual for a RadioButton control. Contains a circular bordered background, an inner radio dot, a text label, and a focus indicator bar.
+/// </summary>
 public class RadioButtonVisual : InteractiveGue
 {
+    /// <summary>
+    /// The circular bordered nine-slice background for the radio indicator area.
+    /// </summary>
     public NineSliceRuntime RadioBackground { get; private set; }
+    /// <summary>
+    /// The sprite displayed inside the radio background showing the filled circle when selected.
+    /// </summary>
     public SpriteRuntime Radio { get; private set; }
+    /// <summary>
+    /// The text label displayed next to the radio button.
+    /// </summary>
     public TextRuntime TextInstance { get; private set; }
+    /// <summary>
+    /// A thin bar displayed at the bottom of the control when focused.
+    /// </summary>
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
     public class RadioButtonCategoryStates
@@ -51,10 +66,17 @@ public class RadioButtonVisual : InteractiveGue
 
     public RadioButtonCategoryStates States;
 
+    /// <summary>
+    /// The state category used by the Forms control to apply visual states.
+    /// </summary>
     public StateSaveCategory RadioButtonCategory { get; private set; }
 
 
     Color _backgroundColor;
+    /// <summary>
+    /// The base color applied to the radio background. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -71,6 +93,10 @@ public class RadioButtonVisual : InteractiveGue
         }
     }
     Color _foregroundColor;
+    /// <summary>
+    /// The base color applied to the text label. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color ForegroundColor
     {
         get => _foregroundColor;
@@ -88,6 +114,10 @@ public class RadioButtonVisual : InteractiveGue
     }
 
     Color _radioColor;
+    /// <summary>
+    /// The base color applied to the inner radio dot. Setting this value immediately updates the visual.
+    /// States may tint this color (for example, disabled states convert to grayscale and darken).
+    /// </summary>
     public Color RadioColor
     {
         get => _radioColor;
@@ -105,6 +135,10 @@ public class RadioButtonVisual : InteractiveGue
     }
 
     Color _focusedIndicatorColor;
+    /// <summary>
+    /// The color of the focus indicator bar shown when the control has focus.
+    /// Setting this value immediately updates the visual.
+    /// </summary>
     public Color FocusedIndicatorColor
     {
         get => _focusedIndicatorColor;
@@ -316,5 +350,8 @@ public class RadioButtonVisual : InteractiveGue
 
     }
 
+    /// <summary>
+    /// Returns the strongly-typed RadioButton Forms control backing this visual.
+    /// </summary>
     public RadioButton FormsControl => (RadioButton)FormsControlAsObject;
 }
