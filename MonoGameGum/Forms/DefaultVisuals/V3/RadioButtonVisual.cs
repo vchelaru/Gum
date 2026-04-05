@@ -192,15 +192,15 @@ public class RadioButtonVisual : InteractiveGue
         Radio.ApplyState(Styling.ActiveStyle.Icons.Circle2);
         RadioBackground.Children.Add(Radio);
 
+        float textOffset = 28;
+
         TextInstance = new TextRuntime();
         TextInstance.Name = "TextInstance";
-        TextInstance.X = 0;
-        TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+        TextInstance.X = textOffset;
         TextInstance.Y = 0;
         TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        TextInstance.XOrigin = HorizontalAlignment.Right;
         TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-        TextInstance.Width = -28;
+        TextInstance.Width = -textOffset;
         TextInstance.Height = 0;
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
