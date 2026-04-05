@@ -21,6 +21,38 @@ checkBox.Unchecked += (_, _) => checkBox.Text = $"IsChecked:{checkBox.IsChecked}
 
 <figure><img src="../../.gitbook/assets/13_21 40 32.gif" alt=""><figcaption><p>CheckBox responding to Checked and Unchecked events by printing output</p></figcaption></figure>
 
+## IsChecked
+
+IsChecked is a nullable bool value.
+
+| Value   | Details                               |
+| ------- | ------------------------------------- |
+| `true`  | CheckBox is checked                   |
+| `false` | CheckBox is not checked               |
+| `null`  | CheckBox is in an indeterminate state |
+
+The following code creates three checkboxes each set to one of the three `IsChecked` values:
+
+```csharp
+// Initialize
+var stackPanel = new StackPanel();
+stackPanel.AddToRoot();
+
+var checkBox = new CheckBox();
+stackPanel.AddChild(checkBox);
+checkBox.IsChecked = true;
+
+var checkBox2 = new CheckBox();
+stackPanel.AddChild(checkBox2);
+checkBox2.IsChecked = false;
+
+var checkBox3 = new CheckBox();
+stackPanel.AddChild(checkBox3);
+checkBox3.IsChecked = null;
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA6tW8ix2L81VsiopKk3VUcrMyyzJTMzJrEpVslIqSyxSKC5JTM4OSMxLzVGwVchLLVcIhgtoaFrH5CHk9RxTUkLyg_LzS8ASIM3JGanJ2U75FVCtzlAuFo3OGZk5KRow9SB5GFvPsxisLzUFaArIkWhmG5FquBGy6UYoxqcl5hSjm29MqvnGyOYbo5ifV5qTY61UCwD-QP0DdAEAAA)
+
 ## CheckBox Width and Height
 
 Default CheckBoxes have the following default values:
