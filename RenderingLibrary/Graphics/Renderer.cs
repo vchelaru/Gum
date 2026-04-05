@@ -1485,15 +1485,28 @@ public class CustomEffectManager
 
         // Loads the Shader.xnb effect file. The shader is optional; if missing,
         // the application won't be able to use custom effects.
-        // Use of try-catch avoids using platform specific code.
+        // On desktop OSes we can check File.Exists to avoid a noisy exception.
+        // On other platforms (e.g., consoles/mobile using TitleContainer), skip the
+        // check and fall through to the try-catch.
         // Shader should be capitalized.
-        try
-        {
-            Effect = mContentManager.Load<Effect>("Content/Shader");
-        }
-        catch
+        var _canCheckFileExists = OperatingSystem.IsWindows()
+            || OperatingSystem.IsLinux()
+            || OperatingSystem.IsMacOS();
+
+        if (_canCheckFileExists && !System.IO.File.Exists("Content/Shader.xnb"))
         {
             Debug.WriteLine("'Content/Shader.xnb' not found. Custom rendering is not available.");
+        }
+        else
+        {
+            try
+            {
+                Effect = mContentManager.Load<Effect>("Content/Shader");
+            }
+            catch
+            {
+                Debug.WriteLine("'Content/Shader.xnb' could not be loaded. Custom rendering is not available.");
+            }
         }
     }
 
