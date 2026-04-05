@@ -62,10 +62,11 @@ public static class EditorTheme
         TryAdd(typeof(Button), (_, c) => new ButtonVisual(tryCreateFormsObject: c));
         TryAdd(typeof(CheckBox), (_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ComboBox), (_, c) => new ComboBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Expander), (_, c) => new ExpanderVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ListBoxItem), (_, c) => new ListBoxItemVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ListBox), (_, c) => new ListBoxVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ScrollBar), (_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ScrollViewer), (_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Slider), (_, c) => new SliderVisual(tryCreateFormsObject: c));
-        TryAdd(typeof(Expander), (_, c) => new ExpanderVisual(tryCreateFormsObject: c));
     }
 }
