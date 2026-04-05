@@ -1108,7 +1108,7 @@ public class CustomSetPropertyOnRenderable
                         bmfcSave.IsBold = isBoldStack.Peek();
 
                         var gumProject = ObjectFinder.Self.GumProjectSave;
-                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.DefaultRanges;
+                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
                         bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
                         bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 
@@ -1158,7 +1158,7 @@ public class CustomSetPropertyOnRenderable
                             // that doesn't exist, create it on demand. This parallels the font creation in
                             // UpdateToFontValues — both use FontService.CreateFontIfNecessary with the same pattern.
                             var gumProject = ObjectFinder.Self.GumProjectSave;
-                            bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.DefaultRanges;
+                            bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
                             bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
                             bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 #endif
@@ -1359,7 +1359,7 @@ public class CustomSetPropertyOnRenderable
                         bmfcSave.IsBold = textRuntime.IsBold;
 
                         var gumProject = ObjectFinder.Self.GumProjectSave;
-                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.DefaultRanges;
+                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
                         bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
                         bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 
@@ -1392,7 +1392,7 @@ public class CustomSetPropertyOnRenderable
                         bmfcSave.IsBold = textRuntime.IsBold;
 
                         var gumProject = ObjectFinder.Self.GumProjectSave;
-                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.DefaultRanges;
+                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
                         bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
                         bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 

@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using KernSmith.Gum;
 using GumRuntime;
+using RenderingLibrary.Graphics.Fonts;
 
 namespace Gum.Themes.Editor;
 
@@ -16,6 +17,9 @@ public static class EditorTheme
     {
         CustomSetPropertyOnRenderable.InMemoryFontCreator =
             new KernSmithFontCreator(graphicsDevice);
+
+        // Register special characters used by editor theme visuals (e.g., ExpanderVisual arrows)
+        BmfcSave.AddCharacters("►▼");
 
         var styling = Styling.ActiveStyle;
 
@@ -58,10 +62,11 @@ public static class EditorTheme
         TryAdd(typeof(Button), (_, c) => new ButtonVisual(tryCreateFormsObject: c));
         TryAdd(typeof(CheckBox), (_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ComboBox), (_, c) => new ComboBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Expander), (_, c) => new ExpanderVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ListBoxItem), (_, c) => new ListBoxItemVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ListBox), (_, c) => new ListBoxVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ScrollBar), (_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ScrollViewer), (_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Slider), (_, c) => new SliderVisual(tryCreateFormsObject: c));
-        TryAdd(typeof(Expander), (_, c) => new ExpanderVisual(tryCreateFormsObject: c));
     }
 }

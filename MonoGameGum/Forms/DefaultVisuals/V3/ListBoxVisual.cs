@@ -303,5 +303,41 @@ public class ListBoxVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed ListBox Forms control backing this visual.
     /// </summary>
+    /// <summary>
+    /// Configures the list box and its containers to size their height to children content
+    /// rather than using a fixed height.
+    /// </summary>
+    public void MakeHeightSizedToChildren()
+    {
+        Height = 0;
+        HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        ClipAndScrollContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        ClipContainerParent.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        ClipContainerParent.Height = 4;
+        ClipContainerInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        ClipContainerInstance.Height = 0;
+        InnerPanelInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+    }
+
+    /// <summary>
+    /// Reverts the list box height to its default fixed size (256px), undoing
+    /// <see cref="MakeHeightSizedToChildren"/>.
+    /// </summary>
+    public void MakeHeightFixedSize()
+    {
+        Height = 256;
+        HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        ClipAndScrollContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        ClipAndScrollContainer.Height = 0;
+        ClipContainerParent.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        ClipContainerParent.Height = 0;
+        ClipContainerInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        ClipContainerInstance.Height = -4;
+        InnerPanelInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+    }
+
+    /// <summary>
+    /// Returns the strongly-typed ListBox Forms control backing this visual.
+    /// </summary>
     public ListBox FormsControl => (ListBox)FormsControlAsObject;
 }

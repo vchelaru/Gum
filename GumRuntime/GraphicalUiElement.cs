@@ -4153,47 +4153,68 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         if (GetIfParentStacks())
         {
-            float whatToStackAfterX;
-            float whatToStackAfterY;
+            var effectiveParent = this.EffectiveParentGue;
 
-            var whatToStackAfter = GetWhatToStackAfter(canWrap, shouldWrap, out whatToStackAfterX, out whatToStackAfterY);
-
-
-
-            float xRelativeTo = 0;
-            float yRelativeTo = 0;
-
-            if (whatToStackAfter != null)
+            // O(1) fast path: when UseFixedStackChildrenSize is true on a TopToBottomStack
+            // without wrapping, compute position directly from visible index × fixed height
+            // instead of walking the sibling chain.
+            if (!canWrap &&
+                effectiveParent != null &&
+                effectiveParent.UseFixedStackChildrenSize &&
+                effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack &&
+                effectiveParent.Children?.Count > 0)
             {
-                var effectiveParent = this.EffectiveParentGue;
-                switch (effectiveParent!.ChildrenLayout)
+                var visibleIndex = this.GetIndexInVisibleSiblings();
+                if (visibleIndex > 0)
                 {
-                    case Gum.Managers.ChildrenLayout.TopToBottomStack:
-
-                        if (canWrap)
-                        {
-                            xRelativeTo = whatToStackAfterX;
-                        }
-
-                        yRelativeTo = whatToStackAfterY;
-
-                        break;
-                    case Gum.Managers.ChildrenLayout.LeftToRightStack:
-
-                        xRelativeTo = whatToStackAfterX;
-
-                        if (canWrap)
-                        {
-                            yRelativeTo = whatToStackAfterY;
-                        }
-                        break;
-                    default:
-                        throw new NotImplementedException();
+                    var firstChildHeight = effectiveParent.Children[0].GetAbsoluteHeight();
+                    unitOffsetY += visibleIndex * (firstChildHeight + effectiveParent.StackSpacing);
                 }
+                this.StackedRowOrColumnIndex = 0;
             }
+            else
+            {
+                float whatToStackAfterX;
+                float whatToStackAfterY;
 
-            unitOffsetX += xRelativeTo;
-            unitOffsetY += yRelativeTo;
+                var whatToStackAfter = GetWhatToStackAfter(canWrap, shouldWrap, out whatToStackAfterX, out whatToStackAfterY);
+
+
+
+                float xRelativeTo = 0;
+                float yRelativeTo = 0;
+
+                if (whatToStackAfter != null)
+                {
+                    switch (effectiveParent!.ChildrenLayout)
+                    {
+                        case Gum.Managers.ChildrenLayout.TopToBottomStack:
+
+                            if (canWrap)
+                            {
+                                xRelativeTo = whatToStackAfterX;
+                            }
+
+                            yRelativeTo = whatToStackAfterY;
+
+                            break;
+                        case Gum.Managers.ChildrenLayout.LeftToRightStack:
+
+                            xRelativeTo = whatToStackAfterX;
+
+                            if (canWrap)
+                            {
+                                yRelativeTo = whatToStackAfterY;
+                            }
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                }
+
+                unitOffsetX += xRelativeTo;
+                unitOffsetY += yRelativeTo;
+            }
         }
         else if (GetIfParentIsAutoGrid())
         {
