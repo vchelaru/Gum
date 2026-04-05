@@ -118,6 +118,10 @@ public class ComboBox :
     }
 
 
+    /// <summary>
+    /// Obsolete. Use <see cref="VisualTemplate"/> instead to control the visual (GraphicalUiElement)
+    /// type used for each item in the drop-down list.
+    /// </summary>
     [Obsolete("Use VisualTemplate")]
     public Type ListBoxItemGumType
     {
@@ -134,6 +138,10 @@ public class ComboBox :
         }
     }
 
+    /// <summary>
+    /// Obsolete. Use <see cref="FrameworkElementTemplate"/> instead to control the Forms control
+    /// type used for each item in the drop-down list.
+    /// </summary>
     [Obsolete("Use FrameworkElementTemplate")]
     public Type ListBoxItemFormsType
     {
@@ -150,12 +158,28 @@ public class ComboBox :
         }
     }
 
+    /// <summary>
+    /// Gets or sets the template used to create the Forms control (FrameworkElement) for each item
+    /// in the drop-down list. When set, each item added to <see cref="Items"/> will have its
+    /// FrameworkElement created by calling <see cref="FrameworkElementTemplate.CreateContent"/>,
+    /// with the item assigned as the BindingContext. This controls the behavioral/logical layer
+    /// of each list item. To control the visual (GraphicalUiElement) layer instead, use
+    /// <see cref="VisualTemplate"/>. This property forwards to the internal ListBox.
+    /// </summary>
     public FrameworkElementTemplate FrameworkElementTemplate
     {
         get => listBox.FrameworkElementTemplate;
         set => listBox.FrameworkElementTemplate = value;
     }
 
+    /// <summary>
+    /// Gets or sets the template used to create the visual (GraphicalUiElement) for each item
+    /// in the drop-down list. When set, each item added to <see cref="Items"/> will have its
+    /// visual created by calling <see cref="VisualTemplate.CreateContent"/>. Changing this
+    /// property clears and recreates all existing item visuals. To control the Forms control
+    /// (FrameworkElement) layer instead, use <see cref="FrameworkElementTemplate"/>.
+    /// This property forwards to the internal ListBox.
+    /// </summary>
     public VisualTemplate VisualTemplate
     {
         get => listBox.VisualTemplate;
