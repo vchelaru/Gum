@@ -1,13 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>12</LangVersion>
 
-    <PackageId>Gum.Themes.Editor</PackageId>
-    <Version>1.0.0</Version>
+    <PackageId>Gum.Themes.Editor.MonoGame</PackageId>
+    <Version>2026.4.5.1</Version>
     <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
     <Description>An editor-focused theme for Gum UI. Provides styled visuals for building tool and editor interfaces with MonoGame and Gum.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -22,13 +23,9 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Temporary: using KernSmith source instead of NuGet -->
     <PackageReference Include="KernSmith.MonoGameGum" Version="*">
 		<PrivateAssets>All</PrivateAssets>
 	</PackageReference>
-<!--    <ProjectReference Include="..\..\..\KernSmith\integrations\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj">
-      <PrivateAssets>All</PrivateAssets>
-    </ProjectReference> -->
 	<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
