@@ -13,14 +13,37 @@ using Gum.Forms.Controls.Primitives;
 namespace Gum.Forms.Controls;
 #endif
 
+/// <summary>
+/// A button that maintains a checked/unchecked state, toggling each time it is clicked.
+/// Base class for <see cref="CheckBox"/> and <see cref="RadioButton"/>.
+/// </summary>
+/// <remarks>
+/// The visual state is driven by the "ToggleCategoryState" property, which combines
+/// the interaction state (Enabled, Highlighted, Pushed, Disabled) with "On" or "Off" suffixes
+/// (e.g. "EnabledOn", "HighlightedOff").
+/// </remarks>
 public class ToggleButton : ButtonBase
 {
     #region Fields/Properties
 
+    /// <summary>
+    /// Whether this toggle supports three states: checked (true), unchecked (false), and
+    /// indeterminate (null). When false, clicking cycles only between checked and unchecked.
+    /// </summary>
     public bool IsThreeState { get; set; }
 
     private bool? isChecked = false;
 
+    /// <summary>
+    /// Gets or sets the checked state of the toggle. A value of <c>true</c> means checked,
+    /// <c>false</c> means unchecked, and <c>null</c> means indeterminate.
+    /// </summary>
+    /// <remarks>
+    /// Setting this property updates the visual state and raises <see cref="Checked"/>,
+    /// <see cref="Unchecked"/>, or <see cref="Indeterminate"/> as appropriate.
+    /// The indeterminate state is only reachable programmatically — clicking the button
+    /// cycles between true and false regardless of <see cref="IsThreeState"/>.
+    /// </remarks>
     public bool? IsChecked
     {
         get
@@ -101,6 +124,7 @@ public class ToggleButton : ButtonBase
 
     #region Update To Methods
 
+    /// <inheritdoc/>
     public override void UpdateState()
     {
         var cursor = MainCursor;
@@ -149,6 +173,10 @@ public class ToggleButton : ButtonBase
 
     #endregion
 
+    /// <summary>
+    /// Called when <see cref="IsChecked"/> is set to true. Override in derived classes
+    /// to add custom checked behavior (e.g. <see cref="RadioButton"/> uses this to uncheck siblings).
+    /// </summary>
     protected virtual void OnChecked()
     {
 
