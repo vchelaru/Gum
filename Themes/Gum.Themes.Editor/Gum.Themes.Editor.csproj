@@ -23,12 +23,12 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Temporary: using KernSmith source instead of NuGet -->
-    <!-- <PackageReference Include="KernSmith.MonoGameGum" Version="0.12.2">
+    <PackageReference Include="KernSmith.MonoGameGum" Version="*">
 		<PrivateAssets>All</PrivateAssets>
-	</PackageReference> -->
-    <ProjectReference Include="..\..\..\KernSmith\integrations\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj">
+	</PackageReference>
+<!--    <ProjectReference Include="..\..\..\KernSmith\integrations\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj">
       <PrivateAssets>All</PrivateAssets>
-    </ProjectReference>
+    </ProjectReference> -->
 	<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
