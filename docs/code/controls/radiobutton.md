@@ -90,6 +90,7 @@ var pvpRadioButton = new RadioButton();
 modePanel.AddChild(pvpRadioButton);
 pvpRadioButton.Text = "PvP";
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACqWSzU7DMBCE75X6DlFORYIIcSziAC2iSCCqNsAlFxO7dIXjjRIn0CLenbUPieNG_LS3enZmvnXqz-EgCMLb8qbKwnGgi0ocWwUUaGAStoLksGZFgJUWxZwpIYOLQIn3YKlZ-maF0dF5otp59FCAUJppQEVe5xTNsIAt0kl2E09QVkxGz8D1-pHQJeVopWjKNIs3uSijKWRCldRhxkaKFkJSaS1inKxB8kKobucyZymoV2o6O-1OLjmPcYGo7eKJMtfjsFpBWkm9-dsdqcNiR16wr_GOvTSN9rct84J9jdbc9VopisWHpsIknDaDcRI2aMHKzYJxwKtKa_snGLSj_LyAFzdeT2oXuKaBQ84Ehyo7gL1TYNw7Ysu_tyNngzUr-AF8L268ntSyZzRw745c_PPxNJH22Rip_8E05m6-eSTNwfk6JLkPo0SJv3-cHpAXNC5PaqFLGjjMFDHfi-kFjcuTWuYETzB3oHm9H7ObM6au0hLn9Zx44XDw9Q1Cki1wRAUAAA)
 
 ## Checked and Unchecked Events
@@ -159,3 +160,32 @@ button.Click += (_, _) =>
 ```
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA51SXWvCMBT9K5c8tSBF3JuSh1lkE8YYzseCpM3dejFLoEn3Jf73NbWrGp1jy1Ny7zn3nJxkw-b2pn5hY1fVOGCkyZFQ9IlszF5FBdaJYv0gNCrgoPENHvtCFE8yve8n11IuzcIY1zY8GYX9WAhJZlo7Z3Q34aByZkRakpJRwPSwoJQs8d01E7N6OByNZk1zt-ukS1HJ_0kHTA8LSsfSt03zSFqJvE_rzu9_lGqR32Hlh0Z_8Zj31vIzjtISizVYVFg4Mro312FTRU27rU45RKsBrGLg_nw1y_Qm09AsegrfIJnbdjBK4Bz8d4l3UL_am5w-CZDtfOA-I49HZdFrhMn-UcNnf1HjIvveuJL08yl7O2HbL25P9ikZAwAA)
+
+## Label Wrapping
+
+Label wrapping behavior can be controlled by modifying the visual width and the internal label width values. The following code shows how to create two RadioButtons - one wraps its text and one has the text extend to the right.
+
+```csharp
+// Initialize
+var stackPanel = new StackPanel();
+stackPanel.AddToRoot();
+
+var noWrapRadio = new RadioButton();
+stackPanel.AddChild(noWrapRadio);
+noWrapRadio.Text = "This radio button will not line wrap - it goes on forever";
+var noWrapVisual = (Gum.Forms.DefaultVisuals.V3.RadioButtonVisual)noWrapRadio.Visual;
+noWrapVisual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+noWrapVisual.Width = 0;
+noWrapVisual.TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+noWrapVisual.TextInstance.Width = 0;
+
+
+var yesWrapRadio = new RadioButton();
+stackPanel.AddChild(yesWrapRadio);
+yesWrapRadio.Text = "This radio button does line wrap if text is long enough";
+var yesWrapVisual = (Gum.Forms.DefaultVisuals.V3.RadioButtonVisual)yesWrapRadio.Visual;
+yesWrapVisual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+yesWrapVisual.Height = 0;
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA61RwU7CQBD9lUlPkOiG4A3jQSUqN1MrXLisdGgnLrtkdxZE47-72xJotYkJeuvOm_fm9b2PZOLu_SoZsfV4lpAmJqnoHZNRspEWHMvF66PUqOAKNG7h6TDo9S_n-oiL6zzPTGoMV0AkazOzcp3KnMyeXX3feGajO-i3Jam812DFlcZTZPjGQWnuB4PhMCvJga3EXypF2JJS4SiDIo2wDTQ4B2IoDDoI-NJY3KCt6S2PU3Jexl_shTDEnbErJ8a4lF5xDTkxvRAN9_W03zRXjw6O66eYUc7lc4jVBfUoPpYss90awwFaoXZkdITjSKSoJNMGM1NFYVF3ygWlwXcgRjOJeeoF_vfRn9p7BzHAHbpTWm7S4k7z_VvPeezz2DEtgSMhrCmjC0BtfFG2Wt6rn1pzy9yh55aoeEAqSv5T6F2CVdLJ5xeoq02GqAMAAA)
