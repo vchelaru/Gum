@@ -4653,7 +4653,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     }
                     else
                     {
-                        whatToStackAfterY = whatToStackAfter.Y + whatToStackAfter.Height + parentGue.StackSpacing;
+                        var effectiveHeight = whatToStackAfter.Height;
+                        if (parentGue.UseFixedStackChildrenSize && parentGue.Children?.Count > 0)
+                        {
+                            effectiveHeight = parentGue.Children[0].GetAbsoluteHeight();
+                        }
+                        whatToStackAfterY = whatToStackAfter.Y + effectiveHeight + parentGue.StackSpacing;
                         whatToStackAfterX = 0;
                         for (int i = 0; i < thisRowOrColumnIndex; i++)
                         {

@@ -1618,6 +1618,132 @@ public class LayoutUnitTests : BaseTestClass
 
     #endregion
 
+    #region UseFixedStackChildrenSize
+
+    [Fact]
+    public void UseFixedStackChildrenSize_ShouldPositionChildrenUsingFirstChildHeight()
+    {
+        // When UseFixedStackChildrenSize is true, ALL children should be positioned
+        // as if every child has the same height as the first child — even if they don't.
+        ContainerRuntime parent = new();
+        parent.Height = 400;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.UseFixedStackChildrenSize = true;
+
+        ContainerRuntime child1 = new();
+        child1.Height = 40;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Height = 100; // intentionally different from child1
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Height = 10; // intentionally different from child1
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        // All children should be spaced as if height = 40 (first child's height)
+        child1.AbsoluteTop.ShouldBe(0);
+        child2.AbsoluteTop.ShouldBe(40);
+        child3.AbsoluteTop.ShouldBe(80);
+    }
+
+    [Fact]
+    public void UseFixedStackChildrenSize_WithStackSpacing_ShouldUseFirstChildHeightPlusSpacing()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 400;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.UseFixedStackChildrenSize = true;
+        parent.StackSpacing = 5;
+
+        ContainerRuntime child1 = new();
+        child1.Height = 30;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Height = 80; // different from child1
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Height = 10; // different from child1
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        // Positions: 0, 30+5=35, 35+30+5=70
+        child1.AbsoluteTop.ShouldBe(0);
+        child2.AbsoluteTop.ShouldBe(35);
+        child3.AbsoluteTop.ShouldBe(70);
+    }
+
+    [Fact]
+    public void UseFixedStackChildrenSize_ParentHeightRelativeToChildren_ShouldUseFirstChildHeight()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.UseFixedStackChildrenSize = true;
+
+        ContainerRuntime child1 = new();
+        child1.Height = 25;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Height = 100; // much taller, but should be treated as 25
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Height = 5;
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        // Parent height should be: 25 + (0 + 25) * 2 = 75
+        parent.GetAbsoluteHeight().ShouldBe(75);
+    }
+
+    [Fact]
+    public void UseFixedStackChildrenSize_False_ShouldPositionUsingActualChildHeights()
+    {
+        // Baseline: without the flag, variable heights are respected
+        ContainerRuntime parent = new();
+        parent.Height = 400;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.UseFixedStackChildrenSize = false;
+
+        ContainerRuntime child1 = new();
+        child1.Height = 40;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Height = 100;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Height = 10;
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        // Normal stacking uses actual heights
+        child1.AbsoluteTop.ShouldBe(0);
+        child2.AbsoluteTop.ShouldBe(40);
+        child3.AbsoluteTop.ShouldBe(140); // 40 + 100
+    }
+
+    #endregion
+
     #region LeftToRightStack
 
     [Fact]
