@@ -43,6 +43,7 @@ namespace RaylibGum.Renderables;
 using Gum.Graphics.Animation;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
+using ToolsUtilities;
 namespace Gum.Wireframe;
 #endif
 
@@ -1804,7 +1805,30 @@ public class CustomSetPropertyOnRenderable
                 // not the GUE
                 try
                 {
-                    sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                    var extension = FileManager.GetExtension(value);
+
+                    var shouldTryStripped = false;
+                    var succeededStripped = false;
+#if MONOGAME
+                    shouldTryStripped = extension == "png";
+#endif
+                    try
+                    {
+                        if (shouldTryStripped)
+                        {
+                            sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(FileManager.RemoveExtension(value));
+                            succeededStripped = true;
+                        }
+                    }
+                    catch
+                    {
+                        // oh well, fall back to PNG
+                    }
+
+                    if(!succeededStripped)
+                    {
+                        sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                    }
                 }
                 catch (Exception ex)
                 // Jan 1, 2025 - we used to only catch certain types of exceptions, but this list keeps growing as there
