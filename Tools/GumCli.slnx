@@ -1,0 +1,13 @@
+<Solution>
+  <Project Path="../GumCommon/GumCommon.csproj" />
+  <Project Path="../GumDataTypes/GumDataTypesNet6.csproj" />
+  <Project Path="../MonoGameGum/MonoGameGum.csproj" />
+  <Project Path="../Runtimes/SkiaGum/SkiaGum.csproj" />
+  <Project Path="../Tests/Gum.Cli.Tests/Gum.Cli.Tests.csproj" />
+  <Project Path="../Tests/Gum.ProjectServices.Tests/Gum.ProjectServices.Tests.csproj" />
+  <Project Path="../ToolsUtilities/ToolsUtilitiesStandard.csproj" />
+  <Project Path="Gum.Cli/Gum.Cli.csproj" />
+  <Project Path="Gum.ProjectServices.MonoGame/Gum.ProjectServices.MonoGame.csproj" />
+  <Project Path="Gum.ProjectServices.SkiaGum/Gum.ProjectServices.SkiaGum.csproj" />
+  <Project Path="Gum.ProjectServices/Gum.ProjectServices.csproj" />
+</Solution>
