@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Gum.Forms.Controls;
+﻿using Gum.Forms.Controls;
 using Shouldly;
 using Xunit;
 
@@ -19,5 +14,16 @@ public class MenuItemVisualTests
 
         // Assert
         sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void RefreshInternalVisualReferences_ShouldFindTextInstance()
+    {
+        // Header get/set depends on coreText being found by RefreshInternalVisualReferences
+        MenuItem menuItem = new();
+
+        menuItem.Header = "File";
+
+        menuItem.Header.ShouldBe("File");
     }
 }

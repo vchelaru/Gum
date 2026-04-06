@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.raylib</PackageId>
-		<Version>2026.3.28.2</Version>
+		<Version>2026.4.5.1</Version>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -143,6 +143,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\..\Tools\Gum.Analyzers\Gum.Analyzers.csproj"
+						  Condition="'$(IncludeAnalyzers)' == 'true'"
 						  OutputItemType="Analyzer"
 						  ReferenceOutputAssembly="false" />
 	</ItemGroup>

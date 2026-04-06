@@ -242,8 +242,8 @@ Next, add the following line after `GumUI.Initialize(this)` in your `Initialize`
 
 ```csharp
 // Initialize
-CustomSetPropertyOnRenderable.InMemoryFontCreator =
-    new KernSmithFontCreator(GraphicsDevice);
+Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
+    new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);
 ```
 
 {% hint style="info" %}

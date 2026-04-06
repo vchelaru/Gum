@@ -90,6 +90,7 @@ public class PasswordBox : TextBoxBase
         }
     }
 
+    /// <inheritdoc/>
     protected override string CategoryName => "PasswordBoxCategoryState";
 
 
@@ -104,11 +105,12 @@ public class PasswordBox : TextBoxBase
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        RefreshInternalVisualReferences();
     }
 
-    protected virtual void RefreshInternalVisualReferences()
+    protected override void RefreshInternalVisualReferences()
     {
+        base.RefreshInternalVisualReferences();
+
         if (selectionInstance != null)
         {
             selectionInstance.Visible = false;

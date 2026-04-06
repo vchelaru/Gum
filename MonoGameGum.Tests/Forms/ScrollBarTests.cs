@@ -49,4 +49,17 @@ public class ScrollBarTests
         ScrollBar scrollBar = new();
         scrollBar.Orientation.ShouldBe(Orientation.Vertical);
     }
+
+    [Fact]
+    public void Track_ShouldHaveEventsEnabled()
+    {
+        // Track must have HasEvents = true so it receives Push events for click-to-seek.
+        // Currently ScrollBar.Track returns ThumbContainer (via a fallback path) which has
+        // HasEvents = true. If Track is ever changed to point to TrackInstance directly,
+        // that element must also have HasEvents = true or track clicking will silently break.
+        ScrollBar scrollBar = new();
+
+        scrollBar.Track!.HasEvents.ShouldBeTrue(
+            "Track must have HasEvents = true to receive Push events for click-to-seek behavior");
+    }
 }

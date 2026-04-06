@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Gum.Forms.Controls;
+﻿using Gum.Forms.Controls;
+using Gum.Wireframe;
 using Shouldly;
 using Xunit;
 
@@ -19,5 +15,19 @@ public class ListBoxItemVisualTests
 
         // Assert
         sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void RefreshInternalVisualReferences_ShouldFindTextInstance()
+    {
+        // UpdateToObject depends on coreText being found by RefreshInternalVisualReferences
+        ListBoxItem listBoxItem = new();
+
+        listBoxItem.UpdateToObject("test item");
+
+        GraphicalUiElement? textInstance = listBoxItem.Visual.GetGraphicalUiElementByName("TextInstance");
+        textInstance.ShouldNotBeNull();
+        string? displayedText = (textInstance.RenderableComponent as RenderingLibrary.Graphics.IText)?.RawText;
+        displayedText.ShouldBe("test item");
     }
 }

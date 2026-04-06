@@ -101,7 +101,7 @@ public class ListBoxItem :
         base.ReactToVisualChanged();
     }
 
-    protected virtual void RefreshInternalVisualReferences()
+    protected override void RefreshInternalVisualReferences()
     {
         // optional
         text = Visual.GetGraphicalUiElementByName("TextInstance");

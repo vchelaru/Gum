@@ -82,7 +82,7 @@ public class Label :
         base.ReactToVisualChanged();
     }
 
-    protected virtual void RefreshInternalVisualReferences()
+    protected override void RefreshInternalVisualReferences()
     {
         if (base.Visual?.Name == "TextInstance")
         {

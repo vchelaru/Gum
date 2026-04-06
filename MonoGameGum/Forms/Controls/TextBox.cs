@@ -15,10 +15,21 @@ namespace Gum.Forms.Controls;
 
 #endif
 
+/// <summary>
+/// A single-line or multi-line text input control that supports selection, clipboard operations,
+/// caret navigation, and optional localization. For a masked variant (e.g. password entry),
+/// see <see cref="PasswordBox"/>.
+/// </summary>
 public class TextBox : TextBoxBase
 {
     #region Fields/Properties
 
+    /// <summary>
+    /// Returns the text currently shown in the text box. In <see cref="TextBox"/> this is
+    /// identical to <see cref="Text"/>. Subclasses such as <see cref="PasswordBox"/> override
+    /// this to return a masked representation (e.g. bullet characters) while keeping the
+    /// actual value in <see cref="Text"/>.
+    /// </summary>
     protected override string? DisplayedText => Text;
 
     /// <summary>
@@ -108,11 +119,10 @@ public class TextBox : TextBoxBase
         }
     }
 
+    /// <inheritdoc/>
     protected override string CategoryName => "TextBoxCategoryState";
 
-
-
-#endregion
+    #endregion
 
     #region Events
 

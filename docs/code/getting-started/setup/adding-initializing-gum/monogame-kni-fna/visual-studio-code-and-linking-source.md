@@ -4,6 +4,10 @@
 
 This page explains how to modify your project so that the Gum source appears in Visual Studio Code.
 
+{% hint style="info" %}
+Linking to source is optional - the quickest way to get set up is to use NuGet, but linking to source can be useful for improved debuggability, access to fixes and features before NuGet packages are published, or if you are interested in contributing.
+{% endhint %}
+
 ## VS Code Visibility (Multi-root Workspace)
 
 If you are using Visual Studio Code, you may notice that even after linking the projects, the `MonoGameGum` source code does not appear in your File Explorer. This is because VS Code defaults to showing only the folder you have opened.
