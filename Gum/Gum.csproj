@@ -473,7 +473,7 @@
 			<GumCliFiles Include="..\Tools\Gum.Cli\bin\$(Configuration)\net8.0\**\*.*" />
 		</ItemGroup>
 		<Copy SourceFiles="@(GumCliFiles)"
-			  DestinationFiles="@(GumCliFiles->'$(OutputPath)GumCli\%(RecursiveDir)%(Filename)%(Extension)')"
+			  DestinationFiles="@(GumCliFiles->'$(OutDir)GumCli\%(RecursiveDir)%(Filename)%(Extension)')"
 			  SkipUnchangedFiles="true" />
 	</Target>
 </Project>

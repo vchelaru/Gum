@@ -41,8 +41,9 @@ jobs:
           dotnet-version: '9.0.x'
 
       # Restore NuGet packages once (ExcludeIOS avoids needing the iOS workload)
+      # Uses GumFull.sln so the CLI is built and copied into the Gum tool output
       - name: Restore
-        run: dotnet restore Gum.sln -p:ExcludeIOS=true
+        run: dotnet restore GumFull.sln -p:ExcludeIOS=true
 
       # Update AssemblyInfo.cs version dynamically to current date
       - name: Update AssemblyInfo.cs version
@@ -61,9 +62,9 @@ jobs:
 
           Write-Host "Updated AssemblyInfo.cs to version $version"
 
-      # Build GUM TOOL
+      # Build GUM TOOL (GumFull.sln includes Gum.Cli, which gets copied into the tool output)
       - name: Build Gum Tool
-        run: dotnet build Gum.sln -c Release --no-restore -p:ExcludeIOS=true
+        run: dotnet build GumFull.sln -c Release --no-restore -p:ExcludeIOS=true
       
       # 1) Package the entire directory exactly as-is
       - name: Package entire Release folder
