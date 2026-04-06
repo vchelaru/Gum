@@ -43,6 +43,7 @@ namespace RaylibGum.Renderables;
 using Gum.Graphics.Animation;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
+using ToolsUtilities;
 namespace Gum.Wireframe;
 #endif
 

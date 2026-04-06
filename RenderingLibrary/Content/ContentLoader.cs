@@ -1,6 +1,7 @@
 ﻿#if MONOGAME || KNI || XNA4 || FNA
 #define XNALIKE
 #endif
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using System;
@@ -311,7 +312,13 @@ public class ContentLoader : IContentLoader
         Texture2D LoadFromContentManager(string fileName, string fileNameStandardized)
         {
             Texture2D toReturn;
-            var relativeFileName = FileManager.MakeRelative(fileNameStandardized, FileManager.RelativeDirectory, preserveCase: true);
+
+            // the file name should be absolute at this point, but we want to make
+            // it relative to the XNA content manager since that's what's doing the loading.
+            var exeFolder = FileManager.ExeLocation;
+            var pathToMakeRelativeTo =  exeFolder + XnaContentManager.RootDirectory;
+
+            var relativeFileName = FileManager.MakeRelative(fileNameStandardized, pathToMakeRelativeTo, preserveCase: true);
             Texture2D texture = XnaContentManager.Load<Texture2D>(relativeFileName);
             texture.Name = fileNameStandardized;
             toReturn = texture;
