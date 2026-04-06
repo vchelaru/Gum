@@ -313,6 +313,12 @@ public abstract class RangeBase :
 
     }
 
+    // WARNING: This intentionally uses `virtual` (hiding FrameworkElement.RefreshInternalVisualReferences)
+    // rather than `override`. Changing to `override` causes AssignExplicitTrack to run for ScrollBar
+    // (it currently never does — ScrollBar.Track uses a fallback path instead). That behavioral change
+    // cascades into the ScrollBar visuals (TrackInstance.HasEvents must be true) and could break
+    // user-authored Gum visuals. Fixing this properly requires auditing the Track semantics across
+    // ScrollBar vs Slider and all visual versions. See also: ScrollBar.RefreshInternalVisualReferences.
     protected virtual void RefreshInternalVisualReferences()
     {
         // assign explicit track before adding events

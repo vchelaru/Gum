@@ -125,7 +125,6 @@ public abstract class TextBoxBase :
 
     public List<Keys> IgnoredKeys => null;
 
-
     public bool TakingInput => true;
 
     public IInputReceiver NextInTabSequence { get; set; }
@@ -277,6 +276,11 @@ public abstract class TextBoxBase :
         }
     }
 
+    /// <summary>
+    /// The name of the Gum state category used to apply visual states (Enabled, Focused, etc.)
+    /// to this control's visual. Each concrete text box type provides its own category name
+    /// so the correct set of states is applied at runtime.
+    /// </summary>
     protected abstract string CategoryName { get; }
 
     int? maxLength;
@@ -395,7 +399,7 @@ public abstract class TextBoxBase :
         IsFocused = false;
     }
 
-    protected virtual void RefreshInternalVisualReferences()
+    protected override void RefreshInternalVisualReferences()
     {
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
         caretComponent = base.Visual.GetGraphicalUiElementByName("CaretInstance");

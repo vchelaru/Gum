@@ -65,6 +65,50 @@ public class TextBoxVisualTests
     }
 
     [Fact]
+    public void RefreshInternalVisualReferences_ShouldFindCaretInstance()
+    {
+        TextBox textBox = new();
+
+        GraphicalUiElement? caret = textBox.Visual.GetGraphicalUiElementByName("CaretInstance");
+
+        caret.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void RefreshInternalVisualReferences_ShouldFindSelectionInstance()
+    {
+        TextBox textBox = new();
+
+        GraphicalUiElement? selection = textBox.Visual.GetGraphicalUiElementByName("SelectionInstance");
+
+        selection.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void RefreshInternalVisualReferences_ShouldFindTextInstance()
+    {
+        TextBox textBox = new();
+
+        // Text set/get depends on textComponent being found by RefreshInternalVisualReferences
+        textBox.Text = "hello";
+
+        textBox.Text.ShouldBe("hello");
+    }
+
+    [Fact]
+    public void SelectionLength_ShouldBeSettableAfterConstruction()
+    {
+        TextBox textBox = new();
+        textBox.Text = "hello";
+
+        // SelectionStart/Length depend on selectionInstance being found
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 3;
+
+        textBox.SelectionLength.ShouldBe(3);
+    }
+
+    [Fact]
     public void TextBox_Visual_HasEvents_IsTrue()
     {
         // Arrange & Act

@@ -57,6 +57,15 @@ public class SliderVisualTests
     }
 
     [Fact]
+    public void RefreshInternalVisualReferences_ShouldFindTrack()
+    {
+        // Track is found by RangeBase.RefreshInternalVisualReferences
+        Slider slider = new();
+
+        slider.Track.ShouldNotBeNull();
+    }
+
+    [Fact]
     public void TrackBackgroundColor_ShouldApplyToTrackBackground()
     {
         Slider slider = new();
@@ -66,5 +75,15 @@ public class SliderVisualTests
         visual.TrackBackgroundColor = expected;
 
         visual.TrackBackground.Color.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Value_ShouldBeSettableAfterConstruction()
+    {
+        Slider slider = new();
+
+        slider.Value = 50;
+
+        slider.Value.ShouldBe(50);
     }
 }
