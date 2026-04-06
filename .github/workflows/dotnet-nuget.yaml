@@ -47,7 +47,7 @@ jobs:
       run: dotnet restore ${{ env.SOLUTION_FILE }}
     
     - name: Build solution
-      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore -p:IncludeAnalyzers=true
     
     # Vic says - why run tests? This seems redundant since we already run tests before merging into main
     # - name: Run tests
@@ -55,7 +55,7 @@ jobs:
     
     # Pack NuGet packages (Debug build) - includes both .nupkg and .snupkg
     - name: Pack NuGet packages
-      run: dotnet pack ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --output ./nupkgs --include-symbols --include-source
+      run: dotnet pack ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --output ./nupkgs --include-symbols --include-source -p:IncludeAnalyzers=true
 
     # Build and pack GumCli as a dotnet tool (not in AllLibraries.sln)
     - name: Build GumCli
