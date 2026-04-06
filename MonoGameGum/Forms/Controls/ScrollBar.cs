@@ -153,6 +153,12 @@ public class ScrollBar : RangeBase
         }
     }
 
+    // NOTE: This overrides RangeBase's hiding `virtual`, NOT FrameworkElement's original `virtual`.
+    // This means ScrollBar.RefreshInternalVisualReferences runs twice — once from ScrollBar.ReactToVisualChanged
+    // and once from RangeBase.ReactToVisualChanged. The lookups are idempotent so this is harmless but wasteful.
+    // RangeBase.RefreshInternalVisualReferences (AssignExplicitTrack) never runs for ScrollBar because this
+    // override doesn't call base. ScrollBar.Track works via its fallback path (thumb.Visual.EffectiveParentGue).
+    // See the comment on RangeBase.RefreshInternalVisualReferences for why this isn't changed to a proper chain.
     protected override void RefreshInternalVisualReferences()
     {
         var upButtonVisual = this.Visual.GetGraphicalUiElementByName("UpButtonInstance") as InteractiveGue;

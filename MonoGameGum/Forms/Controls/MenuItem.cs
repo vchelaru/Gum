@@ -246,7 +246,7 @@ public class MenuItem : ItemsControl
         }
     }
 
-    protected virtual void RefreshInternalVisualReferences()
+    protected override void RefreshInternalVisualReferences()
     {
         if (lastVisual != null && lastVisual != Visual)
         {

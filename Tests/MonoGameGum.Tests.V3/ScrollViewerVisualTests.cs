@@ -30,6 +30,22 @@ public class ScrollViewerVisualTests
     }
 
     [Fact]
+    public void RefreshInternalVisualReferences_ShouldFindClipContainer()
+    {
+        ScrollViewer scrollViewer = new();
+
+        scrollViewer.ClipContainer.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void RefreshInternalVisualReferences_ShouldFindInnerPanel()
+    {
+        ScrollViewer scrollViewer = new();
+
+        scrollViewer.InnerPanel.ShouldNotBeNull();
+    }
+
+    [Fact]
     public void ScrollViewer_Visual_HasEvents_IsTrue()
     {
         // Arrange & Act

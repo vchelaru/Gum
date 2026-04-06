@@ -430,7 +430,7 @@ public class ScrollViewer :
         UpdateState();
     }
 
-    protected virtual void RefreshInternalVisualReferences()
+    protected override void RefreshInternalVisualReferences()
     {
         innerPanel = Visual.GetGraphicalUiElementByName("InnerPanelInstance");
         clipContainer = Visual.GetGraphicalUiElementByName("ClipContainerInstance");
