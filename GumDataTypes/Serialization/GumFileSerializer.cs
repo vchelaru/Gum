@@ -142,7 +142,7 @@ public static class GumFileSerializer
     /// </summary>
     public static (string content, bool isCompact) ReadAndDetectFormat(string fileName)
     {
-        string content = File.ReadAllText(fileName);
+        string content = FileManager.FromFileText(fileName);
         return (content, IsElementContentCompact(content));
     }
 
