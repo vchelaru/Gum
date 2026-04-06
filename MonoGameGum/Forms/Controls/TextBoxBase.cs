@@ -81,6 +81,7 @@ public abstract class TextBoxBase :
     protected Text placeholderTextObject;
 
     protected GraphicalUiElement selectionInstance;
+    float _selectionInstanceYOffset;
 
     List<GraphicalUiElement> _selectionInstances = new List<GraphicalUiElement>();
 
@@ -414,6 +415,7 @@ public abstract class TextBoxBase :
         selectionInstance = base.Visual.GetGraphicalUiElementByName("SelectionInstance");
         if (selectionInstance != null)
         {
+            _selectionInstanceYOffset = selectionInstance.Y;
             _selectionInstances.Add(selectionInstance);
         }
 
@@ -1454,7 +1456,11 @@ public abstract class TextBoxBase :
                 var selection = _selectionInstances[i];
 
                 selection.X = selectionStartEnds[i].XStart;
-                selection.Y = selectionStartEnds[i].Y + selectionInstance?.Y ?? 0;
+                // Use the stored offset rather than reading selectionInstance.Y at runtime.
+                // selectionInstance IS _selectionInstances[0], so writing selection.Y at i==0
+                // would mutate the value we'd read back, causing the offset to accumulate
+                // (selection drifts down by _selectionInstanceYOffset pixels per update).
+                selection.Y = selectionStartEnds[i].Y + _selectionInstanceYOffset;
                 selection.Width = selectionStartEnds[i].Width;
                 selection.Visible = true;
                 selection.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;

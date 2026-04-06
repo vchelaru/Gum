@@ -109,6 +109,36 @@ public class TextBoxVisualTests
     }
 
     [Fact]
+    public void Selection_Y_ShouldNotDriftOnRepeatedUpdates()
+    {
+        // Regression test: SelectionInstance.Y = 2f in the V3 visual. Because selectionInstance
+        // IS _selectionInstances[0], writing to selection.Y at i==0 modifies the value that gets
+        // read as the offset on the next call, causing the selection to drift down by 2px per update.
+        TextBox textBox = new();
+        textBox.Text = "line one\nline two\nline three";
+        textBox.AcceptsReturn = true;
+
+        GraphicalUiElement SelectionInstance = textBox.Visual.GetGraphicalUiElementByName("SelectionInstance");
+
+        // Select some text to trigger UpdateToSelection
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 5;
+        float firstY = SelectionInstance.Y;
+
+        // Change selection to trigger UpdateToSelection again
+        textBox.SelectionStart = 1;
+        float secondY = SelectionInstance.Y;
+
+        // Change again
+        textBox.SelectionStart = 0;
+        float thirdY = SelectionInstance.Y;
+
+        // Y should remain stable, not drift
+        secondY.ShouldBe(firstY, "Selection Y drifted between first and second update");
+        thirdY.ShouldBe(firstY, "Selection Y drifted between first and third update");
+    }
+
+    [Fact]
     public void TextBox_Visual_HasEvents_IsTrue()
     {
         // Arrange & Act
