@@ -352,6 +352,12 @@ public class GumService
 
 #if XNALIKE
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
+
+        if (game != null && ContentLoader != null && ContentLoader.XnaContentManager == null)
+        {
+            ContentLoader.XnaContentManager = game.Content;
+        }
+
         FormsUtilities.InitializeDefaults(game:game, systemManagers: this.SystemManagers,
             defaultVisualsVersion: defaultVisualsVersion);
 #elif RAYLIB
