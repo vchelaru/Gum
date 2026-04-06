@@ -464,8 +464,11 @@
 		<None Remove="GumLogo64Light.png" />
 		<Page Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml" />
 	</ItemGroup>
-	<Target Name="CopyGumCli" AfterTargets="Build">
-		<MSBuild Projects="..\Tools\Gum.Cli\Gum.Cli.csproj" Targets="Build" Properties="Configuration=$(Configuration)" />
+	<!-- When built from GumFull.sln (which includes Gum.Cli), copy CLI output into GumCli subfolder.
+	     This target does NOT build Gum.Cli itself — the solution handles that. When building from
+	     Gum.sln (which does not include Gum.Cli), the condition is false and this is skipped. -->
+	<Target Name="CopyGumCli" AfterTargets="Build"
+			Condition="Exists('..\Tools\Gum.Cli\bin\$(Configuration)\net8.0\gumcli.exe') OR Exists('..\Tools\Gum.Cli\bin\$(Configuration)\net8.0\gumcli.dll')">
 		<ItemGroup>
 			<GumCliFiles Include="..\Tools\Gum.Cli\bin\$(Configuration)\net8.0\**\*.*" />
 		</ItemGroup>
