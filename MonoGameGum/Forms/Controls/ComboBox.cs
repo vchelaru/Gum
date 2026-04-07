@@ -326,7 +326,8 @@ public class ComboBox :
 #if FULL_DIAGNOSTICS
             if (listBox == null)
             {
-                var message = $"The ListBoxInstance Gum component inside the combo box {Visual.Name} is of type {listBoxInstance.FormsControlAsObject.GetType().Name}, but it should be of type ListBox";
+                var message = $"The ListBoxInstance Gum component inside the combo box {Visual.Name} is of type " +
+                    $"{listBoxInstance.FormsControlAsObject.GetType().Name}, but it should be of type ListBox";
                 throw new Exception(message);
             }
 #endif
@@ -380,7 +381,19 @@ public class ComboBox :
     private void ShowListBoxInstance()
     {
         _hadFocusOnListBoxOpened = IsFocused;
+
+        var wasSuspenced = GraphicalUiElement.IsAllLayoutSuspended;
+        if(!wasSuspenced)
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+        }
         listBox.IsVisible = true;
+
+        if(!wasSuspenced)
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+            listBox.Visual.UpdateLayout();
+        }
 
         // Adding this to the Visual will force a layout....
         this.Visual.Children.Add(listBox.Visual);
