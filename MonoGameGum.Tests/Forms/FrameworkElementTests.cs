@@ -146,6 +146,214 @@ public class FrameworkElementTests : BaseTestClass
 
 
     [Fact]
+    public void HandleTab_ShouldSkipDisabledControl_WhenTabbingDown()
+    {
+        StackPanel stackPanel = new();
+        stackPanel.AddToRoot();
+
+        Button button1 = new();
+        stackPanel.AddChild(button1);
+        Button button2 = new();
+        button2.IsEnabled = false;
+        stackPanel.AddChild(button2);
+        Button button3 = new();
+        stackPanel.AddChild(button3);
+
+        button1.IsFocused = true;
+        button1.HandleTab();
+
+        button1.IsFocused.ShouldBeFalse();
+        button2.IsFocused.ShouldBeFalse();
+        button3.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldSkipDisabledControl_WhenTabbingUp()
+    {
+        StackPanel stackPanel = new();
+        stackPanel.AddToRoot();
+
+        Button button1 = new();
+        stackPanel.AddChild(button1);
+        Button button2 = new();
+        button2.IsEnabled = false;
+        stackPanel.AddChild(button2);
+        Button button3 = new();
+        stackPanel.AddChild(button3);
+
+        button3.IsFocused = true;
+        button3.HandleTab(TabDirection.Up);
+
+        button3.IsFocused.ShouldBeFalse();
+        button2.IsFocused.ShouldBeFalse();
+        button1.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotUnfocus_WhenOnlyNextControlIsDisabled()
+    {
+        StackPanel stackPanel = new();
+        stackPanel.AddToRoot();
+
+        Button button1 = new();
+        stackPanel.AddChild(button1);
+        Button button2 = new();
+        button2.IsEnabled = false;
+        stackPanel.AddChild(button2);
+
+        button1.IsFocused = true;
+        button1.HandleTab();
+
+        button1.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotUnfocus_WhenOnlyPreviousControlIsDisabled()
+    {
+        StackPanel stackPanel = new();
+        stackPanel.AddToRoot();
+
+        Button button1 = new();
+        button1.IsEnabled = false;
+        stackPanel.AddChild(button1);
+        Button button2 = new();
+        stackPanel.AddChild(button2);
+
+        button2.IsFocused = true;
+        button2.HandleTab(TabDirection.Up);
+
+        button2.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotFocusControl_InInvisibleParentContainer()
+    {
+        StackPanel container1 = new();
+        container1.AddToRoot();
+        Button button1 = new();
+        container1.AddChild(button1);
+
+        StackPanel container2 = new();
+        container2.IsVisible = false;
+        container2.AddToRoot();
+        Button button2 = new();
+        container2.AddChild(button2);
+
+        button1.IsFocused = true;
+        button1.HandleTab();
+
+        button1.IsFocused.ShouldBeTrue();
+        button2.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotFocusControl_InInvisibleParentContainer_WhenLooping()
+    {
+        // Reproduces: invisible container1 with buttons is first child of root,
+        // visible container2 with a focused button is second. Tabbing Up with
+        // loop should NOT jump into the invisible container's children.
+        StackPanel container1 = new();
+        container1.IsVisible = false;
+        container1.AddToRoot();
+        Button button1 = new();
+        container1.AddChild(button1);
+        Button button2 = new();
+        container1.AddChild(button2);
+
+        StackPanel container2 = new();
+        container2.AddToRoot();
+        Button button3 = new();
+        container2.AddChild(button3);
+
+        button3.IsFocused = true;
+        button3.HandleTab(TabDirection.Up, loop: true);
+
+        button3.IsFocused.ShouldBeTrue();
+        button1.IsFocused.ShouldBeFalse();
+        button2.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldSkipInvisibleControl_WhenTabbingDown()
+    {
+        StackPanel stackPanel = new();
+        stackPanel.AddToRoot();
+
+        Button button1 = new();
+        stackPanel.AddChild(button1);
+        Button button2 = new();
+        button2.IsVisible = false;
+        stackPanel.AddChild(button2);
+        Button button3 = new();
+        stackPanel.AddChild(button3);
+
+        button1.IsFocused = true;
+        button1.HandleTab();
+
+        button1.IsFocused.ShouldBeFalse();
+        button2.IsFocused.ShouldBeFalse();
+        button3.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldSkipInvisibleControl_WhenTabbingUp()
+    {
+        StackPanel stackPanel = new();
+        stackPanel.AddToRoot();
+
+        Button button1 = new();
+        stackPanel.AddChild(button1);
+        Button button2 = new();
+        button2.IsVisible = false;
+        stackPanel.AddChild(button2);
+        Button button3 = new();
+        stackPanel.AddChild(button3);
+
+        button3.IsFocused = true;
+        button3.HandleTab(TabDirection.Up);
+
+        button3.IsFocused.ShouldBeFalse();
+        button2.IsFocused.ShouldBeFalse();
+        button1.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotUnfocus_WhenOnlyNextControlIsInvisible()
+    {
+        StackPanel stackPanel = new();
+        stackPanel.AddToRoot();
+
+        Button button1 = new();
+        stackPanel.AddChild(button1);
+        Button button2 = new();
+        button2.IsVisible = false;
+        stackPanel.AddChild(button2);
+
+        button1.IsFocused = true;
+        button1.HandleTab();
+
+        button1.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotUnfocus_WhenOnlyPreviousControlIsInvisible()
+    {
+        StackPanel stackPanel = new();
+        stackPanel.AddToRoot();
+
+        Button button1 = new();
+        button1.IsVisible = false;
+        stackPanel.AddChild(button1);
+        Button button2 = new();
+        stackPanel.AddChild(button2);
+
+        button2.IsFocused = true;
+        button2.HandleTab(TabDirection.Up);
+
+        button2.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
     public void HandleTab_ShouldNotUnfocus_OnTabOfOnlyElement()
     {
         Button playButton = new ();
