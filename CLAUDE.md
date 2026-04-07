@@ -21,6 +21,13 @@ Available agents:
 
 Select the agent that best matches the task at hand. For tasks that span multiple concerns (e.g., implement a feature and write tests), invoke the relevant agents in sequence.
 
+## Building and Testing
+
+* **Always build and test via the solution file** (`Gum.sln`), not individual `.csproj` files. Plugin projects use `$(SolutionDir)` in post-build scripts, which is undefined when building a `.csproj` directly.
+  * Build: `dotnet build Gum.sln`
+  * Test: `dotnet test Gum.sln --filter "TestClassName"`
+* The test project is `Tool/Tests/GumToolUnitTests/GumToolUnitTests.csproj` (included in `Gum.sln`).
+
 ## Code Style
 
 See `.claude/code-style.md` for all code style rules. Read that file before writing or editing any code.

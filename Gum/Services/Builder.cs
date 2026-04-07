@@ -149,7 +149,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ErrorChecker>();
         services.AddSingleton<IErrorChecker>(provider => provider.GetRequiredService<ErrorChecker>());
         services.AddSingleton<IVariableSaveLogic, VariableSaveLogic>();
-        services.AddSingleton<VariableReferenceLogic>();
+        services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();
         services.AddSingleton<IRenameLogic, RenameLogic>();
         services.AddSingleton<ISetVariableLogic, SetVariableLogic>();
