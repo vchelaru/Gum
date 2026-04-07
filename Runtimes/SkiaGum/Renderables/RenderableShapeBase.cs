@@ -770,6 +770,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
                 new[] { StrokeDashLength, StrokeGapLength }, phase: 0);
         }
 
+        // If you add new paint properties here, don't forget to also add them to
+        // FlatRedBall's RenderableSkiaObject.CreatePaint() in Engines/SkiaGum/Renderables/RenderableSkiaObject.cs
         return paint;
     }
 
