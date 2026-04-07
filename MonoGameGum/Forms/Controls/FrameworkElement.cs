@@ -1341,7 +1341,7 @@ public class FrameworkElement : INotifyPropertyChanged
                                 {
                                     foreach(var child in parentVisual.Children)
                                     {
-                                        if (child is InteractiveGue ig)
+                                        if (child is InteractiveGue ig && ig.Visible && ig.IsEnabled)
                                         {
                                             firstChild = ig;
                                             break;
@@ -1368,7 +1368,7 @@ public class FrameworkElement : INotifyPropertyChanged
     static bool CanElementBeFocused(FrameworkElement? element)
     {
         return element is IInputReceiver &&
-                    element.IsVisible == true &&
+                    ((IVisible)element.Visual).AbsoluteVisible == true &&
                     element.IsEnabled &&
                     element.Visual.HasEvents &&
                     element.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver;
