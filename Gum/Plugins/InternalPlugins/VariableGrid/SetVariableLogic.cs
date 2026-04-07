@@ -679,7 +679,14 @@ public class SetVariableLogic : ISetVariableLogic
 
         if (!isValidExtension)
         {
-            whyInvalid = "The extension " + extension + " is not supported";
+            if (extension == "lottie")
+            {
+                whyInvalid = "The .lottie format is not supported. Please use a .json Lottie file instead.";
+            }
+            else
+            {
+                whyInvalid = "The extension " + extension + " is not supported";
+            }
         }
 
         if (string.IsNullOrEmpty(whyInvalid))
