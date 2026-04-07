@@ -1298,7 +1298,11 @@ public class SelectionManager : ISelectionManager
                         List<GraphicalUiElement> selectedIpsos = new List<GraphicalUiElement>();
                         foreach (var instance in _selectedState.SelectedInstances)
                         {
-                            selectedIpsos.Add(_wireframeObjectManager.GetRepresentation(instance, elementStack));
+                            var representationToAdd = _wireframeObjectManager.GetRepresentation(instance, elementStack);
+                            if(representationToAdd != null)
+                            {
+                                selectedIpsos.Add(representationToAdd);
+                            }
                         }
                         SelectedGues = selectedIpsos;
                     }

@@ -60,7 +60,7 @@ public class SetVariableLogic : ISetVariableLogic
 
 
 
-    private readonly VariableReferenceLogic _variableReferenceLogic;
+    private readonly IVariableReferenceLogic _variableReferenceLogic;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFontManager _fontManager;
     private readonly IFileCommands _fileCommands;
@@ -69,11 +69,11 @@ public class SetVariableLogic : ISetVariableLogic
     private readonly IRenameLogic _renameLogic;
     private readonly IElementCommands _elementCommands;
     private readonly IUndoManager _undoManager;
-    private readonly WireframeCommands _wireframeCommands;
+    private readonly IWireframeCommands _wireframeCommands;
     private readonly IGuiCommands _guiCommands;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IDialogService _dialogService;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectState _projectState;
     private readonly IProjectManager _projectManager;
@@ -83,15 +83,15 @@ public class SetVariableLogic : ISetVariableLogic
         IRenameLogic renameLogic,
         IElementCommands elementCommands,
         IUndoManager undoManager,
-        WireframeCommands wireframeCommands,
-        VariableReferenceLogic variableReferenceLogic,
+        IWireframeCommands wireframeCommands,
+        IVariableReferenceLogic variableReferenceLogic,
         IGuiCommands guiCommands,
         IFontManager fontManager,
         IFileCommands fileCommands,
         ICircularReferenceManager circularReferenceManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IDialogService dialogService,
-        PluginManager pluginManager,
+        IPluginManager pluginManager,
         IWireframeObjectManager wireframeObjectManager,
         IProjectState projectState,
         IProjectManager projectManager)
@@ -299,7 +299,11 @@ public class SetVariableLogic : ISetVariableLogic
 
             ReactIfChangedMemberIsUnitType(parentElement, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsSourceFile(parentElement, instance, rootVariableName, oldValue);
+            var sourceFileResponse = ReactIfChangedMemberIsSourceFile(parentElement, instance, rootVariableName, oldValue);
+            if (!sourceFileResponse.Succeeded)
+            {
+                response = sourceFileResponse;
+            }
 
             ReactIfChangedMemberIsTextureAddress(parentElement, rootVariableName, oldValue);
 
@@ -552,7 +556,7 @@ public class SetVariableLogic : ISetVariableLogic
         }
     }
 
-    private void ReactIfChangedMemberIsSourceFile(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
+    private GeneralResponse ReactIfChangedMemberIsSourceFile(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
     {
         ////////////Early Out /////////////////////////////
 
@@ -568,7 +572,7 @@ public class SetVariableLogic : ISetVariableLogic
 
         if (!isSourcefile || string.IsNullOrWhiteSpace(variable.Value as string))
         {
-            return;
+            return GeneralResponse.SuccessfulResponse;
         }
 
         ////////////End Early Out/////////////////////////
@@ -579,7 +583,24 @@ public class SetVariableLogic : ISetVariableLogic
         {
             _dialogService.ShowMessage(errorMessage);
 
-            variable.Value = oldValue;
+            if (oldValue != null)
+            {
+                // Case 3: variable had a previous value — restore it
+                variable.Value = oldValue;
+            }
+            else if (!string.IsNullOrEmpty(variable.ExposedAsName))
+            {
+                // Case 2: variable is part of the exposed variable system and must remain
+                // in the state with SetsValue=false. Removing it would break exposed variable resolution.
+                variable.Value = null;
+                variable.SetsValue = false;
+            }
+            else
+            {
+                // Case 1: variable didn't exist before the property grid created it — remove entirely.
+                _selectedState.SelectedStateSave.Variables.Remove(variable);
+            }
+            return GeneralResponse.UnsuccessfulWith(errorMessage);
         }
         else
         {
@@ -623,6 +644,10 @@ public class SetVariableLogic : ISetVariableLogic
                 {
                     variable.Value = oldValue;
                     _guiCommands.RefreshVariableValues();
+                    // User cancelled rather than a validation failure. If callers need to
+                    // distinguish cancellation from real errors, this could return an
+                    // OptionallyAttemptedGeneralResponse with DidAttempt = false instead.
+                    return GeneralResponse.UnsuccessfulWith("File copy was cancelled");
                 }
 
                 if (!cancel && filePath.Extension == "achx")
@@ -645,9 +670,11 @@ public class SetVariableLogic : ISetVariableLogic
             // For reference: https://github.com/vchelaru/Gum/issues/1289
             //stateSave.SetValue($"{instancePrefix}AnimationFrames", new List<string>());
         }
+
+        return GeneralResponse.SuccessfulResponse;
     }
 
-    private string GetWhySourcefileIsInvalid(string value, ElementSave parentElement, InstanceSave instance, string changedMember)
+    internal string GetWhySourcefileIsInvalid(string value, ElementSave parentElement, InstanceSave instance, string changedMember)
     {
 
         ////////////////early out//////////////////////

@@ -22,7 +22,7 @@ using Gum.Services.Dialogs;
 using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
-public class VariableReferenceLogic
+public class VariableReferenceLogic : IVariableReferenceLogic
 {
     #region Fields/Properties
 

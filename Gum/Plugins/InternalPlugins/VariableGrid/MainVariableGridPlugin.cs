@@ -21,7 +21,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 public class MainVariableGridPlugin : InternalPlugin
 {
     PropertyGridManager _propertyGridManager;
-    private readonly VariableReferenceLogic _variableReferenceLogic;
+    private readonly IVariableReferenceLogic _variableReferenceLogic;
     private readonly ISelectedState _selectedState;
 
     // When an instance is selected, the default state is force-selected first,
@@ -34,7 +34,7 @@ public class MainVariableGridPlugin : InternalPlugin
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _propertyGridManager = PropertyGridManager.Self;
-        _variableReferenceLogic = Locator.GetRequiredService<VariableReferenceLogic>();
+        _variableReferenceLogic = Locator.GetRequiredService<IVariableReferenceLogic>();
         ElementSaveExtensions.CustomEvaluateExpression = EvaluateExpression;
     }
 

@@ -37,6 +37,13 @@ The Gum tool's core responsibility is editing and serializing save classes (the 
 
 **Qualified variable names:** In `VariableSave.Name`, a dot separates an instance name from a property name (`"InstanceName.PropertyName"`). `VariableSave.SourceObject` and `VariableSave.RootName` are computed helpers that split this. Element-level variables have no dot and `SourceObject` is null. `EventSave.Name` follows the same convention; use `GetSourceObject()` / `GetRootName()`.
 
+**`VariableSave.SetsValue` and the three variable states:** A variable in a `StateSave` can be in one of three states:
+1. **Not present** — the `VariableSave` does not exist in `StateSave.Variables`. The property uses its inherited/default value.
+2. **Present with `SetsValue = false`** — the `VariableSave` exists but does not actively set a value. This state is required for **exposed variables**: when a component exposes an inner instance's property, the container's state must have a `VariableSave` entry with `SetsValue = false` so the exposed variable binding can resolve. Removing this variable would break the exposed variable chain. The edited icon does NOT show for these variables.
+3. **Present with `SetsValue = true`** — the `VariableSave` actively sets its value. The edited icon shows in the tree view.
+
+When reverting a variable after failed validation, you must restore the exact previous state — not just the value. If the variable didn't exist before, remove it from the list. If it existed with `SetsValue = false`, restore that. If it had a value, restore the value. Getting this wrong causes spurious undo entries or broken exposed variables.
+
 **Conditional serialization:** Many properties on save classes are omitted from XML when they hold default values, using `ShouldSerializeXxx()` methods. Don't assume a missing XML element means the property doesn't exist — it likely just holds its default value.
 
 **`[XmlIgnore]` vs serialized:** Runtime-only data (parent references, UI hints, event callbacks) is tagged `[XmlIgnore]` and never written to disk. Only the structural/data properties are serialized.
