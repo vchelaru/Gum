@@ -274,6 +274,79 @@ public class FrameworkElementTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleTab_ShouldNotFocusControl_InDisabledParentContainer_WhenLooping()
+    {
+        StackPanel container1 = new();
+        container1.IsEnabled = false;
+        container1.AddToRoot();
+        Button button1 = new();
+        container1.AddChild(button1);
+        Button button2 = new();
+        container1.AddChild(button2);
+
+        StackPanel container2 = new();
+        container2.AddToRoot();
+        Button button3 = new();
+        container2.AddChild(button3);
+
+        button3.IsFocused = true;
+        button3.HandleTab(TabDirection.Up, loop: true);
+
+        button3.IsFocused.ShouldBeTrue();
+        button1.IsFocused.ShouldBeFalse();
+        button2.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotFocusControl_InInvisibleParentContainer_WhenLoopingDown()
+    {
+        StackPanel container1 = new();
+        container1.AddToRoot();
+        Button button1 = new();
+        container1.AddChild(button1);
+
+        StackPanel container2 = new();
+        container2.IsVisible = false;
+        container2.AddToRoot();
+        Button button2 = new();
+        container2.AddChild(button2);
+        Button button3 = new();
+        container2.AddChild(button3);
+
+        button1.IsFocused = true;
+        button1.HandleTab(TabDirection.Down, loop: true);
+
+        button1.IsFocused.ShouldBeTrue();
+        button2.IsFocused.ShouldBeFalse();
+        button3.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotFocusControl_WhenGrandparentIsInvisible()
+    {
+        StackPanel grandparent = new();
+        grandparent.IsVisible = false;
+        grandparent.AddToRoot();
+
+        StackPanel parent = new();
+        grandparent.AddChild(parent);
+
+        Button button1 = new();
+        parent.AddChild(button1);
+
+        StackPanel visibleContainer = new();
+        visibleContainer.AddToRoot();
+        Button button2 = new();
+        visibleContainer.AddChild(button2);
+
+        button2.IsFocused = true;
+        button2.HandleTab(TabDirection.Up, loop: true);
+
+        button2.IsFocused.ShouldBeTrue();
+        button1.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleTab_ShouldSkipInvisibleControl_WhenTabbingDown()
     {
         StackPanel stackPanel = new();
