@@ -278,7 +278,7 @@ public class GumService
         }
     }
 
-    private static ElementAnimationsSave? TryLoadAnimation(ElementSave element)
+    internal static ElementAnimationsSave? TryLoadAnimation(ElementSave element)
     {
         string prefix = element is ScreenSave ? "Screens/" :
             element is ComponentSave ? "Components/" :

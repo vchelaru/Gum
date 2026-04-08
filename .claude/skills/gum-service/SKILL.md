@@ -69,3 +69,7 @@ Uninitialize tests are split across two projects because `FormsUtilities`, `Load
 
 - `Gum.ProjectServices.Tests` — `LoaderManager`, `ElementSaveExtensions`, `ObjectFinder` (no GPU needed)
 - `MonoGameGum.Tests.V2` — `FormsUtilities`, root containers, `FrameworkElement` statics (require test setup with a mock `SystemManagers`)
+
+## Hot Reload
+
+Gum supports live reloading of `.gumx` project files and associated assets at runtime so changes made in the Gum tool appear in-game without restarting. For details see https://docs.flatredball.com/gum/code/hot-reload
