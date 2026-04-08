@@ -4,7 +4,7 @@
 
 Gum supports hot reload for rapid UI iteration during development. When hot reload is enabled, changes saved in the Gum tool are automatically reflected in your running game without restarting. This lets you adjust layouts, resize elements, change colors, and modify component structure while seeing results immediately.
 
-Hot reload watches for changes to Gum project files (`.gumx`, `.gusx`, `.gucx`, `.gutx`) and reconstructs the element tree when changes are detected.
+Hot reload watches for changes to Gum project files (`.gumx`, `.gusx`, `.gucx`, `.gutx`) and font files (`.fnt`) and reconstructs the element tree when changes are detected.
 
 ## Enabling Hot Reload
 
@@ -36,15 +36,17 @@ Hot reload monitors the following Gum file types:
 | `.gusx`   | Screen definitions           |
 | `.gucx`   | Component definitions        |
 | `.gutx`   | Standard element definitions |
+| `.fnt`    | Bitmap font definitions      |
 
-When any of these files change, Gum reloads the entire project and reconstructs all children of the root element from the updated definitions. This means changes to layout, styling, states, variables, and component structure are all picked up.
+When any of these files change, Gum reloads the entire project and reconstructs all children of the root element from the updated definitions. This means changes to layout, styling, states, variables, component structure, and fonts are all picked up.
+
+When a reload is triggered, Gum automatically copies all `.fnt` and `.png` files from the source project's `FontCache/` directory to the bin-side `FontCache/` directory, and evicts cached fonts so they are reloaded from disk.
 
 ### What Is Not Reloaded
 
 Hot reload is focused on Gum element definitions. The following are **not** automatically reloaded:
 
 * **Textures and images** — If you change a `.png` file, the cached texture is still used. Restart the game to pick up texture changes.
-* **Fonts** — Font files (`.fnt`) are cached and not refreshed during hot reload.
 * **Animation files** — `.ganx` animation definitions are not reloaded.
 * **Runtime state** — Any properties set programmatically at runtime (e.g., changing `Text` or `Width` in code) are lost when the element is recreated. Only values defined in the Gum project are restored.
 
