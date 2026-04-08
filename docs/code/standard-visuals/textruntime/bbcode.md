@@ -25,6 +25,20 @@ The following variables work without any font setup:
 * Custom (see below)
 {% endhint %}
 
+## Code Example: Basic BBCode Styling
+
+The following example shows how to use BBCode tags for inline color and scale changes:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "This is [Color=Red]red[/Color], [Color=Blue]blue[/Color], and [FontScale=2]big[/FontScale] text";
+text.AddToRoot();
+```
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACkWOTQvCMAyG7_sVoSeF4cCjsoMfODx4mbt1PXQ2zEDXQtdOUfzvdoMphECe5CHvOwFg574IHduAdwHTEZAhT1LTCyNlg3Tg8ekhB4MPuFhjC9lhdFZFwCM6Gsi0qyqelMF46nCx3NZmVCYYvZpVd-ohFj9YbV1eohIOFc-mUaQz3-uAoontv5FGAT9Z4683qTFfi4Zanv2AmLLVbP64U6qypbU-hmDJ5wu5H0Ud4QAAAA)
+
+BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `Custom`.
+
 ## Custom Functions
 
 TextRuntime instances can use the `Custom` tag to define a custom function to be used when rendering a Text. This tag can be used to customize letters in a TextRuntime using custom code, allowing for effects such as wavy, rainbow, or shaking text.
