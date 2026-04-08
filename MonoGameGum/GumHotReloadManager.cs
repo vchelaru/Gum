@@ -53,9 +53,12 @@ public interface IGumHotReloadManager
 public class GumHotReloadManager : IGumHotReloadManager
 {
     private string _projectSourcePath = "";
+    private string _binGumDirectory = "";
     private FileSystemWatcher? _watcher;
     private volatile bool _pendingReload;
     private DateTime _lastChangeTime;
+    private readonly List<string> _changedFontFiles = new List<string>();
+    private readonly object _fontFileLock = new object();
 
     /// <inheritdoc/>
     public event Action? ReloadCompleted;
@@ -64,6 +67,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     public void Start(string absoluteGumxSourcePath)
     {
         _projectSourcePath = absoluteGumxSourcePath;
+        _binGumDirectory = ToolsUtilities.FileManager.RelativeDirectory;
 
         var directory = Path.GetDirectoryName(absoluteGumxSourcePath)
             ?? throw new ArgumentException("Cannot determine directory from path.", nameof(absoluteGumxSourcePath));
@@ -104,15 +108,89 @@ public class GumHotReloadManager : IGumHotReloadManager
     private void HandleFileChange(object sender, FileSystemEventArgs e)
     {
         var extension = Path.GetExtension(e.FullPath).ToLowerInvariant();
-        if (extension == ".gumx" || extension == ".gucx" || extension == ".gusx" || extension == ".gutx")
+        if (extension == ".gumx" || extension == ".gucx" || extension == ".gusx" || extension == ".gutx"
+            || extension == ".fnt")
         {
+            if (extension == ".fnt")
+            {
+                lock (_fontFileLock)
+                {
+                    _changedFontFiles.Add(e.FullPath);
+                }
+            }
+
             _pendingReload = true;
             _lastChangeTime = DateTime.UtcNow;
         }
     }
 
+    private void CopyAndUnloadChangedFonts()
+    {
+        List<string> changedFonts;
+        lock (_fontFileLock)
+        {
+            changedFonts = new List<string>(_changedFontFiles);
+            _changedFontFiles.Clear();
+        }
+
+        if (changedFonts.Count == 0)
+        {
+            return;
+        }
+
+        var sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        if (sourceDirectory == null)
+        {
+            return;
+        }
+
+        var sourceFontCache = Path.Combine(sourceDirectory, "FontCache");
+        if (!Directory.Exists(sourceFontCache))
+        {
+            return;
+        }
+
+        var destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
+        Directory.CreateDirectory(destinationFontCache);
+
+        var loaderManager = RenderingLibrary.Content.LoaderManager.Self;
+
+        foreach (var sourceFntPath in changedFonts)
+        {
+            var fileName = Path.GetFileName(sourceFntPath);
+
+            // Copy the .fnt file
+            var destinationFile = Path.Combine(destinationFontCache, fileName);
+            File.Copy(sourceFntPath, destinationFile, overwrite: true);
+
+            // Copy associated .png texture pages (same name prefix)
+            var baseName = Path.GetFileNameWithoutExtension(fileName);
+            var copiedPngs = new List<string>();
+            foreach (var pngFile in Directory.GetFiles(sourceFontCache, baseName + "*.png"))
+            {
+                var pngDestination = Path.Combine(destinationFontCache, Path.GetFileName(pngFile));
+                File.Copy(pngFile, pngDestination, overwrite: true);
+                copiedPngs.Add(pngDestination);
+            }
+
+            // Unload the cached font so it gets reloaded from the new file
+            var absoluteFontPath = Path.Combine(destinationFontCache, fileName);
+            var standardizedFont = ToolsUtilities.FileManager.Standardize(absoluteFontPath, preserveCase: true, makeAbsolute: true);
+            loaderManager.Dispose(standardizedFont);
+
+            // Unload the cached texture pages so they get reloaded too
+            foreach (var pngPath in copiedPngs)
+            {
+                var standardizedPng = ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true);
+                loaderManager.Dispose(standardizedPng);
+            }
+        }
+    }
+
     private void PerformReload(GraphicalUiElement root)
     {
+        CopyAndUnloadChangedFonts();
+
         GumProjectSave newProject = GumProjectSave.Load(_projectSourcePath);
         newProject.Initialize();
         ObjectFinder.Self.GumProjectSave = newProject;
