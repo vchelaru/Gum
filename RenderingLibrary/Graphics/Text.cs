@@ -73,21 +73,15 @@ public class InlineVariable
 #region LetterCustomization
 public struct LetterCustomization
 {
-    public float XOffset;
-    public float YOffset;
+    public float? XOffset;
+    public float? YOffset;
     public Color? Color;
-    public float ScaleX;
-    public HorizontalAlignment ScaleXOrigin = HorizontalAlignment.Center;
-    public float ScaleY;
-    public VerticalAlignment ScaleYOrigin = VerticalAlignment.Center;
-    public float RotationDegrees;
+    public float? ScaleX;
+    public HorizontalAlignment? ScaleXOrigin;
+    public float? ScaleY;
+    public VerticalAlignment? ScaleYOrigin;
+    public float? RotationDegrees;
     public char? ReplacementCharacter;
-
-    public LetterCustomization()
-    {
-        ScaleX = 1;
-        ScaleY = 1;
-    }
 }
 #endregion
 
@@ -101,6 +95,18 @@ public class ParameterizedLetterCustomizationCall
         get
         {
             if(!string.IsNullOrEmpty(FunctionName) && Text.Customizations.TryGetValue(FunctionName, out var func))
+            {
+                return func;
+            }
+            return null;
+        }
+    }
+
+    public Func<int, string, LetterCustomization, LetterCustomization>? ContextFunction
+    {
+        get
+        {
+            if(!string.IsNullOrEmpty(FunctionName) && Text.ContextCustomizations.TryGetValue(FunctionName, out var func))
             {
                 return func;
             }
@@ -710,17 +716,33 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// <example>
     /// LetterCustomization SineWave(int index, string textInBlock)
     /// {
-    ///   // Index is the letter, it will get called for each character in the block, starting at 0
-    ///   // textInBlock is the entire block, in case the function needs to reference it.
     ///   return new LetterCustomization
     ///   {
-    ///     OffsetY = MathF.Sin(DateTime.Now.TotalSeconds + index/5);
+    ///     YOffset = MathF.Sin(DateTime.Now.TotalSeconds + index/5);
     ///   };
     /// }
-    /// // This would be used as follows:
     /// Text.Customizations["SineWave"] = SineWave;
     /// </example>
     public static Dictionary<string, Func<int, string, LetterCustomization>> Customizations { get; private set; }
+        = new ();
+
+    /// <summary>
+    /// Context-aware customization functions. Same as <see cref="Customizations"/> but the function
+    /// receives the letter's current state (color, offset, scale) as a third parameter, enabling
+    /// relative modifications. If a name exists in both dictionaries, this one takes priority.
+    /// </summary>
+    /// <example>
+    /// LetterCustomization Darken(int index, string textInBlock, LetterCustomization context)
+    /// {
+    ///   var c = context.Color ?? System.Drawing.Color.White;
+    ///   return new LetterCustomization
+    ///   {
+    ///     Color = System.Drawing.Color.FromArgb(c.A, c.R / 2, c.G / 2, c.B / 2);
+    ///   };
+    /// }
+    /// Text.ContextCustomizations["Darken"] = Darken;
+    /// </example>
+    public static Dictionary<string, Func<int, string, LetterCustomization, LetterCustomization>> ContextCustomizations { get; private set; }
         = new ();
 
     public OverlapDirection OverlapDirection { get; set; } = OverlapDirection.RightOnTop;
@@ -1166,12 +1188,34 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         {
                             var function = variable.Value as ParameterizedLetterCustomizationCall;
 
-                            if(function?.Function != null)
+                            if(function?.Function != null || function?.ContextFunction != null)
                             {
-                                var response = function.Function(function.CharacterIndex, function.TextBlock);
+                                LetterCustomization response;
+                                if(function.ContextFunction != null)
+                                {
+                                    var context = new LetterCustomization
+                                    {
+                                        XOffset = xOffset,
+                                        YOffset = yOffset,
+                                        Color = color,
+                                        ScaleX = scaleX,
+                                        ScaleY = scaleY,
+                                    };
+                                    response = function.ContextFunction(function.CharacterIndex, function.TextBlock, context);
+                                }
+                                else
+                                {
+                                    response = function.Function!(function.CharacterIndex, function.TextBlock);
+                                }
 
-                                xOffset = response.XOffset;
-                                yOffset = response.YOffset;
+                                if(response.XOffset != null)
+                                {
+                                    xOffset = response.XOffset.Value;
+                                }
+                                if(response.YOffset != null)
+                                {
+                                    yOffset = response.YOffset.Value;
+                                }
                                 if(response.ReplacementCharacter != null)
                                 {
                                     lineByLineList[0] = response.ReplacementCharacter.ToString()!;
@@ -1180,12 +1224,19 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                                 {
                                     color = response.Color.Value;
                                 }
-                                scaleX = response.ScaleX;
-                                scaleY = response.ScaleY;
+                                if(response.ScaleX != null)
+                                {
+                                    scaleX = response.ScaleX.Value;
+                                }
+                                if(response.ScaleY != null)
+                                {
+                                    scaleY = response.ScaleY.Value;
+                                }
 
                                 if(scaleX != 1)
                                 {
-                                    switch(response.ScaleXOrigin)
+                                    var scaleXOrigin = response.ScaleXOrigin ?? HorizontalAlignment.Center;
+                                    switch(scaleXOrigin)
                                     {
                                         case HorizontalAlignment.Left:
                                             // do nothing
@@ -1200,7 +1251,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                                 }
                                 if(scaleY != 1)
                                 {
-                                    switch(response.ScaleYOrigin)
+                                    var scaleYOrigin = response.ScaleYOrigin ?? VerticalAlignment.Center;
+                                    switch(scaleYOrigin)
                                     {
                                         case VerticalAlignment.Top:
                                             // do nothing
@@ -1217,7 +1269,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                                     }
                                 }
 
-                                rotationOffset = response.RotationDegrees;
+                                if(response.RotationDegrees != null)
+                                {
+                                    rotationOffset = response.RotationDegrees.Value;
+                                }
                             }
                         }
                     }
@@ -1311,11 +1366,16 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 var styledSubstring = new StyledSubstring();
                 foreach(var item in inlinesForThisCharacter)
                 {
-                    var existing = styledSubstring.Variables.FirstOrDefault(x => x.VariableName == item.VariableName);
-                    if(existing != null)
+                    // Custom variables can stack (e.g. [Custom=A][Custom=B]),
+                    // so allow multiple with the same VariableName. Other variables
+                    // like Color should replace the previous value.
+                    if(item.VariableName != "Custom")
                     {
-                        // This allows new variables to replace old ones:
-                        styledSubstring.Variables.Remove(existing);
+                        var existing = styledSubstring.Variables.FirstOrDefault(x => x.VariableName == item.VariableName);
+                        if(existing != null)
+                        {
+                            styledSubstring.Variables.Remove(existing);
+                        }
                     }
                     styledSubstring.Variables.Add(item);
                 }

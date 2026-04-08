@@ -44,6 +44,34 @@ Changed the base class of all SkiaGum runtimes from `GraphicalUiElement` to `Int
 
 Changed the default on the non-XNALIKE `GumService.Initialize()` overload from `DefaultVisualsVersion.V2` to `DefaultVisualsVersion.Newest`, matching MonoGame behavior.
 
+## Task: BBCode Custom functions now support context-aware signatures
+
+Added `Text.ContextCustomizations` — a second dictionary alongside the existing `Text.Customizations`. The new dictionary accepts `Func<int, string, LetterCustomization, LetterCustomization>`, where the third parameter provides the letter's current state (color, offset, scale) as resolved by prior BBCode tags.
+
+`Text.Customizations` retains its original type (`Dictionary<string, Func<int, string, LetterCustomization>>`) and existing code is unaffected. If a function name exists in both dictionaries, `ContextCustomizations` takes priority.
+
+`Text.Customizations` may be marked `[Obsolete]` in a future release to consolidate on the context-aware signature.
+
+## Task: LetterCustomization fields are now nullable
+
+All fields on `LetterCustomization` are now nullable (`float?` instead of `float`). Previously, every custom function's return value unconditionally overwrote all rendering state (offset, scale, rotation), even for fields the function didn't intend to change. This caused stacked custom functions to clobber each other — e.g., a Darken function would reset XOffset to 0, erasing a Shake function's offset.
+
+With nullable fields, the render loop only applies values that the function explicitly sets. Unset fields (null) leave the current state unchanged.
+
+**What changed:**
+
+- `XOffset`, `YOffset`, `ScaleX`, `ScaleY`, `RotationDegrees` — changed from `float` to `float?`
+- `ScaleXOrigin` — changed from `HorizontalAlignment` to `HorizontalAlignment?`
+- `ScaleYOrigin` — changed from `VerticalAlignment` to `VerticalAlignment?`
+- The parameterless constructor (which set `ScaleX = 1` and `ScaleY = 1`) was removed
+
+**What breaks:**
+
+- Code that reads `LetterCustomization` fields without handling nullable — e.g., `float x = customization.XOffset` becomes a compile error. Use `customization.XOffset ?? 0` or `.Value`.
+- Code that relied on `ScaleX`/`ScaleY` defaulting to `1` — they now default to `null`. In the render loop, null means "don't change," and the loop defaults are already `1`, so the end result is the same. But code that reads the default back (e.g., `new LetterCustomization().ScaleX == 1`) will get `null` instead.
+
+**What still works:** Setting fields (`customization.XOffset = 5f`) compiles without changes since `float` implicitly converts to `float?`.
+
 ## References
 
 - Full refactoring plan: `docs/contributing/runtime-refactoring.md`

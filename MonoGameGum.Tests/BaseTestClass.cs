@@ -89,5 +89,6 @@ public class BaseTestClass : IDisposable
         FileManager.CustomGetStreamFromFile = null;
 
         RenderingLibrary.Graphics.Text.Customizations.Clear();
+        RenderingLibrary.Graphics.Text.ContextCustomizations.Clear();
     }
 }
