@@ -1,3 +1,6 @@
+#if MONOGAME || KNI || FNA
+#define XNALIKE
+#endif
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
@@ -109,7 +112,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     {
         var extension = Path.GetExtension(e.FullPath).ToLowerInvariant();
         if (extension == ".gumx" || extension == ".gucx" || extension == ".gusx" || extension == ".gutx"
-            || extension == ".fnt")
+            || extension == ".fnt" || extension == ".ganx")
         {
             if (extension == ".fnt")
             {
@@ -191,9 +194,30 @@ public class GumHotReloadManager : IGumHotReloadManager
     {
         CopyAndUnloadChangedFonts();
 
+        var savedRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
+
         GumProjectSave newProject = GumProjectSave.Load(_projectSourcePath);
         newProject.Initialize();
         ObjectFinder.Self.GumProjectSave = newProject;
+
+        // Point at the source project directory so TryLoadAnimation finds the updated .ganx files
+        var sourceDirectory = Path.GetDirectoryName(_projectSourcePath)?.Replace('\\', '/');
+        if (sourceDirectory != null && !sourceDirectory.EndsWith("/"))
+        {
+            sourceDirectory += "/";
+        }
+        ToolsUtilities.FileManager.RelativeDirectory = sourceDirectory ?? savedRelativeDirectory;
+
+        foreach (var element in newProject.AllElements)
+        {
+            var animation = GumService.TryLoadAnimation(element);
+            if (animation != null)
+            {
+                newProject.ElementAnimations.Add(animation);
+            }
+        }
+
+        ToolsUtilities.FileManager.RelativeDirectory = savedRelativeDirectory;
 
         var byName = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
         foreach (var element in newProject.AllElements)
