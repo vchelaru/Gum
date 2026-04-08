@@ -505,6 +505,8 @@ public class GumService
         LoaderManager.Self.DisposeAndClear();
 
 #if XNALIKE
+        Text.Customizations.Clear();
+        Text.ContextCustomizations.Clear();
         Text.DefaultBitmapFont = null;
         Text.DefaultFont = null;
 

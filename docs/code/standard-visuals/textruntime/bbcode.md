@@ -6,8 +6,8 @@ TextRuntime supports using BBCode-like syntax for formatting individual words an
 
 Using BBCode for TextRuntimes supports all of the functionality outlined in the Text documentation which can be found here: [https://docs.flatredball.com/gum/gum-tool/gum-elements/text/text#using-bbcode-for-inline-styling](https://docs.flatredball.com/gum/gum-tool/gum-elements/text/text#using-bbcode-for-inline-styling)
 
-{% hint style="warning" %}
-The Gum tool is able to create fonts as-needed automatically, so if a Text instance requires new fonts, these are created in the FontCache folder. By contrast, code-only projects must explicitly create all fonts as needed. If your game has changed the font that it uses, then it must also include additional font files to support the following BBCode variables:
+{% hint style="info" %}
+The following BBCode variables require font generation:
 
 * IsBold
 * IsItalic
@@ -15,7 +15,9 @@ The Gum tool is able to create fonts as-needed automatically, so if a Text insta
 * FontSize
 * OutlineThickness
 
-The following variables can be used without creating custom fonts:
+The Gum tool generates fonts automatically into the FontCache folder. For code-only projects, the recommended approach is to use [dynamic font generation via KernSmith](fonts.md#dynamic-font-generation-recommended), which handles font creation at runtime with no extra setup. Without the Gum tool or KernSmith, you must provide pre-built `.fnt` files for each font combination your BBCode text uses.
+
+The following variables work without any font setup:
 
 * Color
 * Red/Green/Blue
@@ -39,8 +41,10 @@ The following variables can be modified on each letter. This list also includes 
 
 To use the Custom tag, the following must be performed:
 
-1. A function must be declared which is of the type `Func<int, string, LetterCustomization>`. The int value represents the index in the custom block, starting with 0. The string represents the entire string in the block. The returned LetterCustomization instance includes the desired modifications to the letter.
-2. This function must be registered with the `RenderingLibrary.Graphics.Text` type.
+1. A function must be declared which is of one of the following types:
+   * `Func<int, string, LetterCustomization>` - the int value represents the index in the custom block, starting with 0. The string represents the entire string in the block. The returned LetterCustomization instance includes the desired modifications to the letter. Register with `Text.Customizations`.
+   * `Func<int, string, LetterCustomization, LetterCustomization>` - same as above, but the third parameter is a LetterCustomization containing the letter's current state (color, offset, scale) as set by prior BBCode tags. This allows relative modifications such as darkening the current color. Register with `Text.ContextCustomizations`.
+2. This function must be registered with the `RenderingLibrary.Graphics.Text` type using the appropriate dictionary.
 3. A Custom tag must be included in the text string.
 
 ### Code Example: Shaking Letters With Custom Tag
@@ -133,7 +137,7 @@ protected override void Initialize()
     button.AddToRoot();
     button.Anchor(Anchor.Center);
     button.Y += 50;
-    button.Click += (not, used) =>
+    button.Click += (_, _) =>
     {
         _gold += 5;
         goldDisplayText.Text = "Gold: [Custom=GrowAndShrink]" + _gold + "[/Custom]";
@@ -143,3 +147,25 @@ protected override void Initialize()
 ```
 
 <figure><img src="../../../.gitbook/assets/01_07 39 37 (1) (1).gif" alt=""><figcaption><p>Button adding gold and resetting the grow shirnk time.</p></figcaption></figure>
+
+### Code Example: Context-Aware Custom Function
+
+Custom functions can optionally receive the letter's current state as a `LetterCustomization` parameter. This is useful for making relative modifications — for example, darkening whatever color was set by prior BBCode tags.
+
+```csharp
+LetterCustomization Darken(int index, string textInBlock, LetterCustomization context)
+{
+    var color = context.Color ?? System.Drawing.Color.White;
+    return new LetterCustomization
+    {
+        Color = System.Drawing.Color.FromArgb(color.A, color.R / 2, color.G / 2, color.B / 2)
+    };
+}
+RenderingLibrary.Graphics.Text.ContextCustomizations["Darken"] = Darken;
+
+var text = new TextRuntime();
+text.AddToRoot();
+text.Text = "This is [Color=Red]red and [Custom=Darken]dark red[/Custom][/Color] text";
+```
+
+The context parameter includes the current Color, XOffset, YOffset, ScaleX, and ScaleY as resolved by any prior BBCode tags on the same letter. Functions using the simple two-parameter signature continue to work unchanged.

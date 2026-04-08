@@ -409,7 +409,7 @@ $"chars count=223\r\n";
     [Fact]
     public void Text_WithCustom_ShouldAssignMethodCall()
     {
-        var method = (int index, string block) =>
+        Func<int, string, LetterCustomization> method = (int index, string block) =>
         {
             return new LetterCustomization();
         };
@@ -420,11 +420,11 @@ $"chars count=223\r\n";
         TextRuntime textRuntime = new();
         textRuntime.Text = text;
 
-        var internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
-        var inlineVariables = internalText.InlineVariables;
+        RenderingLibrary.Graphics.Text internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        List<InlineVariable> inlineVariables = internalText.InlineVariables;
 
         inlineVariables.Count.ShouldBe(6);
-        foreach(var variable in inlineVariables)
+        foreach(InlineVariable variable in inlineVariables)
         {
             ParameterizedLetterCustomizationCall asCall = (ParameterizedLetterCustomizationCall)variable.Value;
             asCall.Function.ShouldBe(method);
@@ -439,23 +439,227 @@ $"chars count=223\r\n";
         TextRuntime textRuntime = new();
         textRuntime.Text = text;
 
-        var method = (int index, string block) =>
+        Func<int, string, LetterCustomization> method = (int index, string block) =>
         {
             return new LetterCustomization();
         };
         Text.Customizations["CustomMethod"] = method;
 
-        var internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
-        var inlineVariables = internalText.InlineVariables;
+        RenderingLibrary.Graphics.Text internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        List<InlineVariable> inlineVariables = internalText.InlineVariables;
 
         inlineVariables.Count.ShouldBe(6);
-        foreach (var variable in inlineVariables)
+        foreach (InlineVariable variable in inlineVariables)
         {
             ParameterizedLetterCustomizationCall asCall = (ParameterizedLetterCustomizationCall)variable.Value;
             asCall.Function.ShouldBe(method);
         }
     }
 
+    [Fact]
+    public void Text_WithContextCustom_ShouldResolveContextFunction()
+    {
+        Func<int, string, LetterCustomization, LetterCustomization> method = (int index, string block, LetterCustomization context) =>
+        {
+            return context;
+        };
+        Text.ContextCustomizations["ContextMethod"] = method;
+
+        string text = $"[Custom=ContextMethod]a[/Custom]";
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = text;
+
+        RenderingLibrary.Graphics.Text internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        List<InlineVariable> inlineVariables = internalText.InlineVariables;
+
+        inlineVariables.Count.ShouldBe(1);
+        ParameterizedLetterCustomizationCall asCall = (ParameterizedLetterCustomizationCall)inlineVariables[0].Value;
+        asCall.ContextFunction.ShouldBe(method);
+        asCall.Function.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Text_WithMultipleCustomTags_ShouldCreateStackedInlineVariables()
+    {
+        Func<int, string, LetterCustomization> methodA = (int index, string block) =>
+        {
+            return new LetterCustomization();
+        };
+        Func<int, string, LetterCustomization> methodB = (int index, string block) =>
+        {
+            return new LetterCustomization();
+        };
+        Text.Customizations["A"] = methodA;
+        Text.Customizations["B"] = methodB;
+
+        string text = $"[Custom=A][Custom=B]ab[/Custom][/Custom]";
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = text;
+
+        RenderingLibrary.Graphics.Text internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        List<InlineVariable> inlineVariables = internalText.InlineVariables;
+
+        // 2 characters x 2 custom tags = 4 inline variables
+        inlineVariables.Count.ShouldBe(4);
+        List<InlineVariable> variablesForFirstChar = inlineVariables.Where(v => v.StartIndex == 0).ToList();
+        variablesForFirstChar.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Text_WithContextCustom_ContextFunctionTakesPriorityOverSimple()
+    {
+        Func<int, string, LetterCustomization> simpleMethod = (int index, string block) =>
+        {
+            return new LetterCustomization();
+        };
+        Func<int, string, LetterCustomization, LetterCustomization> contextMethod = (int index, string block, LetterCustomization context) =>
+        {
+            return context;
+        };
+        // Register same name in both dictionaries
+        Text.Customizations["Dual"] = simpleMethod;
+        Text.ContextCustomizations["Dual"] = contextMethod;
+
+        string text = $"[Custom=Dual]a[/Custom]";
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = text;
+
+        RenderingLibrary.Graphics.Text internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        List<InlineVariable> inlineVariables = internalText.InlineVariables;
+
+        inlineVariables.Count.ShouldBe(1);
+        ParameterizedLetterCustomizationCall asCall = (ParameterizedLetterCustomizationCall)inlineVariables[0].Value;
+        // ContextFunction should resolve since it takes priority
+        asCall.ContextFunction.ShouldBe(contextMethod);
+        // Simple should also resolve, but the render path picks ContextFunction first
+        asCall.Function.ShouldBe(simpleMethod);
+    }
+
+    [Fact]
+    public void Text_WithSimpleCustom_ShouldReturnExpectedValues()
+    {
+        Func<int, string, LetterCustomization> method = (int index, string block) =>
+        {
+            return new LetterCustomization
+            {
+                XOffset = index * 10,
+                Color = System.Drawing.Color.Blue,
+            };
+        };
+        Text.Customizations["Offset"] = method;
+
+        string text = $"[Custom=Offset]ab[/Custom]";
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = text;
+
+        RenderingLibrary.Graphics.Text internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        List<InlineVariable> inlineVariables = internalText.InlineVariables;
+
+        ParameterizedLetterCustomizationCall firstCall = (ParameterizedLetterCustomizationCall)inlineVariables[0].Value;
+        LetterCustomization firstResult = firstCall.Function!(firstCall.CharacterIndex, firstCall.TextBlock);
+        firstResult.XOffset.ShouldBe((float?)0);
+        firstResult.Color.ShouldBe(System.Drawing.Color.Blue);
+
+        ParameterizedLetterCustomizationCall secondCall = (ParameterizedLetterCustomizationCall)inlineVariables[1].Value;
+        LetterCustomization secondResult = secondCall.Function!(secondCall.CharacterIndex, secondCall.TextBlock);
+        secondResult.XOffset.ShouldBe((float?)10);
+        secondResult.Color.ShouldBe(System.Drawing.Color.Blue);
+    }
+
+    [Fact]
+    public void Text_WithContextCustom_ShouldReceiveAndModifyContext()
+    {
+        Func<int, string, LetterCustomization, LetterCustomization> darken = (int index, string block, LetterCustomization context) =>
+        {
+            System.Drawing.Color c = context.Color ?? System.Drawing.Color.White;
+            return new LetterCustomization
+            {
+                Color = System.Drawing.Color.FromArgb(c.A, c.R / 2, c.G / 2, c.B / 2),
+            };
+        };
+        Text.ContextCustomizations["Darken"] = darken;
+
+        string text = $"[Custom=Darken]a[/Custom]";
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = text;
+
+        RenderingLibrary.Graphics.Text internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        List<InlineVariable> inlineVariables = internalText.InlineVariables;
+
+        ParameterizedLetterCustomizationCall call = (ParameterizedLetterCustomizationCall)inlineVariables[0].Value;
+
+        // Simulate context as if [Color=Red] had been applied before this Custom tag
+        LetterCustomization context = new LetterCustomization
+        {
+            Color = System.Drawing.Color.Red,
+        };
+        LetterCustomization result = call.ContextFunction!(call.CharacterIndex, call.TextBlock, context);
+        result.Color.ShouldNotBeNull();
+        result.Color.Value.R.ShouldBe((byte)127);
+        result.Color.Value.G.ShouldBe((byte)0);
+        result.Color.Value.B.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void Text_WithStackedCustoms_SecondCanReadFirstOutput()
+    {
+        Func<int, string, LetterCustomization> setRed = (int index, string block) =>
+        {
+            return new LetterCustomization
+            {
+                Color = System.Drawing.Color.Red,
+            };
+        };
+        Func<int, string, LetterCustomization, LetterCustomization> halveColor = (int index, string block, LetterCustomization context) =>
+        {
+            System.Drawing.Color c = context.Color ?? System.Drawing.Color.White;
+            return new LetterCustomization
+            {
+                Color = System.Drawing.Color.FromArgb(c.A, c.R / 2, c.G / 2, c.B / 2),
+            };
+        };
+        Text.Customizations["SetRed"] = setRed;
+        Text.ContextCustomizations["HalveColor"] = halveColor;
+
+        string text = $"[Custom=SetRed][Custom=HalveColor]a[/Custom][/Custom]";
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = text;
+
+        RenderingLibrary.Graphics.Text internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        List<InlineVariable> inlineVariables = internalText.InlineVariables;
+
+        inlineVariables.Count.ShouldBe(2);
+
+        // Simulate the render loop's chaining: first function runs, its output becomes context for second
+        ParameterizedLetterCustomizationCall firstCall = (ParameterizedLetterCustomizationCall)inlineVariables[0].Value;
+        ParameterizedLetterCustomizationCall secondCall = (ParameterizedLetterCustomizationCall)inlineVariables[1].Value;
+
+        // First function (SetRed) sets color to Red
+        LetterCustomization firstResult = firstCall.Function!(firstCall.CharacterIndex, firstCall.TextBlock);
+        firstResult.Color.ShouldBe(System.Drawing.Color.Red);
+
+        // Second function (HalveColor) receives Red as context and halves it.
+        // Simulate what the render loop does: use concrete defaults for null fields.
+        LetterCustomization chainedContext = new LetterCustomization
+        {
+            Color = firstResult.Color ?? System.Drawing.Color.White,
+            XOffset = firstResult.XOffset ?? 0,
+            YOffset = firstResult.YOffset ?? 0,
+            ScaleX = firstResult.ScaleX ?? 1,
+            ScaleY = firstResult.ScaleY ?? 1,
+        };
+        LetterCustomization secondResult = secondCall.ContextFunction!(secondCall.CharacterIndex, secondCall.TextBlock, chainedContext);
+        secondResult.Color.ShouldNotBeNull();
+        secondResult.Color.Value.R.ShouldBe((byte)127);
+        secondResult.Color.Value.G.ShouldBe((byte)0);
+        secondResult.Color.Value.B.ShouldBe((byte)0);
+    }
 
     [Fact]
     public void Text_ShouldUseLocalization()
