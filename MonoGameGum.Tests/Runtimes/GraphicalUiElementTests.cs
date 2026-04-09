@@ -1517,6 +1517,115 @@ public class GraphicalUiElementTests : BaseTestClass
         child1.Parent.ShouldBeNull();
     }
 
+    [Fact]
+    public void ChildrenRemove_ShouldNullParentViaCollectionHandler()
+    {
+        // When removing via Children.Remove (not via the Parent setter),
+        // HandleCollectionChanged should still null out the child's Parent.
+        ContainerRuntime parent = new();
+        ContainerRuntime child = new();
+        child.Parent = parent;
+
+        parent.Children.Remove(child);
+
+        child.Parent.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SetParentToNewParent_ShouldFireParentChangedExactlyOnce()
+    {
+        ContainerRuntime parent1 = new();
+        ContainerRuntime parent2 = new();
+        ContainerRuntime child = new();
+        child.Parent = parent1;
+
+        int parentChangedCount = 0;
+        child.ParentChanged += (_, _) => parentChangedCount++;
+
+        child.Parent = parent2;
+
+        parentChangedCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SetParentToNewParent_ShouldUpdateChildRelativeToParentSize()
+    {
+        // Verifies layout runs correctly when re-parenting — the child's
+        // RelativeToParent size should reflect the new parent's dimensions.
+        ContainerRuntime parent1 = new();
+        parent1.Width = 200;
+        parent1.Height = 200;
+        parent1.WidthUnits = DimensionUnitType.Absolute;
+        parent1.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime parent2 = new();
+        parent2.Width = 400;
+        parent2.Height = 400;
+        parent2.WidthUnits = DimensionUnitType.Absolute;
+        parent2.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime child = new();
+        child.WidthUnits = DimensionUnitType.RelativeToParent;
+        child.HeightUnits = DimensionUnitType.RelativeToParent;
+        child.Width = 0;
+        child.Height = 0;
+        child.Parent = parent1;
+
+        child.GetAbsoluteWidth().ShouldBe(200);
+        child.GetAbsoluteHeight().ShouldBe(200);
+
+        child.Parent = parent2;
+
+        child.GetAbsoluteWidth().ShouldBe(400);
+        child.GetAbsoluteHeight().ShouldBe(400);
+    }
+
+    [Fact]
+    public void SetParentToNull_ShouldFireParentChangedExactlyOnce()
+    {
+        ContainerRuntime parent = new();
+        ContainerRuntime child = new();
+        child.Parent = parent;
+
+        int parentChangedCount = 0;
+        child.ParentChanged += (_, _) => parentChangedCount++;
+
+        child.Parent = null;
+
+        parentChangedCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SetParentToNull_ShouldUpdateSiblingStackLayout()
+    {
+        // When a child is removed from a stacking parent via Parent = null,
+        // the remaining siblings should reposition.
+        ContainerRuntime parent = new();
+        parent.Width = 200;
+        parent.Height = 200;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime child1 = new();
+        child1.Height = 50;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        child1.Parent = parent;
+
+        ContainerRuntime child2 = new();
+        child2.Height = 50;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        child2.Parent = parent;
+
+        // child2 should be stacked below child1
+        child2.GetAbsoluteY().ShouldBe(50);
+
+        // Remove child1 — child2 should move to the top
+        child1.Parent = null;
+
+        child2.GetAbsoluteY().ShouldBe(0);
+    }
+
     #endregion
 
     #region RemoveChild
