@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>12.0</LangVersion>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>GumExpressions</Title>
+		<Description>Optional Roslyn-based expression evaluator for Gum variable references</Description>
+		<PackageId>FlatRedBall.GumExpressions</PackageId>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+		<Version>2026.4.5.1</Version>
+
+		<NoWarn>1591</NoWarn>
+
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
+	</ItemGroup>
+
+</Project>
