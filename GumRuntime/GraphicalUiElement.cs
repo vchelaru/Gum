@@ -218,6 +218,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     float mRotation;
 
     GraphicalUiElement? _parent;
+    bool _isSettingParent;
 
     protected bool mIsLayoutSuspended = false;
     public bool IsLayoutSuspended => mIsLayoutSuspended;
@@ -1092,18 +1093,26 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (_parent != value)
             {
                 var oldParent = _parent;
-                if (_parent?.Children?.Contains(this) == true)
+                _isSettingParent = true;
+                try
                 {
-                    _parent.Children.Remove(this);
-                    oldParent?.UpdateLayout();
+                    if (_parent?.Children?.Contains(this) == true)
+                    {
+                        _parent.Children.Remove(this);
+                        oldParent?.UpdateLayout();
+                    }
+                    _parent = value;
+
+                    // In case the object was added explicitly
+                    if (_parent?.Children != null && _parent.Children.Contains(this) == false)
+                    {
+                        _parent.Children.Add(this);
+
+                    }
                 }
-                _parent = value;
-
-                // In case the object was added explicitly 
-                if (_parent?.Children != null && _parent.Children.Contains(this) == false)
+                finally
                 {
-                    _parent.Children.Add(this);
-
+                    _isSettingParent = false;
                 }
 
                 // If layout is suppressed, the parent may not get set
@@ -5542,7 +5551,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #endif
                     var ipso = (GraphicalUiElement)newItem;
 
-                    if (ipso.Parent != this)
+                    if (ipso.Parent != this && !ipso._isSettingParent)
                     {
                         ipso.Parent = this;
 
@@ -5560,11 +5569,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (e.OldItems != null)
             {
-                foreach (IRenderableIpso ipso in e.OldItems)
+                foreach (GraphicalUiElement child in e.OldItems)
                 {
-                    if (ipso.Parent == this)
+                    if (child.Parent == this && !child._isSettingParent)
                     {
-                        ipso.Parent = null;
+                        child.Parent = null;
                     }
                 }
             }
@@ -5573,11 +5582,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (e.OldItems != null)
             {
-                foreach (IRenderableIpso ipso in e.OldItems)
+                foreach (GraphicalUiElement child in e.OldItems)
                 {
-                    if (ipso.Parent == this)
+                    if (child.Parent == this && !child._isSettingParent)
                     {
-                        ipso.Parent = null;
+                        child.Parent = null;
                     }
                 }
             }
@@ -5596,11 +5605,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (e.OldItems != null)
             {
-                foreach (IRenderableIpso ipso in e.OldItems)
+                foreach (GraphicalUiElement child in e.OldItems)
                 {
-                    if (ipso.Parent == this)
+                    if (child.Parent == this && !child._isSettingParent)
                     {
-                        ipso.Parent = null;
+                        child.Parent = null;
                     }
                 }
             }
