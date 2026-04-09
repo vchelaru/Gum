@@ -90,6 +90,28 @@ public class Program
 }
 </code></pre>
 
+## Adding Expression Support (Optional)
+
+If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
+
+Add the NuGet package:
+
+```bash
+dotnet add package Gum.Expressions
+```
+
+Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+
+```csharp
+// Initialize
+GumUI.Initialize("GumProject/GumProject.gumx");
+GumExpressionService.Initialize();
+```
+
+If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
+
+For more information, see the [Runtime Variable References](../../../../styling/runtime-variable-references.md) page.
+
 ## Adding a Button (Testing the Setup)
 
 Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:

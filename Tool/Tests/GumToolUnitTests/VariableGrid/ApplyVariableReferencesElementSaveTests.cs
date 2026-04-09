@@ -249,4 +249,134 @@ public class ApplyVariableReferencesElementSaveTests : BaseTestClass
     }
 
     #endregion
+
+    #region ApplyAllVariableReferences
+
+    [Fact]
+    public void ApplyAllVariableReferences_AppliesInDependencyOrder()
+    {
+        // A.Width = 100 (no references)
+        // B.Width = Components/A.Width (depends on A)
+        // C.Width = Components/B.Width (depends on B)
+        // After ApplyAll, C.Width should be 100 regardless of element order
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave compA = new ComponentSave { Name = "A" };
+        StateSave stateA = new StateSave { Name = "Default", ParentContainer = compA };
+        stateA.Variables.Add(new VariableSave { Name = "Width", Value = 100f, Type = "float", SetsValue = true });
+        compA.States.Add(stateA);
+        project.Components.Add(compA);
+
+        ComponentSave compB = new ComponentSave { Name = "B" };
+        StateSave stateB = new StateSave { Name = "Default", ParentContainer = compB };
+        stateB.Variables.Add(new VariableSave { Name = "Width", Value = 0f, Type = "float", SetsValue = true });
+        VariableListSave<string> refsB = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        refsB.Value.Add("Width = Components/A.Width");
+        stateB.VariableLists.Add(refsB);
+        compB.States.Add(stateB);
+        project.Components.Add(compB);
+
+        ComponentSave compC = new ComponentSave { Name = "C" };
+        StateSave stateC = new StateSave { Name = "Default", ParentContainer = compC };
+        stateC.Variables.Add(new VariableSave { Name = "Width", Value = 0f, Type = "float", SetsValue = true });
+        VariableListSave<string> refsC = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        refsC.Value.Add("Width = Components/B.Width");
+        stateC.VariableLists.Add(refsC);
+        compC.States.Add(stateC);
+        project.Components.Add(compC);
+
+        project.ApplyAllVariableReferences();
+
+        stateA.GetValue("Width").ShouldBe(100f);
+        stateB.GetValue("Width").ShouldBe(100f);
+        stateC.GetValue("Width").ShouldBe(100f);
+    }
+
+    [Fact]
+    public void ApplyAllVariableReferences_CircularDependency_DoesNotThrow()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave compA = new ComponentSave { Name = "A" };
+        StateSave stateA = new StateSave { Name = "Default", ParentContainer = compA };
+        stateA.Variables.Add(new VariableSave { Name = "Width", Value = 50f, Type = "float", SetsValue = true });
+        VariableListSave<string> refsA = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        refsA.Value.Add("Width = Components/B.Width");
+        stateA.VariableLists.Add(refsA);
+        compA.States.Add(stateA);
+        project.Components.Add(compA);
+
+        ComponentSave compB = new ComponentSave { Name = "B" };
+        StateSave stateB = new StateSave { Name = "Default", ParentContainer = compB };
+        stateB.Variables.Add(new VariableSave { Name = "Width", Value = 75f, Type = "float", SetsValue = true });
+        VariableListSave<string> refsB = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        refsB.Value.Add("Width = Components/A.Width");
+        stateB.VariableLists.Add(refsB);
+        compB.States.Add(stateB);
+        project.Components.Add(compB);
+
+        Should.NotThrow(() => project.ApplyAllVariableReferences());
+    }
+
+    [Fact]
+    public void ApplyAllVariableReferences_CategoryStateReferences_AreApplied()
+    {
+        // Mirrors the real-world pattern: ColoredRectangle has a ColorCategory
+        // with states like "Primary" that reference Components/Styles.Primary.Red
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave styles = new ComponentSave { Name = "Styles" };
+        StateSave stylesState = new StateSave { Name = "Default", ParentContainer = styles };
+        stylesState.Variables.Add(new VariableSave { Name = "Primary.Red", Value = 255, Type = "int", SetsValue = true });
+        stylesState.Variables.Add(new VariableSave { Name = "Primary.Green", Value = 0, Type = "int", SetsValue = true });
+        stylesState.Variables.Add(new VariableSave { Name = "Primary.Blue", Value = 0, Type = "int", SetsValue = true });
+        styles.States.Add(stylesState);
+        project.Components.Add(styles);
+
+        StandardElementSave coloredRect = new StandardElementSave { Name = "ColoredRectangle" };
+        StateSave coloredRectDefault = new StateSave { Name = "Default", ParentContainer = coloredRect };
+        coloredRect.States.Add(coloredRectDefault);
+
+        StateSaveCategory colorCategory = new StateSaveCategory { Name = "ColorCategory" };
+        StateSave primaryState = new StateSave { Name = "Primary", ParentContainer = coloredRect };
+        primaryState.Variables.Add(new VariableSave { Name = "Red", Value = 0, Type = "int", SetsValue = true });
+        primaryState.Variables.Add(new VariableSave { Name = "Green", Value = 0, Type = "int", SetsValue = true });
+        primaryState.Variables.Add(new VariableSave { Name = "Blue", Value = 0, Type = "int", SetsValue = true });
+        VariableListSave<string> refs = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        refs.Value.Add("Red = Components/Styles.Primary.Red");
+        refs.Value.Add("Green = Components/Styles.Primary.Green");
+        refs.Value.Add("Blue = Components/Styles.Primary.Blue");
+        primaryState.VariableLists.Add(refs);
+        colorCategory.States.Add(primaryState);
+        coloredRect.Categories.Add(colorCategory);
+        project.StandardElements.Add(coloredRect);
+
+        project.ApplyAllVariableReferences();
+
+        primaryState.GetValue("Red").ShouldBe(255);
+        primaryState.GetValue("Green").ShouldBe(0);
+        primaryState.GetValue("Blue").ShouldBe(0);
+    }
+
+    [Fact]
+    public void ApplyAllVariableReferences_NoReferences_DoesNotThrow()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave comp = new ComponentSave { Name = "Simple" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = comp };
+        state.Variables.Add(new VariableSave { Name = "Width", Value = 100f, Type = "float", SetsValue = true });
+        comp.States.Add(state);
+        project.Components.Add(comp);
+
+        Should.NotThrow(() => project.ApplyAllVariableReferences());
+
+        state.GetValue("Width").ShouldBe(100f);
+    }
+
+    #endregion
 }

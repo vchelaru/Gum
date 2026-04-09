@@ -12,15 +12,8 @@ Variables which are assigned through `Variable References` cannot be directly se
 
 <figure><img src="../../../.gitbook/assets/01_07 20 13.png" alt=""><figcaption><p>Height is assigned to Width, so it is read only</p></figcaption></figure>
 
-{% hint style="warning" %}
-Variable References result in the following changes
-
-* Dynamic updating of variables whenever the _right side_ changes
-* Evaluation of the variable reference in tool, explicitly setting the _left side_
-
-As of February 2025 no runtimes support dynamic variable assignments; however any changes made in the will propgate those changes in the tool and they will appear in the games.
-
-This limitation may change in future versions of Gum. If you need dynamic variable refernces please file an issue on GitHub or make a request in Discord.
+{% hint style="info" %}
+Variable references can also be re-evaluated at runtime to support theming and dynamic styling. For details, see [Runtime Variable References](../../../code/styling/runtime-variable-references.md).
 {% endhint %}
 
 {% hint style="info" %}

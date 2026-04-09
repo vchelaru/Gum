@@ -31,7 +31,7 @@ git checkout main
 git checkout -b ReleaseCode_YYYY_M_D_V
 ```
 
-## Step 4: Update all 12 .csproj files
+## Step 4: Update all 13 .csproj files
 
 Read each file first, then use the Edit tool to replace the `<Version>...</Version>` line with the new version string.
 
@@ -46,16 +46,17 @@ The repo root is `C:\Users\vchel\Documents\GitHub\Gum`. The 12 files are:
 7. `Runtimes\GumShapes\MonoGameGumShapes.csproj`
 8. `Runtimes\GumShapes\KniGumShapes.csproj`
 9. `Runtimes\RaylibGum\RaylibGum.csproj`
-10. `Gum.Cli\Gum.Cli.csproj`
-11. `Themes\Gum.Themes.Editor.MonoGame\Gum.Themes.Editor.MonoGame.csproj`
-12. `Themes\Gum.Themes.Editor.Kni\Gum.Themes.Editor.Kni.csproj`
+10. `Runtimes\GumExpressions\GumExpressions.csproj`
+11. `Gum.Cli\Gum.Cli.csproj`
+12. `Themes\Gum.Themes.Editor.MonoGame\Gum.Themes.Editor.MonoGame.csproj`
+13. `Themes\Gum.Themes.Editor.Kni\Gum.Themes.Editor.Kni.csproj`
 
 ## Step 5: Commit and push the branch
 
 Stage only the 12 csproj files and commit:
 
 ```bash
-git add GumCommon/GumCommon.csproj MonoGameGum/MonoGameGum.csproj MonoGameGum/KniGum/KniGum.csproj MonoGameGum/FnaGum/FnaGum.csproj Runtimes/SkiaGum/SkiaGum.csproj Runtimes/SkiaGum.Maui/SkiaGum.Maui.csproj Runtimes/GumShapes/MonoGameGumShapes.csproj Runtimes/GumShapes/KniGumShapes.csproj Runtimes/RaylibGum/RaylibGum.csproj Gum.Cli/Gum.Cli.csproj Themes/Gum.Themes.Editor.MonoGame/Gum.Themes.Editor.MonoGame.csproj Themes/Gum.Themes.Editor.Kni/Gum.Themes.Editor.Kni.csproj
+git add GumCommon/GumCommon.csproj MonoGameGum/MonoGameGum.csproj MonoGameGum/KniGum/KniGum.csproj MonoGameGum/FnaGum/FnaGum.csproj Runtimes/SkiaGum/SkiaGum.csproj Runtimes/SkiaGum.Maui/SkiaGum.Maui.csproj Runtimes/GumShapes/MonoGameGumShapes.csproj Runtimes/GumShapes/KniGumShapes.csproj Runtimes/RaylibGum/RaylibGum.csproj Runtimes/GumExpressions/GumExpressions.csproj Gum.Cli/Gum.Cli.csproj Themes/Gum.Themes.Editor.MonoGame/Gum.Themes.Editor.MonoGame.csproj Themes/Gum.Themes.Editor.Kni/Gum.Themes.Editor.Kni.csproj
 ```
 
 Commit message should be `Bump version to {new_version}`.

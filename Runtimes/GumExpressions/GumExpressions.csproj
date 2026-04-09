@@ -8,7 +8,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>GumExpressions</Title>
 		<Description>Optional Roslyn-based expression evaluator for Gum variable references</Description>
-		<PackageId>FlatRedBall.GumExpressions</PackageId>
+		<PackageId>Gum.Expressions</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 
 		<Version>2026.4.5.1</Version>

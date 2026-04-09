@@ -95,5 +95,4 @@ Invalid lines are auto-commented with `//` prefix and a message is shown to the 
 ## Known Gaps
 
 - **Font generation:** `CollectRequiredFonts` (in `HeadlessFontGenerationService`) and `RecursiveVariableFinder` do not resolve variable references. If a font property (Font, FontSize, etc.) is set via a variable reference, the font file may not be generated for that value. The tool-time path works because `VariableChangedThroughReference` fires `PluginManager.VariableSet`, but headless/CLI font generation could miss these. (See issue #2414)
-- **Runtime dynamism:** Variable references are not re-evaluated at game runtime when source values change. This is by design currently but limits use cases.
-- **Expression support varies:** The tool uses Roslyn for full expression evaluation; the runtime fallback uses `RecursiveVariableFinder` which only handles simple variable lookups, not arithmetic expressions.
+- **Runtime support:** The Roslyn expression evaluator has been extracted into `Runtimes/GumExpressions/` (`Gum.Expressions` NuGet). Games can opt in to expression support and use `ApplyAllVariableReferences` to propagate changes at runtime. See the `gum-runtime-variable-references` skill for details.
