@@ -4,6 +4,10 @@
 
 Variable references defined in the Gum tool can be re-evaluated at runtime, allowing you to change style values in code and propagate them across your entire project before creating UI. This is useful for theming, accessibility settings, or any scenario where centralized style values need to change at startup or during gameplay.
 
+{% hint style="info" %}
+Runtime variable references require Gum NuGet packages version 2026.4 or newer. The optional `Gum.Expressions` NuGet is also available starting from this version.
+{% endhint %}
+
 For information on setting up variable references in the Gum tool, see the [Variable References](../../gum-tool/gum-elements/general-properties/variable-references.md) page.
 
 ## Propagating Variable References
