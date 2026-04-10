@@ -21,9 +21,19 @@ using Vector2 = System.Numerics.Vector2;
 
 namespace RenderingLibrary.Graphics;
 
+/// <summary>
+/// Controls how the width of the last character in a line is measured.
+/// </summary>
 public enum HorizontalMeasurementStyle
 {
+    /// <summary>
+    /// Uses the character's XAdvance for the last letter, treating it the same as all other letters.
+    /// </summary>
     Full = 1,
+    /// <summary>
+    /// Uses the character's actual pixel width (PixelRight - PixelLeft) for the last letter,
+    /// trimming any trailing advance so the measured width fits tightly around the rendered glyphs.
+    /// </summary>
     TrimRight = 2,
     // eventually trim left and trim both too
 }
@@ -37,6 +47,10 @@ internal struct LetterRenderInfo
     public int PageIndex;
 }
 
+/// <summary>
+/// Represents a bitmap font loaded from a BMFont-format .fnt file. Handles character layout,
+/// measurement, and rendering of text using one or more texture pages containing the glyph atlas.
+/// </summary>
 public class BitmapFont : IDisposable
 {
     #region Fields
@@ -62,21 +76,34 @@ public class BitmapFont : IDisposable
     [Obsolete("Atlased textures are no longer supported in Gum as of 2025")]
     public AtlasedTexture AtlasedTexture => mAtlasedTexture; 
 
-    public Texture2D Texture
+    /// <summary>
+    /// The first texture page of this font, or null if no pages exist.
+    /// Setting this replaces the first texture page and updates <see cref="TextureName"/>.
+    /// </summary>
+    public Texture2D? Texture
     {
         get { return mTextures.Length > 0 ? mTextures[0] : null; }
         set
         {
-            mTextures[0] = value;
+            mTextures[0] = value!;
 
             mTextureNames[0] = mTextures[0].Name;
         }
     }
 
-    public Texture2D[] Textures => mTextures; 
+    /// <summary>
+    /// All texture pages for this font. Multi-page fonts use separate textures for different glyph ranges.
+    /// </summary>
+    public Texture2D[] Textures => mTextures;
 
-    public string FontFile => mFontFile; 
+    /// <summary>
+    /// The standardized path to the .fnt file that defines this font.
+    /// </summary>
+    public string FontFile => mFontFile;
 
+    /// <summary>
+    /// The name or path of the first texture page.
+    /// </summary>
     public string TextureName => mTextureNames[0]; 
 
     /// <summary>
@@ -106,11 +133,16 @@ public class BitmapFont : IDisposable
 
     #region Methods
 
+    /// <inheritdoc cref="BitmapFont(string)"/>
     [Obsolete("Use the version that does not take SystemManagers")]
     public BitmapFont(string fontFile, SystemManagers managers) : this(fontFile)
     {
     }
 
+    /// <summary>
+    /// Loads a bitmap font from a .fnt file on disk, loading the referenced texture pages.
+    /// </summary>
+    /// <param name="fontFile">Path to the .fnt file.</param>
     public BitmapFont(string fontFile)
     {
         Encoding encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
@@ -192,6 +224,12 @@ public class BitmapFont : IDisposable
         }
     }
 
+    /// <summary>
+    /// Loads a bitmap font from a .fnt file, using an explicitly specified texture file for the first page.
+    /// </summary>
+    /// <param name="textureFile">Path to the texture file for the first page.</param>
+    /// <param name="fontFile">Path to the .fnt file.</param>
+    /// <param name="managers">The system managers used for content loading.</param>
     public BitmapFont(string textureFile, string fontFile, SystemManagers managers)
     {
         mTextures = new Texture2D[1];
@@ -219,6 +257,11 @@ public class BitmapFont : IDisposable
         SetFontPatternFromFile(fontFile);
     }
 
+    /// <summary>
+    /// Creates a bitmap font from a pre-loaded texture and raw .fnt file content. No disk I/O is performed.
+    /// </summary>
+    /// <param name="fontTextureGraphic">The pre-loaded texture containing the glyph atlas.</param>
+    /// <param name="fontPattern">The raw text content of the .fnt file.</param>
     public BitmapFont(Texture2D fontTextureGraphic, string fontPattern)
     {
         // the font could be an extended character set - let's say for Chinese
@@ -257,6 +300,10 @@ public class BitmapFont : IDisposable
 
 
 
+    /// <summary>
+    /// Gets the UV texture coordinates for a character's glyph. Falls back to the space character
+    /// if the requested character is outside the font's character range.
+    /// </summary>
     public void AssignCharacterTextureCoordinates(int asciiNumber, out float tVTop, out float tVBottom,
         out float tULeft, out float tURight)
     {
@@ -281,7 +328,7 @@ public class BitmapFont : IDisposable
 
     public float DistanceFromTopOfLine(int asciiNumber)
     {
-        BitmapCharacterInfo characterInfo = null;
+        BitmapCharacterInfo characterInfo;
 
         if (asciiNumber < mCharacterInfo.Length)
         {
@@ -295,6 +342,11 @@ public class BitmapFont : IDisposable
         return characterInfo.DistanceFromTopOfLine;
     }
 
+    /// <summary>
+    /// Returns the <see cref="BitmapCharacterInfo"/> for the given character code.
+    /// Falls back to the space character if the code is outside the font's range,
+    /// or returns null if the font has no characters at all.
+    /// </summary>
     public BitmapCharacterInfo GetCharacterInfo(int asciiNumber)
     {
         if(mCharacterInfo.Length == 0)
@@ -311,6 +363,7 @@ public class BitmapFont : IDisposable
         }
     }
 
+    /// <inheritdoc cref="GetCharacterInfo(int)"/>
     public BitmapCharacterInfo GetCharacterInfo(char character)
     {
         int asciiNumber = (int)character;
@@ -364,6 +417,11 @@ public class BitmapFont : IDisposable
         return GetCharacterScaleX(asciiNumber) * 2;
     }
 
+    /// <summary>
+    /// Parses the loaded .fnt data and populates the character info array, line height, baseline,
+    /// and kerning pairs. Normally reads texture dimensions from the loaded textures; the forced
+    /// parameters allow overriding this when textures are not yet loaded.
+    /// </summary>
     public void SetFontPattern(int? forcedTextureWidth = null, int? forcedTextureHeight = null)
     {
 
@@ -489,6 +547,10 @@ public class BitmapFont : IDisposable
         }
     }
 
+    /// <summary>
+    /// Loads a .fnt file from disk and re-parses the font data, replacing the current character layout.
+    /// Does not reload textures.
+    /// </summary>
     public void SetFontPatternFromFile(string fntFileName)
     {
         // standardize before doing anything else
@@ -505,6 +567,9 @@ public class BitmapFont : IDisposable
     }
 
 
+    /// <summary>
+    /// Renders the given text string to a <see cref="RenderTarget2D"/> using left alignment.
+    /// </summary>
     public Texture2D RenderToTexture2D(string whatToRender, SystemManagers managers, object objectRequestingRender)
     {
         var lines = whatToRender.Split('\n').ToList();
@@ -512,6 +577,9 @@ public class BitmapFont : IDisposable
         return RenderToTexture2D(lines, HorizontalAlignment.Left, managers, null, objectRequestingRender, null);
     }
 
+    /// <summary>
+    /// Renders the given text string to a <see cref="RenderTarget2D"/> using the specified alignment.
+    /// </summary>
     public Texture2D RenderToTexture2D(string whatToRender, HorizontalAlignment horizontalAlignment, SystemManagers managers, object objectRequestingRender)
     {
         var lines = whatToRender.Split('\n').ToList();
@@ -523,16 +591,17 @@ public class BitmapFont : IDisposable
     static Microsoft.Xna.Framework.Color[] mColorBuffer = new Microsoft.Xna.Framework.Color[2048 * 2048];
 
     /// <summary>
-    /// 
+    /// Renders pre-split lines of text to a <see cref="RenderTarget2D"/>. If <paramref name="toReplace"/>
+    /// is provided and has matching dimensions, it is reused to avoid allocating a new render target.
     /// </summary>
-    /// <param name="lines"></param>
-    /// <param name="horizontalAlignment"></param>
-    /// <param name="managers"></param>
-    /// <param name="toReplace"></param>
-    /// <param name="objectRequestingRender"></param>
-    /// <param name="numberOfLettersToRender">The maximum number of characters to render.</param>
-    /// <param name="lineHeightMultiplier"></param>
-    /// <returns></returns>
+    /// <param name="lines">The lines of text, where each entry is one line.</param>
+    /// <param name="horizontalAlignment">How to align each line within the render target.</param>
+    /// <param name="managers">The system managers used for rendering.</param>
+    /// <param name="toReplace">An existing texture to reuse if its dimensions match. Can be null.</param>
+    /// <param name="objectRequestingRender">The object requesting the render, used for diagnostics.</param>
+    /// <param name="numberOfLettersToRender">The maximum number of characters to render, or null for all.</param>
+    /// <param name="lineHeightMultiplier">Multiplier applied to line height for spacing between lines.</param>
+    /// <returns>A render target containing the rendered text, or null if there is nothing to render.</returns>
     public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment,
         SystemManagers managers, Texture2D toReplace, object objectRequestingRender,
         int? numberOfLettersToRender = null, float lineHeightMultiplier = 1)
@@ -617,27 +686,29 @@ public class BitmapFont : IDisposable
     static List<LetterRenderInfo> letterInfos = new List<LetterRenderInfo>();
 
     /// <summary>
-    /// 
+    /// Draws pre-split lines of text directly to the screen via the <paramref name="spriteRenderer"/>,
+    /// character by character. The caller must provide pre-computed <paramref name="widths"/> (one per line)
+    /// that match the <paramref name="lines"/> list; a mismatch will cause an index-out-of-range error
+    /// (or a detailed exception under FULL_DIAGNOSTICS).
     /// </summary>
-    /// <param name="lines">The lines of text to draw</param>
-    /// <param name="horizontalAlignment"></param>
-    /// <param name="objectRequestingChange"></param>
-    /// <param name="requiredWidth"></param>
-    /// <param name="widths"></param>
-    /// <param name="spriteRenderer"></param>
-    /// <param name="color"></param>
-    /// <param name="xOffset"></param>
-    /// <param name="yOffset"></param>
-    /// <param name="rotationDegrees"></param>
-    /// <param name="scaleX"></param>
-    /// <param name="scaleY"></param>
-    /// <param name="numberOfLettersToRender"></param>
-    /// <param name="overrideTextRenderingPositionMode"></param>
-    /// <param name="lineHeightMultiplier"></param>
-    /// <param name="shiftForOutline"></param>
-    /// <param name="overlapDirection">Controls which direction is letters are drawn, so that they can overlap 
-    /// with the letters to the right on top or the left on top.</param>
-    /// <returns>The rectangle of the drawn text. This will return the same value regardless of alignment.</returns>
+    /// <param name="lines">The lines of text to draw, where each entry is one line.</param>
+    /// <param name="horizontalAlignment">How to align each line within <paramref name="requiredWidth"/>.</param>
+    /// <param name="objectRequestingChange">The object requesting the draw, used for diagnostics.</param>
+    /// <param name="requiredWidth">The total width available for alignment calculations.</param>
+    /// <param name="widths">Pre-computed pixel widths for each line. Must have the same count as <paramref name="lines"/>.</param>
+    /// <param name="spriteRenderer">The sprite renderer to draw with.</param>
+    /// <param name="color">The color to tint the rendered text.</param>
+    /// <param name="xOffset">Horizontal pixel offset for the draw position.</param>
+    /// <param name="yOffset">Vertical pixel offset for the draw position.</param>
+    /// <param name="rotationDegrees">Rotation in degrees applied to the rendered text.</param>
+    /// <param name="scaleX">Horizontal scale factor.</param>
+    /// <param name="scaleY">Vertical scale factor.</param>
+    /// <param name="numberOfLettersToRender">Maximum number of characters to render, or null for all.</param>
+    /// <param name="overrideTextRenderingPositionMode">Overrides the global <see cref="Text.TextRenderingPositionMode"/> if set.</param>
+    /// <param name="lineHeightMultiplier">Multiplier applied to line height for spacing between lines.</param>
+    /// <param name="shiftForOutline">Whether to shift characters to leave room for font outline thickness.</param>
+    /// <param name="overlapDirection">Controls draw order of characters within a line, determining which side overlaps on top.</param>
+    /// <returns>The bounding rectangle of the drawn text, ignoring alignment offset.</returns>
     public FloatRectangle DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment,
         object objectRequestingChange, int requiredWidth, List<int> widths,
         SpriteRenderer spriteRenderer,
@@ -738,13 +809,14 @@ public class BitmapFont : IDisposable
 #if FULL_DIAGNOSTICS
             if (lineNumber >= widths.Count)
             {
-                var message = $"Error trying to draw text with {lines.Count} lines, but only {widths.Count} widths. Lines:\n{GetCombinedLines()}";
-                throw new Exception(message);
-            }
+                string objectName = (objectRequestingChange as IPositionedSizedObject)?.Name ?? "<unknown>";
+                string parentName = (objectRequestingChange as IRenderableIpso)?.Parent?.Name ?? "<no parent>";
 
-            string GetCombinedLines()
-            {
-                return string.Join("\n", lines);
+                var message = $"Error trying to draw text with {lines.Count} lines, but only {widths.Count} widths.\n" +
+                    $"Object: {objectName}, Parent: {parentName}\n" +
+                    $"Font: {TextureName}\n" +
+                    $"Lines:\n{string.Join("\n", lines)}";
+                throw new Exception(message);
             }
 #endif
 
@@ -976,6 +1048,9 @@ public class BitmapFont : IDisposable
         }
     }
 
+    /// <summary>
+    /// Returns the effective line height in pixels, accounting for font scale and line height multiplier.
+    /// </summary>
     public float EffectiveLineHeight(float fontScale = 1, float lineHeightMultiplier = 1) => mLineHeightInPixels * lineHeightMultiplier * fontScale;
 
     /// <summary>
@@ -1052,6 +1127,7 @@ public class BitmapFont : IDisposable
         return lineNumber * EffectiveLineHeight(fontScale, lineHeightMultiplier) + distanceFromTop * fontScale;
     }
 
+    /// <inheritdoc cref="GetRequiredWidthAndHeight(List{string}, out int, out int, List{int}?)"/>
     public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight)
     {
         GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, null);
@@ -1095,6 +1171,7 @@ public class BitmapFont : IDisposable
         }
     }
 
+    /// <inheritdoc cref="GetRequiredWidthAndHeight(List{string}, out int, out int, List{int}?)"/>
     public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
     {
 
@@ -1309,6 +1386,11 @@ public class BitmapFont : IDisposable
     }
 
 
+    /// <summary>
+    /// Adjusts characters '1' through '9' to have the same XAdvance as '0',
+    /// centering each glyph within the uniform advance width. Useful for
+    /// counters, clocks, and scoreboards where digits should not shift horizontally.
+    /// </summary>
     public void MakeNumbersMonospaced()
     {
         var character0 = GetCharacterInfo('0');
