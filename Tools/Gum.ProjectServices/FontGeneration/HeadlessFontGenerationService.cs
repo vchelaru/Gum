@@ -114,7 +114,6 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         {
             bmfcSave = new BmfcSave();
             bmfcSave.FontSize = fontSize.Value;
-            bmfcSave.FontName = fontValue;
             bmfcSave.OutlineThickness = outlineValue;
             bmfcSave.UseSmoothing = fontSmoothing;
             bmfcSave.IsItalic = isItalic;
@@ -122,6 +121,16 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
             bmfcSave.Ranges = fontRanges;
             bmfcSave.SpacingHorizontal = spacingHorizontal;
             bmfcSave.SpacingVertical = spacingVertical;
+
+            if (BmfcSave.IsFontFilePath(fontValue))
+            {
+                bmfcSave.FontFile = fontValue;
+                bmfcSave.FontName = Path.GetFileNameWithoutExtension(fontValue);
+            }
+            else
+            {
+                bmfcSave.FontName = fontValue;
+            }
         }
 
         return bmfcSave;

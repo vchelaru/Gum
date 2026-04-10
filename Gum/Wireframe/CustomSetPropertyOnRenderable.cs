@@ -1100,13 +1100,24 @@ public class CustomSetPropertyOnRenderable
                 {
                     try
                     {
+                        string? bbFontFile = BmfcSave.IsFontFilePath(fontNameStack.Peek()) ? fontNameStack.Peek() : null;
+
                         BmfcSave bmfcSave = new BmfcSave();
                         bmfcSave.FontSize = fontSizeStack.Peek();
-                        bmfcSave.FontName = fontNameStack.Peek();
                         bmfcSave.OutlineThickness = outlineThicknessStack.Peek();
                         bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
                         bmfcSave.IsItalic = isItalicStack.Peek();
                         bmfcSave.IsBold = isBoldStack.Peek();
+
+                        if (bbFontFile != null)
+                        {
+                            bmfcSave.FontFile = bbFontFile;
+                            bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(bbFontFile);
+                        }
+                        else
+                        {
+                            bmfcSave.FontName = fontNameStack.Peek();
+                        }
 
                         var gumProject = ObjectFinder.Self.GumProjectSave;
                         bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
@@ -1147,13 +1158,24 @@ public class CustomSetPropertyOnRenderable
                         // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
                         try
                         {
+                            string? bbFontFileForDisk = BmfcSave.IsFontFilePath(fontNameStack.Peek()) ? fontNameStack.Peek() : null;
+
                             BmfcSave bmfcSave = new BmfcSave();
                             bmfcSave.FontSize = fontSizeStack.Peek();
-                            bmfcSave.FontName = fontNameStack.Peek();
                             bmfcSave.OutlineThickness = outlineThicknessStack.Peek();
                             bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
                             bmfcSave.IsItalic = isItalicStack.Peek();
                             bmfcSave.IsBold = isBoldStack.Peek();
+
+                            if (bbFontFileForDisk != null)
+                            {
+                                bmfcSave.FontFile = bbFontFileForDisk;
+                                bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(bbFontFileForDisk);
+                            }
+                            else
+                            {
+                                bmfcSave.FontName = fontNameStack.Peek();
+                            }
 #if !FRB
                             // BBCode inline font creation: when BBCode tags like [FontSize=24] reference a font
                             // that doesn't exist, create it on demand. This parallels the font creation in
@@ -1198,13 +1220,16 @@ public class CustomSetPropertyOnRenderable
             }
             else
             {
+                string? bbCodeFontFilePath = BmfcSave.IsFontFilePath(fontNameStack.Peek()) ? fontNameStack.Peek() : null;
+
                 fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
                     fontSizeStack.Peek(),
                     fontNameStack.Peek(),
                     outlineThicknessStack.Peek(),
                     useFontSmoothingStack.Peek(),
                     isItalicStack.Peek(),
-                    isBoldStack.Peek());
+                    isBoldStack.Peek(),
+                    bbCodeFontFilePath);
 
             }
 
@@ -1327,13 +1352,16 @@ public class CustomSetPropertyOnRenderable
             if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(textRuntime.Font))
             {
 
+                string? fontFilePath = BmfcSave.IsFontFilePath(textRuntime.Font) ? textRuntime.Font : null;
+
                 string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
                     textRuntime.FontSize,
                     textRuntime.Font,
                     textRuntime.OutlineThickness,
                     textRuntime.UseFontSmoothing,
                     textRuntime.IsItalic,
-                    textRuntime.IsBold);
+                    textRuntime.IsBold,
+                    fontFilePath);
 
                 string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
 
@@ -1353,11 +1381,20 @@ public class CustomSetPropertyOnRenderable
                     {
                         BmfcSave bmfcSave = new BmfcSave();
                         bmfcSave.FontSize = textRuntime.FontSize;
-                        bmfcSave.FontName = textRuntime.Font;
                         bmfcSave.OutlineThickness = textRuntime.OutlineThickness;
                         bmfcSave.UseSmoothing = textRuntime.UseFontSmoothing;
                         bmfcSave.IsItalic = textRuntime.IsItalic;
                         bmfcSave.IsBold = textRuntime.IsBold;
+
+                        if (fontFilePath != null)
+                        {
+                            bmfcSave.FontFile = fontFilePath;
+                            bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(fontFilePath);
+                        }
+                        else
+                        {
+                            bmfcSave.FontName = textRuntime.Font;
+                        }
 
                         var gumProject = ObjectFinder.Self.GumProjectSave;
                         bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
@@ -1386,11 +1423,20 @@ public class CustomSetPropertyOnRenderable
                     {
                         BmfcSave bmfcSave = new BmfcSave();
                         bmfcSave.FontSize = textRuntime.FontSize;
-                        bmfcSave.FontName = textRuntime.Font;
                         bmfcSave.OutlineThickness = textRuntime.OutlineThickness;
                         bmfcSave.UseSmoothing = textRuntime.UseFontSmoothing;
                         bmfcSave.IsItalic = textRuntime.IsItalic;
                         bmfcSave.IsBold = textRuntime.IsBold;
+
+                        if (fontFilePath != null)
+                        {
+                            bmfcSave.FontFile = fontFilePath;
+                            bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(fontFilePath);
+                        }
+                        else
+                        {
+                            bmfcSave.FontName = textRuntime.Font;
+                        }
 
                         var gumProject = ObjectFinder.Self.GumProjectSave;
                         bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();

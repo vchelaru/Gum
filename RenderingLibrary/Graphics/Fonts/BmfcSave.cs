@@ -47,6 +47,11 @@ public class BmfcSave
     public bool IsBold = false;
 
     /// <summary>
+    /// The .ttf font file path when using a file-based font, or null/empty for system fonts.
+    /// </summary>
+    public string? FontFile = null;
+
+    /// <summary>
     /// Horizontal spacing between characters in pixels.
     /// </summary>
     public int SpacingHorizontal = 1;
@@ -155,6 +160,22 @@ public class BmfcSave
         _additionalRanges.Clear();
     }
 
+    /// <summary>
+    /// Returns whether the given font value represents a .ttf font file path
+    /// rather than a system font family name.
+    /// </summary>
+    /// <param name="fontValue">The font value to check (e.g., "Arial" or "fonts/MyFont.ttf").</param>
+    /// <returns>True if the value ends with ".ttf" (case-insensitive); false if null, empty, or not a .ttf path.</returns>
+    public static bool IsFontFilePath(string? fontValue)
+    {
+        if(string.IsNullOrEmpty(fontValue))
+        {
+            return false;
+        }
+
+        return fontValue.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <inheritdoc/>
     public override string ToString()
     {
@@ -183,6 +204,7 @@ public class BmfcSave
         string template = FileManager.FromFileText(bmfcTemplateFullPath);
 
         template = template.Replace("FontNameVariable", FontName);
+        template = template.Replace("FontFileVariable", FontFile ?? "");
         template = template.Replace("FontSizeVariable", FontSize.ToString());
         template = template.Replace("OutlineThicknessVariable", OutlineThickness.ToString());
         template = template.Replace("{UseSmoothing}", UseSmoothing ? "1" : "0");
@@ -529,7 +551,7 @@ public class BmfcSave
     {
         get
         {
-            return GetFontCacheFileNameFor(FontSize, FontName, OutlineThickness, UseSmoothing, IsItalic, IsBold);
+            return GetFontCacheFileNameFor(FontSize, FontName, OutlineThickness, UseSmoothing, IsItalic, IsBold, FontFile);
         }
 
     }
@@ -545,17 +567,35 @@ public class BmfcSave
     /// <param name="useFontSmoothing">Whether font smoothing is enabled.</param>
     /// <param name="isItalic">Whether the font is italic.</param>
     /// <param name="isBold">Whether the font is bold.</param>
+    /// <param name="fontFilePath">Optional .ttf file path. When set, the file name (without extension) is used
+    /// as the font name and a "_ttf" suffix is appended to prevent collision with same-named system fonts.</param>
     /// <returns>A relative file path under "FontCache/" suitable for caching this font.</returns>
     public static string GetFontCacheFileNameFor(int fontSize, string fontName, int outline, bool useFontSmoothing,
-        bool isItalic = false, bool isBold = false)
+        bool isItalic = false, bool isBold = false, string? fontFilePath = null)
     {
         string fileName = null;
 
+        string effectiveFontName;
+        bool isFromFile = !string.IsNullOrEmpty(fontFilePath);
 
-        // don't allow some charactersin the file name:
-        fontName = fontName.Replace(' ', '_');
+        if(isFromFile)
+        {
+            effectiveFontName = Path.GetFileNameWithoutExtension(fontFilePath);
+        }
+        else
+        {
+            effectiveFontName = fontName;
+        }
 
-        fileName = "Font" + fontSize + fontName;
+        // don't allow some characters in the file name:
+        effectiveFontName = effectiveFontName.Replace(' ', '_');
+
+        fileName = "Font" + fontSize + effectiveFontName;
+
+        if(isFromFile)
+        {
+            fileName += "_ttf";
+        }
         if (outline != 0)
         {
             fileName += "_o" + outline;
