@@ -50,7 +50,9 @@ public class KernSmithFileGenerator : IFontFileGenerator
 
             var stopwatch = Stopwatch.StartNew();
 
-            BmFontResult result = BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+            BmFontResult result = string.IsNullOrEmpty(bmfcSave.FontFile)
+                ? BmFont.GenerateFromSystem(bmfcSave.FontName, options)
+                : BmFont.Generate(bmfcSave.FontFile, options);
 
             // ToFile expects a base path WITHOUT the .fnt extension.
             string basePath = Path.ChangeExtension(outputFntPath, null);
