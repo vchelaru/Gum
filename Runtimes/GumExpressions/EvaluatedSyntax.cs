@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Microsoft.CodeAnalysis;
@@ -7,14 +7,14 @@ using Microsoft.CSharp.RuntimeBinder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.RightsManagement;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Media;
 
-namespace Gum.Plugins.InternalPlugins.VariableGrid;
-internal class EvaluatedSyntax
+namespace Gum.Expressions;
+
+/// <summary>
+/// Roslyn-based expression evaluator for Gum variable references.
+/// Parses and evaluates right-side expressions such as "OtherInstance.Width + 10".
+/// </summary>
+public class EvaluatedSyntax
 {
     #region Fields/Properties
 
@@ -62,7 +62,10 @@ internal class EvaluatedSyntax
         {
             var childNodes = parenthesizedExpressionSyntax.ChildNodes();
 
-            if (childNodes == null || childNodes.Count() == 0) return null;
+            if (childNodes == null || childNodes.Count() == 0)
+            {
+                return null;
+            }
 
             foreach (var item in childNodes)
             {
@@ -143,7 +146,10 @@ internal class EvaluatedSyntax
 
             var childNodes = statement?.ChildNodes();
 
-            if (childNodes == null || childNodes.Count() == 0) return null;
+            if (childNodes == null || childNodes.Count() == 0)
+            {
+                return null;
+            }
 
             foreach (var item in childNodes)
             {
@@ -158,7 +164,10 @@ internal class EvaluatedSyntax
         {
             var childNodes = compilationUnitSyntax.ChildNodes();
 
-            if (childNodes?.Count() > 0 != true) return null;
+            if (childNodes?.Count() > 0 != true)
+            {
+                return null;
+            }
 
             foreach (var item in childNodes)
             {
@@ -174,7 +183,10 @@ internal class EvaluatedSyntax
 
     private static object Combine(EvaluatedSyntax leftEvaluated, EvaluatedSyntax rightEvaluated, SyntaxToken operatorToken)
     {
-        if (leftEvaluated?.Value == null || rightEvaluated?.Value == null) return null;
+        if (leftEvaluated?.Value == null || rightEvaluated?.Value == null)
+        {
+            return null;
+        }
 
         dynamic dynamicValue1, dynamicValue2;
         GetDynamicValues(leftEvaluated.Value, rightEvaluated.Value, out dynamicValue1, out dynamicValue2);
@@ -274,7 +286,9 @@ internal class EvaluatedSyntax
     static bool TryGetNumericType(object obj, out Type type)
     {
         if (obj == null)
+        {
             throw new ArgumentNullException(nameof(obj));
+        }
 
         type = obj.GetType();
 

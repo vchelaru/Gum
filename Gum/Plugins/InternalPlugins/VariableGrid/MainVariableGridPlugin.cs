@@ -1,4 +1,5 @@
 ﻿using Gum.Commands;
+using Gum.Expressions;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -13,7 +14,6 @@ using HarfBuzzSharp;
 using System;
 using System.ComponentModel.Composition;
 using System.Windows.Forms;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -35,7 +35,7 @@ public class MainVariableGridPlugin : InternalPlugin
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _propertyGridManager = PropertyGridManager.Self;
         _variableReferenceLogic = Locator.GetRequiredService<IVariableReferenceLogic>();
-        ElementSaveExtensions.CustomEvaluateExpression = EvaluateExpression;
+        GumExpressionService.Initialize();
     }
 
     public override void StartUp()
@@ -61,26 +61,6 @@ public class MainVariableGridPlugin : InternalPlugin
         this.VariableSet += HandleVariableSet;
     }
 
-
-    private object EvaluateExpression(StateSave stateSave, string expression, string desiredType)
-    {
-        //    var syntax =_variableReferenceLogic.GetAssignmentSyntax(expression);
-
-        expression = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
-
-        var syntax = CSharpSyntaxTree.ParseText(expression).GetCompilationUnitRoot();
-
-        if(syntax != null)
-        {
-            var evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(syntax, stateSave);
-
-            if(evaluatedSyntax?.CastTo(desiredType) == true)
-            {
-                return evaluatedSyntax?.Value;
-            }
-        }
-        return null;
-    }
     private void HandleElementRenamed(ElementSave save, string arg2)
     {
         _propertyGridManager.RefreshVariablesDataGridValues();

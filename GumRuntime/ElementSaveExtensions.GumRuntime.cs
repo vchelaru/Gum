@@ -331,6 +331,201 @@ namespace GumRuntime
         // void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         public static Action<ElementSave, InstanceSave, string, object> VariableChangedThroughReference;
 
+        /// <summary>
+        /// Applies variable references on all elements in the project in dependency order.
+        /// Elements that are referenced by others are applied first, so that downstream
+        /// references pick up the latest values. Call this after modifying style variables
+        /// to propagate changes across the entire project.
+        /// </summary>
+        public static void ApplyAllVariableReferences(this GumProjectSave project)
+        {
+            List<ElementSave> allElements = new List<ElementSave>();
+            allElements.AddRange(project.StandardElements);
+            allElements.AddRange(project.Components);
+            allElements.AddRange(project.Screens);
+
+            // Build a dependency graph: if element A references element B,
+            // then B must be applied before A.
+            Dictionary<ElementSave, List<ElementSave>> dependsOn = new Dictionary<ElementSave, List<ElementSave>>();
+            Dictionary<string, ElementSave> elementsByQualifiedName = new Dictionary<string, ElementSave>();
+
+            foreach (var element in allElements)
+            {
+                dependsOn[element] = new List<ElementSave>();
+                string qualifiedName = GetQualifiedName(element);
+                if (qualifiedName != null)
+                {
+                    elementsByQualifiedName[qualifiedName] = element;
+                }
+            }
+
+            // Scan variable references to find cross-element dependencies
+            foreach (var element in allElements)
+            {
+                foreach (var state in element.AllStates)
+                {
+                    foreach (var variableList in state.VariableLists)
+                    {
+                        if (variableList.GetRootName() != "VariableReferences")
+                        {
+                            continue;
+                        }
+
+                        foreach (string referenceString in variableList.ValueAsIList)
+                        {
+                            if (referenceString == null || referenceString.StartsWith("//"))
+                            {
+                                continue;
+                            }
+
+                            string referencedElementName = GetReferencedElementName(referenceString);
+                            if (referencedElementName != null && elementsByQualifiedName.TryGetValue(referencedElementName, out var referencedElement))
+                            {
+                                if (referencedElement != element && !dependsOn[element].Contains(referencedElement))
+                                {
+                                    dependsOn[element].Add(referencedElement);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Topological sort (Kahn's algorithm)
+            List<ElementSave> sorted = new List<ElementSave>();
+            Dictionary<ElementSave, int> inDegree = new Dictionary<ElementSave, int>();
+
+            foreach (var element in allElements)
+            {
+                inDegree[element] = 0;
+            }
+
+            foreach (var kvp in dependsOn)
+            {
+                foreach (var dep in kvp.Value)
+                {
+                    if (inDegree.ContainsKey(dep))
+                    {
+                        // kvp.Key depends on dep, so dep has an outgoing edge to kvp.Key
+                        // We track in-degree of kvp.Key
+                    }
+                }
+            }
+
+            // in-degree = number of dependencies an element has
+            foreach (var element in allElements)
+            {
+                inDegree[element] = dependsOn[element].Count;
+            }
+
+            Queue<ElementSave> queue = new Queue<ElementSave>();
+            foreach (var element in allElements)
+            {
+                if (inDegree[element] == 0)
+                {
+                    queue.Enqueue(element);
+                }
+            }
+
+            while (queue.Count > 0)
+            {
+                var element = queue.Dequeue();
+                sorted.Add(element);
+
+                // Find all elements that depend on this one and reduce their in-degree
+                foreach (var other in allElements)
+                {
+                    if (dependsOn[other].Contains(element))
+                    {
+                        inDegree[other]--;
+                        if (inDegree[other] == 0)
+                        {
+                            queue.Enqueue(other);
+                        }
+                    }
+                }
+            }
+
+            // Any elements not in sorted have circular dependencies — add them at the end
+            foreach (var element in allElements)
+            {
+                if (!sorted.Contains(element))
+                {
+                    sorted.Add(element);
+                }
+            }
+
+            // Apply in sorted order
+            foreach (var element in sorted)
+            {
+                foreach (var state in element.AllStates)
+                {
+                    bool hasVariableReferences = false;
+                    foreach (var variableList in state.VariableLists)
+                    {
+                        if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
+                        {
+                            hasVariableReferences = true;
+                            break;
+                        }
+                    }
+
+                    if (hasVariableReferences)
+                    {
+                        element.ApplyVariableReferences(state);
+                    }
+                }
+            }
+        }
+
+
+        private static string GetQualifiedName(ElementSave element)
+        {
+            if (element is ScreenSave)
+            {
+                return "Screens/" + element.Name;
+            }
+            else if (element is ComponentSave)
+            {
+                return "Components/" + element.Name;
+            }
+            else if (element is StandardElementSave)
+            {
+                return "Standards/" + element.Name;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Extracts the referenced element name from a variable reference string.
+        /// Returns null if the reference is local (no cross-element dependency).
+        /// </summary>
+        private static string GetReferencedElementName(string referenceString)
+        {
+            // Split on '=' to get the right side
+            var equalsIndex = referenceString.IndexOf('=');
+            if (equalsIndex < 0)
+            {
+                return null;
+            }
+
+            var rightSide = referenceString.Substring(equalsIndex + 1).Trim();
+
+            if (!rightSide.Contains("/"))
+            {
+                return null;
+            }
+
+            // Extract the element path (everything before the first dot)
+            var firstDot = rightSide.IndexOf('.');
+            if (firstDot < 0)
+            {
+                return null;
+            }
+
+            return rightSide.Substring(0, firstDot);
+        }
+
         public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave)
         {
             foreach (var variableList in stateSave.VariableLists)
