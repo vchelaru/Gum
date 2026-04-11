@@ -435,6 +435,17 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     {
         Dictionary<string, BmfcSave> bitmapFonts = CollectRequiredFonts(project, elements);
 
+        // Resolve relative FontFile paths to absolute so font generators can find them.
+        // FontFile is stored relative to the project directory, but generators resolve
+        // paths relative to their own working directory or the .bmfc file location.
+        foreach (BmfcSave bmfc in bitmapFonts.Values)
+        {
+            if (!string.IsNullOrEmpty(bmfc.FontFile) && !Path.IsPathRooted(bmfc.FontFile))
+            {
+                bmfc.FontFile = Path.GetFullPath(Path.Combine(projectDirectory, bmfc.FontFile));
+            }
+        }
+
         if (bitmapFonts.Count == 0)
         {
             _callbacks.OnOutput("No fonts to create");

@@ -13,6 +13,7 @@ using Gum.Controls;
 using System.Windows.Media;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using Gum.Logic;
 using Gum.Services;
 using Gum.Undo;
@@ -142,13 +143,25 @@ public partial class PropertyGridManager
             _guiCommands,
             _objectFinder,
             _setVariableLogic);
+        var deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
+        var editVariableService = Locator.GetRequiredService<IEditVariableService>();
+        var hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
+
         mPropertyGridDisplayer = new ElementSaveDisplayer(
             new SubtextLogic(),
             _typeManager,
             _selectedState,
             _undoManager,
             _pluginManager,
-            Locator.GetRequiredService<IVariableSaveLogic>());
+            Locator.GetRequiredService<IVariableSaveLogic>(),
+            editVariableService,
+            _exposeVariableService,
+            hotkeyManager,
+            deleteVariableService,
+            _guiCommands,
+            _fileCommands,
+            _setVariableLogic,
+            _wireframeObjectManager);
 
         mainControl = new Gum.MainPropertyGrid();
 
@@ -156,10 +169,7 @@ public partial class PropertyGridManager
 
         mVariablesDataGrid = mainControl.DataGrid;
 
-        var deleteVariableLogic = Locator.GetRequiredService<IDeleteVariableService>();
-        var editVariableService = Locator.GetRequiredService<IEditVariableService>();
-
-        VariableViewModel = new Plugins.VariableGrid.MainControlViewModel(deleteVariableLogic, editVariableService);
+        VariableViewModel = new Plugins.VariableGrid.MainControlViewModel(deleteVariableService, editVariableService);
         VariableViewModel.AddVariableButtonVisibility = System.Windows.Visibility.Collapsed;
         mainControl.DataContext = VariableViewModel;
         mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
@@ -757,6 +767,8 @@ public partial class PropertyGridManager
         _colorPickerLogic.UpdateColorCategory(categories, element, instance);
 
         UpdateFileFilters(categories);
+
+        AdjustFontSourceToggle(categories, stateSave, instance);
     }
 
     private void UpdateFileFilters(List<MemberCategory> categories)
@@ -771,6 +783,97 @@ public partial class PropertyGridManager
                 }
             }
         }
+    }
+
+    private void AdjustFontSourceToggle(List<MemberCategory> categories, StateSave stateSave, InstanceSave? instance)
+    {
+        var fontCategory = categories.FirstOrDefault(c => c.Name == "Font");
+        if (fontCategory == null)
+        {
+            return;
+        }
+
+        var fontMember = fontCategory.Members
+            .OfType<StateReferencingInstanceMember>()
+            .FirstOrDefault(m => m.RootVariableName == "Font");
+        if (fontMember == null)
+        {
+            return;
+        }
+
+        // Determine current mode from the Font value
+        string prefix = instance != null ? instance.Name + "." : "";
+        string currentFontValue = stateSave.GetValueRecursive(prefix + "Font") as string ?? "Arial";
+        bool isTtfMode = BmfcSave.IsFontFilePath(currentFontValue);
+
+        // If currently in TTF mode, swap the Font row to FileSelectionDisplay
+        if (isTtfMode)
+        {
+            fontMember.PreferredDisplayer = typeof(WpfDataUi.Controls.FileSelectionDisplay);
+            fontMember.PropertiesToSetOnDisplayer["Filter"] = "TrueType Font|*.ttf";
+
+            // Warn if project uses bmfont.exe, which can't handle .ttf file fonts
+            var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
+            if (fontGenerator == DataTypes.FontGeneratorType.BmFont)
+            {
+                fontMember.DetailText = "bmfont cannot generate from .ttf files. Switch to KernSmith in Project Properties.";
+            }
+        }
+
+        // Create the toggle member
+        var toggleMember = new InstanceMember("Font Source", stateSave);
+        toggleMember.PreferredDisplayer = typeof(WpfDataUi.Controls.ComboBoxDisplay);
+        toggleMember.CustomOptions = new List<object> { "System Font", "From File" };
+        toggleMember.CustomGetTypeEvent += (_) => typeof(string);
+        toggleMember.CustomGetEvent += (_) => isTtfMode ? "From File" : "System Font";
+        toggleMember.CustomSetPropertyEvent += (_, args) =>
+        {
+            string? newValue = args.Value as string;
+            if (newValue == "From File" && !isTtfMode)
+            {
+                isTtfMode = true;
+                // Swap Font row to FileSelectionDisplay
+                fontMember.PreferredDisplayer = typeof(WpfDataUi.Controls.FileSelectionDisplay);
+                fontMember.PropertiesToSetOnDisplayer["Filter"] = "TrueType Font|*.ttf";
+
+                // Warn if project uses bmfont.exe
+                var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
+                if (fontGenerator == DataTypes.FontGeneratorType.BmFont)
+                {
+                    fontMember.DetailText = "bmfont cannot generate from .ttf files. Switch to KernSmith in Project Properties.";
+                }
+
+                // Force container recreation by remove + reinsert
+                int idx = fontCategory.Members.IndexOf(fontMember);
+                if (idx >= 0)
+                {
+                    fontCategory.Members.RemoveAt(idx);
+                    fontCategory.Members.Insert(idx, fontMember);
+                }
+            }
+            else if (newValue == "System Font" && isTtfMode)
+            {
+                isTtfMode = false;
+                // Reset Font value to a system font default
+                fontMember.Value = "Arial";
+                // Swap Font row back to ComboBox
+                fontMember.PreferredDisplayer = null;
+                fontMember.PropertiesToSetOnDisplayer.Remove("Filter");
+                fontMember.DetailText = null;
+
+                // Force container recreation
+                int idx = fontCategory.Members.IndexOf(fontMember);
+                if (idx >= 0)
+                {
+                    fontCategory.Members.RemoveAt(idx);
+                    fontCategory.Members.Insert(idx, fontMember);
+                }
+            }
+        };
+
+        // Insert toggle before Font member
+        int fontIndex = fontCategory.Members.IndexOf(fontMember);
+        fontCategory.Members.Insert(fontIndex, toggleMember);
     }
 
     private void AdjustTextPreferredDisplayer(List<MemberCategory> categories, StateSave stateSave, InstanceSave instanceSave)

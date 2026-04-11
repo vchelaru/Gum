@@ -5,6 +5,8 @@ using System.IO;
 using System.Threading.Tasks;
 using KernSmith;
 using KernSmith.Output;
+using KernSmith.Rasterizer;
+using KernSmith.Rasterizers.FreeType;
 using RenderingLibrary.Graphics.Fonts;
 using ToolsUtilities;
 
@@ -16,6 +18,7 @@ namespace Gum.ProjectServices.FontGeneration;
 /// </summary>
 public class KernSmithFileGenerator : IFontFileGenerator
 {
+    private static bool _rasterizerRegistered;
     private readonly IFontGenerationCallbacks _callbacks;
 
     /// <summary>
@@ -27,6 +30,20 @@ public class KernSmithFileGenerator : IFontFileGenerator
     public KernSmithFileGenerator(IFontGenerationCallbacks? callbacks = null)
     {
         _callbacks = callbacks ?? new NoOpFontGenerationCallbacks();
+        EnsureRasterizerRegistered();
+    }
+
+    private static void EnsureRasterizerRegistered()
+    {
+        if (_rasterizerRegistered)
+        {
+            return;
+        }
+        if (!RasterizerFactory.IsRegistered(RasterizerBackend.FreeType))
+        {
+            RasterizerFactory.Register(RasterizerBackend.FreeType, () => new FreeTypeRasterizer());
+        }
+        _rasterizerRegistered = true;
     }
 
     /// <inheritdoc/>

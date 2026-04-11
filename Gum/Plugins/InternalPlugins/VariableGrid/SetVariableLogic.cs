@@ -14,6 +14,7 @@ using Gum.Converters;
 using RenderingLibrary.Content;
 using ToolsUtilities;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using Gum.Logic;
 using GumRuntime;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -46,6 +47,7 @@ public class SetVariableLogic : ISetVariableLogic
         {"Parent",                                                 VariableRefreshType.FullGridRefresh   },
         {"Name",                                                   VariableRefreshType.FullGridRefresh   },
         {"UseCustomFont",                                          VariableRefreshType.FullGridRefresh   },
+        {"Font",                                                   VariableRefreshType.FullGridRefresh   },
         {"TextureAddress",                                         VariableRefreshType.FullGridRefresh   },
         {"BaseType",                                               VariableRefreshType.FullGridRefresh   },
         {"IsRenderTarget",                                         VariableRefreshType.FullGridRefresh   },
@@ -293,6 +295,13 @@ public class SetVariableLogic : ISetVariableLogic
         var parentElement = instanceContainer as ElementSave;
         if (parentElement != null)
         {
+            var fontFileResponse = ReactIfChangedMemberIsFontFile(parentElement, instance, rootVariableName, oldValue);
+            if (!fontFileResponse.Succeeded)
+            {
+                response = fontFileResponse;
+                return response;
+            }
+
             ReactIfChangedMemberIsFont(instance, rootVariableName);
 
             ReactIfChangedMemberIsCustomFont(parentElement, rootVariableName, oldValue);
@@ -417,6 +426,76 @@ public class SetVariableLogic : ISetVariableLogic
                     _projectState.GumProjectSave, stateSave);
             }
         }
+    }
+
+    private GeneralResponse ReactIfChangedMemberIsFontFile(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue)
+    {
+        ////////////Early Out /////////////////////////////
+        if (changedMember != "Font")
+        {
+            return GeneralResponse.SuccessfulResponse;
+        }
+
+        var instancePrefix = instance != null ? $"{instance.Name}." : "";
+        var variableFullName = $"{instancePrefix}{changedMember}";
+        VariableSave variable = _selectedState.SelectedStateSave?.GetVariableSave(variableFullName);
+
+        if (variable == null || string.IsNullOrWhiteSpace(variable.Value as string))
+        {
+            return GeneralResponse.SuccessfulResponse;
+        }
+
+        string value = variable.Value as string;
+
+        // Only handle .ttf file paths, not system font names like "Arial"
+        if (!BmfcSave.IsFontFilePath(value))
+        {
+            return GeneralResponse.SuccessfulResponse;
+        }
+        ////////////End Early Out/////////////////////////
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            var filePath = FileManager.IsRelative(value)
+                ? new FilePath(_projectState.ProjectDirectory + value)
+                : new FilePath(value);
+
+            // See if this is relative to the project
+            var shouldAskToCopy = !FileManager.IsRelativeTo(
+                filePath.FullPath,
+                _projectState.ProjectDirectory);
+
+            if (shouldAskToCopy &&
+                !string.IsNullOrEmpty(_projectState.GumProjectSave?.ParentProjectRoot) &&
+                 FileManager.IsRelativeTo(filePath.FullPath, _projectState.ProjectDirectory + _projectState.GumProjectSave.ParentProjectRoot))
+            {
+                shouldAskToCopy = false;
+            }
+
+            var cancel = false;
+
+            if (shouldAskToCopy)
+            {
+                var shouldCopy = AskIfShouldCopy(variable, value);
+                if (shouldCopy == true)
+                {
+                    PerformCopy(variable, value);
+                }
+                else if (shouldCopy == null)
+                {
+                    cancel = true;
+                }
+            }
+
+            if (cancel)
+            {
+                variable.Value = oldValue;
+                _guiCommands.RefreshVariableValues();
+                return GeneralResponse.UnsuccessfulWith("File copy was cancelled");
+            }
+        }
+
+        return GeneralResponse.SuccessfulResponse;
     }
 
     private void ReactIfChangedMemberIsCustomFont(ElementSave parentElement, string changedMember, object oldValue)

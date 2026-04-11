@@ -30,45 +30,57 @@ Users can write `textRuntime.Font = "Content/fonts/Bungee-Regular.ttf"` in game 
 - `FlatRedBall.GumCommon` 2026.4.10.1
 - `KernSmith.GumCommon` / `KernSmith.MonoGameGum` / `KernSmith.KniGum` 0.12.4
 
+## What's Done (continued)
+
+### Phase B: Gum Tool UI — COMPLETE
+
+**Variable grid toggle (B1):**
+
+- **`PropertyGridManager.cs`** — Added `AdjustFontSourceToggle` method in `CustomizeVariables`. Inserts a synthetic "Font Source" row (ComboBox: "System Font" / "From File") before the Font row. When "From File" is selected, the Font row swaps from the system font dropdown to a `FileSelectionDisplay` with `.ttf` filter. Swapping is done via remove+reinsert on the `ObservableCollection` to force container recreation without a full grid rebuild.
+- When the current `Font` value is a `.ttf` path and the project uses bmfont.exe, the Font row shows detail text: "bmfont cannot generate from .ttf files. Switch to KernSmith in Project Properties."
+
+**SetVariableLogic (B3):**
+
+- Added `"Font"` to `VariablesRequiringRefresh` with `FullGridRefresh` so changing Font triggers grid rebuild (needed because the displayer type changes between ComboBox and FileSelectionDisplay).
+- Added `ReactIfChangedMemberIsFontFile` — when Font is set to a `.ttf` path, handles the copy/reference dialog (same UX as SourceFile for textures) and makes the path relative.
+
+**FontTypeConverter (B2):** No changes needed — only used in system font mode, as designed.
+
+### TTF Drag-Drop — COMPLETE
+
+- **`DragDropManager.cs`** / **`IDragDropManager.cs`** — Added `ValidFontExtensions` property (yields `"ttf"`), updated `IsValidExtensionForFileDrop` to accept both texture and font extensions.
+- **`MainEditorTabPlugin.cs`** — `GetBaseTypeForExtension` returns `"Text"` for `.ttf`. `AddNewInstanceForDrop` sets `Font` instead of `SourceFile` for Text instances. `TryHandleFileDropOnInstance` and `TryHandleFileDropOnComponent` detect font files and show "Set font on [name]" / "Add new Text" dialogs. Added `FindInstanceWithFontProperty` to find Text instances under the cursor.
+
+### Font File Path Resolution — COMPLETE
+
+- **`CustomSetPropertyOnRenderable.cs`** — Added `ResolveFontFilePath` helper. All 4 occurrences of `bmfcSave.FontFile = ...` now resolve relative paths to absolute using the project directory, so both KernSmith and bmfont.exe can find the `.ttf` file.
+- **`HeadlessFontGenerationService.cs`** — In `GenerateMissingFontsFor`, resolves relative `FontFile` paths to absolute after `CollectRequiredFonts`.
+- **`SetVariableLogic.cs`** — `ReactIfChangedMemberIsFontFile` handles absolute paths correctly (checks `FileManager.IsRelative` before prepending project directory).
+
+### KernSmith Rasterizer Registration — COMPLETE
+
+- **`Gum.ProjectServices.csproj`** — Added `KernSmith.Rasterizers.FreeType` NuGet package reference.
+- **`KernSmithFileGenerator.cs`** — Explicitly registers the FreeType rasterizer via `RasterizerFactory.Register` on construction (auto-discovery was not working).
+
+### Code Cleanup — COMPLETE
+
+- **`ElementSaveDisplayer.cs`** — Moved 8 `Locator.GetRequiredService` calls from `CreateSrimFromPropertyData` and the variable list loop into the constructor as `private readonly` fields. Updated call site in `PropertyGridManager.InitializeEarly()`.
+
+### Project Properties Refresh — COMPLETE
+
+- **`MainPropertiesWindowPlugin.cs`** — When `FontGenerator` property changes, refreshes the variable grid so the bmfont warning detail text updates.
+
 ## What's Left
 
 ### Minor Phase A polish (not blocking)
 
-- [ ] **bmfont.exe path verification** — Verify .ttf path resolves correctly for bmfont.exe (absolute vs relative to .bmfc location)
 - [ ] **File existence validation** — In `TryGetBmfcSaveFor()`, validate the .ttf file exists before returning the `BmfcSave`; log via callbacks if missing
 - [ ] **Path canonicalization** — In `CollectRequiredFonts`, canonicalize .ttf paths before deduplication to avoid `fonts/Foo.ttf` vs `./fonts/Foo.ttf` duplicates
 - [ ] **Error messages** — Update `GetMissingWidthMessage` in `CustomSetPropertyOnRenderable.cs` for .ttf paths (cosmetic)
 
-### Phase B: Gum Tool UI — NOT STARTED
+### Known Limitations
 
-Goal: the Gum tool's variable grid provides a clean UI for selecting .ttf files.
-
-**Design:**
-
-The Font property editor displays one of two controls based on the current `Font` value:
-- **No extension** (e.g. `"Arial"`): system font dropdown (existing behavior)
-- **Has `.ttf` extension** (e.g. `"fonts/MyFont.ttf"`): file picker control
-
-A toggle (radio button or similar) above the control lets the user switch modes:
-- **System → File**: clears the value, opens a file dialog filtered to `.ttf`
-- **File → System**: reverts to `"Arial"`, shows the dropdown
-
-The toggle is **not persisted** — it is derived from the current `Font` value. Similar to how texture coordinate values show/hide based on texture address mode.
-
-**Steps:**
-
-- [ ] **B1 — Variable Grid Toggle**: Research and implement conditional UI in `DataUiGrid` / `InstanceMember` to swap between dropdown and file picker based on `Font` value
-- [ ] **B2 — FontTypeConverter**: No change needed — only used in system font mode
-- [ ] **B3 — SetVariableLogic**: Handle mode toggle interaction — intercept toggle, clear/set `Font` value, refresh variable grid
-
-**Key files for Phase B:**
-
-| File | Role |
-|------|------|
-| `Gum/PropertyGridHelpers/Converters/FontTypeConverter.cs` | System font dropdown |
-| `Gum/Plugins/InternalPlugins/VariableGrid/ExclusionsPlugin.cs` | Variable visibility logic |
-| `Gum/Plugins/InternalPlugins/VariableGrid/SetVariableLogic.cs` | Font property change reactions |
-| `Gum/Managers/StandardElementsManager.cs` | Text standard element variable definitions |
+- **bmfont.exe cannot use `.ttf` files** — bmfont.exe ignores the `fontFile` field in `.bmfc` configs (at least in command-line mode). Users must switch to KernSmith in Project Properties to use `.ttf` file fonts. A detail text warning is shown in the variable grid when this situation is detected.
 
 ## How It Works (Technical)
 
