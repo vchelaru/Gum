@@ -81,6 +81,30 @@ public class EvaluatedSyntaxTests : BaseTestClass
     }
 
     [Fact]
+    public void FromSyntaxNode_DivisionByZero_ReturnsNullValue()
+    {
+        StateSave state = BuildState(
+            ("Instance.Width", 100f, "float"),
+            ("Instance.Height", 0f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Width / Instance.Height", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_DivisionByZeroInt_ReturnsNullValue()
+    {
+        StateSave state = BuildState(("Instance.Width", 100, "int"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Width / 0", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBeNull();
+    }
+
+    [Fact]
     public void FromSyntaxNode_DivisionOfTwoVariables_ReturnsDividedValue()
     {
         StateSave state = BuildState(
