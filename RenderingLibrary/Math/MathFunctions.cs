@@ -158,8 +158,40 @@ namespace RenderingLibrary.Math
                 var length = vector2.Length();
                 angle += radians;
 
-                vector2.X = length * (float)System.Math.Cos(angle);
-                vector2.Y = length * (float)System.Math.Sin(angle);
+                SnapSinCos(angle, out double cos, out double sin);
+
+                vector2.X = length * (float)cos;
+                vector2.Y = length * (float)sin;
+            }
+        }
+
+        /// <summary>
+        /// Returns sin and cos for the given angle, snapping to exact {-1, 0, 1}
+        /// values when the angle is within floating-point tolerance of a multiple of pi/2.
+        /// This prevents tiny drift (e.g. cos(pi/2) returning 6e-17 instead of 0).
+        /// </summary>
+        private static void SnapSinCos(double angle, out double cos, out double sin)
+        {
+            const double halfPi = System.Math.PI / 2.0;
+            double quotient = angle / halfPi;
+            double rounded = System.Math.Round(quotient);
+
+            if (System.Math.Abs(quotient - rounded) < 1e-6)
+            {
+                int quadrant = ((int)rounded % 4 + 4) % 4;
+                switch (quadrant)
+                {
+                    case 0: cos = 1; sin = 0; break;
+                    case 1: cos = 0; sin = 1; break;
+                    case 2: cos = -1; sin = 0; break;
+                    case 3: cos = 0; sin = -1; break;
+                    default: cos = System.Math.Cos(angle); sin = System.Math.Sin(angle); break;
+                }
+            }
+            else
+            {
+                cos = System.Math.Cos(angle);
+                sin = System.Math.Sin(angle);
             }
         }
 
