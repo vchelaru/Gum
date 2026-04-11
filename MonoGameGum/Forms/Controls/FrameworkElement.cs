@@ -1384,6 +1384,22 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public virtual void UpdateState() { }
 
+    /// <summary>
+    /// Saves runtime property values (such as text content and caret position)
+    /// before <see cref="GraphicalUiElement.RefreshStyles"/> re-applies states.
+    /// Override in controls whose runtime state is stored on the visual layer
+    /// and would be lost during state re-application.
+    /// </summary>
+    public virtual void SaveRuntimeProperties() { }
+
+    /// <summary>
+    /// Re-applies runtime property values (such as slider position or scroll offset)
+    /// to the visual tree. Called by <see cref="GraphicalUiElement.RefreshStyles"/>
+    /// after re-applying states, since state application may overwrite visual
+    /// properties that were set programmatically at runtime.
+    /// </summary>
+    public virtual void ApplyRuntimeProperties() { }
+
     public void UpdateStateRecursively()
     {
         UpdateStateRecursively(this.Visual);

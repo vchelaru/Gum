@@ -554,6 +554,24 @@ public class ComboBox :
 
     #region UpdateTo Methods
 
+    private string? _savedText;
+
+    /// <inheritdoc/>
+    public override void SaveRuntimeProperties()
+    {
+        _savedText = coreTextObject?.RawText;
+    }
+
+    /// <inheritdoc/>
+    public override void ApplyRuntimeProperties()
+    {
+        if (_savedText != null && coreTextObject != null)
+        {
+            coreTextObject.RawText = _savedText;
+        }
+        _savedText = null;
+    }
+
     public override void UpdateState()
     {
         const string category = "ComboBoxCategoryState";

@@ -1167,6 +1167,36 @@ public abstract class TextBoxBase :
 
     #region UpdateTo Methods
 
+    private string? _savedText;
+    private int _savedCaretIndex;
+    private int _savedSelectionLength;
+
+    /// <inheritdoc/>
+    public override void SaveRuntimeProperties()
+    {
+        _savedText = coreTextObject?.RawText;
+        _savedCaretIndex = caretIndex;
+        _savedSelectionLength = selectionLength;
+    }
+
+    /// <inheritdoc/>
+    public override void ApplyRuntimeProperties()
+    {
+        if (_savedText != null && coreTextObject != null)
+        {
+            textComponent?.SetProperty("Text", _savedText);
+            caretIndex = System.Math.Min(_savedCaretIndex, _savedText.Length);
+            selectionLength = _savedSelectionLength;
+
+            // UpdateToIsFocused calls UpdateState which re-applies categorical
+            // state — must run first so placeholder/selection updates aren't undone
+            UpdateToIsFocused();
+            UpdatePlaceholderVisibility();
+            UpdateToSelection();
+        }
+        _savedText = null;
+    }
+
     public override void UpdateState()
     {
         var cursor = MainCursor;

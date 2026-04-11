@@ -284,6 +284,12 @@ public class ScrollBar : RangeBase
 
     #region UpdateTo Methods
 
+    /// <inheritdoc/>
+    public override void ApplyRuntimeProperties()
+    {
+        UpdateThumbPositionAccordingToValue();
+    }
+
     private void UpdateThumbPositionAccordingToValue()
     {
         if(thumb == null)

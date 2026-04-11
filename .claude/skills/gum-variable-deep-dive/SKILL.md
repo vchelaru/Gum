@@ -87,10 +87,43 @@ applied last.
 After calling `ApplyAllVariableReferences()` to propagate variable reference changes into
 `VariableSave` values, call `RefreshStyles()` to push those values to live visuals:
 
-- `GraphicalUiElement.RefreshStyles()` — recursively re-applies default states and current
-  Forms categorical states on a subtree
+- `GraphicalUiElement.RefreshStyles()` — recursively re-applies default states, current
+  Forms categorical states, and runtime properties on a subtree
 - `GumService.Default.RefreshStyles()` — convenience that calls `RefreshStyles()` on all
   three roots (Root, PopupRoot, ModalRoot)
+
+### Three-pass architecture
+
+`RefreshStyles` uses a three-pass approach to preserve runtime state:
+
+1. **Save** — walks the tree calling `FrameworkElement.SaveRuntimeProperties()` on each
+   Forms control. Controls save values that are stored on the visual layer and would be
+   lost during state re-application.
+2. **Refresh** — walks the tree calling `SetVariablesRecursively` (children first, then
+   parent instance-qualified variables on top).
+3. **Restore** — walks the tree calling `UpdateState()` + `ApplyRuntimeProperties()` on
+   each Forms control. This re-applies the current categorical state and restores any
+   saved runtime values.
+
+The save must happen before ANY state re-application, and the restore must happen AFTER ALL
+state re-application. This prevents parent instance-qualified variables (e.g.,
+`"TextBoxInstance.Text" = ""`) from overwriting restored values.
+
+### Controls with runtime state preservation
+
+| Control | SaveRuntimeProperties | ApplyRuntimeProperties |
+|---------|----------------------|----------------------|
+| **Slider** | — | `UpdateThumbPositionAccordingToValue()` |
+| **ScrollBar** | — | `UpdateThumbPositionAccordingToValue()` |
+| **ScrollViewer** | — | Re-syncs `innerPanel.Y/X` from ScrollBar values |
+| **TextBoxBase** | Saves text, caret index, selection length | Restores text, caret, selection; calls `UpdatePlaceholderVisibility`, `UpdateToSelection`, `UpdateToIsFocused` |
+| **ComboBox** | Saves displayed text | Restores displayed text |
+| **CheckBox/RadioButton** | — | No override needed; `UpdateState()` factors in `IsChecked` |
+| **Expander** | — | No override needed; `UpdateState()` sets `contentContainer.Visible` |
+
+The delegates `SaveFormsRuntimePropertiesAction` and `UpdateFormsStateAction` on
+`GraphicalUiElement` bridge the GumRuntime → MonoGameGum boundary (GumRuntime cannot
+reference FrameworkElement directly).
 
 Typical workflow:
 ```csharp

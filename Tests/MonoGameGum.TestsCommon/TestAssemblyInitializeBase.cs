@@ -37,11 +37,19 @@ public class TestAssemblyInitializeBase : XunitTestFramework
 
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
         GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
+        GraphicalUiElement.SaveFormsRuntimePropertiesAction = formsObject =>
+        {
+            if (formsObject is FrameworkElement frameworkElement)
+            {
+                frameworkElement.SaveRuntimeProperties();
+            }
+        };
         GraphicalUiElement.UpdateFormsStateAction = formsObject =>
         {
             if (formsObject is FrameworkElement frameworkElement)
             {
                 frameworkElement.UpdateState();
+                frameworkElement.ApplyRuntimeProperties();
             }
         };
         

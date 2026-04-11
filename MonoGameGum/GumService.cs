@@ -199,11 +199,19 @@ public class GumService
 
         DeferredQueue = new DeferredActionQueue();
 
+        GraphicalUiElement.SaveFormsRuntimePropertiesAction = formsObject =>
+        {
+            if (formsObject is FrameworkElement frameworkElement)
+            {
+                frameworkElement.SaveRuntimeProperties();
+            }
+        };
         GraphicalUiElement.UpdateFormsStateAction = formsObject =>
         {
             if (formsObject is FrameworkElement frameworkElement)
             {
                 frameworkElement.UpdateState();
+                frameworkElement.ApplyRuntimeProperties();
             }
         };
     }
@@ -560,6 +568,7 @@ public class GumService
 
         GraphicalUiElement.SetPropertyOnRenderable = null!;
         GraphicalUiElement.UpdateFontFromProperties = null;
+        GraphicalUiElement.SaveFormsRuntimePropertiesAction = null;
         GraphicalUiElement.UpdateFormsStateAction = null;
         GraphicalUiElement.AddRenderableToManagers = null;
         GraphicalUiElement.RemoveRenderableFromManagers = null;

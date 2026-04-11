@@ -5347,9 +5347,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     /// <summary>
+    /// Optional delegate called by <see cref="RefreshStyles"/> before re-applying
+    /// states, allowing Forms controls to save runtime property values (such as
+    /// text content and caret position) that would be lost during state re-application.
+    /// Wired by MonoGameGum to call <c>FrameworkElement.SaveRuntimeProperties()</c>.
+    /// </summary>
+    public static Action<object>? SaveFormsRuntimePropertiesAction;
+
+    /// <summary>
     /// Optional delegate called by <see cref="RefreshStyles"/> to re-apply
     /// the current Forms visual state on an element. Wired by MonoGameGum
-    /// to call <c>FrameworkElement.UpdateState()</c> since GumRuntime cannot
+    /// to call <c>FrameworkElement.UpdateState()</c> and
+    /// <c>FrameworkElement.ApplyRuntimeProperties()</c> since GumRuntime cannot
     /// reference Forms types directly.
     /// </summary>
     public static Action<object>? UpdateFormsStateAction;
@@ -5370,12 +5379,42 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             didSuspend = true;
         }
 
+        // Three-pass approach:
+        // 1. Save runtime properties (text, caret, scroll position, etc.)
+        SaveFormsRuntimePropertiesRecursive();
+        // 2. Re-apply all states (default + categorical)
         RefreshStylesRecursive();
+        // 3. Restore runtime properties on top
+        RestoreFormsRuntimePropertiesRecursive();
 
         if (didSuspend)
         {
             IsAllLayoutSuspended = false;
             this.UpdateLayout();
+        }
+    }
+
+    private void SaveFormsRuntimePropertiesRecursive()
+    {
+        if (this is InteractiveGue interactive && interactive.FormsControlAsObject != null)
+        {
+            SaveFormsRuntimePropertiesAction?.Invoke(interactive.FormsControlAsObject);
+        }
+        for (int i = 0; i < Children.Count; i++)
+        {
+            Children[i].SaveFormsRuntimePropertiesRecursive();
+        }
+    }
+
+    private void RestoreFormsRuntimePropertiesRecursive()
+    {
+        if (this is InteractiveGue interactive && interactive.FormsControlAsObject != null)
+        {
+            UpdateFormsStateAction?.Invoke(interactive.FormsControlAsObject);
+        }
+        for (int i = 0; i < Children.Count; i++)
+        {
+            Children[i].RestoreFormsRuntimePropertiesRecursive();
         }
     }
 
@@ -5393,12 +5432,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (elementSave != null)
         {
             this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
-        }
-
-        // Re-apply the current Forms categorical state (e.g., Highlighted, Disabled)
-        if (this is InteractiveGue interactive && interactive.FormsControlAsObject != null)
-        {
-            UpdateFormsStateAction?.Invoke(interactive.FormsControlAsObject);
         }
     }
 
