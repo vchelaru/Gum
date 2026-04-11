@@ -68,7 +68,13 @@ ObjectFinder.Self.GumProjectSave.ApplyAllVariableReferences();
 GumService.Default.RefreshStyles(myScreenGue);
 ```
 
-`RefreshStyles` re-applies default state values on every element in the tree and then re-applies the current Forms categorical state (such as Highlighted or Disabled) on each Forms control. This means buttons, checkboxes, and other controls retain their current interaction state while picking up the new style values.
+`RefreshStyles` re-applies default state values on every element in the tree and then re-applies the current Forms categorical state (such as Highlighted or Disabled) on each Forms control. This means controls retain their current interaction and runtime state while picking up the new style values, including:
+
+* Button, CheckBox, and RadioButton interaction states (highlighted, checked, etc.)
+* TextBox text content, caret position, and selection
+* ComboBox selected text
+* Slider and ScrollBar thumb positions
+* ScrollViewer scroll offset
 
 ## Expression Support (Optional)
 
