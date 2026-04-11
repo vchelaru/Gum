@@ -9,6 +9,11 @@ public interface IDragDropManager
     InputLibrary.Cursor Cursor { get; }
     IEnumerable<string> ValidTextureExtensions { get; }
 
+    /// <summary>
+    /// Valid font file extensions for drag-and-drop operations (e.g., "ttf").
+    /// </summary>
+    IEnumerable<string> ValidFontExtensions { get; }
+
     bool IsValidExtensionForFileDrop(string file);
     void OnFilesDroppedInTreeView(string[] files);
     void OnNodeObjectDroppedInWireframe(object draggedObject);

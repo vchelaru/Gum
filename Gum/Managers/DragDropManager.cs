@@ -130,10 +130,19 @@ public class DragDropManager : IDragDropManager
         }
     }
 
+    /// <inheritdoc/>
+    public IEnumerable<string> ValidFontExtensions
+    {
+        get
+        {
+            yield return "ttf";
+        }
+    }
+
     public bool IsValidExtensionForFileDrop(string file)
     {
         string extension = FileManager.GetExtension(file);
-        return ValidTextureExtensions.Contains(extension);
+        return ValidTextureExtensions.Contains(extension) || ValidFontExtensions.Contains(extension);
     }
 
     #endregion

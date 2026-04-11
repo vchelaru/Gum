@@ -204,6 +204,7 @@ public class BmfcSave
         string template = FileManager.FromFileText(bmfcTemplateFullPath);
 
         template = template.Replace("FontNameVariable", FontName);
+
         template = template.Replace("FontFileVariable", FontFile ?? "");
         template = template.Replace("FontSizeVariable", FontSize.ToString());
         template = template.Replace("OutlineThicknessVariable", OutlineThickness.ToString());

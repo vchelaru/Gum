@@ -45,6 +45,14 @@ public class ElementSaveDisplayer
     private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
     private readonly IPluginManager _pluginManager;
     private readonly StandardElementsManager _standardElementsManager;
+    private readonly IEditVariableService _editVariableService;
+    private readonly IExposeVariableService _exposeVariableService;
+    private readonly IHotkeyManager _hotkeyManager;
+    private readonly IDeleteVariableService _deleteVariableService;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
+    private readonly ISetVariableLogic _setVariableLogic;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
 
     #endregion
 
@@ -70,7 +78,15 @@ public class ElementSaveDisplayer
         ISelectedState selectedState,
         IUndoManager undoManager,
         IPluginManager pluginManager,
-        IVariableSaveLogic variableSaveLogic)
+        IVariableSaveLogic variableSaveLogic,
+        IEditVariableService editVariableService,
+        IExposeVariableService exposeVariableService,
+        IHotkeyManager hotkeyManager,
+        IDeleteVariableService deleteVariableService,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        ISetVariableLogic setVariableLogic,
+        IWireframeObjectManager wireframeObjectManager)
     {
         _subtextLogic = subtextLogic;
         _selectedState = selectedState;
@@ -80,6 +96,14 @@ public class ElementSaveDisplayer
         _categorySortAndColorLogic = new CategorySortAndColorLogic();
         _pluginManager = pluginManager;
         _standardElementsManager = StandardElementsManager.Self;
+        _editVariableService = editVariableService;
+        _exposeVariableService = exposeVariableService;
+        _hotkeyManager = hotkeyManager;
+        _deleteVariableService = deleteVariableService;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _setVariableLogic = setVariableLogic;
+        _wireframeObjectManager = wireframeObjectManager;
     }
 
     private List<PropertyData> GetProperties(ElementSave instanceOwner, InstanceSave instanceSave, StateSave stateSave)
@@ -476,16 +500,6 @@ public class ElementSaveDisplayer
                     type = typeof(List<string>);
                 }
 
-                // todo - eventually move these up to a constructor.
-                var _editVariableService = Locator.GetRequiredService<IEditVariableService>();
-                var _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
-                var _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
-                var _deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
-                var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-                var _fileCommands = Locator.GetRequiredService<IFileCommands>();
-                var _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
-                var _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
-
                 string variableName = instance != null
                     ? instance.Name + "." + variableList.Name
                     : variableList.Name;
@@ -565,16 +579,6 @@ public class ElementSaveDisplayer
         string variableName = instance != null
             ? instance.Name + "." + propertyData.OriginalName
             : propertyData.OriginalName;
-
-        // todo - eventually move these up to a constructor.
-        var _editVariableService = Locator.GetRequiredService<IEditVariableService>();
-        var _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
-        var _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
-        var _deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
-        var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        var _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        var _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
-        var _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
 
         var srim = new StateReferencingInstanceMember(
             propertyData.Attributes,

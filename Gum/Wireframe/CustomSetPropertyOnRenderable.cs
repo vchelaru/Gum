@@ -1111,7 +1111,7 @@ public class CustomSetPropertyOnRenderable
 
                         if (bbFontFile != null)
                         {
-                            bmfcSave.FontFile = bbFontFile;
+                            bmfcSave.FontFile = ResolveFontFilePath(bbFontFile);
                             bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(bbFontFile);
                         }
                         else
@@ -1169,7 +1169,7 @@ public class CustomSetPropertyOnRenderable
 
                             if (bbFontFileForDisk != null)
                             {
-                                bmfcSave.FontFile = bbFontFileForDisk;
+                                bmfcSave.FontFile = ResolveFontFilePath(bbFontFileForDisk);
                                 bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(bbFontFileForDisk);
                             }
                             else
@@ -1388,7 +1388,7 @@ public class CustomSetPropertyOnRenderable
 
                         if (fontFilePath != null)
                         {
-                            bmfcSave.FontFile = fontFilePath;
+                            bmfcSave.FontFile = ResolveFontFilePath(fontFilePath);
                             bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(fontFilePath);
                         }
                         else
@@ -1430,7 +1430,7 @@ public class CustomSetPropertyOnRenderable
 
                         if (fontFilePath != null)
                         {
-                            bmfcSave.FontFile = fontFilePath;
+                            bmfcSave.FontFile = ResolveFontFilePath(fontFilePath);
                             bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(fontFilePath);
                         }
                         else
@@ -2090,5 +2090,29 @@ public class CustomSetPropertyOnRenderable
         {
             ThrowExceptionsForMissingFiles(element);
         }
+    }
+
+    /// <summary>
+    /// Resolves a font file path to an absolute path using the Gum project directory.
+    /// Font generators (KernSmith and bmfont.exe) resolve paths relative to their own
+    /// working directory, not the project directory, so relative paths must be made absolute.
+    /// </summary>
+    /// <param name="fontFilePath">The font file path, which may be relative to the project directory.</param>
+    /// <returns>The absolute font file path, or the original value if already absolute or if no project is loaded.</returns>
+    private static string ResolveFontFilePath(string fontFilePath)
+    {
+        if (System.IO.Path.IsPathRooted(fontFilePath))
+        {
+            return fontFilePath;
+        }
+
+        var gumProject = ObjectFinder.Self.GumProjectSave;
+        if (gumProject != null)
+        {
+            string projectDir = ToolsUtilities.FileManager.GetDirectory(gumProject.FullFileName);
+            return System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, fontFilePath));
+        }
+
+        return fontFilePath;
     }
 }

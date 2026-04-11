@@ -866,6 +866,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
             return null;
         }
 
+        if (extension == "ttf")
+        {
+            return "Text";
+        }
+
         return "Sprite";
     }
 
@@ -891,14 +896,20 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         _dragDropManager.SetInstanceToPosition(worldX, worldY, instance);
 
-        var variableName = instance.Name + ".SourceFile";
-
-        var oldValue = _selectedState.SelectedStateSave.GetValueOrDefault<string>(variableName);
-
-        _selectedState.SelectedStateSave.SetValue(variableName, fileName, instance);
-
-        _setVariableLogic.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, _selectedState.SelectedStateSave, refresh: false);
-
+        if (baseType == "Text")
+        {
+            var variableName = instance.Name + ".Font";
+            var oldValue = _selectedState.SelectedStateSave.GetValueOrDefault<string>(variableName);
+            _selectedState.SelectedStateSave.SetValue(variableName, fileName, instance);
+            _setVariableLogic.ReactToPropertyValueChanged("Font", oldValue, element, instance, _selectedState.SelectedStateSave, refresh: false);
+        }
+        else
+        {
+            var variableName = instance.Name + ".SourceFile";
+            var oldValue = _selectedState.SelectedStateSave.GetValueOrDefault<string>(variableName);
+            _selectedState.SelectedStateSave.SetValue(variableName, fileName, instance);
+            _setVariableLogic.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, _selectedState.SelectedStateSave, refresh: false);
+        }
     }
 
     private void TryHandleFileDropOnComponent(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
@@ -908,44 +919,87 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         // see if it's over the component:
         IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
-        if (ipsoOver?.Tag is ComponentSave component && (component.BaseType == "Sprite" || component.BaseType == "NineSlice" || component.BaseType == "Svg"))
+
+        string extension = FileManager.GetExtension(files[0]);
+        bool isFontFile = extension == "ttf";
+
+        if (ipsoOver?.Tag is ComponentSave component)
         {
-            string fileName = FileManager.MakeRelative(files[0], _fileLocations.ProjectFolder, preserveCase:true);
+            bool isTextureTarget = component.BaseType == "Sprite" || component.BaseType == "NineSlice" || component.BaseType == "Svg";
+            bool isFontTarget = component.BaseType == "Text";
 
-            string? baseType = GetBaseTypeForExtension(fileName);
-            string addNewLabel = "Add new " + (baseType ?? "Sprite");
-
-            string message = "What do you want to do with the file " + fileName;
-            DialogChoices<string> choices = new()
+            if ((isFontFile && isFontTarget) || (!isFontFile && isTextureTarget))
             {
-                ["set-source"] = "Set source file on " + component.Name,
-                ["_"] = addNewLabel
-            };
+                string fileName = FileManager.MakeRelative(files[0], _fileLocations.ProjectFolder, preserveCase: true);
 
-            string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
+                string? baseType = GetBaseTypeForExtension(fileName);
+                string addNewLabel = "Add new " + (baseType ?? "Sprite");
 
-            if (result == "set-source")
-            {
-                var oldValue = _selectedState.SelectedStateSave
-                    .GetValueOrDefault<string>("SourceFile");
+                string message = "What do you want to do with the file " + fileName;
 
-                _selectedState.SelectedStateSave.SetValue("SourceFile", fileName, "string");
-                _selectedState.SelectedInstance = null;
-                _setVariableLogic.PropertyValueChanged(
-                    "SourceFile", 
-                    oldValue, 
-                    _selectedState.SelectedInstance,
-                    _selectedState.SelectedStateSave);
+                if (isFontFile)
+                {
+                    DialogChoices<string> choices = new()
+                    {
+                        ["set-font"] = "Set font on " + component.Name,
+                        ["_"] = addNewLabel
+                    };
 
-                shouldUpdate = true;
-                handled = true;
+                    string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
+
+                    if (result == "set-font")
+                    {
+                        var oldValue = _selectedState.SelectedStateSave
+                            .GetValueOrDefault<string>("Font");
+
+                        _selectedState.SelectedStateSave.SetValue("Font", fileName, "string");
+                        _selectedState.SelectedInstance = null;
+                        _setVariableLogic.PropertyValueChanged(
+                            "Font",
+                            oldValue,
+                            _selectedState.SelectedInstance,
+                            _selectedState.SelectedStateSave);
+
+                        shouldUpdate = true;
+                        handled = true;
+                    }
+                    else if (result == null)
+                    {
+                        handled = true;
+                    }
+                }
+                else
+                {
+                    DialogChoices<string> choices = new()
+                    {
+                        ["set-source"] = "Set source file on " + component.Name,
+                        ["_"] = addNewLabel
+                    };
+
+                    string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
+
+                    if (result == "set-source")
+                    {
+                        var oldValue = _selectedState.SelectedStateSave
+                            .GetValueOrDefault<string>("SourceFile");
+
+                        _selectedState.SelectedStateSave.SetValue("SourceFile", fileName, "string");
+                        _selectedState.SelectedInstance = null;
+                        _setVariableLogic.PropertyValueChanged(
+                            "SourceFile",
+                            oldValue,
+                            _selectedState.SelectedInstance,
+                            _selectedState.SelectedStateSave);
+
+                        shouldUpdate = true;
+                        handled = true;
+                    }
+                    else if (result == null)
+                    {
+                        handled = true;
+                    }
+                }
             }
-            else if (result == null)
-            {
-                handled = true;
-
-            }
-
         }
     }
 
@@ -958,48 +1012,85 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     private void TryHandleFileDropOnInstance(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
     {
-        // This only supports drag+drop on an instance, but what if dropping on a component
-        // which inherits from Sprite, or perhaps an instance that has an exposed file variable?
-        // Not super high priority, but it's worth noting that this currently doesn't work...
-        InstanceSave instance = FindInstanceWithSourceFile(worldX, worldY);
+        string extension = FileManager.GetExtension(files[0]);
+        bool isFontFile = extension == "ttf";
+
+        InstanceSave instance = isFontFile
+            ? FindInstanceWithFontProperty(worldX, worldY)
+            : FindInstanceWithSourceFile(worldX, worldY);
+
         if (instance != null)
         {
-            string fileName = FileManager.MakeRelative(files[0], _fileLocations.ProjectFolder, preserveCase:true);
+            string fileName = FileManager.MakeRelative(files[0], _fileLocations.ProjectFolder, preserveCase: true);
 
             string? baseType = GetBaseTypeForExtension(fileName);
             string addNewLabel = "Add new " + (baseType ?? "Sprite");
 
             string message = "What do you want to do with the file " + fileName;
-            DialogChoices<string> choices = new()
+
+            if (isFontFile)
             {
-                ["set-source"] = "Set source file on " + instance.Name,
-                ["_"] = addNewLabel
-            };
+                DialogChoices<string> choices = new()
+                {
+                    ["set-font"] = "Set font on " + instance.Name,
+                    ["_"] = addNewLabel
+                };
 
-            string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
+                string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
 
-            if (result == "set-source")
-            {
-                var oldValue = _selectedState.SelectedStateSave
-                    .GetValueOrDefault<string>(instance.Name + ".SourceFile");
+                if (result == "set-font")
+                {
+                    var oldValue = _selectedState.SelectedStateSave
+                        .GetValueOrDefault<string>(instance.Name + ".Font");
 
-                _selectedState.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
-                _selectedState.SelectedInstance = instance;
+                    _selectedState.SelectedStateSave.SetValue(instance.Name + ".Font", fileName, instance);
+                    _selectedState.SelectedInstance = instance;
 
-                _setVariableLogic.PropertyValueChanged(
-                    "SourceFile", 
-                    oldValue, instance,
-                    _selectedState.SelectedStateSave);
+                    _setVariableLogic.PropertyValueChanged(
+                        "Font",
+                        oldValue, instance,
+                        _selectedState.SelectedStateSave);
 
-                shouldUpdate = true;
-                handled = true;
+                    shouldUpdate = true;
+                    handled = true;
+                }
+                else if (result == null)
+                {
+                    handled = true;
+                }
             }
-            else if (result == null)
+            else
             {
-                handled = true;
+                DialogChoices<string> choices = new()
+                {
+                    ["set-source"] = "Set source file on " + instance.Name,
+                    ["_"] = addNewLabel
+                };
 
+                string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
+
+                if (result == "set-source")
+                {
+                    var oldValue = _selectedState.SelectedStateSave
+                        .GetValueOrDefault<string>(instance.Name + ".SourceFile");
+
+                    _selectedState.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
+                    _selectedState.SelectedInstance = instance;
+
+                    _setVariableLogic.PropertyValueChanged(
+                        "SourceFile",
+                        oldValue, instance,
+                        _selectedState.SelectedStateSave);
+
+                    shouldUpdate = true;
+                    handled = true;
+                }
+                else if (result == null)
+                {
+                    handled = true;
+                }
+                // continue for Add new Sprite
             }
-            // continue for Add new Sprite
         }
     }
 
@@ -1016,6 +1107,26 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
             var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
 
             if (baseStandardElement.DefaultState.Variables.Any(v => v.Name == "SourceFile"))
+            {
+                return ipsoOver.Tag as InstanceSave;
+            }
+        }
+
+        return null;
+    }
+
+    private InstanceSave FindInstanceWithFontProperty(float worldX, float worldY)
+    {
+        List<ElementWithState> elementStack = new List<ElementWithState>();
+        elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
+
+        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
+
+        if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
+        {
+            var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
+
+            if (baseStandardElement?.Name == "Text")
             {
                 return ipsoOver.Tag as InstanceSave;
             }

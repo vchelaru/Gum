@@ -271,6 +271,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
                 await _fontManager.CreateAllMissingFontFiles(_projectState.GumProjectSave);
                 shouldReloadContent = true;
+                _guiCommands.RefreshVariables(force: true);
                 break;
             case nameof(viewModel.ShowCheckerBackground):
                 // Checkerboard visibility is handled via WireframePropertyChanged,

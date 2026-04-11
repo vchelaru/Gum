@@ -286,6 +286,36 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void IsValidExtensionForFileDrop_ShouldAcceptTtfFiles()
+    {
+        // Act
+        bool result = _dragDropManager.IsValidExtensionForFileDrop("fonts/MyFont.ttf");
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsValidExtensionForFileDrop_ShouldAcceptPngFiles()
+    {
+        // Act
+        bool result = _dragDropManager.IsValidExtensionForFileDrop("textures/image.png");
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsValidExtensionForFileDrop_ShouldRejectUnknownExtensions()
+    {
+        // Act
+        bool result = _dragDropManager.IsValidExtensionForFileDrop("file.xyz");
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
     public void OnNodeSortingDropped_OnlyFolderNodes_DoesNotThrow()
     {
         // Arrange - only folder nodes (Tag=null), no tagged nodes
