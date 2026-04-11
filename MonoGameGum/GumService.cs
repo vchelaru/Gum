@@ -115,6 +115,29 @@ public class GumService
     /// <inheritdoc/>
     public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
 
+    /// <summary>
+    /// Re-applies all styles on Root, PopupRoot, and ModalRoot. Call after
+    /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/>
+    /// to push variable reference changes to all live visuals.
+    /// </summary>
+    public void RefreshStyles()
+    {
+        Root?.RefreshStyles();
+        PopupRoot?.RefreshStyles();
+        ModalRoot?.RefreshStyles();
+    }
+
+    /// <summary>
+    /// Re-applies all styles on the specified element and its children. Call after
+    /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/>
+    /// to push variable reference changes to live visuals in a specific subtree.
+    /// </summary>
+    /// <param name="target">The root of the subtree to refresh.</param>
+    public void RefreshStyles(GraphicalUiElement target)
+    {
+        target?.RefreshStyles();
+    }
+
 #if !IOS && !ANDROID
     /// <summary>
     /// Starts watching the Gum project source files at the given path.
@@ -175,6 +198,22 @@ public class GumService
         Root.Children.CollectionChanged += (o, e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
 
         DeferredQueue = new DeferredActionQueue();
+
+        GraphicalUiElement.SaveFormsRuntimePropertiesAction = formsObject =>
+        {
+            if (formsObject is FrameworkElement frameworkElement)
+            {
+                frameworkElement.SaveRuntimeProperties();
+            }
+        };
+        GraphicalUiElement.UpdateFormsStateAction = formsObject =>
+        {
+            if (formsObject is FrameworkElement frameworkElement)
+            {
+                frameworkElement.UpdateState();
+                frameworkElement.ApplyRuntimeProperties();
+            }
+        };
     }
 
     /// <summary>
@@ -371,8 +410,11 @@ public class GumService
         Root.UpdateLayout();
 
         var mainLayer = SystemManagers.Renderer.MainLayer;
-        mainLayer.Remove(Root.RenderableComponent as IRenderableIpso);
-        mainLayer.Insert(0, Root.RenderableComponent as IRenderableIpso);
+        if (Root.RenderableComponent is IRenderableIpso rootRenderable)
+        {
+            mainLayer.Remove(rootRenderable);
+            mainLayer.Insert(0, rootRenderable);
+        }
 
         GumProjectSave? gumProject = null;
 
@@ -419,8 +461,7 @@ public class GumService
 
         current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
 
-        float GetFloat(string variableName) => current.DefaultState.GetValueOrDefault<float>(variableName);
-        string GetString(string varialbeName) => current.DefaultState.GetValueOrDefault<string>(varialbeName);
+        float GetFloat(string variableName) => current?.DefaultState.GetValueOrDefault<float>(variableName) ?? 0;
     }
 
 #if XNALIKE
@@ -527,6 +568,8 @@ public class GumService
 
         GraphicalUiElement.SetPropertyOnRenderable = null!;
         GraphicalUiElement.UpdateFontFromProperties = null;
+        GraphicalUiElement.SaveFormsRuntimePropertiesAction = null;
+        GraphicalUiElement.UpdateFormsStateAction = null;
         GraphicalUiElement.AddRenderableToManagers = null;
         GraphicalUiElement.RemoveRenderableFromManagers = null;
 

@@ -24,6 +24,10 @@ When fixing a bug that can be reproduced in a unit test, always write the failin
 
 Never apply a fix based on speculation alone. A test that was written alongside the fix and only ever seen passing proves nothing — it might not even exercise the bug.
 
+# Boyscout Principle — Leave It Better Than You Found It
+
+Gum is a mature codebase. When you load context in an area (reading methods, understanding call chains), take the opportunity to fix compiler warnings and clean up code in the methods and files you're already touching. You've already done the context-loading work, so these fixes are low-risk and high-value. Keep it non-invasive — don't refactor unrelated code or restructure classes, just fix warnings, remove dead code, and tidy what's in your path.
+
 # Before editing
 
 (1) Read `.claude/code-style.md` and enforce every rule it contains. All code you write or modify must comply. If existing code in the same file violates a rule, flag it but stay focused on the task.

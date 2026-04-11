@@ -955,5 +955,23 @@ public class ScrollViewer :
         Visual.SetProperty(ScrollViewerCategoryName + "State", state);
     }
 
+    /// <inheritdoc/>
+    public override void ApplyRuntimeProperties()
+    {
+        if (innerPanel != null)
+        {
+            if (verticalScrollBar != null)
+            {
+                innerPanel.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+                innerPanel.Y = -(float)verticalScrollBar.Value;
+            }
+            if (horizontalScrollBar != null)
+            {
+                innerPanel.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+                innerPanel.X = -(float)horizontalScrollBar.Value;
+            }
+        }
+    }
+
     #endregion
 }

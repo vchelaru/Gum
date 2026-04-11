@@ -14,10 +14,6 @@ For information on setting up variable references in the Gum tool, see the [Vari
 
 Variable references operate at the project level, modifying values on `ElementSave` and `StateSave` objects rather than on live `GraphicalUiElement` visuals. This means you should apply variable references before creating your UI. Any controls created after applying references will use the updated values.
 
-{% hint style="info" %}
-If you need to change style values after UI has already been created, you must apply the variable references and then re-create the affected controls for the changes to take effect.
-{% endhint %}
-
 After loading a Gum project, you can modify style variables and call `ApplyAllVariableReferences` to propagate changes across all elements in dependency order. Elements that are referenced by others are applied first, so downstream references always pick up the latest values.
 
 ```csharp
@@ -39,6 +35,46 @@ project.Screens.First().ToGraphicalUiElement().AddToRoot();
 ```
 
 The `ApplyAllVariableReferences` method iterates all elements (standards, components, and screens) and applies variable references on every state, including category states. It automatically handles dependency ordering so that if element B references element A, element A's references are applied first.
+
+## Refreshing Live Visuals After Style Changes
+
+If your UI is already on screen and you change style values, you can push those changes to live visuals without re-creating controls. After calling `ApplyAllVariableReferences`, call `RefreshStyles` to re-apply all default state values and Forms visual states recursively.
+
+The simplest approach refreshes all three root containers (Root, PopupRoot, ModalRoot):
+
+```csharp
+// Update
+// Change style values
+var styles = ObjectFinder.Self.GumProjectSave.Components
+    .First(item => item.Name == "Styles");
+styles.DefaultState.SetValue("Primary.Red", 0);
+styles.DefaultState.SetValue("Primary.Green", 128);
+styles.DefaultState.SetValue("Primary.Blue", 255);
+
+// Propagate variable references to all ElementSave states
+ObjectFinder.Self.GumProjectSave.ApplyAllVariableReferences();
+
+// Push updated values to all live visuals
+GumService.Default.RefreshStyles();
+```
+
+You can also target a specific subtree if you know which part of the UI changed:
+
+```csharp
+// Update
+ObjectFinder.Self.GumProjectSave.ApplyAllVariableReferences();
+
+// Only refresh visuals under a specific element
+GumService.Default.RefreshStyles(myScreenGue);
+```
+
+`RefreshStyles` re-applies default state values on every element in the tree and then re-applies the current Forms categorical state (such as Highlighted or Disabled) on each Forms control. This means controls retain their current interaction and runtime state while picking up the new style values, including:
+
+* Button, CheckBox, and RadioButton interaction states (highlighted, checked, etc.)
+* TextBox text content, caret position, and selection
+* ComboBox selected text
+* Slider and ScrollBar thumb positions
+* ScrollViewer scroll offset
 
 ## Expression Support (Optional)
 

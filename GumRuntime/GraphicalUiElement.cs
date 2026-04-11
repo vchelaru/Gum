@@ -5346,6 +5346,95 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
     }
 
+    /// <summary>
+    /// Optional delegate called by <see cref="RefreshStyles"/> before re-applying
+    /// states, allowing Forms controls to save runtime property values (such as
+    /// text content and caret position) that would be lost during state re-application.
+    /// Wired by MonoGameGum to call <c>FrameworkElement.SaveRuntimeProperties()</c>.
+    /// </summary>
+    public static Action<object>? SaveFormsRuntimePropertiesAction;
+
+    /// <summary>
+    /// Optional delegate called by <see cref="RefreshStyles"/> to re-apply
+    /// the current Forms visual state on an element. Wired by MonoGameGum
+    /// to call <c>FrameworkElement.UpdateState()</c> and
+    /// <c>FrameworkElement.ApplyRuntimeProperties()</c> since GumRuntime cannot
+    /// reference Forms types directly.
+    /// </summary>
+    public static Action<object>? UpdateFormsStateAction;
+
+    /// <summary>
+    /// Re-applies all default state values and current Forms visual states
+    /// recursively on this element and all children. Call this after modifying
+    /// variable values on ElementSave states (e.g., after
+    /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/>)
+    /// to push those changes to the live visual tree.
+    /// </summary>
+    public void RefreshStyles()
+    {
+        bool didSuspend = false;
+        if (!IsAllLayoutSuspended)
+        {
+            IsAllLayoutSuspended = true;
+            didSuspend = true;
+        }
+
+        // Three-pass approach:
+        // 1. Save runtime properties (text, caret, scroll position, etc.)
+        SaveFormsRuntimePropertiesRecursive();
+        // 2. Re-apply all states (default + categorical)
+        RefreshStylesRecursive();
+        // 3. Restore runtime properties on top
+        RestoreFormsRuntimePropertiesRecursive();
+
+        if (didSuspend)
+        {
+            IsAllLayoutSuspended = false;
+            this.UpdateLayout();
+        }
+    }
+
+    private void SaveFormsRuntimePropertiesRecursive()
+    {
+        if (this is InteractiveGue interactive && interactive.FormsControlAsObject != null)
+        {
+            SaveFormsRuntimePropertiesAction?.Invoke(interactive.FormsControlAsObject);
+        }
+        for (int i = 0; i < Children.Count; i++)
+        {
+            Children[i].SaveFormsRuntimePropertiesRecursive();
+        }
+    }
+
+    private void RestoreFormsRuntimePropertiesRecursive()
+    {
+        if (this is InteractiveGue interactive && interactive.FormsControlAsObject != null)
+        {
+            UpdateFormsStateAction?.Invoke(interactive.FormsControlAsObject);
+        }
+        for (int i = 0; i < Children.Count; i++)
+        {
+            Children[i].RestoreFormsRuntimePropertiesRecursive();
+        }
+    }
+
+    private void RefreshStylesRecursive()
+    {
+        // Children first — each child re-applies its own component defaults
+        for (int i = 0; i < Children.Count; i++)
+        {
+            Children[i].RefreshStylesRecursive();
+        }
+
+        // Re-apply this element's default state (includes instance-qualified
+        // variables that override child properties)
+        var elementSave = this.Tag as ElementSave ?? this.ElementSave;
+        if (elementSave != null)
+        {
+            this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+        }
+    }
+
     string NameOrType => !string.IsNullOrEmpty(Name) ? Name : $"<{GetType().Name}>";
 
     string ParentQualifiedName => Parent as GraphicalUiElement == null ? NameOrType : (Parent as GraphicalUiElement).ParentQualifiedName + "." + NameOrType;

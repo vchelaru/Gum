@@ -17,6 +17,8 @@ All save classes live in `GumDataTypes/`.
 
 The Gum tool's core responsibility is editing and serializing save classes (the data model) to XML — it operates purely on save classes. Visualization (the wireframe preview) requires runtime classes and a Gum runtime; the tool uses KNI for this via the `EditorTabPlugin_XNA` plugin, but other runtimes exist (MonoGame, FNA, Skia, Raylib). `Gum.csproj` should be save-class territory only. Runtime/rendering code that still lives there (e.g. `WireframeObjectManager`) is legacy being actively refactored out to plugins — do not add new runtime code to `Gum.csproj`.
 
+**Runtime usage:** At runtime, `ElementSave`/`ScreenSave`/`ComponentSave` are only present if the game loaded a Gum project (`.gumx`). Without a project, these classes are not used. However, `StateSave`, `StateSaveCategory`, and `VariableSave` are used at runtime regardless — they power the state system on `GraphicalUiElement`. For how save data is instantiated and applied at runtime (ToGraphicalUiElement, ApplyState, SetProperty), see the **gum-property-assignment** skill. For a deep dive into the full variable lifecycle from save data through runtime application and Forms state updates, see the **gum-variable-deep-dive** skill.
+
 ---
 
 ## Class Relationships

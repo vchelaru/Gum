@@ -321,6 +321,12 @@ public class Slider : RangeBase, IInputReceiver
         Visual.SetProperty(SliderCategoryName + "State", state);
     }
 
+    /// <inheritdoc/>
+    public override void ApplyRuntimeProperties()
+    {
+        UpdateThumbPositionAccordingToValue();
+    }
+
     private void UpdateThumbPositionAccordingToValue()
     {
         var ratioOver = (Value - Minimum) / (Maximum - Minimum);
