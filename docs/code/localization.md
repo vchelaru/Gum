@@ -58,6 +58,10 @@ protected override void Initialize()
 
 <figure><img src="../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Screen with localization</p></figcaption></figure>
 
+## Localization and Font Ranges
+
+Localized games may need an extended font range. If using the Gum tool, see the [Project Properties](../gum-tool/project-properties.md#font-ranges) page for information on font ranges.
+
 ## Localization in a Code-Only Project
 
 Code-only projects can use the `LocalizationManager` to enable localization. The steps for localization are:
@@ -128,21 +132,21 @@ Forms controls localize text automatically when a `LocalizationService` is activ
 
 The following table shows how each Forms control handles localization:
 
-| Control | Localized Property | No-Translate Method | Notes |
-|---|---|---|---|
-| Button | `Text` | `SetTextNoTranslate()` | |
-| Label | `Text` | `SetTextNoTranslate()` | |
-| CheckBox | `Text` | `SetTextNoTranslate()` | |
-| RadioButton | `Text` | `SetTextNoTranslate()` | |
-| TextBox | `Text` | `SetTextNoTranslate()` | Setting `Text` in code localizes. User-typed text does not localize. See below. |
-| TextBoxBase | `Placeholder` | `SetPlaceholderNoTranslate()` | Placeholder text localizes when set in code. |
-| MenuItem | `Header` | `SetHeaderNoTranslate()` | |
-| PasswordBox | — | — | Mask characters are never localized. |
-| ComboBox | — | — | Text comes from selected item. Pre-translate items before adding. |
-| ListBoxItem | — | — | Text comes from data items. Pre-translate items before adding. |
-| ScrollBar | — | — | No text property. |
-| Slider | — | — | No text property. |
-| ToggleButton | — | — | No text property. |
+| Control      | Localized Property | No-Translate Method           | Notes                                                                           |
+| ------------ | ------------------ | ----------------------------- | ------------------------------------------------------------------------------- |
+| Button       | `Text`             | `SetTextNoTranslate()`        |                                                                                 |
+| Label        | `Text`             | `SetTextNoTranslate()`        |                                                                                 |
+| CheckBox     | `Text`             | `SetTextNoTranslate()`        |                                                                                 |
+| RadioButton  | `Text`             | `SetTextNoTranslate()`        |                                                                                 |
+| TextBox      | `Text`             | `SetTextNoTranslate()`        | Setting `Text` in code localizes. User-typed text does not localize. See below. |
+| TextBoxBase  | `Placeholder`      | `SetPlaceholderNoTranslate()` | Placeholder text localizes when set in code.                                    |
+| MenuItem     | `Header`           | `SetHeaderNoTranslate()`      |                                                                                 |
+| PasswordBox  | —                  | —                             | Mask characters are never localized.                                            |
+| ComboBox     | —                  | —                             | Text comes from selected item. Pre-translate items before adding.               |
+| ListBoxItem  | —                  | —                             | Text comes from data items. Pre-translate items before adding.                  |
+| ScrollBar    | —                  | —                             | No text property.                                                               |
+| Slider       | —                  | —                             | No text property.                                                               |
+| ToggleButton | —                  | —                             | No text property.                                                               |
 
 ### TextBox Localization Behavior
 

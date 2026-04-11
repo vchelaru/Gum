@@ -38,3 +38,7 @@ Once you have added a localization file, Gum recognizes this and displays Text p
 Localized text appears in Gum based on the selected ID. You can change the Language Index at any time to see localization applied immediately in your screens and components.
 
 <figure><img src="../.gitbook/assets/22_12 04 32 (1) (1).gif" alt=""><figcaption><p>Changing Language Index updates displayed Texts immediately</p></figcaption></figure>
+
+## Localization and Font Ranges
+
+Localized games may need an extended font range. If using the Gum tool, see the [Project Properties](project-properties.md#font-ranges) page for information on font ranges.
