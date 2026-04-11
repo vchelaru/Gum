@@ -207,7 +207,17 @@ public class EvaluatedSyntax
             }
             else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.SlashToken))
             {
-                return dynamicValue1 / dynamicValue2;
+                object result = dynamicValue1 / dynamicValue2;
+                // Float/double division by zero returns Infinity/NaN instead of throwing
+                if (result is float f && (float.IsInfinity(f) || float.IsNaN(f)))
+                {
+                    return null;
+                }
+                if (result is double d && (double.IsInfinity(d) || double.IsNaN(d)))
+                {
+                    return null;
+                }
+                return result;
             }
             else
             {
@@ -217,6 +227,10 @@ public class EvaluatedSyntax
         catch(RuntimeBinderException)
         {
             // This can happen if someone does something like tries to subtract strings ("A" - "B")
+        }
+        catch(DivideByZeroException)
+        {
+            // Division by zero returns null rather than crashing
         }
 
         return null;
@@ -346,13 +360,146 @@ public class EvaluatedSyntax
             lineOfText = lineOfText.Replace("Standards/", "global::Standards.");
         }
 
-        // any additional slashes are part of the name, so we want to replace those with something
-        // that still evaluates to a variable in C#, but which can be differentiated from a period, or
-        // anything else the user might type
-        lineOfText = lineOfText.Replace('/', '\u1234');
-
+        // Remaining slashes are either subfolder path separators (e.g. Folder/SubFolder/Button)
+        // or the division operator. We replace only path separators with a Unicode placeholder.
+        // Rules to identify division:
+        // 1. Either side is a numeric constant
+        // 2. Left side contains a dot (meaning it's a qualified property, not a path segment)
+        // 3. Either side is wrapped in parentheses
+        // 4. Spaces surround the slash (fallback for ambiguous cases)
+        lineOfText = ReplacePathSlashes(lineOfText);
 
         return lineOfText;
+    }
+
+    private static bool IsDivisionSlash(string text, int slashIndex)
+    {
+        // Find the token to the left and right of the slash
+        string leftToken = GetTokenBefore(text, slashIndex);
+        string rightToken = GetTokenAfter(text, slashIndex);
+
+        if (leftToken.Length == 0 || rightToken.Length == 0)
+        {
+            return false;
+        }
+
+        // Rule 1: Either side is a numeric constant
+        if (IsNumericConstant(leftToken) || IsNumericConstant(rightToken))
+        {
+            return true;
+        }
+
+        // Rule 2: Left side contains a dot (it's a qualified property like Instance.Width),
+        // but not if it's a global:: qualified path (those dots are from prefix replacement)
+        if (leftToken.Contains('.') && !leftToken.StartsWith("global::"))
+        {
+            return true;
+        }
+
+        // Rule 3: Either side is wrapped in parentheses
+        if (leftToken.EndsWith(")") || rightToken.StartsWith("("))
+        {
+            return true;
+        }
+
+        // Rule 4: Spaces surround the slash (fallback)
+        if (slashIndex > 0 && slashIndex < text.Length - 1 &&
+            text[slashIndex - 1] == ' ' && text[slashIndex + 1] == ' ')
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string GetTokenBefore(string text, int index)
+    {
+        int end = index - 1;
+        // Skip whitespace
+        while (end >= 0 && text[end] == ' ')
+        {
+            end--;
+        }
+
+        if (end < 0)
+        {
+            return "";
+        }
+
+        int start = end;
+        // Walk back through word characters, dots, colons (for global::), and closing parens
+        while (start > 0 && (char.IsLetterOrDigit(text[start - 1]) || text[start - 1] == '.' || text[start - 1] == '_' || text[start - 1] == ')' || text[start - 1] == ':'))
+        {
+            start--;
+        }
+
+        return text.Substring(start, end - start + 1);
+    }
+
+    private static string GetTokenAfter(string text, int index)
+    {
+        int start = index + 1;
+        // Skip whitespace
+        while (start < text.Length && text[start] == ' ')
+        {
+            start++;
+        }
+
+        if (start >= text.Length)
+        {
+            return "";
+        }
+
+        int end = start;
+        // Walk forward through word characters, dots, and opening parens
+        while (end + 1 < text.Length && (char.IsLetterOrDigit(text[end + 1]) || text[end + 1] == '.' || text[end + 1] == '_' || text[end + 1] == '('))
+        {
+            end++;
+        }
+
+        return text.Substring(start, end - start + 1);
+    }
+
+    private static bool IsNumericConstant(string token)
+    {
+        if (token.Length == 0)
+        {
+            return false;
+        }
+
+        // Handle tokens that might have trailing/leading parens
+        string trimmed = token.TrimStart('(').TrimEnd(')');
+        if (trimmed.Length == 0)
+        {
+            return false;
+        }
+
+        return char.IsDigit(trimmed[0]) || (trimmed[0] == '.' && trimmed.Length > 1 && char.IsDigit(trimmed[1]));
+    }
+
+    private static string ReplacePathSlashes(string text)
+    {
+        var result = new System.Text.StringBuilder(text.Length);
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (text[i] == '/')
+            {
+                if (IsDivisionSlash(text, i))
+                {
+                    result.Append('/');
+                }
+                else
+                {
+                    result.Append('\u1234');
+                }
+            }
+            else
+            {
+                result.Append(text[i]);
+            }
+        }
+
+        return result.ToString();
     }
 
     public static string ConvertToSlashSyntax(string cSharp)
