@@ -70,18 +70,51 @@ public class EvaluatedSyntaxTests : BaseTestClass
     }
 
     [Fact]
-    public void FromSyntaxNode_DivisionOfFloats_ReturnsDividedValue()
+    public void FromSyntaxNode_DivisionByConstant_ReturnsDividedValue()
     {
-        // NOTE: Division using "/" is currently broken when routed through ConvertToCSharpSyntax,
-        // because it replaces ALL "/" with a Unicode char (for slash-path disambiguation).
-        // This test evaluates the Roslyn syntax tree directly to verify the Combine logic works.
         StateSave state = BuildState(("Instance.Width", 200f, "float"));
 
-        Microsoft.CodeAnalysis.SyntaxNode syntax = CSharpSyntaxTree.ParseText("Instance.Width / 2").GetCompilationUnitRoot();
-        EvaluatedSyntax result = EvaluatedSyntax.FromSyntaxNode(syntax, state);
+        EvaluatedSyntax result = Evaluate("Instance.Width / 2", state);
 
         result.ShouldNotBeNull();
         result.Value.ShouldBe(100f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_DivisionOfTwoVariables_ReturnsDividedValue()
+    {
+        StateSave state = BuildState(
+            ("Instance.Width", 200f, "float"),
+            ("Instance.Height", 50f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Width / Instance.Height", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(4f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_DivisionWithParentheses_ReturnsDividedValue()
+    {
+        StateSave state = BuildState(
+            ("Instance.Width", 100f, "float"),
+            ("Instance.Margin", 20f, "float"));
+
+        EvaluatedSyntax result = Evaluate("(Instance.Width + Instance.Margin) / 2", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(60f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_ConstantDividedByVariable_ReturnsDividedValue()
+    {
+        StateSave state = BuildState(("Instance.Width", 50f, "float"));
+
+        EvaluatedSyntax result = Evaluate("100 / Instance.Width", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(2f);
     }
 
     [Fact]
@@ -201,6 +234,64 @@ public class EvaluatedSyntaxTests : BaseTestClass
         string roundtripped = EvaluatedSyntax.ConvertToSlashSyntax(csharp);
 
         roundtripped.ShouldBe(original);
+    }
+
+    [Fact]
+    public void ConvertToCSharpSyntax_DivisionByConstant_PreservesSlash()
+    {
+        string result = EvaluatedSyntax.ConvertToCSharpSyntax("Instance.Width / 2");
+
+        result.ShouldBe("Instance.Width / 2");
+    }
+
+    [Fact]
+    public void ConvertToCSharpSyntax_DivisionOfTwoVariables_PreservesSlash()
+    {
+        string result = EvaluatedSyntax.ConvertToCSharpSyntax("Instance.Width / Instance.Height");
+
+        result.ShouldBe("Instance.Width / Instance.Height");
+    }
+
+    [Fact]
+    public void ConvertToCSharpSyntax_DivisionWithParentheses_PreservesSlash()
+    {
+        string result = EvaluatedSyntax.ConvertToCSharpSyntax("(Instance.Width + 10) / 2");
+
+        result.ShouldBe("(Instance.Width + 10) / 2");
+    }
+
+    [Fact]
+    public void ConvertToCSharpSyntax_DivisionWithSpacesNoContext_PreservesSlash()
+    {
+        string result = EvaluatedSyntax.ConvertToCSharpSyntax("SomeVar / AnotherVar");
+
+        result.ShouldBe("SomeVar / AnotherVar");
+    }
+
+    [Fact]
+    public void ConvertToCSharpSyntax_MixedPathAndDivision_ConvertsBoth()
+    {
+        string result = EvaluatedSyntax.ConvertToCSharpSyntax("Components/Button.Width / 2");
+
+        result.ShouldBe("global::Components.Button.Width / 2");
+    }
+
+    [Fact]
+    public void ConvertToCSharpSyntax_SubfolderPathWithDivision_ConvertsBoth()
+    {
+        string result = EvaluatedSyntax.ConvertToCSharpSyntax("Components/Folder/Button.Width / 2");
+
+        result.ShouldContain("global::Components.");
+        result.ShouldEndWith(" / 2");
+    }
+
+    [Fact]
+    public void ConvertToCSharpSyntax_SubfolderPath_ReplacesSlashes()
+    {
+        string result = EvaluatedSyntax.ConvertToCSharpSyntax("Components/Folder/SubFolder/Button.Width");
+
+        result.ShouldStartWith("global::Components.");
+        result.ShouldNotContain("/");
     }
 
     [Fact]
