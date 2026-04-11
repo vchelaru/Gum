@@ -39,6 +39,10 @@ Gum Tool    Game (opt-in)
 
 The decoupling mechanism is `ElementSaveExtensions.CustomEvaluateExpression` — a static `Func<StateSave, string, string, object>` delegate. When null, falls back to `RecursiveVariableFinder` (simple lookups only). When set by `GumExpressionService.Initialize()`, uses Roslyn for full expression support.
 
+After applying variable references, call `GraphicalUiElement.RefreshStyles()` or
+`GumService.Default.RefreshStyles()` to push the updated values to live visuals. For a deep
+dive into how this works end-to-end, see the **gum-variable-deep-dive** skill.
+
 ## Known Limitation
 
 Division expressions (`Width / 2`) are broken when routed through `EvaluatedSyntax.ConvertToCSharpSyntax` because it replaces all `/` characters with a Unicode placeholder for path disambiguation. The division operator gets corrupted. Addition, subtraction, and multiplication work correctly.

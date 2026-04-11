@@ -1,9 +1,40 @@
 ---
 name: gum-property-assignment
-description: Reference guide for how Gum applies variables and sets properties on renderables. Load this when working on ApplyState, SetProperty, SetVariablesRecursively, CustomSetPropertyOnRenderable, font loading, IsAllLayoutSuspended, or isFontDirty.
+description: Reference guide for how Gum instantiates runtime objects from save data and applies variables to renderables. Load this when working on ToGraphicalUiElement, SetGraphicalUiElement, ApplyState, SetProperty, SetVariablesRecursively, CustomSetPropertyOnRenderable, font loading, IsAllLayoutSuspended, or isFontDirty.
 ---
 
 # Gum Property Assignment Reference
+
+## Save-to-Runtime Instantiation
+
+When a game loads a Gum project, `ElementSave.ToGraphicalUiElement()` is the entry point that
+creates a live `GraphicalUiElement` tree from a save element (screen, component, or standard).
+Without a loaded Gum project, `ElementSave` classes are not used at runtime — but `StateSave`,
+`StateSaveCategory`, and `VariableSave` are always used (they power the state system on GUE).
+
+### ToGraphicalUiElement → SetGraphicalUiElement pipeline
+
+`ToGraphicalUiElement` (in `ElementSaveExtensions.GumRuntime.cs`) creates a GUE and delegates
+to `SetGraphicalUiElement`, which does the heavy lifting in this order:
+
+1. **AddStatesAndCategoriesRecursivelyToGue** — walks the inheritance chain (via `BaseType`)
+   and copies `StateSaveCategory` and `StateSave` entries onto the GUE.
+2. **CreateGraphicalComponent** — creates the underlying renderable (`IRenderable`) via
+   `CustomCreateGraphicalComponentFunc` and assigns it with `SetContainedObject`.
+3. **AddExposedVariablesRecursively** — registers exposed variable bindings.
+4. **CreateChildrenRecursively** — iterates `elementSave.Instances`, calls
+   `instance.ToGraphicalUiElement()` for each, and parents the child GUE. For screens,
+   children are not parented directly (they use `ElementGueContainingThis` instead).
+5. **SetInitialState** — applies the default state's variables via `ApplyState`.
+6. **Animations** — if the project has `ElementAnimations`, wires them up.
+
+After this, the GUE tree is fully created and has its default state applied. The GUE's `Tag`
+and `ElementSave` properties point back to the source `ElementSave`.
+
+For a deep dive into the full variable lifecycle including Forms state updates and
+`RefreshStyles`, see the **gum-variable-deep-dive** skill.
+
+---
 
 ## Two Paths for Setting Properties on a GUE
 

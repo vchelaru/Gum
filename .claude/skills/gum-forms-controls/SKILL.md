@@ -53,7 +53,7 @@ Visual.SetProperty("ButtonCategoryState", stateName);
 
 Common state names are defined as constants on `FrameworkElement` (`EnabledStateName`, `DisabledStateName`, `HighlightedStateName`, `PushedStateName`, `FocusedStateName`, etc.). The `GetState(string stateName)` method searches all categories on the Visual.
 
-To customize appearance, either replace the Visual with a custom one that has different state variable values, or get and modify states directly via `control.GetState(...)`.
+To customize appearance, either replace the Visual with a custom one that has different state variable values, or get and modify states directly via `control.GetState(...)`. For a deep dive into how variable values flow from save data through runtime application and how `RefreshStyles` pushes style changes to live Forms controls, see the **gum-variable-deep-dive** skill.
 
 ## Class Hierarchy
 

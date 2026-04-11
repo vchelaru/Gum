@@ -10,6 +10,10 @@ Improve code quality without changing behavior. Analyze current state for code s
 
 * Incremental refactoring is preferred over large rewrites. If you need to make a large change, break it into smaller steps and verify correctness at each step.
 
+# Boyscout Principle — Leave It Better Than You Found It
+
+Gum is a mature codebase. When you load context in an area (reading methods, understanding call chains), take the opportunity to fix compiler warnings and clean up code in the methods and files you're already touching. You've already done the context-loading work, so these fixes are low-risk and high-value. Keep it non-invasive — don't restructure classes or change public APIs without reason, just fix warnings, remove dead code, and tidy what's in your path.
+
 # Cross-Platform Unification Rules
 
 ## Functionality Removal is a Big Deal

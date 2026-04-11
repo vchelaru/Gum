@@ -5346,6 +5346,62 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
     }
 
+    /// <summary>
+    /// Optional delegate called by <see cref="RefreshStyles"/> to re-apply
+    /// the current Forms visual state on an element. Wired by MonoGameGum
+    /// to call <c>FrameworkElement.UpdateState()</c> since GumRuntime cannot
+    /// reference Forms types directly.
+    /// </summary>
+    public static Action<object>? UpdateFormsStateAction;
+
+    /// <summary>
+    /// Re-applies all default state values and current Forms visual states
+    /// recursively on this element and all children. Call this after modifying
+    /// variable values on ElementSave states (e.g., after
+    /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/>)
+    /// to push those changes to the live visual tree.
+    /// </summary>
+    public void RefreshStyles()
+    {
+        bool didSuspend = false;
+        if (!IsAllLayoutSuspended)
+        {
+            IsAllLayoutSuspended = true;
+            didSuspend = true;
+        }
+
+        RefreshStylesRecursive();
+
+        if (didSuspend)
+        {
+            IsAllLayoutSuspended = false;
+            this.UpdateLayout();
+        }
+    }
+
+    private void RefreshStylesRecursive()
+    {
+        // Children first — each child re-applies its own component defaults
+        for (int i = 0; i < Children.Count; i++)
+        {
+            Children[i].RefreshStylesRecursive();
+        }
+
+        // Re-apply this element's default state (includes instance-qualified
+        // variables that override child properties)
+        var elementSave = this.Tag as ElementSave ?? this.ElementSave;
+        if (elementSave != null)
+        {
+            this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+        }
+
+        // Re-apply the current Forms categorical state (e.g., Highlighted, Disabled)
+        if (this is InteractiveGue interactive && interactive.FormsControlAsObject != null)
+        {
+            UpdateFormsStateAction?.Invoke(interactive.FormsControlAsObject);
+        }
+    }
+
     string NameOrType => !string.IsNullOrEmpty(Name) ? Name : $"<{GetType().Name}>";
 
     string ParentQualifiedName => Parent as GraphicalUiElement == null ? NameOrType : (Parent as GraphicalUiElement).ParentQualifiedName + "." + NameOrType;
