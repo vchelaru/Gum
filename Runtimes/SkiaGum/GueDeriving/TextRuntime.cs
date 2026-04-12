@@ -129,7 +129,7 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.VerticalAlignment = value;
     }
 
-#if !RAYLIB && !SKIA
+#if !SKIA
     /// <summary>
     /// The maximum letters to display. This can be used to
     /// create an effect where the text prints out letter-by-letter.
@@ -163,7 +163,7 @@ public class TextRuntime : InteractiveGue
     }
 #endif
 
-#if !SKIA
+#if !RAYLIB && !SKIA
     public BitmapFont BitmapFont
     {
         get => ContainedText.BitmapFont;

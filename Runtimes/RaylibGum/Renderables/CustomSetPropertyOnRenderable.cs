@@ -465,9 +465,12 @@ public class CustomSetPropertyOnRenderable
                 ReactToFontValueChange();
             }
         }
-        else if (propertyName == "LineHeightMultiplier")
+        else if (propertyName == nameof(textRuntime.LineHeightMultiplier))
         {
-            //asText.LineHeightMultiplier = (float)value;
+            if (textRuntime != null)
+            {
+                textRuntime.LineHeightMultiplier = (float)value;
+            }
         }
         else if (propertyName == nameof(textRuntime.UseFontSmoothing))
         {

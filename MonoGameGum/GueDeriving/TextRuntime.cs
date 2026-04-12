@@ -238,7 +238,6 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-#if !RAYLIB
     public float LineHeightMultiplier
     {
         get => ContainedText.LineHeightMultiplier;
@@ -252,7 +251,6 @@ public class TextRuntime : InteractiveGue
             }
         }
     }
-#endif
 
     bool useCustomFont;
     /// <summary>

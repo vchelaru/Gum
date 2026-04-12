@@ -281,6 +281,35 @@ This is a line-rectangle (outline) primitive. It has Red/Green/Blue/Alpha, Color
 
 ---
 
+## CustomSetPropertyOnRenderable
+
+**Status:** MonoGame and Raylib have separate files with significant overlap. Candidate for unification.
+
+### Files
+
+| Backend | Path | Size |
+|---|---|---|
+| MonoGame | `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` | ~2118 lines |
+| Raylib | `Runtimes/RaylibGum/Renderables/CustomSetPropertyOnRenderable.cs` | ~667 lines |
+| SkiaGum | *(none — Skia uses a different property-assignment path)* | — |
+
+Raylib's file is a reduced copy of MonoGame's, handling the subset of properties Raylib supports. Both dispatch by property name string to forward values onto renderables.
+
+### Unification Approach
+
+The same `#if RAYLIB` file-linking pattern used for `TextRuntime` and `ContainerRuntime` should work here. Differences are almost entirely additive (MonoGame supports more property names) rather than structurally divergent, so they can be guarded with `#if !RAYLIB` blocks.
+
+### Remaining Work
+
+- **Audit property-by-property** to confirm Raylib's file is a strict subset (no Raylib-specific branches that differ in behavior from MonoGame).
+- **Reconcile branches where both exist** — any case where the two files handle the same property differently needs to be understood before merging (e.g. the recent `LineHeightMultiplier` case in Raylib was a commented-out stub that has since been activated).
+- **Converge ordering and structure** so the shared file is byte-for-byte identical modulo `#if` guards, then collapse into one file and link from `RaylibGum.csproj`.
+- **Reconcile type differences** — XNA `Color` vs Raylib `Color`, `Texture2D` from different namespaces, etc. Same pattern already used in the other unified files.
+
+> **Note:** SkiaGum deliberately excluded. Its property-assignment goes through a different code path and is not a unification candidate at this time.
+
+---
+
 ## Cross-Cutting Concerns
 
 ### FlatRedBall 1 Compatibility
