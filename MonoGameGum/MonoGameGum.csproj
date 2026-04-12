@@ -196,14 +196,16 @@
 
 	<ItemGroup>
 		<!--
-			MonoGameGum references MonoGame for compile-time types only. Consumers bring their
-			own MonoGame.Framework.* package (Desktop/Android/iOS) — PrivateAssets=All keeps
-			our reference out of the published NuGet, so consumers never pick up a second
-			MonoGame. We pick the reference that matches the current TFM so compilation sees
-			the same API surface a consumer would see on that platform.
+			MonoGameGum references MonoGame for compile-time types only. Consumers bring
+			their own MonoGame.Framework.* package (Desktop/Android/iOS) — PrivateAssets=All
+			keeps our reference out of the published NuGet, so consumers never pick up a
+			second MonoGame. DesktopGL is referenced for net8.0 and net9.0-ios (the API
+			surface matches closely enough that iOS compiles successfully against it).
+			Android is different — Mono.Android base types are not in DesktopGL — so the
+			Android TFM swaps to MonoGame.Framework.Android.
 		-->
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1"
-						  Condition="!$(TargetFramework.Contains('ios')) and !$(TargetFramework.Contains('android'))">
+						  Condition="!$(TargetFramework.Contains('android'))">
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 
