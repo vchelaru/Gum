@@ -529,9 +529,9 @@ public class TextRuntime : InteractiveGue
     /// When set, this takes priority over <see cref="DefaultFont"/> and <see cref="DefaultFontSize"/>.
     /// When null, the default font is constructed from <see cref="DefaultFont"/> and <see cref="DefaultFontSize"/>.
     /// </summary>
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     public static BitmapFont? DefaultCustomFont;
-#else
+#elif RAYLIB
     public static Font? DefaultCustomFont;
 #endif
 
@@ -549,7 +549,7 @@ public class TextRuntime : InteractiveGue
         {
             this.SuspendLayout();
             var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
-#if !RAYLIB
+#if !RAYLIB && !SKIA
             textRenderable.RenderBoundary = false;
 #endif
             mContainedText = textRenderable;
@@ -560,9 +560,10 @@ public class TextRuntime : InteractiveGue
             WidthUnits = DefaultWidthUnits;
             Height = DefaultHeight;
             HeightUnits = DefaultHeightUnits;
-            if(AssignFontInConstructor)
+            if (AssignFontInConstructor)
             {
-                if(DefaultCustomFont != null)
+#if !SKIA
+                if (DefaultCustomFont != null)
                 {
 #if !RAYLIB
                     this.BitmapFont = DefaultCustomFont;
@@ -571,6 +572,7 @@ public class TextRuntime : InteractiveGue
 #endif
                 }
                 else
+#endif
                 {
                     this.FontSize = DefaultFontSize;
                     this.Font = DefaultFont;

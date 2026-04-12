@@ -510,10 +510,13 @@ public class TextRuntime : InteractiveGue
 
     public TextRuntime(bool fullInstantiation = true, SystemManagers? systemManagers = null)
     {
-        if(fullInstantiation)
+        if (fullInstantiation)
         {
             this.SuspendLayout();
             var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
+#if !RAYLIB && !SKIA
+            textRenderable.RenderBoundary = false;
+#endif
             mContainedText = textRenderable;
 
             SetContainedObject(textRenderable);
@@ -522,10 +525,23 @@ public class TextRuntime : InteractiveGue
             WidthUnits = DefaultWidthUnits;
             Height = DefaultHeight;
             HeightUnits = DefaultHeightUnits;
-            if(AssignFontInConstructor)
+            if (AssignFontInConstructor)
             {
-                this.FontSize = DefaultFontSize;
-                this.Font = DefaultFont;
+#if !SKIA
+                if (DefaultCustomFont != null)
+                {
+#if !RAYLIB
+                    this.BitmapFont = DefaultCustomFont;
+#else
+                    this.CustomFont = DefaultCustomFont.Value;
+#endif
+                }
+                else
+#endif
+                {
+                    this.FontSize = DefaultFontSize;
+                    this.Font = DefaultFont;
+                }
             }
             HasEvents = false;
 
