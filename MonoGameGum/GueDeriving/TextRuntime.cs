@@ -477,18 +477,38 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+#if !SKIA
     /// <summary>
     /// The lines of text after wrapping and bbcode parsing have been applied.
     /// </summary>
     public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
+#endif
 
 #if !RAYLIB
+    /// <summary>
+    /// Controls the draw order of letters within a line, which determines how
+    /// adjacent glyphs overlap. See <see cref="Gum.Graphics.OverlapDirection"/>
+    /// for details. Defaults to <see cref="OverlapDirection.RightOnTop"/>.
+    /// </summary>
+    /// <remarks>
+    /// Not supported on Raylib — the underlying Raylib text-rendering calls draw
+    /// a full string as a single unit and do not expose per-glyph ordering.
+    /// </remarks>
     public OverlapDirection OverlapDirection
     {
         get => ContainedText.OverlapDirection;
         set => ContainedText.OverlapDirection = value;
     }
 #endif
+
+    public override GraphicalUiElement Clone()
+    {
+        var toReturn = (TextRuntime)base.Clone();
+
+        toReturn.mContainedText = null;
+
+        return toReturn;
+    }
 
     #region Defaults
 
