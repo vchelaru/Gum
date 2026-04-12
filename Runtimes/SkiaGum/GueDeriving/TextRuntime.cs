@@ -3,6 +3,7 @@
 #endif
 using Gum.DataTypes;
 using Gum.Wireframe;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
 using System;
@@ -507,12 +508,12 @@ public class TextRuntime : InteractiveGue
 
     #endregion
 
-    public TextRuntime(bool fullInstantiation = true)
+    public TextRuntime(bool fullInstantiation = true, SystemManagers? systemManagers = null)
     {
         if(fullInstantiation)
         {
             this.SuspendLayout();
-            var textRenderable = new Text();
+            var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
             mContainedText = textRenderable;
 
             SetContainedObject(textRenderable);
