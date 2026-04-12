@@ -33,6 +33,16 @@ public class TextBox : TextBoxBase
     protected override string? DisplayedText => Text;
 
     /// <summary>
+    /// Applies text returned from the native on-screen keyboard dialog. Uses
+    /// <see cref="SetTextNoTranslate"/> so user-entered input is not passed through the
+    /// localization service.
+    /// </summary>
+    protected override void SetTextFromNativeKeyboardInput(string value)
+    {
+        SetTextNoTranslate(value);
+    }
+
+    /// <summary>
     /// Gets and sets the displayed Text. If the text exceeds MaxLength, it will be truncated.
     /// Setting this property applies localization if a <see cref="Gum.Localization.LocalizationService"/> is registered.
     /// To bypass localization (for example, for user-entered text), use <see cref="SetTextNoTranslate"/>.

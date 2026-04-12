@@ -21,6 +21,21 @@ public class PasswordBox : TextBoxBase
 {
     #region Fields/Properties
 
+    /// <summary>
+    /// Always <c>true</c> for <see cref="PasswordBox"/> — entered characters are masked
+    /// in the native keyboard dialog.
+    /// </summary>
+    protected override bool UseNativeKeyboardPasswordMode => true;
+
+    /// <summary>
+    /// Applies text returned from the native on-screen keyboard dialog to
+    /// <see cref="Password"/>.
+    /// </summary>
+    protected override void SetTextFromNativeKeyboardInput(string value)
+    {
+        Password = value;
+    }
+
     SecureString securePassword = new SecureString();
     public SecureString SecurePassword
     {

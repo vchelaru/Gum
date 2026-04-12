@@ -59,6 +59,29 @@ public class PasswordBoxTests : BaseTestClass
     }
 
 
+    [Fact]
+    public void NativeKeyboardInput_ShouldSetPassword()
+    {
+        var passwordBox = new NativeKeyboardAccessPasswordBox();
+        passwordBox.InvokeSetTextFromNativeKeyboardInput("hunter2");
+        passwordBox.Password.ShouldBe("hunter2");
+    }
+
+    [Fact]
+    public void NativeKeyboardPasswordMode_ShouldBeTrue_ForPasswordBox()
+    {
+        var passwordBox = new NativeKeyboardAccessPasswordBox();
+        passwordBox.GetUseNativeKeyboardPasswordMode().ShouldBeTrue();
+    }
+
+    class NativeKeyboardAccessPasswordBox : PasswordBox
+    {
+        public void InvokeSetTextFromNativeKeyboardInput(string value)
+            => SetTextFromNativeKeyboardInput(value);
+
+        public bool GetUseNativeKeyboardPasswordMode() => UseNativeKeyboardPasswordMode;
+    }
+
     class TestViewModel : ViewModel
     {
         public string? Password

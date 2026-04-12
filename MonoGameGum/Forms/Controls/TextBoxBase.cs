@@ -100,6 +100,37 @@ public abstract class TextBoxBase :
     /// </summary>
     public bool LosesFocusWhenClickedOff { get; set; } = true;
 
+    /// <summary>
+    /// If true, focusing this control displays the OS-provided modal keyboard dialog
+    /// (via MonoGame's <c>Microsoft.Xna.Framework.Input.KeyboardInput.Show</c>). The text
+    /// entered in the dialog is applied to this control when the user accepts. Defaults to
+    /// <c>true</c> on Android and iOS, and <c>false</c> on every other platform, because:
+    /// <list type="bullet">
+    ///   <item><description>Desktop (Windows/Mac/Linux): hardware keyboard input works directly, and the native dialog is a stub — enabling it would break normal typing.</description></item>
+    ///   <item><description>Web (Blazor WebAssembly, including mobile browsers): <c>KeyboardInput.Show</c> is not implemented on the browser runtime, so the call is bypassed regardless of this flag. Note that a mobile device running the game inside a browser reports <c>IsBrowser()</c>, not <c>IsAndroid()</c>/<c>IsIOS()</c>.</description></item>
+    /// </list>
+    /// You can override the default by setting this property explicitly after the control is created.
+    /// </summary>
+    public bool ShowNativeKeyboardOnFocus { get; set; }
+        = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+
+    /// <summary>
+    /// Title shown at the top of the native keyboard dialog when
+    /// <see cref="ShowNativeKeyboardOnFocus"/> is <c>true</c>. Ignored on platforms that
+    /// do not display a native dialog.
+    /// </summary>
+    public string NativeKeyboardTitle { get; set; } = "Enter text";
+
+    /// <summary>
+    /// Description text shown below the title on the native keyboard dialog when
+    /// <see cref="ShowNativeKeyboardOnFocus"/> is <c>true</c>. Ignored on platforms that
+    /// do not display a native dialog.
+    /// </summary>
+    public string NativeKeyboardDescription { get; set; } = string.Empty;
+
+    // Guards against re-entering the native dialog if focus toggles while it is visible.
+    bool _isNativeKeyboardShowing;
+
     protected int caretIndex;
     /// <summary>
     /// Gets or sets the zero-based character position of the caret. Setting this value
@@ -1372,17 +1403,21 @@ public abstract class TextBoxBase :
             {
                 InteractiveGue.CurrentInputReceiver = this;
             }
-#if ANDROID
+            TryShowNativeKeyboard();
+
+            // FRB1 (FlatRedBall) ships its own Android keyboard helper and uses these calls
+            // to drive it. The MonoGameGum build uses TryShowNativeKeyboard instead (via
+            // MonoGame's KeyboardInput.Show), so keep the FRB-only block below — do not remove.
+#if ANDROID && FRB
             FlatRedBall.Input.InputManager.Keyboard.ShowKeyboard();
 #endif
-
         }
         else if (!isFocused)
         {
             if (InteractiveGue.CurrentInputReceiver == this)
             {
                 InteractiveGue.CurrentInputReceiver = null;
-#if ANDROID
+#if ANDROID && FRB
                 FlatRedBall.Input.InputManager.Keyboard.HideKeyboard();
 #endif
             }
@@ -1390,6 +1425,66 @@ public abstract class TextBoxBase :
             // Vic says - why do we need to deselect when it loses focus? It could stay selected
             //SelectionLength = 0;
         }
+    }
+
+    /// <summary>
+    /// Applies text that came back from the native on-screen keyboard dialog. Called on the
+    /// game loop thread (marshaled through <c>GumService.Default.DeferredQueue</c>), so
+    /// overrides may safely mutate control state. Overridden by <see cref="TextBox"/> to
+    /// write to <c>Text</c>, and by <see cref="PasswordBox"/> to write to <c>Password</c>.
+    /// The default implementation does nothing, so subclasses that do not collect text
+    /// (conceptually none at the moment) are unaffected.
+    /// </summary>
+    /// <param name="value">The string the user entered, as returned by the native dialog. Never null.</param>
+    protected virtual void SetTextFromNativeKeyboardInput(string value) { }
+
+    /// <summary>
+    /// Whether the native keyboard dialog should mask entered characters (password mode).
+    /// Overridden by <see cref="PasswordBox"/> to return <c>true</c>. Defaults to <c>false</c>
+    /// for regular <see cref="TextBox"/> input.
+    /// </summary>
+    protected virtual bool UseNativeKeyboardPasswordMode => false;
+
+    private void TryShowNativeKeyboard()
+    {
+#if !FRB && !RAYLIB
+        if (!ShowNativeKeyboardOnFocus || _isNativeKeyboardShowing)
+        {
+            return;
+        }
+
+        // KeyboardInput.Show is not implemented on the Blazor WebAssembly runtime. Even if
+        // the caller sets ShowNativeKeyboardOnFocus = true (e.g. explicitly, since the default
+        // is false on browser), skip the call to avoid an exception / indefinite hang.
+        if (OperatingSystem.IsBrowser())
+        {
+            return;
+        }
+
+        _isNativeKeyboardShowing = true;
+
+        var task = Microsoft.Xna.Framework.Input.KeyboardInput.Show(
+            NativeKeyboardTitle,
+            NativeKeyboardDescription,
+            DisplayedText ?? string.Empty,
+            UseNativeKeyboardPasswordMode);
+
+        task.ContinueWith(t =>
+        {
+            // The continuation runs on whichever thread KeyboardInput.Show completes on,
+            // which is not guaranteed to be the game loop thread. UI/layout mutation must
+            // happen on the game loop thread, so route the result through GumService's
+            // DeferredQueue — it is thread-safe and drains on the next Update.
+            global::MonoGameGum.GumService.Default.DeferredQueue.Enqueue(() =>
+            {
+                _isNativeKeyboardShowing = false;
+                if (t.Status == System.Threading.Tasks.TaskStatus.RanToCompletion && t.Result != null)
+                {
+                    SetTextFromNativeKeyboardInput(t.Result);
+                }
+            });
+        });
+#endif
     }
 
     private void UpdateCaretVisibility()
