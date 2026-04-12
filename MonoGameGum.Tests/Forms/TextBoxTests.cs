@@ -393,6 +393,39 @@ public class TextBoxTests : BaseTestClass
 
     #region Visual
     [Fact]
+    public void NativeKeyboardInput_ShouldBypassLocalization_OnTextBox()
+    {
+        var mockLocalization = new Mock<ILocalizationService>();
+        mockLocalization.Setup(x => x.Translate(It.IsAny<string>())).Returns("TRANSLATED");
+        CustomSetPropertyOnRenderable.LocalizationService = mockLocalization.Object;
+
+        try
+        {
+            var textBox = new NativeKeyboardAccessTextBox();
+            textBox.InvokeSetTextFromNativeKeyboardInput("user entry");
+            textBox.Text.ShouldBe("user entry");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
+    }
+
+    [Fact]
+    public void NativeKeyboardPasswordMode_ShouldBeFalse_ForTextBox()
+    {
+        var textBox = new NativeKeyboardAccessTextBox();
+        textBox.GetUseNativeKeyboardPasswordMode().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShowNativeKeyboardOnFocus_Default_ShouldMatchPlatform()
+    {
+        var expected = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+        new TextBox().ShowNativeKeyboardOnFocus.ShouldBe(expected);
+    }
+
+    [Fact]
     public void Visual_HasEvents_ShouldBeTrue()
     {
         TextBox sut = new();
@@ -400,4 +433,12 @@ public class TextBoxTests : BaseTestClass
     }
 
     #endregion
+
+    class NativeKeyboardAccessTextBox : TextBox
+    {
+        public void InvokeSetTextFromNativeKeyboardInput(string value)
+            => SetTextFromNativeKeyboardInput(value);
+
+        public bool GetUseNativeKeyboardPasswordMode() => UseNativeKeyboardPasswordMode;
+    }
 }

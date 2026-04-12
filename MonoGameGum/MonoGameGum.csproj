@@ -1,8 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks Condition="'$(ExcludeIOS)' != 'true'">net8.0;net9.0-ios</TargetFrameworks>
-		<TargetFrameworks Condition="'$(ExcludeIOS)' == 'true'">net8.0</TargetFrameworks>
+		<!--
+			Target frameworks are composed based on which mobile workloads the developer has
+			installed. ExcludeIOS=true skips the iOS target (no iOS workload needed);
+			ExcludeAndroid=true skips the Android target (no Android workload needed). CI uses
+			both escape hatches because the release runner only has the base .NET SDK installed.
+		-->
+		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ExcludeIOS)' != 'true'">$(TargetFrameworks);net9.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ExcludeAndroid)' != 'true'">$(TargetFrameworks);net9.0-android</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -24,6 +31,12 @@
 
 	<PropertyGroup Condition="$(TargetFramework.Contains('ios'))">
 		<DefineConstants>$(DefineConstants);IOS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(TargetFramework.Contains('android'))">
+		<DefineConstants>$(DefineConstants);ANDROID</DefineConstants>
+		<!-- Matches the minimum SupportedOSPlatformVersion used across the Android samples. -->
+		<SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	
@@ -52,11 +65,19 @@
 	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
 	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-ios|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
 	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
 	</PropertyGroup>
 
@@ -68,11 +89,19 @@
 	  <DefineConstants>$(DefineConstants);MONOGAME;TEST;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='TEST|net9.0-android|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;TEST;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release_No_Diagnostics|net8.0|AnyCPU'">
 	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release_No_Diagnostics|net9.0-ios|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release_No_Diagnostics|net9.0-android|AnyCPU'">
 	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON</DefineConstants>
 	</PropertyGroup>
 
@@ -166,12 +195,33 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
+		<!--
+			MonoGameGum references MonoGame for compile-time types only. Consumers bring
+			their own MonoGame.Framework.* package (Desktop/Android/iOS) — PrivateAssets=All
+			keeps our reference out of the published NuGet, so consumers never pick up a
+			second MonoGame. DesktopGL is referenced for net8.0 and net9.0-ios (the API
+			surface matches closely enough that iOS compiles successfully against it).
+			Android is different — Mono.Android base types are not in DesktopGL — so the
+			Android TFM swaps to MonoGame.Framework.Android.
+		-->
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1"
+						  Condition="!$(TargetFramework.Contains('android'))">
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
-		
-		
-		<PackageReference Include="TextCopy" Version="6.2.1" Condition="!$(TargetFramework.Contains('ios'))" />
+
+		<PackageReference Include="MonoGame.Framework.Android" Version="3.8.4.1"
+						  Condition="$(TargetFramework.Contains('android'))">
+			<PrivateAssets>All</PrivateAssets>
+		</PackageReference>
+
+		<!--
+			TextCopy ships working implementations for Windows, macOS, Linux, and Android
+			(monoandroid90 asset), so it is referenced unconditionally on those targets.
+			iOS is excluded because clipboard operations are stubbed there (see
+			ClipboardImplementation.cs) — the iOS stub-out predates multi-targeting.
+		-->
+		<PackageReference Include="TextCopy" Version="6.2.1"
+						  Condition="!$(TargetFramework.Contains('ios'))" />
 	</ItemGroup>
 
 </Project>

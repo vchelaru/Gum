@@ -40,10 +40,13 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      # Restore NuGet packages once (ExcludeIOS avoids needing the iOS workload)
+      # Restore NuGet packages once. ExcludeIOS / ExcludeAndroid let the tool build
+      # on CI runners that do not have the mobile workloads installed. Mobile-TFM
+      # assemblies are skipped; consumers who need them build locally with the
+      # workloads installed.
       # Uses GumFull.sln so the CLI is built and copied into the Gum tool output
       - name: Restore
-        run: dotnet restore GumFull.sln -p:ExcludeIOS=true
+        run: dotnet restore GumFull.sln -p:ExcludeIOS=true -p:ExcludeAndroid=true
 
       # Update AssemblyInfo.cs version dynamically to current date
       - name: Update AssemblyInfo.cs version
@@ -64,7 +67,7 @@ jobs:
 
       # Build GUM TOOL (GumFull.sln includes Gum.Cli, which gets copied into the tool output)
       - name: Build Gum Tool
-        run: dotnet build GumFull.sln -c Release --no-restore -p:ExcludeIOS=true
+        run: dotnet build GumFull.sln -c Release --no-restore -p:ExcludeIOS=true -p:ExcludeAndroid=true
       
       # 1) Package the entire directory exactly as-is
       - name: Package entire Release folder

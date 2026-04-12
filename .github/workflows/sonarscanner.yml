@@ -27,7 +27,9 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Install workloads
-        run: dotnet workload install ios maui
+        # android is included so SonarQube analyzes the MonoGameGum / KniGum Android
+        # TFM assemblies (which carry the #if ANDROID code for native keyboard support).
+        run: dotnet workload install ios maui android
 
       - name: Cache SonarQube packages
         uses: actions/cache@v4

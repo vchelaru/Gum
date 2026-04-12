@@ -159,12 +159,12 @@ public class KniGumInCodeGame : Game
         }
 
         var container = new ContainerRuntime();
-        container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         container.Width = 0;
         container.Height = 0;
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        container.AddToManagers();
+        container.AddToRoot();
 
         AddText(container, "This is a colored rectangle:");
 

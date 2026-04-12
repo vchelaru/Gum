@@ -14,9 +14,13 @@ namespace MonoGameGum.Input;
 /// <summary>
 /// Provides keyboard input handling for XNA-like projects such as MonoGame and KNI.
 /// </summary>
-public class Keyboard : IInputReceiverKeyboardMonoGame
+public partial class Keyboard : IInputReceiverKeyboardMonoGame
 {
     #region Fields/Properties
+
+    // Stored so the Android partial class can reach Game.Services.GetService<View>()
+    // to drive the on-screen keyboard. Null on headless/test paths.
+    internal Game? _game;
 
     HashSet<char> ignoredWindowTextInputCharacters;
     /// <summary>
@@ -107,6 +111,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
     /// if it is available on the current platform.</param>
     public Keyboard(Game? game = null)
     {
+        _game = game;
 
         // characters 1 - 26 are CTRL+letter characters
         // for example CTRL+A is 1, CTRL+B is 2, etc.
@@ -161,6 +166,11 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
             {
 
             }
+#elif ANDROID
+            // MonoGame's AndroidGameWindow does not expose the TextInput event that the
+            // desktop GameWindow does. On Android we rely on Keyboard.Android.cs — an IME
+            // KeyPress listener registered lazily from ShowKeyboard() — to populate
+            // processedString, and GetStringTyped returns that directly.
 #else
             var succeeded = false;
             try
@@ -185,7 +195,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
     string processedStringFromWindow = string.Empty;
 
 
-#if !FNA
+#if !FNA && !ANDROID
     private void HandleWindowTextInput(object? sender, TextInputEventArgs e)
     {
         lock (windowTextInputBuffer)
