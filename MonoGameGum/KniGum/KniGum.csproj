@@ -1,7 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<!--
+			See MonoGameGum.csproj for details on the ExcludeIOS / ExcludeAndroid escape
+			hatches. KNI does not currently ship an iOS build, but the Android build enables
+			native on-screen keyboard support in the shared Forms TextBox code.
+		-->
+		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ExcludeAndroid)' != 'true'">$(TargetFrameworks);net9.0-android</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -31,6 +37,11 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
 	  <DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(TargetFramework.Contains('android'))">
+		<DefineConstants>$(DefineConstants);ANDROID</DefineConstants>
+		<SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

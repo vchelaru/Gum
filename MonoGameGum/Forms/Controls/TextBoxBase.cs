@@ -1406,8 +1406,9 @@ public abstract class TextBoxBase :
             TryShowNativeKeyboard();
 
             // FRB1 (FlatRedBall) ships its own Android keyboard helper and uses these calls
-            // to drive it. The MonoGameGum build uses TryShowNativeKeyboard instead (via
-            // MonoGame's KeyboardInput.Show), so keep the FRB-only block below — do not remove.
+            // to drive it. The MonoGameGum Android path is handled inside TryShowNativeKeyboard /
+            // TryHideNativeKeyboard via our own Keyboard.Android.cs partial (ported from FRB),
+            // so this FRB-only block is kept but not used by the MonoGameGum build.
 #if ANDROID && FRB
             FlatRedBall.Input.InputManager.Keyboard.ShowKeyboard();
 #endif
@@ -1417,6 +1418,7 @@ public abstract class TextBoxBase :
             if (InteractiveGue.CurrentInputReceiver == this)
             {
                 InteractiveGue.CurrentInputReceiver = null;
+                TryHideNativeKeyboard();
 #if ANDROID && FRB
                 FlatRedBall.Input.InputManager.Keyboard.HideKeyboard();
 #endif
@@ -1448,15 +1450,30 @@ public abstract class TextBoxBase :
     private void TryShowNativeKeyboard()
     {
 #if !FRB && !RAYLIB
-        if (!ShowNativeKeyboardOnFocus || _isNativeKeyboardShowing)
+        if (!ShowNativeKeyboardOnFocus)
         {
             return;
         }
 
-        // KeyboardInput.Show is not implemented on the Blazor WebAssembly runtime. Even if
-        // the caller sets ShowNativeKeyboardOnFocus = true (e.g. explicitly, since the default
-        // is false on browser), skip the call to avoid an exception / indefinite hang.
-        if (OperatingSystem.IsBrowser())
+#if ANDROID
+        // On Android we use an inline soft keyboard (ported from FRB's Keyboard.Android.cs).
+        // Typed characters flow through the normal InputReceiver pipeline via
+        // Keyboard.GetStringTyped / KeysTyped — no modal dialog, no deferred-queue marshaling
+        // needed because all input arrives on the UI thread and is drained by
+        // ProcessAndroidKeys each frame.
+        //
+        // IsAndroidVersionAtLeast(21) is required by CA1416 — see TryHideNativeKeyboard.
+        if (OperatingSystem.IsAndroidVersionAtLeast(21))
+        {
+            var keyboard = global::Gum.Forms.Controls.FrameworkElement.MainKeyboard
+                as global::MonoGameGum.Input.Keyboard;
+            keyboard?.ShowKeyboard();
+        }
+#else
+        // iOS (and any future platform without an inline implementation) falls back to
+        // MonoGame's KeyboardInput.Show modal. Browser (Blazor) is explicitly skipped —
+        // KeyboardInput.Show is not implemented there and would throw or hang.
+        if (_isNativeKeyboardShowing || OperatingSystem.IsBrowser())
         {
             return;
         }
@@ -1484,6 +1501,26 @@ public abstract class TextBoxBase :
                 }
             });
         });
+#endif
+#endif
+    }
+
+    private void TryHideNativeKeyboard()
+    {
+#if ANDROID && !FRB && !RAYLIB
+        // Dismiss the soft keyboard when the TextBox loses focus so users aren't left
+        // staring at an IME over an un-focused UI. Only meaningful on Android — iOS's
+        // modal KeyboardInput.Show dismisses itself.
+        //
+        // The IsAndroidVersionAtLeast guard is redundant at runtime (the whole block is
+        // inside #if ANDROID) but is required by the CA1416 platform-compatibility analyzer,
+        // which does not track #if directives — only runtime OS checks.
+        if (OperatingSystem.IsAndroidVersionAtLeast(21))
+        {
+            var keyboard = global::Gum.Forms.Controls.FrameworkElement.MainKeyboard
+                as global::MonoGameGum.Input.Keyboard;
+            keyboard?.HideKeyboard();
+        }
 #endif
     }
 
