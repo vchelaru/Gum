@@ -4,6 +4,8 @@
 using Gum.DataTypes;
 #if RAYLIB
 using Gum.Renderables;
+#elif SKIA
+using SkiaSharp;
 #else
 using Gum.Graphics;
 using Gum.RenderingLibrary;
@@ -20,6 +22,9 @@ using System.Threading.Tasks;
 #if RAYLIB
 using Raylib_cs;
 namespace Gum.GueDeriving;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
+namespace SkiaGum.GueDeriving;
 #else
 using Color = Microsoft.Xna.Framework.Color;
 namespace MonoGameGum.GueDeriving;
@@ -375,7 +380,7 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     /// <summary>
     /// Gets or sets the text rendering position mode to use for the contained text, overriding the default behavior if
     /// specified.
@@ -484,7 +489,7 @@ public class TextRuntime : InteractiveGue
     public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
 #endif
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     /// <summary>
     /// Controls the draw order of letters within a line, which determines how
     /// adjacent glyphs overlap. See <see cref="Gum.Graphics.OverlapDirection"/>
@@ -493,6 +498,7 @@ public class TextRuntime : InteractiveGue
     /// <remarks>
     /// Not supported on Raylib — the underlying Raylib text-rendering calls draw
     /// a full string as a single unit and do not expose per-glyph ordering.
+    /// Not supported on SkiaGum — Skia's text renderable uses a different path.
     /// </remarks>
     public OverlapDirection OverlapDirection
     {
@@ -591,7 +597,7 @@ public class TextRuntime : InteractiveGue
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     /// <summary>
     /// Returns the index of the character at the specified screen position. This returns the index
     /// within the WrappedText, so to index in, you need to loop through each line.

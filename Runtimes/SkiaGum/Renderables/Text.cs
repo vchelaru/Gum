@@ -13,7 +13,7 @@ using Gum.Wireframe;
 
 namespace SkiaGum;
 
-public class Text : IRenderableIpso, IVisible, IText
+public class Text : IRenderableIpso, IVisible, IText, ICloneable
 {
     #region Fields/Properties
 
@@ -542,4 +542,16 @@ public class Text : IRenderableIpso, IVisible, IText
     public string BatchKey => string.Empty;
 
     #endregion
+
+    public Text Clone()
+    {
+        var newInstance = (Text)this.MemberwiseClone();
+        newInstance.mParent = null;
+        newInstance.mChildren = new();
+        newInstance._cachedTextBlock = null;
+
+        return newInstance;
+    }
+
+    object ICloneable.Clone() => Clone();
 }

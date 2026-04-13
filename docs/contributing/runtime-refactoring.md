@@ -21,7 +21,7 @@ When adding a new property or fixing a bug, include the appropriate `#if` guards
 
 | Runtime | MonoGame | Raylib | SkiaGum | XNA+Raylib Unified? |
 |---|---|---|---|---|
-| TextRuntime | yes | linked to MonoGame | yes | **Done** |
+| TextRuntime | yes | linked to MonoGame | linked to MonoGame | **Done (all backends)** |
 | ContainerRuntime | yes | linked to MonoGame | yes | **Done** |
 | SpriteRuntime | yes | own file | yes | No |
 | ColoredRectangleRuntime | yes | own file | yes | No |
@@ -48,16 +48,15 @@ These runtimes exist only in SkiaGum and have no MonoGame or Raylib counterpart.
 
 ## TextRuntime
 
-**Status:** XNA+Raylib unified. SkiaGum convergence in progress.
+**Status:** **Complete** — fully unified across MonoGame, Raylib, and SkiaGum.
 
 ### Affected Files
 
 | Backend | Path |
 |---|---|
-| MonoGame + Raylib (shared) | `MonoGameGum/GueDeriving/TextRuntime.cs` |
-| SkiaGum | `Runtimes/SkiaGum/GueDeriving/TextRuntime.cs` |
+| MonoGame + Raylib + SkiaGum (shared) | `MonoGameGum/GueDeriving/TextRuntime.cs` |
 
-Raylib compiles the MonoGame file via file linking (`<Compile Include>` in `RaylibGum.csproj`), so there is no separate Raylib `TextRuntime.cs`. Platform differences within the shared file are handled by `#if RAYLIB` guards.
+Raylib and SkiaGum both compile the MonoGame file via file linking (`<Compile Include>` in `RaylibGum.csproj` and `SkiaGum.csproj`), so there are no separate per-backend `TextRuntime.cs` files. Platform differences within the shared file are handled by `#if RAYLIB` / `#if SKIA` / `#if !RAYLIB && !SKIA` guards.
 
 ### What Has Been Done
 
@@ -84,7 +83,7 @@ Raylib compiles the MonoGame file via file linking (`<Compile Include>` in `Rayl
 - ~~**Standardize bold/weight handling.**~~ Done — both files use an identical `#if SKIA / #else` block. Skia path: `float _boldWeight` + `BoldWeight` property with `IsBold` derived as `_boldWeight > 1`. Non-Skia path: `bool isBold` backing field + simple `IsBold` property calling `UpdateToFontValues()`.
 - ~~**Reconcile `FontSize` implementation.**~~ Done — both files use the backing-field pattern (`int fontSize` + `UpdateToFontValues()` in the setter).
 - ~~**Reconcile constructors.**~~ Done — signatures and bodies are now byte-identical between the two files. Both accept `(bool fullInstantiation = true, SystemManagers? systemManagers = null)` with default text `"Hello World"`. Platform-specific lines are wrapped in `#if` guards: `RenderBoundary = false` uses `#if !RAYLIB && !SKIA`; the `DefaultCustomFont` assignment branch uses `#if !SKIA` (with an inner `#if !RAYLIB / #else` for BitmapFont vs CustomFont). The `DefaultCustomFont` field declaration itself uses `#if !RAYLIB && !SKIA / #elif RAYLIB`. Skia's `Text` gained a `Text(SystemManagers)` overload for API uniformity — see `Runtimes/SkiaGum/Renderables/Text.cs`.
-- **Converge SkiaGum toward the shared file's structure and collapse into one file.** Remaining structural/ordering differences need to be resolved so the two files become byte-for-byte identical (modulo `#if` guards), at which point the SkiaGum file can be deleted and `SkiaGum.csproj` can file-link the shared `MonoGameGum/GueDeriving/TextRuntime.cs` — same pattern Raylib already uses. This is the final step.
+- ~~**Converge SkiaGum toward the shared file's structure and collapse into one file.**~~ Done — the SkiaGum `TextRuntime.cs` has been deleted and `SkiaGum.csproj` now file-links the shared `MonoGameGum/GueDeriving/TextRuntime.cs`. Three guards were widened from `#if !RAYLIB` to `#if !RAYLIB && !SKIA` (`TextRenderingPositionMode`, `OverlapDirection`, `GetCharacterIndexAtPosition`), and the using/namespace preamble gained a `#elif SKIA` branch that aliases `Color` to `SkiaSharp.SKColor` and declares the `SkiaGum.GueDeriving` namespace.
 
 ### Known Legitimate Differences
 
