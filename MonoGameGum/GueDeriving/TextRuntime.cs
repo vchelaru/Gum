@@ -238,7 +238,6 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-#if !RAYLIB
     public float LineHeightMultiplier
     {
         get => ContainedText.LineHeightMultiplier;
@@ -252,7 +251,6 @@ public class TextRuntime : InteractiveGue
             }
         }
     }
-#endif
 
     bool useCustomFont;
     /// <summary>
@@ -479,18 +477,38 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+#if !SKIA
     /// <summary>
     /// The lines of text after wrapping and bbcode parsing have been applied.
     /// </summary>
     public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
+#endif
 
 #if !RAYLIB
+    /// <summary>
+    /// Controls the draw order of letters within a line, which determines how
+    /// adjacent glyphs overlap. See <see cref="Gum.Graphics.OverlapDirection"/>
+    /// for details. Defaults to <see cref="OverlapDirection.RightOnTop"/>.
+    /// </summary>
+    /// <remarks>
+    /// Not supported on Raylib — the underlying Raylib text-rendering calls draw
+    /// a full string as a single unit and do not expose per-glyph ordering.
+    /// </remarks>
     public OverlapDirection OverlapDirection
     {
         get => ContainedText.OverlapDirection;
         set => ContainedText.OverlapDirection = value;
     }
 #endif
+
+    public override GraphicalUiElement Clone()
+    {
+        var toReturn = (TextRuntime)base.Clone();
+
+        toReturn.mContainedText = null;
+
+        return toReturn;
+    }
 
     #region Defaults
 
@@ -511,9 +529,9 @@ public class TextRuntime : InteractiveGue
     /// When set, this takes priority over <see cref="DefaultFont"/> and <see cref="DefaultFontSize"/>.
     /// When null, the default font is constructed from <see cref="DefaultFont"/> and <see cref="DefaultFontSize"/>.
     /// </summary>
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     public static BitmapFont? DefaultCustomFont;
-#else
+#elif RAYLIB
     public static Font? DefaultCustomFont;
 #endif
 
@@ -531,7 +549,7 @@ public class TextRuntime : InteractiveGue
         {
             this.SuspendLayout();
             var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
-#if !RAYLIB
+#if !RAYLIB && !SKIA
             textRenderable.RenderBoundary = false;
 #endif
             mContainedText = textRenderable;
@@ -542,9 +560,10 @@ public class TextRuntime : InteractiveGue
             WidthUnits = DefaultWidthUnits;
             Height = DefaultHeight;
             HeightUnits = DefaultHeightUnits;
-            if(AssignFontInConstructor)
+            if (AssignFontInConstructor)
             {
-                if(DefaultCustomFont != null)
+#if !SKIA
+                if (DefaultCustomFont != null)
                 {
 #if !RAYLIB
                     this.BitmapFont = DefaultCustomFont;
@@ -553,6 +572,7 @@ public class TextRuntime : InteractiveGue
 #endif
                 }
                 else
+#endif
                 {
                     this.FontSize = DefaultFontSize;
                     this.Font = DefaultFont;

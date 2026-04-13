@@ -352,6 +352,15 @@ public class Text : IRenderableIpso, IVisible, IText
         mChildren = new ();
     }
 
+    /// <summary>
+    /// Overload provided for API uniformity with the MonoGame/Raylib Text renderable,
+    /// which requires a <see cref="SystemManagers"/> at construction time. SkiaGum does
+    /// not need the managers at construction — they are passed to <see cref="Render"/>
+    /// instead — so the parameter is ignored. This overload exists so that shared
+    /// runtime/wrapper code can target all three backends with the same call shape.
+    /// </summary>
+    public Text(SystemManagers managers) : this() { }
+
     public void Render(ISystemManagers managers)
     {
         var canvas = (managers as SystemManagers).Canvas;

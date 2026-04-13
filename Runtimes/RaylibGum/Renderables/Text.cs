@@ -532,7 +532,7 @@ public class Text : IVisible, IRenderableIpso,
 
     public string? StoredMarkupText => null;
 
-    public float LineHeightMultiplier => 1;
+    public float LineHeightMultiplier { get; set; } = 1;
 
 
     float IPositionedSizedObject.Width
@@ -672,7 +672,7 @@ public class Text : IVisible, IRenderableIpso,
                 origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * FontScale, 0).X;
             }
             var linePosition = position;
-            linePosition.Y += i * LineHeightInPixels;
+            linePosition.Y += i * LineHeightInPixels * LineHeightMultiplier;
 
             if (TextRenderingPositionMode == TextRenderingPositionMode.SnapToPixel)
             {
@@ -741,8 +741,7 @@ public class Text : IVisible, IRenderableIpso,
         }
 
         mPreRenderWidth = (int)(requiredWidth + .5f);
-        //mPreRenderHeight = (int)(requiredHeight * LineHeightMultiplier + .5f);
-        mPreRenderHeight = (int)(requiredHeight * 1 + .5f);
+        mPreRenderHeight = (int)(requiredHeight * LineHeightMultiplier + .5f);
     }
 
     public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<float>? widths)

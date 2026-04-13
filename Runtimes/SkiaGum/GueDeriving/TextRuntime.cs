@@ -3,6 +3,7 @@
 #endif
 using Gum.DataTypes;
 using Gum.Wireframe;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
 using System;
@@ -129,7 +130,7 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.VerticalAlignment = value;
     }
 
-#if !RAYLIB && !SKIA
+#if !SKIA
     /// <summary>
     /// The maximum letters to display. This can be used to
     /// create an effect where the text prints out letter-by-letter.
@@ -163,7 +164,7 @@ public class TextRuntime : InteractiveGue
     }
 #endif
 
-#if !SKIA
+#if !RAYLIB && !SKIA
     public BitmapFont BitmapFont
     {
         get => ContainedText.BitmapFont;
@@ -454,7 +455,19 @@ public class TextRuntime : InteractiveGue
     /// The lines of text after wrapping and bbcode parsing have been applied.
     /// </summary>
     public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
+#endif
 
+#if !RAYLIB && !SKIA
+    /// <summary>
+    /// Controls the draw order of letters within a line, which determines how
+    /// adjacent glyphs overlap. See <see cref="Gum.Graphics.OverlapDirection"/>
+    /// for details. Defaults to <see cref="OverlapDirection.RightOnTop"/>.
+    /// </summary>
+    /// <remarks>
+    /// Not supported on Raylib — the underlying Raylib text-rendering calls draw
+    /// a full string as a single unit and do not expose per-glyph ordering.
+    /// Not supported on SkiaGum — Skia's text renderable uses a different path.
+    /// </remarks>
     public OverlapDirection OverlapDirection
     {
         get => ContainedText.OverlapDirection;
@@ -495,12 +508,15 @@ public class TextRuntime : InteractiveGue
 
     #endregion
 
-    public TextRuntime(bool fullInstantiation = true)
+    public TextRuntime(bool fullInstantiation = true, SystemManagers? systemManagers = null)
     {
-        if(fullInstantiation)
+        if (fullInstantiation)
         {
             this.SuspendLayout();
-            var textRenderable = new Text();
+            var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
+#if !RAYLIB && !SKIA
+            textRenderable.RenderBoundary = false;
+#endif
             mContainedText = textRenderable;
 
             SetContainedObject(textRenderable);
@@ -509,10 +525,23 @@ public class TextRuntime : InteractiveGue
             WidthUnits = DefaultWidthUnits;
             Height = DefaultHeight;
             HeightUnits = DefaultHeightUnits;
-            if(AssignFontInConstructor)
+            if (AssignFontInConstructor)
             {
-                this.FontSize = DefaultFontSize;
-                this.Font = DefaultFont;
+#if !SKIA
+                if (DefaultCustomFont != null)
+                {
+#if !RAYLIB
+                    this.BitmapFont = DefaultCustomFont;
+#else
+                    this.CustomFont = DefaultCustomFont.Value;
+#endif
+                }
+                else
+#endif
+                {
+                    this.FontSize = DefaultFontSize;
+                    this.Font = DefaultFont;
+                }
             }
             HasEvents = false;
 

@@ -75,16 +75,16 @@ Raylib compiles the MonoGame file via file linking (`<Compile Include>` in `Rayl
 
 ### Remaining Work (SkiaGum convergence)
 
-- **Converge SkiaGum toward the shared file's structure.** Many properties and `#if` guards already match, but ordering and some details differ. The goal is byte-for-byte structural identity (modulo legitimate platform differences behind `#if` guards), at which point the two files can be collapsed into one.
-- **Standardize bold/weight handling.** The shared file uses a boolean `IsBold` with a `isBold` backing field. SkiaGum uses a float `BoldWeight` property (delegating to `ContainedText.BoldWeight`) and derives `IsBold` from it (`BoldWeight > 1`). These need a unified approach.
-- **Reconcile `FontSize` implementation.** The shared file stores `fontSize` in a backing field and calls `UpdateToFontValues()`. SkiaGum sets `ContainedText.FontSize` directly AND calls `UpdateToFontValues()`. Need to decide on one approach.
-- **Reconcile `MaxLettersToShow` guard.** The shared file uses `#if !SKIA`. SkiaGum uses `#if !RAYLIB && !SKIA`. Since the SkiaGum file defines `SKIA`, both exclude it, but the guard text should be identical for the eventual merge.
-- **Reconcile `LineHeightMultiplier` guard.** The shared file guards it with `#if !RAYLIB`. SkiaGum has it unconditionally. Need to decide the correct guard for the unified file.
-- **Handle SkiaGum-only legacy code.** SkiaGum has `DefaultRed`/`DefaultGreen`/`DefaultBlue`, `ColorCategory`/`ColorCategoryState` (both `[Obsolete]`), and `MaximumNumberOfLines` (obsolete alias). These need to be either migrated to the shared file behind `#if SKIA` guards or removed if truly dead.
-- **Handle `WrappedText` and `OverlapDirection`.** Both are guarded `#if !SKIA` in the SkiaGum file but `#if !RAYLIB` in the shared file. If SkiaGum's `Text` renderable supports these, the guards should be updated.
-- **Reconcile constructors.** The shared file accepts `SystemManagers? systemManagers`, sets `RenderBoundary = false`, uses `DefaultWidth`/`DefaultHeight`/`DefaultWidthUnits`/`DefaultHeightUnits` fields, and defaults text to `"Hello World"`. SkiaGum's constructor hardcodes dimensions, sets RGB to 255, and defaults to `"Hello"`.
-- **Handle `Clone()` override.** SkiaGum has a `Clone()` override that nulls `mContainedText`. The shared file does not. Need to decide if this should be in the unified file.
-- **Reconcile `BitmapFont` guard.** Shared file uses `#if !RAYLIB && !SKIA`. SkiaGum file uses `#if !SKIA`. Since SkiaGum always defines SKIA, both exclude it, but guard text should match.
+- ~~**Reconcile `MaxLettersToShow` guard.**~~ Done — both files use `#if !SKIA`.
+- ~~**Reconcile `BitmapFont` guard.**~~ Done — both files use `#if !RAYLIB && !SKIA`.
+- ~~**Reconcile `LineHeightMultiplier` guard.**~~ Done — Raylib renderable now implements `LineHeightMultiplier`; property is unguarded in both `TextRuntime` files. See `Runtimes/RaylibGum/Renderables/Text.cs` (`Render` and `UpdatePreRenderDimensions`) and `Runtimes/RaylibGum/Renderables/CustomSetPropertyOnRenderable.cs`.
+- ~~**Handle SkiaGum-only legacy code.**~~ Already removed. No action needed.
+- ~~**Handle `WrappedText` and `OverlapDirection`.**~~ Done — `WrappedText` uses `#if !SKIA` in both files (Raylib and MonoGame both expose it; Skia's renderable does not). `OverlapDirection` uses `#if !RAYLIB && !SKIA` in both files with XML docs explaining the Raylib/Skia limitations. See `RenderingLibrary/Graphics/TextOverflowMode.cs` for the enum docs.
+- ~~**Handle `Clone()` override.**~~ Done — `Clone()` promoted to the shared file. This fixed a latent bug: `base.Clone()` uses `MemberwiseClone`, which leaves `mContainedText` pointing at the original's renderable. Nulling it forces re-cache from the clone's own `RenderableComponent`.
+- ~~**Standardize bold/weight handling.**~~ Done — both files use an identical `#if SKIA / #else` block. Skia path: `float _boldWeight` + `BoldWeight` property with `IsBold` derived as `_boldWeight > 1`. Non-Skia path: `bool isBold` backing field + simple `IsBold` property calling `UpdateToFontValues()`.
+- ~~**Reconcile `FontSize` implementation.**~~ Done — both files use the backing-field pattern (`int fontSize` + `UpdateToFontValues()` in the setter).
+- ~~**Reconcile constructors.**~~ Done — signatures and bodies are now byte-identical between the two files. Both accept `(bool fullInstantiation = true, SystemManagers? systemManagers = null)` with default text `"Hello World"`. Platform-specific lines are wrapped in `#if` guards: `RenderBoundary = false` uses `#if !RAYLIB && !SKIA`; the `DefaultCustomFont` assignment branch uses `#if !SKIA` (with an inner `#if !RAYLIB / #else` for BitmapFont vs CustomFont). The `DefaultCustomFont` field declaration itself uses `#if !RAYLIB && !SKIA / #elif RAYLIB`. Skia's `Text` gained a `Text(SystemManagers)` overload for API uniformity — see `Runtimes/SkiaGum/Renderables/Text.cs`.
+- **Converge SkiaGum toward the shared file's structure and collapse into one file.** Remaining structural/ordering differences need to be resolved so the two files become byte-for-byte identical (modulo `#if` guards), at which point the SkiaGum file can be deleted and `SkiaGum.csproj` can file-link the shared `MonoGameGum/GueDeriving/TextRuntime.cs` — same pattern Raylib already uses. This is the final step.
 
 ### Known Legitimate Differences
 
@@ -96,9 +96,9 @@ Raylib compiles the MonoGame file via file linking (`<Compile Include>` in `Rayl
 | `CustomFont` property | Raylib-only (`Font` type); not applicable to others |
 | `BlendState`/`Blend` properties | XNA-like only; not applicable to Raylib or SkiaGum |
 | `TextRenderingPositionMode` | Present in MonoGame and SkiaGum; absent from Raylib |
-| Bold representation | Shared file uses `bool IsBold`; SkiaGum uses `float BoldWeight` with `IsBold` derived |
-| Obsolete color fields | SkiaGum has legacy `DefaultRed`, `DefaultGreen`, `DefaultBlue`, `ColorCategory` — the shared file does not |
-| `RenderBoundary` | Set to `false` in shared-file constructor; not applicable to SkiaGum |
+| Bold representation | Both files use an `#if SKIA / #else` block: Skia exposes `float BoldWeight` (with `IsBold` derived as `_boldWeight > 1`); non-Skia uses `bool isBold`. |
+| `RenderBoundary` | Set to `false` in the shared-file constructor for MonoGame only. Raylib and Skia `Text` renderables do not have this property. |
+| `DefaultCustomFont` | MonoGame assigns `BitmapFont`; Raylib assigns `CustomFont` (a `Font` value); Skia has no equivalent constructor-time default custom font. |
 
 ---
 
@@ -278,6 +278,35 @@ SkiaGum inherits from `SkiaShapeRuntime` and has `IsClosed`, `Points` (as `List<
 | MonoGame | `MonoGameGum/GueDeriving/RectangleRuntime.cs` (~134 lines) |
 
 This is a line-rectangle (outline) primitive. It has Red/Green/Blue/Alpha, Color, `LineWidth`, and `IsDotted`. No Raylib or SkiaGum equivalents exist. If a Raylib or SkiaGum version is created in the future, it should follow the unification strategy from the start.
+
+---
+
+## CustomSetPropertyOnRenderable
+
+**Status:** MonoGame and Raylib have separate files with significant overlap. Candidate for unification.
+
+### Files
+
+| Backend | Path | Size |
+|---|---|---|
+| MonoGame | `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` | ~2118 lines |
+| Raylib | `Runtimes/RaylibGum/Renderables/CustomSetPropertyOnRenderable.cs` | ~667 lines |
+| SkiaGum | *(none — Skia uses a different property-assignment path)* | — |
+
+Raylib's file is a reduced copy of MonoGame's, handling the subset of properties Raylib supports. Both dispatch by property name string to forward values onto renderables.
+
+### Unification Approach
+
+The same `#if RAYLIB` file-linking pattern used for `TextRuntime` and `ContainerRuntime` should work here. Differences are almost entirely additive (MonoGame supports more property names) rather than structurally divergent, so they can be guarded with `#if !RAYLIB` blocks.
+
+### Remaining Work
+
+- **Audit property-by-property** to confirm Raylib's file is a strict subset (no Raylib-specific branches that differ in behavior from MonoGame).
+- **Reconcile branches where both exist** — any case where the two files handle the same property differently needs to be understood before merging (e.g. the recent `LineHeightMultiplier` case in Raylib was a commented-out stub that has since been activated).
+- **Converge ordering and structure** so the shared file is byte-for-byte identical modulo `#if` guards, then collapse into one file and link from `RaylibGum.csproj`.
+- **Reconcile type differences** — XNA `Color` vs Raylib `Color`, `Texture2D` from different namespaces, etc. Same pattern already used in the other unified files.
+
+> **Note:** SkiaGum deliberately excluded. Its property-assignment goes through a different code path and is not a unification candidate at this time.
 
 ---
 
