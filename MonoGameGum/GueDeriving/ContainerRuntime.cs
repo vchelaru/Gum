@@ -19,6 +19,8 @@ using BlendState = Microsoft.Xna.Framework.Graphics.BlendState;
 #if RAYLIB
 using BlendState = Gum.BlendState;
 namespace Gum.GueDeriving;
+#elif SKIA
+namespace SkiaGum.GueDeriving;
 #else
 namespace MonoGameGum.GueDeriving;
 #endif
@@ -51,6 +53,7 @@ public class ContainerRuntime : InteractiveGue
     }
 
 
+#if !SKIA
     public BlendState BlendState
     {
 #if XNALIKE
@@ -92,6 +95,7 @@ public class ContainerRuntime : InteractiveGue
             // NotifyPropertyChanged handled by BlendState:
         }
     }
+#endif
 
     public ContainerRuntime()
     {
@@ -110,11 +114,8 @@ public class ContainerRuntime : InteractiveGue
     {
         SetContainedObject(new InvisibleRenderable());
         HasEvents = true;
-        ExposeChildrenEvents = true;
         Width = 150;
         Height = 150;
-        Visible = true;
-
     }
 
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>

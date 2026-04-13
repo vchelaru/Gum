@@ -1,15 +1,10 @@
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
 
-namespace MonoGameGum.Tests.Runtimes;
-public class ContainerRuntimeTests
+namespace RaylibGum.Tests.Runtimes;
+
+public class ContainerRuntimeTests : BaseTestClass
 {
     [Fact]
     public void Alpha_ShouldDefaultTo255()

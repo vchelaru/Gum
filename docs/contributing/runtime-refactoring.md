@@ -22,13 +22,15 @@ When adding a new property or fixing a bug, include the appropriate `#if` guards
 | Runtime | MonoGame | Raylib | SkiaGum | XNA+Raylib Unified? |
 |---|---|---|---|---|
 | TextRuntime | yes | linked to MonoGame | linked to MonoGame | **Done (all backends)** |
-| ContainerRuntime | yes | linked to MonoGame | yes | **Done** |
+| ContainerRuntime | yes | linked to MonoGame | linked to MonoGame | **Done (all backends)** |
 | SpriteRuntime | yes | own file | yes | No |
 | ColoredRectangleRuntime | yes | own file | yes | No |
 | NineSliceRuntime | yes | own file | **not implemented** | No |
 | CircleRuntime | yes | — | yes | N/A (no Raylib version) |
 | PolygonRuntime | yes | — | yes | N/A (no Raylib version) |
 | RectangleRuntime | yes | — | — | N/A (MonoGame only) |
+| CustomSetPropertyOnRenderable | yes | linked to MonoGame | own file (~670 lines) | Done (MG+Raylib); SkiaGum diverges |
+| GumService | yes | linked to MonoGame (via `#if RAYLIB`) | own file | Done (MG+Raylib); SkiaGum separate |
 
 ### SkiaGum-only runtimes (no unification target)
 
@@ -43,6 +45,21 @@ These runtimes exist only in SkiaGum and have no MonoGame or Raylib counterpart.
 - `SkiaShapeRuntime` (base class for Circle, Polygon, and other shape runtimes in SkiaGum)
 - `SolidRectangleRuntime`
 - `SvgRuntime`
+
+---
+
+## Recommended Ordering
+
+The remaining candidates are best tackled in this order:
+
+1. **`SpriteRuntime`** — same playbook as `TextRuntime` and `ContainerRuntime`. All three backends have their own copy; convergence is well-understood.
+2. **`ColoredRectangleRuntime`** — similar shape to SpriteRuntime, smaller file. Template from step 1 applies.
+3. **`NineSliceRuntime`** — MonoGame and Raylib only (SkiaGum does not implement it). Still worth unifying the two existing copies.
+4. **`CircleRuntime` and `PolygonRuntime`** — MonoGame and SkiaGum only (no Raylib). Small-scope pairs.
+5. **`CustomSetPropertyOnRenderable`** — deferred to its own project. Skia's 670-line copy vs the 2118-line shared source-of-truth is a much larger divergence than the runtime classes, and Skia's version dispatches on Skia-only renderable types (`Arc`, `RoundedRectangle`, `Line`, `VectorSprite`, etc.) that don't exist elsewhere. Likely requires a dedicated research/design phase before convergence — may need partial-class splitting or heavy `#if SKIA` blocks rather than the simple file-link pattern used for runtime classes.
+6. **`GumService`** — Skia's separate implementation uses a different init model. Probably the hardest single-file unification target; likely touches initialization lifecycle, DeferredQueue, and the Root/PopupRoot/ModalRoot containers.
+
+**Rationale for putting CustomSetPropertyOnRenderable after the runtime classes** rather than tackling it next: finishing the GueDeriving runtimes is a coherent milestone, the pattern is established, and each runtime done gives a reusable template. CustomSetPropertyOnRenderable is a real unknown and risks getting stuck on design decisions mid-stream.
 
 ---
 
@@ -103,29 +120,24 @@ Raylib and SkiaGum both compile the MonoGame file via file linking (`<Compile In
 
 ## ContainerRuntime
 
-**Status:** XNA+Raylib unified. SkiaGum version is minimal and needs convergence.
+**Status:** **Complete** — fully unified across MonoGame, Raylib, and SkiaGum.
 
 ### Affected Files
 
 | Backend | Path |
 |---|---|
-| MonoGame + Raylib (shared) | `MonoGameGum/GueDeriving/ContainerRuntime.cs` (~127 lines) |
-| SkiaGum | `Runtimes/SkiaGum/GueDeriving/ContainerRuntime.cs` (~30 lines) |
+| MonoGame + Raylib + SkiaGum (shared) | `MonoGameGum/GueDeriving/ContainerRuntime.cs` |
 
-Raylib compiles the MonoGame file via file linking.
+Raylib and SkiaGum both compile the MonoGame file via file linking (see the `<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="..." />` entries in `RaylibGum.csproj` and `SkiaGum.csproj`).
 
-### Current State
+### Behavior changes during unification
 
-The shared MonoGame+Raylib file has a full set of properties: `Alpha`, `IsRenderTarget`, `BlendState`, `Blend`, `AddToManagers()`, and batch rendering methods (`BeginRenderingAsBatch`/`EndRenderingAsBatch`). It inherits from `InteractiveGue`.
+Two backend-visible behavior changes were introduced when SkiaGum was converged onto the shared file:
 
-The SkiaGum version is almost empty — it inherits from `InteractiveGue` (migrated from `GraphicalUiElement` in April 2026) and only has a `Clone()` override. Most container behavior is inherited from the base class.
+- **`HasEvents` now defaults to `true` on SkiaGum containers** (parity with MonoGame and Raylib). Previously the Skia `ContainerRuntime` did not set `HasEvents`, so it inherited the `InteractiveGue` default of `false`. Existing SkiaGum apps that relied on containers being non-interactive by default may see different cursor/event routing behavior.
+- **`ContainerRuntime.ClipsChildren` now actually works on SkiaGum.** The old Skia version wrapped a `RenderableShapeBase`, which does not implement `ISetClipsChildren`, so setting `ClipsChildren` silently did nothing. The shared file wraps an `InvisibleRenderable`, which does implement `ISetClipsChildren`. This is a long-standing silent bug fix.
 
-### Remaining Work
-
-- **Determine which shared-file properties are applicable to SkiaGum.** `Alpha` likely applies. `IsRenderTarget`, `BlendState`, `Blend`, and batch methods are likely platform-specific and may need `#if` guards.
-- **Add SkiaGum-applicable properties** behind appropriate guards.
-- **Add `Clone()` override to the shared file** if it's needed across all backends.
-- **Unify MonoGame and Raylib first, then converge with SkiaGum** — since Raylib is already linked, the remaining gap is entirely SkiaGum.
+`BlendState` and `Blend` properties are guarded with `#if !SKIA` in the shared file because SkiaGum does not link `BlendExtensions` and does not consume `BlendState` in its render loop. This mirrors the pattern used in the shared `TextRuntime.cs`.
 
 ---
 
@@ -282,30 +294,87 @@ This is a line-rectangle (outline) primitive. It has Red/Green/Blue/Alpha, Color
 
 ## CustomSetPropertyOnRenderable
 
-**Status:** MonoGame and Raylib have separate files with significant overlap. Candidate for unification.
+**Status:** MonoGame and Raylib already file-link the canonical source. SkiaGum has a fully independent, much smaller copy — high-value convergence target.
 
-### Files
+### Affected Files
 
 | Backend | Path | Size |
 |---|---|---|
-| MonoGame | `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` | ~2118 lines |
-| Raylib | `Runtimes/RaylibGum/Renderables/CustomSetPropertyOnRenderable.cs` | ~667 lines |
-| SkiaGum | *(none — Skia uses a different property-assignment path)* | — |
+| MonoGame + Raylib (shared) | `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` | ~2118 lines |
+| SkiaGum | `Runtimes/SkiaGum/CustomSetPropertyOnRenderable.cs` | ~670 lines |
 
-Raylib's file is a reduced copy of MonoGame's, handling the subset of properties Raylib supports. Both dispatch by property name string to forward values onto renderables.
+MonoGame and Raylib both compile the `Gum/Wireframe/` file via file linking in their `.csproj`. SkiaGum maintains its own separate implementation.
 
-### Unification Approach
+### Current State
 
-The same `#if RAYLIB` file-linking pattern used for `TextRuntime` and `ContainerRuntime` should work here. Differences are almost entirely additive (MonoGame supports more property names) rather than structurally divergent, so they can be guarded with `#if !RAYLIB` blocks.
+The MonoGame+Raylib shared file handles a large surface of property-name string dispatches onto renderables. SkiaGum's file is roughly a third of the size and diverges significantly — likely missing many property branches and/or using a different structural approach for the branches it does handle.
 
 ### Remaining Work
 
-- **Audit property-by-property** to confirm Raylib's file is a strict subset (no Raylib-specific branches that differ in behavior from MonoGame).
-- **Reconcile branches where both exist** — any case where the two files handle the same property differently needs to be understood before merging (e.g. the recent `LineHeightMultiplier` case in Raylib was a commented-out stub that has since been activated).
-- **Converge ordering and structure** so the shared file is byte-for-byte identical modulo `#if` guards, then collapse into one file and link from `RaylibGum.csproj`.
-- **Reconcile type differences** — XNA `Color` vs Raylib `Color`, `Texture2D` from different namespaces, etc. Same pattern already used in the other unified files.
+- **Audit SkiaGum's file against the shared file** to identify which property branches exist, which are missing, and which are structurally different.
+- **Classify divergences** — additive gaps (missing branches) can be guarded with `#if !SKIA`, while structural differences will need case-by-case reconciliation.
+- **Reconcile type differences** — XNA/Raylib `Color` vs `SKColor`, texture types, etc. Same `#if` pattern used in other unified files.
+- **Converge toward the shared file's structure,** then collapse into a file-link from `SkiaGum.csproj`.
 
-> **Note:** SkiaGum deliberately excluded. Its property-assignment goes through a different code path and is not a unification candidate at this time.
+### Known Legitimate Differences
+
+| Difference | Detail |
+|---|---|
+| Color type | `SKColor` in SkiaGum vs XNA/Raylib `Color` in the shared file |
+| Renderable types | SkiaGum dispatches onto Skia renderables (`SKCanvas`-backed) which do not all have XNA-side equivalents |
+
+---
+
+## GumService
+
+**Status:** MonoGame and Raylib converged via `#if RAYLIB` guards in the MonoGame file. SkiaGum has a fully separate implementation with a different init model.
+
+### Affected Files
+
+| Backend | Path |
+|---|---|
+| MonoGame + Raylib (shared) | `MonoGameGum/GumService.cs` |
+| SkiaGum | `Runtimes/SkiaGum/GumService.cs` |
+
+Raylib compiles the MonoGame file directly; platform-specific paths are guarded internally with `#if RAYLIB`. SkiaGum does not link to this file.
+
+### Current State
+
+The MonoGame/Raylib `GumService` centralizes initialization, input polling, and update/draw coordination with per-backend branches. SkiaGum's version predates this convergence and uses a different initialization model, so merging is not a drop-in file link.
+
+### Remaining Work
+
+- **Map SkiaGum's init flow onto the shared file's structure.** Identify which steps correspond and which are Skia-only.
+- **Add `#if SKIA` branches** to the shared file for Skia-specific init, input, and update paths — the same approach just completed for `TextRuntime`.
+- **Converge the two files** until byte-identical modulo guards, then collapse into one and file-link from `SkiaGum.csproj`.
+
+### Known Legitimate Differences
+
+| Difference | Detail |
+|---|---|
+| Input sources | MonoGame/Raylib use their respective input abstractions; SkiaGum has its own input surface (see Future Work) |
+| Init model | Skia currently has a different initialization entry point than the MonoGame/Raylib shared path |
+
+---
+
+## Future Work / Not Yet Scoped
+
+Items identified as gaps but not yet actively being converged. Tracked here so they are not forgotten.
+
+### Input abstraction layer
+
+| Backend | Paths |
+|---|---|
+| MonoGame | `MonoGameGum/Input/GamePad.cs`, `MonoGameGum/Input/Keyboard.cs` |
+| Raylib | `Runtimes/RaylibGum/Input/GamePad.cs`, `Runtimes/RaylibGum/Input/Keyboard.cs` |
+
+These wrap fundamentally different underlying APIs (XNA input types vs. Raylib C bindings) and are structurally very different — roughly 700–800 lines of diff each. This is **not a file-link candidate**. The right approach is to extract a shared interface (e.g. `IGamePad`, `IKeyboard`) and have each backend provide its own implementation, rather than trying to converge with `#if` guards.
+
+Should be taken up as a separate refactor project once the file-link candidates above are exhausted.
+
+### Renderables layer (explicitly not a unification target)
+
+`Runtimes/*/Renderables/*.cs` and the per-backend `RenderingLibrary/Renderer.cs` / `SystemManagers.cs` are **not** candidates for unification. The code is tightly coupled to each backend's graphics API — MonoGame `SpriteBatch`, Raylib C bindings, SkiaSharp `SKCanvas` — and there is little structural overlap worth unifying. These files are expected to remain per-backend indefinitely.
 
 ---
 

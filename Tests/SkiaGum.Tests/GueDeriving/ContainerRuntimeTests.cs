@@ -1,29 +1,22 @@
-using MonoGameGum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
+using SkiaGum;
+using SkiaGum.GueDeriving;
 
-namespace MonoGameGum.Tests.Runtimes;
+namespace SkiaGum.Tests.GueDeriving;
+
+// Note: Alpha/IsRenderTarget/BlendState round-trip tests are intentionally omitted here.
+// Those properties don't exist on the Skia ContainerRuntime yet; they'll be added as part
+// of the ContainerRuntime unification step that converges Skia to match MG+Raylib.
 public class ContainerRuntimeTests
 {
-    [Fact]
-    public void Alpha_ShouldDefaultTo255()
+    public ContainerRuntimeTests()
     {
-        ContainerRuntime sut = new();
-        sut.Alpha.ShouldBe(255);
-    }
-
-    [Fact]
-    public void Alpha_ShouldRoundTrip()
-    {
-        ContainerRuntime sut = new();
-        sut.Alpha = 128;
-        sut.Alpha.ShouldBe(128);
+        // Wire up the SkiaGum custom property setter so SetProperty routes correctly.
+        // Normally done by SystemManagers.Initialize(), but we don't need the full
+        // rendering pipeline for these unit tests.
+        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
     [Fact]
@@ -52,21 +45,6 @@ public class ContainerRuntimeTests
     {
         ContainerRuntime sut = new();
         sut.Height.ShouldBe(150);
-    }
-
-    [Fact]
-    public void IsRenderTarget_ShouldDefaultToFalse()
-    {
-        ContainerRuntime sut = new();
-        sut.IsRenderTarget.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void IsRenderTarget_ShouldRoundTrip()
-    {
-        ContainerRuntime sut = new();
-        sut.IsRenderTarget = true;
-        sut.IsRenderTarget.ShouldBeTrue();
     }
 
     [Fact]
