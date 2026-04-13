@@ -41,6 +41,7 @@
 			<Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
 		</Compile>
 		<Compile Include="..\..\Gum\SvgPlugin\Managers\DefaultStateManager.cs" Link="DefaultStateManager.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\TextRuntime.cs" Link="GueDeriving\TextRuntime.cs" />
 
 	</ItemGroup>
 
