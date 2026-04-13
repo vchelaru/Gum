@@ -44,6 +44,19 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region Clone
+
+    [Fact]
+    public void Clone_ShouldCreateClonedText()
+    {
+        TextRuntime sut = new();
+        TextRuntime clone = (TextRuntime)sut.Clone();
+        clone.ShouldNotBeNull();
+        clone.RenderableComponent.ShouldNotBeSameAs(sut.RenderableComponent);
+    }
+
+    #endregion
+
     #region FontFamily
 
     [Fact]
@@ -180,6 +193,22 @@ public class TextRuntimeTests
         TextRuntime sut = new();
         sut.LineHeightMultiplier = 1.5f;
         sut.LineHeightMultiplier.ShouldBe(1.5f);
+    }
+
+    #endregion
+
+    #region PropertyChanged
+
+    [Fact]
+    public void PropertyChanged_ShouldRaise_WhenTextChanges()
+    {
+        TextRuntime sut = new();
+        string? changedPropertyName = null;
+        sut.PropertyChanged += (_, args) => changedPropertyName = args.PropertyName;
+
+        sut.Text = "Hello 1234";
+
+        changedPropertyName.ShouldBe(nameof(TextRuntime.Text));
     }
 
     #endregion

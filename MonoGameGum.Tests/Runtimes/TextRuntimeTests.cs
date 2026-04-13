@@ -973,5 +973,120 @@ $"chars count=223\r\n";
         textRuntime.VerticalAlignment.ShouldBe(VerticalAlignment.Center);
     }
 
+    #region Defaults
+
+    [Fact]
+    public void DefaultFont_ShouldBeArial()
+    {
+        TextRuntime.DefaultFont.ShouldBe("Arial");
+    }
+
+    [Fact]
+    public void DefaultFontSize_ShouldBe18()
+    {
+        TextRuntime.DefaultFontSize.ShouldBe(18);
+    }
+
+    #endregion
+
+    #region FontFamily
+
+    [Fact]
+    public void Font_ShouldDelegateToFontFamily()
+    {
+        TextRuntime sut = new();
+        sut.FontFamily = "Comic Sans MS";
+        sut.Font.ShouldBe("Comic Sans MS");
+    }
+
+    [Fact]
+    public void FontFamily_ShouldSetAndGetFont()
+    {
+        TextRuntime sut = new();
+        sut.FontFamily = "Impact";
+        sut.FontFamily.ShouldBe("Impact");
+    }
+
+    #endregion
+
+    #region FontSize
+
+    [Fact]
+    public void FontSize_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.FontSize = 24;
+        sut.FontSize.ShouldBe(24);
+    }
+
+    #endregion
+
+    #region SetTextNoTranslate
+
+    [Fact]
+    public void SetTextNoTranslate_ShouldUpdateTextProperty()
+    {
+        TextRuntime sut = new();
+        sut.SetTextNoTranslate("Translated Text");
+        sut.Text.ShouldBe("Translated Text");
+    }
+
+    [Fact]
+    public void SetTextNoTranslate_WhenNull_ShouldSetTextToNull()
+    {
+        TextRuntime sut = new();
+        sut.Text = "Some text";
+        sut.SetTextNoTranslate(null);
+        sut.Text.ShouldBeNull();
+    }
+
+    #endregion
+
+    #region TextOverflowHorizontalMode
+
+    [Fact]
+    public void TextOverflowHorizontalMode_Default_ShouldBeTruncateWord()
+    {
+        TextRuntime sut = new();
+        sut.TextOverflowHorizontalMode.ShouldBe(TextOverflowHorizontalMode.TruncateWord);
+    }
+
+    [Fact]
+    public void TextOverflowHorizontalMode_WhenSetToEllipsis_ShouldReadBackAsEllipsis()
+    {
+        TextRuntime sut = new();
+        sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.EllipsisLetter;
+        sut.TextOverflowHorizontalMode.ShouldBe(TextOverflowHorizontalMode.EllipsisLetter);
+    }
+
+    [Fact]
+    public void TextOverflowHorizontalMode_WhenSetBackToTruncate_ShouldReadBackAsTruncate()
+    {
+        TextRuntime sut = new();
+        sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.EllipsisLetter;
+        sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.TruncateWord;
+        sut.TextOverflowHorizontalMode.ShouldBe(TextOverflowHorizontalMode.TruncateWord);
+    }
+
+    #endregion
+
+    #region UseFontSmoothing
+
+    [Fact]
+    public void UseFontSmoothing_ShouldDefaultToTrue()
+    {
+        TextRuntime sut = new();
+        sut.UseFontSmoothing.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UseFontSmoothing_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        sut.UseFontSmoothing = false;
+        sut.UseFontSmoothing.ShouldBeFalse();
+    }
+
+    #endregion
 
 }
