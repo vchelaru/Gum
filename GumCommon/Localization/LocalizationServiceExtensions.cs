@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -52,45 +52,62 @@ public static class LocalizationServiceExtensions
     /// <param name="baseResxFilePath">Path to the base (default language) .resx file.</param>
     public static void AddResxDatabase(this ILocalizationService service, string baseResxFilePath)
     {
-        var directory = Path.GetDirectoryName(baseResxFilePath)!;
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(baseResxFilePath);
+        AddResxDatabase(service, new[] { baseResxFilePath }, onWarning: null);
+    }
 
-        // Collect all .resx files: base file first, then satellite files sorted alphabetically
-        var resxFiles = new List<(string languageName, string filePath)>();
+    /// <summary>
+    /// Loads localization data from multiple base .resx files, each with their own satellite
+    /// files discovered by convention (e.g., Strings.resx + Strings.es.resx, Buttons.resx +
+    /// Buttons.es.resx). Languages are unioned across all files; missing translations fall
+    /// back to the string ID. String IDs are merged across files with last-write-wins on
+    /// collision.
+    /// </summary>
+    /// <param name="service">The localization service to populate.</param>
+    /// <param name="baseResxFilePaths">Paths to the base (default language) .resx files.</param>
+    /// <param name="onWarning">Optional callback invoked with a descriptive message when
+    /// a string ID collision occurs across files. Not invoked for other events. Does not
+    /// write to Debug or Console by default because this runtime ships in games.</param>
+    public static void AddResxDatabase(this ILocalizationService service,
+        IEnumerable<string> baseResxFilePaths,
+        Action<string>? onWarning = null)
+    {
+        var fileGroups = new List<FileGroup>();
 
-        // The base file represents the default/neutral language
-        resxFiles.Add(("Default", baseResxFilePath));
-
-        // Discover satellite files matching the pattern: BaseName.{culture}.resx
-        var searchPattern = fileNameWithoutExtension + ".*.resx";
-        foreach (var satelliteFile in Directory.GetFiles(directory, searchPattern).OrderBy(f => f))
+        foreach (var baseResxFilePath in baseResxFilePaths)
         {
-            // Extract the culture portion from e.g. "Strings.es.resx" -> "es"
-            var satelliteFileName = Path.GetFileNameWithoutExtension(satelliteFile);
-            var cultureName = satelliteFileName.Substring(fileNameWithoutExtension.Length + 1);
+            var directory = Path.GetDirectoryName(baseResxFilePath)!;
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(baseResxFilePath);
 
-            resxFiles.Add((cultureName, satelliteFile));
-        }
+            var filesForGroup = new List<(string languageName, string filePath)>();
+            filesForGroup.Add(("Default", baseResxFilePath));
 
-        // Read all files into streams and delegate to the stream-based overload
-        var resxStreams = new List<(string languageName, Stream stream)>();
-        try
-        {
-            foreach (var (languageName, filePath) in resxFiles)
+            // Note: this pattern will match any file of the shape {BaseName}.*.resx, including
+            // unintended ones like Strings.backup.resx. Callers are responsible for keeping the
+            // directory clean of non-localization files matching this shape.
+            var searchPattern = fileNameWithoutExtension + ".*.resx";
+            foreach (var satelliteFile in Directory.GetFiles(directory, searchPattern).OrderBy(f => f))
             {
-                var stream = File.OpenRead(filePath);
-                resxStreams.Add((languageName, stream));
+                var satelliteFileName = Path.GetFileNameWithoutExtension(satelliteFile);
+                var cultureName = satelliteFileName.Substring(fileNameWithoutExtension.Length + 1);
+                filesForGroup.Add((cultureName, satelliteFile));
             }
 
-            service.AddResxDatabase(resxStreams);
-        }
-        finally
-        {
-            foreach (var (_, stream) in resxStreams)
+            var group = new FileGroup
             {
-                stream.Dispose();
+                DisplayName = Path.GetFileName(baseResxFilePath),
+                LanguageEntries = new List<(string languageName, Dictionary<string, string> entries)>()
+            };
+
+            foreach (var (languageName, filePath) in filesForGroup)
+            {
+                using var stream = File.OpenRead(filePath);
+                group.LanguageEntries.Add((languageName, ReadResxStream(stream)));
             }
+
+            fileGroups.Add(group);
         }
+
+        BuildAndAddDatabase(service, fileGroups, onWarning);
     }
 
     /// <summary>
@@ -102,49 +119,151 @@ public static class LocalizationServiceExtensions
     public static void AddResxDatabase(this ILocalizationService service,
         IEnumerable<(string languageName, Stream stream)> resxStreams)
     {
-        var streamList = resxStreams.ToList();
-        var headerList = streamList.Select(s => s.languageName).ToList();
+        AddResxDatabase(service,
+            new[] { (groupName: (string?)null, streams: resxStreams) },
+            onWarning: null);
+    }
 
-        // Parse each .resx stream into a dictionary of name -> value
-        var languageDictionaries = new List<Dictionary<string, string>>();
-        foreach (var (_, stream) in streamList)
+    /// <summary>
+    /// Loads localization data from multiple groups of .resx streams. Each group represents
+    /// one base-file worth of per-language streams (e.g., one group for Strings.resx + its
+    /// satellites, another for Buttons.resx + its satellites). Languages are unioned across
+    /// all groups; missing translations fall back to the string ID. String IDs are merged
+    /// across groups with last-write-wins on collision. Use this on mobile/web where
+    /// Directory.GetFiles is unavailable.
+    /// </summary>
+    /// <param name="service">The localization service to populate.</param>
+    /// <param name="fileGroups">Groups of (languageName, stream) pairs, one group per file.</param>
+    /// <param name="onWarning">Optional callback invoked with a descriptive message when
+    /// a string ID collision occurs across groups.</param>
+    public static void AddResxDatabase(this ILocalizationService service,
+        IEnumerable<IEnumerable<(string languageName, Stream stream)>> fileGroups,
+        Action<string>? onWarning = null)
+    {
+        AddResxDatabase(service,
+            fileGroups.Select(g => (groupName: (string?)null, streams: g)),
+            onWarning);
+    }
+
+    /// <summary>
+    /// Loads localization data from multiple named groups of .resx streams. The group name
+    /// is used in collision warning messages; pass null to fall back to "Group {index}".
+    /// Behaves identically to the unnamed multi-group overload otherwise.
+    /// </summary>
+    /// <param name="service">The localization service to populate.</param>
+    /// <param name="fileGroups">Groups of (groupName, streams) pairs. groupName may be null.</param>
+    /// <param name="onWarning">Optional callback invoked with a descriptive message when
+    /// a string ID collision occurs across groups.</param>
+    public static void AddResxDatabase(this ILocalizationService service,
+        IEnumerable<(string? groupName, IEnumerable<(string languageName, Stream stream)> streams)> fileGroups,
+        Action<string>? onWarning = null)
+    {
+        var parsedGroups = new List<FileGroup>();
+
+        var groupIndex = 0;
+        foreach (var (groupName, group) in fileGroups)
         {
-            languageDictionaries.Add(ReadResxStream(stream));
+            var parsed = new FileGroup
+            {
+                DisplayName = groupName ?? ("Group " + groupIndex),
+                LanguageEntries = new List<(string languageName, Dictionary<string, string> entries)>()
+            };
+
+            foreach (var (languageName, stream) in group)
+            {
+                parsed.LanguageEntries.Add((languageName, ReadResxStream(stream)));
+            }
+
+            parsedGroups.Add(parsed);
+            groupIndex++;
         }
 
-        // Collect all string IDs across all languages
-        var allStringIds = new HashSet<string>();
-        foreach (var dict in languageDictionaries)
+        BuildAndAddDatabase(service, parsedGroups, onWarning);
+    }
+
+    private class FileGroup
+    {
+        public string DisplayName { get; set; } = "";
+        public List<(string languageName, Dictionary<string, string> entries)> LanguageEntries { get; set; }
+            = new List<(string, Dictionary<string, string>)>();
+    }
+
+    private static void BuildAndAddDatabase(ILocalizationService service,
+        List<FileGroup> fileGroups,
+        Action<string>? onWarning)
+    {
+        // Union language names across groups, preserving first-seen order.
+        var headerList = new List<string>();
+        var seenLanguages = new HashSet<string>();
+        foreach (var group in fileGroups)
         {
-            foreach (var key in dict.Keys)
+            foreach (var (languageName, _) in group.LanguageEntries)
             {
-                allStringIds.Add(key);
+                if (seenLanguages.Add(languageName))
+                {
+                    headerList.Add(languageName);
+                }
             }
         }
 
-        // Build the entry dictionary in the same format as the CSV loader:
-        // translatedStrings[0] = stringId, translatedStrings[1..N] = translations
-        var totalColumns = streamList.Count + 1;
+        var totalColumns = headerList.Count + 1;
         var entryDictionary = new Dictionary<string, string[]>();
 
-        foreach (var stringId in allStringIds)
-        {
-            var translatedStrings = new string[totalColumns];
-            translatedStrings[0] = stringId;
+        // Track all prior file-groups that provided each stringId for collision reporting.
+        var stringIdToSourceGroups = new Dictionary<string, List<string>>();
 
-            for (int i = 0; i < streamList.Count; i++)
+        foreach (var group in fileGroups)
+        {
+            // Build per-language lookup for this group keyed by language name.
+            var languageMap = new Dictionary<string, Dictionary<string, string>>();
+            foreach (var (languageName, entries) in group.LanguageEntries)
             {
-                if (languageDictionaries[i].TryGetValue(stringId, out var value))
+                languageMap[languageName] = entries;
+            }
+
+            // Collect all string IDs present anywhere in this group.
+            var stringIdsInGroup = new HashSet<string>();
+            foreach (var (_, entries) in group.LanguageEntries)
+            {
+                foreach (var key in entries.Keys)
                 {
-                    translatedStrings[i + 1] = value;
+                    stringIdsInGroup.Add(key);
+                }
+            }
+
+            foreach (var stringId in stringIdsInGroup)
+            {
+                if (stringIdToSourceGroups.TryGetValue(stringId, out var previousSources))
+                {
+                    var priorList = "[" + string.Join(", ", previousSources.Select(s => $"'{s}'")) + "]";
+                    onWarning?.Invoke(
+                        $"Key '{stringId}' collision: overwriting value from {priorList} with value from '{group.DisplayName}' (last-write-wins).");
+                    previousSources.Add(group.DisplayName);
                 }
                 else
                 {
-                    translatedStrings[i + 1] = stringId;
+                    stringIdToSourceGroups[stringId] = new List<string> { group.DisplayName };
                 }
-            }
 
-            entryDictionary[stringId] = translatedStrings;
+                var translatedStrings = new string[totalColumns];
+                translatedStrings[0] = stringId;
+
+                for (var i = 0; i < headerList.Count; i++)
+                {
+                    var languageName = headerList[i];
+                    if (languageMap.TryGetValue(languageName, out var entries)
+                        && entries.TryGetValue(stringId, out var value))
+                    {
+                        translatedStrings[i + 1] = value;
+                    }
+                    else
+                    {
+                        translatedStrings[i + 1] = stringId;
+                    }
+                }
+
+                entryDictionary[stringId] = translatedStrings;
+            }
         }
 
         service.AddDatabase(entryDictionary, headerList);
@@ -152,6 +271,8 @@ public static class LocalizationServiceExtensions
 
     private static Dictionary<string, string> ReadResxStream(Stream stream)
     {
+        // Entries with a null name attribute or null value element are silently skipped
+        // (pre-existing behavior). Malformed entries do not raise exceptions.
         var result = new Dictionary<string, string>();
         var doc = XDocument.Load(stream);
 
