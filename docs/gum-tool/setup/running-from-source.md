@@ -34,6 +34,20 @@ Gum depends on a number of plugins for its functionality. By default if you buil
 
 ## Troubleshooting
 
+### Missing Editor Tab
+
+If your Editor Tab is missing, be sure to Build -> Build Solution. The Editor tab is a plugin, and you can verify that the plugin is in fact being built/loaded.
+
+First view plugins:
+
+<figure><img src="../../.gitbook/assets/14_15 59 13.png" alt=""><figcaption></figcaption></figure>
+
+Next, look for the Editor tab plugin in the list that appears:
+
+<figure><img src="../../.gitbook/assets/14_16 01 14.png" alt=""><figcaption></figcaption></figure>
+
+If you are missing this, be sure to Build -> Build Solution.
+
 ### A project with an Output Type of Class Library cannot be started directly
 
 <figure><img src="../../.gitbook/assets/20_09 20 07.png" alt=""><figcaption></figcaption></figure>
