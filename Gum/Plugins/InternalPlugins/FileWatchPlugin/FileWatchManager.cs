@@ -143,11 +143,16 @@ public class FileWatchManager : IFileWatchManager
     private void HandleRename(object? sender, RenamedEventArgs e)
     {
         var fileName = new FilePath(e.FullPath);
-        // for now only do texture files like PNG:
-        // Update November 3, 2025 - Open Office renames
-        // so allow CSV too:
+        // Some file types are updated via an atomic-save pattern used by editors
+        // such as Vim, JetBrains IDEs, and certain VS Code save modes: the editor
+        // writes to a temp file and then renames it over the target. The
+        // FileSystemWatcher fires a Renamed event rather than a Changed event in
+        // that case, so we must handle renames for these extensions explicitly.
+        // - PNG: texture files edited externally
+        // - CSV: Open Office and similar tools rename on save
+        // - RESX: localization files edited in atomic-save editors
         var extension = fileName.Extension;
-        if(extension == "png" || extension == "csv")
+        if(extension == "png" || extension == "csv" || extension == "resx")
         {
             HandleFileSystemChange(fileName);
         }

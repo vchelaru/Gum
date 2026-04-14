@@ -6,7 +6,7 @@ namespace Gum.ToolStates;
 
 public interface IProjectState
 {
-    GumProjectSave GumProjectSave { get; }
+    GumProjectSave? GumProjectSave { get; }
     GeneralSettingsFile GeneralSettings { get; }
     string? ProjectDirectory { get; }
     FilePath ComponentFilePath { get; }

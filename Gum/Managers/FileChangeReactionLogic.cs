@@ -97,6 +97,11 @@ namespace Gum.Managers
                 if(IsLocalizationFileThatShouldTriggerReload(file, localizationFile))
                 {
                     _fileCommands.LoadLocalizationFile();
+                    // Potential optimization: if the changed file is a satellite (e.g. Strings.es.resx)
+                    // and CurrentLanguage doesn't map to that satellite's language index, this refresh
+                    // is unnecessary. The cost is currently acceptable (small XML reload + layout pass),
+                    // but if flickering becomes noticeable this should be gated on whether the changed
+                    // satellite matches the active language.
                     _wireframeCommands.Refresh();
                 }
             }

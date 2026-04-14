@@ -39,6 +39,10 @@ Gum is a mature codebase. When you load context in an area (reading methods, und
 
 Write unit tests for new features and bug fixes unless the change is trivial or untestable. The user will build and run tests themselves — do not run them via Bash. Output: changed files + brief why. Focus on correctness and brevity over cleverness.
 
+**Zero new warnings policy** — after every change, verify that no new compiler warnings were introduced. If a warning cannot be fixed (e.g., an unused event on a test fake that satisfies an interface contract), suppress it with `#pragma warning disable`/`restore` and a comment explaining why the suppression is justified.
+
+**Boyscout warnings** — apply the boyscout principle to existing warnings too. Fix pre-existing warnings in the same method you're editing, nearby methods in the same file, or the entire class if it's small. You've already loaded the context, so the cost is low. Don't chase warnings into unrelated files.
+
 Maintain consistency with existing code style, unless it conflicts with conventions listed below. In that case, explain which you chose and why. Always search for usages before renaming or changing a public API. Can create new files when implementing new features.
 
 NEVER delete files without user confirmation.
