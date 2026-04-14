@@ -8,6 +8,7 @@ using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.ComponentModel.Composition;
 using Gum.Commands;
 using Gum.Logic.FileWatch;
@@ -73,12 +74,21 @@ class MainPropertiesWindowPlugin : InternalPlugin
         // todo - handle loading new Gum project when this window is shown - re-call BindTo
         this.ProjectLoad += HandleProjectLoad;
         this.ReactToFileChanged += HandleFileChanged;
+        _fileCommands.LocalizationLoaded += HandleLocalizationLoaded;
 
         control = new();
         control.CloseClicked += HandleCloseClicked;
         
         _pluginTab = _tabManager.AddControl(control, "Project Properties");
         _pluginTab.Hide();
+    }
+
+    private void HandleLocalizationLoaded()
+    {
+        if (control == null || viewModel == null) return;
+        viewModel.UpdateLanguageNameFromIndex(LocalizationService.Languages);
+        control.ViewModel = null;
+        control.ViewModel = viewModel;
     }
 
     private void HandleProjectLoad(GumProjectSave obj)
@@ -156,8 +166,19 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 else
                 {
                     _fileCommands.LoadLocalizationFile();
-
                     _wireframeObjectManager.RefreshAll(forceLayout: true, forceReloadTextures: false);
+                }
+                break;
+            case nameof(viewModel.LanguageName):
+                var languageIdx = LocalizationService.Languages.ToList().IndexOf(viewModel.LanguageName) + 1;
+                if (languageIdx > 0 && languageIdx != viewModel.LanguageIndex)
+                {
+                    viewModel.LanguageIndex = languageIdx;
+                    LocalizationService.CurrentLanguage = languageIdx;
+                }
+                else
+                {
+                    shouldSaveAndRefresh = false;
                 }
                 break;
             case nameof(viewModel.LanguageIndex):

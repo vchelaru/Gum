@@ -351,6 +351,11 @@ public class GumxImportServiceTests : IDisposable
 
     private class FakeFileCommands : IFileCommands
     {
+        // CS0067: event is never raised — this fake only satisfies the IFileCommands contract;
+        // tests in this file don't exercise localization loading.
+#pragma warning disable CS0067
+        public event Action? LocalizationLoaded;
+#pragma warning restore CS0067
         public FilePath? ProjectDirectory => null;
 
         public bool TryAutoSaveProject(bool forceSaveContainedElements = false) => false;

@@ -78,15 +78,15 @@ namespace Gum.Managers
             {
                 ReactToBehaviorChanged(file);
             }
-            else if(extension == "csv")
+            else if(extension == "csv" || extension == "resx")
             {
-                ReactToCsvChanged(file);
+                ReactToLocalizationFileChanged(file);
             }
 
             PluginManager.Self.ReactToFileChanged(file);
         }
 
-        private void ReactToCsvChanged(FilePath file)
+        private void ReactToLocalizationFileChanged(FilePath file)
         {
             var gumProject = _projectState.GumProjectSave;
 
@@ -94,12 +94,41 @@ namespace Gum.Managers
             {
                 FilePath localizationFile = _projectState.ProjectDirectory + gumProject.LocalizationFile;
 
-                if(localizationFile == file)
+                if(IsLocalizationFileThatShouldTriggerReload(file, localizationFile))
                 {
                     _fileCommands.LoadLocalizationFile();
+                    // Potential optimization: if the changed file is a satellite (e.g. Strings.es.resx)
+                    // and CurrentLanguage doesn't map to that satellite's language index, this refresh
+                    // is unnecessary. The cost is currently acceptable (small XML reload + layout pass),
+                    // but if flickering becomes noticeable this should be gated on whether the changed
+                    // satellite matches the active language.
                     _wireframeCommands.Refresh();
                 }
             }
+        }
+
+        public static bool IsLocalizationFileThatShouldTriggerReload(FilePath changedFile, FilePath baseLocalizationFile)
+        {
+            if(changedFile == baseLocalizationFile)
+                return true;
+
+            // CSV files have no satellites
+            if(baseLocalizationFile.Extension?.ToLowerInvariant() != "resx")
+                return false;
+
+            if(changedFile.Extension?.ToLowerInvariant() != "resx")
+                return false;
+
+            // Must be in the same directory
+            var baseDirectory = System.IO.Path.GetDirectoryName(baseLocalizationFile.FullPath);
+            var changedDirectory = System.IO.Path.GetDirectoryName(changedFile.FullPath);
+            if(!string.Equals(baseDirectory, changedDirectory, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            // Changed file name (without extension) must start with "{BaseName}."
+            var baseName = System.IO.Path.GetFileNameWithoutExtension(baseLocalizationFile.FullPath);
+            var changedName = System.IO.Path.GetFileNameWithoutExtension(changedFile.FullPath);
+            return changedName.StartsWith(baseName + ".", StringComparison.OrdinalIgnoreCase);
         }
 
         private void ReactToProjectChanged(FilePath file)

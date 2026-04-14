@@ -1,6 +1,6 @@
 ---
 name: gum-localization
-description: Reference guide for Gum's runtime localization system — ILocalizationService, CSV/RESX loading, Text vs TextNoTranslate paths, Forms control localization patterns, and gotchas.
+description: Reference guide for Gum's localization system — ILocalizationService, CSV/RESX loading in both the tool and runtime, Text vs TextNoTranslate paths, Forms control localization patterns, and gotchas.
 ---
 
 # Gum Localization
@@ -17,10 +17,12 @@ Localization is opt-in via a nullable static property. When set, text assigned t
 
 ## ILocalizationService
 
-`GumCommon/Localization/ILocalizationService.cs` — three members:
+`GumCommon/Localization/ILocalizationService.cs` — five members:
 
 - `CurrentLanguage` (int) — index into the translation arrays (0 = default/source language)
+- `Languages` (`IReadOnlyList<string>`) — language names populated after loading; empty until a database is loaded
 - `AddDatabase(Dictionary<string, string[]>, List<string>)` — loads translations; key = string ID, value = array where `[0]` is the ID and `[1..N]` are translations per language
+- `Clear()` — resets the database and Languages list
 - `Translate(string stringId)` — returns the translated string for `CurrentLanguage`
 
 ## LocalizationService (default implementation)
@@ -37,13 +39,25 @@ Translation logic in `TranslateForLanguage`:
 
 `GumCommon/Localization/LocalizationServiceExtensions.cs` — extension methods on `ILocalizationService`:
 
-**CSV:** `AddCsvDatabase(Stream)` — uses CsvHelper. First column = string ID, subsequent columns = translations. First row = language headers.
+**CSV:** `AddCsvDatabase(Stream)` — uses CsvHelper. First column = string ID, subsequent columns = translations. First row = language headers. Languages list populated from header row.
 
 **RESX:** Two overloads:
-- `AddResxDatabase(string baseResxFilePath)` — discovers satellite files by convention (e.g., `Strings.resx` + `Strings.es.resx`, `Strings.fr.resx`). Satellites are sorted alphabetically.
-- `AddResxDatabase(IEnumerable<(string languageName, Stream stream)>)` — stream-based, for manual control over language order.
+- `AddResxDatabase(string baseResxFilePath)` — discovers satellite files by convention (e.g., `Strings.resx` + `Strings.es.resx`, `Strings.fr.resx`). Satellites are sorted alphabetically. Base file is labeled `"Default"` in the Languages list; satellites use their culture code (e.g., `"es"`, `"fr"`).
+- `AddResxDatabase(IEnumerable<(string languageName, Stream stream)>)` — stream-based, for manual control over language order and names. Use this on mobile/web where `Directory.GetFiles` isn't available.
 
 Both formats produce the same internal structure: `Dictionary<string, string[]>` where index 0 = string ID, 1+ = per-language translations.
+
+## Gum Tool Localization Support
+
+The tool stores a single `LocalizationFile` path (relative to the project) in `GumProjectSave`. Both `.csv` and `.resx` are supported; format is inferred from the file extension in `FileCommands.LoadLocalizationFile()`.
+
+**RESX in the tool:** User points to the base file (`Strings.resx`). The tool calls `AddResxDatabase(string)` which auto-discovers all satellites in the same directory.
+
+**File watching:** `FileChangeReactionLogic.IsLocalizationFileThatShouldTriggerReload(changedFile, baseFile)` determines whether a changed file should trigger a reload. For RESX, this returns true for the base file AND any sibling matching `{BaseName}.*.resx`. For CSV, only exact match.
+
+**Language dropdown:** After loading, `ILocalizationService.Languages` is populated. `ProjectPropertiesViewModel.LanguageName` (string) replaces the raw `LanguageIndex` int in the UI. The plugin syncs `LanguageName` ↔ `LanguageIndex` via `IFileCommands.LocalizationLoaded` event (fired at the end of every `LoadLocalizationFile()` call).
+
+**Variable grid refresh:** `LoadLocalizationFile()` calls `_guiCommands.RefreshVariables()` at the end, so the Text property displayer updates from plain textbox to localization combo box without requiring re-selection.
 
 ## Translation Flow in CustomSetPropertyOnRenderable
 
@@ -109,16 +123,22 @@ PasswordBox uses `TextNoTranslate` for mask characters (e.g., "●●●●") si
 
 5. **CurrentLanguage is a raw array index** — No bounds checking. Index 0 in the translation array is the string ID itself (not a translation). Actual translations start at index 1. Setting `CurrentLanguage = 0` returns the string ID.
 
-6. **RESX satellite ordering** — Satellites are sorted alphabetically by file path, so `de` comes before `es` comes before `fr`. If you need a specific order, use the stream-based overload.
+6. **RESX satellite ordering and naming** — Satellites are sorted alphabetically by file path, so `de` comes before `es` comes before `fr`. The base file is always first and labeled `"Default"`. If you need a specific order or names, use the stream-based overload.
 
 7. **ShouldExcludeFromTranslation** — Strings with no letters (pure numbers, punctuation, whitespace, or empty) are silently excluded from translation and returned as-is, with no "(loc)" suffix. This prevents false positives on numeric display values.
 
 ## Key Files
 
-- `GumCommon/Localization/ILocalizationService.cs` — interface
+- `GumCommon/Localization/ILocalizationService.cs` — interface (`CurrentLanguage`, `Languages`, `AddDatabase`, `Clear`, `Translate`)
 - `GumCommon/Localization/LocalizationService.cs` — default implementation
 - `GumCommon/Localization/LocalizationServiceExtensions.cs` — CSV/RESX loaders
 - `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` — static `LocalizationService` property and translation logic in `TrySetPropertyOnText`
+- `Gum/Commands/FileCommands.cs` — `LoadLocalizationFile()` (CSV/RESX branch, `LocalizationLoaded` event)
+- `Gum/Commands/IFileCommands.cs` — `LocalizationLoaded` event declaration
+- `Gum/Managers/FileChangeReactionLogic.cs` — `IsLocalizationFileThatShouldTriggerReload()` (satellite matching)
+- `Gum/Plugins/InternalPlugins/ProjectPropertiesWindowPlugin/` — Language dropdown UI
 - `MonoGameGum/GueDeriving/TextRuntime.cs` — `Text` property and `SetTextNoTranslate` method
 - `MonoGameGum/Forms/Controls/` — Forms control localization pattern
-- `MonoGameGum.Tests/Forms/LocalizationTests.cs` — comprehensive test coverage
+- `MonoGameGum.Tests/Localization/LocalizationServiceExtensionsTests.cs` — CSV/RESX loader tests
+- `MonoGameGum.Tests/Localization/LocalizationServiceLanguagesTests.cs` — `ILocalizationService.Languages` interface contract tests
+- `Tool/Tests/GumToolUnitTests/Managers/FileChangeReactionLogicTests.cs` — satellite matching tests

@@ -353,17 +353,29 @@ public class FileCommands : IFileCommands
             {
                 try
                 {
-                    _localizationService.AddDatabaseFromCsv(file.FullPath, ',');
+                    var extension = file.Extension?.ToLowerInvariant();
+                    if (extension == "resx")
+                    {
+                        _localizationService.AddResxDatabase(file.FullPath);
+                    }
+                    else
+                    {
+                        _localizationService.AddDatabaseFromCsv(file.FullPath, ',');
+                    }
                     _localizationService.CurrentLanguage = _projectState.GumProjectSave.CurrentLanguageIndex;
                 }
                 catch (Exception e)
                 {
-                    // This can happen if the CSV has duplicate entries
-                    _dialogService.ShowMessage($"Error loading CSV {file.FullPath}\n\n{e}");
+                    _dialogService.ShowMessage($"Error loading localization file {file.FullPath}\n\n{e}");
                 }
             }
         }
+
+        _guiCommands.RefreshVariables();
+        LocalizationLoaded?.Invoke();
     }
+
+    public event Action? LocalizationLoaded;
 
     private void ForceSaveBehavior(BehaviorSave behavior)
     {

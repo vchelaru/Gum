@@ -8,7 +8,7 @@ Gum supports localization using CSV and RESX files. Localization can be performe
 
 If you are using the Gum UI Tool to create your project, you can add and test localization in the tool itself. For information on how to set up localization in the Gum UI tool, see the [Localization page](../gum-tool/localization.md).
 
-Once you have a project set up with localization, the only code change needed is to specify the language index. Keep in mind that index 0 is the string IDs, so if this value is unchanged then your game will display the string IDs.
+Once you have a project set up with localization, the only code change needed is to specify the language index. In the Gum UI tool, you select a language by name from a dropdown. At runtime in code, you set `CurrentLanguage` as an integer index: index 0 is the string ID column, index 1 is the first language column, index 2 is the second, and so on. If `CurrentLanguage` is left at its default value of 0, your game will display the raw string IDs.
 
 For example, the following is a screenshot from the Gum UI tool:
 

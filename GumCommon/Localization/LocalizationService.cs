@@ -11,10 +11,10 @@ namespace Gum.Localization;
 /// </summary>
 public class LocalizationService : ILocalizationService
 {
-    public ReadOnlyCollection<string> Languages
+    public IReadOnlyList<string> Languages
     {
         get;
-        set;
+        private set;
     }
 
     Dictionary<string, string[]> mStringDatabase = new Dictionary<string, string[]>();

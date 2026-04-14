@@ -58,8 +58,8 @@ public static class LocalizationServiceExtensions
         // Collect all .resx files: base file first, then satellite files sorted alphabetically
         var resxFiles = new List<(string languageName, string filePath)>();
 
-        // The base file represents the default language
-        resxFiles.Add((fileNameWithoutExtension, baseResxFilePath));
+        // The base file represents the default/neutral language
+        resxFiles.Add(("Default", baseResxFilePath));
 
         // Discover satellite files matching the pattern: BaseName.{culture}.resx
         var searchPattern = fileNameWithoutExtension + ".*.resx";

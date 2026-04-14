@@ -1,4 +1,5 @@
 ﻿using Gum.Commands;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.Services;
@@ -126,6 +127,14 @@ public partial class ProjectPropertiesControl : UserControl
                 if(member.Name == nameof(ViewModel.LocalizationFile))
                 {
                     member.PreferredDisplayer = typeof(FileSelectionDisplay);
+                    member.PropertiesToSetOnDisplayer["Filter"] = "Localization Files|*.csv;*.resx|All Files|*.*";
+                }
+                else if(member.Name == nameof(ViewModel.LanguageName))
+                {
+                    member.DisplayName = "Language";
+                    var localizationService = Locator.GetRequiredService<LocalizationService>();
+                    if(localizationService.Languages.Count > 0)
+                        member.CustomOptions = localizationService.Languages.Cast<object>().ToList();
                 }
                 else if(member.Name == nameof(ViewModel.SinglePixelTextureFile))
                 {
@@ -137,6 +146,22 @@ public partial class ProjectPropertiesControl : UserControl
             if(isUpdatingMember != null)
             {
                 category.Members.Remove(isUpdatingMember);
+            }
+
+            var languageIndexMember = category.Members.FirstOrDefault(item => item.Name == nameof(ViewModel.LanguageIndex));
+            if(languageIndexMember != null)
+            {
+                category.Members.Remove(languageIndexMember);
+            }
+
+            var locService = Locator.GetRequiredService<LocalizationService>();
+            if(locService.Languages.Count == 0)
+            {
+                var languageNameMember = category.Members.FirstOrDefault(item => item.Name == nameof(ViewModel.LanguageName));
+                if(languageNameMember != null)
+                {
+                    category.Members.Remove(languageNameMember);
+                }
             }
         }
 
