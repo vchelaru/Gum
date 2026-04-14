@@ -427,10 +427,24 @@ public class GumService
                 var fileName = FileManager.GetDirectory(gumProject.FullFileName) +
                     gumProject.LocalizationFile;
 
-                using var stream = FileManager.GetStreamForFile(fileName);
+                var extension = FileManager.GetExtension(fileName);
+                var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
 
-                CustomSetPropertyOnRenderable.LocalizationService?.AddCsvDatabase(stream);
-
+                if (string.Equals(extension, "resx", StringComparison.OrdinalIgnoreCase))
+                {
+                    // RESX satellite discovery requires enumerating the directory
+                    // (e.g. Strings.es.resx alongside Strings.resx). On desktop platforms
+                    // the path-based overload handles this via Directory.GetFiles.
+                    // Bundled-content platforms (Android/iOS/TitleContainer) cannot
+                    // enumerate sibling files from a stream, so this auto-load path
+                    // assumes real filesystem access - matching the existing CSV behavior.
+                    localizationService?.AddResxDatabase(fileName);
+                }
+                else
+                {
+                    using var stream = FileManager.GetStreamForFile(fileName);
+                    localizationService?.AddCsvDatabase(stream);
+                }
             }
 
             ObjectFinder.Self.GumProjectSave = gumProject;

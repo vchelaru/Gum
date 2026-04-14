@@ -23,10 +23,18 @@ Select the agent that best matches the task at hand. For tasks that span multipl
 
 ## Building and Testing
 
-* **Always build and test via the solution file** (`Gum.sln`), not individual `.csproj` files. Plugin projects use `$(SolutionDir)` in post-build scripts, which is undefined when building a `.csproj` directly.
-  * Build: `dotnet build Gum.sln`
-  * Test: `dotnet test Gum.sln --filter "TestClassName"`
-* The test project is `Tool/Tests/GumToolUnitTests/GumToolUnitTests.csproj` (included in `Gum.sln`).
+**Always build and test via a solution file**, not individual `.csproj` files. Plugin projects use `$(SolutionDir)` in post-build scripts, which is undefined when building a `.csproj` directly.
+
+Pick the solution based on what you're working on:
+
+* **`GumFull.sln`** — the Gum tool and all tool-related projects (WPF editor, plugins, `GumToolUnitTests`, `Gum.Cli.Tests`, etc.). Use this when working on anything under `Tool/`, `Gum/`, plugins, or tool-side code.
+* **`AllLibraries.sln`** — all runtime-related projects (`GumCommon`, `MonoGameGum`, `KniGum`, `FnaGum`, `SkiaGum`, `RaylibGum`, and their test projects including `MonoGameGum.Tests`). Use this when working on runtime libraries, `GumCommon`, or anything a shipped game would reference.
+
+Examples:
+* Build: `dotnet build GumFull.sln` or `dotnet build AllLibraries.sln`
+* Test: `dotnet test AllLibraries.sln --filter "TestClassName"`
+
+If a change spans both (e.g. editing `GumCommon` which is linked into both), build both solutions.
 
 ## Code Style
 
