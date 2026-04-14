@@ -351,6 +351,7 @@ public class GumxImportServiceTests : IDisposable
 
     private class FakeFileCommands : IFileCommands
     {
+        public event Action? LocalizationLoaded;
         public FilePath? ProjectDirectory => null;
 
         public bool TryAutoSaveProject(bool forceSaveContainedElements = false) => false;

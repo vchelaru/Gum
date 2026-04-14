@@ -59,6 +59,7 @@ public interface IFileCommands
 
     FilePath GetFullFileName(ElementSave element);
 
+    event Action? LocalizationLoaded;
     void LoadLocalizationFile();
 
     FilePath GetFullPathXmlFile(BehaviorSave behaviorSave);

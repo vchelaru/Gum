@@ -3,6 +3,7 @@ using Gum.Mvvm;
 using Gum.Settings;
 using Gum.Wireframe;
 using System;
+using System.Collections.Generic;
 using Gum.ToolStates;
 using ToolsUtilities;
 using Color = System.Drawing.Color;
@@ -92,6 +93,24 @@ public class ProjectPropertiesViewModel : ViewModel
     {
         get => Get<int>();
         set => Set(value);
+    }
+
+    public string LanguageName
+    {
+        get => Get<string>();
+        set => Set(value);
+    }
+
+    /// <summary>
+    /// Syncs LanguageName from the current LanguageIndex without triggering property-change side effects.
+    /// </summary>
+    public void UpdateLanguageNameFromIndex(IReadOnlyList<string> languages)
+    {
+        IsUpdatingFromModel = true;
+        LanguageName = LanguageIndex > 0 && LanguageIndex <= languages.Count
+            ? languages[LanguageIndex - 1]
+            : string.Empty;
+        IsUpdatingFromModel = false;
     }
 
     public bool ShowLocalization
