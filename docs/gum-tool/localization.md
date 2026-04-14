@@ -41,11 +41,11 @@ After selecting the localization file, a **Language** dropdown appears. The drop
 
 Once you have added a localization file, Gum recognizes this and displays Text properties as an editable drop-down. You can type in a string ID, or you can use the drop-down to select from available options.
 
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The Text dropdown displaying available string IDs</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/14_06 20 15.png" alt=""><figcaption><p>The Text dropdown displaying available string IDs</p></figcaption></figure>
 
 Localized text appears in Gum based on the selected ID. You can change the Language at any time to see localization applied immediately in your screens and components.
 
-<figure><img src="../.gitbook/assets/22_12 04 32 (1) (1).gif" alt=""><figcaption><p>Changing Language updates displayed Texts immediately</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/14_06 21 49.gif" alt=""><figcaption><p>Changing Language updates displayed Texts immediately</p></figcaption></figure>
 
 ## Localization and Font Ranges
 
