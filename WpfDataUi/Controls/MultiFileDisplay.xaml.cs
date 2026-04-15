@@ -271,6 +271,21 @@ public partial class MultiFileDisplay : UserControl, IDataUi
         {
             ListBox.SelectedIndex = p;
         }
+        RefreshButtonVisibility();
+    }
+
+    private void ListBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        RefreshButtonVisibility();
+    }
+
+    private void RefreshButtonVisibility()
+    {
+        bool hasSelection = ListBox.SelectedIndex >= 0;
+        bool hasMultiple = _entries.Count > 1;
+        RemoveButton.Visibility = hasSelection ? Visibility.Visible : Visibility.Collapsed;
+        MoveUpButton.Visibility = hasSelection && hasMultiple ? Visibility.Visible : Visibility.Collapsed;
+        MoveDownButton.Visibility = hasSelection && hasMultiple ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private int? TryPeekPendingSelect()

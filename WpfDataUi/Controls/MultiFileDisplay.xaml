@@ -35,7 +35,8 @@
             BorderBrush="{DynamicResource Frb.Brushes.Border.Secondary}"
             BorderThickness="1"
             KeyDown="ListBox_KeyDown"
-            PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown" />
+            PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
+            SelectionChanged="ListBox_SelectionChanged" />
         <StackPanel
             Grid.Row="2"
             HorizontalAlignment="Stretch"
@@ -47,23 +48,29 @@
                 Click="AddButtonClicked"
                 Content="Add..." />
             <Button
+                x:Name="RemoveButton"
                 MinWidth="48"
                 MinHeight="24"
                 Margin="0,2,2,2"
                 Click="RemoveButtonClicked"
-                Content="Remove" />
+                Content="Remove"
+                Visibility="Collapsed" />
             <Button
+                x:Name="MoveUpButton"
                 MinWidth="24"
                 MinHeight="24"
                 Margin="0,2,2,2"
                 Click="MoveUpButtonClicked"
-                Content="Up" />
+                Content="Up"
+                Visibility="Collapsed" />
             <Button
+                x:Name="MoveDownButton"
                 MinWidth="24"
                 MinHeight="24"
                 Margin="0,2,2,2"
                 Click="MoveDownButtonClicked"
-                Content="Down" />
+                Content="Down"
+                Visibility="Collapsed" />
         </StackPanel>
         <TextBlock
             x:Name="HintTextBlock"
