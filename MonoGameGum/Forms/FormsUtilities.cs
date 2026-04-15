@@ -547,6 +547,14 @@ public class FormsUtilities
 
     public static void RegisterFromFileFormRuntimeDefaults()
     {
+        ElementSaveExtensions.InitialStateAppliedNotifier = gue =>
+        {
+            if (gue is InteractiveGue igue && igue.FormsControlAsObject is FrameworkElement fe)
+            {
+                fe.UpdateState();
+            }
+        };
+
 #if FULL_DIAGNOSTICS
         if (ObjectFinder.Self.GumProjectSave == null)
         {
