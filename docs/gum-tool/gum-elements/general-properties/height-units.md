@@ -127,7 +127,7 @@ A parent does not consider a child if the child is explicitly positioned outside
 
 If a child has `Y Units` of `Pixels from Top` and its `Y` value pushes the child out of the top of its parent, then the portion that is outside of the top of the parent is ignored. The BlueRectangle in the following image has an absolute height of 50. Its `Y` value is -20, so only 30 pixels are used to determine the parent's height.
 
-<figure><img src="../../../.gitbook/assets/image (155) (1).png" alt=""><figcaption><p>Parent absolute height is 30 since the BlueRectangle explicitly has 20 of its height set outside of the parent's bounds</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (155).png" alt=""><figcaption><p>Parent absolute height is 30 since the BlueRectangle explicitly has 20 of its height set outside of the parent's bounds</p></figcaption></figure>
 
 Similarly, if a child uses a `Y Units` of `Pixels from Bottom` then the parent does not consider the height of any portion which is outside of its bounds. The following animation shows RedRectangle placed outside of the bottom of its bounds with a `Y Units` of `Pixels from Bottom`.
 

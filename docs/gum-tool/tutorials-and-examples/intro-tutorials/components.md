@@ -19,7 +19,7 @@ To understand how components work, we'll create a simple Button component. To do
 3. Drag+drop a ColoredRectangle standard element into the Button component
 4. Drag+drop a Text standard element into the Button component
 
-![A single Button Component with ColoredRectangle and Text. Note that the text is white.](<../../../.gitbook/assets/GumButton1 (1).PNG>)
+![A single Button Component with ColoredRectangle and Text. Note that the text is white.](../../../.gitbook/assets/GumButton1.PNG)
 
 Since ColoredRectangleInstance and TextInstance are both white you may not be able to see the Text. Let's change the ColoredRectangleInstance's color:
 
@@ -34,7 +34,7 @@ Notice that as you change the values, the background on the text box changes fro
 
 Now you should be able to see the Text on top of the rectangle:
 
-![White text on top of a blue ColoredRectangle](<../../../.gitbook/assets/Gum_URVP5vRzNF (1).png>)
+![White text on top of a blue ColoredRectangle](../../../.gitbook/assets/Gum_URVP5vRzNF.png)
 
 ## Sizing the colored rectangle
 
@@ -60,7 +60,7 @@ Alternatively you can adjust the individual values. Keep in mind that using the 
 
 Now the ColoredRectangleInstance automatically matches the Button's actual with and height:
 
-![ColoredRectangleInstance fills its parent by matching its width and height](<../../../.gitbook/assets/Gum_rL5aAQWKVB (1).png>)
+![ColoredRectangleInstance fills its parent by matching its width and height](../../../.gitbook/assets/Gum_rL5aAQWKVB.png)
 
 Next we'll position the TextInstance. We'll want to adjust the Text so that it is always centered, and line-wraps with the size of the button.
 
@@ -93,7 +93,7 @@ Now let's make it centered on the Y as well:
 3. Change the `Y Origin` to `Center`
 4. Change `Y` to `0`
 
-![](<../../../.gitbook/assets/Gum_rL5aAQWKVB (1).png>)
+![](../../../.gitbook/assets/Gum_rL5aAQWKVB.png)
 
 Finally, let's make the width of the text match the width of the button. For the Text we'll actually leave a border around the edge so the Text doesn't line wrap right against the edge of the button. To do this:
 

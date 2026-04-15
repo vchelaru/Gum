@@ -6,7 +6,7 @@ Points are an ordered set of X,Y values defining the shape of the polygon. All p
 
 By default polygons have four sides. Since the first and last point is repeated, a four-sided polygon has five points.
 
-<figure><img src="../../../.gitbook/assets/image (125) (1).png" alt=""><figcaption><p>A default four-sided polygon</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (125).png" alt=""><figcaption><p>A default four-sided polygon</p></figcaption></figure>
 
 Each point is relative to the polygon's X and Y (position). Points use pixel coordinates. The following image shows a polygon with the following points:
 
@@ -16,7 +16,7 @@ Each point is relative to the polygon's X and Y (position). Points use pixel coo
 * 32, -32
 * -32, -32 (repeat of first point)
 
-<figure><img src="../../../.gitbook/assets/image (126) (1).png" alt=""><figcaption><p>Polygon with points 32 units from the origin on both X and Y</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (126).png" alt=""><figcaption><p>Polygon with points 32 units from the origin on both X and Y</p></figcaption></figure>
 
 Notice that the image above has points which appear above and to the left of the polygon's origin.
 
@@ -54,7 +54,7 @@ Points can also be edited manually in the Screen or Component which contains the
 
 For example, consider the following polygon:
 
-<figure><img src="../../../.gitbook/assets/image (127) (1).png" alt=""><figcaption><p>PolygonInstance in MainMenu</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (127).png" alt=""><figcaption><p>PolygonInstance in MainMenu</p></figcaption></figure>
 
 The points for this polygon defined in the MainMenu XML file might look like this:
 

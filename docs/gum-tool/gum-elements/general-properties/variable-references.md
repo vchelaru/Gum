@@ -4,7 +4,7 @@
 
 `Variable References` allows any variable on an instance or component to reference other variables. These other variables can be on the same instance or component, a different instance, or even variables from a different component.
 
-<figure><img src="../../../.gitbook/assets/image (158) (1).png" alt=""><figcaption><p>Component setting its Height relative to its Width</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (158).png" alt=""><figcaption><p>Component setting its Height relative to its Width</p></figcaption></figure>
 
 One common use of `Variable References` is to create a centralized style component which can be referenced throughout a Gum project.
 
@@ -248,7 +248,7 @@ Blue = Components/Styles.PrimaryColor.Blue
 
 As shown above, Variable References can be used to assign one variable to another. If a variable is referenced, then the variable cannot be manually assigned. The Variable Reference takes priority. For example, if an object references the Red, Green, and Blue variables, then those values cannot be manually set on the object. The values appear disabled and text indicates why they are read-only.
 
-<figure><img src="../../../.gitbook/assets/image (20) (1).png" alt=""><figcaption><p>Left-side variables become read-only</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (20).png" alt=""><figcaption><p>Left-side variables become read-only</p></figcaption></figure>
 
 ## Obtaining a Qualified Variable Name
 

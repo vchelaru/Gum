@@ -13,7 +13,7 @@ To add a behavior:
 1. Right-click on the Behaviors folder
 2.  Select **Add Behavior:**
 
-    <figure><img src="../../../.gitbook/assets/image (82) (1).png" alt=""><figcaption><p>Add Behavior menu item</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/image (82).png" alt=""><figcaption><p>Add Behavior menu item</p></figcaption></figure>
 3. Enter the new behavior name. Often time the word **Behavior** is added at the end of the name, such as **ButtonBehavior**
 
 New behaviors appear in the Project tab.
@@ -91,7 +91,7 @@ An instance can have its Name changed, Base Type changed, or removed.
 
 If a component is missing a behavior then the Error window provides information about the missing requirement.
 
-<figure><img src="../../../.gitbook/assets/image (128) (1).png" alt=""><figcaption><p>Button component is missing a SpriteInstance which is required by the ButtonBehavior</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (128).png" alt=""><figcaption><p>Button component is missing a SpriteInstance which is required by the ButtonBehavior</p></figcaption></figure>
 
 {% hint style="info" %}
 At this time Gum does not automatically add required instances to components which need them. This may change in future versions of Gum. For now, instances must be manually added to resolve errors.

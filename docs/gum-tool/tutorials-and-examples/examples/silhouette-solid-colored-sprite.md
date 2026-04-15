@@ -4,7 +4,7 @@
 
 Render targets and blend modes can be combined to create a silhouette of any shape. This example uses a Sprite with transparency. It uses the Bear.png file:
 
-<figure><img src="../../../.gitbook/assets/Bear (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/Bear.png" alt=""><figcaption></figcaption></figure>
 
 ## Creating a Silhouette Component
 
@@ -12,7 +12,7 @@ To create a Component that can display a Silhouette, first create a new componen
 
 Add a ColoredRectangle instance and a Sprite instance. The order matters - the Sprite should be drawn on top of the ColoredRectangle (it should show up 2nd in the Project tree view).
 
-<figure><img src="../../../.gitbook/assets/image (203) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (203).png" alt=""><figcaption></figcaption></figure>
 
 For this example, we will use the Alignment tab to adjust each item:
 

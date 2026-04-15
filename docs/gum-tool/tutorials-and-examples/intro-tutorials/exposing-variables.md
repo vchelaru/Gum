@@ -14,9 +14,9 @@ While the size and positioning functionality in our button works well, the Text 
 
 ## Exposing the Text variable
 
-By default a Button only exposes its _top level_ variables. Variables on instances inside the button are not available outside of the button. In programming terms these variables are considered _protected_.&#x20;
+By default a Button only exposes its _top level_ variables. Variables on instances inside the button are not available outside of the button. In programming terms these variables are considered _protected_.
 
-&#x20;However, we can _expose_ variables on instances so that they can be modified in our MainMenu screen.
+However, we can _expose_ variables on instances so that they can be modified in our MainMenu screen.
 
 To do this:
 
@@ -25,7 +25,7 @@ To do this:
 3. Right-click on the text box and select **Expose Variable**
 4. Enter the name "Text" for the variable name
 
-<figure><img src="../../../.gitbook/assets/Gum_1efsktPMgR (1) (1).png" alt=""><figcaption><p>Right-click to expose a variable</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/Gum_1efsktPMgR (1).png" alt=""><figcaption><p>Right-click to expose a variable</p></figcaption></figure>
 
 You can verify that the `Text` variable is exposed by clicking on the the **Button** component and seeing the `Text` variable under the **Exposed** category:
 
@@ -48,7 +48,7 @@ This tutorial shows how to expose Text values per-instance. You can expose other
 
 * Visibility of icons on a Button component
 * Font sizes on a Label component
-* Sprite visibility showing the  number of connected gamepads on a JoinGame component
+* Sprite visibility showing the number of connected gamepads on a JoinGame component
 * Width (percentage) on a HealthBar component
 
 It's best to experiment with exposed variables to get a feel for how you can use them in your own components.

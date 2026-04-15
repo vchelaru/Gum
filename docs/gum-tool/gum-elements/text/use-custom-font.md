@@ -10,7 +10,7 @@ The **Use Custom Font** variable controls whether a Text object uses a premade .
 
 If **Use Custom Font** is set to true, then Gum displays the **Custom Font File** variable, which can point to a .fnt file created by Bitmap Font Generator.
 
-![](<../../../.gitbook/assets/UseCustomFontGum (1).png>)
+![](../../../.gitbook/assets/UseCustomFontGum.png)
 
 If **Use Custom Font** is set to true, then the **Font**, **Font Size**, and **Outline Thickness** variables can no longer be set - as they are part of the font file itself.
 
@@ -22,7 +22,7 @@ To set a custom font
 2. Navigate to the location of the desired .fnt file
 3. Select the file and click **Open**
 
-![](<../../../.gitbook/assets/CustomFontInGum (1).png>)
+![](../../../.gitbook/assets/CustomFontInGum.png)
 
 Custom font files are .fnt files created by BitmapFontGenerator. Gum automatically creates .fnt files whenever a font value changes when UseCustomFonts is unchecked.
 
@@ -77,7 +77,7 @@ To generate a font:
 2. Download and open the Hiero tool
 3. Set the values needed for your font, such as font type, size, and effects. Notice that additional effects can be added beyond what is supported in Gum.
 
-<figure><img src="../../../.gitbook/assets/image (79) (1).png" alt=""><figcaption><p>Font in Hiero tool</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (79).png" alt=""><figcaption><p>Font in Hiero tool</p></figcaption></figure>
 
 4. Select **File** -> **Save BMFont Files (text)...**
 5. Select the location to save the files, such as in your project's Contents folder, or the subfolder which contains your Gum project

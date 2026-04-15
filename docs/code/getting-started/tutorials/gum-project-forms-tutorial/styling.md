@@ -104,7 +104,7 @@ When making any styling edits, be sure to first check if the variable is modifie
 
 We can tell if a color is modified by a state by looking for whether it has a color-related state that is assigned by a state. For example, the TextBox's Background is assigned through a state as is shown in the Variables tab:
 
-<figure><img src="../../../../.gitbook/assets/image (86) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (86).png" alt=""><figcaption></figcaption></figure>
 
 We can also check the categories to see which variables they assign by clicking on it in the States tab. In this case, the TextBoxCategory modifies the following variables:
 
@@ -197,7 +197,7 @@ The new TextBoxBackground state already references the Styles component, but it 
 
 In my case, the existing variable references are referencing the Accent color.
 
-<figure><img src="../../../../.gitbook/assets/image (193) (1).png" alt=""><figcaption><p>New state referencing old colors</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (193).png" alt=""><figcaption><p>New state referencing old colors</p></figcaption></figure>
 
 I can change these to instead reference the TextBoxBackground color. After these changes are made, press the tab key to apply them. The NineSlice should update its colors immediately.
 
@@ -246,13 +246,13 @@ To make it easier to select, the UiSpritesheet.png aligns all of its art in 8 pi
 
 This file can be viewed in explorer by clicking the folder button.
 
-<figure><img src="../../../../.gitbook/assets/image (195) (1).png" alt=""><figcaption><p>UISpriteSheet.png in folder</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (195).png" alt=""><figcaption><p>UISpriteSheet.png in folder</p></figcaption></figure>
 
 This file is created by default when Forms components are added. The file in your project can be modified to add more styles. This file intentionally includes a lot of blank space so you can make changes for your own game.
 
 Feel free to open this file and add more frames to be used by your NineSlice.
 
-<figure><img src="../../../../.gitbook/assets/image (196) (1).png" alt=""><figcaption><p>Blank space in UISpriteSheet.png</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (196).png" alt=""><figcaption><p>Blank space in UISpriteSheet.png</p></figcaption></figure>
 
 Notice that most of the frames are white so that they can be colored in Gum using the pre-defined color values in the Styles component. If you intend for your borders to be dynamically colored, you should also use the white color. For example, a new rounded rectangle style can be added below the existing styles.
 

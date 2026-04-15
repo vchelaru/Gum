@@ -8,7 +8,7 @@ The Source File property determines the file that is used by the Sprite. Sprite 
 * .achx files (AnimationChains)
 * Images from URLs
 
-<figure><img src="../../../.gitbook/assets/image (93) (1).png" alt=""><figcaption><p>Sprite displaying the FlatRedBall logo</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (93).png" alt=""><figcaption><p>Sprite displaying the FlatRedBall logo</p></figcaption></figure>
 
 If a Sprite has an empty Source File or if it references a missing file, then the missing file texture is displayed.
 
@@ -20,7 +20,7 @@ Source File can be set by typing a value or using the **...** button to browser 
 
 All files are added as paths relative to the .gumx project.
 
-<figure><img src="../../../.gitbook/assets/image (94) (1).png" alt=""><figcaption><p>Sprite referencing UISpriteSheet.png located in the same folder as the .gumx file</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (94).png" alt=""><figcaption><p>Sprite referencing UISpriteSheet.png located in the same folder as the .gumx file</p></figcaption></figure>
 
 If a file is referenced outside of the .gumx folder, then Gum asks if you would like to copy the file or reference it outside of the current directory. Usually files should be copied to the project folder to keep the entire Gum project portable.
 

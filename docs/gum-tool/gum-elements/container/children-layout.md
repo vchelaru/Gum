@@ -4,7 +4,7 @@
 
 **`Children Layout`** determines how a container positions its children. The default value is `Regular` which means that children are positioned according to their [X Units](../general-properties/x-units.md) and [Y Units](../general-properties/y-units.md).
 
-<figure><img src="../../../.gitbook/assets/image (47) (1).png" alt=""><figcaption><p>Children Layout with Regular selected</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (47).png" alt=""><figcaption><p>Children Layout with Regular selected</p></figcaption></figure>
 
 `Top to Bottom Stack` results in the children stacking one on top of another, from top to bottom.
 
@@ -115,7 +115,7 @@ Children of a container which uses the `Top To Bottom Stack` or `Left To Right S
 
 Children can be reordered using the right-click menu on an instance.
 
-![](<../../../.gitbook/assets/ReorderStackedChildren (1) (1).gif>)
+![](<../../../.gitbook/assets/ReorderStackedChildren (1).gif>)
 
 Alternatively, children order can be changed by clicking on the item in the tree view, holding down the ALT key, then pressing the up or down arrows.
 

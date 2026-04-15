@@ -199,7 +199,7 @@ partial class Screen2
 
 Each screen clears the root (removes the previous screen) when its button is clicked, then creates and adds the next screen to the root.
 
-<figure><img src="../../../../.gitbook/assets/10_06 34 29 (1) (1).gif" alt=""><figcaption><p>Switching Screens with Buttons</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/10_06 34 29 (1).gif" alt=""><figcaption><p>Switching Screens with Buttons</p></figcaption></figure>
 
 ### Showing No Screen
 

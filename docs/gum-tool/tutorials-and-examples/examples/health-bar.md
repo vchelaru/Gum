@@ -45,7 +45,7 @@ The HealthBar displays its current health with another rectangle. This second re
 3. Enter a **Margin** value of 4
 4. Click the **Fill Dock** button
 
-<figure><img src="../../../.gitbook/assets/image (156) (1).png" alt=""><figcaption><p>Set Margin to 4, then click the Fill Dock button</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (156).png" alt=""><figcaption><p>Set Margin to 4, then click the Fill Dock button</p></figcaption></figure>
 
 Now we have a ContainerInstance with the proper margin
 
@@ -76,7 +76,7 @@ Next we'll expose the inner ColoredRectangle's `Width` property so it can be ass
 1. Select the inner ColoredRectangle instance
 2.  Right-click on its `Width` variable and select **Expose Variable**\\
 
-    <figure><img src="../../../.gitbook/assets/image (157) (1).png" alt=""><figcaption><p>Click Expose Variable</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/image (157).png" alt=""><figcaption><p>Click Expose Variable</p></figcaption></figure>
 3. Enter an appropriate name such as "Percentage" and click OK
 
 Now we can add instances of the HealthBar to a screen and control its fill percentage.

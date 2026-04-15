@@ -81,7 +81,7 @@ For example, if we change the Text property on ValueText, it grows or shrinks in
 
 As mentioned above, changing the Text property causes ValueText to grow or shrink. However, regardless of its size, the `Width` property is still set to 0.
 
-<figure><img src="../../../.gitbook/assets/image (153) (1).png" alt=""><figcaption><p>Width is 0 despite the size being larger than 0</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (153).png" alt=""><figcaption><p>Width is 0 despite the size being larger than 0</p></figcaption></figure>
 
 The `Width` variable is used in combination with its `Width Units` to calculate an _effective width._ In this case, the effective width is determined by the Text property on ValueText. It's important to note that all Gum objects have effective values for x, y, width, and height, all of which are determined by their respective _units_ values.
 

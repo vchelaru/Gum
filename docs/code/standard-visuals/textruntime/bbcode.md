@@ -35,6 +35,7 @@ var text = new TextRuntime();
 text.Text = "This is [Color=Red]red[/Color], [Color=Blue]blue[/Color], and [FontScale=2]big[/FontScale] text";
 text.AddToRoot();
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACkWOTQvCMAyG7_sVoSeF4cCjsoMfODx4mbt1PXQ2zEDXQtdOUfzvdoMphECe5CHvOwFg574IHduAdwHTEZAhT1LTCyNlg3Tg8ekhB4MPuFhjC9lhdFZFwCM6Gsi0qyqelMF46nCx3NZmVCYYvZpVd-ohFj9YbV1eohIOFc-mUaQz3-uAoontv5FGAT9Z4683qTFfi4Zanv2AmLLVbP64U6qypbU-hmDJ5wu5H0Ud4QAAAA)
 
 BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `Custom`.
@@ -160,7 +161,7 @@ protected override void Initialize()
 }
 ```
 
-<figure><img src="../../../.gitbook/assets/01_07 39 37 (1) (1).gif" alt=""><figcaption><p>Button adding gold and resetting the grow shirnk time.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/01_07 39 37 (1).gif" alt=""><figcaption><p>Button adding gold and resetting the grow shirnk time.</p></figcaption></figure>
 
 ### Code Example: Context-Aware Custom Function
 

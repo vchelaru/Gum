@@ -36,7 +36,7 @@ If a Sprite uses a **Width Units** of **Percentage of File Width** or a **Height
 
 For example, if a Sprite is displaying a source PNG file with a width of 130 pixels and its Width is 300, then the absolute width of the Sprite is 390 (130 \* 300%). If Wrap is checked, then this indicates the number of times that the image repeats on the Sprite.
 
-<figure><img src="../../../.gitbook/assets/image (148) (1).png" alt=""><figcaption><p>Sprite displaying a PNG with dimensions 130x180 with a Width of 300 and Height of 200</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (148).png" alt=""><figcaption><p>Sprite displaying a PNG with dimensions 130x180 with a Width of 300 and Height of 200</p></figcaption></figure>
 
 #### Texture Width Scale and Texture Height Scale
 

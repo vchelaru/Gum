@@ -55,5 +55,4 @@ The following animation shows a container which has:
 * Children Layout of Left to Right Stack
 * Wraps Children set to True
 
-<figure><img src="../../../.gitbook/assets/16_09 21 11 (1).gif" alt=""><figcaption><p>Wraps Children allowed when max width is set</p></figcaption></figure>
-
+<figure><img src="../../../.gitbook/assets/16_09 21 11.gif" alt=""><figcaption><p>Wraps Children allowed when max width is set</p></figcaption></figure>

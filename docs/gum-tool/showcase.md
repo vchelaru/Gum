@@ -1,10 +1,8 @@
 # Showcase
 
-
-
 <figure><img src="../.gitbook/assets/GumDeadvivors.png" alt=""><figcaption><p>Deadvivors</p></figcaption></figure>
 
-<figure><img src="../.gitbook/assets/GumDeadvivors2 (1) (1).png" alt=""><figcaption><p>Deadvivors</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/GumDeadvivors2 (1).png" alt=""><figcaption><p>Deadvivors</p></figcaption></figure>
 
 <figure><img src="../.gitbook/assets/09_05 59 24.png" alt=""><figcaption><p>Cranky Chibi Cthulhu</p></figcaption></figure>
 
@@ -39,4 +37,3 @@
 <figure><img src="../.gitbook/assets/09_05 48 04.png" alt=""><figcaption><p>Teotihuacan</p></figcaption></figure>
 
 <figure><img src="../.gitbook/assets/09_05 49 15.png" alt=""><figcaption><p>Ship Skwabble</p></figcaption></figure>
-

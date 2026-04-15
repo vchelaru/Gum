@@ -8,6 +8,15 @@ Gum supports localization using CSV or RESX files. Adding a localization file to
 
 Both CSV and RESX formats are supported. Choose the format that best fits your project's existing localization pipeline.
 
+To add a localization file:
+
+1. Click on Edit -> Properties
+2. Click the Add button
+3. Select a CSV or .RESX - see below for details on each file type
+4. If your project uses multiple .RESX files per language, repeat the process by adding additional .RESX files
+
+<figure><img src="../.gitbook/assets/15_13 16 27.png" alt=""><figcaption><p>Project with 2 RESX files</p></figcaption></figure>
+
 ### CSV
 
 Localization can be added using a CSV file. The first column in a localization file is the _string ID_, which is the key that is used to perform localization look-ups. These keys should suggest the text which is displayed, but should also have some kind of prefix or suffix to differentiate string IDs from untranslated text.
@@ -29,13 +38,11 @@ Notice the string IDs in the table above have the "T\_" prefix. This is not a re
 
 Notice that comments using two forward slashes (similar to languages like C#) can be used to add comments which are ignored by Gum.
 
-Once you have created a CSV with the desired entries, you can reference this by clicking the ... button to browse for the file in Gum.
+Once you have created a CSV with the desired entries, you can reference this by clicking the Add button to browse for the file in Gum.
 
 ### RESX
 
 Localization can also be added using .NET RESX files. Point Gum to a single base resource file (e.g. `Strings.resx`). The tool automatically discovers satellite files in the same folder using the standard .NET naming convention — for example, `Strings.es.resx` and `Strings.fr.resx` are picked up alongside `Strings.resx` without any additional configuration. Satellite files are listed in alphabetical order in the Language dropdown. The base file's language is labeled **Default** in the tool.
-
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Selecting localization file</p></figcaption></figure>
 
 After selecting the localization file, a **Language** dropdown appears. The dropdown lists the available languages by name — for example, "English" and "Spanish" for a CSV file, or "Default", "es", and "fr" for a RESX file. The dropdown is only shown once a localization file has been loaded. Selecting a language updates the preview immediately.
 
@@ -45,8 +52,6 @@ Gum supports loading multiple base RESX files into a single project. This is use
 
 Use the list editor in Project Properties to add, remove, and reorder RESX files. Each entry is a base file; its satellites are auto-discovered as described above.
 
-**INSERT SCREENSHOT HERE** — multi-file list editor in Project Properties
-
 When multiple RESX files are loaded:
 
 * The **Language** dropdown shows the union of languages across all files. If `Strings.resx` has an `.es.resx` satellite but `Buttons.resx` does not, "es" still appears — keys missing from a given file fall back to the string ID.
@@ -55,7 +60,9 @@ When multiple RESX files are loaded:
 
 File changes on disk (edits, renames, or new satellites) are watched for every file in the list and trigger an automatic reload.
 
-Once you have added a localization file, Gum recognizes this and displays Text properties as an editable drop-down. You can type in a string ID, or you can use the drop-down to select from available options.
+## Using Localization
+
+Once you have added one or more localization files, Gum recognizes this and displays Text properties as an editable drop-down. You can type in a string ID, or you can use the drop-down to select from available options.
 
 <figure><img src="../.gitbook/assets/14_06 20 15.png" alt=""><figcaption><p>The Text dropdown displaying available string IDs</p></figcaption></figure>
 

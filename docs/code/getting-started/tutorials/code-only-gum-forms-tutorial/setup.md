@@ -16,7 +16,7 @@ Before writing any code, we must add the Gum NuGet package. Add the Gum.MonoGame
 
 Once you are finished, your game project should reference the `Gum.MonoGame` project.
 
-<figure><img src="../../../../.gitbook/assets/NuGetGum (1).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/NuGetGum.png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
 
 ## Adding Gum to Your Game
 

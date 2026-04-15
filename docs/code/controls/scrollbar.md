@@ -6,7 +6,7 @@ ScrollBar is a Forms control that lets the user select a numeric value by intera
 
 If you want a scrollable container that manages content layout for you, use [ScrollViewer](scrollviewer/) instead.
 
-<figure><img src="../../.gitbook/assets/image (202) (1).png" alt=""><figcaption><p>ScrollBar control</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (202).png" alt=""><figcaption><p>ScrollBar control</p></figcaption></figure>
 
 ## Key Properties
 

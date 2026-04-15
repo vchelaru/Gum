@@ -18,7 +18,7 @@ Objects can be centered by setting their unit and numerical values. The **Alignm
 * Set `Y Units` to `Pixels from Center`
 * Set `Y Origin` to `Center`
 
-<figure><img src="../../../.gitbook/assets/image (120) (1).png" alt=""><figcaption><p>Centering using <code>Y</code>, <code>Y Units</code>, and <code>Y Origin</code></p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (120).png" alt=""><figcaption><p>Centering using <code>Y</code>, <code>Y Units</code>, and <code>Y Origin</code></p></figcaption></figure>
 
 ## Centering with Margins
 
@@ -26,11 +26,11 @@ Centering can be performed with margins by adding an additional container to cre
 
 We may want something similar to the following image:
 
-<figure><img src="../../../.gitbook/assets/image (121) (1).png" alt=""><figcaption><p>Green rectangle is centered in the remaining area below the yellow area</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (121).png" alt=""><figcaption><p>Green rectangle is centered in the remaining area below the yellow area</p></figcaption></figure>
 
 To do this, an additional container can be added as shown in the following image:
 
-<figure><img src="../../../.gitbook/assets/image (122) (1).png" alt=""><figcaption><p>Container inside the blue rectangle defining the centering space</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (122).png" alt=""><figcaption><p>Container inside the blue rectangle defining the centering space</p></figcaption></figure>
 
 In this case, the container has the following relevant properties:
 
@@ -56,7 +56,7 @@ Stacks can be centered horizontally or vertically. To center a stack of objects,
 
 A centered stack might look like this:
 
-<figure><img src="../../../.gitbook/assets/20_04 47 47 (2) (1).png" alt=""><figcaption><p>Centered stacking ColoredRectangles</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/20_04 47 47 (2).png" alt=""><figcaption><p>Centered stacking ColoredRectangles</p></figcaption></figure>
 
 For this example, we'll begin with a Container and a background ColoredRectangle. The background is not necessary, but it helps visualize the main Container's size.
 
@@ -85,7 +85,7 @@ For this example I modified each child rectangle to have
 * Height = 32
 * Color = Green
 
-<figure><img src="../../../.gitbook/assets/20_05 01 04 (1) (1).png" alt=""><figcaption><p>Adjusted rectangle sizes and colors</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/20_05 01 04 (1).png" alt=""><figcaption><p>Adjusted rectangle sizes and colors</p></figcaption></figure>
 
 Finally, we mark the inner container to be sized according to its children. Since it remains centered, whenever its size adjusts (by adding or removing children), the inner container adjusts to remain centered.
 

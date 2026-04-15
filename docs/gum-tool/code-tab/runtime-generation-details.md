@@ -56,11 +56,11 @@ If you intend to use Gum to create elements, but you do not want to load the .gu
 
 The following shows the instantiation of the OkButton and CancelButton when using the FullyInCode setting.
 
-<figure><img src="../../.gitbook/assets/image (150) (1).png" alt=""><figcaption><p>Button instances instantiated in code</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (150).png" alt=""><figcaption><p>Button instances instantiated in code</p></figcaption></figure>
 
 Furthermore, when using the FullyInCode option all variables are assigned in generated code. For example, if the OkButton's position is changed, its X and Y values are assigned in generated code.
 
-<figure><img src="../../.gitbook/assets/image (151) (1).png" alt=""><figcaption><p>Variables assigned in generated code when using FullyInCode</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (151).png" alt=""><figcaption><p>Variables assigned in generated code when using FullyInCode</p></figcaption></figure>
 
 {% hint style="info" %}
 If using the FindByName option, then no variable assignment happens in code - rather the variable assignment happens when creating a new GraphicalUiElement from a Gum element.

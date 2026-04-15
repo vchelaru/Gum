@@ -14,7 +14,7 @@ To add a new Screen:
     <figure><img src="../../../../.gitbook/assets/10_05 20 15.png" alt=""><figcaption><p>Add Screen right-click item</p></figcaption></figure>
 3.  Name the screen TitleScreen and click OK
 
-    <figure><img src="../../../../.gitbook/assets/image (100) (1).png" alt=""><figcaption><p>Enter the new screen name and click OK</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (100).png" alt=""><figcaption><p>Enter the new screen name and click OK</p></figcaption></figure>
 
 The newly created TitleScreen is now in the Screens folder.
 

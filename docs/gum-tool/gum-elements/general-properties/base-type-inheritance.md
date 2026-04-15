@@ -35,7 +35,7 @@ The following shows a ColoredRectangle changed to a Container. Since Container a
 
 All components use inheritance even if their `Base Type` variable is not set explicitly. By default components inherit from the **Container** type.
 
-<figure><img src="../../../.gitbook/assets/image (85) (1).png" alt=""><figcaption><p>Button component inheriting from Container</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (85).png" alt=""><figcaption><p>Button component inheriting from Container</p></figcaption></figure>
 
 By inheriting from the **Container** type, components have access to all **Container** variables such as Children Layout.
 

@@ -4,7 +4,7 @@
 
 Arcs are curved lines with variable thickness. Arcs can also be used to draw wedges if the line thickness is large enough.
 
-<figure><img src="../../../../.gitbook/assets/image (135) (1).png" alt=""><figcaption><p>Three arc instances - a default arc, a rounded arc with gradient graphics, and an arc creating a wedge</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (135).png" alt=""><figcaption><p>Three arc instances - a default arc, a rounded arc with gradient graphics, and an arc creating a wedge</p></figcaption></figure>
 
 ### Arc dimensions
 
