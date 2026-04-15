@@ -874,6 +874,36 @@ namespace GumRuntime
 
 
                 toReturn.AfterFullCreation();
+
+            // Forms controls (e.g. RadioButton, CheckBox) apply their default IsChecked visual
+            // inside AfterFullCreation, but a parent's SetInitialState can override that category
+            // state afterward. Walk the subtree so Forms controls can re-assert their state.
+            NotifyFormsControlsOfInitialStateApplied(toReturn);
+        }
+
+        /// <summary>
+        /// Invoked for every GraphicalUiElement after its owning element's SetInitialState has run,
+        /// giving a hosting layer (like Gum.Forms) a chance to re-sync any Forms control state that
+        /// was overridden by parent-level variable application. Set by <c>FormsUtilities</c>.
+        /// </summary>
+        public static Action<GraphicalUiElement>? InitialStateAppliedNotifier;
+
+        private static void NotifyFormsControlsOfInitialStateApplied(GraphicalUiElement element)
+        {
+            var notifier = InitialStateAppliedNotifier;
+            if (notifier == null) return;
+
+            if (element.Children != null)
+            {
+                foreach (var child in element.Children)
+                {
+                    if (child is GraphicalUiElement gueChild)
+                    {
+                        notifier(gueChild);
+                        NotifyFormsControlsOfInitialStateApplied(gueChild);
+                    }
+                }
+            }
         }
 
         public static void CreateChildrenRecursively(GraphicalUiElement graphicalUiElement, ElementSave elementSave, ISystemManagers systemManagers)
