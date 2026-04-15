@@ -19,7 +19,7 @@ namespace Gum.Commands;
 
 public class FileCommands : IFileCommands
 {
-    private readonly LocalizationService _localizationService;
+    private readonly ILocalizationService _localizationService;
     private readonly IFileWatchManager _fileWatchManager;
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IUndoManager> _undoManager;
@@ -33,7 +33,7 @@ public class FileCommands : IFileCommands
         Lazy<IUndoManager> undoManager,
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationService localizationService,
+        ILocalizationService localizationService,
         IOutputManager outputManager,
         IFileWatchManager fileWatchManager,
         IProjectManager projectManager,
@@ -356,12 +356,12 @@ public class FileCommands : IFileCommands
         //
         // Policy: strictly homogeneous.
         //   * 0 files: load nothing, not an error.
-        //   * 1 file: dispatch to the single-file overload matching its extension (identical
-        //     to the pre-list behavior — back-compat for migrated single-file projects).
-        //   * 2+ files: require all entries to be .resx; call the multi-file RESX overload
-        //     once, routing collision warnings to the Output tab. Mixed CSV+RESX or
-        //     multiple CSVs are rejected with an Output-tab error because the runtime has
-        //     no merge API for those shapes today.
+        //   * 1 CSV: load via AddDatabaseFromCsv (no multi-CSV overload exists).
+        //   * 1+ RESX: route through the multi-file AddResxDatabase overload. Missing files
+        //     are reported via AddError and skipped; existing files still load. Collision
+        //     warnings route to the Output tab.
+        //   * Mixed CSV+RESX or multiple CSVs: rejected with an Output-tab error because
+        //     the runtime has no merge API for those shapes today.
         var projectFiles = _projectState.GumProjectSave.LocalizationFiles;
         if (projectFiles == null || projectFiles.Count == 0)
         {
@@ -389,25 +389,21 @@ public class FileCommands : IFileCommands
 
         try
         {
-            if (resolvedFiles.Count == 1)
+            // Single-CSV stays on its own path (no multi-CSV overload exists by design).
+            // All RESX cases (1 or many) flow through the multi-file overload for consistent
+            // missing-file reporting and collision warnings.
+            if (resolvedFiles.Count == 1 &&
+                !string.Equals(resolvedFiles[0].Extension, "resx", StringComparison.OrdinalIgnoreCase))
             {
                 FilePath file = resolvedFiles[0];
                 if (file.Exists())
                 {
-                    var extension = file.Extension?.ToLowerInvariant();
-                    if (extension == "resx")
-                    {
-                        _localizationService.AddResxDatabase(file.FullPath);
-                    }
-                    else
-                    {
-                        _localizationService.AddDatabaseFromCsv(file.FullPath, ',');
-                    }
+                    _localizationService.AddDatabaseFromCsv(file.FullPath, ',');
                 }
             }
             else
             {
-                // Multi-file path: require all .resx.
+                // All-RESX path (1 or more files): require every entry to be .resx.
                 var allResx = true;
                 foreach (var file in resolvedFiles)
                 {

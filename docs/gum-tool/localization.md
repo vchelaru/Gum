@@ -39,6 +39,22 @@ Localization can also be added using .NET RESX files. Point Gum to a single base
 
 After selecting the localization file, a **Language** dropdown appears. The dropdown lists the available languages by name — for example, "English" and "Spanish" for a CSV file, or "Default", "es", and "fr" for a RESX file. The dropdown is only shown once a localization file has been loaded. Selecting a language updates the preview immediately.
 
+#### Multiple RESX Files
+
+Gum supports loading multiple base RESX files into a single project. This is useful if your localization is organized across several files — for example when using [ResX Resource Manager](https://github.com/dotnet/ResXResourceManager), where strings may be split across `Strings.resx`, `Buttons.resx`, `Errors.resx`, etc., each with its own language satellites.
+
+Use the list editor in Project Properties to add, remove, and reorder RESX files. Each entry is a base file; its satellites are auto-discovered as described above.
+
+**INSERT SCREENSHOT HERE** — multi-file list editor in Project Properties
+
+When multiple RESX files are loaded:
+
+* The **Language** dropdown shows the union of languages across all files. If `Strings.resx` has an `.es.resx` satellite but `Buttons.resx` does not, "es" still appears — keys missing from a given file fall back to the string ID.
+* If the same string ID appears in more than one file, the **last file in the list wins**. A warning is printed to the Output tab listing every prior source that defined the key. Collisions between a base file and its own satellite are silent (expected behavior).
+* All files must be RESX. Mixing CSV and RESX — or loading multiple CSVs — is not supported; the tool reports an error in the Output tab if you try.
+
+File changes on disk (edits, renames, or new satellites) are watched for every file in the list and trigger an automatic reload.
+
 Once you have added a localization file, Gum recognizes this and displays Text properties as an editable drop-down. You can type in a string ID, or you can use the drop-down to select from available options.
 
 <figure><img src="../.gitbook/assets/14_06 20 15.png" alt=""><figcaption><p>The Text dropdown displaying available string IDs</p></figcaption></figure>

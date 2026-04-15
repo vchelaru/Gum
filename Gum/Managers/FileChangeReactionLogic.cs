@@ -15,7 +15,7 @@ using ToolsUtilities;
 
 namespace Gum.Managers
 {
-    public class FileChangeReactionLogic : Singleton<FileChangeReactionLogic>
+    public class FileChangeReactionLogic
     {
         private readonly ISelectedState _selectedState;
         private readonly WireframeCommands _wireframeCommands;
@@ -27,17 +27,26 @@ namespace Gum.Managers
         private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
         private readonly IPluginManager _pluginManager;
 
-        public FileChangeReactionLogic()
+        public FileChangeReactionLogic(
+            ISelectedState selectedState,
+            WireframeCommands wireframeCommands,
+            IGuiCommands guiCommands,
+            IFileCommands fileCommands,
+            IOutputManager outputManager,
+            IWireframeObjectManager wireframeObjectManager,
+            IProjectState projectState,
+            StandardElementsManagerGumTool standardElementsManagerGumTool,
+            IPluginManager pluginManager)
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-            _fileCommands = Locator.GetRequiredService<IFileCommands>();
-            _outputManager = Locator.GetRequiredService<IOutputManager>();
-            _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
-            _projectState = Locator.GetRequiredService<IProjectState>();
-            _standardElementsManagerGumTool = Locator.GetRequiredService<StandardElementsManagerGumTool>();
-            _pluginManager = Locator.GetRequiredService<IPluginManager>();
+            _selectedState = selectedState;
+            _wireframeCommands = wireframeCommands;
+            _guiCommands = guiCommands;
+            _fileCommands = fileCommands;
+            _outputManager = outputManager;
+            _wireframeObjectManager = wireframeObjectManager;
+            _projectState = projectState;
+            _standardElementsManagerGumTool = standardElementsManagerGumTool;
+            _pluginManager = pluginManager;
         }
         
         public void ReactToFileChanged(FilePath file)

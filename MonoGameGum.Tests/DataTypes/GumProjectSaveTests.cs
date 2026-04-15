@@ -28,6 +28,28 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
+    public void LocalizationFile_LegacyElement_AppearsBeforeLocalizationFilesInSerializedXml()
+    {
+        // Guard against silent reordering of the LocalizationFile / LocalizationFilesArray
+        // properties in GumProjectSave. XmlSerializer applies properties in document order,
+        // and the list-replacing setter of LocalizationFilesArray must fire AFTER the
+        // legacy setter so that a file containing both elements round-trips with the full
+        // list (not just the legacy first entry).
+        GumProjectSave project = new GumProjectSave();
+        project.LocalizationFiles.Add("a.resx");
+        project.LocalizationFiles.Add("b.resx");
+
+        FileManager.XmlSerialize(project, out string xml);
+
+        int legacyIndex = xml.IndexOf("<LocalizationFile>", StringComparison.Ordinal);
+        int listIndex = xml.IndexOf("<LocalizationFiles>", StringComparison.Ordinal);
+
+        legacyIndex.ShouldBeGreaterThan(-1);
+        listIndex.ShouldBeGreaterThan(-1);
+        legacyIndex.ShouldBeLessThan(listIndex);
+    }
+
+    [Fact]
     public void LocalizationFile_LegacyShim_GetterReturnsFirstEntry()
     {
         GumProjectSave project = new GumProjectSave();

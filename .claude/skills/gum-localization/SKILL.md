@@ -41,19 +41,30 @@ Translation logic in `TranslateForLanguage`:
 
 **CSV:** `AddCsvDatabase(Stream)` — uses CsvHelper. First column = string ID, subsequent columns = translations. First row = language headers. Languages list populated from header row.
 
-**RESX:** Two overloads:
-- `AddResxDatabase(string baseResxFilePath)` — discovers satellite files by convention (e.g., `Strings.resx` + `Strings.es.resx`, `Strings.fr.resx`). Satellites are sorted alphabetically. Base file is labeled `"Default"` in the Languages list; satellites use their culture code (e.g., `"es"`, `"fr"`).
-- `AddResxDatabase(IEnumerable<(string languageName, Stream stream)>)` — stream-based, for manual control over language order and names. Use this on mobile/web where `Directory.GetFiles` isn't available.
+**RESX:** Four overloads — single or multi, path-based or stream-based. All accept an optional `Action<string> onWarning` callback (used on cross-file key collisions; runtime never logs on its own).
 
-Both formats produce the same internal structure: `Dictionary<string, string[]>` where index 0 = string ID, 1+ = per-language translations.
+- `AddResxDatabase(string baseResxFilePath)` — single base file, auto-discovers satellites (`Strings.resx` + `Strings.es.resx`, `Strings.fr.resx`). Base labeled `"Default"`; satellites use their culture code.
+- `AddResxDatabase(IEnumerable<string> baseResxFilePaths, Action<string> onWarning = null)` — **multi-file.** Merges keys across all base files. Language set is the union; missing keys fall back to the string ID. Collision policy: last-write-wins; `onWarning` fires once per colliding key and names all prior sources.
+- `AddResxDatabase(IEnumerable<(string languageName, Stream stream)>)` — single-file stream variant for mobile/web.
+- `AddResxDatabase(IEnumerable<(string? groupName, IEnumerable<(string languageName, Stream stream)>)> fileGroups, Action<string> onWarning = null)` — multi-group stream variant with explicit group names used in collision warnings.
+
+All formats produce the same internal structure: `Dictionary<string, string[]>` where index 0 = string ID, 1+ = per-language translations.
 
 ## Gum Tool Localization Support
 
-The tool stores a single `LocalizationFile` path (relative to the project) in `GumProjectSave`. Both `.csv` and `.resx` are supported; format is inferred from the file extension in `FileCommands.LoadLocalizationFile()`.
+The tool stores `LocalizationFiles` — a `List<string>` of project-relative paths — on `GumProjectSave`. A legacy single-string `LocalizationFile` property is kept as a back-compat serialization shim (reads/writes index 0) so `.gumx` files written by the new tool can still be partially loaded by older tool versions. See `gum-project-versioning` skill for why no version bump was needed.
 
-**RESX in the tool:** User points to the base file (`Strings.resx`). The tool calls `AddResxDatabase(string)` which auto-discovers all satellites in the same directory.
+**Policy in `FileCommands.LoadLocalizationFile()`:**
+- 0 paths → no-op.
+- 1 RESX or multiple RESX → routed through the multi-file `AddResxDatabase(IEnumerable<string>, onWarning)` overload. `onWarning` is wired to `IOutputManager.AddOutput` so collisions appear in the Output tab.
+- 1 CSV → single-file CSV path.
+- Mixed CSV+RESX or multiple CSVs → `AddError` and skip (no multi-CSV overload by design; `AddDatabase` replaces rather than merges).
 
-**File watching:** `FileChangeReactionLogic.IsLocalizationFileThatShouldTriggerReload(changedFile, baseFile)` determines whether a changed file should trigger a reload. For RESX, this returns true for the base file AND any sibling matching `{BaseName}.*.resx`. For CSV, only exact match.
+**UI:** `ProjectPropertiesViewModel` exposes `LocalizationFiles` with `PreferredDisplayer = typeof(MultiFileDisplay)` — a list editor with Add/Remove/Up/Down buttons that composes `FilePickingLogic`.
+
+**Runtime auto-load:** `GumService.InitializeInternal` applies the same policy and exposes collision warnings on `GumService.Default.LastLoadResult.Warnings` (no Output tab available in games).
+
+**File watching:** `FileChangeReactionLogic.IsLocalizationFileThatShouldTriggerReload(changedFile, IEnumerable<FilePath> baseFiles)` returns true if the changed file matches any base path in the list OR any base's satellite (`{BaseName}.*.resx` in the same directory). A single-file overload is preserved as the inner loop body.
 
 **Language dropdown:** After loading, `ILocalizationService.Languages` is populated. `ProjectPropertiesViewModel.LanguageName` (string) replaces the raw `LanguageIndex` int in the UI. The plugin syncs `LanguageName` ↔ `LanguageIndex` via `IFileCommands.LocalizationLoaded` event (fired at the end of every `LoadLocalizationFile()` call).
 
@@ -135,8 +146,11 @@ PasswordBox uses `TextNoTranslate` for mask characters (e.g., "●●●●") si
 - `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` — static `LocalizationService` property and translation logic in `TrySetPropertyOnText`
 - `Gum/Commands/FileCommands.cs` — `LoadLocalizationFile()` (CSV/RESX branch, `LocalizationLoaded` event)
 - `Gum/Commands/IFileCommands.cs` — `LocalizationLoaded` event declaration
-- `Gum/Managers/FileChangeReactionLogic.cs` — `IsLocalizationFileThatShouldTriggerReload()` (satellite matching)
-- `Gum/Plugins/InternalPlugins/ProjectPropertiesWindowPlugin/` — Language dropdown UI
+- `Gum/Managers/FileChangeReactionLogic.cs` — `IsLocalizationFileThatShouldTriggerReload()` (list + satellite matching)
+- `Gum/Plugins/InternalPlugins/ProjectPropertiesWindowPlugin/` — Language dropdown + `LocalizationFiles` list editor UI
+- `WpfDataUi/Controls/MultiFileDisplay.xaml(.cs)` — `IDataUi` control for `List<string>` file-path lists; composes `FilePickingLogic`
+- `WpfDataUi/Controls/FilePickingLogic.cs` — shared file-dialog/relative-path plumbing (pattern like `TextBoxDisplayLogic`)
+- `MonoGameGum/GumService.cs` — runtime auto-load of `.gumx` `LocalizationFiles`; collision warnings surface on `GumLoadResult.Warnings`
 - `MonoGameGum/GueDeriving/TextRuntime.cs` — `Text` property and `SetTextNoTranslate` method
 - `MonoGameGum/Forms/Controls/` — Forms control localization pattern
 - `MonoGameGum.Tests/Localization/LocalizationServiceExtensionsTests.cs` — CSV/RESX loader tests

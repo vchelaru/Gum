@@ -83,9 +83,9 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value); 
     }
 
-    public string LocalizationFile
+    public List<string> LocalizationFiles
     {
-        get => Get<string>();
+        get => Get<List<string>>() ?? new List<string>();
         set => Set(value);
     }
 
@@ -220,7 +220,7 @@ public class ProjectPropertiesViewModel : ViewModel
             CanvasWidth = this.gumProject.DefaultCanvasWidth;
             RestrictFileNamesForAndroid = this.gumProject.RestrictFileNamesForAndroid;
 
-            LocalizationFile = this.gumProject.LocalizationFile;
+            LocalizationFiles = new List<string>(this.gumProject.LocalizationFiles);
             LanguageIndex = this.gumProject.CurrentLanguageIndex;
             ShowLocalization = this.gumProject.ShowLocalizationInGum;
 
@@ -252,7 +252,7 @@ public class ProjectPropertiesViewModel : ViewModel
         this.gumProject.DefaultCanvasWidth = CanvasWidth;
         this.gumProject.RestrictFileNamesForAndroid = RestrictFileNamesForAndroid;
 
-        this.gumProject.LocalizationFile = LocalizationFile;
+        this.gumProject.LocalizationFiles = new List<string>(LocalizationFiles);
         this.gumProject.CurrentLanguageIndex = LanguageIndex;
         this.gumProject.ShowLocalizationInGum = ShowLocalization;
         this.gumProject.FontRanges = FontRanges;
