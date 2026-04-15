@@ -120,6 +120,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IFontManager, FontManager>();
         services.AddSingleton<IHotkeyManager, HotkeyManager>();
         services.AddSingleton<LocalizationService>();
+        services.AddSingleton<ILocalizationService>(provider => provider.GetRequiredService<LocalizationService>());
         services.AddSingleton<ISelectedState, SelectedState>();
         services.AddSingleton<INameVerifier, NameVerifier>();
         services.AddSingleton<IUndoManager, UndoManager>();
@@ -161,6 +162,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
+        services.AddSingleton<FileChangeReactionLogic>();
         services.AddSingleton<ProjectCommands>();
 
         services.AddSingleton<IMessenger>(_ => WeakReferenceMessenger.Default);

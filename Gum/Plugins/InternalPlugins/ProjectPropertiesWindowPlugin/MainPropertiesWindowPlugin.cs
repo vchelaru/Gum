@@ -154,13 +154,28 @@ class MainPropertiesWindowPlugin : InternalPlugin
         var shouldReloadContent = false;
         switch (e.PropertyName)
         {
-            case nameof(viewModel.LocalizationFile):
+            case nameof(viewModel.LocalizationFiles):
 
-
-                if (!string.IsNullOrEmpty(viewModel.LocalizationFile) && FileManager.IsRelative(viewModel.LocalizationFile) == false)
+                // Normalize any absolute paths to project-relative so .gumx stays portable.
+                bool normalizedAny = false;
+                List<string> normalized = new List<string>(viewModel.LocalizationFiles.Count);
+                foreach (string file in viewModel.LocalizationFiles)
                 {
-                    viewModel.LocalizationFile = FileManager.MakeRelative(viewModel.LocalizationFile,
-                        _projectState.ProjectDirectory, preserveCase:true);
+                    if (!string.IsNullOrEmpty(file) && FileManager.IsRelative(file) == false)
+                    {
+                        normalized.Add(FileManager.MakeRelative(file, _projectState.ProjectDirectory, preserveCase: true));
+                        normalizedAny = true;
+                    }
+                    else
+                    {
+                        normalized.Add(file);
+                    }
+                }
+
+                if (normalizedAny)
+                {
+                    // This re-enters HandlePropertyChanged which will hit the else branch.
+                    viewModel.LocalizationFiles = normalized;
                     shouldSaveAndRefresh = false;
                 }
                 else

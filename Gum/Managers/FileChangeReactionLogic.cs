@@ -15,7 +15,7 @@ using ToolsUtilities;
 
 namespace Gum.Managers
 {
-    public class FileChangeReactionLogic : Singleton<FileChangeReactionLogic>
+    public class FileChangeReactionLogic
     {
         private readonly ISelectedState _selectedState;
         private readonly WireframeCommands _wireframeCommands;
@@ -27,17 +27,26 @@ namespace Gum.Managers
         private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
         private readonly IPluginManager _pluginManager;
 
-        public FileChangeReactionLogic()
+        public FileChangeReactionLogic(
+            ISelectedState selectedState,
+            WireframeCommands wireframeCommands,
+            IGuiCommands guiCommands,
+            IFileCommands fileCommands,
+            IOutputManager outputManager,
+            IWireframeObjectManager wireframeObjectManager,
+            IProjectState projectState,
+            StandardElementsManagerGumTool standardElementsManagerGumTool,
+            IPluginManager pluginManager)
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-            _fileCommands = Locator.GetRequiredService<IFileCommands>();
-            _outputManager = Locator.GetRequiredService<IOutputManager>();
-            _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
-            _projectState = Locator.GetRequiredService<IProjectState>();
-            _standardElementsManagerGumTool = Locator.GetRequiredService<StandardElementsManagerGumTool>();
-            _pluginManager = Locator.GetRequiredService<IPluginManager>();
+            _selectedState = selectedState;
+            _wireframeCommands = wireframeCommands;
+            _guiCommands = guiCommands;
+            _fileCommands = fileCommands;
+            _outputManager = outputManager;
+            _wireframeObjectManager = wireframeObjectManager;
+            _projectState = projectState;
+            _standardElementsManagerGumTool = standardElementsManagerGumTool;
+            _pluginManager = pluginManager;
         }
         
         public void ReactToFileChanged(FilePath file)
@@ -89,22 +98,50 @@ namespace Gum.Managers
         private void ReactToLocalizationFileChanged(FilePath file)
         {
             var gumProject = _projectState.GumProjectSave;
+            var projectFiles = gumProject.LocalizationFiles;
 
-            if(!string.IsNullOrEmpty(gumProject.LocalizationFile))
+            if(projectFiles == null || projectFiles.Count == 0)
             {
-                FilePath localizationFile = _projectState.ProjectDirectory + gumProject.LocalizationFile;
+                return;
+            }
 
-                if(IsLocalizationFileThatShouldTriggerReload(file, localizationFile))
+            var projectDirectory = _projectState.ProjectDirectory;
+            var resolvedBaseFiles = projectFiles
+                .Where(path => !string.IsNullOrEmpty(path))
+                .Select(path => new FilePath(projectDirectory + path))
+                .ToList();
+
+            if(IsLocalizationFileThatShouldTriggerReload(file, resolvedBaseFiles))
+            {
+                _fileCommands.LoadLocalizationFile();
+                // Potential optimization: if the changed file is a satellite (e.g. Strings.es.resx)
+                // and CurrentLanguage doesn't map to that satellite's language index, this refresh
+                // is unnecessary. The cost is currently acceptable (small XML reload + layout pass),
+                // but if flickering becomes noticeable this should be gated on whether the changed
+                // satellite matches the active language.
+                _wireframeCommands.Refresh();
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the changed file matches any base localization file in the list, or
+        /// is a RESX satellite (e.g. <c>Strings.es.resx</c>) of any base RESX entry in the list.
+        /// </summary>
+        public static bool IsLocalizationFileThatShouldTriggerReload(FilePath changedFile, IEnumerable<FilePath> baseLocalizationFiles)
+        {
+            if(baseLocalizationFiles == null)
+            {
+                return false;
+            }
+
+            foreach(var baseFile in baseLocalizationFiles)
+            {
+                if(IsLocalizationFileThatShouldTriggerReload(changedFile, baseFile))
                 {
-                    _fileCommands.LoadLocalizationFile();
-                    // Potential optimization: if the changed file is a satellite (e.g. Strings.es.resx)
-                    // and CurrentLanguage doesn't map to that satellite's language index, this refresh
-                    // is unnecessary. The cost is currently acceptable (small XML reload + layout pass),
-                    // but if flickering becomes noticeable this should be gated on whether the changed
-                    // satellite matches the active language.
-                    _wireframeCommands.Refresh();
+                    return true;
                 }
             }
+            return false;
         }
 
         public static bool IsLocalizationFileThatShouldTriggerReload(FilePath changedFile, FilePath baseLocalizationFile)
@@ -113,10 +150,10 @@ namespace Gum.Managers
                 return true;
 
             // CSV files have no satellites
-            if(baseLocalizationFile.Extension?.ToLowerInvariant() != "resx")
+            if(baseLocalizationFile.Extension != "resx")
                 return false;
 
-            if(changedFile.Extension?.ToLowerInvariant() != "resx")
+            if(changedFile.Extension != "resx")
                 return false;
 
             // Must be in the same directory

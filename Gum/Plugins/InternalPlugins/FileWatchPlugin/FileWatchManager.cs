@@ -296,13 +296,13 @@ public class FileWatchManager : IFileWatchManager
             if (PrintFileChangesToOutput)
             {
                 var stopwatch = Stopwatch.StartNew();
-                FileChangeReactionLogic.Self.ReactToFileChanged(file);
+                Locator.GetRequiredService<FileChangeReactionLogic>().ReactToFileChanged(file);
                 stopwatch.Stop();
                 _guiCommands.PrintOutput($"File change processed: {file} (took {stopwatch.ElapsedMilliseconds}ms)");
             }
             else
             {
-                FileChangeReactionLogic.Self.ReactToFileChanged(file);
+                Locator.GetRequiredService<FileChangeReactionLogic>().ReactToFileChanged(file);
             }
         }
 

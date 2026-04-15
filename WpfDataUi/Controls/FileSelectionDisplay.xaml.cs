@@ -1,6 +1,4 @@
-﻿using Microsoft.Win32;
-using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using WpfDataUi.DataTypes;
@@ -15,6 +13,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
     #region Fields
 
     TextBoxDisplayLogic _textBoxLogic;
+    FilePickingLogic _filePickingLogic;
 
     InstanceMember? _instanceMember;
 
@@ -60,12 +59,15 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
     /// </summary>
     public string Filter
     {
-        get; set;
-    } = string.Empty;
+        get => _filePickingLogic.Filter;
+        set => _filePickingLogic.Filter = value;
+    }
 
-    public static string FolderRelativeTo { get; set; }
-
-    public bool IsFolderDialog { get; set; }
+    public bool IsFolderDialog
+    {
+        get => _filePickingLogic.IsFolderDialog;
+        set => _filePickingLogic.IsFolderDialog = value;
+    }
 
     #endregion
 
@@ -73,6 +75,8 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 
     public FileSelectionDisplay()
     {
+        _filePickingLogic = new FilePickingLogic();
+
         InitializeComponent();
 
         _textBoxLogic = new TextBoxDisplayLogic(this, TextBox);
@@ -169,87 +173,17 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 
     private void Button_Click_1(object? sender, RoutedEventArgs e)
     {
-        if (IsFolderDialog)
+        string? selected = _filePickingLogic.ShowOpenDialog();
+        if (selected != null)
         {
-            var fbd = new System.Windows.Forms.FolderBrowserDialog();
-            var result = fbd.ShowDialog();
-
-            if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
-            {
-                this.TextBox.Text = fbd.SelectedPath;
-                _textBoxLogic.TryApplyToInstance();
-            }
-        }
-        else
-        {
-            OpenFileDialog fileDialog = new OpenFileDialog();
-
-            fileDialog.Filter = Filter;
-
-            var shouldOpen = fileDialog.ShowDialog();
-
-            if (shouldOpen.HasValue && shouldOpen.Value)
-            {
-                string file = fileDialog.FileName;
-                this.TextBox.Text = file;
-                _textBoxLogic.TryApplyToInstance();
-            }
+            this.TextBox.Text = selected;
+            _textBoxLogic.TryApplyToInstance();
         }
     }
 
     private void ViewInExplorerClicked(object? sender, RoutedEventArgs e)
     {
-        var fileToOpen = this.TextBox.Text;
-
-        if (!string.IsNullOrEmpty(fileToOpen))
-        {
-            if (!string.IsNullOrEmpty(FolderRelativeTo))
-            {
-                fileToOpen = RemoveDotDotSlash(
-                    FolderRelativeTo + fileToOpen)
-                    .Replace("/", "\\");
-
-            }
-
-            if (System.IO.File.Exists(fileToOpen))
-            {
-                Process.Start("explorer.exe", "/select," + fileToOpen);
-            }
-        }
-    }
-
-    private string RemoveDotDotSlash(string fileNameToFix)
-    {
-        if (fileNameToFix.Contains(".."))
-        {
-            fileNameToFix = fileNameToFix.Replace("\\", "/");
-
-            // First let's get rid of any ..'s that are in the middle
-            // for example:
-            //
-            // "content/zones/area1/../../background/outdoorsanim/outdoorsanim.achx"
-            //
-            // would become
-            // 
-            // "content/background/outdoorsanim/outdoorsanim.achx"
-
-            int indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
-
-            bool shouldLoop = indexOfNextDotDotSlash > 0;
-
-            while (shouldLoop)
-            {
-                int indexOfPreviousDirectory = fileNameToFix.LastIndexOf('/', indexOfNextDotDotSlash - 2, indexOfNextDotDotSlash - 2);
-
-                fileNameToFix = fileNameToFix.Remove(indexOfPreviousDirectory + 1, indexOfNextDotDotSlash - indexOfPreviousDirectory + 2);
-
-                indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
-
-                shouldLoop = indexOfNextDotDotSlash > 0;
-            }
-        }
-
-        return fileNameToFix.Replace("\\", "/");
+        _filePickingLogic.ShowInExplorer(this.TextBox.Text);
     }
 
     #endregion

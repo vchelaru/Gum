@@ -24,6 +24,11 @@ public enum LinkLoadingPreference
 #endregion
 
 #region LoadGumResult class
+/// <summary>
+/// Carries diagnostics from a GumProjectSave load. Includes both load-level
+/// failures (ErrorMessage, MissingFiles) and content-level non-fatal warnings
+/// (Warnings) such as cross-file string ID collisions during localization load.
+/// </summary>
 public class GumLoadResult
 {
     /// <summary>
@@ -44,6 +49,15 @@ public class GumLoadResult
         get;
         private set;
     }
+
+    /// <summary>
+    /// Non-fatal warnings produced during load. For example, when multiple
+    /// localization files are loaded and two files define the same string ID,
+    /// a collision warning is appended here. Also used to report misconfiguration
+    /// (such as mixed CSV/RESX entries) where the load was skipped but the
+    /// project itself is still usable.
+    /// </summary>
+    public List<string> Warnings { get; set; } = new List<string>();
 
     public GumLoadResult()
     {
@@ -184,8 +198,65 @@ public class GumProjectSave
     public string ParentProjectRoot { get; set; } = string.Empty;
     public bool ShouldSerializeParentProjectRoot() => !string.IsNullOrEmpty(ParentProjectRoot);
 
-    public string LocalizationFile { get; set; } = string.Empty;
-    public bool ShouldSerializeLocalizationFile() => !string.IsNullOrEmpty(LocalizationFile);
+    // NOTE: LocalizationFile (legacy, single-string) is declared BEFORE LocalizationFilesArray
+    // so that XmlSerializer writes the legacy element first. On round-trip read, the legacy
+    // setter populates LocalizationFiles with one entry, then LocalizationFilesArray's setter
+    // REPLACES the list with the full array — so the new list wins. The array indirection is
+    // required because XmlSerializer appends to List<T> properties rather than replacing them,
+    // which would duplicate the legacy entry.
+
+    /// <summary>
+    /// Backward-compatibility shim for the previous single-file schema.
+    /// Getter returns the first entry of <see cref="LocalizationFiles"/>; setter clears the
+    /// list and adds the value if non-empty. On deserialization, an old single-file
+    /// &lt;LocalizationFile&gt; element populates <see cref="LocalizationFiles"/> with one
+    /// entry. On serialization, this element is emitted (populated from the first path)
+    /// whenever any files are configured, so older Gum versions that don't know about
+    /// <see cref="LocalizationFiles"/> can still load at least the first file.
+    /// </summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    [XmlElement("LocalizationFile")]
+    public string LocalizationFile
+    {
+        get => LocalizationFiles.FirstOrDefault() ?? string.Empty;
+        set
+        {
+            LocalizationFiles.Clear();
+            if (!string.IsNullOrEmpty(value))
+            {
+                LocalizationFiles.Add(value);
+            }
+        }
+    }
+    /// <summary>
+    /// Always emit the legacy &lt;LocalizationFile&gt; element when any file is configured,
+    /// so older Gum tool versions (single-string schema) can still load the first file.
+    /// </summary>
+    public bool ShouldSerializeLocalizationFile() => LocalizationFiles.Count > 0;
+
+    /// <summary>
+    /// Relative paths (from the .gumx directory) to one or more localization source files
+    /// (either .csv or .resx base files). Multiple RESX base files are merged by the runtime;
+    /// see <c>LocalizationServiceExtensions.AddResxDatabase</c>.
+    /// </summary>
+    [XmlIgnore]
+    public List<string> LocalizationFiles { get; set; } = new List<string>();
+
+    /// <summary>
+    /// Backing array used by XmlSerializer so that deserialization REPLACES
+    /// <see cref="LocalizationFiles"/> rather than appending to it (important when the
+    /// legacy <c>&lt;LocalizationFile&gt;</c> element has already populated one entry
+    /// earlier in the document).
+    /// </summary>
+    [XmlArray("LocalizationFiles")]
+    [XmlArrayItem("string")]
+    public string[] LocalizationFilesArray
+    {
+        get => LocalizationFiles.ToArray();
+        set => LocalizationFiles = value == null ? new List<string>() : new List<string>(value);
+    }
+    /// <summary>Serialize only when the list is non-empty.</summary>
+    public bool ShouldSerializeLocalizationFilesArray() => LocalizationFiles.Count > 0;
 
     public bool ShowLocalizationInGum { get; set; } = true;
 
@@ -331,6 +402,8 @@ public class GumProjectSave
         ComponentReferences = new List<ElementReference>();
         StandardElementReferences = new List<ElementReference>();
         BehaviorReferences = new List<BehaviorReference>();
+
+        LocalizationFiles = new List<string>();
 
         Version = (int)GumxVersions.AttributeVersion;
     }

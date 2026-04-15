@@ -72,10 +72,24 @@ public static class LocalizationServiceExtensions
         Action<string>? onWarning = null)
     {
         var fileGroups = new List<FileGroup>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var baseResxFilePath in baseResxFilePaths)
         {
-            var directory = Path.GetDirectoryName(baseResxFilePath)!;
+            // Skip duplicates — a list with the same path twice would otherwise report
+            // every key as a collision against itself, spamming onWarning.
+            if (!seen.Add(Path.GetFullPath(baseResxFilePath)))
+            {
+                continue;
+            }
+
+            // Path.GetDirectoryName returns "" for a bare filename; Directory.GetFiles("")
+            // throws. Normalize to current directory so the public API tolerates either form.
+            var directory = Path.GetDirectoryName(baseResxFilePath);
+            if (string.IsNullOrEmpty(directory))
+            {
+                directory = ".";
+            }
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(baseResxFilePath);
 
             var filesForGroup = new List<(string languageName, string filePath)>();

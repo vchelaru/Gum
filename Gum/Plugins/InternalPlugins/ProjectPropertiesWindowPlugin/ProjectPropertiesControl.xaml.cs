@@ -124,9 +124,9 @@ public partial class ProjectPropertiesControl : UserControl
                     member.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
                 }
 
-                if(member.Name == nameof(ViewModel.LocalizationFile))
+                if(member.Name == nameof(ViewModel.LocalizationFiles))
                 {
-                    member.PreferredDisplayer = typeof(FileSelectionDisplay);
+                    member.PreferredDisplayer = typeof(MultiFileDisplay);
                     member.PropertiesToSetOnDisplayer["Filter"] = "Localization Files|*.csv;*.resx|All Files|*.*";
                 }
                 else if(member.Name == nameof(ViewModel.LanguageName))

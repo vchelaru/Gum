@@ -231,7 +231,7 @@ public class ProjectManager : IProjectManager
 
         ObjectFinder.Self.GumProjectSave = _gumProjectSave;
 
-        WpfDataUi.Controls.FileSelectionDisplay.FolderRelativeTo = fileName.GetDirectoryContainingThis().FullPath;
+        WpfDataUi.Controls.FilePickingLogic.FolderRelativeTo = fileName.GetDirectoryContainingThis().FullPath;
 
         if (_gumProjectSave != null)
         {
@@ -867,7 +867,7 @@ public class ProjectManager : IProjectManager
                 GumProjectSave.FullFileName = openFileDialog.FileName;
                 var filePath = new FilePath(openFileDialog.FileName);
                 PluginManager.Self.ProjectLocationSet(filePath);
-                WpfDataUi.Controls.FileSelectionDisplay.FolderRelativeTo = filePath.GetDirectoryContainingThis().FullPath;
+                WpfDataUi.Controls.FilePickingLogic.FolderRelativeTo = filePath.GetDirectoryContainingThis().FullPath;
 
                 shouldSave = true;
                 isProjectNew = true;

@@ -117,6 +117,93 @@ public class GumServiceLocalizationAutoLoadTests : BaseTestClass, IDisposable
         service.Translate("T_OK").ShouldBe("Aceptar");
     }
 
+    [Fact]
+    public void Initialize_ShouldAutoLoadMultipleResxFiles()
+    {
+        _tempDirectory = CreateTempDirectory();
+
+        WriteResxFile(Path.Combine(_tempDirectory, "Strings.resx"), new Dictionary<string, string>
+        {
+            { "T_OK", "OK" }
+        });
+        WriteResxFile(Path.Combine(_tempDirectory, "Buttons.resx"), new Dictionary<string, string>
+        {
+            { "B_CANCEL", "Cancel" }
+        });
+
+        string gumxPath = Path.Combine(_tempDirectory, "Project.gumx");
+        File.WriteAllText(gumxPath, BuildMinimalGumxWithMultipleLocalizationFiles(
+            new[] { "Strings.resx", "Buttons.resx" }));
+
+        using GameForLocalizationTest game = new GameForLocalizationTest(gumxPath);
+        game.RunOneFrame();
+
+        ILocalizationService? service = CustomSetPropertyOnRenderable.LocalizationService;
+        service.ShouldNotBeNull();
+        service.CurrentLanguage = 1;
+        service.Translate("T_OK").ShouldBe("OK");
+        service.Translate("B_CANCEL").ShouldBe("Cancel");
+
+        game.GumService.LastLoadResult.ShouldNotBeNull();
+        game.GumService.LastLoadResult!.Warnings.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Initialize_ShouldSurfaceCollisionWarning_WhenMultipleResxFilesDefineSameKey()
+    {
+        _tempDirectory = CreateTempDirectory();
+
+        WriteResxFile(Path.Combine(_tempDirectory, "Strings.resx"), new Dictionary<string, string>
+        {
+            { "SHARED", "FromStrings" }
+        });
+        WriteResxFile(Path.Combine(_tempDirectory, "Buttons.resx"), new Dictionary<string, string>
+        {
+            { "SHARED", "FromButtons" }
+        });
+
+        string gumxPath = Path.Combine(_tempDirectory, "Project.gumx");
+        File.WriteAllText(gumxPath, BuildMinimalGumxWithMultipleLocalizationFiles(
+            new[] { "Strings.resx", "Buttons.resx" }));
+
+        using GameForLocalizationTest game = new GameForLocalizationTest(gumxPath);
+        game.RunOneFrame();
+
+        game.GumService.LastLoadResult.ShouldNotBeNull();
+        game.GumService.LastLoadResult!.Warnings.ShouldNotBeEmpty();
+        game.GumService.LastLoadResult.Warnings
+            .ShouldContain(w => w.Contains("SHARED", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Initialize_ShouldWarnAndSkipLoad_WhenMixingCsvAndResx()
+    {
+        _tempDirectory = CreateTempDirectory();
+
+        WriteResxFile(Path.Combine(_tempDirectory, "Strings.resx"), new Dictionary<string, string>
+        {
+            { "T_OK", "OK" }
+        });
+        File.WriteAllText(Path.Combine(_tempDirectory, "Extra.csv"),
+            "String ID,English\nT_EXTRA,Extra\n");
+
+        string gumxPath = Path.Combine(_tempDirectory, "Project.gumx");
+        File.WriteAllText(gumxPath, BuildMinimalGumxWithMultipleLocalizationFiles(
+            new[] { "Strings.resx", "Extra.csv" }));
+
+        using GameForLocalizationTest game = new GameForLocalizationTest(gumxPath);
+        game.RunOneFrame();
+
+        game.GumService.LastLoadResult.ShouldNotBeNull();
+        game.GumService.LastLoadResult!.Warnings
+            .ShouldContain(w => w.Contains("Mixed CSV/RESX", StringComparison.Ordinal));
+
+        ILocalizationService? service = CustomSetPropertyOnRenderable.LocalizationService;
+        service.ShouldNotBeNull();
+        // Mixed list -> load skipped, so no languages registered.
+        service.Languages.Count.ShouldBe(0);
+    }
+
     #region Helpers
 
     private static string BuildMinimalGumx(string localizationFile)
@@ -127,6 +214,23 @@ public class GumServiceLocalizationAutoLoadTests : BaseTestClass, IDisposable
         sb.AppendLine("  <DefaultCanvasWidth>800</DefaultCanvasWidth>");
         sb.AppendLine("  <DefaultCanvasHeight>600</DefaultCanvasHeight>");
         sb.AppendLine($"  <LocalizationFile>{localizationFile}</LocalizationFile>");
+        sb.AppendLine("</GumProjectSave>");
+        return sb.ToString();
+    }
+
+    private static string BuildMinimalGumxWithMultipleLocalizationFiles(IEnumerable<string> localizationFiles)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        sb.AppendLine("<GumProjectSave xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">");
+        sb.AppendLine("  <DefaultCanvasWidth>800</DefaultCanvasWidth>");
+        sb.AppendLine("  <DefaultCanvasHeight>600</DefaultCanvasHeight>");
+        sb.AppendLine("  <LocalizationFiles>");
+        foreach (string file in localizationFiles)
+        {
+            sb.AppendLine($"    <string>{file}</string>");
+        }
+        sb.AppendLine("  </LocalizationFiles>");
         sb.AppendLine("</GumProjectSave>");
         return sb.ToString();
     }

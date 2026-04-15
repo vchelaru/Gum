@@ -19,7 +19,7 @@ namespace Gum.Commands;
 
 public class FileCommands : IFileCommands
 {
-    private readonly LocalizationService _localizationService;
+    private readonly ILocalizationService _localizationService;
     private readonly IFileWatchManager _fileWatchManager;
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IUndoManager> _undoManager;
@@ -33,7 +33,7 @@ public class FileCommands : IFileCommands
         Lazy<IUndoManager> undoManager,
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationService localizationService,
+        ILocalizationService localizationService,
         IOutputManager outputManager,
         IFileWatchManager fileWatchManager,
         IProjectManager projectManager,
@@ -345,30 +345,117 @@ public class FileCommands : IFileCommands
     {
         _localizationService.Clear();
 
-        if (!string.IsNullOrEmpty(_projectState.GumProjectSave.LocalizationFile))
+        // Design note (issue #2512): GumProjectSave.LocalizationFiles is a list. We pick a
+        // policy here based on what the runtime LocalizationService supports:
+        //   - ILocalizationService.AddDatabase REPLACES the internal database (it does not
+        //     merge). So calling AddCsvDatabase / single-file AddResxDatabase back-to-back
+        //     would clobber earlier loads — that rules out a naive "iterate and call
+        //     single-file overloads" approach for multi-file cases.
+        //   - The multi-file AddResxDatabase(IEnumerable<string>, onWarning) overload merges
+        //     files in one pass and reports cross-file string-ID collisions via the callback.
+        //
+        // Policy: strictly homogeneous.
+        //   * 0 files: load nothing, not an error.
+        //   * 1 CSV: load via AddDatabaseFromCsv (no multi-CSV overload exists).
+        //   * 1+ RESX: route through the multi-file AddResxDatabase overload. Missing files
+        //     are reported via AddError and skipped; existing files still load. Collision
+        //     warnings route to the Output tab.
+        //   * Mixed CSV+RESX or multiple CSVs: rejected with an Output-tab error because
+        //     the runtime has no merge API for those shapes today.
+        var projectFiles = _projectState.GumProjectSave.LocalizationFiles;
+        if (projectFiles == null || projectFiles.Count == 0)
         {
-            FilePath file = _projectState.ProjectDirectory + _projectState.GumProjectSave.LocalizationFile;
+            _guiCommands.RefreshVariables();
+            LocalizationLoaded?.Invoke();
+            return;
+        }
 
-            if (file.Exists())
+        var resolvedFiles = new System.Collections.Generic.List<FilePath>();
+        foreach (var relative in projectFiles)
+        {
+            if (string.IsNullOrEmpty(relative))
             {
-                try
+                continue;
+            }
+            resolvedFiles.Add(_projectState.ProjectDirectory + relative);
+        }
+
+        if (resolvedFiles.Count == 0)
+        {
+            _guiCommands.RefreshVariables();
+            LocalizationLoaded?.Invoke();
+            return;
+        }
+
+        try
+        {
+            // Single-CSV stays on its own path (no multi-CSV overload exists by design).
+            // All RESX cases (1 or many) flow through the multi-file overload for consistent
+            // missing-file reporting and collision warnings.
+            if (resolvedFiles.Count == 1 && resolvedFiles[0].Extension != "resx")
+            {
+                FilePath file = resolvedFiles[0];
+                if (file.Exists())
                 {
-                    var extension = file.Extension?.ToLowerInvariant();
-                    if (extension == "resx")
-                    {
-                        _localizationService.AddResxDatabase(file.FullPath);
-                    }
-                    else
-                    {
-                        _localizationService.AddDatabaseFromCsv(file.FullPath, ',');
-                    }
-                    _localizationService.CurrentLanguage = _projectState.GumProjectSave.CurrentLanguageIndex;
+                    _localizationService.AddDatabaseFromCsv(file.FullPath, ',');
                 }
-                catch (Exception e)
+                else
                 {
-                    _dialogService.ShowMessage($"Error loading localization file {file.FullPath}\n\n{e}");
+                    _outputManager.AddError(
+                        $"Localization: file not found, skipping: {file.FullPath}");
                 }
             }
+            else
+            {
+                // All-RESX path (1 or more files): require every entry to be .resx.
+                var allResx = true;
+                foreach (var file in resolvedFiles)
+                {
+                    if (file.Extension != "resx")
+                    {
+                        allResx = false;
+                        break;
+                    }
+                }
+
+                if (!allResx)
+                {
+                    _outputManager.AddError(
+                        "Localization: multiple files configured but not all are .resx. " +
+                        "Mixed CSV/RESX and multi-CSV loading are not supported. " +
+                        "Loading was skipped.");
+                }
+                else
+                {
+                    var existingPaths = new System.Collections.Generic.List<string>();
+                    foreach (var file in resolvedFiles)
+                    {
+                        if (file.Exists())
+                        {
+                            existingPaths.Add(file.FullPath);
+                        }
+                        else
+                        {
+                            _outputManager.AddError(
+                                $"Localization: file not found, skipping: {file.FullPath}");
+                        }
+                    }
+
+                    if (existingPaths.Count > 0)
+                    {
+                        _localizationService.AddResxDatabase(
+                            existingPaths,
+                            onWarning: message => _outputManager.AddOutput("Localization warning: " + message));
+                    }
+                }
+            }
+
+            _localizationService.CurrentLanguage = _projectState.GumProjectSave.CurrentLanguageIndex;
+        }
+        catch (Exception e)
+        {
+            var joined = string.Join(", ", resolvedFiles);
+            _dialogService.ShowMessage($"Error loading localization file(s) {joined}\n\n{e}");
         }
 
         _guiCommands.RefreshVariables();
