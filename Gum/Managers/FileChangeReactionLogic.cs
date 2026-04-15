@@ -150,10 +150,10 @@ namespace Gum.Managers
                 return true;
 
             // CSV files have no satellites
-            if(baseLocalizationFile.Extension?.ToLowerInvariant() != "resx")
+            if(baseLocalizationFile.Extension != "resx")
                 return false;
 
-            if(changedFile.Extension?.ToLowerInvariant() != "resx")
+            if(changedFile.Extension != "resx")
                 return false;
 
             // Must be in the same directory

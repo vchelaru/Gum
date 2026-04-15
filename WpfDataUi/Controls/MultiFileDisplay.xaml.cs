@@ -24,7 +24,20 @@ public partial class MultiFileDisplay : UserControl, IDataUi
     readonly FilePickingLogic _filePickingLogic;
     InstanceMember? _instanceMember;
     List<string> _entries;
-    int? _pendingSelectIndex;
+
+    // NOTE: static dictionary is process-global. If two MultiFileDisplay controls ever bind
+    // to different InstanceMembers with the same Name simultaneously (e.g. a secondary
+    // property inspector), they would cross-pollinate. Not a concern with today's
+    // single-project-properties-grid usage, but worth revisiting if the control gets reused.
+    //
+    // Pending selection survives across:
+    //   (a) the PropertyChanged-triggered refresh of the current control,
+    //   (b) the subsequent grid rebuild that constructs BOTH a new InstanceMember and a
+    //       new MultiFileDisplay bound to it.
+    // We can't key on InstanceMember identity because (b) produces a different instance.
+    // Name is stable. Scope stays tight because we clear the entry on the next idle tick
+    // after Commit, so stale values can't leak across element switches.
+    static readonly Dictionary<string, int> s_pendingSelectIndexByName = new();
 
     #endregion
 
@@ -117,7 +130,7 @@ public partial class MultiFileDisplay : UserControl, IDataUi
 
     public ApplyValueResult TrySetValueOnUi(object value)
     {
-        _entries = new List<string>();
+        _entries.Clear();
         if (value is List<string> incoming)
         {
             _entries.AddRange(incoming);
@@ -174,11 +187,20 @@ public partial class MultiFileDisplay : UserControl, IDataUi
 
     private void ListBox_PreviewMouseLeftButtonDown(object? sender, MouseButtonEventArgs e)
     {
-        _pendingSelectIndex = null;
+        if (_instanceMember != null)
+        {
+            if (_instanceMember?.Name is string n) s_pendingSelectIndexByName.Remove(n);
+        }
     }
 
     private void ListBox_KeyDown(object? sender, KeyEventArgs e)
     {
+        // Arrow keys / clicks = real user navigation → the latched pending value is stale.
+        if (_instanceMember != null)
+        {
+            if (_instanceMember?.Name is string n) s_pendingSelectIndexByName.Remove(n);
+        }
+
         if (InstanceMember?.IsReadOnly == true)
         {
             return;
@@ -224,23 +246,41 @@ public partial class MultiFileDisplay : UserControl, IDataUi
 
     private void Commit(int? selectIndex = null)
     {
-        // Latch the desired selection BEFORE TrySetValueOnInstance fires, because the
-        // variable-grid may rebuild this control (or call Refresh → RebindListBox) in
-        // response, which would otherwise drop the selection. RebindListBox reapplies
-        // _pendingSelectIndex on every bind; we clear it once the user interacts.
-        _pendingSelectIndex = selectIndex;
+        // Latch the desired selection by MEMBER NAME — the grid rebuild produces a new
+        // InstanceMember instance, so identity-based keys don't survive. Scheduled for
+        // cleanup at ContextIdle so all rebuild passes in this input cycle see it, but
+        // it can't linger into a future element switch.
+        string? name = _instanceMember?.Name;
+        if (selectIndex is int idx && name != null)
+        {
+            s_pendingSelectIndexByName[name] = idx;
+            Dispatcher.BeginInvoke(
+                () => s_pendingSelectIndexByName.Remove(name),
+                System.Windows.Threading.DispatcherPriority.ContextIdle);
+        }
         this.TrySetValueOnInstance();
         RebindListBox();
     }
 
     private void RebindListBox()
     {
+        int? pending = TryPeekPendingSelect();
         ListBox.ItemsSource = null;
         ListBox.ItemsSource = _entries;
-        if (_pendingSelectIndex is int pending && pending >= 0 && pending < _entries.Count)
+        if (pending is int p && p >= 0 && p < _entries.Count)
         {
-            ListBox.SelectedIndex = pending;
+            ListBox.SelectedIndex = p;
         }
+    }
+
+    private int? TryPeekPendingSelect()
+    {
+        var name = _instanceMember?.Name;
+        if (name != null && s_pendingSelectIndexByName.TryGetValue(name, out var idx))
+        {
+            return idx;
+        }
+        return null;
     }
 
     private void RefreshIsEnabled()

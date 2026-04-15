@@ -182,6 +182,19 @@ public class FileCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void LoadLocalizationFile_ShouldReportError_WhenSingleCsvFileMissing()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.LocalizationFiles.Add("DoesNotExist.csv");
+
+        _fileCommands.LoadLocalizationFile();
+
+        _errorCalls.Count.ShouldBe(1);
+        _errorCalls[0].ShouldContain("DoesNotExist.csv");
+        _localizationService.HasDatabase.ShouldBeFalse();
+    }
+
+    [Fact]
     public void LoadLocalizationFile_ShouldReportError_WhenSingleResxFileMissing()
     {
         // Single-RESX now flows through the multi-file path, so a missing file is reported

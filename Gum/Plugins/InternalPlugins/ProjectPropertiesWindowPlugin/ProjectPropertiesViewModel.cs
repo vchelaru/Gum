@@ -85,7 +85,19 @@ public class ProjectPropertiesViewModel : ViewModel
 
     public List<string> LocalizationFiles
     {
-        get => Get<List<string>>() ?? new List<string>();
+        get
+        {
+            // Initialize lazily so mutations (e.g. list.Add(...)) on a freshly-constructed
+            // VM persist. Returning a new list each call would let caller changes fall
+            // on the floor.
+            var list = Get<List<string>>();
+            if (list == null)
+            {
+                list = new List<string>();
+                SetWithoutNotifying(list);
+            }
+            return list;
+        }
         set => Set(value);
     }
 

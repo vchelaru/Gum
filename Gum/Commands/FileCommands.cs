@@ -392,13 +392,17 @@ public class FileCommands : IFileCommands
             // Single-CSV stays on its own path (no multi-CSV overload exists by design).
             // All RESX cases (1 or many) flow through the multi-file overload for consistent
             // missing-file reporting and collision warnings.
-            if (resolvedFiles.Count == 1 &&
-                !string.Equals(resolvedFiles[0].Extension, "resx", StringComparison.OrdinalIgnoreCase))
+            if (resolvedFiles.Count == 1 && resolvedFiles[0].Extension != "resx")
             {
                 FilePath file = resolvedFiles[0];
                 if (file.Exists())
                 {
                     _localizationService.AddDatabaseFromCsv(file.FullPath, ',');
+                }
+                else
+                {
+                    _outputManager.AddError(
+                        $"Localization: file not found, skipping: {file.FullPath}");
                 }
             }
             else
@@ -407,7 +411,7 @@ public class FileCommands : IFileCommands
                 var allResx = true;
                 foreach (var file in resolvedFiles)
                 {
-                    if (!string.Equals(file.Extension, "resx", StringComparison.OrdinalIgnoreCase))
+                    if (file.Extension != "resx")
                     {
                         allResx = false;
                         break;
