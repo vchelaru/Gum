@@ -333,6 +333,16 @@ If the same key appears in more than one base file, the **last write wins**. Whe
 
 The set of languages is the union of cultures across all base files. If `Strings.resx` has an `es` satellite but `Buttons.resx` does not, keys from `Buttons.resx` fall back to their string ID when `es` is selected.
 
+{% hint style="warning" %}
+**Bundled-content platforms and `.gumx` auto-load**
+
+When you pass a `.gumx` file to `GumUI.Initialize(this, "…gumx")` that references RESX localization files, Gum auto-loads them from the filesystem using `Directory.GetFiles` for satellite discovery. This works on desktop platforms (Windows, Linux, macOS) and on any platform that exposes a real filesystem to the running app.
+
+It does **not** work on bundled-content platforms — iOS, Android, consoles, and web — where `Content/` files are packed into the app bundle and can only be read via `TitleContainer.OpenStream`. On those platforms, skip the `.gumx`-driven auto-load for RESX and call `AddResxDatabase(groups, ...)` manually with streams as shown in the XNA-like tab above. CSV auto-load has the same limitation.
+
+A stream-based auto-load path for bundled content is on the roadmap. If this is blocking you, let us know on Discord or file an issue on [GitHub](https://github.com/vchelaru/Gum/issues) — real usage reports help us prioritize.
+{% endhint %}
+
 ## Forms Control Localization
 
 Forms controls localize text automatically when a `LocalizationService` is active. When you assign a string ID to a control's `Text` property (or `Header` for MenuItem, `Placeholder` for TextBox), Gum translates it at assignment time. Each control that supports localization also provides a no-translate method for setting literal text that should not be translated.
