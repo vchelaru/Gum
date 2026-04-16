@@ -9,7 +9,7 @@ using Gum.Services;
 namespace Gum.Plugins.InternalPlugins.Hotkey
 {
     [Export(typeof(PluginBase))]
-    public class MainHotkeyPlugin : InternalPlugin
+    public class MainHotkeyPlugin : PriorityPlugin
     {
         PluginTab pluginTab;
         HotkeyView hotkeyView;

@@ -10,7 +10,7 @@ using Gum.Services.Dialogs;
 namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
 {
     [Export(typeof(PluginBase))]
-    internal class MainDuplicateVariablePlugin : InternalPlugin
+    internal class MainDuplicateVariablePlugin : PriorityPlugin
     {
         private readonly IDialogService _dialogService;
         

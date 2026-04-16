@@ -9,7 +9,7 @@ using System.Linq;
 namespace Gum.Plugins.ParentPlugin
 {
     [Export(typeof(PluginBase))]
-    public class MainParentPlugin : InternalPlugin
+    public class MainParentPlugin : PriorityPlugin
     {
         private readonly ISelectedState _selectedState;
 

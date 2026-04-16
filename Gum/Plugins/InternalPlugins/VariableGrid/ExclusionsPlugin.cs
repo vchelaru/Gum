@@ -19,7 +19,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// exclusions for stroke, gradient, and dropshadow variables.
 /// </summary>
 [Export(typeof(PluginBase))]
-public class ExclusionsPlugin : InternalPlugin
+public class ExclusionsPlugin : PriorityPlugin
 {
     private readonly ISelectedState _selectedState;
     private ObjectFinder _objectFinder;

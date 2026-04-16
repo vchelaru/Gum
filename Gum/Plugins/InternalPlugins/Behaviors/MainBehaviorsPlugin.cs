@@ -17,7 +17,7 @@ using Gum.Services;
 namespace Gum.Plugins.Behaviors;
 
 [Export(typeof(PluginBase))]
-public class MainBehaviorsPlugin : InternalPlugin
+public class MainBehaviorsPlugin : PriorityPlugin
 {
     BehaviorsControl control;
     private readonly ISelectedState _selectedState;

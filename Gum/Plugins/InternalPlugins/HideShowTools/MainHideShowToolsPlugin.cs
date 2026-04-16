@@ -12,7 +12,7 @@ using Gum.Services;
 namespace Gum.Plugins.InternalPlugins.HideShowTools;
 
 [Export(typeof(PluginBase))]
-internal class MainHideShowToolsPlugin : InternalPlugin
+internal class MainHideShowToolsPlugin : PriorityPlugin
 {
     private MenuItem _hideShowMenuItem;
     private readonly MainPanelViewModel _mainPanelViewModel;

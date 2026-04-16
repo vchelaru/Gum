@@ -10,7 +10,7 @@ namespace Gum.Plugins.Undos
     // So it's a pain to identify exactly what has changed to list it.
 
     [Export(typeof(PluginBase))]
-    public class MainPlugin : InternalPlugin
+    public class MainPlugin : PriorityPlugin
     {
         public override void StartUp()
         {

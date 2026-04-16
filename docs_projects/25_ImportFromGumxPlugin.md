@@ -66,7 +66,7 @@ graph TB
 
 ```csharp
 [Export(typeof(PluginBase))]
-internal class MainImportFromGumxPlugin : InternalPlugin
+internal class MainImportFromGumxPlugin : PriorityPlugin
 {
     public override void StartUp()
     {

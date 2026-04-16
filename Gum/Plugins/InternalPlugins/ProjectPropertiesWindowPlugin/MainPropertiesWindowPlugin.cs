@@ -27,7 +27,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin;
 /// Plugin for displaying project properties
 /// </summary>
 [Export(typeof(PluginBase))]
-class MainPropertiesWindowPlugin : InternalPlugin
+class MainPropertiesWindowPlugin : PriorityPlugin
 {
     #region Fields/Properties
 

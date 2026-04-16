@@ -25,7 +25,7 @@ namespace Gum.Plugins.StatePlugin;
 // This is new as of Oct 30, 2020
 // I'd like to move all state logic to this plugin over time.
 [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
-public class MainStatePlugin : InternalPlugin
+public class MainStatePlugin : PriorityPlugin
 {
     #region Fields/Properties
 

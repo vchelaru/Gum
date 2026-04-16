@@ -15,7 +15,7 @@ using System.ComponentModel.Composition;
 namespace Gum.Plugins.Errors;
 
 [Export(typeof(PluginBase))]
-public class MainErrorsPlugin : InternalPlugin
+public class MainErrorsPlugin : PriorityPlugin
 {
     #region Fields/Properties
 

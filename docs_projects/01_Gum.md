@@ -126,7 +126,7 @@ graph TB
 **Plugin Interno** (compilado dentro de Gum.exe):
 ```csharp
 [Export(typeof(PluginBase))]
-internal class MiPlugin : InternalPlugin
+internal class MiPlugin : PriorityPlugin
 {
     public override void StartUp()
     {

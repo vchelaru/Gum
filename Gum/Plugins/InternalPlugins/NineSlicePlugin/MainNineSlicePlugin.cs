@@ -14,7 +14,7 @@ using ToolsUtilities;
 namespace Gum.Plugins.InternalPlugins.NineSlicePlugin;
 
 [Export(typeof(PluginBase))]
-internal class MainNineSlicePlugin : InternalPlugin
+internal class MainNineSlicePlugin : PriorityPlugin
 {
     public override void StartUp()
     {

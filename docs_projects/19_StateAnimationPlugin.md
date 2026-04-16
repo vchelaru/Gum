@@ -17,7 +17,7 @@ graph TB
     
     subgraph PluginBase
         PluginBase[PluginBase]
-        InternalPlugin[InternalPlugin]
+        PriorityPlugin[PriorityPlugin]
     end
     
     StateAnimationPlugin -.->|Extends| PluginBase
@@ -76,7 +76,7 @@ graph TB
 
 ```csharp
 [Export(typeof(PluginBase))]
-internal class MainStateAnimationPlugin : InternalPlugin
+internal class MainStateAnimationPlugin : PriorityPlugin
 {
     public override void StartUp()
     {
@@ -129,7 +129,7 @@ internal class MainStateAnimationPlugin : InternalPlugin
 ### Suscribirse a Eventos
 
 ```csharp
-public class MyPlugin : InternalPlugin
+public class MyPlugin : PriorityPlugin
 {
     public override void StartUp()
     {
