@@ -10,12 +10,12 @@ namespace Gum.ProjectServices.CodeGeneration;
 public class CodeOutputProjectSettingsManager
 {
     private readonly ICodeGenLogger _logger;
-    private readonly string? _projectDirectory;
+    private readonly IProjectDirectoryProvider _projectDirectoryProvider;
 
-    public CodeOutputProjectSettingsManager(ICodeGenLogger logger, string? projectDirectory)
+    public CodeOutputProjectSettingsManager(ICodeGenLogger logger, IProjectDirectoryProvider projectDirectoryProvider)
     {
         _logger = logger;
-        _projectDirectory = projectDirectory;
+        _projectDirectoryProvider = projectDirectoryProvider;
     }
 
     /// <summary>
@@ -23,7 +23,7 @@ public class CodeOutputProjectSettingsManager
     /// </summary>
     public void WriteSettingsForProject(CodeOutputProjectSettings settings)
     {
-        var fileName = GetProjectCodeSettingsFile();
+        var fileName = GetProjectCodeSettingsFilePath();
         if (fileName != null)
         {
             var serialized = JsonConvert.SerializeObject(settings,
@@ -47,13 +47,14 @@ public class CodeOutputProjectSettingsManager
         }
     }
 
-    private FilePath? GetProjectCodeSettingsFile()
+    internal FilePath? GetProjectCodeSettingsFilePath()
     {
-        if (_projectDirectory == null)
+        var projectDirectory = _projectDirectoryProvider.ProjectDirectory;
+        if (projectDirectory == null)
         {
             return null;
         }
-        FilePath folder = _projectDirectory;
+        FilePath folder = projectDirectory;
         var fileName = folder + "ProjectCodeSettings.codsj";
         return fileName;
     }
@@ -64,7 +65,7 @@ public class CodeOutputProjectSettingsManager
     public CodeOutputProjectSettings CreateOrLoadSettingsForProject()
     {
         CodeOutputProjectSettings? toReturn = null;
-        var fileName = GetProjectCodeSettingsFile();
+        var fileName = GetProjectCodeSettingsFilePath();
         try
         {
             if (fileName?.Exists() == true)

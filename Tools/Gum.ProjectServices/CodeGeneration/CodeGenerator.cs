@@ -251,11 +251,13 @@ public class CodeGenerator
     private readonly LocalizationService _localizationService;
     private readonly ITypeStringResolver? _typeStringResolver;
     private readonly CodeOutputElementSettingsManager _elementSettingsManager;
+    private readonly IProjectDirectoryProvider _projectDirectoryProvider;
 
     /// <summary>
-    /// The project directory (folder containing the .gumx file). Used for resolving element file paths.
+    /// The current project directory (folder containing the .gumx file). Read lazily from the
+    /// injected <see cref="IProjectDirectoryProvider"/> so the value stays correct across project switches.
     /// </summary>
-    public string? ProjectDirectory { get; set; }
+    public string? ProjectDirectory => _projectDirectoryProvider.ProjectDirectory;
 
     public static int CanvasWidth { get; set; } = 480;
     public static int CanvasHeight { get; set; } = 854;
@@ -271,11 +273,13 @@ public class CodeGenerator
     #endregion
 
     public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier, LocalizationService localizationService,
-        CodeOutputElementSettingsManager elementSettingsManager, ITypeStringResolver? typeStringResolver = null)
+        CodeOutputElementSettingsManager elementSettingsManager, IProjectDirectoryProvider projectDirectoryProvider,
+        ITypeStringResolver? typeStringResolver = null)
     {
         _codeGenerationNameVerifier = codeGenerationNameVerifier;
         _localizationService = localizationService;
         _elementSettingsManager = elementSettingsManager;
+        _projectDirectoryProvider = projectDirectoryProvider;
         _typeStringResolver = typeStringResolver;
     }
 

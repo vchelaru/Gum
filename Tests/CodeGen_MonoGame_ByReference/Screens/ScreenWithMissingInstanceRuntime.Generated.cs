@@ -9,7 +9,7 @@ using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Screens;
-partial class ScreenWithMissingInstanceRuntime : Gum.Wireframe.BindableGue
+partial class ScreenWithMissingInstanceRuntime : Gum.Wireframe.GraphicalUiElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()

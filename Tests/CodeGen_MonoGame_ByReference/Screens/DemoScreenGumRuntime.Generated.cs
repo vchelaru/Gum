@@ -12,7 +12,7 @@ using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Screens;
-partial class DemoScreenGumRuntime : Gum.Wireframe.BindableGue
+partial class DemoScreenGumRuntime : Gum.Wireframe.GraphicalUiElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()

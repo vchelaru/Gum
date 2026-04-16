@@ -22,10 +22,10 @@ internal class RenameService
         CustomCodeGenerator customCodeGenerator,
         CodeGenerationNameVerifier nameVerifier,
         IDialogService dialogService,
-        IProjectState projectState)
+        IProjectDirectoryProvider projectDirectoryProvider)
     {
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator, nameVerifier, projectState.ProjectDirectory);
-        _elementSettingsManager = new CodeOutputElementSettingsManager(projectState.ProjectDirectory);
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator, nameVerifier, projectDirectoryProvider);
+        _elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         _codeGenerationService = codeGenerationService;
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;

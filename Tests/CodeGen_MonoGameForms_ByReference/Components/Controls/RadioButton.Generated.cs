@@ -81,11 +81,6 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     public TextRuntime TextInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public string Text
-    {
-        get => TextInstance.Text;
-        set => TextInstance.Text = value;
-    }
 
     public RadioButton(InteractiveGue visual) : base(visual)
     {
