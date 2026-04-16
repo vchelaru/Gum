@@ -131,12 +131,16 @@ public partial class SystemManagers : ISystemManagers
     public void Initialize(GraphicsDevice graphicsDevice, bool fullInstantiation = false)
     {
 #if NET6_0_OR_GREATER
-        var usesTitleContainer = System.OperatingSystem.IsAndroid() || 
-            System.OperatingSystem.IsIOS() ||
-            System.OperatingSystem.IsBrowser() ||
-            FileManager.CustomGetStreamFromFile != null;
+        // Install a default TitleContainer-based hook on platforms where files
+        // ship inside the app package, but only if the caller hasn't already
+        // provided their own hook (e.g. loading Gum assets from a zip). See #2522.
+        var needsDefaultTitleContainerHook =
+            (System.OperatingSystem.IsAndroid() ||
+             System.OperatingSystem.IsIOS() ||
+             System.OperatingSystem.IsBrowser())
+            && FileManager.CustomGetStreamFromFile == null;
 
-        if(usesTitleContainer)
+        if(needsDefaultTitleContainerHook)
         {
             FileManager.CustomGetStreamFromFile = (fileName) =>
             {
