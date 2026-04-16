@@ -30,6 +30,14 @@ public enum InheritanceLocation
 
 public class CodeOutputProjectSettings
 {
+    /// <summary>
+    /// The current schema version written by this code. New settings produced
+    /// by <see cref="SetDefaults"/> are stamped with this value; legacy files
+    /// without a Version field deserialize as 0 and are bumped to this value
+    /// by <see cref="CodeOutputProjectSettingsManager.MigrateIfNeeded"/>.
+    /// </summary>
+    public const int CurrentVersion = 1;
+
     public string CommonUsingStatements { get; set; } =
 @"using Gum.Converters;
 using Gum.DataTypes;
@@ -81,12 +89,20 @@ using System.Linq;
     /// Schema version of this .codsj file. Used by
     /// <see cref="CodeOutputProjectSettingsManager"/> to run field-level
     /// migrations on load when the shape or semantics of a setting changes.
-    /// Starts at 0 for files that predate versioning.
+    /// <para>
+    /// The C# default stays at 0 on purpose: legacy .codsj files written before
+    /// this field existed have no Version entry in JSON, so they deserialize as
+    /// 0 and correctly trigger <see cref="CodeOutputProjectSettingsManager.MigrateIfNeeded"/>.
+    /// Raising the default to <see cref="CurrentVersion"/> would skip migration
+    /// for those legacy files. New in-memory settings objects get stamped with
+    /// <see cref="CurrentVersion"/> via <see cref="SetDefaults"/> instead.
+    /// </para>
     /// </summary>
     public int Version { get; set; }
 
     internal void SetDefaults()
     {
         this.AppendFolderToNamespace = true;
+        this.Version = CurrentVersion;
     }
 }
