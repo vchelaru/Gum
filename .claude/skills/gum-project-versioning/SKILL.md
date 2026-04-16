@@ -60,3 +60,4 @@ If you add a new property and keep the old one as a shim, know these:
 
 - **gum-tool-save-classes** — broader overview of the save/load data model, `ShouldSerialize*`, `[XmlIgnore]`, two-phase loading.
 - **gum-localization** — localization-specific file loading, the place where `LocalizationFile(s)` is consumed.
+- **gum-tool-codegen** — `.codsj` files have their own `Version` field (separate from `.gumx` versioning), migrated in `CodeOutputProjectSettingsManager.MigrateIfNeeded` on load. Don't auto-save — let the next user save persist the new version. Each version bump needs a comment explaining what it does and why.

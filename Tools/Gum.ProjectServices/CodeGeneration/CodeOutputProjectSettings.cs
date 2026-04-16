@@ -30,6 +30,14 @@ public enum InheritanceLocation
 
 public class CodeOutputProjectSettings
 {
+    /// <summary>
+    /// The current schema version written by this code. New settings produced
+    /// by <see cref="SetDefaults"/> are stamped with this value; legacy files
+    /// without a Version field deserialize as 0 and are bumped to this value
+    /// by <see cref="CodeOutputProjectSettingsManager.MigrateIfNeeded"/>.
+    /// </summary>
+    public const int CurrentVersion = 1;
+
     public string CommonUsingStatements { get; set; } =
 @"using Gum.Converters;
 using Gum.DataTypes;
@@ -55,12 +63,12 @@ using System.Linq;
     public ObjectInstantiationType ObjectInstantiationType { get; set; }
 
     /// <summary>
-    /// For XamarinForms this would be the base screen type like
-    /// MyProjectNamespace.Screens.MyBaseGumScreen. For other types
-    /// like a PDF renderer, this might just be GraphicalUiElement.
+    /// Optional base class override for generated screens. When empty,
+    /// the code generator picks the appropriate default for the current
+    /// OutputLibrary (e.g. FrameworkElement for MonoGameForms,
+    /// GraphicalUiElement for MonoGame).
     /// </summary>
-    public string DefaultScreenBase { get; set; } =
-            "Gum.Wireframe.GraphicalUiElement";
+    public string DefaultScreenBase { get; set; } = "";
 
     public OutputLibrary OutputLibrary { get; set; } = OutputLibrary.MonoGame;
 
@@ -77,8 +85,24 @@ using System.Linq;
     /// </summary>
     public string SyntaxVersion { get; set; } = "*";
 
+    /// <summary>
+    /// Schema version of this .codsj file. Used by
+    /// <see cref="CodeOutputProjectSettingsManager"/> to run field-level
+    /// migrations on load when the shape or semantics of a setting changes.
+    /// <para>
+    /// The C# default stays at 0 on purpose: legacy .codsj files written before
+    /// this field existed have no Version entry in JSON, so they deserialize as
+    /// 0 and correctly trigger <see cref="CodeOutputProjectSettingsManager.MigrateIfNeeded"/>.
+    /// Raising the default to <see cref="CurrentVersion"/> would skip migration
+    /// for those legacy files. New in-memory settings objects get stamped with
+    /// <see cref="CurrentVersion"/> via <see cref="SetDefaults"/> instead.
+    /// </para>
+    /// </summary>
+    public int Version { get; set; }
+
     internal void SetDefaults()
     {
         this.AppendFolderToNamespace = true;
+        this.Version = CurrentVersion;
     }
 }

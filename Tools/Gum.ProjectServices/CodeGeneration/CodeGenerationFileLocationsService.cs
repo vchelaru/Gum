@@ -12,13 +12,13 @@ public class CodeGenerationFileLocationsService
 {
     private readonly CodeGenerator _codeGenerator;
     private readonly CodeGenerationNameVerifier _nameVerifier;
-    private readonly string? _projectDirectory;
+    private readonly IProjectDirectoryProvider _projectDirectoryProvider;
 
-    public CodeGenerationFileLocationsService(CodeGenerator codeGenerator, CodeGenerationNameVerifier nameVerifier, string? projectDirectory)
+    public CodeGenerationFileLocationsService(CodeGenerator codeGenerator, CodeGenerationNameVerifier nameVerifier, IProjectDirectoryProvider projectDirectoryProvider)
     {
         _codeGenerator = codeGenerator;
         _nameVerifier = nameVerifier;
-        _projectDirectory = projectDirectory;
+        _projectDirectoryProvider = projectDirectoryProvider;
     }
 
     /// <summary>
@@ -33,6 +33,7 @@ public class CodeGenerationFileLocationsService
             return null;
         }
         /////////////////End Early Out/////////////////
+        var projectDirectory = _projectDirectoryProvider.ProjectDirectory;
         string generatedFileName = elementSettings.GeneratedFileName;
 
         if (!string.IsNullOrEmpty(forcedElementName))
@@ -67,7 +68,7 @@ public class CodeGenerationFileLocationsService
                 var folder = codeOutputProjectSettings.CodeProjectRoot;
                 if (FileManager.IsRelative(folder))
                 {
-                    folder = _projectDirectory + folder;
+                    folder = projectDirectory + folder;
                 }
 
                 generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
@@ -76,7 +77,7 @@ public class CodeGenerationFileLocationsService
 
         if (!string.IsNullOrEmpty(generatedFileName) && FileManager.IsRelative(generatedFileName))
         {
-            generatedFileName = _projectDirectory + generatedFileName;
+            generatedFileName = projectDirectory + generatedFileName;
         }
 
         // If it's empty, return null so it doesn't get used in code generation externally

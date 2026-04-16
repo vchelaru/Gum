@@ -64,6 +64,8 @@ Tool UI                              Shared Engine
 
 **Forms base type from behaviors** -- MonoGameForms determines the generated base class by scanning the element's behaviors (e.g., ButtonBehavior maps to Button). The method `GetGumFormsTypeFromBehaviors` drives this.
 
+**Screen inheritance resolution order** -- `CodeGenerator.GetInheritance` for `ScreenSave` resolves inheritance in this priority: `element.BaseType` > `projectSettings.DefaultScreenBase` > library-appropriate fallback (`FrameworkElement` for MonoGameForms, `GraphicalUiElement` otherwise). `DefaultScreenBase` defaults to empty string so users can switch `OutputLibrary` without stale base classes bleeding through.
+
 **State generation suppressed for Forms standards** -- When OutputLibrary is MonoGameForms and the state container is a `StandardElementSave`, state code is not generated; the Forms framework handles it.
 
 **Missing dependency auto-generation** -- When generating for an element, the system checks if referenced elements lack code files and offers to generate them too. In auto-generation mode this happens silently.
