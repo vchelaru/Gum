@@ -40,6 +40,7 @@ namespace GumFromZipFile
             GumUI.Initialize(this, "GumProject/FromZipFileGumProject.gumx");
 
             var screen = ObjectFinder.Self.GumProjectSave.Screens.First().ToGraphicalUiElement();
+            screen.AddToRoot();
 
             base.Initialize();
         }
