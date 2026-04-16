@@ -27,4 +27,10 @@
 		<ProjectReference Include="..\Tests\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<Content Include="TestContent\GumProject.zip">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
 </Project>

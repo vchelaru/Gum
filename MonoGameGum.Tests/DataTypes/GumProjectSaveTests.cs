@@ -1,8 +1,10 @@
 ﻿using Gum.DataTypes;
+using RenderingLibrary;
 using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -218,6 +220,90 @@ public class GumProjectSaveTests : BaseTestClass
         string fakeFilePath = "fakeFilePath.gumx";
         Gum.DataTypes.GumProjectSave.Load(fakeFilePath);
         wasCalled.ShouldBeTrue();
+    }
+
+    // Repro for issue #2522: when the user installs a CustomGetStreamFromFile
+    // hook before GumService.Initialize, SystemManagers.Initialize must not
+    // replace it with its own TitleContainer-based hook.
+    [Fact]
+    public void SystemManagersInitialize_ShouldNotOverwriteUserCustomGetStreamFromFile()
+    {
+        Func<string, Stream> userHook = _ => new MemoryStream();
+        FileManager.CustomGetStreamFromFile = userHook;
+
+        try
+        {
+            new SystemManagers().Initialize(graphicsDevice: null!, fullInstantiation: false);
+        }
+        catch
+        {
+            // Renderer.Initialize requires a GraphicsDevice — that's fine, we only
+            // care that the hook wasn't clobbered before it threw.
+        }
+
+        FileManager.CustomGetStreamFromFile.ShouldBeSameAs(userHook);
+    }
+
+    // Repro for issue #2522: loading a Gum project whose files live only inside a
+    // zip (served via CustomGetStreamFromFile) must succeed — no files on disk,
+    // the hook must be used for the .gumx and every referenced element.
+    [Fact]
+    public void Load_ShouldLoadEntireProjectThroughCustomGetStreamFromFile_WhenAllFilesComeFromZip()
+    {
+        var zipPath = Path.Combine(AppContext.BaseDirectory, "TestContent", "GumProject.zip");
+        File.Exists(zipPath).ShouldBeTrue($"Test zip missing at {zipPath}");
+
+        var contentRoot = Path.Combine(AppContext.BaseDirectory, "Content");
+        var zipFileBytes = new Dictionary<string, byte[]>();
+
+        using (var zipToOpen = new FileStream(zipPath, FileMode.Open, FileAccess.Read))
+        using (var archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
+        {
+            foreach (var entry in archive.Entries)
+            {
+                if (entry.FullName.EndsWith("/"))
+                {
+                    continue;
+                }
+
+                using var stream = entry.Open();
+                using var ms = new MemoryStream();
+                stream.CopyTo(ms);
+
+                var fullPath = Path.Combine(contentRoot, entry.FullName);
+                zipFileBytes.Add(fullPath.Replace("\\", "/"), ms.ToArray());
+            }
+        }
+
+        var requestedPaths = new List<string>();
+        FileManager.CustomGetStreamFromFile = fullPath =>
+        {
+            requestedPaths.Add(fullPath);
+            var normalized = fullPath.Replace("\\", "/");
+            return zipFileBytes.TryGetValue(normalized, out var bytes)
+                ? new MemoryStream(bytes)
+                : null;
+        };
+
+        var originalRelativeDirectory = FileManager.RelativeDirectory;
+        FileManager.RelativeDirectory = "Content/";
+
+        try
+        {
+            var project = GumProjectSave.Load(
+                "GumProject/FromZipFileGumProject.gumx",
+                out var loadResult);
+
+            loadResult.ErrorMessage.ShouldBeNullOrEmpty();
+            loadResult.MissingFiles.ShouldBeEmpty();
+            project.ShouldNotBeNull();
+            project!.Screens.ShouldNotBeEmpty();
+            project.StandardElements.ShouldNotBeEmpty();
+        }
+        finally
+        {
+            FileManager.RelativeDirectory = originalRelativeDirectory;
+        }
     }
 
     [Fact]
