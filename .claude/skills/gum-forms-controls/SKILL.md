@@ -83,6 +83,8 @@ FrameworkElement
 └── Splitter
 ```
 
+**User-codegen'd screens and components also inherit from `FrameworkElement`** when `OutputLibrary` is `MonoGameForms` (the default for new projects). The generated partial class derives from `FrameworkElement` (or a matching built-in control when the element has Forms behaviors), so `this` inside `CustomInitialize` is a `FrameworkElement` — events like `AfterRefreshStyles` and overrides of `SaveRuntimeProperties` / `ApplyRuntimeProperties` are available on screens and components, not just on built-in controls like Button or Label. Only StandardElements (`Container`, `Text`, `Sprite`, etc.) remain non-Forms. See the **gum-tool-codegen** skill for how codegen picks the base class.
+
 ## Key Files
 
 | Path | Purpose |

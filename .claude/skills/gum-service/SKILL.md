@@ -72,4 +72,4 @@ Uninitialize tests are split across two projects because `FormsUtilities`, `Load
 
 ## Hot Reload
 
-Gum supports live reloading of `.gumx` project files and associated assets at runtime so changes made in the Gum tool appear in-game without restarting. For details see https://docs.flatredball.com/gum/code/hot-reload
+`GumService.EnableHotReload(absoluteGumxSourcePath)` wires up a `GumHotReloadManager` that watches the source project directory and rebuilds `Root.Children` when `.gumx`/`.gusx`/`.gucx`/`.gutx`/`.fnt` files change. `GumService.Update` ticks it each frame; `Uninitialize` stops and nulls it. For details on the reload pipeline, debounce, font cache eviction, and gotchas, load the **gum-runtime-hot-reload** skill. Public docs: `docs/code/hot-reload.md`.

@@ -68,13 +68,84 @@ ObjectFinder.Self.GumProjectSave.ApplyAllVariableReferences();
 GumService.Default.RefreshStyles(myScreenGue);
 ```
 
-`RefreshStyles` re-applies default state values on every element in the tree and then re-applies the current Forms categorical state (such as Highlighted or Disabled) on each Forms control. This means controls retain their current interaction and runtime state while picking up the new style values, including:
+`RefreshStyles` re-applies default state values on every element in the tree and then re-applies the current Forms categorical state (such as Highlighted or Disabled) on each Forms control. This means controls retain their current interaction and runtime state while picking up the new style values.
 
-* Button, CheckBox, and RadioButton interaction states (highlighted, checked, etc.)
-* TextBox text content, caret position, and selection
-* ComboBox selected text
-* Slider and ScrollBar thumb positions
-* ScrollViewer scroll offset
+### Automatic State Preservation
+
+All Forms controls automatically re-apply their current categorical state after `RefreshStyles`. This means any state driven by a Forms property is preserved without any extra work. For example:
+
+* CheckBox `IsChecked` state (checked/unchecked visual)
+* RadioButton `IsChecked` and group selection
+* ToggleButton `IsChecked` state
+* Expander `IsExpanded` state (expanded/collapsed visual)
+* ListBox and ListBoxItem selection (`SelectedIndex`, `IsSelected`)
+* ComboBox selection
+* MenuItem `IsSelected` and `IsHighlighted`
+* Button, Label, and all controls' `IsEnabled` / `IsFocused` interaction states
+
+These properties are Forms-level backing fields that are not overwritten by Gum state re-application, so they survive `RefreshStyles` naturally.
+
+### Explicit Value Preservation
+
+Some controls hold runtime values that *are* stored on the visual layer and would be overwritten by default state re-application. These are explicitly saved before the refresh and restored afterward:
+
+* Button and Label `Text`
+* TextBox and PasswordBox text content, caret position, and selection
+* ComboBox displayed text
+* Slider and ScrollBar `Value` (thumb position)
+* ScrollViewer scroll offset (both vertical and horizontal)
+
+## Preserving Custom Runtime Properties
+
+If you set properties at runtime that are not automatically preserved by built-in controls (for example, the size of a resizable panel), you can register them for automatic preservation. Registered properties are captured before `RefreshStyles` re-applies default state values and restored afterward.
+
+The simplest form takes a target object and a property name:
+
+```csharp
+// In CustomInitialize
+LeftPanel.Width = 300;
+this.RegisterRuntimeProperty(LeftPanel, nameof(LeftPanel.Width));
+```
+
+You can also register a property on the current control using the shorthand:
+
+```csharp
+// In CustomInitialize
+this.RegisterRuntimeProperty(nameof(IsEnabled));
+```
+
+For computed or transformed values, use the lambda overload:
+
+```csharp
+// In CustomInitialize
+this.RegisterRuntimeProperty(
+    () => ContentPanel.GetAbsoluteWidth(),
+    v => ContentPanel.Width = v);
+```
+
+Registrations persist for the lifetime of the control. Call `RegisterRuntimeProperty` once during initialization — it does not need to be called again after each refresh.
+
+## Recomputing Values After a Style Refresh
+
+If you need to recompute a value rather than restore it (for example, re-applying localized text after a locale change), subscribe to the `AfterRefreshStyles` event:
+
+```csharp
+// In CustomInitialize
+void ApplyLocalizedText()
+{
+    Title.Text = MainMenuTexts.ExperimentalBuild;
+    Body.Text  = MainMenuTexts.ThisIsAnExperimentalBuild;
+}
+
+ApplyLocalizedText();
+this.AfterRefreshStyles += (_, _) => ApplyLocalizedText();
+```
+
+A corresponding `BeforeRefreshStyles` event fires before default state values are re-applied, allowing you to capture state if needed.
+
+{% hint style="info" %}
+Built-in controls like Label and Button already preserve their `Text` across `RefreshStyles` automatically. You only need `AfterRefreshStyles` when the value should be *recomputed* rather than restored — for example, when the locale may have changed between refreshes.
+{% endhint %}
 
 ## Expression Support (Optional)
 

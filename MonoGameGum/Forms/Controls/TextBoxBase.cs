@@ -1208,6 +1208,7 @@ public abstract class TextBoxBase :
         _savedText = coreTextObject?.RawText;
         _savedCaretIndex = caretIndex;
         _savedSelectionLength = selectionLength;
+        base.SaveRuntimeProperties();
     }
 
     /// <inheritdoc/>
@@ -1226,6 +1227,7 @@ public abstract class TextBoxBase :
             UpdateToSelection();
         }
         _savedText = null;
+        base.ApplyRuntimeProperties();
     }
 
     public override void UpdateState()
