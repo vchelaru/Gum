@@ -536,20 +536,21 @@ public class CodeGenerator
         string? inheritance = null;
         if (element is ScreenSave)
         {
-            if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            string fallback = projectSettings.OutputLibrary == OutputLibrary.MonoGameForms
+                ? "global::Gum.Forms.Controls.FrameworkElement"
+                : "Gum.Wireframe.GraphicalUiElement";
+
+            if (!string.IsNullOrEmpty(element.BaseType))
             {
-                if (string.IsNullOrEmpty(element.BaseType))
-                {
-                    inheritance = "global::Gum.Forms.Controls.FrameworkElement";
-                }
-                else
-                {
-                    inheritance = element.BaseType;
-                }
+                inheritance = element.BaseType;
+            }
+            else if (!string.IsNullOrEmpty(projectSettings.DefaultScreenBase))
+            {
+                inheritance = projectSettings.DefaultScreenBase;
             }
             else
             {
-                inheritance = element.BaseType ?? projectSettings.DefaultScreenBase;
+                inheritance = fallback;
             }
         }
         else if (element.BaseType == "XamarinForms/SkiaGumCanvasView")

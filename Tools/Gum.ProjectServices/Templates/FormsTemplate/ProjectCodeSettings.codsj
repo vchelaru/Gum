@@ -5,7 +5,7 @@
   "AppendFolderToNamespace": false,
   "InheritanceLocation": 1,
   "ObjectInstantiationType": 0,
-  "DefaultScreenBase": "Gum.Wireframe.BindableGue",
+  "DefaultScreenBase": "",
   "OutputLibrary": 0,
   "AdjustPixelValuesForDensity": false,
   "BaseTypesNotCodeGenerated": null,

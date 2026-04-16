@@ -55,12 +55,12 @@ using System.Linq;
     public ObjectInstantiationType ObjectInstantiationType { get; set; }
 
     /// <summary>
-    /// For XamarinForms this would be the base screen type like
-    /// MyProjectNamespace.Screens.MyBaseGumScreen. For other types
-    /// like a PDF renderer, this might just be GraphicalUiElement.
+    /// Optional base class override for generated screens. When empty,
+    /// the code generator picks the appropriate default for the current
+    /// OutputLibrary (e.g. FrameworkElement for MonoGameForms,
+    /// GraphicalUiElement for MonoGame).
     /// </summary>
-    public string DefaultScreenBase { get; set; } =
-            "Gum.Wireframe.GraphicalUiElement";
+    public string DefaultScreenBase { get; set; } = "";
 
     public OutputLibrary OutputLibrary { get; set; } = OutputLibrary.MonoGame;
 
@@ -76,6 +76,14 @@ using System.Linq;
     /// Set to a numeric string (e.g., <c>"0"</c>, <c>"1"</c>) to override auto-detection.
     /// </summary>
     public string SyntaxVersion { get; set; } = "*";
+
+    /// <summary>
+    /// Schema version of this .codsj file. Used by
+    /// <see cref="CodeOutputProjectSettingsManager"/> to run field-level
+    /// migrations on load when the shape or semantics of a setting changes.
+    /// Starts at 0 for files that predate versioning.
+    /// </summary>
+    public int Version { get; set; }
 
     internal void SetDefaults()
     {

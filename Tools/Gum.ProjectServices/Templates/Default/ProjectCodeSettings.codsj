@@ -5,7 +5,7 @@
   "AppendFolderToNamespace": true,
   "InheritanceLocation": 1,
   "ObjectInstantiationType": 0,
-  "DefaultScreenBase": "Gum.Wireframe.GraphicalUiElement",
+  "DefaultScreenBase": "",
   "OutputLibrary": 4,
   "AdjustPixelValuesForDensity": false,
   "BaseTypesNotCodeGenerated": "",

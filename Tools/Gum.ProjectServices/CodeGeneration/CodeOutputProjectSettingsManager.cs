@@ -33,6 +33,20 @@ public class CodeOutputProjectSettingsManager
         }
     }
 
+    internal static void MigrateIfNeeded(CodeOutputProjectSettings settings)
+    {
+        // Version 1: DefaultScreenBase was previously set to stale defaults
+        // (e.g. "Gum.Wireframe.BindableGue", "Gum.Wireframe.GraphicalUiElement")
+        // by project templates, but the value was never actually used in codegen
+        // for MonoGameForms screens. Now that codegen respects it, clear it so
+        // each OutputLibrary falls back to its own appropriate default.
+        if (settings.Version < 1)
+        {
+            settings.DefaultScreenBase = "";
+            settings.Version = 1;
+        }
+    }
+
     private FilePath? GetProjectCodeSettingsFile()
     {
         if (_projectDirectory == null)
@@ -71,6 +85,8 @@ public class CodeOutputProjectSettingsManager
 
             toReturn.SetDefaults();
         }
+
+        MigrateIfNeeded(toReturn);
 
         return toReturn;
     }
