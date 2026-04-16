@@ -68,14 +68,32 @@ ObjectFinder.Self.GumProjectSave.ApplyAllVariableReferences();
 GumService.Default.RefreshStyles(myScreenGue);
 ```
 
-`RefreshStyles` re-applies default state values on every element in the tree and then re-applies the current Forms categorical state (such as Highlighted or Disabled) on each Forms control. This means controls retain their current interaction and runtime state while picking up the new style values, including:
+`RefreshStyles` re-applies default state values on every element in the tree and then re-applies the current Forms categorical state (such as Highlighted or Disabled) on each Forms control. This means controls retain their current interaction and runtime state while picking up the new style values.
 
-* Button and Label text
-* Button, CheckBox, and RadioButton interaction states (highlighted, checked, etc.)
-* TextBox text content, caret position, and selection
-* ComboBox selected text
-* Slider and ScrollBar thumb positions
-* ScrollViewer scroll offset
+### Automatic State Preservation
+
+All Forms controls automatically re-apply their current categorical state after `RefreshStyles`. This means any state driven by a Forms property is preserved without any extra work. For example:
+
+* CheckBox `IsChecked` state (checked/unchecked visual)
+* RadioButton `IsChecked` and group selection
+* ToggleButton `IsChecked` state
+* Expander `IsExpanded` state (expanded/collapsed visual)
+* ListBox and ListBoxItem selection (`SelectedIndex`, `IsSelected`)
+* ComboBox selection
+* MenuItem `IsSelected` and `IsHighlighted`
+* Button, Label, and all controls' `IsEnabled` / `IsFocused` interaction states
+
+These properties are Forms-level backing fields that are not overwritten by Gum state re-application, so they survive `RefreshStyles` naturally.
+
+### Explicit Value Preservation
+
+Some controls hold runtime values that *are* stored on the visual layer and would be overwritten by default state re-application. These are explicitly saved before the refresh and restored afterward:
+
+* Button and Label `Text`
+* TextBox and PasswordBox text content, caret position, and selection
+* ComboBox displayed text
+* Slider and ScrollBar `Value` (thumb position)
+* ScrollViewer scroll offset (both vertical and horizontal)
 
 ## Preserving Custom Runtime Properties
 
