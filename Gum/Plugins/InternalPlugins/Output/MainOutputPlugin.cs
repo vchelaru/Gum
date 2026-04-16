@@ -10,7 +10,7 @@ using Gum.Services;
 namespace Gum.Plugins.Output
 {
     [Export(typeof(PluginBase))]
-    class MainOutputPlugin : InternalPlugin
+    class MainOutputPlugin : PriorityPlugin
     {
         public override void StartUp()
         {

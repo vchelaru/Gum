@@ -8,7 +8,7 @@ using System.Windows.Forms;
 namespace Gum.Plugins.AlignmentButtons
 {
     [Export(typeof(PluginBase))]
-    public class AlignmentMainPlugin : InternalPlugin
+    public class AlignmentMainPlugin : PriorityPlugin
     {
         private readonly ISelectedState _selectedState;
 

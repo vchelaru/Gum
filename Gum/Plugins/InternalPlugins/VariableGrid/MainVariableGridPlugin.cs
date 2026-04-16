@@ -18,7 +18,7 @@ using System.Windows.Forms;
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
 [Export(typeof(PluginBase))]
-public class MainVariableGridPlugin : InternalPlugin
+public class MainVariableGridPlugin : PriorityPlugin
 {
     PropertyGridManager _propertyGridManager;
     private readonly IVariableReferenceLogic _variableReferenceLogic;

@@ -15,7 +15,7 @@ using Gum.Managers;
 namespace Gum.Gui.Plugins;
 
 [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
-public class DeleteObjectPlugin : InternalPlugin
+public class DeleteObjectPlugin : PriorityPlugin
 {
     private CheckBox deleteXmlCheckBox;
 

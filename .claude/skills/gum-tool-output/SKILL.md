@@ -13,7 +13,7 @@ description: Reference guide for Gum's Output tab system. Load this when working
 
 **`MainOutputViewModel`** — implements `IOutputManager`. Stores all output as a single `OutputText` string (not a list). Registered as a singleton in DI, aliased as both `MainOutputViewModel` and `IOutputManager`.
 
-**`MainOutputPlugin`** — `InternalPlugin` that creates the Output tab at `TabLocation.RightBottom`.
+**`MainOutputPlugin`** — `PriorityPlugin` that creates the Output tab at `TabLocation.RightBottom`.
 
 ## How to Write Output
 

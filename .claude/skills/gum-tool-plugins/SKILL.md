@@ -1,6 +1,6 @@
 ---
 name: gum-tool-plugins
-description: Reference guide for the Gum tool's plugin system, including visualization plugins (EditorTabPlugin_XNA, TextureCoordinateSelectionPlugin). Load this when working on plugin registration, PluginBase, InternalPlugin, PluginManager, plugin events, visualization/rendering concerns, or finding which internal plugin owns a feature.
+description: Reference guide for the Gum tool's plugin system, including visualization plugins (EditorTabPlugin_XNA, TextureCoordinateSelectionPlugin). Load this when working on plugin registration, PluginBase, PriorityPlugin, PluginManager, plugin events, visualization/rendering concerns, or finding which internal plugin owns a feature.
 ---
 
 # Gum Tool Plugin System Reference
@@ -13,22 +13,23 @@ The plugin system uses MEF (Managed Extensibility Framework) for discovery. All 
 
 - `IPlugin` — minimal interface: `StartUp()`, `ShutDown(PluginShutDownReason)`, `FriendlyName`, `UniqueId`, `Version`
 - `PluginBase` — concrete base with all event declarations and pre-injected helper services (`_guiCommands`, `_fileCommands`, `_tabManager`, `_menuStripManager`, `_dialogService`)
-- `InternalPlugin` — base for internal plugins; provides default `ShutDown()` returning `false` and auto-generates `FriendlyName`
+- `PriorityPlugin` — marker base for plugins that should receive events before others; provides default `ShutDown()` returning `false` and auto-generates `FriendlyName`
 
-### Internal vs. External
+### Origin vs. Priority
 
-**Internal plugins** live in `Gum/Plugins/InternalPlugins/`, inherit from `InternalPlugin`, and are compiled into Gum.exe.
+**Origin** (where the plugin's code lives) is independent of **priority** (whether it receives events early):
 
-**External plugins** are separate .dlls loaded from `[GumExecutableDirectory]\Plugins\` at runtime. They inherit from `PluginBase` directly.
+- **First-party plugins** live in `Gum/Plugins/InternalPlugins/` and are compiled into Gum.exe. Most inherit from `PriorityPlugin`.
+- **External plugins** are separate .dlls loaded from `[GumExecutableDirectory]\Plugins\` at runtime. They usually inherit from `PluginBase` directly, but may inherit from `PriorityPlugin` if they need early event dispatch (e.g. `EditorTabPlugin_XNA`, which ships as an external DLL but needs priority for wireframe events).
 
-The type check `is InternalPlugin` is used at runtime — internal plugins receive events before external ones.
+The type check `is PriorityPlugin` is used at runtime — priority plugins receive events before non-priority ones, regardless of origin.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
 | `Gum/Plugins/BaseClasses/PluginBase.cs` | All event declarations + helper services |
-| `Gum/Plugins/BaseClasses/InternalPlugin.cs` | Base for internal plugins |
+| `Gum/Plugins/BaseClasses/PriorityPlugin.cs` | Marker base granting early event dispatch |
 | `Gum/Plugins/PluginManager.cs` | Loads plugins via MEF, routes all events via `Call*` methods |
 | `Gum/Plugins/PluginContainer.cs` | Wraps each plugin; tracks enabled state and failure info |
 | `Gum/Plugins/InternalPlugins/` | All built-in plugin subfolders |
@@ -78,7 +79,7 @@ Visualization/rendering is handled by **external** plugin projects, not by Gum.c
 
 ## Non-Obvious Behaviors
 
-**Event ordering**: `PluginManager` sorts with `OrderBy(!(item is InternalPlugin))`, so internal plugins always handle events before external ones.
+**Event ordering**: `PluginManager` sorts with `OrderBy(!(item is PriorityPlugin))`, so priority plugins always handle events before non-priority ones. Note: "priority" is about dispatch order, not where the plugin's code lives — an external DLL can still be a `PriorityPlugin`.
 
 **VariableSet vs. VariableSetLate**: Two events for the same change. Use `VariableSet` to respond to a change; use `VariableSetLate` for cleanup/refresh that should run after all other plugins have responded.
 

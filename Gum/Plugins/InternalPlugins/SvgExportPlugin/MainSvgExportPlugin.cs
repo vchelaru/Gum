@@ -11,7 +11,7 @@ using System.Windows.Controls;
 namespace Gum.Plugins.InternalPlugins.SvgExportPlugin;
 
 [Export(typeof(PluginBase))]
-internal class MainSvgExportPlugin : InternalPlugin
+internal class MainSvgExportPlugin : PriorityPlugin
 {
     private MenuItem _exportSvgMenuItem;
     private readonly ISelectedState _selectedState;

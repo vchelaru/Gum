@@ -78,7 +78,7 @@ graph TB
 
 ```csharp
 [Export(typeof(PluginBase))]
-public class MainCodeOutputPlugin : InternalPlugin
+public class MainCodeOutputPlugin : PriorityPlugin
 {
     public override void StartUp()
     {

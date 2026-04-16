@@ -15,7 +15,7 @@ using ToolsUtilities;
 namespace Gum.Plugins.FileWatchPlugin;
 
 [Export(typeof(PluginBase))]
-public class MainFileWatchPlugin : InternalPlugin
+public class MainFileWatchPlugin : PriorityPlugin
 {
     #region Fields/Properties
 

@@ -76,7 +76,7 @@ graph TB
 
 ```csharp
 [Export(typeof(PluginBase))]
-internal class MainGumFormsPlugin : InternalPlugin
+internal class MainGumFormsPlugin : PriorityPlugin
 {
     public override void StartUp()
     {

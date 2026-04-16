@@ -8,7 +8,7 @@ using System.ComponentModel.Composition;
 namespace Gum.Plugins.Inheritance;
 
 [Export(typeof(PluginBase))]
-public class MainInheritancePlugin : InternalPlugin
+public class MainInheritancePlugin : PriorityPlugin
 {
     private readonly InheritanceLogic _inheritanceLogic;
 

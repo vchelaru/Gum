@@ -18,7 +18,7 @@ using Gum.Services;
 namespace Gum.Plugins.InternalPlugins.MenuStripPlugin;
 
 [Export(typeof(PluginBase))]
-public class MainMenuStripPlugin : InternalPlugin
+public class MainMenuStripPlugin : PriorityPlugin
 {
     private readonly MenuStripManager _menuStripManager;
 

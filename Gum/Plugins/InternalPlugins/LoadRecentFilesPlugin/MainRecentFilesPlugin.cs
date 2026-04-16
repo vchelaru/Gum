@@ -13,7 +13,7 @@ using ToolsUtilities;
 namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 {
     [Export(typeof(PluginBase))]
-    internal class MainRecentFilesPlugin : InternalPlugin
+    internal class MainRecentFilesPlugin : PriorityPlugin
     {
         MenuItem recentFilesMenuItem;
         public override void StartUp()

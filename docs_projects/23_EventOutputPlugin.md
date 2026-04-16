@@ -75,7 +75,7 @@ graph TB
 
 ```csharp
 [Export(typeof(PluginBase))]
-public class MainEventOutputPlugin : InternalPlugin
+public class MainEventOutputPlugin : PriorityPlugin
 {
     public override void StartUp()
     {

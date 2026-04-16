@@ -154,7 +154,7 @@ public class PluginManager : IPluginManager
         }
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+        var sortedPlugins = this.Plugins.OrderBy(item => !(item is PriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             if (this.PluginContainers.ContainsKey(plugin) == false)
@@ -231,7 +231,7 @@ public class PluginManager : IPluginManager
 
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+        var sortedPlugins = this.Plugins.OrderBy(item => !(item is PriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             PluginContainer container = this.PluginContainers[plugin];
@@ -505,7 +505,7 @@ public class PluginManager : IPluginManager
 
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+        var sortedPlugins = this.Plugins.OrderBy(item => !(item is PriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             PluginContainer container = this.PluginContainers[plugin];
@@ -544,7 +544,7 @@ public class PluginManager : IPluginManager
 
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+        var sortedPlugins = this.Plugins.OrderBy(item => !(item is PriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             PluginContainer container = this.PluginContainers[plugin];

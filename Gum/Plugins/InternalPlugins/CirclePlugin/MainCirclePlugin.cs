@@ -7,7 +7,7 @@ using System.ComponentModel.Composition;
 namespace Gum.Plugins.CirclePlugin
 {
     [Export(typeof(PluginBase))]
-    public class MainCirclePlugin : InternalPlugin
+    public class MainCirclePlugin : PriorityPlugin
     {
         private readonly ISelectedState _selectedState;
 

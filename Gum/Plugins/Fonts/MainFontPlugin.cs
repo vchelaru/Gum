@@ -14,7 +14,7 @@ using Gum.Services.Fonts;
 namespace Gum.Plugins.Fonts;
 
 [Export(typeof(PluginBase))]
-public class MainFontPlugin : InternalPlugin
+public class MainFontPlugin : PriorityPlugin
 {
 
     private readonly IGuiCommands _guiCommands;

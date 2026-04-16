@@ -10,7 +10,7 @@ using Gum.Services;
 namespace Gum.Undo;
 
 [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
-public class UndoPlugin : InternalPlugin
+public class UndoPlugin : PriorityPlugin
 {
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
