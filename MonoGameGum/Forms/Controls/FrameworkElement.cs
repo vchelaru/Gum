@@ -1385,20 +1385,138 @@ public class FrameworkElement : INotifyPropertyChanged
     public virtual void UpdateState() { }
 
     /// <summary>
+    /// Raised before <see cref="GraphicalUiElement.RefreshStyles"/> re-applies
+    /// default states on this element's visual. Subscribers can capture runtime
+    /// property values here that would otherwise be overwritten by state re-application.
+    /// Fired from <see cref="SaveRuntimeProperties"/>; overrides of that method must
+    /// call <c>base.SaveRuntimeProperties()</c> to keep this event firing.
+    /// </summary>
+    public event EventHandler? BeforeRefreshStyles;
+
+    /// <summary>
+    /// Raised after <see cref="GraphicalUiElement.RefreshStyles"/> re-applies default
+    /// states. Subscribers can restore or override visual properties here.
+    /// Fired from <see cref="ApplyRuntimeProperties"/>; overrides of that method must
+    /// call <c>base.ApplyRuntimeProperties()</c> to keep this event firing.
+    /// </summary>
+    public event EventHandler? AfterRefreshStyles;
+
+    #region Runtime Property Registration
+
+    private interface IRuntimePropertyRegistration
+    {
+        void Save();
+        void Restore();
+    }
+
+    private class LambdaRegistration<T> : IRuntimePropertyRegistration
+    {
+        private readonly Func<T> _getter;
+        private readonly Action<T> _setter;
+        private T? _savedValue;
+
+        public LambdaRegistration(Func<T> getter, Action<T> setter)
+        {
+            _getter = getter;
+            _setter = setter;
+        }
+
+        public void Save() => _savedValue = _getter();
+        public void Restore() => _setter(_savedValue!);
+    }
+
+    private class ReflectionRegistration : IRuntimePropertyRegistration
+    {
+        private readonly object _target;
+        private readonly System.Reflection.PropertyInfo _propertyInfo;
+        private object? _savedValue;
+
+        public ReflectionRegistration(object target, string propertyName)
+        {
+            _target = target;
+            _propertyInfo = target.GetType().GetProperty(propertyName)
+                ?? throw new ArgumentException(
+                    $"Property '{propertyName}' not found on type '{target.GetType().Name}'.");
+        }
+
+        public void Save() => _savedValue = _propertyInfo.GetValue(_target);
+        public void Restore() => _propertyInfo.SetValue(_target, _savedValue);
+    }
+
+    private List<IRuntimePropertyRegistration>? _runtimePropertyRegistrations;
+
+    /// <summary>
+    /// Registers a property on the specified target for automatic preservation
+    /// across <see cref="GraphicalUiElement.RefreshStyles"/> calls. The current
+    /// value is captured before state re-application and restored afterward.
+    /// </summary>
+    public void RegisterRuntimeProperty(object target, string propertyName)
+    {
+        _runtimePropertyRegistrations ??= new();
+        _runtimePropertyRegistrations.Add(new ReflectionRegistration(target, propertyName));
+    }
+
+    /// <summary>
+    /// Registers a property on this control for automatic preservation
+    /// across <see cref="GraphicalUiElement.RefreshStyles"/> calls.
+    /// </summary>
+    public void RegisterRuntimeProperty(string propertyName)
+    {
+        RegisterRuntimeProperty(this, propertyName);
+    }
+
+    /// <summary>
+    /// Registers a getter/setter pair for automatic preservation across
+    /// <see cref="GraphicalUiElement.RefreshStyles"/> calls. Use this when the
+    /// value to preserve is computed or not a simple reflected property.
+    /// </summary>
+    public void RegisterRuntimeProperty<T>(Func<T> getter, Action<T> setter)
+    {
+        _runtimePropertyRegistrations ??= new();
+        _runtimePropertyRegistrations.Add(new LambdaRegistration<T>(getter, setter));
+    }
+
+    #endregion
+
+    /// <summary>
     /// Saves runtime property values (such as text content and caret position)
     /// before <see cref="GraphicalUiElement.RefreshStyles"/> re-applies states.
     /// Override in controls whose runtime state is stored on the visual layer
-    /// and would be lost during state re-application.
+    /// and would be lost during state re-application. Overrides must call
+    /// <c>base.SaveRuntimeProperties()</c> so <see cref="BeforeRefreshStyles"/> fires
+    /// and registered runtime properties are captured.
     /// </summary>
-    public virtual void SaveRuntimeProperties() { }
+    public virtual void SaveRuntimeProperties()
+    {
+        if (_runtimePropertyRegistrations != null)
+        {
+            for (int i = 0; i < _runtimePropertyRegistrations.Count; i++)
+            {
+                _runtimePropertyRegistrations[i].Save();
+            }
+        }
+        BeforeRefreshStyles?.Invoke(this, EventArgs.Empty);
+    }
 
     /// <summary>
     /// Re-applies runtime property values (such as slider position or scroll offset)
     /// to the visual tree. Called by <see cref="GraphicalUiElement.RefreshStyles"/>
     /// after re-applying states, since state application may overwrite visual
-    /// properties that were set programmatically at runtime.
+    /// properties that were set programmatically at runtime. Overrides must call
+    /// <c>base.ApplyRuntimeProperties()</c> so <see cref="AfterRefreshStyles"/> fires
+    /// and registered runtime properties are restored.
     /// </summary>
-    public virtual void ApplyRuntimeProperties() { }
+    public virtual void ApplyRuntimeProperties()
+    {
+        if (_runtimePropertyRegistrations != null)
+        {
+            for (int i = 0; i < _runtimePropertyRegistrations.Count; i++)
+            {
+                _runtimePropertyRegistrations[i].Restore();
+            }
+        }
+        AfterRefreshStyles?.Invoke(this, EventArgs.Empty);
+    }
 
     public void UpdateStateRecursively()
     {

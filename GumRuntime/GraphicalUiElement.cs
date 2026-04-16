@@ -26,6 +26,11 @@ using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
 using Gum.Collections;
 
+#if FRB
+
+using InteractiveGue = Gum.Wireframe.GraphicalUiElement;
+#endif
+
 
 #if !FRB
 using Gum.StateAnimation.Runtime;

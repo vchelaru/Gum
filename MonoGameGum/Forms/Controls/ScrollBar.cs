@@ -288,6 +288,7 @@ public class ScrollBar : RangeBase
     public override void ApplyRuntimeProperties()
     {
         UpdateThumbPositionAccordingToValue();
+        base.ApplyRuntimeProperties();
     }
 
     private void UpdateThumbPositionAccordingToValue()

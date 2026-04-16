@@ -325,6 +325,7 @@ public class Slider : RangeBase, IInputReceiver
     public override void ApplyRuntimeProperties()
     {
         UpdateThumbPositionAccordingToValue();
+        base.ApplyRuntimeProperties();
     }
 
     private void UpdateThumbPositionAccordingToValue()

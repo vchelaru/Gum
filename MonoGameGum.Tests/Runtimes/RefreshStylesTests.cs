@@ -552,4 +552,233 @@ public class RefreshStylesTests : BaseTestClass
         innerCheck2.Visible.ShouldBe(true, "radio2 inner check should still be visible after refresh");
         innerCheck1.Visible.ShouldBe(false, "radio1 inner check should still be hidden after refresh");
     }
+
+    [Fact]
+    public void RefreshStyles_ShouldPreserveLabelTextWhenComponentHasTextDefault()
+    {
+        // Simulates a Gum project where the Label component's own default state
+        // sets TextInstance.Text, and the user has assigned a runtime value
+        // (e.g. a localized string) via Label.Text in CustomInitialize.
+        ContainerRuntime parent = new();
+
+        Label label = new();
+        label.Visual.Name = "LabelInstance";
+        label.Visual.Parent = parent;
+
+        ComponentSave labelComponent = new();
+        labelComponent.Name = "Controls/Label";
+        StateSave labelDefault = new();
+        labelDefault.Name = "Default";
+        labelDefault.Variables.Add(new VariableSave
+        {
+            Name = "Text",
+            Value = "DesignTimeText",
+            SetsValue = true
+        });
+        labelComponent.States.Add(labelDefault);
+        label.Visual.AddStates(new System.Collections.Generic.List<StateSave> { labelDefault });
+        label.Visual.ElementSave = labelComponent;
+
+        StateSave parentDefault = new();
+        parentDefault.Name = "Default";
+        ScreenSave parentElement = new();
+        parentElement.Name = "TestScreen";
+        parentElement.States.Add(parentDefault);
+        parent.AddStates(new System.Collections.Generic.List<StateSave> { parentDefault });
+        parent.ElementSave = parentElement;
+
+        label.Text = "RuntimeText";
+        label.Text.ShouldBe("RuntimeText");
+
+        parent.RefreshStyles();
+
+        label.Text.ShouldBe("RuntimeText");
+    }
+
+    [Fact]
+    public void RefreshStyles_ShouldPreserveButtonTextWhenComponentHasTextDefault()
+    {
+        ContainerRuntime parent = new();
+
+        Button button = new();
+        button.Visual.Name = "ButtonInstance";
+        button.Visual.Parent = parent;
+
+        ComponentSave buttonComponent = new();
+        buttonComponent.Name = "Controls/Button";
+        StateSave buttonDefault = new();
+        buttonDefault.Name = "Default";
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.Text",
+            Value = "DesignTimeText",
+            SetsValue = true
+        });
+        buttonComponent.States.Add(buttonDefault);
+        button.Visual.AddStates(new System.Collections.Generic.List<StateSave> { buttonDefault });
+        button.Visual.ElementSave = buttonComponent;
+
+        StateSave parentDefault = new();
+        parentDefault.Name = "Default";
+        ScreenSave parentElement = new();
+        parentElement.Name = "TestScreen";
+        parentElement.States.Add(parentDefault);
+        parent.AddStates(new System.Collections.Generic.List<StateSave> { parentDefault });
+        parent.ElementSave = parentElement;
+
+        button.Text = "RuntimeText";
+        button.Text.ShouldBe("RuntimeText");
+
+        parent.RefreshStyles();
+
+        button.Text.ShouldBe("RuntimeText");
+    }
+
+    [Fact]
+    public void RefreshStyles_ShouldRaiseBeforeAndAfterRefreshStylesEventsInOrder()
+    {
+        // A FrameworkElement subscriber (e.g. user code in CustomInitialize)
+        // must be able to save state before the default state is re-applied
+        // and restore/override state after, without subclassing.
+        ContainerRuntime parent = new();
+
+        Button button = new();
+        button.Visual.Name = "ButtonInstance";
+        button.Visual.Parent = parent;
+
+        ComponentSave buttonComponent = new();
+        buttonComponent.Name = "Controls/Button";
+        StateSave buttonDefault = new();
+        buttonDefault.Name = "Default";
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.Text",
+            Value = "DesignTimeText",
+            SetsValue = true
+        });
+        buttonComponent.States.Add(buttonDefault);
+        button.Visual.AddStates(new System.Collections.Generic.List<StateSave> { buttonDefault });
+        button.Visual.ElementSave = buttonComponent;
+
+        StateSave parentDefault = new();
+        parentDefault.Name = "Default";
+        ScreenSave parentElement = new();
+        parentElement.Name = "TestScreen";
+        parentElement.States.Add(parentDefault);
+        parent.AddStates(new System.Collections.Generic.List<StateSave> { parentDefault });
+        parent.ElementSave = parentElement;
+
+        button.Text = "UserValue";
+
+        var log = new System.Collections.Generic.List<string>();
+
+        button.BeforeRefreshStyles += (_, _) => log.Add("before");
+        button.AfterRefreshStyles += (_, _) =>
+        {
+            log.Add("after");
+            button.Text = "FinalValue";
+        };
+
+        parent.RefreshStyles();
+
+        log.ShouldBe(new[] { "before", "after" });
+        button.Text.ShouldBe("FinalValue");
+    }
+
+    [Fact]
+    public void RegisterRuntimeProperty_ShouldPreserveReflectedPropertyOnTarget()
+    {
+        // Simulates a user registering a visual property for preservation
+        // via the string-based overload targeting a child visual.
+        ContainerRuntime parent = new();
+
+        Button button = new();
+        button.Visual.Name = "ButtonInstance";
+        button.Visual.Parent = parent;
+
+        ComponentSave buttonComponent = new();
+        buttonComponent.Name = "Controls/Button";
+        StateSave buttonDefault = new();
+        buttonDefault.Name = "Default";
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "Width",
+            Value = 100f,
+            SetsValue = true
+        });
+        buttonComponent.States.Add(buttonDefault);
+        button.Visual.AddStates(new System.Collections.Generic.List<StateSave> { buttonDefault });
+        button.Visual.ElementSave = buttonComponent;
+
+        StateSave parentDefault = new();
+        parentDefault.Name = "Default";
+        ScreenSave parentElement = new();
+        parentElement.Name = "TestScreen";
+        parentElement.States.Add(parentDefault);
+        parent.AddStates(new System.Collections.Generic.List<StateSave> { parentDefault });
+        parent.ElementSave = parentElement;
+
+        // User sets width at runtime
+        button.Visual.Width = 250f;
+        button.RegisterRuntimeProperty(button.Visual, nameof(button.Visual.Width));
+
+        parent.RefreshStyles();
+
+        button.Visual.Width.ShouldBe(250f);
+    }
+
+    [Fact]
+    public void RegisterRuntimeProperty_ShouldPreserveSelfPropertyByName()
+    {
+        // Simulates a user registering a property on self via the shorthand.
+        Button button = new();
+        button.IsEnabled = false;
+        button.RegisterRuntimeProperty(nameof(button.IsEnabled));
+
+        button.Visual.RefreshStyles();
+
+        button.IsEnabled.ShouldBe(false);
+    }
+
+    [Fact]
+    public void RegisterRuntimeProperty_ShouldPreserveLambdaBasedProperty()
+    {
+        // Simulates a user registering a property via getter/setter lambdas.
+        ContainerRuntime parent = new();
+
+        Button button = new();
+        button.Visual.Name = "ButtonInstance";
+        button.Visual.Parent = parent;
+
+        ComponentSave buttonComponent = new();
+        buttonComponent.Name = "Controls/Button";
+        StateSave buttonDefault = new();
+        buttonDefault.Name = "Default";
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "Height",
+            Value = 50f,
+            SetsValue = true
+        });
+        buttonComponent.States.Add(buttonDefault);
+        button.Visual.AddStates(new System.Collections.Generic.List<StateSave> { buttonDefault });
+        button.Visual.ElementSave = buttonComponent;
+
+        StateSave parentDefault = new();
+        parentDefault.Name = "Default";
+        ScreenSave parentElement = new();
+        parentElement.Name = "TestScreen";
+        parentElement.States.Add(parentDefault);
+        parent.AddStates(new System.Collections.Generic.List<StateSave> { parentDefault });
+        parent.ElementSave = parentElement;
+
+        button.Visual.Height = 300f;
+        button.RegisterRuntimeProperty(
+            () => button.Visual.Height,
+            v => button.Visual.Height = v);
+
+        parent.RefreshStyles();
+
+        button.Visual.Height.ShouldBe(300f);
+    }
 }

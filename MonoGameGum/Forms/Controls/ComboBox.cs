@@ -555,21 +555,26 @@ public class ComboBox :
     #region UpdateTo Methods
 
     private string? _savedText;
+    private bool _hasSavedText;
 
     /// <inheritdoc/>
     public override void SaveRuntimeProperties()
     {
         _savedText = coreTextObject?.RawText;
+        _hasSavedText = coreTextObject != null;
+        base.SaveRuntimeProperties();
     }
 
     /// <inheritdoc/>
     public override void ApplyRuntimeProperties()
     {
-        if (_savedText != null && coreTextObject != null)
+        if (_hasSavedText && coreTextObject != null)
         {
             coreTextObject.RawText = _savedText;
         }
         _savedText = null;
+        _hasSavedText = false;
+        base.ApplyRuntimeProperties();
     }
 
     public override void UpdateState()

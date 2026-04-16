@@ -971,6 +971,7 @@ public class ScrollViewer :
                 innerPanel.X = -(float)horizontalScrollBar.Value;
             }
         }
+        base.ApplyRuntimeProperties();
     }
 
     #endregion
