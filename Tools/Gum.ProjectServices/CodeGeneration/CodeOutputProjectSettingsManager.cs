@@ -10,12 +10,12 @@ namespace Gum.ProjectServices.CodeGeneration;
 public class CodeOutputProjectSettingsManager
 {
     private readonly ICodeGenLogger _logger;
-    private readonly string? _projectDirectory;
+    private readonly IProjectDirectoryProvider _projectDirectoryProvider;
 
-    public CodeOutputProjectSettingsManager(ICodeGenLogger logger, string? projectDirectory)
+    public CodeOutputProjectSettingsManager(ICodeGenLogger logger, IProjectDirectoryProvider projectDirectoryProvider)
     {
         _logger = logger;
-        _projectDirectory = projectDirectory;
+        _projectDirectoryProvider = projectDirectoryProvider;
     }
 
     /// <summary>
@@ -23,7 +23,7 @@ public class CodeOutputProjectSettingsManager
     /// </summary>
     public void WriteSettingsForProject(CodeOutputProjectSettings settings)
     {
-        var fileName = GetProjectCodeSettingsFile();
+        var fileName = GetProjectCodeSettingsFilePath();
         if (fileName != null)
         {
             var serialized = JsonConvert.SerializeObject(settings,
@@ -33,13 +33,28 @@ public class CodeOutputProjectSettingsManager
         }
     }
 
-    private FilePath? GetProjectCodeSettingsFile()
+    internal static void MigrateIfNeeded(CodeOutputProjectSettings settings)
     {
-        if (_projectDirectory == null)
+        // Version 1: DefaultScreenBase was previously set to stale defaults
+        // (e.g. "Gum.Wireframe.BindableGue", "Gum.Wireframe.GraphicalUiElement")
+        // by project templates, but the value was never actually used in codegen
+        // for MonoGameForms screens. Now that codegen respects it, clear it so
+        // each OutputLibrary falls back to its own appropriate default.
+        if (settings.Version < 1)
+        {
+            settings.DefaultScreenBase = "";
+            settings.Version = 1;
+        }
+    }
+
+    internal FilePath? GetProjectCodeSettingsFilePath()
+    {
+        var projectDirectory = _projectDirectoryProvider.ProjectDirectory;
+        if (projectDirectory == null)
         {
             return null;
         }
-        FilePath folder = _projectDirectory;
+        FilePath folder = projectDirectory;
         var fileName = folder + "ProjectCodeSettings.codsj";
         return fileName;
     }
@@ -50,7 +65,7 @@ public class CodeOutputProjectSettingsManager
     public CodeOutputProjectSettings CreateOrLoadSettingsForProject()
     {
         CodeOutputProjectSettings? toReturn = null;
-        var fileName = GetProjectCodeSettingsFile();
+        var fileName = GetProjectCodeSettingsFilePath();
         try
         {
             if (fileName?.Exists() == true)
@@ -71,6 +86,8 @@ public class CodeOutputProjectSettingsManager
 
             toReturn.SetDefaults();
         }
+
+        MigrateIfNeeded(toReturn);
 
         return toReturn;
     }

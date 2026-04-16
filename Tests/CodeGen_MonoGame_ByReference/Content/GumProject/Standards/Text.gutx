@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <StandardElementSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Text</Name>
   <State>
@@ -767,10 +767,23 @@
     <State>
       <Name>Tiny</Name>
       <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>CustomFontFile</Name>
+        <Value xsi:type="xsd:string"></Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <IsFont>true</IsFont>
         <Type>string</Type>
         <Name>Font</Name>
         <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>FontScale</Name>
+        <Value xsi:type="xsd:float">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -794,6 +807,18 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>LineHeightMultiplier</Name>
+        <Value xsi:type="xsd:float">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
+        <Name>UseCustomFont</Name>
+        <Value xsi:type="xsd:boolean">false</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -814,10 +839,23 @@
     <State>
       <Name>Small</Name>
       <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>CustomFontFile</Name>
+        <Value xsi:type="xsd:string"></Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <IsFont>true</IsFont>
         <Type>string</Type>
         <Name>Font</Name>
         <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>FontScale</Name>
+        <Value xsi:type="xsd:float">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -838,6 +876,18 @@
         <Name>IsItalic</Name>
         <Value xsi:type="xsd:boolean">false</Value>
         <Category>Font</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>LineHeightMultiplier</Name>
+        <Value xsi:type="xsd:float">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
+        <Name>UseCustomFont</Name>
+        <Value xsi:type="xsd:boolean">false</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -861,10 +911,23 @@
     <State>
       <Name>Normal</Name>
       <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>CustomFontFile</Name>
+        <Value xsi:type="xsd:string"></Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <IsFont>true</IsFont>
         <Type>string</Type>
         <Name>Font</Name>
         <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>FontScale</Name>
+        <Value xsi:type="xsd:float">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -886,6 +949,18 @@
         <Name>IsItalic</Name>
         <Value xsi:type="xsd:boolean">false</Value>
         <Category>Font</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>LineHeightMultiplier</Name>
+        <Value xsi:type="xsd:float">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
+        <Name>UseCustomFont</Name>
+        <Value xsi:type="xsd:boolean">false</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -909,10 +984,23 @@
     <State>
       <Name>Emphasis</Name>
       <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>CustomFontFile</Name>
+        <Value xsi:type="xsd:string"></Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <IsFont>true</IsFont>
         <Type>string</Type>
         <Name>Font</Name>
         <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>FontScale</Name>
+        <Value xsi:type="xsd:float">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -933,6 +1021,18 @@
         <Type>bool</Type>
         <Name>IsItalic</Name>
         <Value xsi:type="xsd:boolean">true</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>LineHeightMultiplier</Name>
+        <Value xsi:type="xsd:float">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
+        <Name>UseCustomFont</Name>
+        <Value xsi:type="xsd:boolean">false</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -956,10 +1056,23 @@
     <State>
       <Name>Strong</Name>
       <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>CustomFontFile</Name>
+        <Value xsi:type="xsd:string"></Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <IsFont>true</IsFont>
         <Type>string</Type>
         <Name>Font</Name>
         <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>FontScale</Name>
+        <Value xsi:type="xsd:float">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -980,6 +1093,18 @@
         <Name>IsItalic</Name>
         <Value xsi:type="xsd:boolean">false</Value>
         <Category>Font</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>LineHeightMultiplier</Name>
+        <Value xsi:type="xsd:float">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
+        <Name>UseCustomFont</Name>
+        <Value xsi:type="xsd:boolean">false</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1003,10 +1128,23 @@
     <State>
       <Name>H3</Name>
       <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>CustomFontFile</Name>
+        <Value xsi:type="xsd:string"></Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <IsFont>true</IsFont>
         <Type>string</Type>
         <Name>Font</Name>
         <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>FontScale</Name>
+        <Value xsi:type="xsd:float">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -1030,6 +1168,18 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>LineHeightMultiplier</Name>
+        <Value xsi:type="xsd:float">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
+        <Name>UseCustomFont</Name>
+        <Value xsi:type="xsd:boolean">false</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -1051,10 +1201,23 @@
     <State>
       <Name>H2</Name>
       <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>CustomFontFile</Name>
+        <Value xsi:type="xsd:string"></Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <IsFont>true</IsFont>
         <Type>string</Type>
         <Name>Font</Name>
         <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>FontScale</Name>
+        <Value xsi:type="xsd:float">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -1078,6 +1241,18 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>LineHeightMultiplier</Name>
+        <Value xsi:type="xsd:float">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
+        <Name>UseCustomFont</Name>
+        <Value xsi:type="xsd:boolean">false</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -1099,10 +1274,23 @@
     <State>
       <Name>H1</Name>
       <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>CustomFontFile</Name>
+        <Value xsi:type="xsd:string"></Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <IsFont>true</IsFont>
         <Type>string</Type>
         <Name>Font</Name>
         <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>FontScale</Name>
+        <Value xsi:type="xsd:float">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -1126,6 +1314,18 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>LineHeightMultiplier</Name>
+        <Value xsi:type="xsd:float">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
+        <Name>UseCustomFont</Name>
+        <Value xsi:type="xsd:boolean">false</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -1147,10 +1347,23 @@
     <State>
       <Name>Title</Name>
       <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>CustomFontFile</Name>
+        <Value xsi:type="xsd:string"></Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <IsFont>true</IsFont>
         <Type>string</Type>
         <Name>Font</Name>
         <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>FontScale</Name>
+        <Value xsi:type="xsd:float">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -1172,6 +1385,18 @@
         <Name>IsItalic</Name>
         <Value xsi:type="xsd:boolean">false</Value>
         <Category>Font</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>LineHeightMultiplier</Name>
+        <Value xsi:type="xsd:float">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
+        <Name>UseCustomFont</Name>
+        <Value xsi:type="xsd:boolean">false</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">

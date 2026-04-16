@@ -37,7 +37,7 @@ Gum is a mature codebase. When you load context in an area (reading methods, und
 
 # After editing
 
-Write unit tests for new features and bug fixes unless the change is trivial or untestable. The user will build and run tests themselves — do not run them via Bash. Output: changed files + brief why. Focus on correctness and brevity over cleverness.
+Write unit tests for new features and bug fixes unless the change is trivial or untestable. Always build and run tests via Bash to verify your changes — both the red/green cycle for bug fixes and regression checks for new features. Output: changed files + brief why. Focus on correctness and brevity over cleverness.
 
 **Zero new warnings policy** — after every change, verify that no new compiler warnings were introduced. If a warning cannot be fixed (e.g., an unused event on a test fake that satisfies an interface contract), suppress it with `#pragma warning disable`/`restore` and a comment explaining why the suppression is justified.
 

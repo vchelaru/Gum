@@ -24,12 +24,12 @@ internal class CodeGenerationService
         IDialogService dialogService,
         CustomCodeGenerator customCodeGenerator,
         CodeGenerationNameVerifier nameVerifier,
-        IProjectState projectState)
+        IProjectDirectoryProvider projectDirectoryProvider)
     {
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, nameVerifier, projectState.ProjectDirectory);
-        _elementSettingsManager = new CodeOutputElementSettingsManager(projectState.ProjectDirectory);
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, nameVerifier, projectDirectoryProvider);
+        _elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         _guiCommands = guiCommands;
         _dialogService = dialogService;
     }

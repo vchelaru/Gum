@@ -9,11 +9,11 @@ namespace Gum.ProjectServices.CodeGeneration;
 /// </summary>
 public class CodeOutputElementSettingsManager
 {
-    private readonly string? _projectDirectory;
+    private readonly IProjectDirectoryProvider _projectDirectoryProvider;
 
-    public CodeOutputElementSettingsManager(string? projectDirectory)
+    public CodeOutputElementSettingsManager(IProjectDirectoryProvider projectDirectoryProvider)
     {
-        _projectDirectory = projectDirectory;
+        _projectDirectoryProvider = projectDirectoryProvider;
     }
 
     /// <summary>
@@ -21,7 +21,7 @@ public class CodeOutputElementSettingsManager
     /// </summary>
     public void WriteSettingsForElement(ElementSave element, CodeOutputElementSettings settings)
     {
-        var fileName = GetCodeSettingsFileFor(element);
+        var fileName = GetCodeSettingsFilePath(element);
         if (fileName == null)
         {
             return;
@@ -30,9 +30,9 @@ public class CodeOutputElementSettingsManager
         System.IO.File.WriteAllText(fileName.FullPath, serialized);
     }
 
-    private FilePath? GetCodeSettingsFileFor(ElementSave element)
+    internal FilePath? GetCodeSettingsFilePath(ElementSave element)
     {
-        FilePath? fileName = ElementFilePathHelper.GetFullPathXmlFile(element, _projectDirectory);
+        FilePath? fileName = ElementFilePathHelper.GetFullPathXmlFile(element, _projectDirectoryProvider.ProjectDirectory);
         if (fileName == null)
         {
             return null;
@@ -46,7 +46,7 @@ public class CodeOutputElementSettingsManager
     public CodeOutputElementSettings LoadOrCreateSettingsFor(ElementSave element)
     {
         CodeOutputElementSettings toReturn;
-        var fileName = GetCodeSettingsFileFor(element);
+        var fileName = GetCodeSettingsFilePath(element);
         if (fileName != null && fileName.Exists())
         {
             var contents = System.IO.File.ReadAllText(fileName.FullPath);

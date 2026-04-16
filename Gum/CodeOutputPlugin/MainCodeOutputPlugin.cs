@@ -53,6 +53,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly IFileCommands _fileCommands;
     private CodeOutputProjectSettingsManager _codeOutputProjectSettingsManager;
     private readonly IProjectState _projectState;
+    private readonly IProjectDirectoryProvider _projectDirectoryProvider;
     private readonly CodeGenerationNameVerifier _codeGenerationNameVerifier;
 
     PluginTab pluginTab = default!;
@@ -77,34 +78,34 @@ public class MainCodeOutputPlugin : PluginBase
         _localizationService = Locator.GetRequiredService<LocalizationService>();
 
         _projectState = Locator.GetRequiredService<IProjectState>();
+        _projectDirectoryProvider = new ProjectStateDirectoryProvider(_projectState);
 
         _codeGenerationNameVerifier = new CodeGenerationNameVerifier(_nameVerifier);
-        _elementSettingsManager = new CodeOutputElementSettingsManager(_projectState.ProjectDirectory);
+        _elementSettingsManager = new CodeOutputElementSettingsManager(_projectDirectoryProvider);
         var typeStringResolver = new ToolTypeStringResolver();
 
-        _codeGenerator = new CodeGenerator(_codeGenerationNameVerifier, _localizationService, _elementSettingsManager, typeStringResolver);
-        _codeGenerator.ProjectDirectory = _projectState.ProjectDirectory;
+        _codeGenerator = new CodeGenerator(_codeGenerationNameVerifier, _localizationService, _elementSettingsManager, _projectDirectoryProvider, typeStringResolver);
 
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, _codeGenerationNameVerifier, _projectState.ProjectDirectory);
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, _codeGenerationNameVerifier, _projectDirectoryProvider);
 
         _selectedState = Locator.GetRequiredService<ISelectedState>();
 
         var customCodeGenerator = new CustomCodeGenerator(_codeGenerator, _codeGenerationNameVerifier);
-        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator, _codeGenerationNameVerifier, _projectState);
+        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator, _codeGenerationNameVerifier, _projectDirectoryProvider);
         _renameService = new RenameService(
             _codeGenerationService,
             _codeGenerator,
             customCodeGenerator,
             _codeGenerationNameVerifier,
             _dialogService,
-            _projectState);
+            _projectDirectoryProvider);
 
         _messenger = Locator.GetRequiredService<IMessenger>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
 
         var codeGenLogger = new ToolCodeGenLogger(Locator.GetRequiredService<IOutputManager>());
         _codeOutputProjectSettingsManager = new CodeOutputProjectSettingsManager(
-            codeGenLogger, _projectState.ProjectDirectory);
+            codeGenLogger, _projectDirectoryProvider);
 
         _parentSetLogic = new ParentSetLogic(_codeGenerator);
 
@@ -204,19 +205,8 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleProjectLoaded(GumProjectSave project)
     {
-        // Reinitialize services that depend on the project directory
-        var projectDirectory = _projectState.ProjectDirectory;
-        _elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectory);
-        _codeGenerator.ProjectDirectory = projectDirectory;
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, _codeGenerationNameVerifier, projectDirectory);
-
-        var codeGenLogger = new ToolCodeGenLogger(Locator.GetRequiredService<IOutputManager>());
-        _codeOutputProjectSettingsManager = new CodeOutputProjectSettingsManager(codeGenLogger, projectDirectory);
-
-        var customCodeGenerator = new CustomCodeGenerator(_codeGenerator, _codeGenerationNameVerifier);
-        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator, _codeGenerationNameVerifier, _projectState);
-        _renameService = new RenameService(_codeGenerationService, _codeGenerator, customCodeGenerator, _codeGenerationNameVerifier, _dialogService, _projectState);
-
+        // Services resolve ProjectDirectory lazily via IProjectDirectoryProvider,
+        // so no reconstruction is needed here — just reload project-scoped settings.
         codeOutputProjectSettings = _codeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
         HandleElementSelected(null);

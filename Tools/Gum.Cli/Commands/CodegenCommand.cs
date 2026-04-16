@@ -79,7 +79,8 @@ public static class CodegenCommand
 
         // Load project code settings
         ICodeGenLogger logger = new ConsoleCodeGenLogger();
-        var projectSettingsManager = new CodeOutputProjectSettingsManager(logger, projectDirectory);
+        IProjectDirectoryProvider projectDirectoryProvider = new FixedProjectDirectoryProvider(projectDirectory);
+        var projectSettingsManager = new CodeOutputProjectSettingsManager(logger, projectDirectoryProvider);
         CodeOutputProjectSettings projectSettings = projectSettingsManager.CreateOrLoadSettingsForProject();
 
         if (string.IsNullOrEmpty(projectSettings.CodeProjectRoot))
@@ -102,15 +103,14 @@ public static class CodegenCommand
         // Build the codegen pipeline
         INameVerifier nameVerifier = new HeadlessNameVerifier();
         var codeGenNameVerifier = new CodeGenerationNameVerifier(nameVerifier);
-        var elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectory);
+        var elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         var localizationService = new Gum.Localization.LocalizationService();
         var codeGenerator = new CodeGenerator(
-            codeGenNameVerifier, localizationService, elementSettingsManager);
-        codeGenerator.ProjectDirectory = projectDirectory;
+            codeGenNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider);
 
         var customCodeGenerator = new CustomCodeGenerator(codeGenerator, codeGenNameVerifier);
         var fileLocationsService = new CodeGenerationFileLocationsService(
-            codeGenerator, codeGenNameVerifier, projectDirectory);
+            codeGenerator, codeGenNameVerifier, projectDirectoryProvider);
 
         var codeGenService = new HeadlessCodeGenerationService(
             codeGenerator, customCodeGenerator, fileLocationsService, elementSettingsManager, logger);

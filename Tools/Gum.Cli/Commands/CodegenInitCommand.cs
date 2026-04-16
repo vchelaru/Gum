@@ -85,7 +85,7 @@ public static class CodegenInitCommand
         }
 
         ICodeGenLogger logger = new ConsoleCodeGenLogger();
-        var settingsManager = new CodeOutputProjectSettingsManager(logger, projectDirectory);
+        var settingsManager = new CodeOutputProjectSettingsManager(logger, new FixedProjectDirectoryProvider(projectDirectory));
         settingsManager.WriteSettingsForProject(result.Settings!);
 
         Console.WriteLine("Code generation settings initialized successfully.");
