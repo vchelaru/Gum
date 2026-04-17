@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Proxy project for Sokol.NET.
+
+    Sokol.NET/src/sokol/sokol.csproj can't be ProjectReference'd:
+    SDebugUI.cs in src/sokol/ imports the Imgui namespace whose types live
+    in src/imgui/ (a sibling folder), which sokol.csproj doesn't include.
+    So building it standalone fails.
+
+    This project wraps the Sokol.NET source files (from both folders) into
+    a proper library that the rest of the solution can reference cleanly.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Sokol</AssemblyName>
+    <RootNamespace>Sokol</RootNamespace>
+    <NoWarn>CS9084;CS9087;CS8600;CS8603</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Sokol.NET\src\sokol\*.cs" Link="sokol\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Sokol.NET\src\sokol\generated\*.cs" Link="sokol\generated\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Sokol.NET\src\imgui\*.cs" Link="imgui\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>
