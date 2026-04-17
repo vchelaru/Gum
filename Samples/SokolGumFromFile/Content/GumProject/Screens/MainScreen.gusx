@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>MainScreen</Name>
+  <State>
+    <Name>Default</Name>
+
+    <!-- Title: centred horizontally within its Width, with a 2-pixel outline. -->
+    <Variable Type="float"  Name="TitleText.X"                SetsValue="true"><Value xsi:type="xsd:float">40</Value></Variable>
+    <Variable Type="float"  Name="TitleText.Y"                SetsValue="true"><Value xsi:type="xsd:float">30</Value></Variable>
+    <Variable Type="float"  Name="TitleText.Width"            SetsValue="true"><Value xsi:type="xsd:float">1200</Value></Variable>
+    <Variable Type="float"  Name="TitleText.Height"           SetsValue="true"><Value xsi:type="xsd:float">50</Value></Variable>
+    <Variable Type="string" Name="TitleText.Text"             SetsValue="true"><Value xsi:type="xsd:string">SokolGum — loaded from .gumx</Value></Variable>
+    <Variable Type="string" Name="TitleText.Font"             SetsValue="true"><Value xsi:type="xsd:string">DroidSerif-Regular.ttf</Value></Variable>
+    <Variable Type="float"  Name="TitleText.FontSize"         SetsValue="true"><Value xsi:type="xsd:float">32</Value></Variable>
+    <Variable Type="int"    Name="TitleText.Red"              SetsValue="true"><Value xsi:type="xsd:int">120</Value></Variable>
+    <Variable Type="int"    Name="TitleText.Green"            SetsValue="true"><Value xsi:type="xsd:int">220</Value></Variable>
+    <Variable Type="int"    Name="TitleText.Blue"             SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
+    <Variable Type="HorizontalAlignment" Name="TitleText.HorizontalAlignment" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+    <Variable Type="int"    Name="TitleText.OutlineThickness" SetsValue="true"><Value xsi:type="xsd:int">2</Value></Variable>
+
+    <Variable Type="float"  Name="SubtitleText.X"                    SetsValue="true"><Value xsi:type="xsd:float">40</Value></Variable>
+    <Variable Type="float"  Name="SubtitleText.Y"                    SetsValue="true"><Value xsi:type="xsd:float">80</Value></Variable>
+    <Variable Type="float"  Name="SubtitleText.Width"                SetsValue="true"><Value xsi:type="xsd:float">1200</Value></Variable>
+    <Variable Type="float"  Name="SubtitleText.Height"               SetsValue="true"><Value xsi:type="xsd:float">30</Value></Variable>
+    <Variable Type="string" Name="SubtitleText.Text"                 SetsValue="true"><Value xsi:type="xsd:string">Rendered from XML via GumProjectSave.Load</Value></Variable>
+    <Variable Type="string" Name="SubtitleText.Font"                 SetsValue="true"><Value xsi:type="xsd:string">DroidSerif-Regular.ttf</Value></Variable>
+    <Variable Type="float"  Name="SubtitleText.FontSize"             SetsValue="true"><Value xsi:type="xsd:float">16</Value></Variable>
+    <Variable Type="int"    Name="SubtitleText.Red"                  SetsValue="true"><Value xsi:type="xsd:int">180</Value></Variable>
+    <Variable Type="int"    Name="SubtitleText.Green"                SetsValue="true"><Value xsi:type="xsd:int">180</Value></Variable>
+    <Variable Type="int"    Name="SubtitleText.Blue"                 SetsValue="true"><Value xsi:type="xsd:int">180</Value></Variable>
+    <Variable Type="HorizontalAlignment" Name="SubtitleText.HorizontalAlignment" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+
+    <Variable Type="float" Name="Rect1.X"      SetsValue="true"><Value xsi:type="xsd:float">40</Value></Variable>
+    <Variable Type="float" Name="Rect1.Y"      SetsValue="true"><Value xsi:type="xsd:float">160</Value></Variable>
+    <Variable Type="float" Name="Rect1.Width"  SetsValue="true"><Value xsi:type="xsd:float">200</Value></Variable>
+    <Variable Type="float" Name="Rect1.Height" SetsValue="true"><Value xsi:type="xsd:float">100</Value></Variable>
+    <Variable Type="int"   Name="Rect1.Red"    SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
+    <Variable Type="int"   Name="Rect1.Green"  SetsValue="true"><Value xsi:type="xsd:int">90</Value></Variable>
+    <Variable Type="int"   Name="Rect1.Blue"   SetsValue="true"><Value xsi:type="xsd:int">140</Value></Variable>
+
+    <!-- Rect2 rotates 10° counter-clockwise via the centralized transform in Renderer. -->
+    <Variable Type="float" Name="Rect2.X"        SetsValue="true"><Value xsi:type="xsd:float">260</Value></Variable>
+    <Variable Type="float" Name="Rect2.Y"        SetsValue="true"><Value xsi:type="xsd:float">160</Value></Variable>
+    <Variable Type="float" Name="Rect2.Width"    SetsValue="true"><Value xsi:type="xsd:float">200</Value></Variable>
+    <Variable Type="float" Name="Rect2.Height"   SetsValue="true"><Value xsi:type="xsd:float">100</Value></Variable>
+    <Variable Type="int"   Name="Rect2.Red"      SetsValue="true"><Value xsi:type="xsd:int">60</Value></Variable>
+    <Variable Type="int"   Name="Rect2.Green"    SetsValue="true"><Value xsi:type="xsd:int">200</Value></Variable>
+    <Variable Type="int"   Name="Rect2.Blue"     SetsValue="true"><Value xsi:type="xsd:int">200</Value></Variable>
+    <Variable Type="float" Name="Rect2.Rotation" SetsValue="true"><Value xsi:type="xsd:float">10</Value></Variable>
+
+    <Variable Type="float" Name="Rect3.X"      SetsValue="true"><Value xsi:type="xsd:float">480</Value></Variable>
+    <Variable Type="float" Name="Rect3.Y"      SetsValue="true"><Value xsi:type="xsd:float">160</Value></Variable>
+    <Variable Type="float" Name="Rect3.Width"  SetsValue="true"><Value xsi:type="xsd:float">200</Value></Variable>
+    <Variable Type="float" Name="Rect3.Height" SetsValue="true"><Value xsi:type="xsd:float">100</Value></Variable>
+    <Variable Type="int"   Name="Rect3.Red"    SetsValue="true"><Value xsi:type="xsd:int">240</Value></Variable>
+    <Variable Type="int"   Name="Rect3.Green"  SetsValue="true"><Value xsi:type="xsd:int">190</Value></Variable>
+    <Variable Type="int"   Name="Rect3.Blue"   SetsValue="true"><Value xsi:type="xsd:int">70</Value></Variable>
+
+    <Variable Type="float"  Name="Logo.X"          SetsValue="true"><Value xsi:type="xsd:float">40</Value></Variable>
+    <Variable Type="float"  Name="Logo.Y"          SetsValue="true"><Value xsi:type="xsd:float">300</Value></Variable>
+    <Variable Type="float"  Name="Logo.Width"      SetsValue="true"><Value xsi:type="xsd:float">256</Value></Variable>
+    <Variable Type="float"  Name="Logo.Height"     SetsValue="true"><Value xsi:type="xsd:float">128</Value></Variable>
+    <Variable Type="string" Name="Logo.SourceFile" SetsValue="true"><Value xsi:type="xsd:string">sokol_logo.png</Value></Variable>
+
+    <!-- Panel uses an overridden border width so corners look half as thick
+         as the default 1/3-1/3-1/3 split. -->
+    <Variable Type="float"  Name="Panel.X"                                 SetsValue="true"><Value xsi:type="xsd:float">320</Value></Variable>
+    <Variable Type="float"  Name="Panel.Y"                                 SetsValue="true"><Value xsi:type="xsd:float">300</Value></Variable>
+    <Variable Type="float"  Name="Panel.Width"                             SetsValue="true"><Value xsi:type="xsd:float">360</Value></Variable>
+    <Variable Type="float"  Name="Panel.Height"                            SetsValue="true"><Value xsi:type="xsd:float">180</Value></Variable>
+    <Variable Type="string" Name="Panel.SourceFile"                        SetsValue="true"><Value xsi:type="xsd:string">sokol_logo.png</Value></Variable>
+    <Variable Type="float"  Name="Panel.CustomFrameTextureCoordinateWidth" SetsValue="true"><Value xsi:type="xsd:float">8</Value></Variable>
+
+    <!-- Multi-line wrapped + centred paragraph with outlined letters. -->
+    <Variable Type="float"  Name="WrappedParagraph.X"                   SetsValue="true"><Value xsi:type="xsd:float">720</Value></Variable>
+    <Variable Type="float"  Name="WrappedParagraph.Y"                   SetsValue="true"><Value xsi:type="xsd:float">160</Value></Variable>
+    <Variable Type="float"  Name="WrappedParagraph.Width"               SetsValue="true"><Value xsi:type="xsd:float">520</Value></Variable>
+    <Variable Type="float"  Name="WrappedParagraph.Height"              SetsValue="true"><Value xsi:type="xsd:float">320</Value></Variable>
+    <Variable Type="string" Name="WrappedParagraph.Text"                SetsValue="true"><Value xsi:type="xsd:string">This paragraph is loaded from the .gumx and exercises word-wrapping to the renderable's Width, centred horizontal alignment, top-aligned vertical origin, and an outline drawn by stroking the glyphs at every cardinal offset. Multiple lines are built by word-boundary splits; manual newlines are honoured.</Value></Variable>
+    <Variable Type="string" Name="WrappedParagraph.Font"                SetsValue="true"><Value xsi:type="xsd:string">DroidSerif-Regular.ttf</Value></Variable>
+    <Variable Type="float"  Name="WrappedParagraph.FontSize"            SetsValue="true"><Value xsi:type="xsd:float">18</Value></Variable>
+    <Variable Type="int"    Name="WrappedParagraph.Red"                 SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
+    <Variable Type="int"    Name="WrappedParagraph.Green"               SetsValue="true"><Value xsi:type="xsd:int">230</Value></Variable>
+    <Variable Type="int"    Name="WrappedParagraph.Blue"                SetsValue="true"><Value xsi:type="xsd:int">160</Value></Variable>
+    <Variable Type="HorizontalAlignment" Name="WrappedParagraph.HorizontalAlignment" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+    <Variable Type="int"    Name="WrappedParagraph.OutlineThickness"    SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+
+    <Variable Type="float"  Name="Footer.X"                          SetsValue="true"><Value xsi:type="xsd:float">40</Value></Variable>
+    <Variable Type="float"  Name="Footer.Y"                          SetsValue="true"><Value xsi:type="xsd:float">530</Value></Variable>
+    <Variable Type="float"  Name="Footer.Width"                      SetsValue="true"><Value xsi:type="xsd:float">1200</Value></Variable>
+    <Variable Type="float"  Name="Footer.Height"                     SetsValue="true"><Value xsi:type="xsd:float">30</Value></Variable>
+    <Variable Type="string" Name="Footer.Text"                       SetsValue="true"><Value xsi:type="xsd:string">Every instance above is an XML entry parsed at startup.</Value></Variable>
+    <Variable Type="string" Name="Footer.Font"                       SetsValue="true"><Value xsi:type="xsd:string">DroidSerif-Regular.ttf</Value></Variable>
+    <Variable Type="float"  Name="Footer.FontSize"                   SetsValue="true"><Value xsi:type="xsd:float">14</Value></Variable>
+    <Variable Type="int"    Name="Footer.Red"                        SetsValue="true"><Value xsi:type="xsd:int">160</Value></Variable>
+    <Variable Type="int"    Name="Footer.Green"                      SetsValue="true"><Value xsi:type="xsd:int">160</Value></Variable>
+    <Variable Type="int"    Name="Footer.Blue"                       SetsValue="true"><Value xsi:type="xsd:int">160</Value></Variable>
+    <Variable Type="HorizontalAlignment" Name="Footer.HorizontalAlignment" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+  </State>
+  <Instance Name="TitleText"        BaseType="Text" />
+  <Instance Name="SubtitleText"     BaseType="Text" />
+  <Instance Name="Rect1"            BaseType="ColoredRectangle" />
+  <Instance Name="Rect2"            BaseType="ColoredRectangle" />
+  <Instance Name="Rect3"            BaseType="ColoredRectangle" />
+  <Instance Name="Logo"             BaseType="Sprite" />
+  <Instance Name="Panel"            BaseType="NineSlice" />
+  <Instance Name="WrappedParagraph" BaseType="Text" />
+  <Instance Name="Footer"           BaseType="Text" />
+</ScreenSave>

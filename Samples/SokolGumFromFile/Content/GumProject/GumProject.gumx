@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GumProjectSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Version>2</Version>
+  <DefaultCanvasWidth>1280</DefaultCanvasWidth>
+  <DefaultCanvasHeight>720</DefaultCanvasHeight>
+  <StandardElementReference Name="ColoredRectangle" />
+  <StandardElementReference Name="Container" />
+  <StandardElementReference Name="NineSlice" />
+  <StandardElementReference Name="Sprite" />
+  <StandardElementReference Name="Text" />
+  <ScreenReference Name="MainScreen" />
+</GumProjectSave>

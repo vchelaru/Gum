@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>SokolGumFromFile</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\Runtimes\SokolGum\SokolGum.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Content\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <IsOSX Condition="$([MSBuild]::IsOSPlatform('OSX'))">true</IsOSX>
+    <IsLinux Condition="$([MSBuild]::IsOSPlatform('Linux'))">true</IsLinux>
+    <IsWindows Condition="$([MSBuild]::IsOSPlatform('Windows'))">true</IsWindows>
+    <OSArchLower>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLower())</OSArchLower>
+    <BuildConfigLower>$(Configuration.ToLower())</BuildConfigLower>
+    <SokolLibsDir>$(MSBuildThisFileDirectory)..\..\Sokol.NET\libs</SokolLibsDir>
+  </PropertyGroup>
+
+  <Target Name="CopyLibSokolMac" AfterTargets="Build" Condition="'$(IsOSX)' == 'true'">
+    <PropertyGroup>
+      <LibSokol>$(SokolLibsDir)\macos\$(OSArchLower)\$(BuildConfigLower)\libsokol.dylib</LibSokol>
+    </PropertyGroup>
+    <Error Text="libsokol.dylib not found at $(LibSokol). See Sokol.NET README for build instructions." Condition="!Exists('$(LibSokol)')" />
+    <Copy SourceFiles="$(LibSokol)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyLibSokolLinux" AfterTargets="Build" Condition="'$(IsLinux)' == 'true'">
+    <PropertyGroup>
+      <LibSokol>$(SokolLibsDir)\linux\$(OSArchLower)\$(BuildConfigLower)\libsokol.so</LibSokol>
+    </PropertyGroup>
+    <Error Text="libsokol.so not found at $(LibSokol). See Sokol.NET README for build instructions." Condition="!Exists('$(LibSokol)')" />
+    <Copy SourceFiles="$(LibSokol)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyLibSokolWindows" AfterTargets="Build" Condition="'$(IsWindows)' == 'true'">
+    <PropertyGroup>
+      <LibSokol>$(SokolLibsDir)\windows\$(OSArchLower)\$(BuildConfigLower)\sokol.dll</LibSokol>
+    </PropertyGroup>
+    <Error Text="sokol.dll not found at $(LibSokol). See Sokol.NET README for build instructions." Condition="!Exists('$(LibSokol)')" />
+    <Copy SourceFiles="$(LibSokol)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>
