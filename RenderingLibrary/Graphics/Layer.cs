@@ -217,6 +217,12 @@ namespace RenderingLibrary.Graphics
                 effectiveCameraY = 0;
             }
 
+            if (LayerCameraSettings?.Position is System.Numerics.Vector2 layerPosition)
+            {
+                effectiveCameraX += layerPosition.X;
+                effectiveCameraY += layerPosition.Y;
+            }
+
             if (camera.CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
             {
                 // make local vars to make stepping in faster if debugging
