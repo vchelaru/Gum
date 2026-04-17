@@ -204,7 +204,18 @@ namespace RenderingLibrary.Graphics
 
         public void ScreenToWorld(Camera camera, float screenX, float screenY, out float worldX, out float worldY)
         {
-            var effectiveZoom = LayerCameraSettings?.Zoom ?? camera.Zoom;
+            // When IsInScreenSpace is true the main camera is ignored entirely, including its
+            // zoom — a screen-space HUD should not scale when the world camera zooms. This must
+            // match SpriteRenderer.GetZoomAndMatrix so rendering and hit-testing agree.
+            float effectiveZoom;
+            if (LayerCameraSettings?.IsInScreenSpace == true)
+            {
+                effectiveZoom = LayerCameraSettings.Zoom ?? 1;
+            }
+            else
+            {
+                effectiveZoom = LayerCameraSettings?.Zoom ?? camera.Zoom;
+            }
 
             Matrix transformationMatrix;
 
@@ -215,6 +226,12 @@ namespace RenderingLibrary.Graphics
             {
                 effectiveCameraX = 0;
                 effectiveCameraY = 0;
+            }
+
+            if (LayerCameraSettings?.Position is System.Numerics.Vector2 layerPosition)
+            {
+                effectiveCameraX += layerPosition.X;
+                effectiveCameraY += layerPosition.Y;
             }
 
             if (camera.CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
