@@ -200,4 +200,198 @@ public class LayerTests : BaseTestClass
         worldX.ShouldBe(100);
         worldY.ShouldBe(450);
     }
+
+    [Fact]
+    public void WorldToScreen_RoundTripWithScreenToWorld_Returns_Original()
+    {
+        Camera camera = CreateTopLeftCamera();
+        camera.X = 50;
+        camera.Y = 30;
+
+        Layer layer = new Layer
+        {
+            LayerCameraSettings = new LayerCameraSettings
+            {
+                Zoom = 2,
+                Position = new System.Numerics.Vector2(10, 20),
+            },
+        };
+
+        float startWorldX = 123;
+        float startWorldY = 456;
+
+        layer.WorldToScreen(camera, startWorldX, startWorldY, out float screenX, out float screenY);
+        layer.ScreenToWorld(camera, screenX, screenY, out float roundTrippedX, out float roundTrippedY);
+
+        roundTrippedX.ShouldBe(startWorldX, tolerance: 0.001);
+        roundTrippedY.ShouldBe(startWorldY, tolerance: 0.001);
+    }
+
+    [Fact]
+    public void WorldToScreen_WithIsInScreenSpaceAndLayerPosition_IgnoresMainCameraAndAppliesLayerPosition()
+    {
+        Camera camera = CreateTopLeftCamera();
+        camera.X = 1000;
+        camera.Y = 1000;
+
+        Layer layer = new Layer
+        {
+            LayerCameraSettings = new LayerCameraSettings
+            {
+                IsInScreenSpace = true,
+                Position = new System.Numerics.Vector2(0, 200),
+            },
+        };
+
+        layer.WorldToScreen(camera, 100, 450, out float screenX, out float screenY);
+
+        screenX.ShouldBe(100);
+        screenY.ShouldBe(250);
+    }
+
+    [Fact]
+    public void WorldToScreen_WithIsInScreenSpaceAndMainCameraZoom_IgnoresMainCameraZoom()
+    {
+        Camera camera = CreateTopLeftCamera();
+        camera.Zoom = 4;
+        camera.X = 1000;
+        camera.Y = 1000;
+
+        Layer layer = new Layer
+        {
+            LayerCameraSettings = new LayerCameraSettings
+            {
+                IsInScreenSpace = true,
+            },
+        };
+
+        layer.WorldToScreen(camera, 100, 150, out float screenX, out float screenY);
+
+        screenX.ShouldBe(100);
+        screenY.ShouldBe(150);
+    }
+
+    [Fact]
+    public void WorldToScreen_WithLayerPositionX_TreatsPositionAsCameraOffset()
+    {
+        Camera camera = CreateTopLeftCamera();
+        Layer layer = new Layer
+        {
+            LayerCameraSettings = new LayerCameraSettings
+            {
+                Position = new System.Numerics.Vector2(75, 0),
+            },
+        };
+
+        layer.WorldToScreen(camera, 200, 50, out float screenX, out float screenY);
+
+        screenX.ShouldBe(125);
+        screenY.ShouldBe(50);
+    }
+
+    [Fact]
+    public void WorldToScreen_WithLayerPositionY_TreatsPositionAsCameraOffset()
+    {
+        Camera camera = CreateTopLeftCamera();
+        Layer layer = new Layer
+        {
+            LayerCameraSettings = new LayerCameraSettings
+            {
+                Position = new System.Numerics.Vector2(0, 200),
+            },
+        };
+
+        layer.WorldToScreen(camera, 100, 450, out float screenX, out float screenY);
+
+        screenX.ShouldBe(100);
+        screenY.ShouldBe(250);
+    }
+
+    [Fact]
+    public void WorldToScreen_WithMainCameraOffsetAndLayerPosition_AddsTheTwo()
+    {
+        Camera camera = CreateTopLeftCamera();
+        camera.X = 50;
+        camera.Y = 30;
+
+        Layer layer = new Layer
+        {
+            LayerCameraSettings = new LayerCameraSettings
+            {
+                Position = new System.Numerics.Vector2(10, 20),
+            },
+        };
+
+        layer.WorldToScreen(camera, 160, 200, out float screenX, out float screenY);
+
+        screenX.ShouldBe(100);
+        screenY.ShouldBe(150);
+    }
+
+    [Fact]
+    public void WorldToScreen_WithMainCameraOffsetAndNoLayerSettings_UsesMainCamera()
+    {
+        Camera camera = CreateTopLeftCamera();
+        camera.X = 50;
+        camera.Y = 30;
+
+        Layer layer = new Layer();
+
+        layer.WorldToScreen(camera, 150, 180, out float screenX, out float screenY);
+
+        screenX.ShouldBe(100);
+        screenY.ShouldBe(150);
+    }
+
+    [Fact]
+    public void WorldToScreen_WithNoLayerCameraSettings_ReturnsWorldAsScreen()
+    {
+        Camera camera = CreateTopLeftCamera();
+        Layer layer = new Layer();
+
+        layer.WorldToScreen(camera, 100, 150, out float screenX, out float screenY);
+
+        screenX.ShouldBe(100);
+        screenY.ShouldBe(150);
+    }
+
+    [Fact]
+    public void WorldToScreen_WithZoom_OverridesMainCameraZoom()
+    {
+        Camera camera = CreateTopLeftCamera();
+        camera.Zoom = 4;
+
+        Layer layer = new Layer
+        {
+            LayerCameraSettings = new LayerCameraSettings
+            {
+                Zoom = 2,
+            },
+        };
+
+        layer.WorldToScreen(camera, 50, 25, out float screenX, out float screenY);
+
+        screenX.ShouldBe(100);
+        screenY.ShouldBe(50);
+    }
+
+    [Fact]
+    public void WorldToScreen_WithZoomAndPosition_AppliesBothCorrectly()
+    {
+        Camera camera = CreateTopLeftCamera();
+
+        Layer layer = new Layer
+        {
+            LayerCameraSettings = new LayerCameraSettings
+            {
+                Zoom = 2,
+                Position = new System.Numerics.Vector2(10, 20),
+            },
+        };
+
+        layer.WorldToScreen(camera, 60, 45, out float screenX, out float screenY);
+
+        screenX.ShouldBe(100);
+        screenY.ShouldBe(50);
+    }
 }

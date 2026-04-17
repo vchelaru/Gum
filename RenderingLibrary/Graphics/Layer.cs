@@ -202,12 +202,16 @@ namespace RenderingLibrary.Graphics
             return false;
         }
 
-        public void ScreenToWorld(Camera camera, float screenX, float screenY, out float worldX, out float worldY)
+        /// <summary>
+        /// Builds the world-to-screen matrix for this layer, factoring in LayerCameraSettings
+        /// (position, zoom, IsInScreenSpace) on top of the main camera. Both ScreenToWorld and
+        /// WorldToScreen route through this so their behavior cannot drift apart.
+        /// </summary>
+        private Matrix GetEffectiveTransformationMatrix(Camera camera, out float effectiveZoom)
         {
             // When IsInScreenSpace is true the main camera is ignored entirely, including its
             // zoom — a screen-space HUD should not scale when the world camera zooms. This must
             // match SpriteRenderer.GetZoomAndMatrix so rendering and hit-testing agree.
-            float effectiveZoom;
             if (LayerCameraSettings?.IsInScreenSpace == true)
             {
                 effectiveZoom = LayerCameraSettings.Zoom ?? 1;
@@ -217,12 +221,10 @@ namespace RenderingLibrary.Graphics
                 effectiveZoom = LayerCameraSettings?.Zoom ?? camera.Zoom;
             }
 
-            Matrix transformationMatrix;
+            float effectiveCameraX = camera.X;
+            float effectiveCameraY = camera.Y;
 
-            var effectiveCameraX = camera.X;
-            var effectiveCameraY = camera.Y;
-
-            if(LayerCameraSettings?.IsInScreenSpace == true)
+            if (LayerCameraSettings?.IsInScreenSpace == true)
             {
                 effectiveCameraX = 0;
                 effectiveCameraY = 0;
@@ -236,26 +238,52 @@ namespace RenderingLibrary.Graphics
 
             if (camera.CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
             {
-                // make local vars to make stepping in faster if debugging
-                var zoom = effectiveZoom;
-                var width = camera.ClientWidth;
-                var height = camera.ClientHeight;
-                transformationMatrix = Camera.GetTransformationMatrix(effectiveCameraX, effectiveCameraY, zoom, width, height, false);
+                return Camera.GetTransformationMatrix(effectiveCameraX, effectiveCameraY, effectiveZoom, camera.ClientWidth, camera.ClientHeight, forRendering: false);
             }
             else
             {
-                transformationMatrix =  Matrix.CreateTranslation(-effectiveCameraX, -effectiveCameraY, 0) *
-                                         Matrix.CreateScale(new Vector3(effectiveZoom, effectiveZoom, 1));
+                return Matrix.CreateTranslation(-effectiveCameraX, -effectiveCameraY, 0) *
+                       Matrix.CreateScale(new Vector3(effectiveZoom, effectiveZoom, 1));
             }
+        }
 
+        public void ScreenToWorld(Camera camera, float screenX, float screenY, out float worldX, out float worldY)
+        {
+            Matrix transformationMatrix = GetEffectiveTransformationMatrix(camera, out float effectiveZoom);
 
             Matrix.Invert(transformationMatrix, out var matrix);
 
             Vector3 position = new Vector3(screenX, screenY, 0);
             Vector3 transformed = Vector3.Transform(position, matrix);
 
+#if FRB
+            // FRB handles its own client offsets, so don't update those here, mirroring Camera.ScreenToWorld.
             worldX = transformed.X;
             worldY = transformed.Y;
+#else
+            worldX = transformed.X - camera.ClientLeft / effectiveZoom;
+            worldY = transformed.Y - camera.ClientTop / effectiveZoom;
+#endif
+        }
+
+        /// <summary>
+        /// Converts a world-space point on this layer to screen space using the same effective
+        /// camera/layer transform as ScreenToWorld. Use this (instead of Camera.WorldToScreen)
+        /// whenever the point lives on a Layer so LayerCameraSettings is honored.
+        /// </summary>
+        public void WorldToScreen(Camera camera, float worldX, float worldY, out float screenX, out float screenY)
+        {
+            Matrix transformationMatrix = GetEffectiveTransformationMatrix(camera, out float effectiveZoom);
+
+#if FRB
+            Vector3 position = new Vector3(worldX, worldY, 0);
+#else
+            Vector3 position = new Vector3(worldX + camera.ClientLeft / effectiveZoom, worldY + camera.ClientTop / effectiveZoom, 0);
+#endif
+            Vector3 transformed = Vector3.Transform(position, transformationMatrix);
+
+            screenX = transformed.X;
+            screenY = transformed.Y;
         }
     }
 }
