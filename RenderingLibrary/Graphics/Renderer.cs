@@ -798,7 +798,7 @@ public class Renderer : IRenderer
         }
     }
 
-    internal Rectangle GetScissorRectangleFor(Camera camera, IRenderableIpso ipso)
+    internal Rectangle GetScissorRectangleFor(Camera camera, Layer layer, IRenderableIpso ipso)
     {
         if (ipso == null)
         {
@@ -817,14 +817,31 @@ public class Renderer : IRenderer
 
             float screenX;
             float screenY;
-            camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+            // Route through the Layer (when present) so LayerCameraSettings is honored. This
+            // keeps the scissor rect in sync with SpriteRenderer.GetZoomAndMatrix, which also
+            // applies layer position/zoom/IsInScreenSpace.
+            if (layer != null)
+            {
+                layer.WorldToScreen(camera, worldX, worldY, out screenX, out screenY);
+            }
+            else
+            {
+                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+            }
 
             int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
             int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
 
             worldX = ipso.GetAbsoluteRight();
             worldY = ipso.GetAbsoluteBottom();
-            camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+            if (layer != null)
+            {
+                layer.WorldToScreen(camera, worldX, worldY, out screenX, out screenY);
+            }
+            else
+            {
+                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+            }
 
             int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
             int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
@@ -900,7 +917,7 @@ public class Renderer : IRenderer
 
         if (renderable.ClipsChildren)
         {
-            var clipRectangle = GetScissorRectangleFor(Camera, renderable);
+            var clipRectangle = GetScissorRectangleFor(Camera, layer, renderable);
 
             if (renderState.ClipRectangle == null || clipRectangle != renderState.ClipRectangle.Value)
             {
