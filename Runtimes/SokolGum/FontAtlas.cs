@@ -51,6 +51,12 @@ public sealed unsafe class FontAtlas : IDisposable
     private sgp_vertex[] _vertexScratch = new sgp_vertex[256];
     private bool _disposed;
 
+    // TTF byte buffers handed to fontstash via fonsAddFontMem. Fontstash
+    // keeps the raw pointer alive for the font's lifetime within the
+    // context, so these must outlive every Font but can be freed safely
+    // once fonsDeleteInternal has torn down the context.
+    private readonly List<IntPtr> _fontDataBuffers = [];
+
     // sokol_gfx permits exactly one sg_update_image per image per frame.
     // fontstash may call renderUpdate multiple times in a frame (one per
     // fonsDrawText that rasterizes new glyphs). We accumulate the union
@@ -84,6 +90,18 @@ public sealed unsafe class FontAtlas : IDisposable
             throw new InvalidOperationException("fonsCreateInternal returned null");
     }
 
+    /// <summary>
+    /// Registers a native TTF byte buffer that fontstash took a pointer to
+    /// via <c>fonsAddFontMem(..., freeData: 0)</c>. The atlas owns the
+    /// buffer's lifetime and frees it in <see cref="Dispose"/> once the
+    /// fontstash context is torn down, so no Font instance can dangle.
+    /// </summary>
+    internal void TrackFontData(IntPtr nativeData)
+    {
+        if (nativeData != IntPtr.Zero)
+            _fontDataBuffers.Add(nativeData);
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -95,6 +113,15 @@ public sealed unsafe class FontAtlas : IDisposable
             fonsDeleteInternal(_stash);
             _stash = IntPtr.Zero;
         }
+
+        // Free TTF buffers *after* fonsDeleteInternal so fontstash is no
+        // longer reading from them. Up until this point every Font that
+        // references the context is still valid — freeing these earlier
+        // would leave fonsRasterizeGlyph pointing at reclaimed memory.
+        foreach (var buf in _fontDataBuffers)
+            Marshal.FreeHGlobal(buf);
+        _fontDataBuffers.Clear();
+
         if (_selfHandle.IsAllocated)
             _selfHandle.Free();
     }

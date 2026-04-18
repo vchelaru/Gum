@@ -94,16 +94,15 @@ public sealed class ContentLoader : IContentLoader
         if (!File.Exists(fileName))
             return null;
 
-        var stash = (SystemManagers.Default
+        var atlas = (SystemManagers.Default
             ?? throw new InvalidOperationException(
                 "SystemManagers.Default must be set before loading a Font."))
-            .FontStash;
-        if (stash == IntPtr.Zero)
-            throw new InvalidOperationException(
-                "SystemManagers.FontStash is not initialized; call SystemManagers.Initialize() first.");
+            .Fonts
+            ?? throw new InvalidOperationException(
+                "SystemManagers.Fonts is not initialized; call SystemManagers.Initialize() first.");
 
         var bytes = File.ReadAllBytes(fileName);
-        var font = Font.FromTrueTypeBytes(stash, Path.GetFileNameWithoutExtension(fileName), bytes);
+        var font = Font.FromTrueTypeBytes(atlas, Path.GetFileNameWithoutExtension(fileName), bytes);
 
         if (LoaderManager.Self.CacheTextures)
             LoaderManager.Self.AddDisposable(key, new ManagedFont(font));

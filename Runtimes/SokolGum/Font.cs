@@ -4,15 +4,16 @@ using static Sokol.Fontstash;
 namespace SokolGum;
 
 /// <summary>
-/// A font loaded into the shared fontstash context. Holds the font id
-/// returned by fontstash plus the unmanaged TTF byte buffer that fontstash
-/// keeps a reference to internally (so we must not free it until the font
-/// is disposed).
+/// A font loaded into a <see cref="FontAtlas"/>'s fontstash context.
+/// Holds the numeric font id that fontstash returned so <see cref="Text"/>
+/// can select it via <c>fonsSetFont</c>.
 ///
-/// NOTE: fonsAddFontMem with freeData=0 keeps the caller's pointer alive for
-/// the font's lifetime, so we allocate an unmanaged copy we own explicitly.
-/// Handing fontstash a pinned managed byte[] would be unsafe — the GC can
-/// relocate the buffer the moment we un-fix it.
+/// The unmanaged TTF byte buffer fontstash reads glyph outlines from is
+/// owned by <see cref="FontAtlas"/>, not by Font. Fontstash keeps the
+/// pointer alive for the context's lifetime, so freeing it as part of
+/// Font.Dispose (per-font) would leave later glyph rasterizations
+/// pointing at reclaimed memory. Tying the buffer to the atlas means
+/// every Font stays valid until the atlas itself is torn down.
 /// </summary>
 public sealed class Font : IDisposable
 {
@@ -25,42 +26,42 @@ public sealed class Font : IDisposable
     /// <summary>Default render size in logical pixels.</summary>
     public float DefaultSize { get; set; } = 16f;
 
-    private IntPtr _nativeData;
-    private bool _disposed;
-
-    internal Font(IntPtr stash, int id, IntPtr nativeData)
+    internal Font(IntPtr stash, int id)
     {
         Stash = stash;
         Id = id;
-        _nativeData = nativeData;
     }
 
-    public static unsafe Font FromTrueTypeBytes(IntPtr stash, string name, ReadOnlySpan<byte> ttfBytes)
+    /// <summary>
+    /// Adds a TTF blob to the atlas's fontstash context. The unmanaged copy
+    /// of <paramref name="ttfBytes"/> is handed to the atlas for lifetime
+    /// management — don't dispose the returned Font before the atlas itself.
+    /// </summary>
+    public static unsafe Font FromTrueTypeBytes(FontAtlas atlas, string name, ReadOnlySpan<byte> ttfBytes)
     {
-        // Copy into unmanaged memory so fontstash can hold the pointer.
+        if (atlas is null) throw new ArgumentNullException(nameof(atlas));
+
         var nativeData = Marshal.AllocHGlobal(ttfBytes.Length);
         ttfBytes.CopyTo(new Span<byte>((void*)nativeData, ttfBytes.Length));
 
-        int id = fonsAddFontMem(stash, name, (byte*)nativeData, ttfBytes.Length, freeData: 0);
+        int id = fonsAddFontMem(atlas.Stash, name, (byte*)nativeData, ttfBytes.Length, freeData: 0);
         if (id < 0) // FONS_INVALID
         {
             Marshal.FreeHGlobal(nativeData);
             throw new InvalidOperationException($"fontstash failed to add font '{name}'.");
         }
 
-        return new Font(stash, id, nativeData);
+        atlas.TrackFontData(nativeData);
+        return new Font(atlas.Stash, id);
     }
 
-    public void Dispose()
-    {
-        if (_disposed) return;
-        _disposed = true;
-        if (_nativeData != IntPtr.Zero)
-        {
-            Marshal.FreeHGlobal(_nativeData);
-            _nativeData = IntPtr.Zero;
-        }
-        // fontstash itself doesn't have a "remove font" API; atlas memory is
-        // reclaimed when sfons_destroy is called on context teardown.
-    }
+    /// <summary>
+    /// No-op in practice: Font owns no unmanaged resources of its own, and
+    /// fontstash has no "remove single font" API. Kept on the type for
+    /// IDisposable symmetry with other loaded content (Texture2D, etc.)
+    /// so caller code using <c>using</c> / <c>Dispose</c> patterns compiles.
+    /// The actual font buffer and fontstash context are released when the
+    /// owning <see cref="FontAtlas"/> is disposed.
+    /// </summary>
+    public void Dispose() { }
 }
