@@ -1,28 +1,43 @@
-﻿using Gum.RenderingLibrary;
+#if MONOGAME || FNA || KNI
+#define XNALIKE
+#endif
+
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+#if RAYLIB
+using Gum.Renderables;
+using Color = Raylib_cs.Color;
+using ContainedRectangleType = Gum.Renderables.SolidRectangle;
+namespace Gum.GueDeriving;
+#elif SKIA
+using SkiaGum.Renderables;
+using Color = SkiaSharp.SKColor;
+using ContainedRectangleType = SkiaGum.Renderables.RoundedRectangle;
+namespace SkiaGum.GueDeriving;
+#else
+using Gum.RenderingLibrary;
+using Color = Microsoft.Xna.Framework.Color;
+using ContainedRectangleType = RenderingLibrary.Graphics.SolidRectangle;
 namespace MonoGameGum.GueDeriving;
+#endif
+
 
 public class ColoredRectangleRuntime : GraphicalUiElement
 {
     public static float DefaultWidth = 50;
     public static float DefaultHeight = 50;
 
-    RenderingLibrary.Graphics.SolidRectangle mContainedColoredRectangle;
-    RenderingLibrary.Graphics.SolidRectangle ContainedColoredRectangle
+    ContainedRectangleType mContainedColoredRectangle;
+    ContainedRectangleType ContainedColoredRectangle
     {
         get
         {
             if (mContainedColoredRectangle == null)
             {
-                mContainedColoredRectangle = this.RenderableComponent as RenderingLibrary.Graphics.SolidRectangle;
+                mContainedColoredRectangle = this.RenderableComponent as ContainedRectangleType;
             }
             return mContainedColoredRectangle;
         }
@@ -30,17 +45,26 @@ public class ColoredRectangleRuntime : GraphicalUiElement
 
     public int Alpha
     {
-        get
+#if RAYLIB
+        get => ContainedColoredRectangle.Color.A;
+        set
         {
-            return ContainedColoredRectangle.Alpha;
+            var color = ContainedColoredRectangle.Color;
+            color.A = (byte)value;
+            ContainedColoredRectangle.Color = color;
+            NotifyPropertyChanged();
         }
+#else
+        get => ContainedColoredRectangle.Alpha;
         set
         {
             ContainedColoredRectangle.Alpha = value;
             NotifyPropertyChanged();
         }
+#endif
     }
 
+#if XNALIKE
     public Microsoft.Xna.Framework.Graphics.BlendState BlendState
     {
         get => ContainedColoredRectangle.BlendState.ToXNA();
@@ -67,53 +91,55 @@ public class ColoredRectangleRuntime : GraphicalUiElement
             // NotifyPropertyChanged handled by BlendState:
         }
     }
-    public int Blue
-    {
-        get
-        {
-            return ContainedColoredRectangle.Blue;
-        }
-        set
-        {
-            ContainedColoredRectangle.Blue = value;
-            NotifyPropertyChanged();
-        }
-    }
-    public int Green
-    {
-        get
-        {
-            return ContainedColoredRectangle.Green;
-        }
-        set
-        {
-            ContainedColoredRectangle.Green = value;
-            NotifyPropertyChanged();
-        }
-    }
+#endif
+
     public int Red
     {
-        get
-        {
-            return ContainedColoredRectangle.Red;
-        }
+        get => ContainedColoredRectangle.Red;
         set
         {
             ContainedColoredRectangle.Red = value;
             NotifyPropertyChanged();
         }
     }
-    public Microsoft.Xna.Framework.Color Color
+
+    public int Green
     {
-        get
+        get => ContainedColoredRectangle.Green;
+        set
         {
-            return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedColoredRectangle.Color);
+            ContainedColoredRectangle.Green = value;
+            NotifyPropertyChanged();
         }
+    }
+
+    public int Blue
+    {
+        get => ContainedColoredRectangle.Blue;
+        set
+        {
+            ContainedColoredRectangle.Blue = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public Color Color
+    {
+#if XNALIKE
+        get => RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedColoredRectangle.Color);
         set
         {
             ContainedColoredRectangle.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
             NotifyPropertyChanged();
         }
+#else
+        get => ContainedColoredRectangle.Color;
+        set
+        {
+            ContainedColoredRectangle.Color = value;
+            NotifyPropertyChanged();
+        }
+#endif
     }
 
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
@@ -124,13 +150,29 @@ public class ColoredRectangleRuntime : GraphicalUiElement
     {
         if (fullInstantiation)
         {
-            var solidRectangle = new SolidRectangle();
-            SetContainedObject(solidRectangle);
-            mContainedColoredRectangle = solidRectangle;
+            var rectangle = new ContainedRectangleType();
+            SetContainedObject(rectangle);
+            mContainedColoredRectangle = rectangle;
 
-            solidRectangle.Color = System.Drawing.Color.White;
+#if SKIA
+            rectangle.CornerRadius = 0;
+            rectangle.Color = SkiaSharp.SKColors.White;
+#elif RAYLIB
+            rectangle.Color = Raylib_cs.Color.White;
+#else
+            rectangle.Color = System.Drawing.Color.White;
+#endif
             Width = DefaultWidth;
             Height = DefaultHeight;
         }
+    }
+
+    public override GraphicalUiElement Clone()
+    {
+        var toReturn = (ColoredRectangleRuntime)base.Clone();
+
+        toReturn.mContainedColoredRectangle = null;
+
+        return toReturn;
     }
 }

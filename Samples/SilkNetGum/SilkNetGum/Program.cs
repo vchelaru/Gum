@@ -36,6 +36,8 @@ unsafe class Program
     private static bool running = true;
 
     static GraphicalUiElement Root;
+    static int currentScreenIndex;
+    static TextRuntime instructionsText;
     static SKPaint sKPaint;
     static SKCanvas canvas;
     static SKPaint paintFromFile;
@@ -49,9 +51,28 @@ unsafe class Program
         //Root = new CodeOnlyScreen();
         //Root.AddToManagers();
 
-        var screen = ObjectFinder.Self.GumProjectSave!.Screens.First();
-        Root = screen.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
-        Root.AddToRoot();
+        LoadScreen(0);
+
+        instructionsText = new TextRuntime();
+        instructionsText.Text = "Press the left or right arrows to toggle between the screens";
+        instructionsText.X = 0;
+        instructionsText.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        instructionsText.XOrigin = HorizontalAlignment.Center;
+        instructionsText.Y = -10;
+        instructionsText.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+        instructionsText.YOrigin = VerticalAlignment.Bottom;
+        instructionsText.AddToManagers();
+    }
+
+    private static void LoadScreen(int index)
+    {
+        var screens = ObjectFinder.Self.GumProjectSave!.Screens;
+        if (screens.Count == 0) return;
+
+        currentScreenIndex = ((index % screens.Count) + screens.Count) % screens.Count;
+
+        Root?.RemoveFromManagers();
+        Root = screens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
     }
 
     private static void Draw()
@@ -294,6 +315,10 @@ unsafe class Program
                         case (uint)EventType.Keydown:
                             if (ev.Key.Keysym.Sym == (int)KeyCode.KEscape)
                                 running = false;
+                            else if (ev.Key.Keysym.Sym == (int)KeyCode.KLeft)
+                                LoadScreen(currentScreenIndex - 1);
+                            else if (ev.Key.Keysym.Sym == (int)KeyCode.KRight)
+                                LoadScreen(currentScreenIndex + 1);
                             break;
                         case (uint)EventType.Windowevent:
                             if (ev.Window.Event == (byte)WindowEventID.Resized)

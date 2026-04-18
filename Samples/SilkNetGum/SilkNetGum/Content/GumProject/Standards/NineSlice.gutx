@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<StandardElementSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<?xml version="1.0" encoding="utf-8"?>
+<StandardElementSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>NineSlice</Name>
   <State>
     <Name>Default</Name>
@@ -29,6 +29,13 @@
       <Name>Blue</Name>
       <Value xsi:type="xsd:int">255</Value>
       <Category>Rendering</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>BorderScale</Name>
+      <Value xsi:type="xsd:float">1</Value>
+      <Category>Dimensions</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -83,6 +90,13 @@
       <Name>IgnoredByParentSize</Name>
       <Value xsi:type="xsd:boolean">false</Value>
       <Category>Parent</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsTilingMiddleSections</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Source</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
