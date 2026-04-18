@@ -97,11 +97,19 @@ public sealed class Renderer : IRenderer
     {
         // Gum's render walker only visits IRenderable.Render; animation
         // tickers have nowhere else to live, so we match the walk order
-        // here and look for Sprites with an active chain.
-        if (element is GraphicalUiElement gue && gue.RenderableComponent is Sprite sprite)
-            sprite.AnimateSelf(dt);
-        else if (element is Sprite plainSprite)
-            plainSprite.AnimateSelf(dt);
+        // here. Sprite and NineSlice are the two shared-Gum renderables
+        // that accept .achx chains — Text doesn't animate via chains
+        // (per-character reveal uses MaxLettersToShow instead).
+        //
+        // Invisible subtrees still tick so that a paused-but-visible
+        // element resumes in-sync when re-shown; this matches how Gum's
+        // shared Sprite.AnimateSelf behaves.
+        var renderable = (element as GraphicalUiElement)?.RenderableComponent ?? element;
+        switch (renderable)
+        {
+            case Sprite sprite:        sprite.AnimateSelf(dt); break;
+            case NineSlice nineSlice:  nineSlice.AnimateSelf(dt); break;
+        }
 
         if (element.Children is null) return;
         foreach (var child in element.Children)

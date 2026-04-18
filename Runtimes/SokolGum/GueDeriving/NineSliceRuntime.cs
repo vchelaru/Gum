@@ -1,4 +1,5 @@
 using Gum.Wireframe;
+using SokolGum.Animation;
 using SokolGum.Renderables;
 
 namespace SokolGum.GueDeriving;
@@ -29,6 +30,30 @@ public sealed class NineSliceRuntime : GraphicalUiElement
     {
         get => Contained.CustomFrameTextureCoordinateWidth;
         set { Contained.CustomFrameTextureCoordinateWidth = value; NotifyPropertyChanged(); }
+    }
+
+    public AnimationChainList? AnimationChains
+    {
+        get => Contained.AnimationChains;
+        set { Contained.AnimationChains = value; NotifyPropertyChanged(); }
+    }
+
+    public string? CurrentChainName
+    {
+        get => Contained.CurrentChainName;
+        set { Contained.CurrentChainName = value; NotifyPropertyChanged(); }
+    }
+
+    public bool Animate
+    {
+        get => Contained.Animate;
+        set { Contained.Animate = value; NotifyPropertyChanged(); }
+    }
+
+    public float AnimationSpeed
+    {
+        get => Contained.AnimationSpeed;
+        set { Contained.AnimationSpeed = value; NotifyPropertyChanged(); }
     }
 
     public NineSliceRuntime(bool fullInstantiation = true)

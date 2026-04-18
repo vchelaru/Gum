@@ -269,15 +269,67 @@ public static class CustomSetPropertyOnRenderable
         switch (propertyName)
         {
             case "SourceFile":
-                AssignTextureFromPath(t => nineSlice.Texture = t, value as string, element);
+                AssignNineSliceSourceFile(nineSlice, value as string, element);
                 return true;
 
             case "Texture" when value is Texture2D tex:
                 nineSlice.Texture = tex;
                 return true;
 
+            case "AnimationChains" when value is AnimationChainList list:
+                nineSlice.AnimationChains = list;
+                return true;
+
+            case "CurrentChainName":
+                nineSlice.CurrentChainName = value as string;
+                return true;
+
+            case "Animate" when value is bool b:
+                nineSlice.Animate = b;
+                return true;
+
             default:
                 return false;
+        }
+    }
+
+    /// <summary>
+    /// Routes a NineSlice <c>SourceFile</c> to the right content type: a path
+    /// ending in <c>.achx</c> loads an <see cref="AnimationChainList"/> and
+    /// auto-selects the first chain, matching the shared XNA NineSlice's
+    /// behaviour. Any other extension falls back to a straight texture load.
+    /// </summary>
+    private static void AssignNineSliceSourceFile(NineSlice nineSlice, string? path, GraphicalUiElement element)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            nineSlice.Texture = null;
+            nineSlice.AnimationChains = null;
+            nineSlice.CurrentChainName = null;
+            return;
+        }
+
+        var extension = FileManager.GetExtension(path);
+        if (string.Equals(extension, "achx", StringComparison.OrdinalIgnoreCase))
+        {
+            var resolved = ResolveRelativePath(path);
+            AnimationChainList? list = null;
+            try
+            {
+                list = LoaderManager.Self.ContentLoader.LoadContent<AnimationChainList>(resolved);
+            }
+            catch
+            {
+                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException) throw;
+            }
+
+            nineSlice.AnimationChains = list;
+            if (list is { Count: > 0 })
+                nineSlice.CurrentChainName = list[0].Name;
+        }
+        else
+        {
+            AssignTextureFromPath(t => nineSlice.Texture = t, path, element);
         }
     }
 
