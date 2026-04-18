@@ -106,11 +106,24 @@ public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordina
 
         // Burn through complete frames in a loop so a dt larger than one
         // frame's duration still lands on the correct absolute frame
-        // rather than stuttering to a neighbour.
+        // rather than stuttering to a neighbour. A cap on iterations
+        // protects against a malformed .achx whose frames all have
+        // FrameLength<=0 — without it the loop never consumes dt and
+        // spins the render thread forever.
         bool frameChanged = false;
-        while (true)
+        int safety = chain.Count * 8;
+        while (safety-- > 0)
         {
             var currentFrame = chain[_currentFrameIndex];
+            if (currentFrame.FrameLength <= 0f)
+            {
+                // Skip-only — don't spend time on it, but don't decrement
+                // _frameElapsed either (nothing to subtract). Advancing
+                // past is enough for the chain to still cycle.
+                _currentFrameIndex = (_currentFrameIndex + 1) % chain.Count;
+                frameChanged = true;
+                continue;
+            }
             if (_frameElapsed < currentFrame.FrameLength) break;
             _frameElapsed -= currentFrame.FrameLength;
             _currentFrameIndex = (_currentFrameIndex + 1) % chain.Count;
