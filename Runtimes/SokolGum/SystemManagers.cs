@@ -87,6 +87,15 @@ public sealed class SystemManagers : ISystemManagers, IDisposable
         LoaderManager.Self.ContentLoader = new ContentLoader();
 
         // Lets Gum load .gumx files and instantiate our runtime types by name.
+        //
+        // These assignments mutate process-wide statics on
+        // ElementSaveExtensions / GraphicalUiElement / LoaderManager that
+        // every other Gum backend (MonoGame, Raylib, Skia) also writes to.
+        // Running two SystemManagers instances concurrently — or mixing
+        // two backends in a single process — will have the last
+        // Initialize() call win. This is intentional for the typical
+        // single-backend app and matches how MonoGameGum / RaylibGum
+        // wire themselves up in their respective SystemManagers.
         StandardElementsManager.Self.Initialize();
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
         RegisterComponentRuntimeInstantiations();

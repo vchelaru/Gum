@@ -24,5 +24,12 @@ public struct Color
     public static readonly Color Red = new(255, 0, 0);
     public static readonly Color Green = new(0, 255, 0);
     public static readonly Color Blue = new(0, 0, 255);
+
+    /// <summary>
+    /// Fully transparent black (0, 0, 0, 0) — the additive identity. For
+    /// sprite tinting you usually want (255, 255, 255, 0) or straight
+    /// <see cref="White"/> with <c>Alpha = 0</c> instead, so the RGB
+    /// channels don't zero out the sampled texture.
+    /// </summary>
     public static readonly Color Transparent = new(0, 0, 0, 0);
 }

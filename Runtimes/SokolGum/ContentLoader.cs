@@ -91,7 +91,10 @@ public sealed class ContentLoader : IContentLoader
             return cached.Font;
         }
 
-        if (!File.Exists(fileName))
+        // Use `key` (the standardized, absolute path) rather than the caller's
+        // `fileName` — otherwise a relative input with a different working
+        // directory could miss here while still hitting the cache above.
+        if (!File.Exists(key))
             return null;
 
         var atlas = (SystemManagers.Default
@@ -101,8 +104,8 @@ public sealed class ContentLoader : IContentLoader
             ?? throw new InvalidOperationException(
                 "SystemManagers.Fonts is not initialized; call SystemManagers.Initialize() first.");
 
-        var bytes = File.ReadAllBytes(fileName);
-        var font = Font.FromTrueTypeBytes(atlas, Path.GetFileNameWithoutExtension(fileName), bytes);
+        var bytes = File.ReadAllBytes(key);
+        var font = Font.FromTrueTypeBytes(atlas, Path.GetFileNameWithoutExtension(key), bytes);
 
         if (LoaderManager.Self.CacheTextures)
             LoaderManager.Self.AddDisposable(key, new ManagedFont(font));
@@ -120,10 +123,13 @@ public sealed class ContentLoader : IContentLoader
             return cached.Texture;
         }
 
-        if (!File.Exists(fileName))
+        // Same rationale as LoadFont: use the standardized key for existence
+        // + read so the path probed for presence matches the one we just
+        // missed the cache lookup on.
+        if (!File.Exists(key))
             return null;
 
-        var tex = DecodeFromFile(fileName);
+        var tex = DecodeFromFile(key);
         if (tex is not null && LoaderManager.Self.CacheTextures)
             LoaderManager.Self.AddDisposable(key, new ManagedTexture(tex));
 

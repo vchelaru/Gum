@@ -8,18 +8,6 @@ using static Sokol.SFontstash;
 namespace SokolGum.Renderables;
 
 /// <summary>
-/// Text renderable. Draws one or more lines via the SystemManagers' shared
-/// fontstash context. Supports word-wrap to <see cref="IRenderableIpso.Width"/>,
-/// manual <c>\n</c> line breaks, horizontal + vertical alignment inside the
-/// renderable's bounding box, line-height scaling, and an N-offset outline
-/// via <see cref="OutlineThickness"/>.
-///
-/// Line layout is recomputed lazily on first Render after any text/size/font
-/// change (cheap — fontstash measurement is just table lookups). Fontstash
-/// render callbacks emit into sokol_gp, so text batches alongside other
-/// renderables in scene-graph order.
-/// </summary>
-/// <summary>
 /// Whether text positions get snapped to whole pixels before rasterization.
 /// Subpixel positions can blur glyph outlines for small bitmap-style fonts
 /// or on low-DPI displays; snapping eliminates that at the cost of
@@ -43,6 +31,18 @@ public enum TextPositionRoundingMode
     Ceiling,
 }
 
+/// <summary>
+/// Text renderable. Draws one or more lines via the SystemManagers' shared
+/// fontstash context. Supports word-wrap to <see cref="IRenderableIpso.Width"/>,
+/// manual <c>\n</c> line breaks, horizontal + vertical alignment inside the
+/// renderable's bounding box, line-height scaling, and an N-offset outline
+/// via <see cref="OutlineThickness"/>.
+///
+/// Line layout is recomputed lazily on first Render after any text/size/font
+/// change (cheap — fontstash measurement is just table lookups). Fontstash
+/// render callbacks emit into sokol_gp, so text batches alongside other
+/// renderables in scene-graph order.
+/// </summary>
 public sealed class Text : RenderableBase
 {
     /// <summary>

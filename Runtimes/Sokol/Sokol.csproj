@@ -19,6 +19,14 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>Sokol</AssemblyName>
     <RootNamespace>Sokol</RootNamespace>
+    <!--
+      These warnings come from the vendored Sokol.NET bindings we include
+      verbatim via the Compile globs below — they aren't our code to fix:
+        CS9084 - struct member is a readonly ref returning field
+        CS9087 - returning ref of a member of a ref-returning property
+        CS8600 - converting null literal to non-nullable type
+        CS8603 - possible null reference return
+    -->
     <NoWarn>CS9084;CS9087;CS8600;CS8603</NoWarn>
   </PropertyGroup>
 
