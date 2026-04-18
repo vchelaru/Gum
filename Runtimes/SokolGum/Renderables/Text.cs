@@ -132,6 +132,15 @@ public sealed class Text : RenderableBase
 
         // Relay-out if text/size/font changed, or if our containing Width
         // was resized and word-wrap could produce different breaks.
+        //
+        // If Width or FontSize is actively animating, RewrapLines runs
+        // every frame — that's correct (different wrap breaks are the
+        // whole point of a responsive box) and cheap enough, since
+        // fontstash measurement is a table lookup per glyph. We
+        // intentionally don't add an epsilon here: a sub-pixel width
+        // change can legitimately shift a wrap break by one character,
+        // and catching only the "large change" cases would introduce
+        // visible wobble between adjacent frames.
         if (_layoutDirty || _lastLaidOutWidth != Width || _lastLaidOutFontSize != FontSize)
         {
             RewrapLines(stash);

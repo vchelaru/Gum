@@ -48,6 +48,11 @@ public sealed unsafe class FontAtlas : IDisposable
     private byte[] _rgbaStaging = [];
     private int _width;
     private int _height;
+    // Grows geometrically in RenderDraw; never shrinks. For a GUI that's
+    // fine — glyph-heavy frames push a modest ceiling (a few thousand
+    // verts) that we'd rather reuse than reallocate. If a pathological
+    // frame grows this to megabytes, consider capping or compacting on
+    // idle frames; none of our samples trigger that case in practice.
     private sgp_vertex[] _vertexScratch = new sgp_vertex[256];
     private bool _disposed;
 
