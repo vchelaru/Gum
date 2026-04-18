@@ -303,13 +303,23 @@ public sealed class Text : RenderableBase
         // handling, which is the same level MonoGame's renderer provides.
         if (wrap && TextOverflowHorizontalMode == TextOverflowHorizontalMode.EllipsisLetter)
         {
+            // U+2026 is visually tighter than three ASCII periods but not
+            // all TTFs include it. fonsTextBounds returns 0 advance for
+            // missing glyphs, so if the font can't render the single-char
+            // ellipsis we fall back to "..." which every Western font has.
+            var ellipsis = "…";
+            float ellipsisWidth = MeasureWidth(stash, ellipsis);
+            if (ellipsisWidth <= 0f)
+            {
+                ellipsis = "...";
+                ellipsisWidth = MeasureWidth(stash, ellipsis);
+            }
+
             for (int i = 0; i < _wrappedLines.Count; i++)
             {
                 var line = _wrappedLines[i];
                 if (MeasureWidth(stash, line) <= Width) continue;
 
-                const string ellipsis = "…";
-                float ellipsisWidth = MeasureWidth(stash, ellipsis);
                 int cut = line.Length;
                 while (cut > 0 && MeasureWidth(stash, line[..cut]) + ellipsisWidth > Width)
                     cut--;
