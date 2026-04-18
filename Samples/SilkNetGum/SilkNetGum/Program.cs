@@ -61,7 +61,7 @@ unsafe class Program
         instructionsText.Y = -10;
         instructionsText.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
         instructionsText.YOrigin = VerticalAlignment.Bottom;
-        instructionsText.AddToManagers();
+        instructionsText.AddToRoot();
     }
 
     private static void LoadScreen(int index)
