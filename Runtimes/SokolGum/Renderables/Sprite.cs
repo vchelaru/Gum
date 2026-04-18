@@ -106,12 +106,15 @@ public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordina
 
         // Burn through complete frames in a loop so a dt larger than one
         // frame's duration still lands on the correct absolute frame
-        // rather than stuttering to a neighbour. A cap on iterations
-        // protects against a malformed .achx whose frames all have
-        // FrameLength<=0 — without it the loop never consumes dt and
-        // spins the render thread forever.
+        // rather than stuttering to a neighbour.
+        //
+        // Cap iterations at chain.Count+1: past one full cycle any
+        // remaining dt is reduced modulo the chain's total length so
+        // wildly high AnimationSpeed values still land on a correct
+        // frame rather than running unbounded or visibly freezing. The
+        // +1 lets a final partial frame advance complete normally.
         bool frameChanged = false;
-        int safety = chain.Count * 8;
+        int safety = chain.Count + 1;
         while (safety-- > 0)
         {
             var currentFrame = chain[_currentFrameIndex];
@@ -128,6 +131,10 @@ public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordina
             _frameElapsed -= currentFrame.FrameLength;
             _currentFrameIndex = (_currentFrameIndex + 1) % chain.Count;
             frameChanged = true;
+        }
+        if (safety < 0 && chain.TotalLength > 0f)
+        {
+            _frameElapsed = (float)(_frameElapsed % chain.TotalLength);
         }
         if (frameChanged) UpdateToCurrentAnimationFrame();
     }
