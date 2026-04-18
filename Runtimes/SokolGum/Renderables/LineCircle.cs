@@ -1,8 +1,9 @@
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using static Sokol.SGP;
+using SokolGum;
 
-namespace SokolGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>Where the (X, Y) coordinate refers to on a <see cref="LineCircle"/>.</summary>
 public enum CircleOrigin

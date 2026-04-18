@@ -4,12 +4,9 @@ namespace SokolGum;
 /// Simple RGBA8 color. We define our own instead of taking a dep on System.Drawing
 /// (which is restricted on some .NET targets) or Raylib.
 ///
-/// Lives in the root <c>SokolGum</c> namespace (rather than
-/// <c>SokolGum.Renderables</c> alongside Sprite/NineSlice/etc.) because
-/// it's used by top-level types too (SystemManagers, ContentLoader,
-/// FontAtlas). Renderables access it unqualified via C#'s nested-
-/// namespace lookup — <c>SokolGum.Renderables</c> inherits visibility
-/// into <c>SokolGum</c>.
+/// Lives in the root <c>SokolGum</c> namespace. Top-level infrastructure
+/// types (SystemManagers, ContentLoader, FontAtlas) live there too; the
+/// renderables in <c>Gum.Renderables</c> import it explicitly.
 /// </summary>
 public struct Color
 {

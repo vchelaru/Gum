@@ -4,8 +4,9 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using static Sokol.Fontstash;
 using static Sokol.SFontstash;
+using SokolGum;
 
-namespace SokolGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>
 /// Whether text positions get snapped to whole pixels before rasterization.

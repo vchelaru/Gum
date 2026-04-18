@@ -1,10 +1,11 @@
-using System.Drawing;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using SokolGum;
 using SokolGum.Animation;
 using static Sokol.SGP;
+using Rectangle = System.Drawing.Rectangle;
 
-namespace SokolGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>
 /// Nine-slice renderable. Divides the source texture (or SourceRectangle)
@@ -178,7 +179,8 @@ public sealed class NineSlice : RenderableBase, ITextureCoordinate
         var a = Color.A / 255f;
         sgp_set_color(Color.R / 255f, Color.G / 255f, Color.B / 255f, a);
         sgp_set_view(0, Texture.View);
-        sgp_set_sampler(0, systemManagers.LinearSampler);
+        // See Sprite.Render — point filtering by default to match Gum core.
+        sgp_set_sampler(0, systemManagers.SpriteSampler);
 
         // Src column/row boundaries mirror the source-pixel border width.
         float srcMidX   = sx + bwSrc;

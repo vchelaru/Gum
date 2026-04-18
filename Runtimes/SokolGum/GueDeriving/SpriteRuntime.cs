@@ -1,8 +1,9 @@
 using Gum.Wireframe;
 using SokolGum.Animation;
-using SokolGum.Renderables;
+using Gum.Renderables;
+using SokolGum;
 
-namespace SokolGum.GueDeriving;
+namespace Gum.GueDeriving;
 
 public sealed class SpriteRuntime : GraphicalUiElement
 {

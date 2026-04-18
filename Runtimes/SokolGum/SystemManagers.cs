@@ -5,7 +5,7 @@ using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Sokol;
-using SokolGum.GueDeriving;
+using Gum.GueDeriving;
 using static Sokol.SApp;
 using static Sokol.SG;
 
@@ -29,11 +29,20 @@ public sealed class SystemManagers : ISystemManagers, IDisposable
 
     public bool EnableTouchEvents { get; set; }
 
-    /// <summary>Linear-filter sampler; default choice for UI sprites.</summary>
+    /// <summary>Linear-filter sampler — bilinear interpolation for smooth textures.</summary>
     public sg_sampler LinearSampler { get; private set; }
 
-    /// <summary>Nearest-filter sampler; use for pixel-perfect art.</summary>
+    /// <summary>Nearest-filter sampler — pixel-perfect for art and small UI.</summary>
     public sg_sampler NearestSampler { get; private set; }
+
+    /// <summary>
+    /// Which sampler <see cref="Renderables.Sprite"/> and
+    /// <see cref="Renderables.NineSlice"/> use by default. Defaults to
+    /// <see cref="NearestSampler"/> matching Gum core's
+    /// <c>TextureFilter.Point</c>. Set to <see cref="LinearSampler"/> for
+    /// smoothly scaled photographic textures.
+    /// </summary>
+    public sg_sampler SpriteSampler { get; set; }
 
     /// <summary>Font atlas + fontstash context. IntPtr.Zero until <see cref="Initialize"/>.</summary>
     public FontAtlas? Fonts { get; private set; }
@@ -79,6 +88,11 @@ public sealed class SystemManagers : ISystemManagers, IDisposable
             wrap_v = sg_wrap.SG_WRAP_CLAMP_TO_EDGE,
             label = "SokolGum.NearestSampler",
         });
+
+        // Default to point filtering to match Gum core's TextureFilter.Point
+        // default. Users with photographic textures that need smooth scaling
+        // can reassign this before drawing.
+        SpriteSampler = NearestSampler;
 
         // Font atlas with 2× oversampling: fontstash rasterizes glyphs at
         // FontSize × OversampleFactor into a denser atlas, and FontAtlas's

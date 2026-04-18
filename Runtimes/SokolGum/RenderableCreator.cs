@@ -1,7 +1,7 @@
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using SokolGum.Renderables;
+using Gum.Renderables;
 
 namespace SokolGum;
 

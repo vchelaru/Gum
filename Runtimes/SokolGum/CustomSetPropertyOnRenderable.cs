@@ -4,8 +4,8 @@ using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using SokolGum.Animation;
-using SokolGum.GueDeriving;
-using SokolGum.Renderables;
+using Gum.GueDeriving;
+using Gum.Renderables;
 using ToolsUtilities;
 
 namespace SokolGum;

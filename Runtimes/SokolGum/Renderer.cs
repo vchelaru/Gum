@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.Wireframe;
-using SokolGum.Renderables;
+using Gum.Renderables;
 using static Sokol.SGP;
 
 namespace SokolGum;

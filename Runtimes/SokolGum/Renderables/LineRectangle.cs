@@ -1,8 +1,9 @@
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using static Sokol.SGP;
+using SokolGum;
 
-namespace SokolGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>
 /// Stroked rectangle outline. Emits four line segments via sgp_draw_line.

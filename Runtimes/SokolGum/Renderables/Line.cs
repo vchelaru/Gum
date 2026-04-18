@@ -2,8 +2,9 @@ using System.Numerics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using static Sokol.SGP;
+using SokolGum;
 
-namespace SokolGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>
 /// Single straight line segment from <c>(X, Y)</c> to

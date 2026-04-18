@@ -1,7 +1,8 @@
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using SokolGum;
 
-namespace SokolGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>
 /// Filled rectangle renderable. Emits a single sgp_draw_filled_rect call

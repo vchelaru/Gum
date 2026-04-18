@@ -1,10 +1,11 @@
-using System.Drawing;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using SokolGum;
 using SokolGum.Animation;
 using static Sokol.SGP;
+using Rectangle = System.Drawing.Rectangle;
 
-namespace SokolGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>
 /// Textured quad renderable. Supports <see cref="SourceRectangle"/> for
@@ -187,7 +188,10 @@ public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordina
         var a = (Tint.A / 255f) * (Alpha / 255f);
         sgp_set_color(Tint.R / 255f, Tint.G / 255f, Tint.B / 255f, a);
         sgp_set_view(0, Texture.View);
-        sgp_set_sampler(0, systemManagers.LinearSampler);
+        // Point filtering by default — matches Gum core's TextureFilter.Point
+        // default and keeps pixel art crisp. Callers wanting bilinear on
+        // photographic textures can switch to systemManagers.LinearSampler.
+        sgp_set_sampler(0, systemManagers.SpriteSampler);
 
         sgp_draw_textured_rect(
             0,

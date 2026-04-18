@@ -1,7 +1,8 @@
 using Gum.Wireframe;
-using SokolGum.Renderables;
+using Gum.Renderables;
+using SokolGum;
 
-namespace SokolGum.GueDeriving;
+namespace Gum.GueDeriving;
 
 /// <summary>
 /// An <see cref="InteractiveGue"/> backed by a <see cref="SolidRectangle"/>.

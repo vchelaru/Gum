@@ -1,8 +1,9 @@
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using static Sokol.SGP;
+using SokolGum;
 
-namespace SokolGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>
 /// Rectangular grid of horizontal and vertical lines, typically used for

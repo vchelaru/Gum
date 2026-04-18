@@ -1,7 +1,8 @@
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
+using SokolGum;
 
-namespace SokolGum.GueDeriving;
+namespace Gum.GueDeriving;
 
 /// <summary>
 /// Layout-only container. Carries an <see cref="InvisibleRenderable"/> as

@@ -2,8 +2,9 @@ using System.Numerics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using static Sokol.SGP;
+using SokolGum;
 
-namespace SokolGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>
 /// Stroked polyline from a caller-supplied list of points, rendered via
