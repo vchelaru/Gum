@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using RenderingLibrary.Content;
 using SokolGum;
+using SokolGum.Animation;
 using SokolGum.GueDeriving;
 using SokolGum.Renderables;
 using static Sokol.SApp;
@@ -30,6 +31,7 @@ public static unsafe class Program
     private static Texture2D? _logoTexture;
     private static Texture2D? _nineSliceTexture;
     private static Font? _font;
+    private static AnimationChainList? _characterAnimations;
 
     public static void Main()
     {
@@ -77,6 +79,7 @@ public static unsafe class Program
         _nineSliceTexture = BuildNineSliceTestTexture();
         _logoTexture = LoaderManager.Self.ContentLoader.LoadContent<Texture2D>("Assets/sokol_logo.png");
         _font = LoaderManager.Self.ContentLoader.LoadContent<Font>("Assets/DroidSerif-Regular.ttf");
+        _characterAnimations = LoaderManager.Self.ContentLoader.LoadContent<AnimationChainList>("Assets/CharacterAnimations.achx");
 
         var root = _systemManagers.Renderer.MainLayer;
 
@@ -112,6 +115,34 @@ public static unsafe class Program
             Texture = _nineSliceTexture,
             CustomFrameTextureCoordinateWidth = 8f,
         });
+
+        // Animated sprite — .achx chain list plays CharacterSheet.png frames
+        // (16×32 per frame, 0.1s each, looped). Rendered 4× scale so the
+        // animation is clearly visible. Renderer.Update below ticks every
+        // animated Sprite each frame.
+        if (_characterAnimations is not null)
+        {
+            root.Add(new SpriteRuntime
+            {
+                X = 700, Y = 400, Width = 64, Height = 128,
+                AnimationChains = _characterAnimations,
+                CurrentChainName = "IdleLeft",
+            });
+            root.Add(new SpriteRuntime
+            {
+                X = 800, Y = 400, Width = 64, Height = 128,
+                AnimationChains = _characterAnimations,
+                CurrentChainName = "IdleRight",
+                AnimationSpeed = 2f,
+            });
+            root.Add(new TextRuntime
+            {
+                X = 700, Y = 380, Width = 340, Height = 20,
+                Font = _font, FontSize = 14f,
+                RawText = "Animation chains (.achx): IdleLeft · IdleRight 2×",
+                Color = new Color(255, 200, 140),
+            });
+        }
 
         // Row 5 — Line primitives: solid + dotted LineRectangle, LineCircle,
         // star LinePolygon, single Line, LineGrid. Each at 100px stride.
@@ -291,10 +322,12 @@ public static unsafe class Program
     {
         var width = sapp_width();
         var height = sapp_height();
+        var dt = sapp_frame_duration();
 
         sg_begin_pass(new sg_pass { action = _passAction, swapchain = sglue_swapchain() });
 
-        _systemManagers!.Renderer.BeginFrame(width, height);
+        _systemManagers!.Renderer.Update(dt);
+        _systemManagers.Renderer.BeginFrame(width, height);
         _systemManagers.Renderer.Draw(_systemManagers);
         _systemManagers.Renderer.EndFrame();
 
