@@ -1,7 +1,7 @@
-﻿using Gum.Renderables;
-using Gum.Wireframe;
 using Gum.Renderables;
+using Gum.Wireframe;
 using Raylib_cs;
+using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +27,48 @@ public class SpriteRuntime : GraphicalUiElement
 
     #endregion
 
+    #region Color/Blend
+
+    public int Alpha
+    {
+        get => ContainedSprite.Alpha;
+        set
+        {
+            ContainedSprite.Alpha = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public int Red
+    {
+        get => ContainedSprite.Red;
+        set
+        {
+            ContainedSprite.Red = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public int Green
+    {
+        get => ContainedSprite.Green;
+        set
+        {
+            ContainedSprite.Green = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public int Blue
+    {
+        get => ContainedSprite.Blue;
+        set
+        {
+            ContainedSprite.Blue = value;
+            NotifyPropertyChanged();
+        }
+    }
+
     public Color Color
     {
         get => ContainedSprite.Color;
@@ -37,24 +79,7 @@ public class SpriteRuntime : GraphicalUiElement
         }
     }
 
-    //public Raylib_cs.Rectangle? SourceRectangle
-    //{
-    //    get
-    //    {
-    //        return ContainedSprite.SourceRectangle;
-    //    }
-    //    set
-    //    {
-    //        ContainedSprite.SourceRectangle = value;
-    //        NotifyPropertyChanged();
-    //    }
-    //}
-
-    public Texture2D? Texture
-    {
-        get => ContainedSprite.Texture;
-        set => ContainedSprite.Texture = value;
-    }
+    #endregion
 
     public bool FlipVertical
     {
@@ -62,6 +87,34 @@ public class SpriteRuntime : GraphicalUiElement
         set
         {
             ContainedSprite.FlipVertical = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public Raylib_cs.Rectangle SourceRectangle
+    {
+        get => new Raylib_cs.Rectangle(TextureLeft, TextureTop, TextureWidth, TextureHeight);
+        set
+        {
+            TextureLeft = (int)value.X;
+            TextureTop = (int)value.Y;
+            TextureWidth = (int)value.Width;
+            TextureHeight = (int)value.Height;
+        }
+    }
+
+    #region AnimationChain
+
+    #endregion
+
+    #region Source File/Texture
+
+    public Texture2D? Texture
+    {
+        get => ContainedSprite.Texture;
+        set
+        {
+            ContainedSprite.Texture = value;
             NotifyPropertyChanged();
         }
     }
@@ -79,6 +132,8 @@ public class SpriteRuntime : GraphicalUiElement
         }
     }
 
+    #endregion
+
     public SpriteRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
         if (fullInstantiation)
@@ -91,5 +146,18 @@ public class SpriteRuntime : GraphicalUiElement
             HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         }
     }
+
+    public override GraphicalUiElement Clone()
+    {
+        var toReturn = (SpriteRuntime)base.Clone();
+
+        toReturn.mContainedSprite = null;
+
+        return toReturn;
+    }
+
+    /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+    [Obsolete("Use the AddToRoot extension method instead (e.g. mySprite.AddToRoot()).")]
+    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
 }
