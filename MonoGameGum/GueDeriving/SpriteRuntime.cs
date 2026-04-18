@@ -1,4 +1,4 @@
-﻿using Gum.Graphics.Animation;
+using Gum.Graphics.Animation;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -7,13 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving;
 
-public class SpriteRuntime : global::Gum.Wireframe.GraphicalUiElement, IRenderTargetTextureReferencer
+public class SpriteRuntime : GraphicalUiElement, IRenderTargetTextureReferencer
 {
     #region Contained Sprite
     Sprite mContainedSprite;
@@ -35,16 +34,57 @@ public class SpriteRuntime : global::Gum.Wireframe.GraphicalUiElement, IRenderTa
 
     public int Alpha
     {
-        get
-        {
-            return ContainedSprite.Alpha;
-        }
+        get => ContainedSprite.Alpha;
         set
         {
             ContainedSprite.Alpha = value;
             NotifyPropertyChanged();
         }
     }
+
+    public int Red
+    {
+        get => ContainedSprite.Red;
+        set
+        {
+            ContainedSprite.Red = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public int Green
+    {
+        get => ContainedSprite.Green;
+        set
+        {
+            ContainedSprite.Green = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public int Blue
+    {
+        get => ContainedSprite.Blue;
+        set
+        {
+            ContainedSprite.Blue = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public Microsoft.Xna.Framework.Color Color
+    {
+        get
+        {
+            return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedSprite.Color);
+        }
+        set
+        {
+            ContainedSprite.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            NotifyPropertyChanged();
+        }
+    }
+
     public Microsoft.Xna.Framework.Graphics.BlendState BlendState
     {
         get => ContainedSprite.BlendState.ToXNA();
@@ -71,68 +111,18 @@ public class SpriteRuntime : global::Gum.Wireframe.GraphicalUiElement, IRenderTa
             // NotifyPropertyChanged handled by BlendState:
         }
     }
-    public int Blue
-    {
-        get
-        {
-            return ContainedSprite.Blue;
-        }
-        set
-        {
-            ContainedSprite.Blue = value;
-            NotifyPropertyChanged();
-        }
-    }
+
+    #endregion
+
     public bool FlipVertical
     {
-        get
-        {
-            return ContainedSprite.FlipVertical;
-        }
+        get => ContainedSprite.FlipVertical;
         set
         {
             ContainedSprite.FlipVertical = value;
             NotifyPropertyChanged();
         }
     }
-    public int Green
-    {
-        get
-        {
-            return ContainedSprite.Green;
-        }
-        set
-        {
-            ContainedSprite.Green = value;
-            NotifyPropertyChanged();
-        }
-    }
-    public int Red
-    {
-        get
-        {
-            return ContainedSprite.Red;
-        }
-        set
-        {
-            ContainedSprite.Red = value;
-            NotifyPropertyChanged();
-        }
-    }
-    public Microsoft.Xna.Framework.Color Color
-    {
-        get
-        {
-            return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedSprite.Color);
-        }
-        set
-        {
-            ContainedSprite.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
-            NotifyPropertyChanged();
-        }
-    }
-
-    #endregion
 
     public Microsoft.Xna.Framework.Rectangle SourceRectangle
     {
@@ -145,6 +135,8 @@ public class SpriteRuntime : global::Gum.Wireframe.GraphicalUiElement, IRenderTa
             TextureHeight = value.Height;
         }
     }
+
+    #region AnimationChain
 
     public bool Animate
     {
@@ -173,8 +165,6 @@ public class SpriteRuntime : global::Gum.Wireframe.GraphicalUiElement, IRenderTa
             }
         }
     }
-
-    #region AnimationChain
 
     public int AnimationChainFrameIndex
     {
@@ -286,7 +276,7 @@ public class SpriteRuntime : global::Gum.Wireframe.GraphicalUiElement, IRenderTa
         }
     }
 
-    IRenderableIpso? IRenderTargetTextureReferencer.RenderTargetTextureSource => 
+    IRenderableIpso? IRenderTargetTextureReferencer.RenderTargetTextureSource =>
         ContainedSprite.RenderTargetTextureSource;
 
 
@@ -303,6 +293,15 @@ public class SpriteRuntime : global::Gum.Wireframe.GraphicalUiElement, IRenderTa
             WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
             HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         }
+    }
+
+    public override GraphicalUiElement Clone()
+    {
+        var toReturn = (SpriteRuntime)base.Clone();
+
+        toReturn.mContainedSprite = null;
+
+        return toReturn;
     }
 
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
