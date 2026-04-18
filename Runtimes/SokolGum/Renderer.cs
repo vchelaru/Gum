@@ -36,6 +36,18 @@ public sealed class Renderer : IRenderer
 
     private sgp_blend_mode _currentBlendMode = sgp_blend_mode.SGP_BLENDMODE_BLEND;
 
+    /// <summary>
+    /// One entry on the scissor stack. sokol_gp has no native scissor
+    /// save/restore, so nested <see cref="IRenderableIpso.ClipsChildren"/>
+    /// elements need us to remember the outer rect and re-apply it when
+    /// the inner subtree unwinds. We store the effective (intersected)
+    /// rect rather than the raw element rect so popping restores exactly
+    /// what the parent had pushed.
+    /// </summary>
+    private readonly record struct ScissorRect(int X, int Y, int W, int H);
+
+    private readonly List<ScissorRect> _scissorStack = [];
+
     public Renderer()
     {
         _layers = [new Layer()];
@@ -61,6 +73,7 @@ public sealed class Renderer : IRenderer
                     _camera.AbsoluteTop,  _camera.AbsoluteBottom);
         _currentBlendMode = DefaultBlendMode;
         sgp_set_blend_mode(_currentBlendMode);
+        _scissorStack.Clear();
     }
 
     /// <summary>
@@ -185,7 +198,24 @@ public sealed class Renderer : IRenderer
             var top    = (int)MathF.Floor  (element.GetAbsoluteTop());
             var right  = (int)MathF.Ceiling(element.GetAbsoluteRight());
             var bottom = (int)MathF.Ceiling(element.GetAbsoluteBottom());
-            sgp_scissor(left, top, right - left, bottom - top);
+
+            // Intersect with the parent scissor, if any, so nested ClipsChildren
+            // accumulate correctly instead of the inner element widening the
+            // clip region beyond the outer bound.
+            if (_scissorStack.Count > 0)
+            {
+                var outer = _scissorStack[^1];
+                int ox1 = outer.X, oy1 = outer.Y;
+                int ox2 = outer.X + outer.W, oy2 = outer.Y + outer.H;
+                left   = Math.Max(left,   ox1);
+                top    = Math.Max(top,    oy1);
+                right  = Math.Min(right,  ox2);
+                bottom = Math.Min(bottom, oy2);
+            }
+
+            var rect = new ScissorRect(left, top, Math.Max(0, right - left), Math.Max(0, bottom - top));
+            _scissorStack.Add(rect);
+            sgp_scissor(rect.X, rect.Y, rect.W, rect.H);
         }
 
         if (element.Children != null)
@@ -201,7 +231,22 @@ public sealed class Renderer : IRenderer
         }
 
         if (clipping)
-            sgp_reset_scissor();
+        {
+            // Pop our frame and restore the outer scissor (or clear entirely
+            // when nothing's on the stack). sgp_reset_scissor disables
+            // scissoring outright, so we only call it at the very outer
+            // boundary; inside a nested clip we re-push the parent rect.
+            _scissorStack.RemoveAt(_scissorStack.Count - 1);
+            if (_scissorStack.Count > 0)
+            {
+                var outer = _scissorStack[^1];
+                sgp_scissor(outer.X, outer.Y, outer.W, outer.H);
+            }
+            else
+            {
+                sgp_reset_scissor();
+            }
+        }
 
         if (rotating)
             sgp_pop_transform();
