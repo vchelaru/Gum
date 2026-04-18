@@ -8,8 +8,8 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms;
+using Gum.Forms.Controls;
+using Gum.Forms;
 using MonoGameGum;
 namespace GameUiSamples.Components;
 

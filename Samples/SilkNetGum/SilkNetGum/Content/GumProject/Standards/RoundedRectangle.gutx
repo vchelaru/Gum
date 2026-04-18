@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<StandardElementSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<?xml version="1.0" encoding="utf-8"?>
+<StandardElementSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>RoundedRectangle</Name>
   <State>
     <Name>Default</Name>
@@ -346,6 +346,20 @@
       <Name>State</Name>
       <Value xsi:type="xsd:string">Default</Value>
       <SetsValue>false</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>StrokeDashLength</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <Category>Stroke and Fill</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>StrokeGapLength</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <Category>Stroke and Fill</Category>
+      <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>

@@ -1,5 +1,62 @@
 {
   "UserEvents": {
-    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": []
+    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
+      {
+        "NewName": "RectangleScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2026-04-18T11:20:17.1924469Z"
+      },
+      {
+        "NewName": "RectangleScreen.ContainerInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-04-18T11:20:24.3253242Z"
+      },
+      {
+        "NewName": "RectangleScreen.RoundedRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-04-18T11:20:45.7647176Z"
+      },
+      {
+        "NewName": "RectangleScreen.RoundedRectangleInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-04-18T11:21:30.474193Z"
+      },
+      {
+        "NewName": "RectangleScreen.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-04-18T11:22:53.8096359Z"
+      },
+      {
+        "NewName": "RectangleScreen.ColoredRectangleInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-04-18T11:23:04.8632245Z"
+      },
+      {
+        "NewName": "RectangleScreen.ColoredRectangleInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-04-18T11:23:33.2361395Z"
+      },
+      {
+        "NewName": "RectangleScreen.ColoredRectangleInstance3",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-04-18T11:23:49.3910794Z"
+      }
+    ]
   }
 }

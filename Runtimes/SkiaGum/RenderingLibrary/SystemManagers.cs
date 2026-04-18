@@ -75,6 +75,7 @@ namespace RenderingLibrary
                 GraphicalUiElement.UpdateFontFromProperties = UpdateFonts;
 
                 GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
+                GraphicalUiElement.RemoveRenderableFromManagers = RemoveRenderableFromManagers;
                 SkiaResourceManager.Initialize(null);
                 LoaderManager.Self.ContentLoader = LoaderManager.Self.ContentLoader ?? new EmbeddedResourceContentLoader();
                 RegisterComponentRuntimeInstantiations();
@@ -172,6 +173,19 @@ namespace RenderingLibrary
         private void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers managers, Layer layer)
         {
             (layer ?? managers.Renderer.Layers[0]).Add(renderable);
+        }
+
+        private void RemoveRenderableFromManagers(IRenderableIpso renderable, ISystemManagers managers)
+        {
+            if (renderable == null) return;
+            foreach (var layer in managers.Renderer.Layers)
+            {
+                if (layer.Renderables.Contains(renderable))
+                {
+                    layer.Remove(renderable);
+                    return;
+                }
+            }
         }
 
         public void InvalidateSurface()
