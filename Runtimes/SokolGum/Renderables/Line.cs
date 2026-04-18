@@ -11,7 +11,7 @@ namespace SokolGum.Renderables;
 /// backends — rarely instantiated from <c>.gumx</c>, more often used
 /// programmatically for debug overlays.
 /// </summary>
-public sealed class Line : RenderableBase
+public sealed class Line : RenderableBase, IRenderableIpso
 {
     public Vector2 RelativePoint { get; set; }
 

@@ -10,7 +10,7 @@ namespace SokolGum.Renderables;
 /// sgp_draw_lines_strip. Points are in the renderable's local space and
 /// are offset by (X, Y) at draw time.
 /// </summary>
-public sealed class LinePolygon : RenderableBase
+public sealed class LinePolygon : RenderableBase, IRenderableIpso
 {
     private readonly List<Vector2> _points = new();
 

@@ -9,7 +9,7 @@ namespace SokolGum.Renderables;
 /// When <see cref="IsDotted"/> is true the outline is rendered as a dashed
 /// pattern by subdividing each edge into short on/off segments.
 /// </summary>
-public sealed class LineRectangle : RenderableBase
+public sealed class LineRectangle : RenderableBase, IRenderableIpso
 {
     public Color Color = Color.White;
 

@@ -9,7 +9,7 @@ namespace SokolGum.Renderables;
 /// debug overlays. Size is <c>ColumnCount × ColumnWidth</c> wide and
 /// <c>RowCount × RowWidth</c> tall. All cell lines share one color.
 /// </summary>
-public sealed class LineGrid : RenderableBase
+public sealed class LineGrid : RenderableBase, IRenderableIpso
 {
     public float RowWidth    { get; set; } = 16f;
     public float ColumnWidth { get; set; } = 16f;

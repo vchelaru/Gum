@@ -18,7 +18,7 @@ public enum CircleOrigin
 /// via sgp_draw_lines_strip. Segment count scales with radius so large
 /// circles don't look faceted but tiny ones don't waste vertices.
 /// </summary>
-public sealed class LineCircle : RenderableBase
+public sealed class LineCircle : RenderableBase, IRenderableIpso
 {
     public float Radius { get; set; }
     public CircleOrigin CircleOrigin { get; set; } = CircleOrigin.Center;
