@@ -178,19 +178,25 @@ public sealed class Renderer : IRenderer
         bool clipping = element.ClipsChildren;
         if (clipping)
         {
-            var x = (int)element.GetAbsoluteLeft();
-            var y = (int)element.GetAbsoluteTop();
-            var w = (int)(element.GetAbsoluteRight() - element.GetAbsoluteLeft());
-            var h = (int)(element.GetAbsoluteBottom() - element.GetAbsoluteTop());
-            sgp_scissor(x, y, w, h);
+            // Floor top-left + ceil bottom-right so a sub-pixel-wide element
+            // still gets a scissor rect that fully contains its drawn pixels
+            // instead of being clipped by integer truncation.
+            var left   = (int)MathF.Floor  (element.GetAbsoluteLeft());
+            var top    = (int)MathF.Floor  (element.GetAbsoluteTop());
+            var right  = (int)MathF.Ceiling(element.GetAbsoluteRight());
+            var bottom = (int)MathF.Ceiling(element.GetAbsoluteBottom());
+            sgp_scissor(left, top, right - left, bottom - top);
         }
 
         if (element.Children != null)
         {
             foreach (var child in element.Children)
             {
-                if (child is GraphicalUiElement childGue && childGue.Visible)
-                    DrawGumRecursively(childGue, managers);
+                // Descend into any IRenderableIpso child, not just GUEs.
+                // Plain renderables added under a GUE (e.g. when an IRenderable
+                // is parented directly) were previously silently dropped.
+                if (child.Visible)
+                    DrawGumRecursively(child, managers);
             }
         }
 
