@@ -222,8 +222,10 @@ windows — aspect-preserving letterbox would need a non-full viewport.
   imports types from the sibling `imgui/` folder.
 - `GumCommon.csproj` — standard core Gum dependency.
 
-Target framework: `net10.0` (matches Sokol.NET). Other Gum backends
-target `net8.0`; consumers of `Gum.sokol` need a `net10.0` SDK.
+Target framework: `net8.0`, matching every other Gum backend and
+sample in the repo. The Sokol.NET submodule's own `sokol.csproj`
+defaults to `net10.0`, but the source files it includes compile
+cleanly against `net8.0` — our proxy overrides the TFM.
 
 ---
 
