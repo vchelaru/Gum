@@ -183,6 +183,47 @@ public static unsafe class Program
             Color = new Color(100, 110, 160),
         });
 
+        // Row 6 — ClipsChildren + nested rotation combo demo. A container
+        // rotated 10° holds a second container that clips its children
+        // and is itself rotated 15°. Inside that sits an oversized rect
+        // whose right half visually disappears at the clip boundary while
+        // the combined rotations take it into double-tilted space. Proves
+        // three code paths at once: scissor stacking, parent→child
+        // rotation composition, and sub-pixel scissor rounding.
+        var outer = new ContainerRuntime
+        {
+            X = 40, Y = 670, Width = 180, Height = 40,
+            Rotation = 10f,
+        };
+        var clipper = new ContainerRuntime
+        {
+            X = 0, Y = 0, Width = 180, Height = 40,
+            Rotation = 15f,
+            ClipsChildren = true,
+        };
+        // Over-wide rect inside the clipper: only the first 180px of its
+        // 260px width stays visible after scissoring.
+        clipper.Children.Add(new ColoredRectangleRuntime
+        {
+            X = 0, Y = 0, Width = 260, Height = 40,
+            Color = new Color(120, 200, 160),
+        });
+        outer.Children.Add(clipper);
+        root.Add(outer);
+
+        root.Add(new TextRuntime
+        {
+            X = 230, Y = 675, Width = 260, Height = 20,
+            Font = _font, FontSize = 11f,
+            RawText = "ClipsChildren + nested rotation",
+            Color = new Color(160, 200, 255),
+        });
+
+        // Uncomment to demo camera Zoom / Position (applied globally to
+        // every layer via Renderer.BeginFrame's sgp_project call):
+        //   _systemManagers.Renderer.Camera.Zoom = 1.15f;   // zoom in 15%
+        //   _systemManagers.Renderer.Camera.Position = new Vector2(-40, 0); // pan right 40px
+
         // Right column — Text labels at multiple sizes/colors (Text via
         // fontstash render callbacks that emit sgp draws — batches alongside
         // the rest in scene-graph order, honoring Z).
