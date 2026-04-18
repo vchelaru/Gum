@@ -50,7 +50,8 @@ unsafe class Program
         //Root.AddToManagers();
 
         var screen = ObjectFinder.Self.GumProjectSave!.Screens.First();
-        Root = screen.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+        Root = screen.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        Root.AddToRoot();
     }
 
     private static void Draw()
@@ -298,6 +299,7 @@ unsafe class Program
                             if (ev.Window.Event == (byte)WindowEventID.Resized)
                             {
                                 gl.Viewport(0, 0, (uint)ev.Window.Data1, (uint)ev.Window.Data2);
+                                GumService.Default.HandleResize(ev.Window.Data1, ev.Window.Data2);
                             }
                             break;
                     }
