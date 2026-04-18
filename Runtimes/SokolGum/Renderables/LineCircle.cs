@@ -29,6 +29,7 @@ public sealed class LineCircle : RenderableBase
     public int Green { get => Color.G; set => Color.G = (byte)value; }
     public int Blue  { get => Color.B; set => Color.B = (byte)value; }
     public new int Alpha { get => Color.A; set => Color.A = (byte)value; }
+    int IRenderableIpso.Alpha => Color.A;
 
     public LineCircle() { }
     public LineCircle(SystemManagers? _) { }

@@ -22,6 +22,13 @@ public sealed class Line : RenderableBase
     public int Blue  { get => Color.B; set => Color.B = (byte)value; }
     public new int Alpha { get => Color.A; set => Color.A = (byte)value; }
 
+    // RenderableBase explicitly implements IRenderableIpso.Alpha as 255;
+    // our `new int Alpha` only shadows the regular member, so an
+    // interface-cast caller (e.g. color-operation extensions that iterate
+    // IRenderableIpso) would see 255 instead of the real color alpha.
+    // Overriding the interface member keeps both paths in agreement.
+    int IRenderableIpso.Alpha => Color.A;
+
     public Line() { }
     public Line(SystemManagers? _) { }
 
