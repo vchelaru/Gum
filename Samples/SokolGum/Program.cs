@@ -239,6 +239,41 @@ public static unsafe class Program
             root.Add(new TextRuntime { X = 720, Y = 400, Width = 520, Height = 24, Font = _font, FontSize = 18f, RawText = "NineSlices",                   Color = new Color(220, 180, 140) });
             root.Add(new TextRuntime { X = 720, Y = 560, Width = 520, Height = 24, Font = _font, FontSize = 18f, RawText = "Line primitives",              Color = new Color(255, 220, 180) });
 
+            // Outline-thickness progression — same word "Gum" drawn four times
+            // at thicknesses 0 (none) through 3. The 8-direction offset
+            // technique stamps the word that many times around each center
+            // in OutlineColor, then draws the main word on top. Halo grows
+            // linearly with thickness; cost is (8 * thickness + 1) draws per
+            // line. Over a dim panel so the outline is visible against the
+            // main text colour.
+            root.Add(new ColoredRectangleRuntime
+            {
+                X = 720, Y = 220, Width = 520, Height = 50,
+                Color = new Color(30, 30, 40, 220),
+            });
+            for (int t = 0; t <= 3; t++)
+            {
+                int columnX = 720 + t * 130;
+                root.Add(new TextRuntime
+                {
+                    X = columnX, Y = 225, Width = 130, Height = 32,
+                    Font = _font, FontSize = 24f,
+                    RawText = "Gum",
+                    Color = new Color(255, 255, 255),
+                    OutlineThickness = t,
+                    OutlineColor = new Color(20, 20, 20),
+                    HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center,
+                });
+                root.Add(new TextRuntime
+                {
+                    X = columnX, Y = 255, Width = 130, Height = 14,
+                    Font = _font, FontSize = 10f,
+                    RawText = $"outline {t}px",
+                    Color = new Color(180, 180, 200),
+                    HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center,
+                });
+            }
+
             // Wrapped + centred + outlined text. Exercises word-wrapping to
             // Width, per-line HorizontalAlignment.Center, and the 8-direction
             // OutlineThickness stroke. Drawn inside a dim panel to make the
