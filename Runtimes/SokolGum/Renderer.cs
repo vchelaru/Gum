@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.Wireframe;
+using SokolGum.Renderables;
 using static Sokol.SGP;
 
 namespace SokolGum;
@@ -60,6 +61,38 @@ public sealed class Renderer : IRenderer
                     _camera.AbsoluteTop,  _camera.AbsoluteBottom);
         _currentBlendMode = DefaultBlendMode;
         sgp_set_blend_mode(_currentBlendMode);
+    }
+
+    /// <summary>
+    /// Advances per-frame state for every animated Sprite across every
+    /// layer. Call this once per frame before <see cref="Draw"/>. Passing
+    /// dt is explicit (rather than baked into Draw) so non-real-time cases
+    /// like editor scrubbing or paused menus can suppress the tick without
+    /// skipping rendering.
+    /// </summary>
+    public void Update(double secondsSinceLastFrame)
+    {
+        for (int i = 0; i < _layers.Count; i++)
+        {
+            var layer = _layers[i];
+            foreach (var renderable in layer.Renderables)
+                TickRecursively(renderable, secondsSinceLastFrame);
+        }
+    }
+
+    private static void TickRecursively(IRenderableIpso element, double dt)
+    {
+        // Gum's render walker only visits IRenderable.Render; animation
+        // tickers have nowhere else to live, so we match the walk order
+        // here and look for Sprites with an active chain.
+        if (element is GraphicalUiElement gue && gue.RenderableComponent is Sprite sprite)
+            sprite.AnimateSelf(dt);
+        else if (element is Sprite plainSprite)
+            plainSprite.AnimateSelf(dt);
+
+        if (element.Children is null) return;
+        foreach (var child in element.Children)
+            TickRecursively(child, dt);
     }
 
     public void Draw(ISystemManagers? managers)

@@ -1,4 +1,5 @@
 using RenderingLibrary.Content;
+using SokolGum.Animation;
 using ToolsUtilities;
 using static Sokol.StbImage;
 
@@ -26,6 +27,11 @@ public sealed class ContentLoader : IContentLoader
             var font = LoadFont(contentName);
             return font is null ? default! : (T)(object)font;
         }
+        if (typeof(T) == typeof(AnimationChainList))
+        {
+            var list = LoadAnimationChainList(contentName);
+            return list is null ? default! : (T)(object)list;
+        }
         throw new NotImplementedException(
             $"SokolGum.ContentLoader doesn't support {typeof(T).FullName} yet.");
     }
@@ -42,7 +48,38 @@ public sealed class ContentLoader : IContentLoader
             var font = LoadFont(contentName);
             return font is null ? default! : (T)(object)font;
         }
+        if (typeof(T) == typeof(AnimationChainList))
+        {
+            var list = LoadAnimationChainList(contentName);
+            return list is null ? default! : (T)(object)list;
+        }
         return default!;
+    }
+
+    /// <summary>
+    /// Loads a <c>.achx</c> file into an <see cref="AnimationChainList"/>,
+    /// resolving every frame's texture along the way. Cached by standardized
+    /// path so repeated loads share both the chain list and the referenced
+    /// textures (textures self-cache inside <see cref="LoadTexture2D"/>).
+    /// </summary>
+    private static AnimationChainList? LoadAnimationChainList(string fileName)
+    {
+        var key = Standardize(fileName);
+        if (LoaderManager.Self.CacheTextures
+            && LoaderManager.Self.GetDisposable(key) is ManagedAnimationChainList cached)
+        {
+            return cached.List;
+        }
+
+        var absolutePath = key;
+        if (!File.Exists(absolutePath)) return null;
+
+        var list = AnimationChainList.FromAchxFile(absolutePath);
+
+        if (LoaderManager.Self.CacheTextures)
+            LoaderManager.Self.AddDisposable(key, new ManagedAnimationChainList(list));
+
+        return list;
     }
 
     private static Font? LoadFont(string fileName)
@@ -164,4 +201,17 @@ internal sealed class ManagedFont : IDisposable
         _disposed = true;
         Font.Dispose();
     }
+}
+
+/// <summary>
+/// Cache entry for <see cref="AnimationChainList"/>. The list itself isn't
+/// IDisposable (its frames just reference cached Texture2Ds which the
+/// texture cache owns), so this wrapper is purely so LoaderManager can
+/// store the list under its IDisposable-keyed API.
+/// </summary>
+internal sealed class ManagedAnimationChainList : IDisposable
+{
+    public AnimationChainList List { get; }
+    public ManagedAnimationChainList(AnimationChainList list) { List = list; }
+    public void Dispose() { /* textures are managed by the Texture2D cache */ }
 }

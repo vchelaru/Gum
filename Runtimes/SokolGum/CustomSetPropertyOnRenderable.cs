@@ -3,6 +3,7 @@ using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
+using SokolGum.Animation;
 using SokolGum.GueDeriving;
 using SokolGum.Renderables;
 using ToolsUtilities;
@@ -180,7 +181,7 @@ public static class CustomSetPropertyOnRenderable
         switch (propertyName)
         {
             case "SourceFile":
-                AssignTextureFromPath(t => sprite.Texture = t, value as string, element);
+                AssignSpriteSourceFile(sprite, value as string, element);
                 element.UpdateLayout();
                 return true;
 
@@ -188,8 +189,64 @@ public static class CustomSetPropertyOnRenderable
                 sprite.Texture = tex;
                 return true;
 
+            case "AnimationChains" when value is AnimationChainList list:
+                sprite.AnimationChains = list;
+                return true;
+
+            case "CurrentChainName":
+                sprite.CurrentChainName = value as string;
+                return true;
+
+            case "Animate" when value is bool b:
+                sprite.Animate = b;
+                return true;
+
             default:
                 return false;
+        }
+    }
+
+    /// <summary>
+    /// Routes a Sprite <c>SourceFile</c> to the right content type: a path
+    /// ending in <c>.achx</c> is loaded as an <see cref="AnimationChainList"/>
+    /// and the first chain is auto-selected, mirroring the behaviour of the
+    /// shared XNA-backed Sprite. Any other extension falls back to a
+    /// straight texture load.
+    /// </summary>
+    private static void AssignSpriteSourceFile(Sprite sprite, string? path, GraphicalUiElement element)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            sprite.Texture = null;
+            sprite.AnimationChains = null;
+            sprite.CurrentChainName = null;
+            return;
+        }
+
+        var extension = FileManager.GetExtension(path);
+        if (string.Equals(extension, "achx", StringComparison.OrdinalIgnoreCase))
+        {
+            var resolved = ResolveRelativePath(path);
+            AnimationChainList? list = null;
+            try
+            {
+                list = LoaderManager.Self.ContentLoader.LoadContent<AnimationChainList>(resolved);
+            }
+            catch
+            {
+                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException) throw;
+            }
+
+            sprite.AnimationChains = list;
+            // Pick the first chain as the initial state. Callers typically
+            // override CurrentChainName afterwards (e.g. to "IdleLeft") via
+            // a separate variable assignment.
+            if (list is { Count: > 0 })
+                sprite.CurrentChainName = list[0].Name;
+        }
+        else
+        {
+            AssignTextureFromPath(t => sprite.Texture = t, path, element);
         }
     }
 

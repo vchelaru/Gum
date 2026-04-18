@@ -1,4 +1,5 @@
 using Gum.Wireframe;
+using SokolGum.Animation;
 using SokolGum.Renderables;
 
 namespace SokolGum.GueDeriving;
@@ -33,6 +34,30 @@ public sealed class SpriteRuntime : GraphicalUiElement
     {
         get => Contained.FlipVertical;
         set { Contained.FlipVertical = value; NotifyPropertyChanged(); }
+    }
+
+    public AnimationChainList? AnimationChains
+    {
+        get => Contained.AnimationChains;
+        set { Contained.AnimationChains = value; NotifyPropertyChanged(); }
+    }
+
+    public string? CurrentChainName
+    {
+        get => Contained.CurrentChainName;
+        set { Contained.CurrentChainName = value; NotifyPropertyChanged(); }
+    }
+
+    public bool Animate
+    {
+        get => Contained.Animate;
+        set { Contained.Animate = value; NotifyPropertyChanged(); }
+    }
+
+    public float AnimationSpeed
+    {
+        get => Contained.AnimationSpeed;
+        set { Contained.AnimationSpeed = value; NotifyPropertyChanged(); }
     }
 
     public SpriteRuntime(bool fullInstantiation = true)
