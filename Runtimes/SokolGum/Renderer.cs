@@ -48,11 +48,26 @@ public sealed class Renderer : IRenderer
 
     private readonly List<ScissorRect> _scissorStack = [];
 
+    // Logical-to-framebuffer scale factors. sgp_scissor works in framebuffer
+    // pixels while GetAbsoluteLeft/Top/... return logical coordinates, so
+    // clip rects need scaling by this ratio to land correctly when high-DPI
+    // or stretch-to-fit is active. Default 1:1 is restored by the 2-arg
+    // BeginFrame overload.
+    private float _scissorScaleX = 1f;
+    private float _scissorScaleY = 1f;
+
     public Renderer()
     {
         _layers = [new Layer()];
         _layersReadOnly = new ReadOnlyCollection<Layer>(_layers);
     }
+
+    /// <summary>
+    /// Convenience overload for the 1:1 case (no DPI scaling): logical and
+    /// framebuffer dimensions are the same.
+    /// </summary>
+    public void BeginFrame(int viewportWidth, int viewportHeight)
+        => BeginFrame(viewportWidth, viewportHeight, viewportWidth, viewportHeight);
 
     /// <summary>
     /// Configure sokol_gp for screen-space (top-left origin, +Y down) and
@@ -61,19 +76,30 @@ public sealed class Renderer : IRenderer
     /// fold in Zoom + Position + CameraCenterOnScreen, so the returned
     /// projection matches Gum's MonoGame/XNA camera semantics: <c>Zoom=2</c>
     /// makes everything render 2× larger; moving <c>Camera.Position</c> pans.
+    ///
+    /// Splits the two dimensions so hi-DPI callers can project in logical
+    /// pixels (UI layout units) while sokol_gp rasterizes into a physical-
+    /// pixel framebuffer that's typically 2× larger on Retina. Logical
+    /// coords drive Camera + sgp_project; framebuffer coords drive
+    /// sgp_begin + sgp_viewport so the full native resolution gets filled.
     /// </summary>
-    public void BeginFrame(int viewportWidth, int viewportHeight)
+    public void BeginFrame(int logicalWidth, int logicalHeight, int framebufferWidth, int framebufferHeight)
     {
-        _camera.ClientWidth = viewportWidth;
-        _camera.ClientHeight = viewportHeight;
+        _camera.ClientWidth = logicalWidth;
+        _camera.ClientHeight = logicalHeight;
 
-        sgp_begin(viewportWidth, viewportHeight);
-        sgp_viewport(0, 0, viewportWidth, viewportHeight);
+        sgp_begin(framebufferWidth, framebufferHeight);
+        sgp_viewport(0, 0, framebufferWidth, framebufferHeight);
         sgp_project(_camera.AbsoluteLeft, _camera.AbsoluteRight,
                     _camera.AbsoluteTop,  _camera.AbsoluteBottom);
         _currentBlendMode = DefaultBlendMode;
         sgp_set_blend_mode(_currentBlendMode);
         _scissorStack.Clear();
+        // sgp_scissor operates in framebuffer pixels; ClipsChildren bounds
+        // come from logical coords. Remember the ratio for each axis so
+        // DrawGumRecursively can translate one to the other.
+        _scissorScaleX = framebufferWidth  / (float)logicalWidth;
+        _scissorScaleY = framebufferHeight / (float)logicalHeight;
     }
 
     /// <summary>
@@ -214,11 +240,15 @@ public sealed class Renderer : IRenderer
         {
             // Floor top-left + ceil bottom-right so a sub-pixel-wide element
             // still gets a scissor rect that fully contains its drawn pixels
-            // instead of being clipped by integer truncation.
-            var left   = (int)MathF.Floor  (element.GetAbsoluteLeft());
-            var top    = (int)MathF.Floor  (element.GetAbsoluteTop());
-            var right  = (int)MathF.Ceiling(element.GetAbsoluteRight());
-            var bottom = (int)MathF.Ceiling(element.GetAbsoluteBottom());
+            // instead of being clipped by integer truncation. Multiply by
+            // _scissorScaleX/Y to convert from logical coords (what
+            // GetAbsolute*() returns) into framebuffer pixels (what
+            // sgp_scissor takes) — they diverge under high-DPI +
+            // stretch-to-fit projection.
+            var left   = (int)MathF.Floor  (element.GetAbsoluteLeft()   * _scissorScaleX);
+            var top    = (int)MathF.Floor  (element.GetAbsoluteTop()    * _scissorScaleY);
+            var right  = (int)MathF.Ceiling(element.GetAbsoluteRight()  * _scissorScaleX);
+            var bottom = (int)MathF.Ceiling(element.GetAbsoluteBottom() * _scissorScaleY);
 
             // Intersect with the parent scissor, if any, so nested ClipsChildren
             // accumulate correctly instead of the inner element widening the

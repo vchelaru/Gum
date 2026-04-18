@@ -51,6 +51,14 @@ public static unsafe class Program
             width = 1280,
             height = 720,
             sample_count = 4,
+            // Opt into the native framebuffer resolution on Retina / hi-DPI
+            // displays. Without this, sokol_app asks the OS for a 1280×720
+            // backing store and the compositor bilinearly upscales it 2× to
+            // the physical display — which blurs every pixel we draw. With
+            // it on, sapp_width() / sapp_height() return physical pixels and
+            // BeginFrame's sgp_project below matches, so text + geometry
+            // sample 1:1 against the display's native grid.
+            high_dpi = true,
             window_title = "SokolGum Sample — Gum UI via sokol_gp",
             icon = { sokol_default = true },
             logger = { func = &slog_func },
@@ -259,9 +267,13 @@ public static unsafe class Program
                     X = columnX, Y = 225, Width = 130, Height = 32,
                     Font = _font, FontSize = 24f,
                     RawText = "Gum",
-                    Color = new Color(255, 255, 255),
+                    // Black text + white outline on the dark panel: each
+                    // successive column sprouts a more visible white halo
+                    // around otherwise-camouflaged black glyphs, making
+                    // the 8-direction stamp pattern obvious.
+                    Color = new Color(0, 0, 0),
                     OutlineThickness = t,
-                    OutlineColor = new Color(20, 20, 20),
+                    OutlineColor = new Color(255, 255, 255),
                     HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center,
                 });
                 root.Add(new TextRuntime
@@ -394,17 +406,28 @@ public static unsafe class Program
         return Texture2D.FromRgba8(pixels, size, size, "nineslice-test");
     }
 
+    // Design size the UI was laid out against. Projecting this fixed logical
+    // region into whatever the framebuffer is now means the whole scene
+    // stretches to fill the window — resizing grows/shrinks everything
+    // proportionally. Aspect distorts at non-16:9 windows; preserving aspect
+    // would need a letterboxed viewport.
+    private const int DesignWidth  = 1280;
+    private const int DesignHeight = 720;
+
     [UnmanagedCallersOnly]
     private static void Frame()
     {
-        var width = sapp_width();
-        var height = sapp_height();
-        var dt = sapp_frame_duration();
+        // sapp_width()/sapp_height() always report the CURRENT framebuffer
+        // size, so resizing the window is self-healing — we just re-project
+        // the fixed design space into whatever's current this frame.
+        var fbW = sapp_width();
+        var fbH = sapp_height();
+        var dt  = sapp_frame_duration();
 
         sg_begin_pass(new sg_pass { action = _passAction, swapchain = sglue_swapchain() });
 
         _systemManagers!.Renderer.Update(dt);
-        _systemManagers.Renderer.BeginFrame(width, height);
+        _systemManagers.Renderer.BeginFrame(DesignWidth, DesignHeight, fbW, fbH);
         _systemManagers.Renderer.Draw(_systemManagers);
         _systemManagers.Renderer.EndFrame(_systemManagers);
 

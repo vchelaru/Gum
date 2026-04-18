@@ -44,6 +44,10 @@ public static unsafe class Program
             width = 1280,
             height = 720,
             sample_count = 4,
+            // See comment on the equivalent flag in Samples/SokolGum for
+            // why this matters — without it the OS upscales our framebuffer
+            // 2× on Retina displays, blurring every pixel.
+            high_dpi = true,
             window_title = "SokolGum FromFile — .gumx loader",
             icon = { sokol_default = true },
             logger = { func = &slog_func },
@@ -118,15 +122,20 @@ public static unsafe class Program
             layer.Add(contained);
     }
 
+    // Fixed design-time layout size — projected into whatever the framebuffer
+    // is now so the UI stretches with the window.
+    private const int DesignWidth  = 1280;
+    private const int DesignHeight = 720;
+
     [UnmanagedCallersOnly]
     private static void Frame()
     {
-        var width = sapp_width();
-        var height = sapp_height();
+        var fbW = sapp_width();
+        var fbH = sapp_height();
 
         sg_begin_pass(new sg_pass { action = _passAction, swapchain = sglue_swapchain() });
 
-        _systemManagers!.Renderer.BeginFrame(width, height);
+        _systemManagers!.Renderer.BeginFrame(DesignWidth, DesignHeight, fbW, fbH);
         _systemManagers.Renderer.Draw(_systemManagers);
         _systemManagers.Renderer.EndFrame(_systemManagers);
 
