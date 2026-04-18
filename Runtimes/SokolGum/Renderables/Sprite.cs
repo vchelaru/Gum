@@ -1,7 +1,9 @@
+using Gum.Graphics.Animation;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Animation;
+using RenderingLibrary.Math;
 using SokolGum;
-using SokolGum.Animation;
 using static Sokol.SGP;
 using Rectangle = System.Drawing.Rectangle;
 
@@ -14,13 +16,16 @@ namespace Gum.Renderables;
 /// via sgp_push_transform + sgp_rotate_at so each renderable draws in
 /// local coordinates.
 ///
-/// Also implements <c>.achx</c> animation chains: assign
-/// <see cref="AnimationChains"/> + <see cref="CurrentChainName"/> and set
-/// <see cref="Animate"/> = true, then let <see cref="Renderer"/> call
-/// <see cref="AnimateSelf"/> each frame. Texture / SourceRectangle /
-/// flip flags are updated in-place from the current chain frame.
+/// Animation chain playback is delegated to a composed
+/// <see cref="SpriteAnimationLogic"/> (same pattern as RaylibGum / Skia).
+/// Assign <see cref="AnimationChains"/> + <see cref="CurrentChainName"/>
+/// and keep <see cref="Animate"/> = true; the <see cref="Renderer"/> calls
+/// <see cref="AnimateSelf"/> per frame and the shared playback machinery
+/// dispatches <see cref="ApplyAnimationFrame"/> on every frame change —
+/// which pushes the current frame's texture + source rect + flip flags
+/// onto this sprite's render state.
 /// </summary>
-public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
+public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAnimatable
 {
     public Texture2D? Texture { get; set; }
     public Rectangle? SourceRectangle { get; set; }
@@ -41,121 +46,78 @@ public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordina
 
     bool ITextureCoordinate.Wrap { get; set; }
 
-    // Animation state. AnimationChains holds every named chain; CurrentChainName
-    // drives which one plays. When Animate is true the Renderer ticks AnimateSelf
-    // each frame, advancing the frame index by the elapsed time.
-
-    public AnimationChainList? AnimationChains { get; set; }
-
-    private string? _currentChainName;
-
     /// <summary>
-    /// Name of the chain currently playing. Setting this resets the frame
-    /// index / elapsed-time counters and immediately applies the first
-    /// frame's texture + source rect + flip flags to this sprite. Assigning
-    /// null or an unknown name stops animation.
+    /// Shared animation state machine. Exposed so consumers can subscribe
+    /// to <see cref="SpriteAnimationLogic.AnimationChainCycled"/> or tweak
+    /// playback (speed, looping) directly. The property shortcuts below
+    /// (<see cref="AnimationChains"/>, <see cref="CurrentChainName"/>,
+    /// <see cref="Animate"/>, <see cref="AnimationSpeed"/>) just forward.
     /// </summary>
-    public string? CurrentChainName
+    public SpriteAnimationLogic AnimationLogic { get; } = new();
+
+    public AnimationChainList? AnimationChains
     {
-        get => _currentChainName;
-        set
-        {
-            if (_currentChainName == value) return;
-            _currentChainName = value;
-            _currentFrameIndex = 0;
-            _frameElapsed = 0;
-            UpdateToCurrentAnimationFrame();
-        }
+        get => AnimationLogic.AnimationChains;
+        set => AnimationLogic.AnimationChains = value;
     }
 
-    /// <summary>Play/pause toggle. Defaults to true once a chain is assigned.</summary>
-    public bool Animate { get; set; } = true;
-
-    /// <summary>Playback-rate multiplier. 1.0 = realtime; 2.0 = double speed; 0.5 = half.</summary>
-    public float AnimationSpeed { get; set; } = 1f;
-
-    private int _currentFrameIndex;
-    private double _frameElapsed;
-
-    private AnimationChain? CurrentChain
+    public string? CurrentChainName
     {
-        get
-        {
-            if (AnimationChains is null || _currentChainName is null) return null;
-            return AnimationChains[_currentChainName];
-        }
+        get => AnimationLogic.CurrentChainName;
+        set => AnimationLogic.CurrentChainName = value;
+    }
+
+    public bool Animate
+    {
+        get => AnimationLogic.Animate;
+        set => AnimationLogic.Animate = value;
+    }
+
+    public float AnimationSpeed
+    {
+        get => AnimationLogic.AnimationSpeed;
+        set => AnimationLogic.AnimationSpeed = value;
     }
 
     public Sprite(Texture2D? texture = null)
     {
         Texture = texture;
+        AnimationLogic.ApplyFrame = ApplyAnimationFrame;
     }
 
     /// <summary>
-    /// Advances the active chain by <paramref name="secondsSinceLastFrame"/>,
-    /// crossing frame boundaries as needed (handles multi-frame skips when
-    /// a big dt arrives, e.g. after a pause). Loops at chain end. Called
-    /// by <see cref="Renderer"/> once per frame for every animated sprite.
+    /// IAnimatable entry point — called by <see cref="Renderer.Update"/>
+    /// each frame with the elapsed seconds since the last tick. Delegates
+    /// to <see cref="SpriteAnimationLogic.AnimateSelf"/> which advances the
+    /// frame index and invokes <see cref="ApplyAnimationFrame"/> on change.
     /// </summary>
-    public void AnimateSelf(double secondsSinceLastFrame)
+    public bool AnimateSelf(double secondDifference)
     {
-        if (!Animate) return;
-        var chain = CurrentChain;
-        if (chain is null || chain.Count == 0) return;
-
-        _frameElapsed += secondsSinceLastFrame * AnimationSpeed;
-
-        // Burn through complete frames in a loop so a dt larger than one
-        // frame's duration still lands on the correct absolute frame
-        // rather than stuttering to a neighbour.
-        //
-        // Cap iterations at chain.Count+1: past one full cycle any
-        // remaining dt is reduced modulo the chain's total length so
-        // wildly high AnimationSpeed values still land on a correct
-        // frame rather than running unbounded or visibly freezing. The
-        // +1 lets a final partial frame advance complete normally.
-        bool frameChanged = false;
-        int safety = chain.Count + 1;
-        while (safety-- > 0)
-        {
-            var currentFrame = chain[_currentFrameIndex];
-            if (currentFrame.FrameLength <= 0f)
-            {
-                // Skip-only — don't spend time on it, but don't decrement
-                // _frameElapsed either (nothing to subtract). Advancing
-                // past is enough for the chain to still cycle.
-                _currentFrameIndex = (_currentFrameIndex + 1) % chain.Count;
-                frameChanged = true;
-                continue;
-            }
-            if (_frameElapsed < currentFrame.FrameLength) break;
-            _frameElapsed -= currentFrame.FrameLength;
-            _currentFrameIndex = (_currentFrameIndex + 1) % chain.Count;
-            frameChanged = true;
-        }
-        if (safety < 0 && chain.TotalLength > 0f)
-        {
-            _frameElapsed = (float)(_frameElapsed % chain.TotalLength);
-        }
-        if (frameChanged) UpdateToCurrentAnimationFrame();
+        if (!Visible) return false;
+        return AnimationLogic.AnimateSelf(secondDifference);
     }
 
     /// <summary>
-    /// Pushes the current frame's texture / source rect / flip flags onto
-    /// this sprite's render state. Called automatically on
-    /// <see cref="CurrentChainName"/> assignment and after each
-    /// <see cref="AnimateSelf"/> frame advance; can also be called
-    /// manually after mutating a frame in place.
+    /// Pushes the current <see cref="AnimationFrame"/> onto this sprite's
+    /// render state. Called by <see cref="AnimationLogic"/> on every frame
+    /// change (and on initial chain assignment).
     /// </summary>
-    public void UpdateToCurrentAnimationFrame()
+    private void ApplyAnimationFrame(AnimationFrame frame)
     {
-        var chain = CurrentChain;
-        if (chain is null || chain.Count == 0) return;
-        if (_currentFrameIndex >= chain.Count) _currentFrameIndex = 0;
+        if (frame.Texture is { } tex)
+        {
+            Texture = tex;
+            var left   = MathFunctions.RoundToInt(frame.LeftCoordinate   * tex.Width);
+            var right  = MathFunctions.RoundToInt(frame.RightCoordinate  * tex.Width);
+            var top    = MathFunctions.RoundToInt(frame.TopCoordinate    * tex.Height);
+            var bottom = MathFunctions.RoundToInt(frame.BottomCoordinate * tex.Height);
+            SourceRectangle = new Rectangle(left, top, right - left, bottom - top);
+        }
+        else
+        {
+            SourceRectangle = null;
+        }
 
-        var frame = chain[_currentFrameIndex];
-        if (frame.Texture is not null) Texture = frame.Texture;
-        SourceRectangle = frame.ToPixelSourceRectangle();
         FlipHorizontal = frame.FlipHorizontal;
         FlipVertical   = frame.FlipVertical;
     }

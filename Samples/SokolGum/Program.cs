@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using RenderingLibrary.Content;
 using SokolGum;
-using SokolGum.Animation;
+using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Renderables;
 using static Sokol.SApp;

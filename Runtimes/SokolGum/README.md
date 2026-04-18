@@ -45,8 +45,9 @@ project loading.
 
 ```
 Runtimes/SokolGum/
-├── Animation/          # AnimationChainList/Chain/Frame — backend-local
-│                       # runtime classes wrapping our Texture2D
+├── (Animation — linked from RenderingLibrary/Graphics/Animation/*.cs
+│                  via the csproj's <Compile Include> with #elif SOKOL
+│                  branches; no backend-local source lives here.)
 ├── GueDeriving/        # ColoredRectangleRuntime, ContainerRuntime,
 │                       # NineSliceRuntime, SpriteRuntime, TextRuntime,
 │                       # InteractiveColoredRectangleRuntime
@@ -177,15 +178,17 @@ to the core path on any exception. Also covers string enum names
 
 ### Animation chain dispatch
 
-`Renderer.TickRecursively` walks every layer looking for Sprite and
-NineSlice renderables and calls `AnimateSelf(dt)` on them. Invisible
-subtrees still tick so that a paused-but-visible element resumes
-in-sync when re-shown — matches shared Gum behaviour.
+Sprite + NineSlice compose the shared `SpriteAnimationLogic` (from
+`RenderingLibrary/Graphics/Animation/`) and implement `IAnimatable`.
+`Renderer.TickRecursively` walks every layer, type-checks children
+to `IAnimatable`, and calls `AnimateSelf(dt)`. Invisible subtrees
+still tick so that a paused-but-visible element resumes in-sync
+when re-shown — matches shared Gum behaviour.
 
-`AnimateSelf` has a safety cap of `chain.Count + 1` iterations plus
-a modulo on remaining time, so a wildly-high `AnimationSpeed` landing
-a large dt in one frame still lands on the correct frame rather than
-running unbounded.
+Texture + source-rect + flip flags are pushed onto each renderable
+via the `ApplyFrame` callback on its `SpriteAnimationLogic`. NineSlice
+animation is SokolGum-only for now: RaylibGum and Skia expose
+`AnimationChains` on their SpriteRuntime but not their NineSliceRuntime.
 
 ### Outline rendering
 

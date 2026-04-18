@@ -3,7 +3,7 @@ using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
-using SokolGum.Animation;
+using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Renderables;
 using ToolsUtilities;

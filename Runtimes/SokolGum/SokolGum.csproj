@@ -35,4 +35,19 @@
 		<ProjectReference Include="..\Sokol\Sokol.csproj" />
 	</ItemGroup>
 
+	<!--
+		Shared AnimationChain + playback classes. Pulled in as source so
+		SOKOL preprocessor directives take effect locally (Texture2D
+		aliases to SokolGum.Texture2D, texture-loading branch uses our
+		ContentLoader). Matches the linking pattern Runtimes/RaylibGum
+		and Runtimes/SkiaGum use for the same files.
+	-->
+	<ItemGroup>
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" Link="Animation\SpriteAnimationLogic.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\IAnimatable.cs" Link="Renderables\IAnimatable.cs" />
+	</ItemGroup>
+
 </Project>

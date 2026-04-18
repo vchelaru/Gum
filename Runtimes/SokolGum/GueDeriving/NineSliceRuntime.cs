@@ -1,5 +1,5 @@
 using Gum.Wireframe;
-using SokolGum.Animation;
+using Gum.Graphics.Animation;
 using Gum.Renderables;
 using SokolGum;
 

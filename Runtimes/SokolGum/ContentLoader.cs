@@ -1,5 +1,5 @@
 using RenderingLibrary.Content;
-using SokolGum.Animation;
+using Gum.Graphics.Animation;
 using ToolsUtilities;
 using static Sokol.StbImage;
 
@@ -61,6 +61,12 @@ public sealed class ContentLoader : IContentLoader
     /// resolving every frame's texture along the way. Cached by standardized
     /// path so repeated loads share both the chain list and the referenced
     /// textures (textures self-cache inside <see cref="LoadTexture2D"/>).
+    ///
+    /// Delegates to the shared <c>AnimationChainListSave</c> XML
+    /// deserializer and the <c>ToAnimationChainList()</c> conversion
+    /// extension. Texture loading inside <c>ToAnimationFrame</c> is
+    /// gated by our <c>#elif SOKOL</c> branch which calls back into
+    /// this ContentLoader via <c>LoaderManager.Self.LoadContent&lt;Texture2D&gt;</c>.
     /// </summary>
     private static AnimationChainList? LoadAnimationChainList(string fileName)
     {
@@ -73,7 +79,8 @@ public sealed class ContentLoader : IContentLoader
 
         if (!File.Exists(key)) return null;
 
-        var list = AnimationChainList.FromAchxFile(key);
+        var save = Gum.Content.AnimationChain.AnimationChainListSave.FromFile(key);
+        var list = save.ToAnimationChainList();
 
         if (LoaderManager.Self.CacheTextures)
             LoaderManager.Self.AddDisposable(key, new ManagedAnimationChainList(list));

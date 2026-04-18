@@ -1,7 +1,9 @@
+using Gum.Graphics.Animation;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Animation;
+using RenderingLibrary.Math;
 using SokolGum;
-using SokolGum.Animation;
 using static Sokol.SGP;
 using Rectangle = System.Drawing.Rectangle;
 
@@ -14,14 +16,13 @@ namespace Gum.Renderables;
 /// one axis, center stretched along both. Explicit border overrides are
 /// exposed via <see cref="CustomFrameTextureCoordinateWidth"/>.
 ///
-/// Also supports <c>.achx</c> animation chains (matching the shared XNA
-/// NineSlice): assign <see cref="AnimationChains"/> + <see cref="CurrentChainName"/>
-/// and let <see cref="Renderer"/> drive <see cref="AnimateSelf"/> per frame.
-/// Texture / SourceRectangle are swapped from the current chain frame;
-/// frame flip flags on nine-slice are interpreted as <see cref="SourceRectangle"/>
-/// negation the same way <see cref="Sprite"/> handles them.
+/// Animation chain playback is delegated to <see cref="SpriteAnimationLogic"/>
+/// — same composition pattern as <see cref="Sprite"/>. SokolGum is currently
+/// the only backend that drives animation on NineSlice; RaylibGum/Skia
+/// expose <c>AnimationChains</c> on their SpriteRuntime but not their
+/// NineSliceRuntime yet.
 /// </summary>
-public sealed class NineSlice : RenderableBase, ITextureCoordinate
+public sealed class NineSlice : RenderableBase, ITextureCoordinate, IAnimatable
 {
     public Texture2D? Texture { get; set; }
     public Rectangle? SourceRectangle { get; set; }
@@ -45,91 +46,61 @@ public sealed class NineSlice : RenderableBase, ITextureCoordinate
 
     bool ITextureCoordinate.Wrap { get => false; set { } }
 
-    // Animation state. Mirrors Sprite's implementation — NineSlice is the
-    // only other renderable Gum's shared XNA code animates via .achx chains.
+    // Shared animation state — see Sprite for the composition pattern.
 
-    public AnimationChainList? AnimationChains { get; set; }
+    public SpriteAnimationLogic AnimationLogic { get; } = new();
 
-    private string? _currentChainName;
+    public AnimationChainList? AnimationChains
+    {
+        get => AnimationLogic.AnimationChains;
+        set => AnimationLogic.AnimationChains = value;
+    }
 
-    /// <summary>
-    /// Name of the chain currently playing. Setting this resets frame state
-    /// and immediately applies the first frame's texture + source rect.
-    /// </summary>
     public string? CurrentChainName
     {
-        get => _currentChainName;
-        set
-        {
-            if (_currentChainName == value) return;
-            _currentChainName = value;
-            _currentFrameIndex = 0;
-            _frameElapsed = 0;
-            UpdateToCurrentAnimationFrame();
-        }
+        get => AnimationLogic.CurrentChainName;
+        set => AnimationLogic.CurrentChainName = value;
     }
 
-    public bool  Animate        { get; set; } = true;
-    public float AnimationSpeed { get; set; } = 1f;
-
-    private int _currentFrameIndex;
-    private double _frameElapsed;
-
-    private AnimationChain? CurrentChain
+    public bool Animate
     {
-        get
-        {
-            if (AnimationChains is null || _currentChainName is null) return null;
-            return AnimationChains[_currentChainName];
-        }
+        get => AnimationLogic.Animate;
+        set => AnimationLogic.Animate = value;
     }
 
-    /// <summary>Advances the active chain by <paramref name="secondsSinceLastFrame"/>.</summary>
-    public void AnimateSelf(double secondsSinceLastFrame)
+    public float AnimationSpeed
     {
-        if (!Animate) return;
-        var chain = CurrentChain;
-        if (chain is null || chain.Count == 0) return;
-
-        _frameElapsed += secondsSinceLastFrame * AnimationSpeed;
-
-        bool frameChanged = false;
-        int safety = chain.Count + 1;
-        while (safety-- > 0)
-        {
-            var currentFrame = chain[_currentFrameIndex];
-            if (currentFrame.FrameLength <= 0f)
-            {
-                _currentFrameIndex = (_currentFrameIndex + 1) % chain.Count;
-                frameChanged = true;
-                continue;
-            }
-            if (_frameElapsed < currentFrame.FrameLength) break;
-            _frameElapsed -= currentFrame.FrameLength;
-            _currentFrameIndex = (_currentFrameIndex + 1) % chain.Count;
-            frameChanged = true;
-        }
-        if (safety < 0 && chain.TotalLength > 0f)
-        {
-            // Ran out of iterations with time still banked — modulo into
-            // chain length so wildly high AnimationSpeed lands correctly.
-            _frameElapsed = (float)(_frameElapsed % chain.TotalLength);
-        }
-
-        if (frameChanged) UpdateToCurrentAnimationFrame();
+        get => AnimationLogic.AnimationSpeed;
+        set => AnimationLogic.AnimationSpeed = value;
     }
 
-    /// <summary>Pushes the current frame's texture + source rect onto render state.</summary>
-    public void UpdateToCurrentAnimationFrame()
+    public NineSlice()
     {
-        var chain = CurrentChain;
-        if (chain is null || chain.Count == 0) return;
-        if (_currentFrameIndex >= chain.Count) _currentFrameIndex = 0;
+        AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+    }
 
-        var frame = chain[_currentFrameIndex];
-        if (frame.Texture is not null) Texture = frame.Texture;
-        SourceRectangle = frame.ToPixelSourceRectangle();
-        // FlipHorizontal on RenderableBase is handled via the base field;
+    public bool AnimateSelf(double secondDifference)
+    {
+        if (!Visible) return false;
+        return AnimationLogic.AnimateSelf(secondDifference);
+    }
+
+    private void ApplyAnimationFrame(AnimationFrame frame)
+    {
+        if (frame.Texture is { } tex)
+        {
+            Texture = tex;
+            var left   = MathFunctions.RoundToInt(frame.LeftCoordinate   * tex.Width);
+            var right  = MathFunctions.RoundToInt(frame.RightCoordinate  * tex.Width);
+            var top    = MathFunctions.RoundToInt(frame.TopCoordinate    * tex.Height);
+            var bottom = MathFunctions.RoundToInt(frame.BottomCoordinate * tex.Height);
+            SourceRectangle = new Rectangle(left, top, right - left, bottom - top);
+        }
+        else
+        {
+            SourceRectangle = null;
+        }
+
         // NineSlice doesn't flip per-slice, but honouring the frame flag at
         // the container level matches Sprite's behaviour.
         FlipHorizontal = frame.FlipHorizontal;
