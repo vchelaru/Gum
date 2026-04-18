@@ -62,10 +62,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\ContentLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\IContentLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\LoaderManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\AnimationFrame.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\AnimationChain.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\AnimationChainList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\AnimationFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Atlas.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\AtlasedTexture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BitmapCharacterInfo.cs" />
@@ -107,7 +107,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextOverflowMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextureFlipAnimation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TimedSpriteSheetAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\VerticalAlignment.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\XNAExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\IPositionedSizedObject.cs" />
