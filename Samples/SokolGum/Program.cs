@@ -116,30 +116,31 @@ public static unsafe class Program
             CustomFrameTextureCoordinateWidth = 8f,
         });
 
-        // Animated sprite — .achx chain list plays CharacterSheet.png frames
-        // (16×32 per frame, 0.1s each, looped). Rendered 4× scale so the
-        // animation is clearly visible. Renderer.Update below ticks every
+        // Animated sprites — .achx chain list plays CharacterSheet.png frames
+        // (16×32 per frame, 0.1s each, looped). Sized 3× into the unused
+        // gap between the PNG-sprite row (ends near x=528) and the right
+        // text column (starts at x=720). Renderer.Update ticks every
         // animated Sprite each frame.
         if (_characterAnimations is not null)
         {
             root.Add(new SpriteRuntime
             {
-                X = 700, Y = 400, Width = 64, Height = 128,
+                X = 570, Y = 295, Width = 48, Height = 96,
                 AnimationChains = _characterAnimations,
                 CurrentChainName = "IdleLeft",
             });
             root.Add(new SpriteRuntime
             {
-                X = 800, Y = 400, Width = 64, Height = 128,
+                X = 640, Y = 295, Width = 48, Height = 96,
                 AnimationChains = _characterAnimations,
                 CurrentChainName = "IdleRight",
                 AnimationSpeed = 2f,
             });
             root.Add(new TextRuntime
             {
-                X = 700, Y = 380, Width = 340, Height = 20,
-                Font = _font, FontSize = 14f,
-                RawText = "Animation chains (.achx): IdleLeft · IdleRight 2×",
+                X = 550, Y = 268, Width = 170, Height = 18,
+                Font = _font, FontSize = 12f,
+                RawText = ".achx  1×  ·  2×",
                 Color = new Color(255, 200, 140),
             });
         }
