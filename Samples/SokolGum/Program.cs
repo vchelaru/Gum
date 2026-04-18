@@ -131,11 +131,14 @@ public static unsafe class Program
         // animated Sprite each frame.
         if (_characterAnimations is not null)
         {
+            // SpriteAnimationLogic.Animate defaults to false (matches
+            // RaylibGum/Skia convention); callers opt in explicitly.
             root.Add(new SpriteRuntime
             {
                 X = 570, Y = 295, Width = 48, Height = 96,
                 AnimationChains = _characterAnimations,
                 CurrentChainName = "IdleLeft",
+                Animate = true,
             });
             root.Add(new SpriteRuntime
             {
@@ -143,6 +146,7 @@ public static unsafe class Program
                 AnimationChains = _characterAnimations,
                 CurrentChainName = "IdleRight",
                 AnimationSpeed = 2f,
+                Animate = true,
             });
             root.Add(new TextRuntime
             {
