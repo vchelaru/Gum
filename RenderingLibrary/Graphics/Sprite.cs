@@ -10,6 +10,7 @@ using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Gum.Graphics.Animation;
+using RenderingLibrary.Graphics.Animation;
 using RenderingLibrary.Math;
 
 namespace RenderingLibrary.Graphics;
@@ -34,77 +35,38 @@ public class Sprite : SpriteBatchRenderableBase,
         set {  mInvalidTexture = value; }
     }
 
-    int mCurrentChainIndex;
-    protected int mCurrentFrameIndex;
+    public SpriteAnimationLogic AnimationLogic { get; } = new SpriteAnimationLogic();
+
     public int CurrentFrameIndex
     {
-        get => mCurrentFrameIndex;
-        set
-        {
-            mCurrentFrameIndex = value;
-
-            if (CurrentChain != null && CurrentChain.Count > 0)
-            {
-                double time = 0;
-                int clampedIndex = System.Math.Clamp(value, 0, CurrentChain.Count - 1);
-                for (int i = 0; i < clampedIndex; i++)
-                {
-                    time += CurrentChain[i].FrameLength;
-                }
-                mTimeIntoAnimation = time;
-            }
-        }
+        get => AnimationLogic.CurrentFrameIndex;
+        set => AnimationLogic.CurrentFrameIndex = value;
     }
 
-    protected float mAnimationSpeed = 1;
     public float AnimationSpeed
     {
-        get => mAnimationSpeed;
-        set => mAnimationSpeed = value;
+        get => AnimationLogic.AnimationSpeed;
+        set => AnimationLogic.AnimationSpeed = value;
     }
-
-    protected double mTimeIntoAnimation;
 
     public double TimeIntoAnimation
     {
-        get => mTimeIntoAnimation;
-        set => mTimeIntoAnimation = value;
+        get => AnimationLogic.TimeIntoAnimation;
+        set => AnimationLogic.TimeIntoAnimation = value;
     }
 
-    AnimationChainList? mAnimationChains;
     public AnimationChainList? AnimationChains
     {
-        get => mAnimationChains;
-        set => mAnimationChains = value;
+        get => AnimationLogic.AnimationChains;
+        set => AnimationLogic.AnimationChains = value;
     }
-    public AnimationChain? CurrentChain
-    {
-        get
-        {
-            if (mCurrentChainIndex != -1 && mAnimationChains?.Count > 0 && mCurrentChainIndex < mAnimationChains.Count)
-            {
-                return mAnimationChains[mCurrentChainIndex];
-            }
-            else
-                return null;
-        }
-    }
-    bool mJustCycled;
 
-    string? desiredCurrentChainName;
+    public AnimationChain? CurrentChain => AnimationLogic.CurrentChain;
+
     public string? CurrentChainName
     {
-        get => CurrentChain?.Name;
-        set
-        {
-            desiredCurrentChainName = value;
-            mCurrentChainIndex = -1;
-            if (mAnimationChains?.Count > 0)
-            {
-                RefreshCurrentChainToDesiredName();
-                UpdateToCurrentAnimationFrame();
-            }
-        }
+        get => AnimationLogic.CurrentChainName;
+        set => AnimationLogic.CurrentChainName = value;
     }
 
     Vector2 Position;
@@ -281,18 +243,21 @@ public class Sprite : SpriteBatchRenderableBase,
 
     public bool Animate
     {
-        get;
-        set;
+        get => AnimationLogic.Animate;
+        set => AnimationLogic.Animate = value;
     }
 
-    bool mIsAnimationChainLooping = true;
     public bool IsAnimationChainLooping
     {
-        get => mIsAnimationChainLooping;
-        set => mIsAnimationChainLooping = value;
+        get => AnimationLogic.IsAnimationChainLooping;
+        set => AnimationLogic.IsAnimationChainLooping = value;
     }
 
-    public event Action AnimationChainCycled;
+    public event Action AnimationChainCycled
+    {
+        add => AnimationLogic.AnimationChainCycled += value;
+        remove => AnimationLogic.AnimationChainCycled -= value;
+    }
 
     ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
@@ -380,13 +345,31 @@ public class Sprite : SpriteBatchRenderableBase,
     public Sprite(Texture2D? texture)
     {
         this.Visible = true;
-        // why do we set this? It should be null so that 
+        // why do we set this? It should be null so that
         // the sprite will render using the default blendop, which may differ
         // depending on whether the game uses premult or standard
         //BlendState = BlendState.NonPremultiplied;
         mChildren = new ();
 
         Texture = texture;
+        AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+    }
+
+    void ApplyAnimationFrame(AnimationFrame frame)
+    {
+        Texture = frame.Texture;
+
+        if (frame.Texture != null)
+        {
+            var left = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
+            var width = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - left;
+            var top = MathFunctions.RoundToInt(frame.TopCoordinate * frame.Texture.Height);
+            var height = MathFunctions.RoundToInt(frame.BottomCoordinate * frame.Texture.Height) - top;
+            SourceRectangle = new Rectangle(left, top, width, height);
+        }
+
+        FlipHorizontal = frame.FlipHorizontal;
+        FlipVertical = frame.FlipVertical;
     }
 
     public override void Render(ISystemManagers managers)
@@ -890,181 +873,13 @@ public class Sprite : SpriteBatchRenderableBase,
 
     public bool AnimateSelf(double secondDifference)
     {
-        //////////////////Early Out/////////////////////
-        // Check mContainedObjectAsIVisible - if it's null, then this is a Screen and we should animate it
-        if (Visible == false)
-        {
-            return false;
-        }
-        ////////////////End Early Out///////////////////
-
-        var didChange = false;
-        var shouldAnimateSelf = true;
-
-        if (Animate == false || mCurrentChainIndex == -1 || mAnimationChains == null || mAnimationChains.Count == 0 || mAnimationChains[mCurrentChainIndex].Count == 0)
-        {
-            shouldAnimateSelf = false;
-        }
-
-        if (shouldAnimateSelf)
-        {
-            int frameBefore = mCurrentFrameIndex;
-
-            // June 10, 2011
-            // A negative animation speed should cause the animation to play in reverse
-            //Removed the System.Math.Abs on the mAnimationSpeed variable to restore the correct behaviour.
-            //double modifiedTimePassed = TimeManager.SecondDifference * System.Math.Abs(mAnimationSpeed);
-            double modifiedTimePassed = secondDifference * mAnimationSpeed;
-
-            mTimeIntoAnimation += modifiedTimePassed;
-
-            AnimationChain animationChain = mAnimationChains[mCurrentChainIndex];
-
-            if (IsAnimationChainLooping)
-            {
-                mTimeIntoAnimation = MathFunctions.Loop(mTimeIntoAnimation, animationChain.TotalLength, out mJustCycled);
-            }
-            else
-            {
-                if (mTimeIntoAnimation >= animationChain.TotalLength)
-                {
-                    mTimeIntoAnimation = animationChain.TotalLength;
-                    mCurrentFrameIndex = animationChain.Count - 1;
-                    Animate = false;
-                    mJustCycled = true;
-                }
-                else
-                {
-                    mJustCycled = false;
-                }
-            }
-
-            if (mJustCycled)
-            {
-                AnimationChainCycled?.Invoke();
-            }
-
-            UpdateFrameBasedOffOfTimeIntoAnimation();
-
-            if (mCurrentFrameIndex != frameBefore)
-            {
-                didChange = UpdateToCurrentAnimationFrame();
-                // Eventually we may need this? FRB uses it, but not sure if Gum needs it...
-                //mJustChangedFrame = true;
-            }
-        }
-
-        return didChange;
+        if (Visible == false) return false;
+        return AnimationLogic.AnimateSelf(secondDifference);
     }
 
-    public bool UpdateToCurrentAnimationFrame()
-    {
-        var didChange = false;
-        if (mAnimationChains != null &&
-            mAnimationChains.Count > mCurrentChainIndex &&
-            mCurrentChainIndex != -1 &&
-            mCurrentFrameIndex > -1 &&
-            mAnimationChains[mCurrentChainIndex].Count > 0
-            // If we switch animations, we still want it to apply right away
-            // so do a frame check:
-            //mCurrentFrameIndex < mAnimationChains[mCurrentChainIndex].Count
-            )
-        {
+    public bool UpdateToCurrentAnimationFrame() => AnimationLogic.UpdateToCurrentAnimationFrame();
 
-
-            var index = mCurrentFrameIndex;
-            if (index >= mAnimationChains[mCurrentChainIndex].Count)
-            {
-                index = 0;
-            }
-            var frame = mAnimationChains[mCurrentChainIndex][index];
-
-            Texture = frame.Texture;
-
-#if FULL_DIAGNOSTICS
-            if (Texture == null)
-            {
-                throw new NullReferenceException("The AnimationFrame for this sprite has a null texture. This is not allowed.");
-            }
-#endif
-
-            var left = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
-            var width = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - left;
-
-            var top = MathFunctions.RoundToInt(frame.TopCoordinate * frame.Texture.Height);
-            var height = MathFunctions.RoundToInt(frame.BottomCoordinate * frame.Texture.Height) - top;
-
-            SourceRectangle = new Rectangle(left, top, width, height);
-
-            this.FlipHorizontal = frame.FlipHorizontal;
-            this.FlipVertical = frame.FlipVertical;
-
-            didChange = true;
-        }
-        return didChange;
-    }
-
-    void UpdateFrameBasedOffOfTimeIntoAnimation()
-    {
-        double timeIntoAnimation = mTimeIntoAnimation;
-
-        if (timeIntoAnimation < 0)
-        {
-            throw new ArgumentException("The timeIntoAnimation argument must be 0 or positive");
-        }
-        else if (CurrentChain != null && 
-            // This used to check if the count was > 1, but that prevents 1-frame animations from applying, so we should do > 0
-            //CurrentChain.Count > 1
-            CurrentChain.Count > 0
-            )
-        {
-            int frameIndex = 0;
-
-            if (CurrentChain.TotalLength == 0)
-            {
-                // do nothing:
-            }
-            else
-            {
-                while (timeIntoAnimation >= 0)
-                {
-                    double frameTime = CurrentChain[frameIndex].FrameLength;
-
-                    if (timeIntoAnimation < frameTime)
-                    {
-                        mCurrentFrameIndex = frameIndex;
-
-                        break;
-                    }
-                    else
-                    {
-                        timeIntoAnimation -= frameTime;
-
-                        frameIndex = (frameIndex + 1) % CurrentChain.Count;
-                    }
-                }
-            }
-        }
-    }
-
-    public void RefreshCurrentChainToDesiredName()
-    {
-        if(mAnimationChains == null)
-        {
-            mCurrentChainIndex = -1;
-        }
-        else
-        {
-            for (int i = 0; i < mAnimationChains.Count; i++)
-            {
-                if (mAnimationChains[i].Name == desiredCurrentChainName)
-                {
-                    mCurrentChainIndex = i;
-                    break;
-                }
-            }
-        }
-    }
+    public void RefreshCurrentChainToDesiredName() => AnimationLogic.RefreshCurrentChainToDesiredName();
 
     #region IVisible Implementation
 

@@ -1,6 +1,8 @@
 ﻿using Raylib_cs;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Animation;
+using RenderingLibrary.Math;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +13,7 @@ using System.Xml.Linq;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
-public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
+public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAnimatable
 {
     public Texture2D? Texture { get; set; }
     public Raylib_cs.Rectangle? SourceRectangle
@@ -162,8 +164,39 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         DrawTexturePro(Texture.Value, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
     }
 
+    public SpriteAnimationLogic AnimationLogic { get; } = new SpriteAnimationLogic();
+
     public Sprite(Texture2D? texture = null)
     {
         this.Texture = texture;
+        AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+    }
+
+    void ApplyAnimationFrame(Gum.Graphics.Animation.AnimationFrame frame)
+    {
+        Texture = frame.Texture;
+
+        if (frame.Texture.HasValue)
+        {
+            var tex = frame.Texture.Value;
+            var left = MathFunctions.RoundToInt(frame.LeftCoordinate * tex.Width);
+            var width = MathFunctions.RoundToInt(frame.RightCoordinate * tex.Width) - left;
+            var top = MathFunctions.RoundToInt(frame.TopCoordinate * tex.Height);
+            var height = MathFunctions.RoundToInt(frame.BottomCoordinate * tex.Height) - top;
+            SourceRectangle = new Rectangle(left, top, width, height);
+        }
+        else
+        {
+            SourceRectangle = null;
+        }
+
+        FlipHorizontal = frame.FlipHorizontal;
+        FlipVertical = frame.FlipVertical;
+    }
+
+    public bool AnimateSelf(double secondDifference)
+    {
+        if (!Visible) return false;
+        return AnimationLogic.AnimateSelf(secondDifference);
     }
 }

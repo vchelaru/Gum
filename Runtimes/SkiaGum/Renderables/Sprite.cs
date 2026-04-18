@@ -1,4 +1,6 @@
 ﻿using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Animation;
+using RenderingLibrary.Math;
 using SkiaSharp;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
@@ -6,7 +8,7 @@ using System;
 
 namespace SkiaGum.Renderables;
 
-public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate
+public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable
 {
     public SKBitmap? Texture 
     { 
@@ -49,9 +51,40 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate
 
     public float AspectRatio => Texture != null ? (Texture.Width / (float)Texture.Height) : 1.0f;
 
+    public SpriteAnimationLogic AnimationLogic { get; } = new SpriteAnimationLogic();
+
     public Sprite()
     {
+        AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+    }
 
+    void ApplyAnimationFrame(Gum.Graphics.Animation.AnimationFrame frame)
+    {
+        Texture = frame.Texture;
+
+        if (frame.Texture != null)
+        {
+            var tex = frame.Texture;
+            var left = MathFunctions.RoundToInt(frame.LeftCoordinate * tex.Width);
+            var right = MathFunctions.RoundToInt(frame.RightCoordinate * tex.Width);
+            var top = MathFunctions.RoundToInt(frame.TopCoordinate * tex.Height);
+            var bottom = MathFunctions.RoundToInt(frame.BottomCoordinate * tex.Height);
+
+            // Skia encodes flips by swapping source rectangle edges (see DrawBound).
+            if (frame.FlipHorizontal) (left, right) = (right, left);
+            if (frame.FlipVertical) (top, bottom) = (bottom, top);
+
+            SourceRectangle = new Rectangle(left, top, right - left, bottom - top);
+        }
+        else
+        {
+            SourceRectangle = null;
+        }
+    }
+
+    public bool AnimateSelf(double secondDifference)
+    {
+        return AnimationLogic.AnimateSelf(secondDifference);
     }
 
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)

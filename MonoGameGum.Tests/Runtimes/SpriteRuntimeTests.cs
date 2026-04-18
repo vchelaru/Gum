@@ -40,6 +40,31 @@ public class SpriteRuntimeTests : BaseTestClass
     #endregion
 
     [Fact]
+    public void AnimateSelf_ShouldApplyFrameFlipsToSprite_WhenFrameChanges()
+    {
+        // Guards against the ApplyFrame callback being disconnected in the Sprite constructor.
+        // If AnimationLogic.ApplyFrame is null, frame transitions happen silently and no sprite
+        // state changes — this test ensures a frame transition observably updates the Sprite.
+        var sprite = new Sprite((Texture2D?)null);
+
+        var chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = false, FlipVertical = false });
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = true, FlipVertical = true });
+
+        var chainList = new AnimationChainList();
+        chainList.Add(chain);
+
+        sprite.AnimationChains = chainList;
+        sprite.Animate = true;
+
+        // 1.5s into chain crosses from frame 0 (ends at 1.0s) into frame 1.
+        sprite.AnimateSelf(1.5);
+
+        sprite.FlipHorizontal.ShouldBeTrue();
+        sprite.FlipVertical.ShouldBeTrue();
+    }
+
+    [Fact]
     public void AnimateSelf_ShouldFireAnimationChainCycled_WhenLooping()
     {
         var sut = CreateAnimatedSprite(1.0f);
