@@ -8,14 +8,15 @@ namespace SokolGum;
 /// Holds the numeric font id that fontstash returned so <see cref="Text"/>
 /// can select it via <c>fonsSetFont</c>.
 ///
-/// The unmanaged TTF byte buffer fontstash reads glyph outlines from is
-/// owned by <see cref="FontAtlas"/>, not by Font. Fontstash keeps the
-/// pointer alive for the context's lifetime, so freeing it as part of
-/// Font.Dispose (per-font) would leave later glyph rasterizations
-/// pointing at reclaimed memory. Tying the buffer to the atlas means
-/// every Font stays valid until the atlas itself is torn down.
+/// Font is intentionally NOT <see cref="IDisposable"/>. fontstash has no
+/// per-font removal API, and the unmanaged TTF byte buffer it reads glyph
+/// outlines from is owned by <see cref="FontAtlas"/> (so it's released
+/// only when the atlas itself is disposed). Individual Font instances
+/// therefore own nothing — lifetime is tied to the atlas. If callers
+/// want to `using` a font, they're almost certainly doing something
+/// wrong; don't offer the pattern.
 /// </summary>
-public sealed class Font : IDisposable
+public sealed class Font
 {
     /// <summary>The fontstash context this font was added to.</summary>
     public IntPtr Stash { get; }
@@ -35,7 +36,8 @@ public sealed class Font : IDisposable
     /// <summary>
     /// Adds a TTF blob to the atlas's fontstash context. The unmanaged copy
     /// of <paramref name="ttfBytes"/> is handed to the atlas for lifetime
-    /// management — don't dispose the returned Font before the atlas itself.
+    /// management — the returned Font stays valid until the atlas itself
+    /// is disposed.
     /// </summary>
     public static unsafe Font FromTrueTypeBytes(FontAtlas atlas, string name, ReadOnlySpan<byte> ttfBytes)
     {
@@ -54,14 +56,4 @@ public sealed class Font : IDisposable
         atlas.TrackFontData(nativeData);
         return new Font(atlas.Stash, id);
     }
-
-    /// <summary>
-    /// No-op in practice: Font owns no unmanaged resources of its own, and
-    /// fontstash has no "remove single font" API. Kept on the type for
-    /// IDisposable symmetry with other loaded content (Texture2D, etc.)
-    /// so caller code using <c>using</c> / <c>Dispose</c> patterns compiles.
-    /// The actual font buffer and fontstash context are released when the
-    /// owning <see cref="FontAtlas"/> is disposed.
-    /// </summary>
-    public void Dispose() { }
 }

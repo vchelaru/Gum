@@ -380,7 +380,8 @@ public static unsafe class Program
     [UnmanagedCallersOnly]
     private static void Cleanup()
     {
-        _font?.Dispose();
+        // Font has no per-font Dispose — its TTF buffer is owned by the
+        // FontAtlas which the SystemManagers disposes below.
         _gradientTexture?.Dispose();
         _nineSliceTexture?.Dispose();
         _logoTexture?.Dispose();

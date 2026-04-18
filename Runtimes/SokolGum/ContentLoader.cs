@@ -192,19 +192,17 @@ internal sealed class ManagedTexture : IDisposable
     }
 }
 
+/// <summary>
+/// LoaderManager keys its cache on IDisposable so every cache entry has to
+/// nominally implement it. Font itself isn't disposable (see Font.cs for
+/// why), so ManagedFont's Dispose is a no-op — the underlying buffer and
+/// fontstash context are released by <see cref="FontAtlas.Dispose"/>.
+/// </summary>
 internal sealed class ManagedFont : IDisposable
 {
     public Font Font { get; }
-    private bool _disposed;
-
     public ManagedFont(Font font) { Font = font; }
-
-    public void Dispose()
-    {
-        if (_disposed) return;
-        _disposed = true;
-        Font.Dispose();
-    }
+    public void Dispose() { /* nothing to release per-font */ }
 }
 
 /// <summary>
