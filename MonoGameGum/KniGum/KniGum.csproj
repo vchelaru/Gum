@@ -68,6 +68,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" Link="Animation\SpriteAnimationLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\AtlasedTexture.cs" Link="Renderables\AtlasedTexture.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\BitmapCharacterInfo.cs" Link="Renderables\Fonts\BitmapCharacterInfo.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Fonts\BitmapFont.cs" Link="Renderables\Fonts\BitmapFont.cs" />

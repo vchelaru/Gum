@@ -2,7 +2,13 @@ using Gum.Content.AnimationChain;
 using System;
 using System.Collections.Generic;
 using ToolsUtilities;
+#if MONOGAME || KNI || XNA4
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
+#elif RAYLIB
+using Texture2D = Raylib_cs.Texture2D;
+#elif SKIA
+using Texture2D = SkiaSharp.SKBitmap;
+#endif
 
 namespace Gum.Graphics.Animation
 {
@@ -140,6 +146,7 @@ namespace Gum.Graphics.Animation
 			// called when unloading a ContentManager.
 		}
 
+#if MONOGAME || KNI || XNA4
 		public void SetAllTexture(Texture2D textureToSet)
 		{
 			int i = 0;
@@ -161,6 +168,7 @@ namespace Gum.Graphics.Animation
 			}
 
 		}
+#endif
 
         public override string ToString()
         {

@@ -2,7 +2,13 @@ using Gum.Content.AnimationChain;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+#if MONOGAME || KNI || XNA4
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
+#elif RAYLIB
+using Texture2D = Raylib_cs.Texture2D;
+#elif SKIA
+using Texture2D = SkiaSharp.SKBitmap;
+#endif
 
 
 
@@ -166,8 +172,13 @@ namespace Gum.Graphics.Animation
             for (int i = 0; i < this.Count; i++)
             {
                 AnimationFrame af = this[i];
-                if (af.Texture.Name == nameToSearchFor)
+#if MONOGAME || KNI || XNA4
+                if (af.Texture?.Name == nameToSearchFor)
                     return af;
+#else
+                if (af.TextureName == nameToSearchFor)
+                    return af;
+#endif
             }
             return null;
         }
@@ -194,6 +205,7 @@ namespace Gum.Graphics.Animation
         }
 
 
+#if MONOGAME || KNI || XNA4
 		public void ReplaceTexture(Texture2D oldTexture, Texture2D newTexture)
 		{
 			for (int i = 0; i < this.Count; i++)
@@ -205,6 +217,7 @@ namespace Gum.Graphics.Animation
 				}
 			}
 		}
+#endif
 
         public override string ToString()
         {

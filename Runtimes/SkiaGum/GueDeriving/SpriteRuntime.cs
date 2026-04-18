@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.Graphics.Animation;
 using Gum.Wireframe;
 using SkiaGum.Renderables;
 using SkiaSharp;
@@ -53,6 +54,62 @@ public class SpriteRuntime : InteractiveGue
         get => ContainedSprite.Image;
         set => ContainedSprite.Image = value;
     }
+
+    #region AnimationChain
+
+    public bool Animate
+    {
+        get => ContainedSprite.AnimationLogic.Animate;
+        set => ContainedSprite.AnimationLogic.Animate = value;
+    }
+
+    public string? CurrentChainName
+    {
+        get => ContainedSprite.AnimationLogic.CurrentChainName;
+        set => ContainedSprite.AnimationLogic.CurrentChainName = value;
+    }
+
+    public AnimationChainList? AnimationChains
+    {
+        get => ContainedSprite.AnimationLogic.AnimationChains;
+        set
+        {
+            ContainedSprite.AnimationLogic.AnimationChains = value;
+            ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame();
+        }
+    }
+
+    public int AnimationChainFrameIndex
+    {
+        get => ContainedSprite.AnimationLogic.CurrentFrameIndex;
+        set => ContainedSprite.AnimationLogic.CurrentFrameIndex = value;
+    }
+
+    public double AnimationChainTime
+    {
+        get => ContainedSprite.AnimationLogic.TimeIntoAnimation;
+        set => ContainedSprite.AnimationLogic.TimeIntoAnimation = value;
+    }
+
+    public float AnimationChainSpeed
+    {
+        get => ContainedSprite.AnimationLogic.AnimationSpeed;
+        set => ContainedSprite.AnimationLogic.AnimationSpeed = value;
+    }
+
+    public bool IsAnimationChainLooping
+    {
+        get => ContainedSprite.AnimationLogic.IsAnimationChainLooping;
+        set => ContainedSprite.AnimationLogic.IsAnimationChainLooping = value;
+    }
+
+    public event Action AnimationChainCycled
+    {
+        add => ContainedSprite.AnimationLogic.AnimationChainCycled += value;
+        remove => ContainedSprite.AnimationLogic.AnimationChainCycled -= value;
+    }
+
+    #endregion
 
     public SpriteRuntime(bool fullInstantiaton = true)
     {

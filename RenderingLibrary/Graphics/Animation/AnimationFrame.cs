@@ -1,10 +1,14 @@
 using System;
 using Gum.Content.AnimationChain;
 
-
+#nullable enable
 
 #if MONOGAME || KNI || XNA4
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
+#elif RAYLIB
+using Texture2D = Raylib_cs.Texture2D;
+#elif SKIA
+using Texture2D = SkiaSharp.SKBitmap;
 #endif
 
 using System.Xml.Serialization;
@@ -32,12 +36,12 @@ namespace Gum.Graphics.Animation
         #endregion
         public static AnimationFrame Empty;
 
-#if MONOGAME || KNI || XNA4
+#if MONOGAME || KNI || XNA4 || RAYLIB || SKIA
         /// <summary>
         /// The texture that the AnimationFrame will show.
         /// </summary>
         [XmlIgnore]
-        public Texture2D Texture;
+        public Texture2D? Texture;
 #endif
 
         /// <summary>
@@ -234,6 +238,7 @@ namespace Gum.Graphics.Animation
             frame.TextureName = animationFrameSave.TextureName;
             frame.FrameLength = animationFrameSave.FrameLength;
 
+#if MONOGAME || KNI || XNA4
             if (loadTexture)
             {
                 //if (animationFrameSave.mTextureInstance != null)
@@ -264,6 +269,7 @@ namespace Gum.Graphics.Animation
                 }
                 //frame.Texture = FlatRedBallServices.Load<Texture2D>(TextureName, contentManagerName);
             }
+#endif
             frame.FlipHorizontal = animationFrameSave.FlipHorizontal;
             frame.FlipVertical = animationFrameSave.FlipVertical;
 
@@ -286,6 +292,7 @@ namespace Gum.Graphics.Animation
                 //    throw new Exception("The frame must have its texture loaded to use the Pixel coordinate type");
                 //}
 
+#if MONOGAME || KNI || XNA4
                 if (frame.Texture != null)
                 {
                     frame.LeftCoordinate = animationFrameSave.LeftCoordinate / frame.Texture.Width;
@@ -294,6 +301,7 @@ namespace Gum.Graphics.Animation
                     frame.TopCoordinate = animationFrameSave.TopCoordinate / frame.Texture.Height;
                     frame.BottomCoordinate = animationFrameSave.BottomCoordinate / frame.Texture.Height;
                 }
+#endif
             }
 
 
