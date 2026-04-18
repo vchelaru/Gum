@@ -61,7 +61,7 @@ unsafe class Program
         instructionsText.Y = -10;
         instructionsText.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
         instructionsText.YOrigin = VerticalAlignment.Bottom;
-        instructionsText.AddToManagers();
+        instructionsText.AddToRoot();
     }
 
     private static void LoadScreen(int index)
@@ -324,6 +324,7 @@ unsafe class Program
                             if (ev.Window.Event == (byte)WindowEventID.Resized)
                             {
                                 gl.Viewport(0, 0, (uint)ev.Window.Data1, (uint)ev.Window.Data2);
+                                GumService.Default.HandleResize(ev.Window.Data1, ev.Window.Data2);
                             }
                             break;
                     }
