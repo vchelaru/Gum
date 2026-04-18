@@ -97,14 +97,30 @@ public static class CustomSetPropertyOnRenderable
         {
             var targetType = prop.PropertyType;
 
-            if (targetType.IsEnum && value.GetType().IsPrimitive)
+            if (targetType.IsEnum)
             {
-                try
+                if (value.GetType().IsPrimitive)
                 {
-                    prop.SetValue(renderable, Enum.ToObject(targetType, value));
-                    return;
+                    try
+                    {
+                        prop.SetValue(renderable, Enum.ToObject(targetType, value));
+                        return;
+                    }
+                    catch { /* fall through to base reflection helper */ }
                 }
-                catch { /* fall through to base reflection helper */ }
+                else if (value is string enumName)
+                {
+                    // Hand-written .gumx or externally-produced project files
+                    // sometimes store enum values by name ("Center") instead
+                    // of int. Core Gum doesn't handle this conversion either,
+                    // so covering it here closes that compat gap.
+                    try
+                    {
+                        prop.SetValue(renderable, Enum.Parse(targetType, enumName, ignoreCase: true));
+                        return;
+                    }
+                    catch { /* fall through — name not in enum or ambiguous */ }
+                }
             }
 
             var underlyingNullable = Nullable.GetUnderlyingType(targetType);
@@ -112,9 +128,17 @@ public static class CustomSetPropertyOnRenderable
             {
                 try
                 {
-                    var converted = underlyingNullable.IsEnum
-                        ? Enum.ToObject(underlyingNullable, value)
-                        : Convert.ChangeType(value, underlyingNullable);
+                    object? converted;
+                    if (underlyingNullable.IsEnum)
+                    {
+                        converted = value is string enumStr
+                            ? Enum.Parse(underlyingNullable, enumStr, ignoreCase: true)
+                            : Enum.ToObject(underlyingNullable, value);
+                    }
+                    else
+                    {
+                        converted = Convert.ChangeType(value, underlyingNullable);
+                    }
                     prop.SetValue(renderable, converted);
                     return;
                 }
