@@ -265,12 +265,12 @@ public class ScrollBarVisual : InteractiveGue
 
             UpButtonIcon.Rotation = 180f;
 
-            UpButtonInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-            UpButtonInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-            UpButtonInstance.XOrigin = HorizontalAlignment.Left;
-            UpButtonInstance.YOrigin = VerticalAlignment.Center;
-            UpButtonInstance.Width = 24f;
-            UpButtonInstance.WidthUnits = DimensionUnitType.Absolute;
+            upButtonVisual.XUnits = GeneralUnitType.PixelsFromSmall;
+            upButtonVisual.YUnits = GeneralUnitType.PixelsFromMiddle;
+            upButtonVisual.XOrigin = HorizontalAlignment.Left;
+            upButtonVisual.YOrigin = VerticalAlignment.Center;
+            upButtonVisual.Width = 24f;
+            upButtonVisual.WidthUnits = DimensionUnitType.Absolute;
 
             ThumbContainer.Height = 0f;
             ThumbContainer.HeightUnits = DimensionUnitType.RelativeToParent;
@@ -285,10 +285,10 @@ public class ScrollBarVisual : InteractiveGue
 
             
             DownButtonIcon.Rotation = 0f;
-            DownButtonInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-            DownButtonInstance.XOrigin = HorizontalAlignment.Right;
-            DownButtonInstance.Width = 24f;
-            DownButtonInstance.WidthUnits = DimensionUnitType.Absolute;
+            downButtonVisual.XUnits = GeneralUnitType.PixelsFromLarge;
+            downButtonVisual.XOrigin = HorizontalAlignment.Right;
+            downButtonVisual.Width = 24f;
+            downButtonVisual.WidthUnits = DimensionUnitType.Absolute;
 
             // Local Styling colors
             UpButtonIcon.Color = ScrollArrowColor;
@@ -308,12 +308,12 @@ public class ScrollBarVisual : InteractiveGue
             UpButtonIcon.Color = Styling.ActiveStyle.Colors.IconDefault;
             UpButtonIcon.Rotation = 90f;
 
-            UpButtonInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
-            UpButtonInstance.YUnits = GeneralUnitType.PixelsFromSmall;
-            UpButtonInstance.XOrigin = HorizontalAlignment.Center;
-            UpButtonInstance.YOrigin = VerticalAlignment.Top;
-            UpButtonInstance.Height = 24f;
-            UpButtonInstance.HeightUnits = DimensionUnitType.Absolute;
+            upButtonVisual.XUnits = GeneralUnitType.PixelsFromMiddle;
+            upButtonVisual.YUnits = GeneralUnitType.PixelsFromSmall;
+            upButtonVisual.XOrigin = HorizontalAlignment.Center;
+            upButtonVisual.YOrigin = VerticalAlignment.Top;
+            upButtonVisual.Height = 24f;
+            upButtonVisual.HeightUnits = DimensionUnitType.Absolute;
 
             ThumbContainer.Height = -48f;
             ThumbContainer.HeightUnits = DimensionUnitType.RelativeToParent;
@@ -328,10 +328,10 @@ public class ScrollBarVisual : InteractiveGue
 
             DownButtonIcon.Color = Styling.ActiveStyle.Colors.IconDefault;
             DownButtonIcon.Rotation = -90f;
-            DownButtonInstance.YUnits = GeneralUnitType.PixelsFromLarge;
-            DownButtonInstance.YOrigin = VerticalAlignment.Bottom;
-            DownButtonInstance.Height = 24f;
-            DownButtonInstance.HeightUnits = DimensionUnitType.Absolute;
+            downButtonVisual.YUnits = GeneralUnitType.PixelsFromLarge;
+            downButtonVisual.YOrigin = VerticalAlignment.Bottom;
+            downButtonVisual.Height = 24f;
+            downButtonVisual.HeightUnits = DimensionUnitType.Absolute;
 
             // Local Styling colors
             UpButtonIcon.Color = ScrollArrowColor;

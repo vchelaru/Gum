@@ -8,7 +8,7 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 namespace GameUiSamples.Components;
 
 partial class InventoryGrid
