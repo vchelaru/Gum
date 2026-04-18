@@ -12,6 +12,11 @@ using Gum.Renderables;
 using Color = Raylib_cs.Color;
 using ContainedRectangleType = Gum.Renderables.SolidRectangle;
 namespace Gum.GueDeriving;
+#elif SOKOL
+using Gum.Renderables;
+using Color = SokolGum.Color;
+using ContainedRectangleType = Gum.Renderables.SolidRectangle;
+namespace Gum.GueDeriving;
 #elif SKIA
 using SkiaGum.Renderables;
 using Color = SkiaSharp.SKColor;
@@ -142,9 +147,11 @@ public class ColoredRectangleRuntime : GraphicalUiElement
 #endif
     }
 
+#if !SOKOL
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
     [Obsolete("Use the AddToRoot extension method instead (e.g. myColoredRectangle.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
+#endif
 
     public ColoredRectangleRuntime(bool fullInstantiation = true)
     {
@@ -159,6 +166,8 @@ public class ColoredRectangleRuntime : GraphicalUiElement
             rectangle.Color = SkiaSharp.SKColors.White;
 #elif RAYLIB
             rectangle.Color = Raylib_cs.Color.White;
+#elif SOKOL
+            rectangle.Color = SokolGum.Color.White;
 #else
             rectangle.Color = System.Drawing.Color.White;
 #endif

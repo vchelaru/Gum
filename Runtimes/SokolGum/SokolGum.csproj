@@ -42,6 +42,17 @@
 		ContentLoader). Matches the linking pattern Runtimes/RaylibGum
 		and Runtimes/SkiaGum use for the same files.
 	-->
+	<!--
+		Shared GueDeriving runtimes. Same linking pattern Runtimes/RaylibGum
+		uses: these files have SOKOL branches that select Sokol-friendly
+		type aliases (BlendState=Gum.BlendState, etc.) and namespace
+		(Gum.GueDeriving). Keeping one source of truth avoids drift.
+	-->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum\GueDeriving\ColoredRectangleRuntime.cs" Link="GueDeriving\ColoredRectangleRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
