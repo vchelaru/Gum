@@ -330,7 +330,7 @@ public static unsafe class Program
         _systemManagers!.Renderer.Update(dt);
         _systemManagers.Renderer.BeginFrame(width, height);
         _systemManagers.Renderer.Draw(_systemManagers);
-        _systemManagers.Renderer.EndFrame();
+        _systemManagers.Renderer.EndFrame(_systemManagers);
 
         sg_end_pass();
         sg_commit();

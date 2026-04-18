@@ -139,10 +139,16 @@ public sealed class Renderer : IRenderer
     /// This means new glyphs appear in the same frame they're rasterized
     /// (no one-frame lag). Ordering matters because sgp buffers its commands
     /// internally and only submits them to sokol_gfx on sgp_flush.
+    ///
+    /// Accepts the <see cref="ISystemManagers"/> passed to <see cref="Draw"/>
+    /// so a caller using a non-default SystemManagers instance still gets
+    /// its own font atlas flushed. Falls back to <see cref="SystemManagers.Default"/>
+    /// when called without an argument, for symmetry with <see cref="Draw"/>.
     /// </summary>
-    public void EndFrame()
+    public void EndFrame(ISystemManagers? managers = null)
     {
-        (SystemManagers.Default as SystemManagers)?.Fonts?.FlushPendingUpload();
+        var sm = managers as SystemManagers ?? SystemManagers.Default;
+        sm?.Fonts?.FlushPendingUpload();
         sgp_flush();
         sgp_end();
     }
