@@ -79,6 +79,12 @@ public static class CustomSetPropertyOnRenderable
     /// constantly. Handling them here keeps alignment/overflow/units enums
     /// and nullable-float properties (like NineSlice's custom border width)
     /// working without special-casing each one.
+    ///
+    /// If the conversion throws (incompatible types, value out of range,
+    /// undefined enum backing), we fall through to the core reflection
+    /// helper rather than propagate — that matches the behaviour of the
+    /// core path for most other mismatches, so a single bad variable
+    /// doesn't tear down the entire screen load.
     /// </summary>
     private static void SetPropertyWithEnumConversion(
         IRenderableIpso renderable,
@@ -93,18 +99,26 @@ public static class CustomSetPropertyOnRenderable
 
             if (targetType.IsEnum && value.GetType().IsPrimitive)
             {
-                prop.SetValue(renderable, Enum.ToObject(targetType, value));
-                return;
+                try
+                {
+                    prop.SetValue(renderable, Enum.ToObject(targetType, value));
+                    return;
+                }
+                catch { /* fall through to base reflection helper */ }
             }
 
             var underlyingNullable = Nullable.GetUnderlyingType(targetType);
             if (underlyingNullable is not null)
             {
-                var converted = underlyingNullable.IsEnum
-                    ? Enum.ToObject(underlyingNullable, value)
-                    : Convert.ChangeType(value, underlyingNullable);
-                prop.SetValue(renderable, converted);
-                return;
+                try
+                {
+                    var converted = underlyingNullable.IsEnum
+                        ? Enum.ToObject(underlyingNullable, value)
+                        : Convert.ChangeType(value, underlyingNullable);
+                    prop.SetValue(renderable, converted);
+                    return;
+                }
+                catch { /* fall through — incompatible primitive → Nullable<T> conversion */ }
             }
         }
         GraphicalUiElement.SetPropertyThroughReflection(renderable, element, propertyName, value);
