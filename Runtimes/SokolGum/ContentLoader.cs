@@ -71,10 +71,9 @@ public sealed class ContentLoader : IContentLoader
             return cached.List;
         }
 
-        var absolutePath = key;
-        if (!File.Exists(absolutePath)) return null;
+        if (!File.Exists(key)) return null;
 
-        var list = AnimationChainList.FromAchxFile(absolutePath);
+        var list = AnimationChainList.FromAchxFile(key);
 
         if (LoaderManager.Self.CacheTextures)
             LoaderManager.Self.AddDisposable(key, new ManagedAnimationChainList(list));

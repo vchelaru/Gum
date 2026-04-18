@@ -165,6 +165,11 @@ public sealed class Text : RenderableBase
         };
 
         // Truncate trailing lines that would spill past Height when requested.
+        // The Math.Max(1, ...) floor means even a Height smaller than one
+        // line still draws one line (that may overflow its block). This
+        // matches TextOverflowVerticalMode's "truncate whole lines" intent
+        // — the alternative (drawing nothing) would make a momentarily-
+        // undersized text block disappear entirely during resize animations.
         int linesToDraw = _wrappedLines.Count;
         if (TextOverflowVerticalMode == TextOverflowVerticalMode.TruncateLine
             && Height > 0 && lineStep > 0)

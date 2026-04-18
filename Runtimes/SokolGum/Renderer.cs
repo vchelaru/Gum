@@ -125,6 +125,13 @@ public sealed class Renderer : IRenderer
             RenderLayer(managers, _layers[i]);
     }
 
+    /// <summary>
+    /// Renders a single layer. <paramref name="prerender"/> is part of the
+    /// <see cref="IRenderer"/> contract used by backends that support an
+    /// off-screen prerender pass — we don't, and match RaylibGum's behaviour
+    /// of ignoring the flag. Present for signature compatibility so callers
+    /// holding an IRenderer can invoke this uniformly across runtimes.
+    /// </summary>
     public void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true)
     {
         layer.SortRenderables();

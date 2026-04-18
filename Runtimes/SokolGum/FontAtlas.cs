@@ -163,6 +163,13 @@ public sealed unsafe class FontAtlas : IDisposable
     {
         // Destroy old resources and create new ones at the new size.
         // fontstash will redraw glyphs into the new atlas.
+        //
+        // Called synchronously from inside fonsAtlasGrow, which happens
+        // mid-fonsDrawText. Any sgp draws already queued this frame that
+        // referenced the old view are safe because sokol_gfx defers real
+        // destruction until the frame commits — sg_destroy_view only
+        // marks the view dead, and the swap chain retains the underlying
+        // texture until sg_commit completes.
         if (_view.id != 0) sg_destroy_view(_view);
         if (_image.id != 0) sg_destroy_image(_image);
         return RenderCreate(w, h);
