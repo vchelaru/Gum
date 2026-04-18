@@ -130,6 +130,15 @@ public sealed class Text : RenderableBase
 
         var stash = systemManagers.FontStash;
 
+        // Oversample factor: fontstash rasterizes at FontSize*scale into a
+        // denser atlas, and FontAtlas.RenderDraw divides emitted vertex
+        // positions back down — so the atlas has 2× (or 4×) the texels per
+        // visible glyph pixel while the on-screen size stays at FontSize.
+        // Metrics (line-height, text bounds) come back from fontstash at
+        // the oversampled size too; we divide them by `scale` to get
+        // logical values usable for layout.
+        float scale = systemManagers.Fonts?.OversampleFactor ?? 1f;
+
         // Relay-out if text/size/font changed, or if our containing Width
         // was resized and word-wrap could produce different breaks.
         //
@@ -143,7 +152,7 @@ public sealed class Text : RenderableBase
         // visible wobble between adjacent frames.
         if (_layoutDirty || _lastLaidOutWidth != Width || _lastLaidOutFontSize != FontSize)
         {
-            RewrapLines(stash);
+            RewrapLines(stash, scale);
             _lastLaidOutWidth = Width;
             _lastLaidOutFontSize = FontSize;
             _layoutDirty = false;
@@ -152,13 +161,15 @@ public sealed class Text : RenderableBase
         if (_wrappedLines.Count == 0) return;
 
         fonsSetFont(stash, Font.Id);
-        fonsSetSize(stash, FontSize);
+        fonsSetSize(stash, FontSize * scale);
         fonsSetAlign(stash, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
 
-        // Font-native line height in pixels at the current size.
+        // Font-native line height in pixels at the current size. Divided by
+        // scale because fontstash returns metrics at the set size, which is
+        // FontSize*scale — we need the logical line step.
         float ascender = 0, descender = 0, lineh = 0;
         fonsVertMetrics(stash, ref ascender, ref descender, ref lineh);
-        float lineStep = lineh * LineHeightMultiplier;
+        float lineStep = (lineh / scale) * LineHeightMultiplier;
 
         float left = this.GetAbsoluteLeft();
         float top  = this.GetAbsoluteTop();
@@ -199,7 +210,7 @@ public sealed class Text : RenderableBase
             if (line.Length > lettersRemaining) line = line[..lettersRemaining];
             lettersRemaining -= line.Length;
 
-            float lineWidth = MeasureWidth(stash, line);
+            float lineWidth = MeasureWidth(stash, line, scale);
             float x = HorizontalAlignment switch
             {
                 HorizontalAlignment.Center => left + (Width - lineWidth) * 0.5f,
@@ -214,7 +225,7 @@ public sealed class Text : RenderableBase
                 y = SnapToPixel(y);
             }
 
-            DrawLineWithOptionalOutline(stash, line, x, y);
+            DrawLineWithOptionalOutline(stash, line, x, y, scale);
         }
     }
 
@@ -231,26 +242,44 @@ public sealed class Text : RenderableBase
     /// at each integer distance from 1 to OutlineThickness — same technique
     /// every bitmap-font renderer without native SDF support uses.
     /// </summary>
-    private void DrawLineWithOptionalOutline(IntPtr stash, string line, float x, float y)
+    private void DrawLineWithOptionalOutline(IntPtr stash, string line, float x, float y, float scale)
     {
+        // (x, y) arrive in logical pixels; fontstash operates in the
+        // oversampled atlas space, so every position handed to fonsDrawText
+        // is multiplied by scale. Outline offsets stay in logical px
+        // (so "OutlineThickness = 2" means "2-px visible halo" regardless
+        // of oversample) and get scaled the same way.
+        //
+        // Nested-rings strategy: for each integer radius r in 1..OutlineThickness,
+        // stamp the glyph N_r times at evenly-spaced angular samples on a
+        // circle of that radius, where N_r ≈ 2πr (one stamp per ~1px of
+        // arc). This keeps inter-stamp spacing roughly constant regardless
+        // of radius and produces a much rounder halo than the previous
+        // 8-compass pattern — at radius 2, the 8-compass corners sit at
+        // 2√2 ≈ 2.83px instead of the intended 2px, causing visible
+        // diagonal bulges. Sampling on a circle avoids that.
         if (OutlineThickness > 0)
         {
             fonsSetColor(stash, sfons_rgba(OutlineColor.R, OutlineColor.G, OutlineColor.B, Color.A));
-            for (int d = 1; d <= OutlineThickness; d++)
+            for (int r = 1; r <= OutlineThickness; r++)
             {
-                fonsDrawText(stash, x - d, y,     line, end: null!);
-                fonsDrawText(stash, x + d, y,     line, end: null!);
-                fonsDrawText(stash, x,     y - d, line, end: null!);
-                fonsDrawText(stash, x,     y + d, line, end: null!);
-                fonsDrawText(stash, x - d, y - d, line, end: null!);
-                fonsDrawText(stash, x + d, y - d, line, end: null!);
-                fonsDrawText(stash, x - d, y + d, line, end: null!);
-                fonsDrawText(stash, x + d, y + d, line, end: null!);
+                int samples = Math.Max(8, (int)MathF.Ceiling(MathF.PI * 2f * r));
+                // Interleave successive rings' angular samples so stamps
+                // from adjacent radii don't land on top of each other,
+                // which would leave radial streaks between sample rays.
+                float phaseOffset = (r % 2 == 0) ? MathF.PI / samples : 0f;
+                for (int s = 0; s < samples; s++)
+                {
+                    float angle = phaseOffset + s * (MathF.PI * 2f / samples);
+                    float dx = MathF.Cos(angle) * r;
+                    float dy = MathF.Sin(angle) * r;
+                    fonsDrawText(stash, (x + dx) * scale, (y + dy) * scale, line, end: null!);
+                }
             }
         }
 
         fonsSetColor(stash, sfons_rgba(Color.R, Color.G, Color.B, Color.A));
-        fonsDrawText(stash, x, y, line, end: null!);
+        fonsDrawText(stash, x * scale, y * scale, line, end: null!);
     }
 
     /// <summary>
@@ -259,13 +288,16 @@ public sealed class Text : RenderableBase
     /// word-wraps each paragraph to <see cref="IRenderableIpso.Width"/>
     /// when <see cref="WrapTextInsideBlock"/> is set.
     /// </summary>
-    private void RewrapLines(IntPtr stash)
+    private void RewrapLines(IntPtr stash, float scale)
     {
         _wrappedLines.Clear();
         if (string.IsNullOrEmpty(RawText) || Font is null) return;
 
+        // Match Render: rasterize measurements at the oversampled size, then
+        // divide results by `scale` to get logical widths used for wrap
+        // decisions against Width.
         fonsSetFont(stash, Font.Id);
-        fonsSetSize(stash, FontSize);
+        fonsSetSize(stash, FontSize * scale);
         fonsSetAlign(stash, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
 
         var paragraphs = RawText.Split('\n');
@@ -273,7 +305,7 @@ public sealed class Text : RenderableBase
 
         foreach (var paragraph in paragraphs)
         {
-            if (!wrap || MeasureWidth(stash, paragraph) <= Width)
+            if (!wrap || MeasureWidth(stash, paragraph, scale) <= Width)
             {
                 _wrappedLines.Add(paragraph);
                 continue;
@@ -297,7 +329,7 @@ public sealed class Text : RenderableBase
                 var trailingWhitespace = paragraph[wordEnd..spaceEnd];
                 var candidate = builder.Length == 0 ? word : builder + word;
 
-                if (MeasureWidth(stash, candidate) > Width && builder.Length > 0)
+                if (MeasureWidth(stash, candidate, scale) > Width && builder.Length > 0)
                 {
                     _wrappedLines.Add(builder.ToString().TrimEnd());
                     builder.Clear();
@@ -322,27 +354,27 @@ public sealed class Text : RenderableBase
             // missing glyphs, so if the font can't render the single-char
             // ellipsis we fall back to "..." which every Western font has.
             var ellipsis = "…";
-            float ellipsisWidth = MeasureWidth(stash, ellipsis);
+            float ellipsisWidth = MeasureWidth(stash, ellipsis, scale);
             if (ellipsisWidth <= 0f)
             {
                 ellipsis = "...";
-                ellipsisWidth = MeasureWidth(stash, ellipsis);
+                ellipsisWidth = MeasureWidth(stash, ellipsis, scale);
             }
 
             for (int i = 0; i < _wrappedLines.Count; i++)
             {
                 var line = _wrappedLines[i];
-                if (MeasureWidth(stash, line) <= Width) continue;
+                if (MeasureWidth(stash, line, scale) <= Width) continue;
 
                 int cut = line.Length;
-                while (cut > 0 && MeasureWidth(stash, line[..cut]) + ellipsisWidth > Width)
+                while (cut > 0 && MeasureWidth(stash, line[..cut], scale) + ellipsisWidth > Width)
                     cut--;
                 _wrappedLines[i] = line[..cut] + ellipsis;
             }
         }
     }
 
-    private static float MeasureWidth(IntPtr stash, string s)
+    private static float MeasureWidth(IntPtr stash, string s, float scale)
     {
         if (string.IsNullOrEmpty(s)) return 0f;
         // fontstash.h's fonsTextBounds writes 4 floats (minX, minY, maxX, maxY)
@@ -350,8 +382,11 @@ public sealed class Text : RenderableBase
         // we must back it with a 4-float buffer — passing a single float by
         // ref would let the native side overrun the stack. We only need the
         // advance width (the return value), so the buffer is discard-only.
+        // Fontstash returns the advance at the currently-set size (which is
+        // FontSize*scale), so divide to recover the logical width.
         Span<float> bounds = stackalloc float[4];
-        return fonsTextBounds(stash, 0, 0, s, end: null!,
-                              ref MemoryMarshal.GetReference(bounds));
+        float raw = fonsTextBounds(stash, 0, 0, s, end: null!,
+                                   ref MemoryMarshal.GetReference(bounds));
+        return raw / scale;
     }
 }

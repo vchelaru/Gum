@@ -20,6 +20,22 @@ namespace SokolGum;
 /// </summary>
 public sealed unsafe class FontAtlas : IDisposable
 {
+    /// <summary>
+    /// Glyph-rasterization oversample factor (matches FontStashSharp's
+    /// <c>FontResolutionFactor</c>). Text renders tell fontstash to rasterize
+    /// at <c>FontSize × Oversample</c>; our <c>RenderDraw</c> callback
+    /// divides emitted vertex positions by the same factor so the on-screen
+    /// size matches the requested FontSize. The atlas ends up with 2× (or
+    /// 4×) denser glyph bitmaps, so when sgp's linear sampler draws at
+    /// high-DPI each physical pixel samples a 2×2 atlas region — proper
+    /// bilinear downsampling. Set before creating the FontAtlas; 2.0 is
+    /// the sweet spot for Retina. 1.0 = disabled (vanilla fontstash).
+    /// </summary>
+    public static float Oversample { get; set; } = 2f;
+
+    /// <summary>The oversample factor this atlas was instantiated with. Immutable after construction.</summary>
+    public float OversampleFactor { get; }
+
     // FONSflags
     private const byte FONS_ZERO_TOPLEFT = 1;
 
@@ -75,6 +91,7 @@ public sealed unsafe class FontAtlas : IDisposable
     public FontAtlas(int initialWidth, int initialHeight, sg_sampler sampler)
     {
         _sampler = sampler;
+        OversampleFactor = Oversample;
         _selfHandle = GCHandle.Alloc(this);
 
         var p = new FONSparams
@@ -229,12 +246,16 @@ public sealed unsafe class FontAtlas : IDisposable
             _vertexScratch = new sgp_vertex[Math.Max(nverts, _vertexScratch.Length * 2)];
 
         // fontstash colors are packed uint32 with byte0=R, byte1=G, byte2=B, byte3=A.
+        // Positions are divided by OversampleFactor so the on-screen destination
+        // shrinks to the originally-requested FontSize — see the Oversample XML
+        // comment above for the full pipeline.
+        float invScale = 1f / OversampleFactor;
         for (int i = 0; i < nverts; i++)
         {
             uint c = colors[i];
             _vertexScratch[i] = new sgp_vertex
             {
-                position = new sgp_vec2 { x = verts[i * 2 + 0], y = verts[i * 2 + 1] },
+                position = new sgp_vec2 { x = verts[i * 2 + 0] * invScale, y = verts[i * 2 + 1] * invScale },
                 texcoord = new sgp_vec2 { x = tcoords[i * 2 + 0], y = tcoords[i * 2 + 1] },
                 color = new sgp_color_ub4
                 {

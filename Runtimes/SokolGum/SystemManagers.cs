@@ -80,9 +80,16 @@ public sealed class SystemManagers : ISystemManagers, IDisposable
             label = "SokolGum.NearestSampler",
         });
 
-        // Font atlas samples with LinearSampler so glyph edges stay smooth
-        // under arbitrary DPI scaling.
-        Fonts = new FontAtlas(fontAtlasSize, fontAtlasSize, LinearSampler);
+        // Font atlas with 2× oversampling: fontstash rasterizes glyphs at
+        // FontSize × OversampleFactor into a denser atlas, and FontAtlas's
+        // RenderDraw divides emitted vertex positions back down so on-screen
+        // size stays at FontSize. With LinearSampler each physical pixel
+        // samples a 2×2 region of the oversampled atlas — proper bilinear
+        // downsampling, which is both sharp AND smooth on curves. The atlas
+        // is bumped to 2× the requested size so the extra texels fit without
+        // forcing a mid-frame grow.
+        int atlasPixelSize = fontAtlasSize * (int)FontAtlas.Oversample;
+        Fonts = new FontAtlas(atlasPixelSize, atlasPixelSize, LinearSampler);
 
         LoaderManager.Self.ContentLoader = new ContentLoader();
 
