@@ -2,7 +2,15 @@
 #define XNALIKE
 #endif
 using Gum.Wireframe;
+#if RAYLIB
 using Raylib_cs;
+#endif
+#if SOKOL
+using SokolGum;
+using Gum.Graphics.Animation;
+using Color = SokolGum.Color;
+using Texture2D = SokolGum.Texture2D;
+#endif
 using Gum.Renderables;
 using System;
 using System.Collections.Generic;
@@ -121,6 +129,38 @@ public class NineSliceRuntime : InteractiveGue
     {
         get => ContainedNineSlice.BorderScale;
         set => ContainedNineSlice.BorderScale = value;
+    }
+#endif
+
+#if SOKOL
+    public float? CustomFrameTextureCoordinateWidth
+    {
+        get => ContainedNineSlice.CustomFrameTextureCoordinateWidth;
+        set { ContainedNineSlice.CustomFrameTextureCoordinateWidth = value; NotifyPropertyChanged(); }
+    }
+
+    public AnimationChainList? AnimationChains
+    {
+        get => ContainedNineSlice.AnimationChains;
+        set { ContainedNineSlice.AnimationChains = value; NotifyPropertyChanged(); }
+    }
+
+    public string? CurrentChainName
+    {
+        get => ContainedNineSlice.CurrentChainName;
+        set { ContainedNineSlice.CurrentChainName = value; NotifyPropertyChanged(); }
+    }
+
+    public bool Animate
+    {
+        get => ContainedNineSlice.Animate;
+        set { ContainedNineSlice.Animate = value; NotifyPropertyChanged(); }
+    }
+
+    public float AnimationSpeed
+    {
+        get => ContainedNineSlice.AnimationSpeed;
+        set { ContainedNineSlice.AnimationSpeed = value; NotifyPropertyChanged(); }
     }
 #endif
 

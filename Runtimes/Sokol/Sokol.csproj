@@ -17,7 +17,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>Sokol</AssemblyName>
+    <!--
+      AssemblyName intentionally differs from the project name to avoid a
+      case-insensitive filename collision with the native libsokol on
+      Windows. The Sokol.NET P/Invoke bindings declare
+      [DllImport("sokol", ...)] which resolves to the native sokol.dll
+      copied alongside the consumer's output by Sokol.Native.targets. If
+      this managed assembly were also named Sokol.dll it would share the
+      same filename slot as native sokol.dll on Windows — the two copies
+      would race and every native entry point (sapp_run, sg_setup, etc.)
+      would fail with EntryPointNotFoundException at runtime.
+    -->
+    <AssemblyName>Sokol.NET</AssemblyName>
     <RootNamespace>Sokol</RootNamespace>
     <!--
       These warnings come from the vendored Sokol.NET bindings we include
