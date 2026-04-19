@@ -148,7 +148,7 @@ public static unsafe class Program
             root.Add(new TextRuntime
             {
                 X = 550, Y = 268, Width = 170, Height = 18,
-                Font = _font, FontSize = 12f,
+                CustomFont = _font, FontSize = 12,
                 RawText = ".achx  1×  ·  2×",
                 Color = new Color(255, 200, 140),
             });
@@ -223,7 +223,7 @@ public static unsafe class Program
         root.Add(new TextRuntime
         {
             X = 230, Y = 675, Width = 260, Height = 20,
-            Font = _font, FontSize = 11f,
+            CustomFont = _font, FontSize = 11,
             RawText = "ClipsChildren + nested rotation",
             Color = new Color(160, 200, 255),
         });
@@ -238,15 +238,15 @@ public static unsafe class Program
         // the rest in scene-graph order, honoring Z).
         if (_font is not null)
         {
-            root.Add(new TextRuntime { X = 720, Y = 40,  Width = 520, Height = 40, Font = _font, FontSize = 32f, RawText = "SokolGum Sample",                  Color = new Color(120, 220, 255) });
-            root.Add(new TextRuntime { X = 720, Y = 90,  Width = 520, Height = 24, Font = _font, FontSize = 16f, RawText = "Gum UI rendered via sokol_gp + sokol_gfx", Color = new Color(180, 180, 180) });
+            root.Add(new TextRuntime { X = 720, Y = 40,  Width = 520, Height = 40, CustomFont = _font, FontSize = 32, RawText = "SokolGum Sample",                  Color = new Color(120, 220, 255) });
+            root.Add(new TextRuntime { X = 720, Y = 90,  Width = 520, Height = 24, CustomFont = _font, FontSize = 16, RawText = "Gum UI rendered via sokol_gp + sokol_gfx", Color = new Color(180, 180, 180) });
 
-            root.Add(new TextRuntime { X = 720, Y = 160, Width = 520, Height = 24, Font = _font, FontSize = 18f, RawText = "ColoredRectangles",            Color = new Color(255, 140, 180) });
-            root.Add(new TextRuntime { X = 720, Y = 190, Width = 520, Height = 20, Font = _font, FontSize = 12f, RawText = "SolidRectangle via sgp_draw_filled_rect", Color = new Color(160, 160, 160) });
+            root.Add(new TextRuntime { X = 720, Y = 160, Width = 520, Height = 24, CustomFont = _font, FontSize = 18, RawText = "ColoredRectangles",            Color = new Color(255, 140, 180) });
+            root.Add(new TextRuntime { X = 720, Y = 190, Width = 520, Height = 20, CustomFont = _font, FontSize = 12, RawText = "SolidRectangle via sgp_draw_filled_rect", Color = new Color(160, 160, 160) });
 
-            root.Add(new TextRuntime { X = 720, Y = 280, Width = 520, Height = 24, Font = _font, FontSize = 18f, RawText = "Sprites (procedural + PNG)",  Color = new Color(180, 220, 180) });
-            root.Add(new TextRuntime { X = 720, Y = 400, Width = 520, Height = 24, Font = _font, FontSize = 18f, RawText = "NineSlices",                   Color = new Color(220, 180, 140) });
-            root.Add(new TextRuntime { X = 720, Y = 560, Width = 520, Height = 24, Font = _font, FontSize = 18f, RawText = "Line primitives",              Color = new Color(255, 220, 180) });
+            root.Add(new TextRuntime { X = 720, Y = 280, Width = 520, Height = 24, CustomFont = _font, FontSize = 18, RawText = "Sprites (procedural + PNG)",  Color = new Color(180, 220, 180) });
+            root.Add(new TextRuntime { X = 720, Y = 400, Width = 520, Height = 24, CustomFont = _font, FontSize = 18, RawText = "NineSlices",                   Color = new Color(220, 180, 140) });
+            root.Add(new TextRuntime { X = 720, Y = 560, Width = 520, Height = 24, CustomFont = _font, FontSize = 18, RawText = "Line primitives",              Color = new Color(255, 220, 180) });
 
             // Outline-thickness progression — same word "Gum" drawn four times
             // at thicknesses 0 (none) through 3. The 8-direction offset
@@ -266,7 +266,7 @@ public static unsafe class Program
                 root.Add(new TextRuntime
                 {
                     X = columnX, Y = 225, Width = 130, Height = 32,
-                    Font = _font, FontSize = 24f,
+                    CustomFont = _font, FontSize = 24,
                     RawText = "Gum",
                     // Black text + white outline on the dark panel: each
                     // successive column sprouts a more visible white halo
@@ -280,7 +280,7 @@ public static unsafe class Program
                 root.Add(new TextRuntime
                 {
                     X = columnX, Y = 255, Width = 130, Height = 14,
-                    Font = _font, FontSize = 10f,
+                    CustomFont = _font, FontSize = 10,
                     RawText = $"outline {t}px",
                     Color = new Color(180, 180, 200),
                     HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center,
@@ -299,7 +299,7 @@ public static unsafe class Program
             root.Add(new TextRuntime
             {
                 X = 720, Y = 440, Width = 520, Height = 100,
-                Font = _font, FontSize = 18f,
+                CustomFont = _font, FontSize = 18,
                 RawText = "Multi-line wrapped text, centred horizontally and vertically, with a 2-pixel outline.",
                 Color = new Color(255, 230, 160),
                 OutlineThickness = 2,
@@ -315,7 +315,7 @@ public static unsafe class Program
             root.Add(new TextRuntime
             {
                 X = 720, Y = 640, Z = 0, Width = 520, Height = 28,
-                Font = _font, FontSize = 20f,
+                CustomFont = _font, FontSize = 20,
                 RawText = "Z-order: text at Z=0, rect at Z=1 over right half",
                 Color = new Color(240, 240, 240),
             });

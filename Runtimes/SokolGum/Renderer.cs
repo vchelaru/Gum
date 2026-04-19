@@ -28,6 +28,33 @@ public sealed class Renderer : IRenderer
     public ReadOnlyCollection<Layer> Layers => _layersReadOnly;
 
     /// <summary>
+    /// Creates a new <see cref="Layer"/>, appends it to the render list, and
+    /// returns it so the caller can assign <see cref="Layer.LayerCameraSettings"/>
+    /// or move renderables onto it via <c>MoveToLayer</c>.
+    /// </summary>
+    public Layer AddLayer()
+    {
+        var layer = new Layer();
+        _layers.Add(layer);
+        return layer;
+    }
+
+    /// <summary>
+    /// Removes <paramref name="layer"/> from the render list.
+    /// The <see cref="MainLayer"/> cannot be removed and the call is silently
+    /// ignored when <paramref name="layer"/> is the main layer.
+    /// </summary>
+    public void RemoveLayer(Layer layer)
+    {
+        if (layer == MainLayer)
+        {
+            return;
+        }
+
+        _layers.Remove(layer);
+    }
+
+    /// <summary>
     /// Default blend mode applied at the start of each frame and between
     /// renderables that don't declare their own. sokol_gp's SGP_BLENDMODE_BLEND
     /// is standard alpha (src.a, 1-src.a) — matches Gum's NonPremultiplied default.

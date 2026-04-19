@@ -105,6 +105,12 @@ public sealed class SystemManagers : ISystemManagers, IDisposable
         int atlasPixelSize = fontAtlasSize * (int)FontAtlas.Oversample;
         Fonts = new FontAtlas(atlasPixelSize, atlasPixelSize, LinearSampler);
 
+        // Wire the layout-time text measurer so Gum's RelativeToChildren
+        // sizing can query font metrics before the first render. Without
+        // this, Text.EffectiveMeasurer is null and WrappedTextHeight
+        // reports 0 — RelativeToChildren text collapses to zero height.
+        Gum.Renderables.Text.DefaultMeasurer = new FontstashTextMeasurer(Fonts);
+
         LoaderManager.Self.ContentLoader = new ContentLoader();
 
         // Lets Gum load .gumx files and instantiate our runtime types by name.

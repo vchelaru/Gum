@@ -1,7 +1,11 @@
+using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Renderables;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using SokolGum;
+using SokolGum.Tests.Support;
 
 namespace SokolGum.Tests.Runtimes;
 
@@ -15,10 +19,13 @@ public class TextRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void RawText_ShouldBeNullByDefault()
+    public void RawText_ShouldDefaultToHelloWorld()
     {
+        // Matches the shared TextRuntime default — constructor pre-seeds
+        // the contained Text with "Hello World" so visual consumers don't
+        // render an empty box before the first RawText assignment.
         var sut = new TextRuntime();
-        sut.RawText.ShouldBeNull();
+        sut.RawText.ShouldBe("Hello World");
     }
 
     [Fact]
@@ -29,26 +36,30 @@ public class TextRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void FontSize_ShouldDefaultTo16()
+    public void FontSize_ShouldDefaultToDefaultFontSize()
     {
+        // AssignFontInConstructor = true, so the ctor stamps
+        // DefaultFontSize (18) onto every new TextRuntime.
         var sut = new TextRuntime();
-        sut.FontSize.ShouldBe(16f);
+        sut.FontSize.ShouldBe(TextRuntime.DefaultFontSize);
     }
 
     [Fact]
     public void FontSize_ShouldRoundTrip()
     {
-        var sut = new TextRuntime { FontSize = 24f };
-        sut.FontSize.ShouldBe(24f);
+        var sut = new TextRuntime { FontSize = 24 };
+        sut.FontSize.ShouldBe(24);
     }
 
     [Fact]
-    public void Font_ShouldBeNullByDefault()
+    public void Font_ShouldDefaultToDefaultFontFamily()
     {
-        // Font is null until explicitly assigned (no "default Arial" behaviour
-        // as in RaylibGum — fontstash-based text has no built-in fallback).
+        // With AssignFontInConstructor = true, Font is set to DefaultFont
+        // ("Arial"). Actual fontstash resolution only happens when a
+        // SokolGum.SystemManagers is active; unit tests exercise the
+        // property shape rather than render output.
         var sut = new TextRuntime();
-        sut.Font.ShouldBeNull();
+        sut.Font.ShouldBe(TextRuntime.DefaultFont);
     }
 
     [Fact]
@@ -147,5 +158,61 @@ public class TextRuntimeTests : BaseTestClass
     {
         var sut = new TextRuntime { MaxLettersToShow = 10 };
         sut.MaxLettersToShow.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Text_ShouldImplementIText()
+    {
+        // Layout engine (GraphicalUiElement.cs:2342) checks `is IText` to
+        // decide whether to read WrappedTextHeight for RelativeToChildren.
+        // Without this, Text renderables report 0 height in layout.
+        Text sut = new Text();
+        sut.ShouldBeAssignableTo<IText>();
+    }
+
+    [Fact]
+    public void WrappedTextHeight_UsesMeasurerLineHeight_SingleLine()
+    {
+        ITextMeasurer? previousMeasurer = Text.DefaultMeasurer;
+        try
+        {
+            Text.DefaultMeasurer = new FakeTextMeasurer { LineHeight = 24f };
+            Text sut = new Text { RawText = "Hello" };
+            ((IText)sut).WrappedTextHeight.ShouldBe(24f);
+        }
+        finally { Text.DefaultMeasurer = previousMeasurer; }
+    }
+
+    [Fact]
+    public void WrappedTextHeight_ScalesWithLineCount()
+    {
+        ITextMeasurer? previousMeasurer = Text.DefaultMeasurer;
+        try
+        {
+            Text.DefaultMeasurer = new FakeTextMeasurer { LineHeight = 24f };
+            Text sut = new Text { RawText = "Line1\nLine2\nLine3" };
+            ((IText)sut).WrappedTextHeight.ShouldBe(72f);
+        }
+        finally { Text.DefaultMeasurer = previousMeasurer; }
+    }
+
+    [Fact]
+    public void TextRuntime_WithRelativeToChildrenHeight_UsesMeasuredHeight()
+    {
+        ITextMeasurer? previousMeasurer = Text.DefaultMeasurer;
+        try
+        {
+            Text.DefaultMeasurer = new FakeTextMeasurer { LineHeight = 24f };
+            TextRuntime sut = new TextRuntime
+            {
+                Width = 200,
+                WidthUnits = DimensionUnitType.Absolute,
+                HeightUnits = DimensionUnitType.RelativeToChildren,
+                RawText = "Hello",
+            };
+            sut.UpdateLayout();
+            sut.GetAbsoluteHeight().ShouldBe(24f);
+        }
+        finally { Text.DefaultMeasurer = previousMeasurer; }
     }
 }

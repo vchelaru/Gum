@@ -3,6 +3,7 @@ using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using ToolsUtilities;
 using static Sokol.SApp;
@@ -12,22 +13,41 @@ namespace SokolGum;
 /// <summary>
 /// High-level entry point for SokolGum. Mirrors the shape of
 /// <c>MonoGameGum.GumService</c> so the Sokol samples look like the
-/// documented MonoGame usage (see
-/// https://docs.flatredball.com/gum/code/getting-started/tutorials/gum-project-forms-tutorial/setup).
-/// Intentionally minimal: handles SystemManagers construction, content-root
-/// wiring, optional .gumx loading, and a <see cref="Root"/> container that
-/// elements get parented to via the <c>AddToRoot</c> extension. Does NOT
-/// yet cover input, update loops, Forms wiring, or the deferred queue —
-/// those are tracked in .claude/designs/runtime-refactoring.md as a future
-/// full port of GumService to Sokol.
+/// documented MonoGame usage. Handles SystemManagers construction,
+/// content-root wiring, optional .gumx loading, and a <see cref="Root"/>
+/// container that elements get parented to via the <c>AddToRoot</c> extension.
 /// </summary>
 public sealed class GumService
 {
-    public static GumService Default { get; } = new();
+    #region Default
 
-    private GumService() { }
+    static GumService _default = default!;
 
-    public SystemManagers SystemManagers { get; private set; } = null!;
+    public static GumService Default => _default ??= new GumService();
+
+    #endregion
+
+    private GumService()
+    {
+        Root = new Gum.GueDeriving.ContainerRuntime
+        {
+            Width = 0,
+            WidthUnits = DimensionUnitType.RelativeToParent,
+            Height = 0,
+            HeightUnits = DimensionUnitType.RelativeToParent,
+            Name = "Main Root",
+            HasEvents = false,
+        };
+    }
+
+    private SystemManagers? _systemManagers;
+
+    public SystemManagers SystemManagers
+    {
+        get => _systemManagers ?? throw new InvalidOperationException(
+            "GumService has not been initialized. Call GumService.Default.Initialize() first.");
+        private set => _systemManagers = value;
+    }
 
     /// <summary>
     /// The loaded project, or null if <see cref="Initialize"/> was called
@@ -40,9 +60,25 @@ public sealed class GumService
     /// top-level visuals and participate in layout and draw. Conceptually
     /// matches <c>MonoGameGum.GumService.Root</c>.
     /// </summary>
-    public InteractiveGue Root { get; private set; } = null!;
+    public InteractiveGue Root { get; }
+
+    /// <summary>Gets or sets the logical canvas width.</summary>
+    public float CanvasWidth
+    {
+        get => GraphicalUiElement.CanvasWidth;
+        set => GraphicalUiElement.CanvasWidth = value;
+    }
+
+    /// <summary>Gets or sets the logical canvas height.</summary>
+    public float CanvasHeight
+    {
+        get => GraphicalUiElement.CanvasHeight;
+        set => GraphicalUiElement.CanvasHeight = value;
+    }
 
     public bool IsInitialized { get; private set; }
+
+    #region Initialize
 
     /// <summary>
     /// Initializes SokolGum and (optionally) loads a .gumx project. Call
@@ -50,49 +86,23 @@ public sealed class GumService
     /// </summary>
     /// <param name="gumProjectFile">
     /// Optional path to a .gumx project file. Relative paths are resolved
-    /// against the current working directory. When a project is loaded,
-    /// <see cref="FileManager.RelativeDirectory"/> is set to the directory
-    /// containing the .gumx so relative <c>SourceFile</c> / <c>Font</c>
-    /// references inside the project resolve as the Gum editor sees them
-    /// (project root = asset root). Pass null (the default) for code-only
-    /// scenarios where screens are built programmatically instead of
-    /// loaded from disk.
+    /// against the current working directory. When omitted, Gum operates in
+    /// code-only mode and screens are built programmatically.
     /// </param>
     /// <returns>The loaded project, or null if no path was supplied.</returns>
     public GumProjectSave? Initialize(string? gumProjectFile = null)
     {
+        if (IsInitialized)
+        {
+            throw new InvalidOperationException("Initialize has already been called once. It cannot be called again.");
+        }
+        IsInitialized = true;
+
         SystemManagers = new SystemManagers();
         SystemManagers.Default = SystemManagers;
+        ISystemManagers.Default = SystemManagers;
         SystemManagers.Initialize();
 
-        if (gumProjectFile != null)
-        {
-            var gumxPath = Path.IsPathRooted(gumProjectFile)
-                ? gumProjectFile
-                : Path.Combine(Directory.GetCurrentDirectory(), gumProjectFile);
-            Project = LoadProject(gumxPath);
-
-            // Anchor relative asset lookups at the .gumx's directory —
-            // mirrors MonoGameGum.GumService. CustomSetPropertyOnRenderable
-            // prepends RelativeDirectory to any SourceFile / Font value
-            // before handing it to the ContentLoader.
-            FileManager.RelativeDirectory = FileManager.GetDirectory(gumxPath);
-        }
-
-        // Root spans the canvas so RelativeToParent children resolve.
-        // Matches the Raylib branch of MonoGame's GumService: Root is
-        // registered with the layer via AddToManagers, then its renderable
-        // is moved to index 0 of MainLayer so anything added to
-        // Root.Children draws above (not under) it.
-        Root = new Gum.GueDeriving.ContainerRuntime
-        {
-            Width = 0,
-            WidthUnits = DimensionUnitType.RelativeToParent,
-            Height = 0,
-            HeightUnits = DimensionUnitType.RelativeToParent,
-            Name = "Main Root",
-            HasEvents = false,
-        };
         Root.AddToManagers(SystemManagers, layer: null);
         Root.UpdateLayout();
 
@@ -103,10 +113,8 @@ public sealed class GumService
             mainLayer.Insert(0, rootRenderable);
         }
 
-        // Default the logical canvas to the current window size, matching
-        // what the Raylib sample does manually before InitWindow. Callers
-        // wanting a fixed design size independent of the window set these
-        // explicitly after Initialize returns.
+        // Default the logical canvas to the current window size.
+        // Callers wanting a fixed design size set CanvasWidth/Height after Initialize.
         if (GraphicalUiElement.CanvasWidth == 0f)
         {
             GraphicalUiElement.CanvasWidth = sapp_width();
@@ -116,20 +124,88 @@ public sealed class GumService
             GraphicalUiElement.CanvasHeight = sapp_height();
         }
 
-        IsInitialized = true;
+        if (!string.IsNullOrEmpty(gumProjectFile))
+        {
+            var gumxPath = Path.IsPathRooted(gumProjectFile)
+                ? gumProjectFile
+                : Path.Combine(Directory.GetCurrentDirectory(), gumProjectFile);
+
+            var project = GumProjectSave.Load(gumxPath, out var loadResult);
+
+            if (project == null || !string.IsNullOrEmpty(loadResult.ErrorMessage))
+            {
+                throw new InvalidOperationException(
+                    $"Failed to load {gumxPath}: {loadResult.ErrorMessage}");
+            }
+
+            // Anchor relative asset lookups (SourceFile, Font) at the .gumx's directory.
+            // Mirrors MonoGameGum.GumService — CustomSetPropertyOnRenderable prepends
+            // RelativeDirectory before handing paths to the ContentLoader.
+            FileManager.RelativeDirectory = FileManager.GetDirectory(gumxPath);
+
+            ObjectFinder.Self.GumProjectSave = project;
+
+            // Initialize() fixes serialized boxed-int enum values (e.g. XUnits stored
+            // as xsd:int) back to their proper typed enums, and hydrates every standard
+            // element's DefaultState. Skipping this causes NotImplementedException in
+            // UnitConverter.ConvertToGeneralUnit when loading any screen that uses
+            // non-default unit values. Matches what MonoGameGum.GumService does.
+            project.Initialize();
+
+            Project = project;
+        }
+
         return Project;
     }
 
+    #endregion
+
+    #region Uninitialize
+
     /// <summary>
-    /// Per-frame tick. Advances sprite animation chains and runs the
-    /// GraphicalUiElement animation hook on <see cref="Root"/>. Call once
-    /// per frame, typically just before <see cref="Draw"/>. With no
-    /// argument, uses <c>sapp_frame_duration()</c> for the delta.
+    /// Tears down this GumService instance, releasing GPU resources and
+    /// resetting static state so that Initialize can be called again.
+    /// </summary>
+    public void Uninitialize()
+    {
+        Root.Children.Clear();
+        Root.RemoveFromManagers();
+
+        ElementSaveExtensions.ClearRegistrations();
+
+        ObjectFinder.Self.GumProjectSave = null;
+
+        LoaderManager.Self.DisposeAndClear();
+
+        GraphicalUiElement.SetPropertyOnRenderable = null!;
+        GraphicalUiElement.AddRenderableToManagers = null;
+        GraphicalUiElement.RemoveRenderableFromManagers = null;
+
+        GraphicalUiElement.CanvasWidth = 0;
+        GraphicalUiElement.CanvasHeight = 0;
+
+        SystemManagers.Default = null;
+        ISystemManagers.Default = null;
+
+        FileManager.RelativeDirectory = "Content/";
+
+        IsInitialized = false;
+        _systemManagers = null;
+        _default = null!;
+    }
+
+    #endregion
+
+    #region Update / Draw
+
+    /// <summary>
+    /// Per-frame tick. Advances sprite animation chains on <see cref="Root"/>.
+    /// Uses <c>sapp_frame_duration()</c> for the delta.
     /// </summary>
     public void Update() => Update(sapp_frame_duration());
 
     /// <inheritdoc cref="Update()"/>
-    /// <param name="secondsSinceLastFrame">Elapsed seconds override — pass this to scale or pause time.</param>
+    /// <param name="secondsSinceLastFrame">Elapsed seconds — pass this to scale or pause time.</param>
     public void Update(double secondsSinceLastFrame)
     {
         Root.AnimateSelf(secondsSinceLastFrame);
@@ -139,12 +215,8 @@ public sealed class GumService
     /// <summary>
     /// Renders the current Gum scene. Logical canvas comes from
     /// <c>GraphicalUiElement.CanvasWidth/Height</c>; framebuffer size is
-    /// queried from <c>sapp_width()/sapp_height()</c> each frame (so
-    /// window resizes are self-healing). Wraps <c>Renderer.BeginFrame</c>
-    /// / <c>Renderer.Draw</c> / <c>Renderer.EndFrame</c>. The native
-    /// sokol_gfx pass boundaries (<c>sg_begin_pass</c> / <c>sg_end_pass</c>
-    /// / <c>sg_commit</c>) stay in caller code because multi-pass setups
-    /// may want to wrap Gum in a pass the service can't know about.
+    /// queried from <c>sapp_width()/sapp_height()</c> each frame so window
+    /// resizes are self-healing.
     /// </summary>
     public void Draw()
     {
@@ -158,42 +230,20 @@ public sealed class GumService
         renderer.EndFrame(SystemManagers);
     }
 
-    private static GumProjectSave LoadProject(string gumxPath)
-    {
-        var project = GumProjectSave.Load(gumxPath, out var result)
-            ?? throw new InvalidOperationException(
-                $"Failed to load {gumxPath}: {result.ErrorMessage}");
-
-        // GumProjectSave.Load creates bare stubs for any
-        // <StandardElementReference> whose companion .gutx file is missing
-        // on disk. Hydrate each with its in-memory default state so
-        // DefaultState is non-null when Gum walks instances during
-        // ToGraphicalUiElement.
-        foreach (var std in project.StandardElements)
-        {
-            if (std.States.Count == 0
-                && StandardElementsManager.Self.DefaultStates.TryGetValue(std.Name, out var defaultState))
-            {
-                std.Initialize(defaultState);
-            }
-        }
-        ObjectFinder.Self.GumProjectSave = project;
-        return project;
-    }
+    #endregion
 }
 
 /// <summary>
-/// Extensions matching the shape of MonoGameGum's and SkiaGum's equivalents
-/// so Sokol sample code reads identically to the documented patterns.
+/// Extension methods matching the shape of MonoGameGum's equivalents so
+/// Sokol sample code reads identically to the documented patterns.
 /// </summary>
 public static class ElementSaveExtensionMethods
 {
     /// <summary>
     /// Instantiates a GraphicalUiElement from the supplied ElementSave using
-    /// the GumService's SystemManagers by default. Matches
+    /// the GumService's SystemManagers. Matches
     /// <c>MonoGameGum.ElementSaveExtensionMethods.ToGraphicalUiElement</c>.
-    /// Uses <c>addToManagers: false</c> — callers are expected to pair with
-    /// <see cref="GraphicalUiElementExtensionMethods.AddToRoot"/>.
+    /// Callers pair this with <see cref="GraphicalUiElementExtensionMethods.AddToRoot"/>.
     /// </summary>
     public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers? systemManagers = null)
     {
@@ -203,15 +253,14 @@ public static class ElementSaveExtensionMethods
 }
 
 /// <summary>
-/// Extension methods on <see cref="GraphicalUiElement"/> for adding
-/// elements to and removing them from the GumService root container.
+/// Extension methods on <see cref="GraphicalUiElement"/> for adding/removing
+/// elements from the GumService root container.
 /// </summary>
 public static class GraphicalUiElementExtensionMethods
 {
     /// <summary>
     /// Adds this element as a child of the GumService root container,
-    /// making it a top-level element that will be rendered and receive
-    /// layout updates.
+    /// making it a top-level element that will be rendered.
     /// </summary>
     public static void AddToRoot(this GraphicalUiElement element)
     {

@@ -36,6 +36,16 @@
 	</ItemGroup>
 
 	<!--
+		System registry access for SystemFontResolver on Windows. The package
+		is a no-op on other OSes at runtime (we gate calls behind an
+		IsOSPlatform check), but the reference is required for the
+		Registry API to resolve at compile time on net8.0.
+	-->
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+	</ItemGroup>
+
+	<!--
 		Shared AnimationChain + playback classes. Pulled in as source so
 		SOKOL preprocessor directives take effect locally (Texture2D
 		aliases to SokolGum.Texture2D, texture-loading branch uses our

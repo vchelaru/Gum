@@ -78,6 +78,12 @@ public sealed unsafe class FontAtlas : IDisposable
     // once fonsDeleteInternal has torn down the context.
     private readonly List<IntPtr> _fontDataBuffers = [];
 
+    // Cache of (family, bold, italic) -> fontstash font id. Reused by
+    // TextRuntime so repeated .gumx elements sharing a font don't each
+    // trigger a separate TTF read + fonsAddFontMem upload.
+    private readonly Dictionary<(string Family, bool Bold, bool Italic), Font> _fontsByIdentity
+        = new(capacity: 8);
+
     // sokol_gfx permits exactly one sg_update_image per image per frame.
     // fontstash may call renderUpdate multiple times in a frame (one per
     // fonsDrawText that rasterizes new glyphs). We accumulate the union
@@ -121,7 +127,43 @@ public sealed unsafe class FontAtlas : IDisposable
     internal void TrackFontData(IntPtr nativeData)
     {
         if (nativeData != IntPtr.Zero)
+        {
             _fontDataBuffers.Add(nativeData);
+        }
+    }
+
+    /// <summary>
+    /// Returns a fontstash <see cref="Font"/> for the given identity,
+    /// loading it via <see cref="SystemFontResolver"/> on first request
+    /// and caching by (family, bold, italic) tuple thereafter. Returns
+    /// null if no matching system font is installed — callers are
+    /// responsible for a fallback. TODO: ship a bundled fallback TTF
+    /// so missing system fonts don't produce invisible text.
+    /// </summary>
+    public Font? GetOrLoadFont(string family, bool bold, bool italic)
+    {
+        if (string.IsNullOrEmpty(family))
+        {
+            return null;
+        }
+
+        var key = (family, bold, italic);
+        if (_fontsByIdentity.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
+        var path = SystemFontResolver.Resolve(family, bold, italic);
+        if (path is null)
+        {
+            return null;
+        }
+
+        var bytes = File.ReadAllBytes(path);
+        var name = $"{family}{(bold ? "-Bold" : "")}{(italic ? "-Italic" : "")}";
+        var font = Font.FromTrueTypeBytes(this, name, bytes);
+        _fontsByIdentity[key] = font;
+        return font;
     }
 
     public void Dispose()

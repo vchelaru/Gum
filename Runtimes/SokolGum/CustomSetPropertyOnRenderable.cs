@@ -186,27 +186,56 @@ public static class CustomSetPropertyOnRenderable
                 RequestLayoutIfSizedToChildren(element);
                 return true;
 
+            // Font-identity properties: route to the TextRuntime, which owns
+            // resolution of (family, size, bold, italic) into a fontstash
+            // font handle via its local UpdateToFontValues.
             case "Font":
-                return AssignFont(text, value);
-
-            case "CustomFontFile":
-                if (textRuntime is not null && value is string path && !string.IsNullOrEmpty(path))
+                if (textRuntime is not null && value is string family)
                 {
-                    var font = TryLoadFont(path);
-                    if (font is not null) text.Font = font;
+                    textRuntime.Font = family;
                 }
                 return true;
-
-            // These exist in Gum's schema for bitmap-font backends (Raylib/MG/FRB)
-            // that regenerate a per-size .fnt cache. Our fontstash-based text
-            // applies size/style at rasterization time, so we just swallow
-            // them rather than letting reflection spam errors about missing
-            // properties. OutlineThickness / LineHeightMultiplier / alignment
-            // fall through to reflection because Text now exposes them.
-            case "UseCustomFont":
-            case "UseFontSmoothing":
-            case "IsItalic":
+            case "FontSize":
+                if (textRuntime is not null && value is int size)
+                {
+                    textRuntime.FontSize = size;
+                }
+                return true;
             case "IsBold":
+                if (textRuntime is not null && value is bool bold)
+                {
+                    textRuntime.IsBold = bold;
+                }
+                return true;
+            case "IsItalic":
+                if (textRuntime is not null && value is bool italic)
+                {
+                    textRuntime.IsItalic = italic;
+                }
+                return true;
+            case "OutlineThickness":
+                if (textRuntime is not null && value is int ot)
+                {
+                    textRuntime.OutlineThickness = ot;
+                }
+                return true;
+            case "UseFontSmoothing":
+                if (textRuntime is not null && value is bool ufs)
+                {
+                    textRuntime.UseFontSmoothing = ufs;
+                }
+                return true;
+            case "UseCustomFont":
+                if (textRuntime is not null && value is bool ucf)
+                {
+                    textRuntime.UseCustomFont = ucf;
+                }
+                return true;
+            case "CustomFontFile":
+                if (textRuntime is not null)
+                {
+                    textRuntime.CustomFontFile = value as string;
+                }
                 return true;
 
             default:
@@ -354,36 +383,6 @@ public static class CustomSetPropertyOnRenderable
         else
         {
             AssignTextureFromPath(t => nineSlice.Texture = t, path, element);
-        }
-    }
-
-    private static bool AssignFont(Text text, object value)
-    {
-        switch (value)
-        {
-            case Font font:
-                text.Font = font;
-                return true;
-            case string fontPath when !string.IsNullOrEmpty(fontPath):
-                var loaded = TryLoadFont(fontPath);
-                if (loaded is not null) text.Font = loaded;
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    private static Font? TryLoadFont(string path)
-    {
-        path = ResolveRelativePath(path);
-        try
-        {
-            return LoaderManager.Self.ContentLoader.LoadContent<Font>(path);
-        }
-        catch
-        {
-            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException) throw;
-            return null;
         }
     }
 

@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using System.Text;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -44,8 +43,21 @@ public enum TextPositionRoundingMode
 /// render callbacks emit into sokol_gp, so text batches alongside other
 /// renderables in scene-graph order.
 /// </summary>
-public sealed class Text : RenderableBase
+public sealed class Text : RenderableBase, IText
 {
+    /// <summary>
+    /// Process-wide default measurer wired by <see cref="SokolGum.SystemManagers.Initialize"/>.
+    /// Tests can swap in a <c>FakeTextMeasurer</c> without touching fontstash.
+    /// Null means measurement returns 0 — layout-driven sizing (<c>RelativeToChildren</c>)
+    /// will report 0 height until a measurer is assigned.
+    /// </summary>
+    public static ITextMeasurer? DefaultMeasurer { get; set; }
+
+    /// <summary>Per-instance override; null falls back to <see cref="DefaultMeasurer"/>.</summary>
+    public ITextMeasurer? Measurer { get; set; }
+
+    private ITextMeasurer? EffectiveMeasurer => Measurer ?? DefaultMeasurer;
+
     /// <summary>
     /// Process-wide switch for pixel snapping. Defaults to <see cref="TextRenderingPositionMode.SnapToPixel"/>
     /// matching RaylibGum/MonoGame convention. Flip to FreeFloating for
@@ -70,7 +82,12 @@ public sealed class Text : RenderableBase
     private const int FONS_ALIGN_LEFT = 1 << 0;
     private const int FONS_ALIGN_TOP  = 1 << 3;
 
-    public Font? Font { get; set; }
+    private Font? _font;
+    public Font? Font
+    {
+        get => _font;
+        set { if (!ReferenceEquals(_font, value)) { _font = value; _layoutDirty = true; } }
+    }
 
     private string? _rawText;
     /// <summary>
@@ -151,13 +168,7 @@ public sealed class Text : RenderableBase
         // change can legitimately shift a wrap break by one character,
         // and catching only the "large change" cases would introduce
         // visible wobble between adjacent frames.
-        if (_layoutDirty || _lastLaidOutWidth != Width || _lastLaidOutFontSize != FontSize)
-        {
-            RewrapLines(stash, scale);
-            _lastLaidOutWidth = Width;
-            _lastLaidOutFontSize = FontSize;
-            _layoutDirty = false;
-        }
+        EnsureWrapped();
 
         if (_wrappedLines.Count == 0) return;
 
@@ -211,7 +222,11 @@ public sealed class Text : RenderableBase
             if (line.Length > lettersRemaining) line = line[..lettersRemaining];
             lettersRemaining -= line.Length;
 
-            float lineWidth = MeasureWidth(stash, line, scale);
+            // Route per-line width through the measurer so Render and
+            // EnsureWrapped share one measurement path. In production this
+            // is FontstashTextMeasurer using the same stash; tests that
+            // never call Render don't care about this site.
+            float lineWidth = EffectiveMeasurer?.MeasureLineWidth(Font, FontSize, line.AsSpan()) ?? 0f;
             float x = HorizontalAlignment switch
             {
                 HorizontalAlignment.Center => left + (Width - lineWidth) * 0.5f,
@@ -284,29 +299,43 @@ public sealed class Text : RenderableBase
     }
 
     /// <summary>
-    /// Recomputes <see cref="_wrappedLines"/> from <see cref="RawText"/>.
-    /// Splits on <c>\n</c> first (manual breaks always honoured), then
-    /// word-wraps each paragraph to <see cref="IRenderableIpso.Width"/>
-    /// when <see cref="WrapTextInsideBlock"/> is set.
+    /// Populates <see cref="_wrappedLines"/> from <see cref="RawText"/>,
+    /// <see cref="Width"/>, and <see cref="FontSize"/>. Uses the effective
+    /// <see cref="ITextMeasurer"/> — no fontstash / GPU dependency — so
+    /// layout can call this before any rendering has happened. Splits on
+    /// <c>\n</c> first (manual breaks always honoured), then word-wraps
+    /// each paragraph to <see cref="IRenderableIpso.Width"/> when
+    /// <see cref="WrapTextInsideBlock"/> is set. Ellipsis trimming runs
+    /// here too.
     /// </summary>
-    private void RewrapLines(IntPtr stash, float scale)
+    private void EnsureWrapped()
     {
-        _wrappedLines.Clear();
-        if (string.IsNullOrEmpty(RawText) || Font is null) return;
-
-        // Match Render: rasterize measurements at the oversampled size, then
-        // divide results by `scale` to get logical widths used for wrap
-        // decisions against Width.
-        fonsSetFont(stash, Font.Id);
-        fonsSetSize(stash, FontSize * scale);
-        fonsSetAlign(stash, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
-
-        var paragraphs = RawText.Split('\n');
-        bool wrap = WrapTextInsideBlock && Width > 0;
-
-        foreach (var paragraph in paragraphs)
+        if (!_layoutDirty && _lastLaidOutWidth == Width && _lastLaidOutFontSize == FontSize)
         {
-            if (!wrap || MeasureWidth(stash, paragraph, scale) <= Width)
+            return;
+        }
+
+        _wrappedLines.Clear();
+        _lastLaidOutWidth = Width;
+        _lastLaidOutFontSize = FontSize;
+        _layoutDirty = false;
+
+        if (string.IsNullOrEmpty(RawText))
+        {
+            return;
+        }
+        ITextMeasurer? measurer = EffectiveMeasurer;
+        if (measurer is null)
+        {
+            return;
+        }
+
+        string[] paragraphs = RawText.Split('\n');
+        bool wrap = WrapTextInsideBlock && Width > 0 && !float.IsPositiveInfinity(Width);
+
+        foreach (string paragraph in paragraphs)
+        {
+            if (!wrap || measurer.MeasureLineWidth(Font, FontSize, paragraph.AsSpan()) <= Width)
             {
                 _wrappedLines.Add(paragraph);
                 continue;
@@ -321,16 +350,22 @@ public sealed class Text : RenderableBase
             while (i < paragraph.Length)
             {
                 int wordStart = i;
-                while (i < paragraph.Length && !char.IsWhiteSpace(paragraph[i])) i++;
+                while (i < paragraph.Length && !char.IsWhiteSpace(paragraph[i]))
+                {
+                    i++;
+                }
                 int wordEnd = i;
-                while (i < paragraph.Length && char.IsWhiteSpace(paragraph[i]) && paragraph[i] != '\n') i++;
+                while (i < paragraph.Length && char.IsWhiteSpace(paragraph[i]) && paragraph[i] != '\n')
+                {
+                    i++;
+                }
                 int spaceEnd = i;
 
-                var word = paragraph[wordStart..wordEnd];
-                var trailingWhitespace = paragraph[wordEnd..spaceEnd];
-                var candidate = builder.Length == 0 ? word : builder + word;
+                string word = paragraph[wordStart..wordEnd];
+                string trailingWhitespace = paragraph[wordEnd..spaceEnd];
+                string candidate = builder.Length == 0 ? word : builder + word;
 
-                if (MeasureWidth(stash, candidate, scale) > Width && builder.Length > 0)
+                if (measurer.MeasureLineWidth(Font, FontSize, candidate.AsSpan()) > Width && builder.Length > 0)
                 {
                     _wrappedLines.Add(builder.ToString().TrimEnd());
                     builder.Clear();
@@ -341,7 +376,10 @@ public sealed class Text : RenderableBase
                     builder.Append(word).Append(trailingWhitespace);
                 }
             }
-            if (builder.Length > 0) _wrappedLines.Add(builder.ToString().TrimEnd());
+            if (builder.Length > 0)
+            {
+                _wrappedLines.Add(builder.ToString().TrimEnd());
+            }
         }
 
         // Optional horizontal ellipsis when a single word (no break point)
@@ -351,43 +389,114 @@ public sealed class Text : RenderableBase
         if (wrap && TextOverflowHorizontalMode == TextOverflowHorizontalMode.EllipsisLetter)
         {
             // U+2026 is visually tighter than three ASCII periods but not
-            // all TTFs include it. fonsTextBounds returns 0 advance for
-            // missing glyphs, so if the font can't render the single-char
-            // ellipsis we fall back to "..." which every Western font has.
-            var ellipsis = "…";
-            float ellipsisWidth = MeasureWidth(stash, ellipsis, scale);
+            // all TTFs include it. Fontstash returns 0 advance for missing
+            // glyphs, so if the font can't render the single-char ellipsis
+            // we fall back to "..." which every Western font has.
+            string ellipsis = "…";
+            float ellipsisWidth = measurer.MeasureLineWidth(Font, FontSize, ellipsis.AsSpan());
             if (ellipsisWidth <= 0f)
             {
                 ellipsis = "...";
-                ellipsisWidth = MeasureWidth(stash, ellipsis, scale);
+                ellipsisWidth = measurer.MeasureLineWidth(Font, FontSize, ellipsis.AsSpan());
             }
 
             for (int i = 0; i < _wrappedLines.Count; i++)
             {
-                var line = _wrappedLines[i];
-                if (MeasureWidth(stash, line, scale) <= Width) continue;
+                string line = _wrappedLines[i];
+                if (measurer.MeasureLineWidth(Font, FontSize, line.AsSpan()) <= Width)
+                {
+                    continue;
+                }
 
                 int cut = line.Length;
-                while (cut > 0 && MeasureWidth(stash, line[..cut], scale) + ellipsisWidth > Width)
+                while (cut > 0 && measurer.MeasureLineWidth(Font, FontSize, line.AsSpan(0, cut)) + ellipsisWidth > Width)
+                {
                     cut--;
+                }
                 _wrappedLines[i] = line[..cut] + ellipsis;
             }
         }
     }
 
-    private static float MeasureWidth(IntPtr stash, string s, float scale)
+    #region IText
+
+    /// <inheritdoc/>
+    float IText.FontScale => 1f;
+
+    /// <inheritdoc/>
+    float IText.DescenderHeight
     {
-        if (string.IsNullOrEmpty(s)) return 0f;
-        // fontstash.h's fonsTextBounds writes 4 floats (minX, minY, maxX, maxY)
-        // into the bounds pointer. The P/Invoke signature is `ref float`, so
-        // we must back it with a 4-float buffer — passing a single float by
-        // ref would let the native side overrun the stack. We only need the
-        // advance width (the return value), so the buffer is discard-only.
-        // Fontstash returns the advance at the currently-set size (which is
-        // FontSize*scale), so divide to recover the logical width.
-        Span<float> bounds = stackalloc float[4];
-        float raw = fonsTextBounds(stash, 0, 0, s, end: null!,
-                                   ref MemoryMarshal.GetReference(bounds));
-        return raw / scale;
+        get
+        {
+            ITextMeasurer? m = EffectiveMeasurer;
+            if (m is null)
+            {
+                return 0f;
+            }
+            m.GetVerticalMetrics(Font, FontSize, out _, out float descent, out _);
+            return descent;
+        }
     }
+
+    /// <inheritdoc/>
+    float IText.WrappedTextWidth
+    {
+        get
+        {
+            ITextMeasurer? m = EffectiveMeasurer;
+            if (m is null || string.IsNullOrEmpty(RawText))
+            {
+                return 0f;
+            }
+            EnsureWrapped();
+            float maxLine = 0f;
+            foreach (string line in _wrappedLines)
+            {
+                float w = m.MeasureLineWidth(Font, FontSize, line.AsSpan());
+                if (w > maxLine)
+                {
+                    maxLine = w;
+                }
+            }
+            return maxLine;
+        }
+    }
+
+    /// <inheritdoc/>
+    float IText.WrappedTextHeight
+    {
+        get
+        {
+            ITextMeasurer? m = EffectiveMeasurer;
+            if (m is null || string.IsNullOrEmpty(RawText))
+            {
+                return 0f;
+            }
+            EnsureWrapped();
+            m.GetVerticalMetrics(Font, FontSize, out _, out _, out float lineHeight);
+            return _wrappedLines.Count * lineHeight * LineHeightMultiplier;
+        }
+    }
+
+    /// <inheritdoc/>
+    string? IText.StoredMarkupText => RawText;
+
+    // IText.Width conflicts with RenderableBase.Width (non-nullable). Bridge
+    // via explicit impl: a null setter means "unconstrained" → clear Width
+    // to 0, matching the "Width > 0 => constraint active" convention used
+    // throughout EnsureWrapped / Render.
+    /// <inheritdoc/>
+    float? IText.Width
+    {
+        get => Width == 0 ? (float?)null : Width;
+        set => Width = value ?? 0;
+    }
+
+    /// <inheritdoc/>
+    void IText.SetNeedsRefreshToTrue() { _layoutDirty = true; }
+
+    /// <inheritdoc/>
+    void IText.UpdatePreRenderDimensions() { EnsureWrapped(); }
+
+    #endregion
 }
