@@ -1489,7 +1489,7 @@ public class ListBox : ItemsControl, IInputReceiver
             DoTopLevelFocusUpdate();
         }
 
-#if (MONOGAME || KNI || FNA) && !FRB
+#if !FRB
         base.HandleKeyboardFocusUpdate();
 #endif
 

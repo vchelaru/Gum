@@ -607,7 +607,7 @@ public class ComboBox :
             DoClosedDropDownFocusUpdate();
         }
 
-#if MONOGAME && !FRB
+#if !FRB
         base.HandleKeyboardFocusUpdate();
 #endif
 

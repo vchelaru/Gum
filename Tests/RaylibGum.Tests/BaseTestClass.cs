@@ -14,6 +14,11 @@ namespace RaylibGum.Tests;
 
 public class BaseTestClass : IDisposable
 {
+    public BaseTestClass()
+    {
+        GumService.Default.InitializeForTesting();
+    }
+
     public virtual void Dispose()
     {
         FrameworkElement.KeyboardsForUiControl.Clear();

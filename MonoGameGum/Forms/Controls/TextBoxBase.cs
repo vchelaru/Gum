@@ -1111,7 +1111,7 @@ public abstract class TextBoxBase :
         }
 #endif
 
-#if XNALIKE && !FRB
+#if !FRB
         base.HandleKeyboardFocusUpdate();
 #endif
 

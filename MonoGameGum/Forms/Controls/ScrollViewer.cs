@@ -721,7 +721,7 @@ public class ScrollViewer :
             DoTopLevelFocusUpdate();
         }
 
-#if (MONOGAME || KNI || FNA) && !FRB
+#if !FRB
         base.HandleKeyboardFocusUpdate();
 #endif
 
