@@ -21,13 +21,13 @@ public class SpriteRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void Tint_ShouldRoundTrip()
+    public void Color_ShouldRoundTrip()
     {
         var color = new Color(100, 150, 200, 255);
-        var sut = new SpriteRuntime { Tint = color };
-        sut.Tint.R.ShouldBe((byte)100);
-        sut.Tint.G.ShouldBe((byte)150);
-        sut.Tint.B.ShouldBe((byte)200);
+        var sut = new SpriteRuntime { Color = color };
+        sut.Color.R.ShouldBe((byte)100);
+        sut.Color.G.ShouldBe((byte)150);
+        sut.Color.B.ShouldBe((byte)200);
     }
 
     [Fact]

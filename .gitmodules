@@ -3,4 +3,4 @@
 	url = https://github.com/FNA-XNA/FNA
 [submodule "Sokol.NET"]
 	path = Sokol.NET
-	url = git@github.com:wiredmatt/Sokol.NET.git
+	url = https://github.com/wiredmatt/Sokol.NET.git

@@ -16,10 +16,10 @@ public sealed class SpriteRuntime : GraphicalUiElement
         set { Contained.Texture = value; NotifyPropertyChanged(); }
     }
 
-    public Color Tint
+    public Color Color
     {
-        get => Contained.Tint;
-        set { Contained.Tint = value; NotifyPropertyChanged(); }
+        get => Contained.Color;
+        set { Contained.Color = value; NotifyPropertyChanged(); }
     }
 
     // `new` hides GraphicalUiElement.FlipHorizontal, which is the design-time

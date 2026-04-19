@@ -29,12 +29,12 @@ public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordina
 {
     public Texture2D? Texture { get; set; }
     public Rectangle? SourceRectangle { get; set; }
-    public Color Tint = Color.White;
+    public Color Color = Color.White;
     public bool FlipVertical { get; set; }
 
-    public int Red   { get => Tint.R; set => Tint.R = (byte)value; }
-    public int Green { get => Tint.G; set => Tint.G = (byte)value; }
-    public int Blue  { get => Tint.B; set => Tint.B = (byte)value; }
+    public int Red   { get => Color.R; set => Color.R = (byte)value; }
+    public int Green { get => Color.G; set => Color.G = (byte)value; }
+    public int Blue  { get => Color.B; set => Color.B = (byte)value; }
 
     public float? TextureWidth  => Texture?.Width;
     public float? TextureHeight => Texture?.Height;
@@ -147,8 +147,8 @@ public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordina
         if (FlipHorizontal) { sx += sw; sw = -sw; }
         if (FlipVertical)   { sy += sh; sh = -sh; }
 
-        var a = (Tint.A / 255f) * (Alpha / 255f);
-        sgp_set_color(Tint.R / 255f, Tint.G / 255f, Tint.B / 255f, a);
+        var a = (Color.A / 255f) * (Alpha / 255f);
+        sgp_set_color(Color.R / 255f, Color.G / 255f, Color.B / 255f, a);
         sgp_set_view(0, Texture.View);
         // Point filtering by default — matches Gum core's TextureFilter.Point
         // default and keeps pixel art crisp. Callers wanting bilinear on

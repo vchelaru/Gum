@@ -48,9 +48,12 @@ Runtimes/SokolGum/
 ├── (Animation — linked from RenderingLibrary/Graphics/Animation/*.cs
 │                  via the csproj's <Compile Include> with #elif SOKOL
 │                  branches; no backend-local source lives here.)
-├── GueDeriving/        # ColoredRectangleRuntime, ContainerRuntime,
-│                       # NineSliceRuntime, SpriteRuntime, TextRuntime,
-│                       # InteractiveColoredRectangleRuntime
+├── GueDeriving/        # SpriteRuntime + TextRuntime are backend-local.
+│                       # ColoredRectangleRuntime + ContainerRuntime
+│                       # are file-linked from MonoGameGum/GueDeriving/
+│                       # via #if SOKOL branches; NineSliceRuntime
+│                       # is file-linked from RaylibGum/GueDeriving/.
+│                       # See .claude/designs/runtime-refactoring.md.
 ├── Renderables/        # Sprite, NineSlice, SolidRectangle, Text,
 │                       # Line, LineRectangle, LineCircle, LinePolygon,
 │                       # LineGrid
@@ -64,6 +67,9 @@ Runtimes/SokolGum/
 │                       # Lifetime tied to FontAtlas, not individual.
 ├── FontAtlas.cs        # fontstash context whose render callbacks emit
 │                       # into sokol_gp. Owns TTF byte buffers.
+├── GumService.cs       # High-level entry point — Initialize (optional
+│                       # .gumx), Root container, Update, Draw. Mirrors
+│                       # MonoGameGum.GumService's shape.
 ├── RenderableCreator.cs  # Maps .gumx base-type names to renderables
 ├── Renderer.cs         # IRenderer — BeginFrame / Draw / EndFrame /
 │                       # Update (animation tick) with scissor stack +
@@ -268,6 +274,12 @@ keyboard shortcut to quit — use the window's close button or `⌘Q`.
 Keep commits granular and scoped (one concern per commit). If you
 touch text rendering, test both samples at multiple window sizes,
 verify `.gumx` still loads, and run at least thickness-0, 1, 2, 3
-outlines to catch off-by-one artifacts. There are no automated tests
-for this backend yet; a `Tests/SokolGum.Tests/` project following
-`Tests/RaylibGum.Tests/`'s pattern would be a good first addition.
+outlines to catch off-by-one artifacts.
+
+Automated tests live at `Tests/SokolGum.Tests/` — run via `dotnet
+test AllLibraries.sln --filter "FullyQualifiedName~SokolGum"`. The
+tests cover runtime property forwarding and `CustomSetPropertyOnRenderable`
+dispatch. They do **not** cover the `GumService.Initialize` →
+`Update` → `Draw` path because that requires a live `sg_setup`
+environment (and no window, no sokol_gfx context); the two Sokol
+samples serve as the integration test for that flow.

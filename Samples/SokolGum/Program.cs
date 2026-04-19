@@ -97,7 +97,7 @@ public static unsafe class Program
 
         // Row 2 — Sprites from the procedural gradient texture (sgp_draw_textured_rect).
         root.Add(new SpriteRuntime { X = 40,  Y = 160, Width = 200, Height = 100, Texture = _gradientTexture });
-        root.Add(new SpriteRuntime { X = 260, Y = 160, Width = 200, Height = 100, Texture = _gradientTexture, Tint = new Color(255, 180, 180) });
+        root.Add(new SpriteRuntime { X = 260, Y = 160, Width = 200, Height = 100, Texture = _gradientTexture, Color = new Color(255, 180, 180) });
         root.Add(new SpriteRuntime { X = 480, Y = 160, Width = 200, Height = 100, Texture = _gradientTexture, FlipHorizontal = true, FlipVertical = true });
 
         // Row 3 — Sprite from a loaded PNG (stb_image via ContentLoader).
@@ -105,7 +105,7 @@ public static unsafe class Program
         {
             root.Add(new SpriteRuntime { X = 40,  Y = 280, Width = _logoTexture.Width,     Height = _logoTexture.Height,     Texture = _logoTexture });
             root.Add(new SpriteRuntime { X = 160, Y = 280, Width = _logoTexture.Width * 2, Height = _logoTexture.Height * 2, Texture = _logoTexture });
-            root.Add(new SpriteRuntime { X = 400, Y = 280, Width = _logoTexture.Width,     Height = _logoTexture.Height,     Texture = _logoTexture, Tint = new Color(180, 255, 180) });
+            root.Add(new SpriteRuntime { X = 400, Y = 280, Width = _logoTexture.Width,     Height = _logoTexture.Height,     Texture = _logoTexture, Color = new Color(180, 255, 180) });
         }
 
         // Row 4 — NineSlice at three sizes. The test texture has distinctly
