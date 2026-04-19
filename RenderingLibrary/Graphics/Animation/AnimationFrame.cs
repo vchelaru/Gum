@@ -9,6 +9,8 @@ using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 using Texture2D = Raylib_cs.Texture2D;
 #elif SKIA
 using Texture2D = SkiaSharp.SKBitmap;
+#elif SOKOL
+using Texture2D = SokolGum.Texture2D;
 #endif
 
 using System.Xml.Serialization;
@@ -36,7 +38,7 @@ namespace Gum.Graphics.Animation
         #endregion
         public static AnimationFrame Empty;
 
-#if MONOGAME || KNI || XNA4 || RAYLIB || SKIA
+#if MONOGAME || KNI || XNA4 || RAYLIB || SKIA || SOKOL
         /// <summary>
         /// The texture that the AnimationFrame will show.
         /// </summary>
@@ -269,6 +271,24 @@ namespace Gum.Graphics.Animation
                 }
                 //frame.Texture = FlatRedBallServices.Load<Texture2D>(TextureName, contentManagerName);
             }
+#elif SOKOL
+            if (loadTexture && !string.IsNullOrEmpty(animationFrameSave.TextureName))
+            {
+                try
+                {
+                    var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + animationFrameSave.TextureName);
+                    frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<SokolGum.Texture2D>(fileName);
+                }
+                catch (System.IO.FileNotFoundException)
+                {
+                    if (Wireframe.GraphicalUiElement.MissingFileBehavior == Wireframe.MissingFileBehavior.ThrowException)
+                    {
+                        string message = $"Error loading texture in animation :\n{animationFrameSave.TextureName}";
+                        throw new System.IO.FileNotFoundException(message);
+                    }
+                    frame.Texture = null;
+                }
+            }
 #endif
             frame.FlipHorizontal = animationFrameSave.FlipHorizontal;
             frame.FlipVertical = animationFrameSave.FlipVertical;
@@ -292,7 +312,7 @@ namespace Gum.Graphics.Animation
                 //    throw new Exception("The frame must have its texture loaded to use the Pixel coordinate type");
                 //}
 
-#if MONOGAME || KNI || XNA4
+#if MONOGAME || KNI || XNA4 || SOKOL
                 if (frame.Texture != null)
                 {
                     frame.LeftCoordinate = animationFrameSave.LeftCoordinate / frame.Texture.Width;

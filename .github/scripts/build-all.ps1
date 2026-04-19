@@ -11,11 +11,12 @@ $ErrorActionPreference = 'Continue'
 $failures = [System.Collections.Generic.List[string]]::new()
 $successes = [System.Collections.Generic.List[string]]::new()
 
-$slns = Get-ChildItem -Path $Path -Recurse -File -Filter '*.sln' |
+$slns = Get-ChildItem -Path $Path -Recurse -File |
+        Where-Object { $_.Extension -in '.sln', '.slnx' } |
         Select-Object -ExpandProperty FullName
 
 if (-not $slns) {
-    Write-Warning "No .sln files found under '$Path'."
+    Write-Warning "No .sln / .slnx files found under '$Path'."
     exit 1
 } 
 else {

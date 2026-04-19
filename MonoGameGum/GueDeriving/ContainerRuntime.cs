@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 using BlendState = Microsoft.Xna.Framework.Graphics.BlendState;
 #endif
 
-#if RAYLIB
+#if RAYLIB || SOKOL
 using BlendState = Gum.BlendState;
 namespace Gum.GueDeriving;
 #elif SKIA
@@ -53,7 +53,7 @@ public class ContainerRuntime : InteractiveGue
     }
 
 
-#if !SKIA
+#if !SKIA && !SOKOL
     public BlendState BlendState
     {
 #if XNALIKE
@@ -118,9 +118,11 @@ public class ContainerRuntime : InteractiveGue
         Height = 150;
     }
 
+#if !SOKOL
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
     [Obsolete("Use the AddToRoot extension method instead (e.g. myContainer.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
+#endif
 
     public override string BatchKey => Children?.LastOrDefault()?.BatchKey ?? string.Empty;
 

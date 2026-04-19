@@ -100,6 +100,11 @@ jobs:
         run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
         continue-on-error: true
 
+      - name: SokolGum.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/SokolGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        continue-on-error: true
+
       - name: GumToolUnitTests (Windows Only)
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
         run: dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"

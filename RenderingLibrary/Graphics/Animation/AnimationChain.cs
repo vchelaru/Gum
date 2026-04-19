@@ -8,6 +8,8 @@ using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 using Texture2D = Raylib_cs.Texture2D;
 #elif SKIA
 using Texture2D = SkiaSharp.SKBitmap;
+#elif SOKOL
+using Texture2D = SokolGum.Texture2D;
 #endif
 
 

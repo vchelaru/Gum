@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Proxy project for Sokol.NET.
+
+    Sokol.NET/src/sokol/sokol.csproj can't be ProjectReference'd:
+    SDebugUI.cs in src/sokol/ imports the Imgui namespace whose types live
+    in src/imgui/ (a sibling folder), which sokol.csproj doesn't include.
+    So building it standalone fails.
+
+    This project wraps the Sokol.NET source files (from both folders) into
+    a proper library that the rest of the solution can reference cleanly.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!--
+      AssemblyName intentionally differs from the project name to avoid a
+      case-insensitive filename collision with the native libsokol on
+      Windows. The Sokol.NET P/Invoke bindings declare
+      [DllImport("sokol", ...)] which resolves to the native sokol.dll
+      copied alongside the consumer's output by Sokol.Native.targets. If
+      this managed assembly were also named Sokol.dll it would share the
+      same filename slot as native sokol.dll on Windows — the two copies
+      would race and every native entry point (sapp_run, sg_setup, etc.)
+      would fail with EntryPointNotFoundException at runtime.
+    -->
+    <AssemblyName>Sokol.NET</AssemblyName>
+    <RootNamespace>Sokol</RootNamespace>
+    <!--
+      These warnings come from the vendored Sokol.NET bindings we include
+      verbatim via the Compile globs below — they aren't our code to fix:
+        CS9084 - struct member is a readonly ref returning field
+        CS9087 - returning ref of a member of a ref-returning property
+        CS8600 - converting null literal to non-nullable type
+        CS8603 - possible null reference return
+    -->
+    <NoWarn>CS9084;CS9087;CS8600;CS8603</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Sokol.NET\src\sokol\*.cs" Link="sokol\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Sokol.NET\src\sokol\generated\*.cs" Link="sokol\generated\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Sokol.NET\src\imgui\*.cs" Link="imgui\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

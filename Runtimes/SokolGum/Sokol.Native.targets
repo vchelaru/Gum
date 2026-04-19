@@ -1,0 +1,62 @@
+<Project>
+
+  <!--
+    Shared post-build logic for any sample / consumer that needs to copy
+    the native libsokol binary alongside its managed output. Imported from
+    Samples/SokolGum*/*.csproj so the lib-copy targets and OS/arch casing
+    map live in one place.
+
+    Consumers must have already defined:
+      $(SokolLibsDir)   — path to Sokol.NET/libs (or equivalent)
+
+    Everything else (OS booleans, arch-dir mapping, per-OS copy targets)
+    is handled below.
+  -->
+
+  <PropertyGroup>
+    <IsOSX Condition="$([MSBuild]::IsOSPlatform('OSX'))">true</IsOSX>
+    <IsLinux Condition="$([MSBuild]::IsOSPlatform('Linux'))">true</IsLinux>
+    <IsWindows Condition="$([MSBuild]::IsOSPlatform('Windows'))">true</IsWindows>
+    <OSArchLower>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLower())</OSArchLower>
+    <BuildConfigLower>$(Configuration.ToLower())</BuildConfigLower>
+
+    <!--
+      Sokol.NET/libs/ uses mixed casing per OS: linux/X64/, macos/X64/,
+      macos/arm64/, windows/x64/. A blanket .ToLower() breaks on
+      case-sensitive filesystems (Linux always, macOS sometimes), so we
+      pick the right-cased subdir per OS+arch explicitly.
+    -->
+    <SokolArchDir Condition="'$(IsWindows)' == 'true' And '$(OSArchLower)' == 'x64'">x64</SokolArchDir>
+    <SokolArchDir Condition="'$(IsLinux)'   == 'true' And '$(OSArchLower)' == 'x64'">X64</SokolArchDir>
+    <SokolArchDir Condition="'$(IsOSX)'     == 'true' And '$(OSArchLower)' == 'arm64'">arm64</SokolArchDir>
+    <SokolArchDir Condition="'$(IsOSX)'     == 'true' And '$(OSArchLower)' == 'x64'">X64</SokolArchDir>
+  </PropertyGroup>
+
+  <Target Name="CopyLibSokolMac" AfterTargets="Build" Condition="'$(IsOSX)' == 'true'">
+    <PropertyGroup>
+      <LibSokol>$(SokolLibsDir)\macos\$(SokolArchDir)\$(BuildConfigLower)\libsokol.dylib</LibSokol>
+    </PropertyGroup>
+    <Error Text="No SokolArchDir mapping for macOS $(OSArchLower). Add one to Sokol.Native.targets." Condition="'$(SokolArchDir)' == ''" />
+    <Error Text="libsokol.dylib not found at $(LibSokol). See Sokol.NET README for build instructions." Condition="!Exists('$(LibSokol)')" />
+    <Copy SourceFiles="$(LibSokol)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyLibSokolLinux" AfterTargets="Build" Condition="'$(IsLinux)' == 'true'">
+    <PropertyGroup>
+      <LibSokol>$(SokolLibsDir)\linux\$(SokolArchDir)\$(BuildConfigLower)\libsokol.so</LibSokol>
+    </PropertyGroup>
+    <Error Text="No SokolArchDir mapping for Linux $(OSArchLower). Add one to Sokol.Native.targets." Condition="'$(SokolArchDir)' == ''" />
+    <Error Text="libsokol.so not found at $(LibSokol). See Sokol.NET README for build instructions." Condition="!Exists('$(LibSokol)')" />
+    <Copy SourceFiles="$(LibSokol)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyLibSokolWindows" AfterTargets="Build" Condition="'$(IsWindows)' == 'true'">
+    <PropertyGroup>
+      <LibSokol>$(SokolLibsDir)\windows\$(SokolArchDir)\$(BuildConfigLower)\sokol.dll</LibSokol>
+    </PropertyGroup>
+    <Error Text="No SokolArchDir mapping for Windows $(OSArchLower). Add one to Sokol.Native.targets." Condition="'$(SokolArchDir)' == ''" />
+    <Error Text="sokol.dll not found at $(LibSokol). See Sokol.NET README for build instructions." Condition="!Exists('$(LibSokol)')" />
+    <Copy SourceFiles="$(LibSokol)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

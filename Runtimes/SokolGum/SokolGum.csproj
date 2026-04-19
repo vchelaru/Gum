@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<RootNamespace>SokolGum</RootNamespace>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<PackageId>Gum.sokol</PackageId>
+		<Version>2026.4.17.1</Version>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>$(DefineConstants);SOKOL;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants>$(DefineConstants);SOKOL;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+		<DefineConstants>$(DefineConstants);SOKOL</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\Sokol\Sokol.csproj" />
+	</ItemGroup>
+
+	<!--
+		System registry access for SystemFontResolver on Windows. The package
+		is a no-op on other OSes at runtime (we gate calls behind an
+		IsOSPlatform check), but the reference is required for the
+		Registry API to resolve at compile time on net8.0.
+	-->
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+	</ItemGroup>
+
+	<!--
+		Shared AnimationChain + playback classes. Pulled in as source so
+		SOKOL preprocessor directives take effect locally (Texture2D
+		aliases to SokolGum.Texture2D, texture-loading branch uses our
+		ContentLoader). Matches the linking pattern Runtimes/RaylibGum
+		and Runtimes/SkiaGum use for the same files.
+	-->
+	<!--
+		Shared GueDeriving runtimes. Same linking pattern Runtimes/RaylibGum
+		uses: these files have SOKOL branches that select Sokol-friendly
+		type aliases (BlendState=Gum.BlendState, etc.) and namespace
+		(Gum.GueDeriving). Keeping one source of truth avoids drift.
+	-->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum\GueDeriving\ColoredRectangleRuntime.cs" Link="GueDeriving\ColoredRectangleRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
+		<Compile Include="..\RaylibGum\GueDeriving\NineSliceRuntime.cs" Link="GueDeriving\NineSliceRuntime.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" Link="Animation\SpriteAnimationLogic.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\IAnimatable.cs" Link="Renderables\IAnimatable.cs" />
+	</ItemGroup>
+
+</Project>

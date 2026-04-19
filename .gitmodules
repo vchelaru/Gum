@@ -1,3 +1,6 @@
 [submodule "fna"]
 	path = fna
 	url = https://github.com/FNA-XNA/FNA
+[submodule "Sokol.NET"]
+	path = Sokol.NET
+	url = https://github.com/wiredmatt/Sokol.NET.git
