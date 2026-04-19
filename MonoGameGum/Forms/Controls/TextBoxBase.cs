@@ -609,13 +609,7 @@ public abstract class TextBoxBase :
             {
                 var xChange = MainCursor.XChange / global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
 
-#if RAYLIB
-                var stringLength = coreTextObject.MeasureString(DisplayedText);
-
-#else
-                var bitmapFont = this.coreTextObject.BitmapFont;
-                var stringLength = bitmapFont.MeasureString(DisplayedText, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
-#endif
+                var stringLength = coreTextObject.MeasureString(DisplayedText, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
 
                 var minimumShift = System.Math.Min(
                     edgeToTextPadding,
@@ -1720,21 +1714,13 @@ public abstract class TextBoxBase :
         else
         {
             var selectionPosition = new SelectionPosition();
-#if RAYLIB
-            var firstMeasure = this.coreTextObject.MeasureString(substring);
-#else
-            var firstMeasure = this.coreTextObject.BitmapFont.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
-#endif
+            var firstMeasure = this.coreTextObject.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
             substring = DisplayedText.Substring(0, selectionStart + selectionLength);
 
             selectionPosition.XStart = this.textComponent.X + firstMeasure;
             selectionPosition.Y = this.textComponent.Y;
             selectionPosition.Width = 1 +
-#if RAYLIB
-                this.coreTextObject.MeasureString(substring) - firstMeasure;
-#else
-                this.coreTextObject.BitmapFont.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
-#endif
+                this.coreTextObject.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
 
             selectionStartEnds.Add(selectionPosition);
         }
@@ -1836,15 +1822,17 @@ public abstract class TextBoxBase :
         var substring = stringToMeasure.Substring(0, indexIntoLine);
         caretComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
-#if RAYLIB
-        if(true)
+        // The unified MeasureString overload internally handles the no-font
+        // case (falling back to DefaultBitmapFont, or zero under TEST). The
+        // outer null-guard previously used on MonoGame is preserved as a
+        // portable "do we have something to measure against" check - on
+        // Raylib there is no BitmapFont property, so we guard on the
+        // coreTextObject itself. In practice this is always non-null here,
+        // but keeping the else branch preserves the historical side effect
+        // on caretComponent.X when no measurement can be performed.
+        if (this.coreTextObject != null)
         {
-            var measure = this.coreTextObject.MeasureString(substring);
-#else
-        if (this.coreTextObject.BitmapFont != null)
-        {
-            var measure = this.coreTextObject.BitmapFont.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
-#endif
+            var measure = this.coreTextObject.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
             return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
         }
         else

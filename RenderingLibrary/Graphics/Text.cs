@@ -852,6 +852,33 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
+    /// <summary>
+    /// Returns the size of the string, ignoring font scale, but considering the bitmap font
+    /// and honoring the supplied <paramref name="style"/>. When no BitmapFont is available,
+    /// the style is ignored (there is no way to honor it without glyph metrics) and the method
+    /// falls back to the same behavior as the parameterless <see cref="MeasureString(string)"/>.
+    /// </summary>
+    public float MeasureString(string whatToMeasure, HorizontalMeasurementStyle style)
+    {
+        if (this.BitmapFont != null)
+        {
+            return BitmapFont.MeasureString(whatToMeasure, style);
+        }
+        else if (DefaultBitmapFont != null)
+        {
+            return DefaultBitmapFont.MeasureString(whatToMeasure, style);
+        }
+        else
+        {
+#if TEST
+            return 0;
+#else
+            float wordWidth = DefaultFont.MeasureString(whatToMeasure).X;
+            return wordWidth;
+#endif
+        }
+    }
+
     // made public so that objects that need to position based off of the texture can force call this
     public void TryUpdateTextureToRender()
     {

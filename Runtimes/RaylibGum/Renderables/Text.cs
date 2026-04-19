@@ -610,6 +610,18 @@ public class Text : IVisible, IRenderableIpso,
         return MeasureTextEx(Font, whatToMeasure, _font.BaseSize, 0).X;
     }
 
+    /// <summary>
+    /// Returns the size of the string using Raylib's native text measurement. The
+    /// <paramref name="style"/> parameter is advisory on the Raylib runtime and is
+    /// ignored - Raylib's native engine is used regardless of the requested style.
+    /// This overload exists so callers can write platform-agnostic code that also
+    /// works on runtimes (such as the MonoGame runtime) where the style is honored.
+    /// </summary>
+    public float MeasureString(string whatToMeasure, HorizontalMeasurementStyle style)
+    {
+        return MeasureTextEx(Font, whatToMeasure, _font.BaseSize, 0).X;
+    }
+
     public virtual void PreRender() { }
 
     public void Render(ISystemManagers managers)
