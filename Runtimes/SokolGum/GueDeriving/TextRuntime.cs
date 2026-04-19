@@ -51,18 +51,6 @@ public class TextRuntime : InteractiveGue
         set { ContainedText.TextOverflowHorizontalMode = value; NotifyPropertyChanged(); }
     }
 
-    public TextOverflowVerticalMode TextOverflowVerticalMode
-    {
-        get => ContainedText.TextOverflowVerticalMode;
-        set { ContainedText.TextOverflowVerticalMode = value; NotifyPropertyChanged(); }
-    }
-
-    public bool WrapTextInsideBlock
-    {
-        get => ContainedText.WrapTextInsideBlock;
-        set { ContainedText.WrapTextInsideBlock = value; NotifyPropertyChanged(); }
-    }
-
     public float LineHeightMultiplier
     {
         get => ContainedText.LineHeightMultiplier;
@@ -77,6 +65,12 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// Color of the outline drawn behind glyphs when <see cref="OutlineThickness"/>
+    /// is > 0. Sokol-only — shared TextRuntime doesn't expose this yet; kept here
+    /// because fontstash outlines are drawn at render time from an arbitrary color
+    /// rather than baked into a .fnt file. May migrate to shared in a future pass.
+    /// </summary>
     public SokolGum.Color OutlineColor
     {
         get => ContainedText.OutlineColor;
@@ -183,12 +177,6 @@ public class TextRuntime : InteractiveGue
     {
         get => outlineThickness;
         set { outlineThickness = value; UpdateToFontValues(); }
-    }
-
-    public string? RawText
-    {
-        get => ContainedText.RawText;
-        set { ContainedText.RawText = value; NotifyPropertyChanged(); }
     }
 
     public string? Text

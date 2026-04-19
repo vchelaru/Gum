@@ -19,20 +19,20 @@ public class TextRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void RawText_ShouldDefaultToHelloWorld()
+    public void Text_ShouldDefaultToHelloWorld()
     {
         // Matches the shared TextRuntime default — constructor pre-seeds
         // the contained Text with "Hello World" so visual consumers don't
-        // render an empty box before the first RawText assignment.
+        // render an empty box before the first Text assignment.
         var sut = new TextRuntime();
-        sut.RawText.ShouldBe("Hello World");
+        sut.Text.ShouldBe("Hello World");
     }
 
     [Fact]
-    public void RawText_ShouldRoundTrip()
+    public void Text_ShouldRoundTrip()
     {
-        var sut = new TextRuntime { RawText = "hello" };
-        sut.RawText.ShouldBe("hello");
+        var sut = new TextRuntime { Text = "hello" };
+        sut.Text.ShouldBe("hello");
     }
 
     [Fact]
@@ -105,13 +105,6 @@ public class TextRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void TextOverflowVerticalMode_ShouldDefaultToSpillOver()
-    {
-        var sut = new TextRuntime();
-        sut.TextOverflowVerticalMode.ShouldBe(TextOverflowVerticalMode.SpillOver);
-    }
-
-    [Fact]
     public void OutlineThickness_ShouldDefaultToZero()
     {
         var sut = new TextRuntime();
@@ -123,13 +116,6 @@ public class TextRuntimeTests : BaseTestClass
     {
         var sut = new TextRuntime { OutlineThickness = 2 };
         sut.OutlineThickness.ShouldBe(2);
-    }
-
-    [Fact]
-    public void WrapTextInsideBlock_ShouldDefaultToTrue()
-    {
-        var sut = new TextRuntime();
-        sut.WrapTextInsideBlock.ShouldBeTrue();
     }
 
     [Fact]
@@ -197,6 +183,126 @@ public class TextRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void WrappedText_TwoWordsPerLine_ProducesTwoLines()
+    {
+        // PPC=10. "aaa bbb " = 80px (includes trailing space), adding "ccc"
+        // makes candidate "aaa bbb ccc" = 110px > Width 80 → break.
+        // Expected wrap: ["aaa bbb", "ccc ddd"]
+        var previous = Text.DefaultMeasurer;
+        try
+        {
+            Text.DefaultMeasurer = new FakeTextMeasurer { LineHeight = 24f, PixelsPerChar = 10f };
+            var sut = new Text
+            {
+                Width = 80,
+                RawText = "aaa bbb ccc ddd",
+            };
+            ((IText)sut).WrappedTextHeight.ShouldBe(48f);
+        }
+        finally { Text.DefaultMeasurer = previous; }
+    }
+
+    [Fact]
+    public void WrappedText_ExplicitNewlinesAlwaysHonored_EvenWithoutWrap()
+    {
+        // Manual \n creates two lines; with Width = 1000 the per-line
+        // measurement (50px each) never exceeds Width, so no further
+        // wrap breaks are introduced beyond the explicit newline.
+        var previous = Text.DefaultMeasurer;
+        try
+        {
+            Text.DefaultMeasurer = new FakeTextMeasurer { LineHeight = 24f, PixelsPerChar = 10f };
+            var sut = new Text
+            {
+                Width = 1000,
+                RawText = "line1\nline2",
+            };
+            ((IText)sut).WrappedTextHeight.ShouldBe(48f);
+        }
+        finally { Text.DefaultMeasurer = previous; }
+    }
+
+    [Fact]
+    public void WrappedText_ThreeLineWrap()
+    {
+        // "aa bb cc dd ee ff" with PPC=10, Width=50
+        // ["aa bb", "cc dd", "ee ff"] → 3 lines.
+        var previous = Text.DefaultMeasurer;
+        try
+        {
+            Text.DefaultMeasurer = new FakeTextMeasurer { LineHeight = 10f, PixelsPerChar = 10f };
+            var sut = new Text
+            {
+                Width = 50,
+                RawText = "aa bb cc dd ee ff",
+            };
+            ((IText)sut).WrappedTextHeight.ShouldBe(30f);
+        }
+        finally { Text.DefaultMeasurer = previous; }
+    }
+
+    [Fact]
+    public void WrappedTextWidth_ReflectsLongestWrappedLine()
+    {
+        // After wrapping "aaa bbb ccc ddd" at Width=80 we get
+        // ["aaa bbb", "ccc ddd"] — TrimEnd strips trailing space.
+        // Both lines are 7 chars × 10 = 70.
+        var previous = Text.DefaultMeasurer;
+        try
+        {
+            Text.DefaultMeasurer = new FakeTextMeasurer { LineHeight = 24f, PixelsPerChar = 10f };
+            var sut = new Text
+            {
+                Width = 80,
+                RawText = "aaa bbb ccc ddd",
+            };
+            ((IText)sut).WrappedTextWidth.ShouldBe(70f);
+        }
+        finally { Text.DefaultMeasurer = previous; }
+    }
+
+    [Fact]
+    public void WrappedText_WidthChange_Invalidates()
+    {
+        // Width was a cache key — changing it must force a rewrap.
+        var previous = Text.DefaultMeasurer;
+        try
+        {
+            Text.DefaultMeasurer = new FakeTextMeasurer { LineHeight = 24f, PixelsPerChar = 10f };
+            var sut = new Text
+            {
+                Width = 1000,
+                RawText = "aaa bbb ccc ddd",
+            };
+            ((IText)sut).WrappedTextHeight.ShouldBe(24f);
+
+            sut.Width = 80;
+            ((IText)sut).WrappedTextHeight.ShouldBe(48f);
+        }
+        finally { Text.DefaultMeasurer = previous; }
+    }
+
+    [Fact]
+    public void TextRuntime_WithRelativeToChildrenHeight_WrappedText_UsesMeasuredHeight()
+    {
+        var previous = Text.DefaultMeasurer;
+        try
+        {
+            Text.DefaultMeasurer = new FakeTextMeasurer { LineHeight = 24f, PixelsPerChar = 10f };
+            var sut = new TextRuntime
+            {
+                Width = 80,
+                WidthUnits = DimensionUnitType.Absolute,
+                HeightUnits = DimensionUnitType.RelativeToChildren,
+                Text = "aaa bbb ccc ddd",
+            };
+            sut.UpdateLayout();
+            sut.GetAbsoluteHeight().ShouldBe(48f);
+        }
+        finally { Text.DefaultMeasurer = previous; }
+    }
+
+    [Fact]
     public void TextRuntime_WithRelativeToChildrenHeight_UsesMeasuredHeight()
     {
         ITextMeasurer? previousMeasurer = Text.DefaultMeasurer;
@@ -208,7 +314,7 @@ public class TextRuntimeTests : BaseTestClass
                 Width = 200,
                 WidthUnits = DimensionUnitType.Absolute,
                 HeightUnits = DimensionUnitType.RelativeToChildren,
-                RawText = "Hello",
+                Text = "Hello",
             };
             sut.UpdateLayout();
             sut.GetAbsoluteHeight().ShouldBe(24f);

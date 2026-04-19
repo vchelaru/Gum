@@ -93,8 +93,8 @@ public sealed class Text : RenderableBase, IText
     /// <summary>
     /// The text to render. Setting this invalidates the cached line layout.
     /// Use <c>\n</c> for explicit line breaks; additional wrapping happens
-    /// automatically when <see cref="WrapTextInsideBlock"/> is true and
-    /// a line exceeds <see cref="IRenderableIpso.Width"/>.
+    /// automatically when <see cref="IRenderableIpso.Width"/> is greater than 0
+    /// and a line exceeds that width.
     /// </summary>
     public string? RawText
     {
@@ -117,9 +117,6 @@ public sealed class Text : RenderableBase, IText
 
     public TextOverflowHorizontalMode TextOverflowHorizontalMode { get; set; } = TextOverflowHorizontalMode.TruncateWord;
     public TextOverflowVerticalMode   TextOverflowVerticalMode   { get; set; } = TextOverflowVerticalMode.SpillOver;
-
-    /// <summary>When true, lines longer than <c>Width</c> are word-wrapped.</summary>
-    public bool WrapTextInsideBlock { get; set; } = true;
 
     /// <summary>Line-to-line spacing multiplier. 1.0 = font-native line height.</summary>
     public float LineHeightMultiplier { get; set; } = 1f;
@@ -305,8 +302,7 @@ public sealed class Text : RenderableBase, IText
     /// layout can call this before any rendering has happened. Splits on
     /// <c>\n</c> first (manual breaks always honoured), then word-wraps
     /// each paragraph to <see cref="IRenderableIpso.Width"/> when
-    /// <see cref="WrapTextInsideBlock"/> is set. Ellipsis trimming runs
-    /// here too.
+    /// <c>Width &gt; 0</c>. Ellipsis trimming runs here too.
     /// </summary>
     private void EnsureWrapped()
     {
@@ -331,7 +327,7 @@ public sealed class Text : RenderableBase, IText
         }
 
         string[] paragraphs = RawText.Split('\n');
-        bool wrap = WrapTextInsideBlock && Width > 0 && !float.IsPositiveInfinity(Width);
+        bool wrap = Width > 0 && !float.IsPositiveInfinity(Width);
 
         foreach (string paragraph in paragraphs)
         {
