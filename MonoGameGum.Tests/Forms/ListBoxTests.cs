@@ -1347,4 +1347,31 @@ public class ListBoxTests : BaseTestClass
     }
 
     #endregion
+
+    [Fact]
+    public void ListBox_DownArrowPressed_MovesSelectionDown()
+    {
+        ListBox listBox = new ListBox();
+        listBox.AddToRoot();
+
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+
+        listBox.SelectedIndex = 0;
+        // ListBox routes keyboard arrow navigation through DoListItemFocusUpdate(),
+        // which only runs when items (not the list itself) have focus.
+        listBox.DoListItemsHaveFocus = true;
+
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeyTyped(Gum.Forms.Input.Keys.Down)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeysTyped).Returns(new List<int>());
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        listBox.OnFocusUpdate();
+
+        listBox.SelectedIndex.ShouldBe(1);
+    }
 }

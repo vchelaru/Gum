@@ -1,6 +1,8 @@
 ﻿using Gum.Forms.Controls;
 using Gum.Wireframe;
 using MonoGameGum.GueDeriving;
+using MonoGameGum.Input;
+using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -93,5 +95,28 @@ public class SliderTests : BaseTestClass
         slider.IsFocused = true;
 
         wasSet.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Slider_RightArrowPressed_IncreasesValue()
+    {
+        Slider slider = new()
+        {
+            Minimum = 0,
+            Maximum = 100,
+            SmallChange = 5,
+            Value = 50
+        };
+
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeyTyped(Gum.Forms.Input.Keys.Right)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeysTyped).Returns(new List<int>());
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        slider.OnFocusUpdate();
+
+        slider.Value.ShouldBe(55);
     }
 }

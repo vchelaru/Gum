@@ -73,9 +73,9 @@ public class BaseTestClass : IDisposable
 
         //Text.Customizations.Clear();
 
-        if (Raylib.IsWindowReady())
-        {
-            Raylib.CloseWindow();
-        }
+        // The hidden Raylib window opened in TestAssemblyInitialize is intentionally
+        // kept alive for the duration of the test run — closing and reopening it across
+        // tests is unreliable on CI and makes Forms tests (which need LoadEmbeddedTexture2d
+        // to succeed) prohibitively expensive to set up per test.
     }
 }
