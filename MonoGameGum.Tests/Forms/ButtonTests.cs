@@ -56,6 +56,13 @@ public class ButtonTests : BaseTestClass
         keyboard
             .Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.Enter))
             .Returns(true);
+        // KeyCombo.IsComboPushed now routes through the shared Gum.Forms.Input.Keys overload.
+        keyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter))
+            .Returns(true);
+        keyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyDown(Gum.Forms.Input.Keys.Enter))
+            .Returns(true);
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         button.OnFocusUpdate();
@@ -107,6 +114,9 @@ public class ButtonTests : BaseTestClass
         mockKeyboard
             .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
             .Returns(true);
+        mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter))
+            .Returns(true);
 
 
         FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
@@ -151,6 +161,9 @@ public class ButtonTests : BaseTestClass
         mockKeyboard
             .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Space))
             .Returns(true);
+        mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Space))
+            .Returns(true);
 
         FrameworkElement.ClickCombos.Add(new KeyCombo
         {
@@ -193,6 +206,13 @@ public class ButtonTests : BaseTestClass
         mockKeyboard
             .Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.Space))
             .Returns(true);
+        // KeyCombo.IsComboPushed / IsComboDown now route through the Gum.Forms.Input.Keys overload.
+        mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Space))
+            .Returns(true);
+        mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyDown(Gum.Forms.Input.Keys.Space))
+            .Returns(true);
 
         FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
 
@@ -203,6 +223,9 @@ public class ButtonTests : BaseTestClass
 
         mockKeyboard
             .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Space))
+            .Returns(false);
+        mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Space))
             .Returns(false);
 
         button.UpdateState();
@@ -215,6 +238,12 @@ public class ButtonTests : BaseTestClass
 
         mockKeyboard
             .Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.Space))
+            .Returns(false);
+        mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyReleased(Gum.Forms.Input.Keys.Space))
+            .Returns(true);
+        mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyDown(Gum.Forms.Input.Keys.Space))
             .Returns(false);
 
         button.OnFocusUpdate();

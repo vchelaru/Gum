@@ -1,12 +1,12 @@
-﻿using System;
+using Gum.Wireframe;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 #if RAYLIB
-using RaylibGum.Input;
-using Keys = Raylib_cs.KeyboardKey;
+using Keys = Gum.Forms.Input.Keys;
 #else
 using Microsoft.Xna.Framework.Input;
 #endif
@@ -25,61 +25,61 @@ public struct KeyCombo
 
 public static class KeyComboExtensions
 {
+    // Converts the platform-local Keys alias (XNA Keys on MonoGame, Gum Keys on Raylib/Sokol)
+    // to the shared Gum.Forms.Input.Keys that IInputReceiverKeyboard's interface methods accept.
+    // Values align across both enums, so an int round-trip is safe.
+    private static Gum.Forms.Input.Keys ToGumKey(Keys key) => (Gum.Forms.Input.Keys)(int)key;
+
     public static bool IsComboPushed(this KeyCombo keyCombo)
     {
-#if !RAYLIB
-// requires keyboards to have KeyDown etc, which requires them to be generic
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
-            var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(keyCombo.HeldKey.Value);
+            var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value));
             if (isHeld)
             {
-                return keyboard.KeyPushed(keyCombo.PushedKey) ||
-                    (keyboard.KeysTyped?.Contains(keyCombo.PushedKey) == true && keyCombo.IsTriggeredOnRepeat);
+                // Access KeysTyped via the base interface so we consistently get the
+                // IEnumerable<int> overload. IInputReceiverKeyboardMonoGame hides this with
+                // an XNA-typed collection, which would not expose LINQ Contains(int).
+                IEnumerable<int>? keysTyped = ((IInputReceiverKeyboard)keyboard).KeysTyped;
+                return keyboard.KeyPushed(ToGumKey(keyCombo.PushedKey)) ||
+                    (keysTyped?.Contains((int)keyCombo.PushedKey) == true && keyCombo.IsTriggeredOnRepeat);
             }
         }
-#endif
         return false;
     }
 
     public static bool IsComboReleased(this KeyCombo keyCombo)
     {
-#if !RAYLIB
-// requires keyboards to have KeyDown etc, which requires them to be generic
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             if (keyCombo.HeldKey == null)
             {
                 // see if the normal key was just released:
-                if (keyboard.KeyReleased(keyCombo.PushedKey))
+                if (keyboard.KeyReleased(ToGumKey(keyCombo.PushedKey)))
                 {
                     return true;
                 }
             }
             else
             {
-                return (keyboard.KeyReleased(keyCombo.HeldKey.Value) &&
-                       keyboard.KeyDown(keyCombo.PushedKey)) ||
+                return (keyboard.KeyReleased(ToGumKey(keyCombo.HeldKey.Value)) &&
+                       keyboard.KeyDown(ToGumKey(keyCombo.PushedKey))) ||
 
-                       (keyboard.KeyReleased(keyCombo.PushedKey) &&
-                        keyboard.KeyDown(keyCombo.HeldKey.Value));
+                       (keyboard.KeyReleased(ToGumKey(keyCombo.PushedKey)) &&
+                        keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value)));
             }
         }
-#endif
         return false;
     }
 
     public static bool IsComboDown(this KeyCombo keyCombo)
     {
-#if !RAYLIB
-// requires keyboards to have KeyDown etc, which requires them to be generic
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
-            var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(keyCombo.HeldKey.Value);
+            var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value));
 
-            return isHeld && keyboard.KeyDown(keyCombo.PushedKey);
+            return isHeld && keyboard.KeyDown(ToGumKey(keyCombo.PushedKey));
         }
-#endif
         return false;
     }
-    }
+}
