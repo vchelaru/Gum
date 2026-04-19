@@ -26,4 +26,15 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <!--
+    SokolGum.GumService.Initialize calls into the native sokol library
+    (sg_make_sampler, etc.) during SystemManagers.Initialize. Samples pull
+    the native DLL in via Sokol.Native.targets; tests need the same hook
+    so any test that exercises Initialize can actually run.
+  -->
+  <PropertyGroup>
+    <SokolLibsDir>$(MSBuildThisFileDirectory)..\..\Sokol.NET\libs</SokolLibsDir>
+  </PropertyGroup>
+  <Import Project="..\..\Runtimes\SokolGum\Sokol.Native.targets" />
+
 </Project>
