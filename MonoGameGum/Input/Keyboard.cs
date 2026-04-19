@@ -100,6 +100,25 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
         }
     }
 
+    /// <summary>
+    /// Returns whether the specified key is currently held down, accepting a shared
+    /// <see cref="Gum.Forms.Input.Keys"/> value. Casts directly to XNA <see cref="Keys"/>
+    /// because both enums share the same numeric values.
+    /// </summary>
+    public bool KeyDown(Gum.Forms.Input.Keys key) => KeyDown((Keys)(int)key);
+
+    /// <summary>
+    /// Returns whether the specified key was pressed this frame, accepting a shared
+    /// <see cref="Gum.Forms.Input.Keys"/> value.
+    /// </summary>
+    public bool KeyPushed(Gum.Forms.Input.Keys key) => KeyPushed((Keys)(int)key);
+
+    /// <summary>
+    /// Returns whether the specified key was released this frame, accepting a shared
+    /// <see cref="Gum.Forms.Input.Keys"/> value.
+    /// </summary>
+    public bool KeyReleased(Gum.Forms.Input.Keys key) => KeyReleased((Keys)(int)key);
+
     public const int NumberOfKeys = 255;
 
     #endregion
