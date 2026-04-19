@@ -1095,6 +1095,35 @@ public class FrameworkElement : INotifyPropertyChanged
     /// List of key combinations that will trigger shifting focus
     /// to the next control (typically called "tabbing").
     /// </summary>
+#if RAYLIB
+    // On Raylib, the ambient Keys alias resolves to Raylib_cs.KeyboardKey (used by
+    // KeyEventArgs etc.), but KeyCombo.PushedKey/HeldKey is Gum.Forms.Input.Keys.
+    // Use the fully-qualified Gum type so the initializers match.
+    public static List<KeyCombo> TabKeyCombos { get; set; } = new ()
+    {
+        new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Tab, IsTriggeredOnRepeat = true }
+    };
+
+    /// <summary>
+    /// List of key combinations that will trigger shifting focus
+    /// to the previous control.
+    /// </summary>
+    public static List<KeyCombo> TabReverseKeyCombos { get; set; } = new ()
+    {
+        new KeyCombo { HeldKey = Gum.Forms.Input.Keys.LeftShift, PushedKey = Gum.Forms.Input.Keys.Tab, IsTriggeredOnRepeat = true },
+        new KeyCombo { HeldKey = Gum.Forms.Input.Keys.RightShift, PushedKey = Gum.Forms.Input.Keys.Tab, IsTriggeredOnRepeat = true },
+    };
+
+    /// <summary>
+    /// List of key combinations that will trigger a click action
+    /// on controls which can be clicked such as Button, ComboBox, and CheckBox
+    /// </summary>
+    public static List<KeyCombo> ClickCombos { get; set; } = new ()
+    {
+        new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Enter },
+        new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Space },
+    };
+#else
     public static List<KeyCombo> TabKeyCombos { get; set; } = new ()
     {
         new KeyCombo { PushedKey = Keys.Tab, IsTriggeredOnRepeat = true }
@@ -1119,6 +1148,7 @@ public class FrameworkElement : INotifyPropertyChanged
         new KeyCombo { PushedKey = Keys.Enter },
         new KeyCombo { PushedKey = Keys.Space },
     };
+#endif
 
     protected void HandleKeyboardFocusUpdate()
     {
@@ -1129,7 +1159,11 @@ public class FrameworkElement : INotifyPropertyChanged
                 if(tabKeyCombo.IsComboPushed())
                 {
                     // This allows TextBoes to set AcceptsTab to true
+#if RAYLIB
+                    if(IsTabNavigationEnabled == true || tabKeyCombo.PushedKey != Gum.Forms.Input.Keys.Tab)
+#else
                     if(IsTabNavigationEnabled == true || tabKeyCombo.PushedKey != Keys.Tab)
+#endif
                     {
                         this.HandleTab(TabDirection.Down, this, loop: true);
                         break; // one tab per frame
@@ -1142,7 +1176,11 @@ public class FrameworkElement : INotifyPropertyChanged
                 if(tabReverseKeyCombo.IsComboPushed())
                 {
                     // This allows TextBoes to set AcceptsTab to true
+#if RAYLIB
+                    if (IsTabNavigationEnabled == true || tabReverseKeyCombo.PushedKey != Gum.Forms.Input.Keys.Tab)
+#else
                     if (IsTabNavigationEnabled == true || tabReverseKeyCombo.PushedKey != Keys.Tab)
+#endif
                     {
                         this.HandleTab(TabDirection.Up, this, loop: true);
                         break;

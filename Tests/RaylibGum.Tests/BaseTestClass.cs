@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
-using Keys = Raylib_cs.KeyboardKey;
+using Keys = Gum.Forms.Input.Keys;
 
 namespace RaylibGum.Tests;
 
