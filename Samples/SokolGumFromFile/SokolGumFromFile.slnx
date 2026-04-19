@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="../../GumCommon/GumCommon.csproj" />
+  <Project Path="../../Runtimes/Sokol/Sokol.csproj" />
+  <Project Path="../../Runtimes/SokolGum/SokolGum.csproj" />
+  <Project Path="SokolGumFromFile.csproj" />
+</Solution>

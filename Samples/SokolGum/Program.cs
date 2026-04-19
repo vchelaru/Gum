@@ -26,7 +26,6 @@ namespace SokolGumSample;
 public static unsafe class Program
 {
     private static sg_pass_action _passAction;
-    private static SystemManagers? _systemManagers;
     private static Texture2D? _gradientTexture;
     private static Texture2D? _logoTexture;
     private static Texture2D? _nineSliceTexture;
@@ -79,9 +78,7 @@ public static unsafe class Program
         _passAction.colors[0].load_action = sg_load_action.SG_LOADACTION_CLEAR;
         _passAction.colors[0].clear_value = new sg_color { r = 0.10f, g = 0.12f, b = 0.15f, a = 1.0f };
 
-        _systemManagers = new SystemManagers();
-        SystemManagers.Default = _systemManagers;
-        _systemManagers.Initialize();
+        GumService.Default.Initialize();
 
         _gradientTexture = BuildGradientTexture(128, 128);
         _nineSliceTexture = BuildNineSliceTestTexture();
@@ -89,7 +86,7 @@ public static unsafe class Program
         _font = LoaderManager.Self.ContentLoader.LoadContent<Font>("Assets/DroidSerif-Regular.ttf");
         _characterAnimations = LoaderManager.Self.ContentLoader.LoadContent<AnimationChainList>("Assets/CharacterAnimations.achx");
 
-        var root = _systemManagers.Renderer.MainLayer;
+        var root = GumService.Default.SystemManagers.Renderer.MainLayer;
 
         // Row 1 — ColoredRectangles (SolidRectangle via sgp_draw_filled_rect).
         // The third is rotated 15° counter-clockwise to exercise the rotation
@@ -410,30 +407,13 @@ public static unsafe class Program
         return Texture2D.FromRgba8(pixels, size, size, "nineslice-test");
     }
 
-    // Design size the UI was laid out against. Projecting this fixed logical
-    // region into whatever the framebuffer is now means the whole scene
-    // stretches to fill the window — resizing grows/shrinks everything
-    // proportionally. Aspect distorts at non-16:9 windows; preserving aspect
-    // would need a letterboxed viewport.
-    private const int DesignWidth  = 1280;
-    private const int DesignHeight = 720;
-
     [UnmanagedCallersOnly]
     private static void Frame()
     {
-        // sapp_width()/sapp_height() always report the CURRENT framebuffer
-        // size, so resizing the window is self-healing — we just re-project
-        // the fixed design space into whatever's current this frame.
-        var fbW = sapp_width();
-        var fbH = sapp_height();
-        var dt  = sapp_frame_duration();
-
         sg_begin_pass(new sg_pass { action = _passAction, swapchain = sglue_swapchain() });
 
-        _systemManagers!.Renderer.Update(dt);
-        _systemManagers.Renderer.BeginFrame(DesignWidth, DesignHeight, fbW, fbH);
-        _systemManagers.Renderer.Draw(_systemManagers);
-        _systemManagers.Renderer.EndFrame(_systemManagers);
+        GumService.Default.Update();
+        GumService.Default.Draw();
 
         sg_end_pass();
         sg_commit();
@@ -447,7 +427,7 @@ public static unsafe class Program
         _gradientTexture?.Dispose();
         _nineSliceTexture?.Dispose();
         _logoTexture?.Dispose();
-        _systemManagers?.Dispose();
+        GumService.Default.SystemManagers?.Dispose();
         sgp_shutdown();
         sg_shutdown();
     }
