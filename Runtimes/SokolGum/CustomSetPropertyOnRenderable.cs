@@ -186,6 +186,36 @@ public static class CustomSetPropertyOnRenderable
                 RequestLayoutIfSizedToChildren(element);
                 return true;
 
+            // Color channels: .gumx serializes text color as separate
+            // Red/Green/Blue/Alpha ints. Route to the TextRuntime shims
+            // (which in turn update the renderable's Color field per channel).
+            // Without this routing, reflection falls through to the renderable
+            // which has no R/G/B properties and the assignment silently drops.
+            case "Red":
+                if (textRuntime is not null && value is int r)
+                {
+                    textRuntime.Red = r;
+                }
+                return true;
+            case "Green":
+                if (textRuntime is not null && value is int g)
+                {
+                    textRuntime.Green = g;
+                }
+                return true;
+            case "Blue":
+                if (textRuntime is not null && value is int b)
+                {
+                    textRuntime.Blue = b;
+                }
+                return true;
+            case "Alpha":
+                if (textRuntime is not null && value is int a)
+                {
+                    textRuntime.Alpha = a;
+                }
+                return true;
+
             // Font-identity properties: route to the TextRuntime, which owns
             // resolution of (family, size, bold, italic) into a fontstash
             // font handle via its local UpdateToFontValues.

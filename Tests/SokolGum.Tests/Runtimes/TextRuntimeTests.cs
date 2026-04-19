@@ -147,6 +147,23 @@ public class TextRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void SetProperty_Red_UpdatesColorChannel()
+    {
+        // .gumx projects serialize text color as separate Red/Green/Blue int
+        // variables which route through GraphicalUiElement.SetProperty.
+        // Without R/G/B reachable through that path, .gumx-specified text
+        // colors silently don't render (observed as black-in-project /
+        // white-at-runtime).
+        var sut = new TextRuntime();
+        sut.SetProperty("Red", 50);
+        sut.SetProperty("Green", 100);
+        sut.SetProperty("Blue", 150);
+        sut.Red.ShouldBe(50);
+        sut.Green.ShouldBe(100);
+        sut.Blue.ShouldBe(150);
+    }
+
+    [Fact]
     public void Text_ShouldImplementIText()
     {
         // Layout engine (GraphicalUiElement.cs:2342) checks `is IText` to
