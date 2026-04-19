@@ -493,15 +493,16 @@ public class Slider : RangeBase, IInputReceiver
         }
 #endif
 
-#if (MONOGAME || KNI) && !FRB
+#if !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
-            if(keyboard.KeyTyped(Keys.Right) == true)
+            // Fully qualified so this compiles regardless of the file-level `using Keys = ...` alias.
+            if(keyboard.KeyTyped(Gum.Forms.Input.Keys.Right) == true)
             {
                 this.Value += SmallChange;
             }
-            if(keyboard.KeyTyped(Keys.Left) == true)
+            if(keyboard.KeyTyped(Gum.Forms.Input.Keys.Left) == true)
             {
                 this.Value -= SmallChange;
             }

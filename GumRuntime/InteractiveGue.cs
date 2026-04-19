@@ -1140,6 +1140,18 @@ public interface IInputReceiverKeyboard
     /// Default implementation returns <c>false</c> — see <see cref="KeyDown"/> for rationale.
     /// </remarks>
     bool KeyReleased(Gum.Forms.Input.Keys key) => false;
+
+    /// <summary>
+    /// Returns whether the specified key was "typed" this frame — either pushed this frame,
+    /// or held long enough to trigger the OS key-repeat. Matches the behavior of
+    /// <c>Microsoft.Xna.Framework.Input.Keys</c>-based <c>KeyTyped</c> on MonoGame and
+    /// <c>Raylib.IsKeyPressedRepeat</c> on Raylib.
+    /// </summary>
+    /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
+    /// <remarks>
+    /// Default implementation returns <c>false</c> — see <see cref="KeyDown"/> for rationale.
+    /// </remarks>
+    bool KeyTyped(Gum.Forms.Input.Keys key) => false;
 }
 
 

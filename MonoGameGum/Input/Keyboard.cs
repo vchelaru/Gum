@@ -119,6 +119,12 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     /// </summary>
     public bool KeyReleased(Gum.Forms.Input.Keys key) => KeyReleased((Keys)(int)key);
 
+    /// <summary>
+    /// Returns whether the specified key was "typed" this frame (pushed or OS-repeat),
+    /// accepting a shared <see cref="Gum.Forms.Input.Keys"/> value.
+    /// </summary>
+    public bool KeyTyped(Gum.Forms.Input.Keys key) => KeyTyped((Keys)(int)key);
+
     public const int NumberOfKeys = 255;
 
     #endregion

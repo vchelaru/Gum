@@ -768,7 +768,7 @@ public class ComboBox :
             }
         }
 #endif
-#if (MONOGAME || KNI) && !FRB
+#if !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {

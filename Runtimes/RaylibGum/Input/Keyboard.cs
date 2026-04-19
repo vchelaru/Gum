@@ -239,6 +239,22 @@ public class Keyboard : IInputReceiverKeyboard
         return false;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Delegates to <see cref="Raylib.IsKeyPressedRepeat(KeyboardKey)"/>, which returns true on
+    /// initial press and on OS-driven repeat intervals. This matches MonoGame's
+    /// <c>Keyboard.KeyTyped</c> semantics (push + repeat-rate) closely enough for
+    /// keyboard-driven Forms controls.
+    /// </remarks>
+    public bool KeyTyped(GumKeys key)
+    {
+        if (_gumToRaylib.TryGetValue(key, out KeyboardKey raylibKey))
+        {
+            return Raylib.IsKeyPressed(raylibKey) || Raylib.IsKeyPressedRepeat(raylibKey);
+        }
+        return false;
+    }
+
     /// <summary>
     /// Performs every-frame activity for the keyboard. This is automatically called by Gum.
     /// </summary>

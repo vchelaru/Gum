@@ -286,7 +286,7 @@ public class ButtonBase :
         }
 #endif
 
-#if (MONOGAME || KNI) && !FRB
+#if !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {

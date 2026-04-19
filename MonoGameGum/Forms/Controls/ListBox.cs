@@ -1608,7 +1608,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 #endif
 
-#if (MONOGAME || KNI || FNA) && !FRB
+#if !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
@@ -1624,11 +1624,15 @@ public class ListBox : ItemsControl, IInputReceiver
 
             RepositionDirections? direction = null;
 
-            if (keyboard.KeyPushed(Keys.Up) == true || keyboard.KeysTyped.Contains(Keys.Up) == true)
+            // Keys.X references are fully qualified to Gum.Forms.Input.Keys so this block compiles
+            // on every platform regardless of what the file-level `using Keys = ...` alias resolves
+            // to. KeyTyped (pushed + OS repeat) replaces the old "KeyPushed OR KeysTyped.Contains"
+            // two-step — same effective behavior, single call, works on the shared base interface.
+            if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Up) == true)
             {
                 direction = RepositionDirections.Up;
             }
-            if (keyboard.KeyPushed(Keys.Down) == true || keyboard.KeysTyped.Contains(Keys.Down) == true)
+            if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Down) == true)
             {
                 direction = RepositionDirections.Down;
             }
