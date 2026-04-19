@@ -44,4 +44,34 @@ public class ListBoxTests : BaseTestClass
 
         listBox.SelectedIndex.ShouldBe(1);
     }
+
+    [Fact]
+    public void ListBox_EnterPressedAtTopLevelFocus_DropsFocusIntoItems()
+    {
+        // Covers the Bucket 2 sub-task 4 follow-up: the guard at ListBox.cs:~1871
+        // was originally #if (MONOGAME || KNI || FNA) && !FRB, which excluded Raylib
+        // from the natural Enter-to-drop-focus-into-items transition. This test pins
+        // the Raylib behavior so the guard flip to !FRB is covered end-to-end.
+        ListBox listBox = new ListBox();
+
+        listBox.Visual.ShouldNotBeNull();
+        listBox.AddToRoot();
+
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+
+        // Top-level focus: ListBox is focused, but items are not yet.
+        listBox.DoListItemsHaveFocus = false;
+
+        Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
+        // ClickCombos default contains Enter (PushedKey = Keys.Enter, HeldKey = null).
+        // IsComboPushed() calls keyboard.KeyPushed on the pushed key with no held key.
+        keyboard.Setup(k => k.KeyPushed(Keys.Enter)).Returns(true);
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<int>());
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        listBox.OnFocusUpdate();
+
+        listBox.DoListItemsHaveFocus.ShouldBeTrue();
+    }
 }

@@ -1374,4 +1374,33 @@ public class ListBoxTests : BaseTestClass
 
         listBox.SelectedIndex.ShouldBe(1);
     }
+
+    [Fact]
+    public void ListBox_EnterPressedAtTopLevelFocus_DropsFocusIntoItems()
+    {
+        // Regression test for the Bucket 2 sub-task 4 follow-up: the guard around
+        // the Enter-to-drop-focus-into-items block in ListBox.DoTopLevelFocusUpdate
+        // was flipped from #if (MONOGAME || KNI || FNA) && !FRB to !FRB. This pins
+        // the MonoGame behavior so the flip stays zero-impact on MonoGame.
+        ListBox listBox = new ListBox();
+        listBox.AddToRoot();
+
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+
+        listBox.DoListItemsHaveFocus = false;
+
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
+        // ClickCombos default contains Enter. IsComboPushed calls keyboard.KeyPushed
+        // (on the shared interface, which takes Gum.Forms.Input.Keys) with no held key.
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeysTyped).Returns(new List<int>());
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        listBox.OnFocusUpdate();
+
+        listBox.DoListItemsHaveFocus.ShouldBeTrue();
+    }
 }

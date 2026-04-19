@@ -1868,7 +1868,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 #endif
 
-#if (MONOGAME || KNI || FNA) && !FRB
+#if !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
