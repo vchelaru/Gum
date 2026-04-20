@@ -2,7 +2,6 @@
 #define XNALIKE
 #endif
 
-using Gum.Forms.Controls;
 using Gum.Wireframe;
 using System;
 
@@ -11,6 +10,10 @@ using System.Numerics;
 using Raylib_cs;
 using Matrix = System.Numerics.Matrix3x2;
 namespace RaylibGum.Input;
+#elif SOKOL
+using System.Numerics;
+using Matrix = System.Numerics.Matrix3x2;
+namespace Gum.Input;
 #else
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -99,6 +102,28 @@ public partial class Cursor : ICursor
                     break;
             }
 #endif
+
+#if SOKOL
+            switch (value)
+            {
+                case Cursors.Arrow:
+                case null:
+                    Sokol.SApp.sapp_set_mouse_cursor(Sokol.SApp.sapp_mouse_cursor.SAPP_MOUSECURSOR_ARROW);
+                    break;
+                case Cursors.SizeNS:
+                    Sokol.SApp.sapp_set_mouse_cursor(Sokol.SApp.sapp_mouse_cursor.SAPP_MOUSECURSOR_RESIZE_NS);
+                    break;
+                case Cursors.SizeWE:
+                    Sokol.SApp.sapp_set_mouse_cursor(Sokol.SApp.sapp_mouse_cursor.SAPP_MOUSECURSOR_RESIZE_EW);
+                    break;
+                case Cursors.SizeNWSE:
+                    Sokol.SApp.sapp_set_mouse_cursor(Sokol.SApp.sapp_mouse_cursor.SAPP_MOUSECURSOR_RESIZE_NWSE);
+                    break;
+                case Cursors.SizeNESW:
+                    Sokol.SApp.sapp_set_mouse_cursor(Sokol.SApp.sapp_mouse_cursor.SAPP_MOUSECURSOR_RESIZE_NESW);
+                    break;
+            }
+#endif
         }
     }
 
@@ -134,7 +159,11 @@ public partial class Cursor : ICursor
     /// <returns>The cursor's position</returns>
     public float XRespectingGumZoomAndBounds()
     {
+#if SOKOL
+        var renderer = SokolGum.SystemManagers.Default.Renderer;
+#else
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
+#endif
         var zoom = renderer.Camera.Zoom;
         return ((X - GetViewportLeft()) / zoom) + renderer.Camera.X ?? 0;
     }
@@ -152,7 +181,11 @@ public partial class Cursor : ICursor
     /// <returns>The cursor's position</returns>
     public float YRespectingGumZoomAndBounds()
     {
+#if SOKOL
+        var renderer = SokolGum.SystemManagers.Default.Renderer;
+#else
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
+#endif
         var zoom = renderer.Camera.Zoom;
         return ((Y - GetViewportTop()) / zoom) + renderer.Camera.Y ?? 0;
     }
@@ -370,20 +403,10 @@ public partial class Cursor : ICursor
     public InteractiveGue? VisualPushed { get; set; }
 
     /// <summary>
-    /// Gets the control that was under the cursor when the cursor (left button) was pushed.
-    /// </summary>
-    public FrameworkElement? FrameworkElementPushed => VisualPushed?.FormsControlAsObject as FrameworkElement;
-
-    /// <summary>
     /// Gets or sets the Visual that was under the cursor when the cursor right button
     /// was pushed.
     /// </summary>
     public InteractiveGue? VisualRightPushed { get; set; }
-
-    /// <summary>
-    /// Gets the control that was under the cursor when the cursor right button was pushed.
-    /// </summary>
-    public FrameworkElement? FrameworkElementRightPushed => VisualRightPushed?.FormsControlAsObject as FrameworkElement;
 
     [Obsolete("Use VisualOver instead")]
     public InteractiveGue? WindowOver
@@ -396,11 +419,6 @@ public partial class Cursor : ICursor
     /// Gets or sets the Visual that was under the cursor the last time it was updated.
     /// </summary>
     public InteractiveGue? VisualOver { get; set; }
-
-    /// <summary>
-    /// Gets the control that is currently under the cursor.
-    /// </summary>
-    public FrameworkElement? FrameworkElementOver => VisualOver?.FormsControlAsObject as FrameworkElement;
 
     MouseState _mouseState;
     MouseState mLastFrameMouseState = new MouseState();
@@ -484,7 +502,7 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
         }
         else
         {
-#if RAYLIB
+#if RAYLIB || SOKOL
             _touchCollection = _touchCollection ?? new TouchCollection();
 #endif
         }
