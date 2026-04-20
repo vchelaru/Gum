@@ -32,6 +32,16 @@ public class TestAssemblyInitialize : XunitTestFramework
 {
     public TestAssemblyInitialize(IMessageSink messageSink) : base(messageSink)
     {
+        ApplyDefaultTestState();
+    }
+
+    /// <summary>
+    /// Sets up (or restores) the assembly-wide test state. Called once from the constructor
+    /// and may be called again from tests that tear down <see cref="GumService"/> via
+    /// <c>Uninitialize()</c> and need to rebuild the default state for subsequent tests.
+    /// </summary>
+    public static void ApplyDefaultTestState()
+    {
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
 
         // Raylib's LoadEmbeddedTexture2d and MeasureTextEx both require an initialized window.

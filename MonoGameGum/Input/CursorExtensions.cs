@@ -72,9 +72,10 @@ public static class CursorExtensions
         {
             return $"The argument InteractiveGue does not have its HasEvents set to true";
         }
-        if(GetNotExposedChildrenEventsParent(interactiveGue) is GraphicalUiElement)
+        if(GetNotExposedChildrenEventsParent(interactiveGue) is InteractiveGue notExposingParent)
         {
-            return $"The parent {interactiveGue} does not raise its children's events, preventing {interactiveGue} from raising events";
+            return $"The parent {NameOrType(notExposingParent)} does not raise its children's events, preventing {NameOrType(interactiveGue)} from raising events\n" +
+                GetAncestorTree(interactiveGue, notExposingParent);
         }
         if (interactiveGue.GetAbsoluteWidth() == 0)
         {
@@ -198,48 +199,52 @@ public static class CursorExtensions
 
         return null;
 
-        string GetStack(GraphicalUiElement itemInStack)
+        string GetStack(GraphicalUiElement itemInStack) => GetAncestorTree(interactiveGue, itemInStack);
+    }
+
+    /// <summary>
+    /// Builds an indented ancestor tree string from the root down to <paramref name="leaf"/>.
+    /// If <paramref name="highlighted"/> is provided and appears in the chain, it is marked with " &lt;---- THIS".
+    /// </summary>
+    public static string GetAncestorTree(GraphicalUiElement leaf, GraphicalUiElement? highlighted = null)
+    {
+        var inheritanceChain = new List<GraphicalUiElement>();
+
+        GraphicalUiElement? current = leaf;
+        while (current != null)
         {
-            List<GraphicalUiElement> inheritanceChain = new List<GraphicalUiElement>();
-
-            GraphicalUiElement? current = interactiveGue;
-            while (current != null)
-            {
-                inheritanceChain.Insert(0, current);
-
-                current = current.Parent as GraphicalUiElement;
-            }
-
-            string toReturn = "";
-
-            for(int i = 0; i < inheritanceChain.Count; i++)
-            {
-                var item = inheritanceChain[i];
-                if(item == itemInStack)
-                {
-                    toReturn += new string(' ', i * 2) + "└-" + NameOrType(item) + " <---- THIS";
-                }
-                else
-                {
-                    toReturn += new string(' ', i * 2) + "└-" + NameOrType(item);
-                }
-                toReturn += "\n";
-            }
-
-            return toReturn;
+            inheritanceChain.Insert(0, current);
+            current = current.Parent as GraphicalUiElement;
         }
+
+        var sb = new StringBuilder();
+        for (int i = 0; i < inheritanceChain.Count; i++)
+        {
+            var item = inheritanceChain[i];
+            sb.Append(new string(' ', i * 2));
+            sb.Append("└-");
+            sb.Append(NameOrType(item));
+            if (item == highlighted)
+            {
+                sb.Append(" <---- THIS");
+            }
+            sb.Append('\n');
+        }
+
+        return sb.ToString();
     }
 
     static string NameOrType(GraphicalUiElement gue)
     {
-        if(string.IsNullOrEmpty(gue.Name))
-        {
-            return gue.GetType().Name;
-        }
-        else
-        {
-            return $"{gue.GetType().Name} named {gue.Name}";
-        }
+        // If this visual backs a Forms control, the user thinks of it by the Forms type
+        // (e.g. "Button", "Panel") — not the Visual class ("ButtonVisual", "InteractiveGue").
+        var typeName = (gue is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject != null)
+            ? interactiveGue.FormsControlAsObject.GetType().Name
+            : gue.GetType().Name;
+
+        return string.IsNullOrEmpty(gue.Name)
+            ? typeName
+            : $"{typeName} named {gue.Name}";
     }
 
 
@@ -292,27 +297,18 @@ public static class CursorExtensions
         }
     }
 
-    private static GraphicalUiElement? GetNotExposedChildrenEventsParent(GraphicalUiElement visual)
+    private static InteractiveGue? GetNotExposedChildrenEventsParent(GraphicalUiElement visual)
     {
-        if (visual.Parent as InteractiveGue == null)
+        var current = visual.Parent as GraphicalUiElement;
+        while (current != null)
         {
-            if(visual.Parent is GraphicalUiElement)
+            if (current is InteractiveGue { ExposeChildrenEvents: false } parent)
             {
-                return GetNotExposedChildrenEventsParent(visual.Parent as GraphicalUiElement);
+                return parent;
             }
-            else
-            {
-                return null;
-            }
+            current = current.Parent as GraphicalUiElement;
         }
-        else if (visual is InteractiveGue { ExposeChildrenEvents: false } interactiveGue)
-        {
-            return interactiveGue;
-        }
-        else
-        {
-            return GetNotExposedChildrenEventsParent(visual.Parent as GraphicalUiElement);
-        }
+        return null;
     }
 
     private static bool IsDescendantOf(GraphicalUiElement possibleDescendant, GraphicalUiElement possibleAncestor)
@@ -327,6 +323,130 @@ public static class CursorExtensions
             current = current.Parent as GraphicalUiElement;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Searches Root, PopupRoot, and ModalRoot recursively for a <see cref="FrameworkElement"/>
+    /// of type <typeparamref name="T"/> and returns the event-failure reason for it.
+    /// If multiple elements match, diagnostics for each are returned in a single string.
+    /// </summary>
+    /// <returns>
+    /// <c>null</c> if exactly one match was found and its events should be working;
+    /// otherwise a string describing the match(es) and any event failures.
+    /// </returns>
+    public static string? GetEventFailureReason<T>(this ICursor cursor) where T : FrameworkElement
+        => GetEventFailureReasonForMatches(cursor, typeof(T), name: null);
+
+    /// <summary>
+    /// Searches Root, PopupRoot, and ModalRoot recursively for any <see cref="FrameworkElement"/>
+    /// whose name matches <paramref name="name"/> and returns the event-failure reason for it.
+    /// If multiple elements match, diagnostics for each are returned in a single string.
+    /// </summary>
+    public static string? GetEventFailureReason(this ICursor cursor, string name)
+        => GetEventFailureReasonForMatches(cursor, type: null, name: name);
+
+    /// <summary>
+    /// Searches Root, PopupRoot, and ModalRoot recursively for a <see cref="FrameworkElement"/>
+    /// of type <typeparamref name="T"/> whose name matches <paramref name="name"/> and returns
+    /// the event-failure reason for it. If multiple elements match, diagnostics for each are
+    /// returned in a single string.
+    /// </summary>
+    public static string? GetEventFailureReason<T>(this ICursor cursor, string name) where T : FrameworkElement
+        => GetEventFailureReasonForMatches(cursor, typeof(T), name);
+
+    private static string? GetEventFailureReasonForMatches(ICursor cursor, Type? type, string? name)
+    {
+        var matches = FindFrameworkElements(type, name);
+
+        var filterDescription = DescribeFilter(type, name);
+
+        if (matches.Count == 0)
+        {
+            return $"No FrameworkElement matching {filterDescription} was found under Root, PopupRoot, or ModalRoot.";
+        }
+
+        if (matches.Count == 1)
+        {
+            return cursor.GetEventFailureReason(matches[0]);
+        }
+
+        var sb = new StringBuilder();
+        sb.Append("Found ").Append(matches.Count).Append(" elements matching ")
+            .Append(filterDescription).AppendLine(":");
+
+        for (int i = 0; i < matches.Count; i++)
+        {
+            var element = matches[i];
+            var label = element.Visual != null ? NameOrType(element.Visual) : element.GetType().Name;
+            sb.Append("  [").Append(i + 1).Append("] ").AppendLine(label);
+
+            var reason = cursor.GetEventFailureReason(element);
+            var indented = reason == null
+                ? "(null — events appear to be working correctly)"
+                : IndentLines(reason, "      ");
+            sb.Append("      → ").AppendLine(indented.TrimStart());
+        }
+
+        return sb.ToString();
+    }
+
+    private static string DescribeFilter(Type? type, string? name)
+    {
+        if (type != null && name != null) return $"type {type.Name} named \"{name}\"";
+        if (type != null) return $"type {type.Name}";
+        if (name != null) return $"name \"{name}\"";
+        return "(no filter)";
+    }
+
+    private static string IndentLines(string text, string indent)
+    {
+        var lines = text.Split('\n');
+        var sb = new StringBuilder();
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (i > 0) sb.Append(indent);
+            sb.Append(lines[i]);
+            if (i < lines.Length - 1) sb.Append('\n');
+        }
+        return sb.ToString();
+    }
+
+    private static List<FrameworkElement> FindFrameworkElements(Type? type, string? name)
+    {
+        var results = new List<FrameworkElement>();
+        var gumUI = GumService.Default;
+
+        Collect(gumUI.Root, results, type, name);
+        if (gumUI.PopupRoot != null) Collect(gumUI.PopupRoot, results, type, name);
+        if (gumUI.ModalRoot != null) Collect(gumUI.ModalRoot, results, type, name);
+
+        return results;
+
+        static void Collect(GraphicalUiElement gue, List<FrameworkElement> results, Type? type, string? name)
+        {
+            if (gue is InteractiveGue interactiveGue &&
+                interactiveGue.FormsControlAsObject is FrameworkElement formsElement)
+            {
+                bool typeMatches = type == null || type.IsInstanceOfType(formsElement);
+                bool nameMatches = name == null || string.Equals(formsElement.Name, name, StringComparison.Ordinal);
+
+                if (typeMatches && nameMatches)
+                {
+                    results.Add(formsElement);
+                }
+            }
+
+            if (gue.Children != null)
+            {
+                foreach (var child in gue.Children)
+                {
+                    if (child is GraphicalUiElement childGue)
+                    {
+                        Collect(childGue, results, type, name);
+                    }
+                }
+            }
+        }
     }
 
     private static bool IsInLastEventRoots(GraphicalUiElement element)

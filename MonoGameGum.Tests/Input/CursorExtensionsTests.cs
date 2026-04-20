@@ -149,4 +149,116 @@ public class CursorExtensionsTests : BaseTestClass
         reason.ShouldContain("TitleBarInstance");
         reason.ShouldContain("not directly over");
     }
+
+    // -------------------------------------------------------------------------
+    // Overloads that look up the target by type and/or name
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void GetEventFailureReason_ByType_ShouldReportNoMatch_WhenNoElementFound()
+    {
+        Mock<ICursor> cursor = new();
+
+        string? reason = cursor.Object.GetEventFailureReason<Button>();
+
+        reason.ShouldNotBeNull();
+        reason.ShouldContain("No FrameworkElement");
+        reason.ShouldContain("Button");
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ByType_ShouldReturnSingleDiagnostic_WhenExactlyOneMatch()
+    {
+        Button button = new Button();
+        GumService.Default.Root.AddChild(button.Visual);
+
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(-500);
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(-500);
+        cursor.Setup(x => x.X).Returns(-500);
+        cursor.Setup(x => x.Y).Returns(-500);
+
+        string? lookupReason = cursor.Object.GetEventFailureReason<Button>();
+        string? directReason = cursor.Object.GetEventFailureReason(button);
+
+        lookupReason.ShouldBe(directReason);
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ByType_ShouldListAllMatches_WhenMultipleMatch()
+    {
+        Button first = new Button { Name = "First" };
+        Button second = new Button { Name = "Second" };
+        GumService.Default.Root.AddChild(first.Visual);
+        GumService.Default.Root.AddChild(second.Visual);
+
+        Mock<ICursor> cursor = new();
+
+        string? reason = cursor.Object.GetEventFailureReason<Button>();
+
+        reason.ShouldNotBeNull();
+        reason.ShouldContain("Found 2");
+        reason.ShouldContain("First");
+        reason.ShouldContain("Second");
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ByName_ShouldFindElement()
+    {
+        Button button = new Button { Name = "ConfirmButton" };
+        GumService.Default.Root.AddChild(button.Visual);
+
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(-500);
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(-500);
+        cursor.Setup(x => x.X).Returns(-500);
+        cursor.Setup(x => x.Y).Returns(-500);
+
+        string? lookupReason = cursor.Object.GetEventFailureReason("ConfirmButton");
+        string? directReason = cursor.Object.GetEventFailureReason(button);
+
+        lookupReason.ShouldBe(directReason);
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ByTypeAndName_ShouldDisambiguate()
+    {
+        Button matchingButton = new Button { Name = "Save" };
+        Button otherButton = new Button { Name = "Cancel" };
+        CheckBox sameNameDifferentType = new CheckBox { Name = "Save" };
+        GumService.Default.Root.AddChild(matchingButton.Visual);
+        GumService.Default.Root.AddChild(otherButton.Visual);
+        GumService.Default.Root.AddChild(sameNameDifferentType.Visual);
+
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(-500);
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(-500);
+        cursor.Setup(x => x.X).Returns(-500);
+        cursor.Setup(x => x.Y).Returns(-500);
+
+        string? lookupReason = cursor.Object.GetEventFailureReason<Button>("Save");
+        string? directReason = cursor.Object.GetEventFailureReason(matchingButton);
+
+        lookupReason.ShouldBe(directReason);
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ShouldSearchNested_WhenElementIsGrandchildOfRoot()
+    {
+        Panel panel = new Panel();
+        Button nested = new Button { Name = "Nested" };
+        panel.AddChild(nested);
+        GumService.Default.Root.AddChild(panel.Visual);
+
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(-500);
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(-500);
+        cursor.Setup(x => x.X).Returns(-500);
+        cursor.Setup(x => x.Y).Returns(-500);
+
+        string? reason = cursor.Object.GetEventFailureReason("Nested");
+
+        reason.ShouldNotBeNull();
+        reason.ShouldNotStartWith("No FrameworkElement");
+    }
 }

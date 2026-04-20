@@ -550,7 +550,7 @@ public class ComboBox :
         HideListBox();
     }
 
-#endregion
+    #endregion
 
     #region UpdateTo Methods
 
