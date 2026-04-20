@@ -41,6 +41,7 @@ public class BaseTestClass : IDisposable
         GraphicalUiElement.GlobalFontScale = 1;
 
         FrameworkElement.KeyboardsForUiControl.Clear();
+        FrameworkElement.GamePadsForUiControl.Clear();
         FrameworkElement.ClickCombos.Clear();
         FrameworkElement.ClickCombos.Add(new KeyCombo
         {

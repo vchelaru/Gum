@@ -26,7 +26,7 @@ using static FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum.Input;
-using Keys = Raylib_cs.KeyboardKey;
+using Keys = Gum.Forms.Input.Keys;
 
 using Gum.GueDeriving;
 
@@ -696,9 +696,12 @@ public class ListBox : ItemsControl, IInputReceiver
         bool isCtrlDown = false;
         bool isShiftDown = false;
 
-#if (MONOGAME || KNI || FNA) && !FRB
+#if !FRB
         // Use the same pattern as KeyCombo and TextBox - check KeyboardsForUiControl.
         // If the list is empty, no modifiers are detected (consistent with the rest of Gum's keyboard input handling).
+        // On MonoGame the keyboards list is typed IInputReceiverKeyboardMonoGame (XNA Keys);
+        // on Raylib it's IInputReceiverKeyboard (Gum Keys). Both expose `KeyDown(Keys)` where
+        // `Keys` matches the file-level alias, so the call resolves correctly on each platform.
         var keyboards = FrameworkElement.KeyboardsForUiControl;
         foreach (var keyboard in keyboards)
         {
@@ -1489,7 +1492,7 @@ public class ListBox : ItemsControl, IInputReceiver
             DoTopLevelFocusUpdate();
         }
 
-#if (MONOGAME || KNI || FNA) && !FRB
+#if !FRB
         base.HandleKeyboardFocusUpdate();
 #endif
 
@@ -1608,7 +1611,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 #endif
 
-#if (MONOGAME || KNI || FNA) && !FRB
+#if !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
@@ -1624,11 +1627,15 @@ public class ListBox : ItemsControl, IInputReceiver
 
             RepositionDirections? direction = null;
 
-            if (keyboard.KeyPushed(Keys.Up) == true || keyboard.KeysTyped.Contains(Keys.Up) == true)
+            // Keys.X references are fully qualified to Gum.Forms.Input.Keys so this block compiles
+            // on every platform regardless of what the file-level `using Keys = ...` alias resolves
+            // to. KeyTyped (pushed + OS repeat) replaces the old "KeyPushed OR KeysTyped.Contains"
+            // two-step — same effective behavior, single call, works on the shared base interface.
+            if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Up) == true)
             {
                 direction = RepositionDirections.Up;
             }
-            if (keyboard.KeyPushed(Keys.Down) == true || keyboard.KeysTyped.Contains(Keys.Down) == true)
+            if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Down) == true)
             {
                 direction = RepositionDirections.Down;
             }
@@ -1864,7 +1871,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 #endif
 
-#if (MONOGAME || KNI || FNA) && !FRB
+#if !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {

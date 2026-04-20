@@ -114,6 +114,25 @@ public  class ComboBoxTests : BaseTestClass
 
     }
 
+    [Fact]
+    public void ComboBox_EnterPressed_Opens()
+    {
+        ComboBox comboBox = new ComboBox();
+        comboBox.AddToRoot();
+        comboBox.IsDropDownOpen.ShouldBeFalse();
+
+        Mock<MonoGameGum.Input.IInputReceiverKeyboardMonoGame> keyboard = new Mock<MonoGameGum.Input.IInputReceiverKeyboardMonoGame>();
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeysTyped).Returns(new List<int>());
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        comboBox.OnFocusUpdate();
+
+        comboBox.IsDropDownOpen.ShouldBeTrue();
+    }
+
     public class CGComboBox : InteractiveGue
     {
         public MonoGameGum.Forms.DefaultVisuals.DefaultListBoxRuntime? ListBoxInstance;

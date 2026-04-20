@@ -34,7 +34,7 @@ namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum;
 using RaylibGum.Input;
-using Keys = Raylib_cs.KeyboardKey;
+using Keys = Gum.Forms.Input.Keys;
 
 #else
 using Keys = Microsoft.Xna.Framework.Input.Keys;

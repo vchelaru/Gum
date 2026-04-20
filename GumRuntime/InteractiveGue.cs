@@ -1095,14 +1095,63 @@ public interface IInputReceiverKeyboard
     bool IsCtrlDown { get; }
     bool IsAltDown { get; }
 
-    // FRB has this, but we don't have access to XNA-likes here, so we can't include it
-    // Update - we can make this use int instead of the specific enum, and then cast it to
-    // the enum based on the platform
-    // Update2 - this is going to change to a specific key type when we get the generic type in
+    /// <summary>
+    /// Returns the keys typed this frame as int values in the Gum/XNA key space
+    /// (see <see cref="Gum.Forms.Input.Keys"/>). Every runtime that ships with Gum
+    /// guarantees the returned ints correspond to values on <see cref="Gum.Forms.Input.Keys"/>,
+    /// so callers can cast directly (e.g. <c>(Gum.Forms.Input.Keys)key</c>).
+    /// </summary>
+    /// <remarks>
+    /// The return type stays <c>IEnumerable&lt;int&gt;</c> for back-compat with existing
+    /// implementations (including FRB and user code). The value-space contract is what
+    /// tightened — implementations must translate from any native key type to Gum/XNA values
+    /// before yielding.
+    /// </remarks>
     IEnumerable<int> KeysTyped { get; }
 
 
     string GetStringTyped();
+
+    /// <summary>
+    /// Returns whether the specified key is currently held down.
+    /// </summary>
+    /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
+    /// <remarks>
+    /// Default implementation returns <c>false</c> so existing implementors of
+    /// <see cref="IInputReceiverKeyboard"/> (including FRB and user code) continue to compile
+    /// unchanged. Runtimes that ship with Gum override this to query the underlying platform.
+    /// </remarks>
+    bool KeyDown(Gum.Forms.Input.Keys key) => false;
+
+    /// <summary>
+    /// Returns whether the specified key was pressed this frame (down this frame, not down last frame).
+    /// </summary>
+    /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
+    /// <remarks>
+    /// Default implementation returns <c>false</c> — see <see cref="KeyDown"/> for rationale.
+    /// </remarks>
+    bool KeyPushed(Gum.Forms.Input.Keys key) => false;
+
+    /// <summary>
+    /// Returns whether the specified key was released this frame (down last frame, not down this frame).
+    /// </summary>
+    /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
+    /// <remarks>
+    /// Default implementation returns <c>false</c> — see <see cref="KeyDown"/> for rationale.
+    /// </remarks>
+    bool KeyReleased(Gum.Forms.Input.Keys key) => false;
+
+    /// <summary>
+    /// Returns whether the specified key was "typed" this frame — either pushed this frame,
+    /// or held long enough to trigger the OS key-repeat. Matches the behavior of
+    /// <c>Microsoft.Xna.Framework.Input.Keys</c>-based <c>KeyTyped</c> on MonoGame and
+    /// <c>Raylib.IsKeyPressedRepeat</c> on Raylib.
+    /// </summary>
+    /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
+    /// <remarks>
+    /// Default implementation returns <c>false</c> — see <see cref="KeyDown"/> for rationale.
+    /// </remarks>
+    bool KeyTyped(Gum.Forms.Input.Keys key) => false;
 }
 
 

@@ -8,12 +8,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
-using Keys = Raylib_cs.KeyboardKey;
+using Keys = Gum.Forms.Input.Keys;
 
 namespace RaylibGum.Tests;
 
 public class BaseTestClass : IDisposable
 {
+    public BaseTestClass()
+    {
+        GumService.Default.InitializeForTesting();
+    }
+
     public virtual void Dispose()
     {
         FrameworkElement.KeyboardsForUiControl.Clear();
@@ -68,9 +73,9 @@ public class BaseTestClass : IDisposable
 
         //Text.Customizations.Clear();
 
-        if (Raylib.IsWindowReady())
-        {
-            Raylib.CloseWindow();
-        }
+        // The hidden Raylib window opened in TestAssemblyInitialize is intentionally
+        // kept alive for the duration of the test run — closing and reopening it across
+        // tests is unreliable on CI and makes Forms tests (which need LoadEmbeddedTexture2d
+        // to succeed) prohibitively expensive to set up per test.
     }
 }

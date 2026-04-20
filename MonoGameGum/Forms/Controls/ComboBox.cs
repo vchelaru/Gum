@@ -22,7 +22,7 @@ using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum.Input;
-using Keys = Raylib_cs.KeyboardKey;
+using Keys = Gum.Forms.Input.Keys;
 
 #else
 using MonoGameGum.Input;
@@ -607,7 +607,7 @@ public class ComboBox :
             DoClosedDropDownFocusUpdate();
         }
 
-#if MONOGAME && !FRB
+#if !FRB
         base.HandleKeyboardFocusUpdate();
 #endif
 
@@ -768,7 +768,7 @@ public class ComboBox :
             }
         }
 #endif
-#if (MONOGAME || KNI) && !FRB
+#if !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
