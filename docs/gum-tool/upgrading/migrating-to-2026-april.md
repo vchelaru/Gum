@@ -41,3 +41,19 @@ If you need to keep V2 visuals, pass the version explicitly:
 ```csharp
 GumUI.Initialize(DefaultVisualsVersion.V2);
 ```
+
+### RaylibGum.Input Namespace Removed
+
+Input types have been unified across non-XNA runtimes (raylib, sokol) under a single `Gum.Input` namespace. The `RaylibGum.Input` namespace has been deleted.
+
+The following types moved from `RaylibGum.Input` to `Gum.Input`: `Cursor`, `Keyboard`, `GamePad`, `GamepadButton`, `AnalogStick`, `DPadDirection`, `MouseState`, `ButtonState`, `TouchCollection`, and `TouchLocation`.
+
+Update any `using` directives or fully-qualified references:
+
+| Old                          | New                      |
+| ---------------------------- | ------------------------ |
+| `using RaylibGum.Input;`     | `using Gum.Input;`       |
+| `RaylibGum.Input.Cursor`     | `Gum.Input.Cursor`       |
+| `RaylibGum.Input.GamePad`    | `Gum.Input.GamePad`      |
+
+MonoGame projects are unaffected — the `MonoGameGum.Input` namespace has not changed. This change only impacts raylib-based projects.

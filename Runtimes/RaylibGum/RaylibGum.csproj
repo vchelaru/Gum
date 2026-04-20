@@ -147,6 +147,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!--
+		Global using so shared source files (e.g. MonoGameGum/Forms/**) don't need
+		explicit `using Raylib_cs;` inside #elif RAYLIB import blocks. Types like
+		Raylib, KeyboardKey, MouseCursor are still guarded by #if RAYLIB where
+		they're referenced — this only eliminates the import boilerplate.
+		-->
+		<Using Include="Raylib_cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Raylib-cs" Version="7.0.1" />
 		<PackageReference Include="TextCopy" Version="6.2.1" Condition="!$(TargetFramework.Contains('ios'))" />
 

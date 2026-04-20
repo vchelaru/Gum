@@ -5,9 +5,8 @@ using RenderingLibrary.Graphics;
 #if XNALIKE
 using MonoGameGum.GueDeriving;
 using Microsoft.Xna.Framework;
-#elif RAYLIB
+#else
 using Gum.GueDeriving;
-using Raylib_cs;
 #endif
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals.V3;

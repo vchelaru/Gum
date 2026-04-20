@@ -28,8 +28,9 @@ namespace FlatRedBall.Forms.Controls;
 using MonoGameGum.Input;
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 using Microsoft.Xna.Framework.Input;
-#elif RAYLIB
+#else
 using Gum.Input;
+using GamepadButton = Gum.Input.GamepadButton;
 using Keys = Gum.Forms.Input.Keys;
 using Gum.GueDeriving;
 #endif

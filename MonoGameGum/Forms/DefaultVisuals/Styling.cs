@@ -8,8 +8,6 @@ using System.ComponentModel;
 #if XNALIKE
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-#elif RAYLIB
-using Raylib_cs;
 #endif
 namespace Gum.Forms.DefaultVisuals;
 

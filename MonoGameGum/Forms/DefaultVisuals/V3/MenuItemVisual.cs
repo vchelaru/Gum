@@ -12,8 +12,6 @@ using System.Threading.Tasks;
 
 #if XNALIKE
 using Microsoft.Xna.Framework;
-#elif RAYLIB
-using Raylib_cs;
 #endif
 
 namespace Gum.Forms.DefaultVisuals.V3;

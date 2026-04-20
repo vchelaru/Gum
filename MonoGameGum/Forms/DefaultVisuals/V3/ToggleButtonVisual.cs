@@ -10,8 +10,7 @@ using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
 using MonoGameGum.GueDeriving;
 using Microsoft.Xna.Framework.Graphics;
-#elif RAYLIB
-using Raylib_cs;
+#else
 using Gum.GueDeriving;
 #endif
 using Gum.Forms.Controls;

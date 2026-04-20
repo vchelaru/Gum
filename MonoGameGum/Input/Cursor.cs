@@ -17,9 +17,6 @@ namespace MonoGameGum.Input;
 #else
 using System.Numerics;
 using Matrix = System.Numerics.Matrix3x2;
-#if RAYLIB
-using Raylib_cs;
-#endif
 namespace Gum.Input;
 #endif
 

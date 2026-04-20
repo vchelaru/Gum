@@ -41,7 +41,6 @@ using Gum.ToolStates;
 #if RAYLIB
 using Gum.Renderables;
 using Gum.GueDeriving;
-using Raylib_cs;
 namespace RaylibGum.Renderables;
 #else
 using Gum.Graphics.Animation;

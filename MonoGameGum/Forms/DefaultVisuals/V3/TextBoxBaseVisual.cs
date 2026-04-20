@@ -10,9 +10,8 @@ using System;
 #if XNALIKE
 using MonoGameGum.GueDeriving;
 using Microsoft.Xna.Framework;
-#elif RAYLIB
+#else
 using Gum.GueDeriving;
-using Raylib_cs;
 #endif
 
 

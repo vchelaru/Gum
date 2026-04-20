@@ -20,9 +20,8 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
-#elif RAYLIB
+#else
 using Gum.GueDeriving;
-using Raylib_cs;
 using Gum.Input;
 #endif
 

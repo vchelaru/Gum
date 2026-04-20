@@ -25,8 +25,9 @@ using Microsoft.Xna.Framework.Input;
 using RenderingLibrary.Graphics;
 using MonoGameGum.Input;
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
-#elif RAYLIB
+#else
 using Gum.Input;
+using GamepadButton = Gum.Input.GamepadButton;
 using Keys = Gum.Forms.Input.Keys;
 using Gum.Renderables;
 #endif

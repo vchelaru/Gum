@@ -13,9 +13,8 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.GueDeriving;
-#elif RAYLIB
+#else
 using Gum.GueDeriving;
-using Raylib_cs;
 #endif
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals;
