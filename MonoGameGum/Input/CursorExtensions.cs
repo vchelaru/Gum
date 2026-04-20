@@ -72,9 +72,10 @@ public static class CursorExtensions
         {
             return $"The argument InteractiveGue does not have its HasEvents set to true";
         }
-        if(GetNotExposedChildrenEventsParent(interactiveGue) is GraphicalUiElement)
+        if(GetNotExposedChildrenEventsParent(interactiveGue) is InteractiveGue notExposingParent)
         {
-            return $"The parent {interactiveGue} does not raise its children's events, preventing {interactiveGue} from raising events";
+            return $"The parent {NameOrType(notExposingParent)} does not raise its children's events, preventing {NameOrType(interactiveGue)} from raising events\n" +
+                GetAncestorTree(interactiveGue, notExposingParent);
         }
         if (interactiveGue.GetAbsoluteWidth() == 0)
         {
@@ -198,36 +199,39 @@ public static class CursorExtensions
 
         return null;
 
-        string GetStack(GraphicalUiElement itemInStack)
+        string GetStack(GraphicalUiElement itemInStack) => GetAncestorTree(interactiveGue, itemInStack);
+    }
+
+    /// <summary>
+    /// Builds an indented ancestor tree string from the root down to <paramref name="leaf"/>.
+    /// If <paramref name="highlighted"/> is provided and appears in the chain, it is marked with " &lt;---- THIS".
+    /// </summary>
+    public static string GetAncestorTree(GraphicalUiElement leaf, GraphicalUiElement? highlighted = null)
+    {
+        var inheritanceChain = new List<GraphicalUiElement>();
+
+        GraphicalUiElement? current = leaf;
+        while (current != null)
         {
-            List<GraphicalUiElement> inheritanceChain = new List<GraphicalUiElement>();
-
-            GraphicalUiElement? current = interactiveGue;
-            while (current != null)
-            {
-                inheritanceChain.Insert(0, current);
-
-                current = current.Parent as GraphicalUiElement;
-            }
-
-            string toReturn = "";
-
-            for(int i = 0; i < inheritanceChain.Count; i++)
-            {
-                var item = inheritanceChain[i];
-                if(item == itemInStack)
-                {
-                    toReturn += new string(' ', i * 2) + "└-" + NameOrType(item) + " <---- THIS";
-                }
-                else
-                {
-                    toReturn += new string(' ', i * 2) + "└-" + NameOrType(item);
-                }
-                toReturn += "\n";
-            }
-
-            return toReturn;
+            inheritanceChain.Insert(0, current);
+            current = current.Parent as GraphicalUiElement;
         }
+
+        var sb = new StringBuilder();
+        for (int i = 0; i < inheritanceChain.Count; i++)
+        {
+            var item = inheritanceChain[i];
+            sb.Append(new string(' ', i * 2));
+            sb.Append("└-");
+            sb.Append(NameOrType(item));
+            if (item == highlighted)
+            {
+                sb.Append(" <---- THIS");
+            }
+            sb.Append('\n');
+        }
+
+        return sb.ToString();
     }
 
     static string NameOrType(GraphicalUiElement gue)
@@ -292,27 +296,18 @@ public static class CursorExtensions
         }
     }
 
-    private static GraphicalUiElement? GetNotExposedChildrenEventsParent(GraphicalUiElement visual)
+    private static InteractiveGue? GetNotExposedChildrenEventsParent(GraphicalUiElement visual)
     {
-        if (visual.Parent as InteractiveGue == null)
+        var current = visual.Parent as GraphicalUiElement;
+        while (current != null)
         {
-            if(visual.Parent is GraphicalUiElement)
+            if (current is InteractiveGue { ExposeChildrenEvents: false } parent)
             {
-                return GetNotExposedChildrenEventsParent(visual.Parent as GraphicalUiElement);
+                return parent;
             }
-            else
-            {
-                return null;
-            }
+            current = current.Parent as GraphicalUiElement;
         }
-        else if (visual is InteractiveGue { ExposeChildrenEvents: false } interactiveGue)
-        {
-            return interactiveGue;
-        }
-        else
-        {
-            return GetNotExposedChildrenEventsParent(visual.Parent as GraphicalUiElement);
-        }
+        return null;
     }
 
     private static bool IsDescendantOf(GraphicalUiElement possibleDescendant, GraphicalUiElement possibleAncestor)
