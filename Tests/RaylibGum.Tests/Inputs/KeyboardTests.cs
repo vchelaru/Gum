@@ -2,7 +2,7 @@
 using Moq;
 using Moq.Protected;
 using Raylib_cs;
-using RaylibGum.Input;
+using Gum.Input;
 using Shouldly;
 using System;
 using System.Collections.Generic;

@@ -17,15 +17,15 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>$(DefineConstants);FNA;USE_GUMCOMMON;XNA4;FULL_DIAGNOSTICS</DefineConstants>
+		<DefineConstants>$(DefineConstants);FNA;USE_GUMCOMMON;XNA4;XNALIKE;FULL_DIAGNOSTICS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>$(DefineConstants);FNA;USE_GUMCOMMON;XNA4;FULL_DIAGNOSTICS</DefineConstants>
+		<DefineConstants>$(DefineConstants);FNA;USE_GUMCOMMON;XNA4;XNALIKE;FULL_DIAGNOSTICS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
-	  <DefineConstants>$(DefineConstants);FNA;USE_GUMCOMMON;XNA4</DefineConstants>
+	  <DefineConstants>$(DefineConstants);FNA;USE_GUMCOMMON;XNA4;XNALIKE</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

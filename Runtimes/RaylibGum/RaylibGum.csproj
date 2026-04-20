@@ -120,6 +120,11 @@
 		<Compile Include="..\..\MonoGameGum\GueDeriving\TextRuntime.cs" Link="GueDeriving\TextRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GumService.cs" Link="GumService.cs" />
 		<Compile Include="..\..\MonoGameGum\GumHotReloadManager.cs" Link="GumHotReloadManager.cs" />
+		<Compile Include="..\..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />
+		<Compile Include="..\..\GumRuntime\Input\MouseState.cs" Link="Input\MouseState.cs" />
+		<Compile Include="..\..\GumRuntime\Input\TouchCollection.cs" Link="Input\TouchCollection.cs" />
+		<Compile Include="..\..\GumRuntime\Input\TouchLocation.cs" Link="Input\TouchLocation.cs" />
+		<Compile Include="..\..\GumRuntime\Input\GamePad.cs" Link="Input\GamePad.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\Cursor.cs" Link="Input\Cursor.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
@@ -139,6 +144,16 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="Content\UISpriteSheet.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!--
+		Global using so shared source files (e.g. MonoGameGum/Forms/**) don't need
+		explicit `using Raylib_cs;` inside #elif RAYLIB import blocks. Types like
+		Raylib, KeyboardKey, MouseCursor are still guarded by #if RAYLIB where
+		they're referenced — this only eliminates the import boilerplate.
+		-->
+		<Using Include="Raylib_cs" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -14,16 +14,15 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 
-#if RAYLIB
-using Gum.GueDeriving;
-using Raylib_cs;
-using RaylibGum.Input;
-#else
+#if XNALIKE
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
+#else
+using Gum.GueDeriving;
+using Gum.Input;
 #endif
 
 #if FRB
@@ -112,10 +111,10 @@ public class FormsUtilities
                 "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
         }
 
-#if RAYLIB
-        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
-#else
+#if XNALIKE
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
+#elif RAYLIB
+        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
 #endif
 
         switch (defaultVisualsVersion)

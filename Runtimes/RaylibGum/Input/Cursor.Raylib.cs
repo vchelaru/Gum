@@ -4,8 +4,7 @@ using System;
 
 #if RAYLIB
 using System.Numerics;
-using Raylib_cs;
-namespace RaylibGum.Input;
+namespace Gum.Input;
 #else
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

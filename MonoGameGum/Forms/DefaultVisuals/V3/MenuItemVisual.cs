@@ -10,10 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if RAYLIB
-using Raylib_cs;
-
-#else
+#if XNALIKE
 using Microsoft.Xna.Framework;
 #endif
 

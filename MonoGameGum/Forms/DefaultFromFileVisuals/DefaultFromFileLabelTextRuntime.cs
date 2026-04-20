@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if MONOGAME || FNA || KNI
+#if XNALIKE
 using MonoGameGum.GueDeriving;
-#elif RAYLIB
+#else
 using Gum.GueDeriving;
 #endif
 

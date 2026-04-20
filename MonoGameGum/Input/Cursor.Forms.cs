@@ -1,12 +1,14 @@
+#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+
 using Gum.Forms.Controls;
 using Gum.Wireframe;
 
-#if RAYLIB
-namespace RaylibGum.Input;
-#elif SOKOL
-namespace Gum.Input;
-#else
+#if XNALIKE
 namespace MonoGameGum.Input;
+#else
+namespace Gum.Input;
 #endif
 
 public partial class Cursor

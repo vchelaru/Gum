@@ -27,7 +27,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace MonoGameGum;
 #elif RAYLIB
 using Gum.GueDeriving;
-using RaylibGum.Input;
+using Gum.Input;
 using GameTime = double;
 using RaylibGum.Renderables;
 namespace RaylibGum;

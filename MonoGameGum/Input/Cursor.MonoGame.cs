@@ -2,11 +2,6 @@
 using Gum.Wireframe;
 using System;
 
-#if RAYLIB
-using System.Numerics;
-using Raylib_cs;
-namespace RaylibGum.Input;
-#else
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -15,7 +10,6 @@ using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 namespace MonoGameGum.Input;
-#endif
 
 /// <summary>
 /// A cursor implementation providing mouse and touch input functionality.
