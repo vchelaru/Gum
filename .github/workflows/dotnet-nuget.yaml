@@ -104,19 +104,22 @@ jobs:
         dotnet workload install wasm-tools
         dotnet workload install maui
     
+    # IncludeAndroid=true forces KniGum's net9.0-android TFM to be restored, built, and
+    # packed. KniGum uses opt-in for Android (see KniGum.csproj); without this flag the
+    # published Gum.KNI nupkg would silently drop its Android TFM.
     - name: Restore dependencies
-      run: dotnet restore ${{ env.SOLUTION_FILE }}
-    
+      run: dotnet restore ${{ env.SOLUTION_FILE }} -p:IncludeAndroid=true
+
     - name: Build solution
-      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore -p:IncludeAnalyzers=true
-    
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore -p:IncludeAnalyzers=true -p:IncludeAndroid=true
+
     # Vic says - why run tests? This seems redundant since we already run tests before merging into main
     # - name: Run tests
     #  run: dotnet test ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
-    
+
     # Pack NuGet packages (Debug build) - includes both .nupkg and .snupkg
     - name: Pack NuGet packages
-      run: dotnet pack ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --output ./nupkgs --include-symbols --include-source -p:IncludeAnalyzers=true
+      run: dotnet pack ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --output ./nupkgs --include-symbols --include-source -p:IncludeAnalyzers=true -p:IncludeAndroid=true
 
     # Build and pack GumCli as a dotnet tool (not in AllLibraries.sln)
     - name: Build GumCli
