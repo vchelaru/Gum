@@ -17,6 +17,7 @@ public class Keyboard : IInputReceiverKeyboard
     double _lastGameTime;
     double _lastGetStringTypedCall = -999;
     string _lastStringTyped = "";
+    List<int>? _cachedKeysTyped;
 
     #region Key translation tables
 
@@ -193,19 +194,25 @@ public class Keyboard : IInputReceiverKeyboard
     {
         get
         {
-            int key = Raylib.GetKeyPressed();
-
-            while (key > 0)
+            // Raylib.GetKeyPressed drains the native key queue, so we cache per frame
+            // to keep this property idempotent — see Activity for cache invalidation.
+            if (_cachedKeysTyped == null)
             {
-                // Translate Raylib key value to Gum/XNA key value. If the Raylib key has no
-                // Gum counterpart (e.g. Raylib's Menu, or a Raylib-only code), drop it silently —
-                // callers cast to GumKeys and wouldn't know what to do with an unmapped value.
-                if (_raylibToGum.TryGetValue((KeyboardKey)key, out GumKeys gumKey))
+                List<int> drained = new();
+                int key = GetKeyPressed();
+                while (key > 0)
                 {
-                    yield return (int)gumKey;
+                    // Drop Raylib keys without a Gum counterpart (e.g. Raylib's Menu);
+                    // callers cast to GumKeys and wouldn't know what to do with them.
+                    if (_raylibToGum.TryGetValue((KeyboardKey)key, out GumKeys gumKey))
+                    {
+                        drained.Add((int)gumKey);
+                    }
+                    key = GetKeyPressed();
                 }
-                key = Raylib.GetKeyPressed();
+                _cachedKeysTyped = drained;
             }
+            return _cachedKeysTyped;
         }
     }
 
@@ -261,6 +268,7 @@ public class Keyboard : IInputReceiverKeyboard
     /// <param name="gameTime">The number of seconds since the start of the game.</param>
     public void Activity(double gameTime)
     {
+        _cachedKeysTyped = null;
         _lastGameTime = gameTime;
     }
 
@@ -301,4 +309,14 @@ public class Keyboard : IInputReceiverKeyboard
     /// </remarks>
     /// <returns>The unicode character as an int</returns>
     protected virtual int GetCharPressed() => Raylib.GetCharPressed();
+
+    /// <summary>
+    /// Retrieves the next pressed key code from Raylib's internal key queue (Raylib key space).
+    /// </summary>
+    /// <remarks>
+    /// This method exists for unit testing purposes. Returns 0 when the queue is drained,
+    /// matching Raylib's native sentinel.
+    /// </remarks>
+    /// <returns>The Raylib key code as an int, or 0 if the queue is empty.</returns>
+    protected virtual int GetKeyPressed() => Raylib.GetKeyPressed();
 }
