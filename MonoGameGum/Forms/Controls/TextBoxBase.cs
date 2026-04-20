@@ -20,15 +20,15 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 using RenderingLibrary.Graphics;
 namespace FlatRedBall.Forms.Controls;
-#elif RAYLIB
-using RaylibGum.Input;
-using Keys = Gum.Forms.Input.Keys;
-using Gum.Renderables;
-#else
+#elif XNALIKE
 using Microsoft.Xna.Framework.Input;
 using RenderingLibrary.Graphics;
 using MonoGameGum.Input;
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+#elif RAYLIB
+using RaylibGum.Input;
+using Keys = Gum.Forms.Input.Keys;
+using Gum.Renderables;
 #endif
 
 #if !FRB
@@ -707,30 +707,7 @@ public abstract class TextBoxBase :
         var index = textToUse?.Length ?? 0;
         float distanceMeasuredSoFar = 0;
 
-#if RAYLIB
-        for (int i = 0; i < (textToUse?.Length ?? 0); i++)
-        {
-            // Is there a faster way to do this?
-            distanceMeasuredSoFar = coreTextObject.MeasureString(textToUse.Substring(0, i + 1));
-
-            // This should find which side of the character you're closest to, but for now it's good enough...
-            if (distanceMeasuredSoFar > cursorOffset)
-            {
-                var distanceBefore = coreTextObject.MeasureString(textToUse.Substring(0, i));
-                var advance = distanceMeasuredSoFar - distanceBefore;
-                var halfwayPoint = distanceMeasuredSoFar - (advance / 2.0f);
-                if (halfwayPoint > cursorOffset)
-                {
-                    index = i;
-                }
-                else
-                {
-                    index = i + 1;
-                }
-                break;
-            }
-        }
-#else
+#if XNALIKE
 
         var bitmapFont = this.coreTextObject.BitmapFont;
 
@@ -752,6 +729,29 @@ public abstract class TextBoxBase :
             // This should find which side of the character you're closest to, but for now it's good enough...
             if (distanceMeasuredSoFar > cursorOffset)
             {
+                var halfwayPoint = distanceMeasuredSoFar - (advance / 2.0f);
+                if (halfwayPoint > cursorOffset)
+                {
+                    index = i;
+                }
+                else
+                {
+                    index = i + 1;
+                }
+                break;
+            }
+        }
+#else
+        for (int i = 0; i < (textToUse?.Length ?? 0); i++)
+        {
+            // Is there a faster way to do this?
+            distanceMeasuredSoFar = coreTextObject.MeasureString(textToUse.Substring(0, i + 1));
+
+            // This should find which side of the character you're closest to, but for now it's good enough...
+            if (distanceMeasuredSoFar > cursorOffset)
+            {
+                var distanceBefore = coreTextObject.MeasureString(textToUse.Substring(0, i));
+                var advance = distanceMeasuredSoFar - distanceBefore;
                 var halfwayPoint = distanceMeasuredSoFar - (advance / 2.0f);
                 if (halfwayPoint > cursorOffset)
                 {

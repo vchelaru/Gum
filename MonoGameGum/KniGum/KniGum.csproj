@@ -16,7 +16,7 @@
 		<Version>2026.4.5.1</Version>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<NoWarn>1591</NoWarn>
-		<DefineConstants>KNI</DefineConstants>
+		<DefineConstants>KNI;XNALIKE</DefineConstants>
 
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>

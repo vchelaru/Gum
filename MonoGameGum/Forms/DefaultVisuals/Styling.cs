@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 
-#if RAYLIB
-using Raylib_cs;
-#else
+#if XNALIKE
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+#elif RAYLIB
+using Raylib_cs;
 #endif
 namespace Gum.Forms.DefaultVisuals;
 
@@ -47,9 +47,7 @@ public class Styling
         NineSlice = new();
         Icons = new();
 
-#if RAYLIB
-        this.SpriteSheet = spriteSheet.Value;
-#else
+#if XNALIKE
         if (spriteSheet == null)
         {
             this.SpriteSheet = (Texture2D)global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
@@ -58,6 +56,8 @@ public class Styling
         {
             this.SpriteSheet = spriteSheet;
         }
+#elif RAYLIB
+        this.SpriteSheet = spriteSheet.Value;
 #endif
 
         if (ActiveStyle == null)
@@ -411,11 +411,7 @@ public class Icons
 
 public class Text
 {
-#if RAYLIB
-    public StateSave Normal = new();
-    public StateSave Strong = new();
-    public StateSave Emphasis = new();
-#else
+#if XNALIKE
     public StateSave Normal = CreateFontState("Arial", 18, false, false);
     public StateSave Strong = CreateFontState("Arial", 18, true, false);
     public StateSave Emphasis = CreateFontState("Arial", 18, false, true);
@@ -432,6 +428,10 @@ public class Text
                 }
         };
     }
+#else
+    public StateSave Normal = new();
+    public StateSave Strong = new();
+    public StateSave Emphasis = new();
 #endif
 
 }

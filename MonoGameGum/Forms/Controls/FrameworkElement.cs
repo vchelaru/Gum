@@ -31,18 +31,16 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using BindableGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
-#elif RAYLIB
-using RaylibGum;
-using RaylibGum.Input;
-using Keys = Gum.Forms.Input.Keys;
-
-#else
+#elif XNALIKE
 using Keys = Microsoft.Xna.Framework.Input.Keys;
 using GamePad = MonoGameGum.Input.GamePad;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 using Gum.Converters;
-
+#elif RAYLIB
+using RaylibGum;
+using RaylibGum.Input;
+using Keys = Gum.Forms.Input.Keys;
 #endif
 
 
@@ -114,11 +112,10 @@ public class FrameworkElement : INotifyPropertyChanged
 
 #if !FRB
 
-#if RAYLIB
-    public static List<IInputReceiverKeyboard> KeyboardsForUiControl { get; private set; } = new ();
-#else
+#if XNALIKE
     public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new ();
-
+#else
+    public static List<IInputReceiverKeyboard> KeyboardsForUiControl { get; private set; } = new ();
 #endif
 
 

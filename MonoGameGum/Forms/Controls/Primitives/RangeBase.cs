@@ -12,8 +12,7 @@ using Gum.Converters;
 using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls.Primitives;
-#elif RAYLIB
-#else
+#elif XNALIKE
 using MonoGameGum.Input;
 #endif
 
