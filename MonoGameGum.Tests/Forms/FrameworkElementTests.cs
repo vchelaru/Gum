@@ -519,6 +519,11 @@ public class FrameworkElementTests : BaseTestClass
         keyboard
             .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Tab))
             .Returns(true);
+        // KeyCombo.IsComboPushed (used for Tab navigation) now routes through
+        // the shared IInputReceiverKeyboard.KeyPushed(Gum.Forms.Input.Keys) overload.
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Tab))
+            .Returns(true);
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         textBox1.OnFocusUpdate();
