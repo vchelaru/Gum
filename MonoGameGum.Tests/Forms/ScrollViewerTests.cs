@@ -224,7 +224,7 @@ public class ScrollViewerTests : BaseTestClass
             .Returns(true);
         mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
             .Setup(m => m.KeysTyped)
-            .Returns(new List<int>() { (int)Keys.Tab });
+            .Returns(new List<Gum.Forms.Input.Keys>() { Gum.Forms.Input.Keys.Tab });
         FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
 
         Mock<ICursor> mockCursor = new();

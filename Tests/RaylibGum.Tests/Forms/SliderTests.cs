@@ -52,7 +52,7 @@ public class SliderTests : BaseTestClass
         slider.KeyDown += (_, args) => receivedKey = args.Key;
 
         Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
-        keyboard.Setup(k => k.KeysTyped).Returns(new List<int> { (int)Keys.Right });
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys> { Keys.Right });
         keyboard.Setup(k => k.GetStringTyped()).Returns("");
 
         slider.DoKeyboardAction(keyboard.Object);
@@ -75,7 +75,7 @@ public class SliderTests : BaseTestClass
 
         Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
         keyboard.Setup(k => k.KeyTyped(Keys.Right)).Returns(true);
-        keyboard.Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         slider.OnFocusUpdate();

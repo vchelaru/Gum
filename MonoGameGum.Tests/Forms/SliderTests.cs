@@ -112,7 +112,7 @@ public class SliderTests : BaseTestClass
         keyboard.As<IInputReceiverKeyboard>()
             .Setup(k => k.KeyTyped(Gum.Forms.Input.Keys.Right)).Returns(true);
         keyboard.As<IInputReceiverKeyboard>()
-            .Setup(k => k.KeysTyped).Returns(new List<int>());
+            .Setup(k => k.KeysTyped).Returns(new List<Gum.Forms.Input.Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         slider.OnFocusUpdate();

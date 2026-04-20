@@ -1148,13 +1148,11 @@ public abstract class TextBoxBase :
         // an IList or List. That's a breaking change for a tiny amount
         // of allocation....what to do....
 
-        var asMonoGameKeyboard = keyboard;
-
         // Handle all the special situations only based on Keyboard.GetState
         //   Situations: LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A
-        foreach (var key in asMonoGameKeyboard.KeysTyped)
+        foreach (Keys key in keyboard.KeysTyped)
         {
-            HandleKeyDown((Keys)key, shift, alt, ctrl);
+            HandleKeyDown(key, shift, alt, ctrl);
         }
 
         // String of letters typed and captured via the TextInput() Monogame event
@@ -1462,9 +1460,7 @@ public abstract class TextBoxBase :
         // IsAndroidVersionAtLeast(21) is required by CA1416 — see TryHideNativeKeyboard.
         if (OperatingSystem.IsAndroidVersionAtLeast(21))
         {
-            var keyboard = global::Gum.Forms.Controls.FrameworkElement.MainKeyboard
-                as global::MonoGameGum.Input.Keyboard;
-            keyboard?.ShowKeyboard();
+            global::Gum.Forms.Controls.FrameworkElement.MainKeyboard?.ShowKeyboard();
         }
 #else
         // iOS (and any future platform without an inline implementation) falls back to
@@ -1514,9 +1510,7 @@ public abstract class TextBoxBase :
         // which does not track #if directives — only runtime OS checks.
         if (OperatingSystem.IsAndroidVersionAtLeast(21))
         {
-            var keyboard = global::Gum.Forms.Controls.FrameworkElement.MainKeyboard
-                as global::MonoGameGum.Input.Keyboard;
-            keyboard?.HideKeyboard();
+            global::Gum.Forms.Controls.FrameworkElement.MainKeyboard?.HideKeyboard();
         }
 #endif
     }

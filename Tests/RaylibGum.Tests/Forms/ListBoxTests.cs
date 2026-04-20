@@ -39,7 +39,7 @@ public class ListBoxTests : BaseTestClass
 
         Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
         keyboard.Setup(k => k.KeyTyped(Keys.Down)).Returns(true);
-        keyboard.Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         listBox.OnFocusUpdate();
@@ -69,7 +69,7 @@ public class ListBoxTests : BaseTestClass
         // ClickCombos default contains Enter (PushedKey = Keys.Enter, HeldKey = null).
         // IsComboPushed() calls keyboard.KeyPushed on the pushed key with no held key.
         keyboard.Setup(k => k.KeyPushed(Keys.Enter)).Returns(true);
-        keyboard.Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         listBox.OnFocusUpdate();

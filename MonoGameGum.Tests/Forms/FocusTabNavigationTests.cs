@@ -35,7 +35,7 @@ public class FocusTabNavigationTests : BaseTestClass
         Mock<IInputReceiverKeyboardMonoGame> keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
         keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
         keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyDown(Keys.LeftShift)).Returns(true);
-        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         textBox2.OnFocusUpdate();
@@ -59,7 +59,7 @@ public class FocusTabNavigationTests : BaseTestClass
 
         Mock<IInputReceiverKeyboardMonoGame> keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
         keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
-        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         textBox1.OnFocusUpdate();
@@ -83,7 +83,7 @@ public class FocusTabNavigationTests : BaseTestClass
 
         Mock<IInputReceiverKeyboardMonoGame> keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
         keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
-        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         textBox2.OnFocusUpdate();

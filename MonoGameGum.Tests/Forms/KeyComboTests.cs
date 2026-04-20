@@ -134,7 +134,7 @@ public class KeyComboTests : BaseTestClass
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyPushed(Keys.Space)).Returns(false);
         // The key was repeated this frame, but IsTriggeredOnRepeat is false
-        mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<int> { (int)Keys.Space });
+        mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<Keys> { Keys.Space });
 
         FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
 
@@ -150,7 +150,7 @@ public class KeyComboTests : BaseTestClass
         sut.IsTriggeredOnRepeat = true;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
-        mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<int> { (int)Keys.Space });
+        mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<Keys> { Keys.Space });
 
         FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
 
