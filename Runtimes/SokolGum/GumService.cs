@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.Input;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
@@ -38,6 +39,32 @@ public sealed class GumService
             Name = "Main Root",
             HasEvents = false,
         };
+
+        Cursor = new Cursor();
+        Keyboard = new Keyboard();
+    }
+
+    /// <summary>
+    /// Gets the default cursor, fed by Sokol mouse events forwarded via
+    /// <see cref="HandleSokolEvent"/>.
+    /// </summary>
+    public Cursor Cursor { get; }
+
+    /// <summary>
+    /// Gets the default keyboard, fed by Sokol key / char events forwarded via
+    /// <see cref="HandleSokolEvent"/>.
+    /// </summary>
+    public Keyboard Keyboard { get; }
+
+    /// <summary>
+    /// Forwards a Sokol app event into Gum's input buffers. Host apps should call
+    /// this from their <c>sokol_app</c> event callback for every event — mouse,
+    /// key, and char alike.
+    /// </summary>
+    public void HandleSokolEvent(in sapp_event ev)
+    {
+        Cursor.HandleSokolEvent(ev);
+        Keyboard.HandleSokolEvent(ev);
     }
 
     private SystemManagers? _systemManagers;
@@ -97,6 +124,8 @@ public sealed class GumService
             throw new InvalidOperationException("Initialize has already been called once. It cannot be called again.");
         }
         IsInitialized = true;
+
+        // TODO: wire FrameworkElement.MainCursor/MainKeyboard when Forms is linked (task #4)
 
         SystemManagers = new SystemManagers();
         SystemManagers.Default = SystemManagers;
@@ -208,6 +237,9 @@ public sealed class GumService
     /// <param name="secondsSinceLastFrame">Elapsed seconds — pass this to scale or pause time.</param>
     public void Update(double secondsSinceLastFrame)
     {
+        Cursor.Activity(secondsSinceLastFrame);
+        Keyboard.Activity(secondsSinceLastFrame);
+
         Root.AnimateSelf(secondsSinceLastFrame);
         SystemManagers.Renderer.Update(secondsSinceLastFrame);
     }

@@ -4,6 +4,11 @@ namespace Gum.Input;
 
 public partial class Cursor
 {
+    // Thread-safety: _pendingState is not synchronized. Matches MonoGame/Raylib —
+    // event intake and per-frame reads are assumed to run on the same thread
+    // (the main/game thread). sokol_app delivers events synchronously on the
+    // main thread by default, so this holds under normal use. If a host app
+    // ever pumps Sokol events from a background thread, add locking here.
     private static MouseState _pendingState;
 
     private MouseState GetMouseState() => _pendingState;
