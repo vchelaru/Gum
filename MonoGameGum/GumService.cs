@@ -410,9 +410,14 @@ public class GumService
         FormsUtilities.InitializeDefaults(game:game, systemManagers: this.SystemManagers,
             defaultVisualsVersion: defaultVisualsVersion);
 #elif RAYLIB
+        // SystemManagers.Initialize must come first because it assigns the
+        // GraphicalUiElement.AddRenderableToManagers delegate. InitializeDefaults
+        // creates PopupRoot/ModalRoot and calls AddToManagers on them — that call
+        // silently no-ops if the delegate is still null, so the roots would never
+        // be added to MainLayer.Renderables and would not draw.
+        this.SystemManagers.Initialize();
         FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
             defaultVisualsVersion: defaultVisualsVersion);
-        this.SystemManagers.Initialize();
 #endif
 
 
