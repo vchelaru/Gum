@@ -553,7 +553,7 @@ public class ScrollViewer :
 
             var hasExplicitKeyboardsForUiControl = false;
 
-#if !FRB && !RAYLIB
+#if !FRB
             foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
             {
                 isShiftHeld |= keyboard.IsShiftDown;
@@ -768,7 +768,7 @@ public class ScrollViewer :
 
 
 
-#if (MONOGAME || KNI || FNA) && !FRB
+#if !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
