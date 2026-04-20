@@ -109,4 +109,63 @@ public class ScrollViewerTests
             FrameworkElement.KeyboardsForUiControl.Clear();
         }
     }
+
+    [Fact]
+    public void ShiftHeldOnMainKeyboard_ShouldRedirectScrollToHorizontal()
+    {
+        // Regression test pinning MonoGame V2 behavior after the ScrollViewer.cs:~566
+        // MainKeyboard fallback was un-gated (previously #if !RAYLIB). MonoGame was
+        // already matched by the previous guard, so behavior must be unchanged. Also
+        // confirms the new null-check guard is a no-op when MainKeyboard is non-null.
+        ScrollViewer scrollViewer = new();
+
+        FieldInfo verticalField = typeof(ScrollViewer).GetField(
+            "verticalScrollBar",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        FieldInfo horizontalField = typeof(ScrollViewer).GetField(
+            "horizontalScrollBar",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        ScrollBar verticalBar = (ScrollBar)verticalField.GetValue(scrollViewer)!;
+        ScrollBar horizontalBar = (ScrollBar)horizontalField.GetValue(scrollViewer)!;
+        verticalBar.ShouldNotBeNull();
+        horizontalBar.ShouldNotBeNull();
+        verticalBar.Minimum = 0;
+        verticalBar.Maximum = 1000;
+        verticalBar.Value = 500;
+        horizontalBar.Minimum = 0;
+        horizontalBar.Maximum = 1000;
+        horizontalBar.Value = 500;
+
+        Mock<ICursor> mockCursor = new();
+        mockCursor.Setup(c => c.ZVelocity).Returns(1f);
+        ICursor? previousCursor = FrameworkElement.MainCursor;
+        FrameworkElement.MainCursor = mockCursor.Object;
+
+        // Force the MainKeyboard fallback path by leaving KeyboardsForUiControl empty.
+        FrameworkElement.KeyboardsForUiControl.Count.ShouldBe(0);
+
+        IInputReceiverKeyboard? previousMainKeyboard = FrameworkElement.MainKeyboard;
+        Mock<IInputReceiverKeyboard> mockKeyboard = new();
+        mockKeyboard.Setup(k => k.IsShiftDown).Returns(true);
+        FrameworkElement.MainKeyboard = mockKeyboard.Object;
+        try
+        {
+            MethodInfo handler = typeof(ScrollViewer).GetMethod(
+                "HandleMouseWheelScroll",
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+            double verticalBefore = verticalBar.Value;
+            double horizontalBefore = horizontalBar.Value;
+
+            handler.Invoke(scrollViewer, new object[] { scrollViewer.Visual, new RoutedEventArgs() });
+
+            verticalBar.Value.ShouldBe(verticalBefore);
+            horizontalBar.Value.ShouldNotBe(horizontalBefore);
+        }
+        finally
+        {
+            FrameworkElement.MainCursor = previousCursor;
+            FrameworkElement.MainKeyboard = previousMainKeyboard;
+        }
+    }
 }

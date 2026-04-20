@@ -105,4 +105,68 @@ public class ScrollViewerTests : BaseTestClass
         horizontalBar.Value.ShouldNotBe(horizontalBefore,
             "because shift-held should redirect wheel scroll to the horizontal bar");
     }
+
+    [Fact]
+    public void ScrollViewer_ShiftHeldOnMainKeyboard_ScrollsHorizontally()
+    {
+        // Covers the MainKeyboard fallback branch at ScrollViewer.cs:~566. When
+        // KeyboardsForUiControl is empty, the ScrollViewer falls back to reading
+        // FrameworkElement.MainKeyboard.IsShiftDown. Pre un-gate this line was
+        // wrapped in #if !RAYLIB, so shift-scroll fallback was dead on Raylib.
+        ScrollViewer scrollViewer = new ScrollViewer();
+
+        scrollViewer.Visual.ShouldNotBeNull();
+        scrollViewer.AddToRoot();
+
+        FieldInfo verticalField = typeof(ScrollViewer).GetField(
+            "verticalScrollBar",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        FieldInfo horizontalField = typeof(ScrollViewer).GetField(
+            "horizontalScrollBar",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        ScrollBar verticalBar = (ScrollBar)verticalField.GetValue(scrollViewer)!;
+        ScrollBar horizontalBar = (ScrollBar)horizontalField.GetValue(scrollViewer)!;
+        verticalBar.ShouldNotBeNull();
+        horizontalBar.ShouldNotBeNull();
+        verticalBar.Minimum = 0;
+        verticalBar.Maximum = 1000;
+        verticalBar.Value = 500;
+        horizontalBar.Minimum = 0;
+        horizontalBar.Maximum = 1000;
+        horizontalBar.Value = 500;
+
+        Mock<ICursor> cursor = new Mock<ICursor>();
+        cursor.Setup(c => c.ZVelocity).Returns(1f);
+        FrameworkElement.MainCursor = cursor.Object;
+
+        // Leave KeyboardsForUiControl empty to force the MainKeyboard fallback path.
+        FrameworkElement.KeyboardsForUiControl.Count.ShouldBe(0,
+            "because BaseTestClass.Dispose clears this and the test must hit the fallback branch");
+
+        IInputReceiverKeyboard? previousMainKeyboard = FrameworkElement.MainKeyboard;
+        Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
+        keyboard.Setup(k => k.IsShiftDown).Returns(true);
+        FrameworkElement.MainKeyboard = keyboard.Object;
+        try
+        {
+            MethodInfo handler = typeof(ScrollViewer).GetMethod(
+                "HandleMouseWheelScroll",
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+            handler.ShouldNotBeNull();
+
+            double verticalBefore = verticalBar.Value;
+            double horizontalBefore = horizontalBar.Value;
+
+            handler.Invoke(scrollViewer, new object[] { scrollViewer.Visual, new RoutedEventArgs() });
+
+            verticalBar.Value.ShouldBe(verticalBefore,
+                "because shift-held on MainKeyboard should suppress vertical scroll on Raylib");
+            horizontalBar.Value.ShouldNotBe(horizontalBefore,
+                "because shift-held on MainKeyboard should redirect wheel scroll to the horizontal bar");
+        }
+        finally
+        {
+            FrameworkElement.MainKeyboard = previousMainKeyboard;
+        }
+    }
 }

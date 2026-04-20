@@ -563,9 +563,10 @@ public class ScrollViewer :
 
             if(!hasExplicitKeyboardsForUiControl)
             {
-#if !RAYLIB
-                isShiftHeld |= FrameworkElement.MainKeyboard.IsShiftDown;
-#endif
+                if (FrameworkElement.MainKeyboard != null)
+                {
+                    isShiftHeld |= FrameworkElement.MainKeyboard.IsShiftDown;
+                }
             }
 
             if (isShiftHeld == false)
