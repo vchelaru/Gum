@@ -39,7 +39,7 @@ using MonoGameGum.Input;
 using Gum.Converters;
 #elif RAYLIB
 using RaylibGum;
-using RaylibGum.Input;
+using Gum.Input;
 using Keys = Gum.Forms.Input.Keys;
 #endif
 

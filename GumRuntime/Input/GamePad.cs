@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace Gum.Input;
 
-namespace RaylibGum.Input;
 public class GamePad
 {
     // todo - this is needed to be implemented
@@ -18,6 +13,7 @@ public class GamePad
 
 public class AnalogStick
 {
+    // todo - this is needed to be implemented
     public bool AsDPadPushed(DPadDirection direction) => false;
     public bool AsDPadPushedRepeatRate(DPadDirection direction) => false;
 }
@@ -133,7 +129,6 @@ public enum GamepadButton
     //     Left stick is towards the right.
     LeftThumbstickRight = 0x40000000
 }
-
 
 public enum DPadDirection
 {

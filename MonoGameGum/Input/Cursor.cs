@@ -5,16 +5,7 @@
 using Gum.Wireframe;
 using System;
 
-#if RAYLIB
-using System.Numerics;
-using Raylib_cs;
-using Matrix = System.Numerics.Matrix3x2;
-namespace RaylibGum.Input;
-#elif SOKOL
-using System.Numerics;
-using Matrix = System.Numerics.Matrix3x2;
-namespace Gum.Input;
-#else
+#if XNALIKE
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -23,6 +14,13 @@ using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 namespace MonoGameGum.Input;
+#else
+using System.Numerics;
+using Matrix = System.Numerics.Matrix3x2;
+#if RAYLIB
+using Raylib_cs;
+#endif
+namespace Gum.Input;
 #endif
 
 /// <summary>
@@ -162,7 +160,7 @@ public partial class Cursor : ICursor
 #if SOKOL
         var renderer = SokolGum.SystemManagers.Default.Renderer;
 #else
-        var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
+        var renderer = global::RenderingLibrary.SystemManagers.Default.Renderer;
 #endif
         var zoom = renderer.Camera.Zoom;
         return ((X - GetViewportLeft()) / zoom) + renderer.Camera.X ?? 0;
@@ -184,7 +182,7 @@ public partial class Cursor : ICursor
 #if SOKOL
         var renderer = SokolGum.SystemManagers.Default.Renderer;
 #else
-        var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
+        var renderer = global::RenderingLibrary.SystemManagers.Default.Renderer;
 #endif
         var zoom = renderer.Camera.Zoom;
         return ((Y - GetViewportTop()) / zoom) + renderer.Camera.Y ?? 0;

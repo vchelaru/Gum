@@ -21,7 +21,7 @@ using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 #elif RAYLIB
-using RaylibGum.Input;
+using Gum.Input;
 #endif
 
 #if !FRB

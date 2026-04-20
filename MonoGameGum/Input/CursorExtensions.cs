@@ -1,4 +1,8 @@
-﻿using Gum.Forms;
+﻿#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -9,10 +13,14 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-#if RAYLIB
-namespace RaylibGum.Input;
-#else
+#if XNALIKE
+using MonoGameGum;
 namespace MonoGameGum.Input;
+#elif RAYLIB
+using RaylibGum;
+namespace Gum.Input;
+#else
+namespace Gum.Input;
 #endif
 
 public static class CursorExtensions 

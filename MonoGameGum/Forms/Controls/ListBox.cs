@@ -29,7 +29,7 @@ using MonoGameGum.Input;
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 using Microsoft.Xna.Framework.Input;
 #elif RAYLIB
-using RaylibGum.Input;
+using Gum.Input;
 using Keys = Gum.Forms.Input.Keys;
 using Gum.GueDeriving;
 #endif

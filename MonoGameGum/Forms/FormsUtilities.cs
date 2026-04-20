@@ -23,7 +23,7 @@ using MonoGameGum.Input;
 #elif RAYLIB
 using Gum.GueDeriving;
 using Raylib_cs;
-using RaylibGum.Input;
+using Gum.Input;
 #endif
 
 #if FRB

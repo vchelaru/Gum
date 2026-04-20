@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GumKeys = Gum.Forms.Input.Keys;
 
-namespace RaylibGum.Input;
+namespace Gum.Input;
 
 /// <summary>
 /// Keyboard implementation for Raylib.
