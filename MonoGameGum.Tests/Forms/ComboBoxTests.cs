@@ -125,7 +125,7 @@ public  class ComboBoxTests : BaseTestClass
         keyboard.As<IInputReceiverKeyboard>()
             .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter)).Returns(true);
         keyboard.As<IInputReceiverKeyboard>()
-            .Setup(k => k.KeysTyped).Returns(new List<int>());
+            .Setup(k => k.KeysTyped).Returns(new List<Gum.Forms.Input.Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         comboBox.OnFocusUpdate();

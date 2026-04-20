@@ -49,7 +49,7 @@ public class KeyboardTests : BaseTestClass
 
         sut.Object.Activity(1);
 
-        List<int> result = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
+        List<GumKeys> result = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
 
         result.ShouldBeEmpty();
     }
@@ -69,15 +69,15 @@ public class KeyboardTests : BaseTestClass
         // load a different key. A cache that isn't invalidated by Activity would keep
         // returning [A] instead of picking up [B].
         ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
-        List<int> firstFrameRepeat = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
-        firstFrameRepeat.ShouldBe(new List<int> { (int)GumKeys.A });
+        List<GumKeys> firstFrameRepeat = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
+        firstFrameRepeat.ShouldBe(new List<GumKeys> { GumKeys.A });
 
         sut.Object.Activity(2);
         pressed.Enqueue((int)KeyboardKey.B);
         pressed.Enqueue(0);
 
-        List<int> secondFrame = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
-        secondFrame.ShouldBe(new List<int> { (int)GumKeys.B });
+        List<GumKeys> secondFrame = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
+        secondFrame.ShouldBe(new List<GumKeys> { GumKeys.B });
     }
 
     [Fact]
@@ -91,10 +91,10 @@ public class KeyboardTests : BaseTestClass
 
         sut.Object.Activity(1);
 
-        List<int> firstRead = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
-        List<int> secondRead = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
+        List<GumKeys> firstRead = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
+        List<GumKeys> secondRead = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
 
-        var expected = new List<int> { (int)GumKeys.A, (int)GumKeys.B };
+        var expected = new List<GumKeys> { GumKeys.A, GumKeys.B };
         firstRead.ShouldBe(expected);
         secondRead.ShouldBe(expected);
     }

@@ -35,7 +35,7 @@ public class ScrollViewerTests : BaseTestClass
         // BaseTestClass.Dispose seeds ClickCombos with { PushedKey = Enter, HeldKey = null }.
         // IsComboPushed() then calls keyboard.KeyPushed(Enter) with no held key.
         keyboard.Setup(k => k.KeyPushed(Keys.Enter)).Returns(true);
-        keyboard.Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         scrollViewer.OnFocusUpdate();

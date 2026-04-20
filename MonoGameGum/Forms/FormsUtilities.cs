@@ -372,14 +372,13 @@ public class FormsUtilities
             cursor.VisualOver?.FormsControlAsObject as FrameworkElement;
 
 #if XNALIKE
-        cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-        keyboard.Activity(gameTime.TotalGameTime.TotalSeconds, game);
-        UpdateGamepads(gameTime.TotalGameTime.TotalSeconds);
+        double gameTimeSeconds = gameTime.TotalGameTime.TotalSeconds;
 #else
-        cursor.Activity(gameTime);
-        keyboard.Activity(gameTime);
-        UpdateGamepads(gameTime);
+        double gameTimeSeconds = gameTime;
 #endif
+        cursor.Activity(gameTimeSeconds);
+        keyboard.Activity(gameTimeSeconds);
+        UpdateGamepads(gameTimeSeconds);
         innerList.Clear();
 
         var didModalsProcessInput = false;

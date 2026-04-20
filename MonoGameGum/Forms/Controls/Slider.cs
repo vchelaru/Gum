@@ -547,12 +547,12 @@ public class Slider : RangeBase, IInputReceiver
         // an IList or List. That's a breaking change for a tiny amount
         // of allocation....what to do....
 
-        // KeysTyped on the shared interface yields ints in the Gum/XNA key space,
-        // so a direct cast to the file-level `Keys` alias (XNA on MonoGame, Gum on Raylib)
-        // produces the correct enum value on every platform.
-        foreach (int keyValue in keyboard.KeysTyped)
+        // KeysTyped on the shared interface yields Gum.Forms.Input.Keys values. The
+        // file-level `Keys` alias resolves to Gum.Forms.Input.Keys here, so no cast
+        // is needed.
+        foreach (Keys key in keyboard.KeysTyped)
         {
-            HandleKeyDown((Keys)keyValue, shift, alt, ctrl);
+            HandleKeyDown(key, shift, alt, ctrl);
         }
 
         var stringTyped = keyboard.GetStringTyped();

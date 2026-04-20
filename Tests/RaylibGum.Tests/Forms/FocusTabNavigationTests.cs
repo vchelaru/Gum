@@ -67,7 +67,7 @@ public class FocusTabNavigationTests : BaseTestClass
         Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
         keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
         keyboard.Setup(k => k.KeyDown(Keys.LeftShift)).Returns(true);
-        keyboard.Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         harness2.InvokeHandleKeyboardFocusUpdate();
@@ -88,7 +88,7 @@ public class FocusTabNavigationTests : BaseTestClass
 
         Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
         keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
-        keyboard.Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         harness1.InvokeHandleKeyboardFocusUpdate();
@@ -111,7 +111,7 @@ public class FocusTabNavigationTests : BaseTestClass
 
         Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
         keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
-        keyboard.Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         harness2.InvokeHandleKeyboardFocusUpdate();

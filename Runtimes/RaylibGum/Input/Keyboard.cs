@@ -17,7 +17,7 @@ public class Keyboard : IInputReceiverKeyboard
     double _lastGameTime;
     double _lastGetStringTypedCall = -999;
     string _lastStringTyped = "";
-    List<int>? _cachedKeysTyped;
+    List<GumKeys>? _cachedKeysTyped;
 
     #region Key translation tables
 
@@ -190,7 +190,7 @@ public class Keyboard : IInputReceiverKeyboard
         Raylib.IsKeyDown(KeyboardKey.LeftAlt) ||
         Raylib.IsKeyDown(KeyboardKey.RightAlt);
 
-    IEnumerable<int> IInputReceiverKeyboard.KeysTyped
+    IEnumerable<GumKeys> IInputReceiverKeyboard.KeysTyped
     {
         get
         {
@@ -198,7 +198,7 @@ public class Keyboard : IInputReceiverKeyboard
             // to keep this property idempotent — see Activity for cache invalidation.
             if (_cachedKeysTyped == null)
             {
-                List<int> drained = new();
+                List<GumKeys> drained = new();
                 int key = GetKeyPressed();
                 while (key > 0)
                 {
@@ -206,7 +206,7 @@ public class Keyboard : IInputReceiverKeyboard
                     // callers cast to GumKeys and wouldn't know what to do with them.
                     if (_raylibToGum.TryGetValue((KeyboardKey)key, out GumKeys gumKey))
                     {
-                        drained.Add((int)gumKey);
+                        drained.Add(gumKey);
                     }
                     key = GetKeyPressed();
                 }

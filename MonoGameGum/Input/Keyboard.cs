@@ -88,14 +88,13 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
         }
     }
 
-    // temporary - to help unify raylib
-    IEnumerable<int> IInputReceiverKeyboard.KeysTyped
+    IEnumerable<Gum.Forms.Input.Keys> IInputReceiverKeyboard.KeysTyped
     {
         get
         {
             foreach (var item in KeysTyped)
             {
-                yield return (int)item;
+                yield return (Gum.Forms.Input.Keys)(int)item;
             }
         }
     }
@@ -397,8 +396,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     /// pressed too fast.
     /// </summary>
     /// <param name="currentTime"></param>
-    /// <param name="game"></param>
-    public void Activity(double currentTime, Game? game = null)
+    public void Activity(double currentTime)
     {
 #if ANDROID
 			ProcessAndroidKeys();
@@ -410,14 +408,14 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 
         // This could be done in initialize, we don't want
         // to break projects. Instead, GumService.Initialize
-        // now has the GraphicsDevice version obsolete 
-        if (windowTextInputBuffer == null && game != null && !isMobile)
+        // now has the GraphicsDevice version obsolete
+        if (windowTextInputBuffer == null && _game != null && !isMobile)
         {
             try
             {
                 // Only happens once per run of the application/game
                 // Probably should't attempt to do this on platforms that don't support it?
-                TrySubscribeToGameWindowInput(game);
+                TrySubscribeToGameWindowInput(_game);
             }
             catch
             {

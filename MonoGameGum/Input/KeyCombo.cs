@@ -38,11 +38,11 @@ public static class KeyComboExtensions
             if (isHeld)
             {
                 // Access KeysTyped via the base interface so we consistently get the
-                // IEnumerable<int> overload. IInputReceiverKeyboardMonoGame hides this with
-                // an XNA-typed collection, which would not expose LINQ Contains(int).
-                IEnumerable<int>? keysTyped = ((IInputReceiverKeyboard)keyboard).KeysTyped;
+                // Gum.Forms.Input.Keys overload. IInputReceiverKeyboardMonoGame hides this
+                // with an XNA-typed collection, which would not compare against GumKeys.
+                IEnumerable<Gum.Forms.Input.Keys>? keysTyped = ((IInputReceiverKeyboard)keyboard).KeysTyped;
                 return keyboard.KeyPushed(ToGumKey(keyCombo.PushedKey)) ||
-                    (keysTyped?.Contains((int)keyCombo.PushedKey) == true && keyCombo.IsTriggeredOnRepeat);
+                    (keysTyped?.Contains(ToGumKey(keyCombo.PushedKey)) == true && keyCombo.IsTriggeredOnRepeat);
             }
         }
         return false;

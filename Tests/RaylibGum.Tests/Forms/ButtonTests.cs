@@ -30,7 +30,7 @@ public class ButtonTests : BaseTestClass
 
         Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
         keyboard.Setup(k => k.KeyPushed(Keys.Enter)).Returns(true);
-        keyboard.Setup(k => k.KeysTyped).Returns(new List<int>());
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys>());
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
         button.OnFocusUpdate();

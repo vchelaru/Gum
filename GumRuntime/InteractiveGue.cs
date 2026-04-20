@@ -1096,50 +1096,52 @@ public interface IInputReceiverKeyboard
     bool IsAltDown { get; }
 
     /// <summary>
-    /// Returns the keys typed this frame as int values in the Gum/XNA key space
-    /// (see <see cref="Gum.Forms.Input.Keys"/>). Every runtime that ships with Gum
-    /// guarantees the returned ints correspond to values on <see cref="Gum.Forms.Input.Keys"/>,
-    /// so callers can cast directly (e.g. <c>(Gum.Forms.Input.Keys)key</c>).
-    /// </summary>
-    /// <remarks>
-    /// The return type stays <c>IEnumerable&lt;int&gt;</c> for back-compat with existing
-    /// implementations (including FRB and user code). The value-space contract is what
-    /// tightened — implementations must translate from any native key type to Gum/XNA values
+    /// Returns the keys typed this frame in the shared <see cref="Gum.Forms.Input.Keys"/>
+    /// space. Implementations must translate from any native key type to Gum/XNA values
     /// before yielding.
-    /// </remarks>
-    IEnumerable<int> KeysTyped { get; }
+    /// </summary>
+    IEnumerable<Gum.Forms.Input.Keys> KeysTyped { get; }
+
+    /// <summary>
+    /// Default no-op. Runtimes with soft-keyboard / IME support (e.g. Android) override
+    /// this to surface the native on-screen keyboard.
+    /// </summary>
+    void ShowKeyboard() { }
+
+    /// <summary>
+    /// Default no-op. Runtimes with soft-keyboard / IME support (e.g. Android) override
+    /// this to dismiss the native on-screen keyboard.
+    /// </summary>
+    void HideKeyboard() { }
 
 
     string GetStringTyped();
 
     /// <summary>
+    /// Advances the keyboard one frame. Must be called once per frame before any
+    /// <see cref="KeysTyped"/> / <see cref="GetStringTyped"/> / key-query reads, so per-frame
+    /// caches reset on the correct boundary.
+    /// </summary>
+    /// <param name="gameTime">The total game time, in seconds.</param>
+    void Activity(double gameTime);
+
+    /// <summary>
     /// Returns whether the specified key is currently held down.
     /// </summary>
     /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
-    /// <remarks>
-    /// Default implementation returns <c>false</c> so existing implementors of
-    /// <see cref="IInputReceiverKeyboard"/> (including FRB and user code) continue to compile
-    /// unchanged. Runtimes that ship with Gum override this to query the underlying platform.
-    /// </remarks>
-    bool KeyDown(Gum.Forms.Input.Keys key) => false;
+    bool KeyDown(Gum.Forms.Input.Keys key);
 
     /// <summary>
     /// Returns whether the specified key was pressed this frame (down this frame, not down last frame).
     /// </summary>
     /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
-    /// <remarks>
-    /// Default implementation returns <c>false</c> — see <see cref="KeyDown"/> for rationale.
-    /// </remarks>
-    bool KeyPushed(Gum.Forms.Input.Keys key) => false;
+    bool KeyPushed(Gum.Forms.Input.Keys key);
 
     /// <summary>
     /// Returns whether the specified key was released this frame (down last frame, not down this frame).
     /// </summary>
     /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
-    /// <remarks>
-    /// Default implementation returns <c>false</c> — see <see cref="KeyDown"/> for rationale.
-    /// </remarks>
-    bool KeyReleased(Gum.Forms.Input.Keys key) => false;
+    bool KeyReleased(Gum.Forms.Input.Keys key);
 
     /// <summary>
     /// Returns whether the specified key was "typed" this frame — either pushed this frame,
@@ -1148,10 +1150,7 @@ public interface IInputReceiverKeyboard
     /// <c>Raylib.IsKeyPressedRepeat</c> on Raylib.
     /// </summary>
     /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
-    /// <remarks>
-    /// Default implementation returns <c>false</c> — see <see cref="KeyDown"/> for rationale.
-    /// </remarks>
-    bool KeyTyped(Gum.Forms.Input.Keys key) => false;
+    bool KeyTyped(Gum.Forms.Input.Keys key);
 }
 
 
