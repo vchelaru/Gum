@@ -17,7 +17,7 @@ using static FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls.Primitives;
 #elif RAYLIB
 using RaylibGum.Input;
-using Keys = Raylib_cs.KeyboardKey;
+using Keys = Gum.Forms.Input.Keys;
 #else
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;

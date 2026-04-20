@@ -12,7 +12,9 @@ namespace RaylibGum.Tests.Forms;
 /// chain from a mocked <see cref="IInputReceiverKeyboard"/> through
 /// <c>ListBox.OnFocusUpdate</c> → <c>DoTopLevelFocusUpdate</c> →
 /// <c>DoListItemFocusUpdate</c> advances <c>SelectedIndex</c> on
-/// <c>Keys.Down</c> for Raylib.
+/// <c>Keys.Down</c> for Raylib, plus multi-select modifier coverage unlocked by
+/// the Bucket A alias flip (which widened the <c>HandleItemSelected</c> modifier
+/// check from <c>#if (MONOGAME || KNI || FNA) &amp;&amp; !FRB</c> to <c>#if !FRB</c>).
 /// </summary>
 public class ListBoxTests : BaseTestClass
 {
@@ -73,5 +75,66 @@ public class ListBoxTests : BaseTestClass
         listBox.OnFocusUpdate();
 
         listBox.DoListItemsHaveFocus.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ListBox_ExtendedMode_CtrlHeldWhileToggling_DoesNotClearOtherSelections()
+    {
+        // Covers the Bucket A guard flip at ListBox.cs:699 (now #if !FRB, previously
+        // excluded Raylib). With LeftControl held, selecting a new item in Extended
+        // mode should toggle it on without deselecting the existing selection — that's
+        // the Ctrl-toggle behavior. Before the flip, the modifier-detection block was
+        // compiled out on Raylib, so new clicks would clear prior selections.
+        ListBox listBox = new ListBox { SelectionMode = SelectionMode.Extended };
+
+        listBox.Visual.ShouldNotBeNull();
+        listBox.AddToRoot();
+
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
+
+        listBox.ListBoxItems[0].IsSelected = true;
+
+        Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
+        keyboard.Setup(k => k.KeyDown(ListBox.ToggleSelectionModifierKey)).Returns(true);
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        listBox.ListBoxItems[1].IsSelected = true;
+
+        listBox.SelectedItems.Count.ShouldBe(2);
+        listBox.ListBoxItems[0].IsSelected.ShouldBeTrue();
+        listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ListBox_ExtendedMode_ShiftHeldWhileSelecting_ExtendsRange()
+    {
+        // Covers the Bucket A guard flip at ListBox.cs:699 for the range-selection
+        // side. With LeftShift held, selecting a later item in Extended mode should
+        // select everything from the anchor through the clicked index inclusive.
+        ListBox listBox = new ListBox { SelectionMode = SelectionMode.Extended };
+
+        listBox.Visual.ShouldNotBeNull();
+        listBox.AddToRoot();
+
+        listBox.Items!.Add("Item 0");
+        listBox.Items!.Add("Item 1");
+        listBox.Items!.Add("Item 2");
+        listBox.Items!.Add("Item 3");
+
+        listBox.ListBoxItems[0].IsSelected = true;
+
+        Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
+        keyboard.Setup(k => k.KeyDown(ListBox.RangeSelectionModifierKey)).Returns(true);
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        listBox.ListBoxItems[2].IsSelected = true;
+
+        listBox.SelectedItems.Count.ShouldBe(3);
+        listBox.ListBoxItems[0].IsSelected.ShouldBeTrue();
+        listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+        listBox.ListBoxItems[3].IsSelected.ShouldBeFalse();
     }
 }

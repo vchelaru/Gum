@@ -22,7 +22,7 @@ using RenderingLibrary.Graphics;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum.Input;
-using Keys = Raylib_cs.KeyboardKey;
+using Keys = Gum.Forms.Input.Keys;
 using Gum.Renderables;
 #else
 using Microsoft.Xna.Framework.Input;
@@ -849,9 +849,6 @@ public abstract class TextBoxBase :
                 }
                 break;
             case Keys.Back:
-#if RAYLIB
-            case Keys.Backspace:
-#endif
                 if (!IsReadOnly)
                 {
                     HandleBackspace(isCtrlDown);

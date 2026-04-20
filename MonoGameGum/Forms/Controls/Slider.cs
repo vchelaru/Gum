@@ -19,7 +19,7 @@ using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum.Input;
-using Keys = Raylib_cs.KeyboardKey;
+using Keys = Gum.Forms.Input.Keys;
 
 
 #else
@@ -547,14 +547,13 @@ public class Slider : RangeBase, IInputReceiver
         // an IList or List. That's a breaking change for a tiny amount
         // of allocation....what to do....
 
-#if !RAYLIB
-        var asMonoGameKeyboard = (IInputReceiverKeyboardMonoGame)keyboard;
-
-        foreach (var key in asMonoGameKeyboard.KeysTyped)
+        // KeysTyped on the shared interface yields ints in the Gum/XNA key space,
+        // so a direct cast to the file-level `Keys` alias (XNA on MonoGame, Gum on Raylib)
+        // produces the correct enum value on every platform.
+        foreach (int keyValue in keyboard.KeysTyped)
         {
-            HandleKeyDown(key, shift, alt, ctrl);
+            HandleKeyDown((Keys)keyValue, shift, alt, ctrl);
         }
-#endif
 
         var stringTyped = keyboard.GetStringTyped();
 
@@ -571,7 +570,7 @@ public class Slider : RangeBase, IInputReceiver
 
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
-#if MONOGAME && !FRB
+#if !FRB
         var args = new KeyEventArgs();
         args.Key = key;
         base.RaiseKeyDown(args);

@@ -26,7 +26,7 @@ using static FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum.Input;
-using Keys = Raylib_cs.KeyboardKey;
+using Keys = Gum.Forms.Input.Keys;
 
 using Gum.GueDeriving;
 
@@ -696,9 +696,12 @@ public class ListBox : ItemsControl, IInputReceiver
         bool isCtrlDown = false;
         bool isShiftDown = false;
 
-#if (MONOGAME || KNI || FNA) && !FRB
+#if !FRB
         // Use the same pattern as KeyCombo and TextBox - check KeyboardsForUiControl.
         // If the list is empty, no modifiers are detected (consistent with the rest of Gum's keyboard input handling).
+        // On MonoGame the keyboards list is typed IInputReceiverKeyboardMonoGame (XNA Keys);
+        // on Raylib it's IInputReceiverKeyboard (Gum Keys). Both expose `KeyDown(Keys)` where
+        // `Keys` matches the file-level alias, so the call resolves correctly on each platform.
         var keyboards = FrameworkElement.KeyboardsForUiControl;
         foreach (var keyboard in keyboards)
         {
