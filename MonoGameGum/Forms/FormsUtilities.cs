@@ -146,13 +146,13 @@ public class FormsUtilities
                 TryAdd(typeof(Button), (_, c) => new DefaultVisuals.ButtonVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(CheckBox), (_, c) => new DefaultVisuals.CheckBoxVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ComboBox), (_, c) => new DefaultVisuals.ComboBoxVisual(tryCreateFormsObject: c));
-#if !RAYLIB && !SOKOL
+#if XNALIKE || FRB
                 TryAdd(typeof(ItemsControl), (_, c) => new DefaultVisuals.ItemsControlVisual(tryCreateFormsObject: c));
 #endif
                 TryAdd(typeof(Label), (_, c) => new DefaultVisuals.LabelVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ListBox), (_, c) => new DefaultVisuals.ListBoxVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.ListBoxItemVisual(tryCreateFormsObject: c));
-#if !RAYLIB && !SOKOL
+#if XNALIKE || FRB
                 TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.MenuVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.MenuItemVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.PasswordBoxVisual(tryCreateFormsObject: c));
@@ -162,7 +162,7 @@ public class FormsUtilities
                 TryAdd(typeof(ScrollViewer), (_, c) => new DefaultVisuals.ScrollViewerVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(Slider), (_, c) => new DefaultVisuals.SliderVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(Splitter), (_, c) => new DefaultVisuals.SplitterVisual(tryCreateFormsObject: c));
-#if !RAYLIB && !SOKOL
+#if XNALIKE || FRB
                 TryAdd(typeof(TextBox), (_, c) => new DefaultVisuals.TextBoxVisual(tryCreateFormsObject: c));
 #endif
                 TryAdd(typeof(Window), (_, c) => new DefaultVisuals.WindowVisual(tryCreateFormsObject: c));
@@ -178,7 +178,7 @@ public class FormsUtilities
                 TryAdd(typeof(Label), (_, c) => new DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ListBox), (_, c) => new DefaultVisuals.V3.ListBoxVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.V3.ListBoxItemVisual(tryCreateFormsObject: c));
-#if !RAYLIB && !SOKOL
+#if XNALIKE || FRB
                 TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.V3.MenuVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.V3.MenuItemVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.V3.PasswordBoxVisual(tryCreateFormsObject: c));
@@ -631,7 +631,7 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.MenuBehaviorName))
             {
-#if !RAYLIB && !SOKOL
+#if XNALIKE || FRB
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileMenuRuntime), overwriteIfAlreadyExists: false);
@@ -639,7 +639,7 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.MenuItemBehaviorName))
             {
-#if !RAYLIB && !SOKOL
+#if XNALIKE || FRB
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileMenuItemRuntime), overwriteIfAlreadyExists: false);
@@ -653,7 +653,7 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.PasswordBoxBehaviorName))
             {
-#if !RAYLIB && !SOKOL
+#if XNALIKE || FRB
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFilePasswordBoxRuntime), overwriteIfAlreadyExists: false);

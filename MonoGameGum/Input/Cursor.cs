@@ -489,7 +489,7 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
         }
         else
         {
-#if RAYLIB || SOKOL
+#if !XNALIKE && !FRB
             _touchCollection = _touchCollection ?? new TouchCollection();
 #endif
         }
@@ -497,7 +497,7 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
         var lastFrameTouchCollectionCount = 0;
         try
         {
-#if RAYLIB || SOKOL
+#if !XNALIKE && !FRB
             lastFrameTouchCollectionCount = _lastFrameTouchCollection?.Count ?? 0;
 #else
             lastFrameTouchCollectionCount = _lastFrameTouchCollection.Count;

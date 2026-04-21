@@ -1028,7 +1028,7 @@ public class FrameworkElement : INotifyPropertyChanged
 #endif
     {
         // todo for raylib...
-#if !RAYLIB && !SOKOL
+#if XNALIKE || FRB
         if (gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadRight)) ||
             gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down) ||
@@ -1657,7 +1657,7 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         bool isPushInputHeldDown = false;
 
-#if !RAYLIB && !SOKOL
+#if XNALIKE || FRB
         for (int i = 0; i < GamePadsForUiControl.Count; i++)
         {
             isPushInputHeldDown = isPushInputHeldDown || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
