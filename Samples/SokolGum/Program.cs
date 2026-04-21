@@ -299,6 +299,8 @@ public static unsafe class Program
             root.Add(new TextRuntime
             {
                 X = 720, Y = 440, Width = 520, Height = 100,
+                WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+                HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute,
                 CustomFont = _font, FontSize = 18,
                 Text = "Multi-line wrapped text, centred horizontally and vertically, with a 2-pixel outline.",
                 Color = new Color(255, 230, 160),
