@@ -2,12 +2,22 @@
 
 	<PropertyGroup>
 		<!--
-			See MonoGameGum.csproj for details on the ExcludeIOS / ExcludeAndroid escape
-			hatches. KNI does not currently ship an iOS build, but the Android build enables
-			native on-screen keyboard support in the shared Forms TextBox code.
+			KNI does not currently ship an iOS build, but the Android build enables native
+			on-screen keyboard support in the shared Forms TextBox code.
+
+			NOTE: This csproj uses opt-IN for Android (IncludeAndroid=true), which is the
+			opposite of MonoGameGum.csproj's opt-OUT convention (ExcludeAndroid=true). The
+			inversion is intentional: the Gum tool (GumFull.sln) references this csproj as
+			a ProjectReference, and IDEs (Visual Studio / Rider) evaluate csprojs with
+			default property values when opening a solution. With opt-out, every tool user
+			was forced to install the Android workload just to load the tool — even though
+			the tool itself never targets Android. Opt-in keeps the default build desktop-
+			only; release pipelines that pack Gum.KNI pass -p:IncludeAndroid=true so the
+			published NuGet still ships the net9.0-android TFM. Do not "fix" this to match
+			MonoGameGum without first solving the IDE-load problem above.
 		-->
 		<TargetFrameworks>net8.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(ExcludeAndroid)' != 'true'">$(TargetFrameworks);net9.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="'$(IncludeAndroid)' == 'true'">$(TargetFrameworks);net9.0-android</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>

@@ -74,11 +74,15 @@ jobs:
           dotnet restore "Gum.sln"
           dotnet build "Gum.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
 
+      # IncludeAndroid=true forces KniGum's net9.0-android TFM to be included so CI
+      # actually validates the #if ANDROID code compiles. KniGum uses opt-in for Android
+      # (see KniGum.csproj); without this flag Android regressions would slip past CI and
+      # only surface when packing the Gum.KNI nupkg.
       - name: Build AllLibraries
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: |
-          dotnet restore "AllLibraries.sln"
-          dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
+          dotnet restore "AllLibraries.sln" -p:IncludeAndroid=true
+          dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0 -p:IncludeAndroid=true
 
       - name: Build Generated Code Projects (Windows Only)
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'

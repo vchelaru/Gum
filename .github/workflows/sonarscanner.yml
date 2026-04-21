@@ -29,6 +29,7 @@ jobs:
       - name: Install workloads
         # android is included so SonarQube analyzes the MonoGameGum / KniGum Android
         # TFM assemblies (which carry the #if ANDROID code for native keyboard support).
+        # KniGum uses opt-in for Android (IncludeAndroid=true); see KniGum.csproj for why.
         run: dotnet workload install ios maui android
 
       - name: Cache SonarQube packages
@@ -62,7 +63,7 @@ jobs:
           echo "::endgroup::"
           
           echo "::group::Build"
-          dotnet build .\AllLibraries.sln
+          dotnet build .\AllLibraries.sln -p:IncludeAndroid=true
           echo "::endgroup::"
           
           echo "::group::Test Coverage"
