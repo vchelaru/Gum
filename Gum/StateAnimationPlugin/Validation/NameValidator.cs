@@ -16,8 +16,8 @@ public class NameValidator
     {
         _nameVerifier = nameVerifier;
     }
-    public bool IsAnimationNameValid(string? animationName,
-        IEnumerable<AnimationViewModel> existingAnimations, out string? whyNotValid)
+    public bool IsAnimationNameValid(string? animationName, Gum.DataTypes.ElementSave element,
+        IEnumerable<AnimationViewModel> existingAnimations, out string? whyNotValid, object? objectToIgnore = null)
     {
         whyNotValid = null;
 
@@ -35,10 +35,15 @@ public class NameValidator
         {
             return false;
         }
-        if(existingAnimations.Any(item=>item.Name.Equals(animationName, StringComparison.InvariantCultureIgnoreCase)))
+        if(existingAnimations.Any(item=>item.Name.Equals(animationName, StringComparison.InvariantCultureIgnoreCase) && item != objectToIgnore))
         {
             whyNotValid = $"The name \"{animationName}\" is already being used.";
             return false;
+        }
+
+        if(element != null)
+        {
+            _nameVerifier.IsNameValidTopLevel(animationName, element, objectToIgnore, out whyNotValid);
         }
         
         return string.IsNullOrEmpty(whyNotValid);

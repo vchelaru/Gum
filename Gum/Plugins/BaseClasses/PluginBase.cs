@@ -260,6 +260,8 @@ public abstract class PluginBase : IPlugin
         _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
+    public virtual void FillTopLevelNames(ElementSave element, List<TopLevelName> names) { }
+
     public abstract void StartUp();
     public abstract bool ShutDown(PluginShutDownReason shutDownReason);
 

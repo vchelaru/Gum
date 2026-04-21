@@ -366,7 +366,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         {
             InitialValue = SelectedAnimation.Name,
             Validator = v =>
-                _nameValidator.IsAnimationNameValid(v, Animations, out string? whyInvalid) ? null : whyInvalid,
+                _nameValidator.IsAnimationNameValid(v, Element, Animations, out string? whyInvalid, SelectedAnimation) ? null : whyInvalid,
         };
 
         if (_dialogService.GetUserString(message, null, options) is { } result)
@@ -592,7 +592,7 @@ public partial class ElementAnimationsViewModel : ViewModel
             var dialogViewModel = new AddAnimationDialogViewModel
             {
                 Validator = x =>
-                    _nameValidator.IsAnimationNameValid(x, Animations, out string? whyInvalid)
+                    _nameValidator.IsAnimationNameValid(x, Element, Animations, out string? whyInvalid)
                         ? null
                         : whyInvalid,
             };

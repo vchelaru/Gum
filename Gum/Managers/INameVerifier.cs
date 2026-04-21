@@ -20,6 +20,8 @@ public interface INameVerifier
 
     bool IsInstanceNameValid(string instanceName, InstanceSave instanceSave, IInstanceContainer instanceContainer, out string? whyNotValid);
 
+    bool IsNameValidTopLevel(string name, ElementSave element, object? objectToIgnore, out string? whyNotValid);
+
     bool IsVariableNameValid(string variableName, ElementSave elementSave, VariableSave variableSave, out string? whyNotValid);
 
     bool IsBehaviorNameValid(string behaviorName, BehaviorSave behaviorSave, out string? whyNotValid);

@@ -16,10 +16,12 @@ namespace GumToolUnitTests.Managers;
 public class NameVerifierTests : BaseTestClass
 {
     private readonly NameVerifier _nameVerifier;
+    private readonly Mock<Gum.Plugins.IPluginManager> _pluginManager;
 
     public NameVerifierTests()
     {
-        _nameVerifier = new NameVerifier(new Mock<IVariableSaveLogic>().Object);
+        _pluginManager = new Mock<Gum.Plugins.IPluginManager>();
+        _nameVerifier = new NameVerifier(new Mock<IVariableSaveLogic>().Object, _pluginManager.Object);
     }
 
     #region ElementSave
@@ -219,6 +221,54 @@ public class NameVerifierTests : BaseTestClass
                               "This would cause compiler errors when generating Forms code.");
         
         whyNotValid.ShouldBe("State name cannot be the same as its category's");
+    }
+
+    #endregion
+
+    #region TopLevelNameCollisions
+
+    [Fact]
+    public void IsCategoryNameValid_ShouldReturnFalse_IfCollidesWithAnimation()
+    {
+        var element = new ComponentSave();
+        _pluginManager.Setup(x => x.FillTopLevelNames(element, It.IsAny<List<TopLevelName>>()))
+            .Callback<ElementSave, List<TopLevelName>>((e, names) =>
+            {
+                names.Add(new TopLevelName("Anim1", "Animation", new object()));
+            });
+
+        var isValid = _nameVerifier.IsCategoryNameValid("Anim1", element, out string whyNotValid);
+
+        isValid.ShouldBeFalse();
+        whyNotValid.ShouldBe("The name Anim1 is already used by a(n) Animation");
+    }
+
+    [Fact]
+    public void IsInstanceNameValid_ShouldReturnFalse_IfCollidesWithCategory()
+    {
+        var element = new ComponentSave();
+        element.Categories.Add(new StateSaveCategory { Name = "Category1" });
+
+        var isValid = _nameVerifier.IsInstanceNameValid("Category1", new InstanceSave(), element, out string whyNotValid);
+
+        isValid.ShouldBeFalse();
+        whyNotValid.ShouldBe("The name Category1 is already used by a(n) Category");
+    }
+
+    [Fact]
+    public void IsVariableNameValid_ShouldReturnFalse_IfCollidesWithAnimation()
+    {
+        var element = new ComponentSave();
+        _pluginManager.Setup(x => x.FillTopLevelNames(element, It.IsAny<List<TopLevelName>>()))
+            .Callback<ElementSave, List<TopLevelName>>((e, names) =>
+            {
+                names.Add(new TopLevelName("Anim1", "Animation", new object()));
+            });
+
+        var isValid = _nameVerifier.IsVariableNameValid("Anim1", element, new VariableSave(), out string whyNotValid);
+
+        isValid.ShouldBeFalse();
+        whyNotValid.ShouldBe("The name Anim1 is already used by a(n) Animation");
     }
 
     #endregion

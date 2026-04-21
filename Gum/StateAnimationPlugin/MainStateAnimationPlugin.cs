@@ -68,6 +68,18 @@ public class MainStateAnimationPlugin : PluginBase
         get { return new Version(0, 0, 0, 2); }
     }
 
+    public override void FillTopLevelNames(ElementSave element, List<TopLevelName> names)
+    {
+        var animationsSave = _animationCollectionViewModelManager.GetElementAnimationsSave(element);
+        if (animationsSave != null)
+        {
+            foreach (var anim in animationsSave.Animations)
+            {
+                names.Add(new TopLevelName(anim.Name, "Animation", anim));
+            }
+        }
+    }
+
     ObservableCollection<string> AvailableStates { get; set; } = new ObservableCollection<string>();
 
     #endregion
