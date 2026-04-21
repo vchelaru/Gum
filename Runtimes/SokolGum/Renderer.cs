@@ -23,6 +23,23 @@ public sealed class Renderer : IRenderer
     private readonly ReadOnlyCollection<Layer> _layersReadOnly;
     private readonly Camera _camera = new();
 
+    /// <summary>
+    /// Convenience accessor matching the <c>Renderer.Self</c> pattern used by
+    /// MonoGame / Raylib. Delegates to <see cref="SystemManagers.Default"/>.
+    /// </summary>
+    public static Renderer Self
+    {
+        get
+        {
+            if (SystemManagers.Default == null)
+            {
+                throw new InvalidOperationException(
+                    "SystemManagers.Default is null. Initialize the default SystemManagers first.");
+            }
+            return SystemManagers.Default.Renderer;
+        }
+    }
+
     public Camera Camera => _camera;
     public Layer MainLayer => _layers[0];
     public ReadOnlyCollection<Layer> Layers => _layersReadOnly;
@@ -231,6 +248,13 @@ public sealed class Renderer : IRenderer
 
     private void DrawGumRecursively(IRenderableIpso element, ISystemManagers managers)
     {
+        // Skip the whole subtree when this element is invisible. The child
+        // loop below already checks child.Visible, but the initial call from
+        // RenderLayer goes straight past that guard — so a top-level
+        // ContainerRuntime added directly to a Layer would otherwise render
+        // its children with its own Visible = false ignored.
+        if (element is IVisible visible && !visible.Visible) return;
+
         var desiredBlend = MapBlend(element.BlendState);
         if (desiredBlend != _currentBlendMode)
         {

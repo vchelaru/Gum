@@ -75,6 +75,27 @@ public sealed class Text : RenderableBase, IText
     /// </summary>
     public int? MaxLettersToShow { get; set; }
 
+    private int? _maxNumberOfLines;
+    /// <summary>
+    /// Hard cap on how many wrapped lines are kept after layout. Setting to
+    /// a smaller value than the natural wrap count truncates trailing lines
+    /// (Forms <c>TextBox</c> uses this for single-line boxes). Null = no cap.
+    /// Matches the property name/shape used by Raylib and shared Text for
+    /// cross-runtime source compatibility.
+    /// </summary>
+    public int? MaxNumberOfLines
+    {
+        get => _maxNumberOfLines;
+        set
+        {
+            if (_maxNumberOfLines != value)
+            {
+                _maxNumberOfLines = value;
+                _layoutDirty = true;
+            }
+        }
+    }
+
     // Fontstash alignment bitflags from fontstash.h. Fontstash can handle
     // its own horizontal alignment, but we want per-line horizontal anchor
     // computed from Width anyway (for mixed-length lines), so we always
@@ -378,6 +399,14 @@ public sealed class Text : RenderableBase, IText
             }
         }
 
+        // Hard cap on line count — drop trailing lines so wrapped height
+        // stays bounded regardless of input length. Forms TextBox uses this
+        // for the single-line (MaxNumberOfLines == 1) case.
+        if (_maxNumberOfLines is int cap && _wrappedLines.Count > cap)
+        {
+            _wrappedLines.RemoveRange(cap, _wrappedLines.Count - cap);
+        }
+
         // Optional horizontal ellipsis when a single word (no break point)
         // still exceeds Width. Measure + trim letter-by-letter and append
         // an ellipsis. Conservative first pass — no BiDi / grapheme-cluster
@@ -412,6 +441,71 @@ public sealed class Text : RenderableBase, IText
                 _wrappedLines[i] = line[..cut] + ellipsis;
             }
         }
+    }
+
+    /// <summary>
+    /// The post-wrap lines ready to render. Populated lazily by
+    /// <see cref="EnsureWrapped"/>; consumers (Forms <c>TextBoxBase</c>
+    /// caret/selection math) call this after any change that could
+    /// affect wrapping. Matches the shared RenderingLibrary.Graphics.Text
+    /// semantics so caret math ports identically across runtimes.
+    /// </summary>
+    public List<string> WrappedText
+    {
+        get
+        {
+            EnsureWrapped();
+            return _wrappedLines;
+        }
+    }
+
+    /// <summary>
+    /// Font-native line height in logical pixels (rounded to int to match
+    /// shared Text API). Derived from fontstash vertical metrics via the
+    /// effective <see cref="ITextMeasurer"/>; does NOT include
+    /// <see cref="LineHeightMultiplier"/> — callers that want the
+    /// line-to-line step multiply themselves (same convention as the
+    /// shared RenderingLibrary.Graphics.Text).
+    /// </summary>
+    public int LineHeightInPixels
+    {
+        get
+        {
+            ITextMeasurer? m = EffectiveMeasurer;
+            if (m is null)
+            {
+                return 0;
+            }
+            m.GetVerticalMetrics(Font, FontSize, out _, out _, out float lineHeight);
+            return (int)(lineHeight + 0.5f);
+        }
+    }
+
+    /// <summary>
+    /// Measures the width of a single-line string in logical pixels via
+    /// the effective <see cref="ITextMeasurer"/>. Returns 0 when no
+    /// measurer / font is available.
+    /// </summary>
+    public float MeasureString(string whatToMeasure)
+    {
+        ITextMeasurer? m = EffectiveMeasurer;
+        if (m is null || string.IsNullOrEmpty(whatToMeasure))
+        {
+            return 0f;
+        }
+        return m.MeasureLineWidth(Font, FontSize, whatToMeasure.AsSpan());
+    }
+
+    /// <summary>
+    /// Style-aware overload kept for cross-runtime source compatibility
+    /// with Forms controls. Sokol uses fontstash's native measurement
+    /// which always returns the advance-width (Full) — TrimRight is
+    /// accepted but currently treated the same. Matches RaylibGum which
+    /// ignores the style for the same reason.
+    /// </summary>
+    public float MeasureString(string whatToMeasure, HorizontalMeasurementStyle style)
+    {
+        return MeasureString(whatToMeasure);
     }
 
     #region IText

@@ -154,11 +154,7 @@ public partial class Cursor : ICursor
     /// <returns>The cursor's position</returns>
     public float XRespectingGumZoomAndBounds()
     {
-#if SOKOL
-        var renderer = SokolGum.SystemManagers.Default.Renderer;
-#else
         var renderer = global::RenderingLibrary.SystemManagers.Default.Renderer;
-#endif
         var zoom = renderer.Camera.Zoom;
         return ((X - GetViewportLeft()) / zoom) + renderer.Camera.X ?? 0;
     }
@@ -176,11 +172,7 @@ public partial class Cursor : ICursor
     /// <returns>The cursor's position</returns>
     public float YRespectingGumZoomAndBounds()
     {
-#if SOKOL
-        var renderer = SokolGum.SystemManagers.Default.Renderer;
-#else
         var renderer = global::RenderingLibrary.SystemManagers.Default.Renderer;
-#endif
         var zoom = renderer.Camera.Zoom;
         return ((Y - GetViewportTop()) / zoom) + renderer.Camera.Y ?? 0;
     }
@@ -497,7 +489,7 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
         }
         else
         {
-#if RAYLIB || SOKOL
+#if !XNALIKE && !FRB
             _touchCollection = _touchCollection ?? new TouchCollection();
 #endif
         }
@@ -505,7 +497,7 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
         var lastFrameTouchCollectionCount = 0;
         try
         {
-#if RAYLIB
+#if !XNALIKE && !FRB
             lastFrameTouchCollectionCount = _lastFrameTouchCollection?.Count ?? 0;
 #else
             lastFrameTouchCollectionCount = _lastFrameTouchCollection.Count;

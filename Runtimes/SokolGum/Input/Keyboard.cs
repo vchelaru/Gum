@@ -283,6 +283,15 @@ public class Keyboard : IInputReceiverKeyboard
     /// <summary>
     /// Performs every-frame activity for the keyboard. This is automatically called by Gum.
     /// </summary>
+    /// <remarks>
+    /// Does NOT clear per-frame event buffers (<c>_keysPushedThisFrame</c>,
+    /// <c>_keysTypedThisFrame</c>, <c>_charsTypedThisFrame</c>) — those are
+    /// populated asynchronously by <see cref="HandleSokolEvent"/> between
+    /// sokol_app ticks and must still be readable when the frame's
+    /// <c>DoKeyboardAction</c> consumes them. Clearing happens after the
+    /// frame reads them, via <see cref="PostFrameCleanup"/>, which Sokol's
+    /// <c>GumService.Update</c> calls at end-of-frame.
+    /// </remarks>
     /// <param name="gameTime">The number of seconds since the start of the game.</param>
     public void Activity(double gameTime)
     {
@@ -291,6 +300,16 @@ public class Keyboard : IInputReceiverKeyboard
         {
             _lastFrameKeysDown.Add(key);
         }
+    }
+
+    /// <summary>
+    /// Clears per-frame keyboard buffers. Called by Sokol's GumService.Update
+    /// after FormsUtilities.Update has finished its activity pass, so events
+    /// that arrive between frames (via <see cref="HandleSokolEvent"/>) are
+    /// visible to <c>DoKeyboardAction</c> before being discarded.
+    /// </summary>
+    public void PostFrameCleanup()
+    {
         _keysPushedThisFrame.Clear();
         _keysTypedThisFrame.Clear();
         _charsTypedThisFrame.Clear();

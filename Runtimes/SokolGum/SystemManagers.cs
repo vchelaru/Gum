@@ -6,10 +6,11 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Sokol;
 using Gum.GueDeriving;
+using SokolGum;
 using static Sokol.SApp;
 using static Sokol.SG;
 
-namespace SokolGum;
+namespace RenderingLibrary;
 
 /// <summary>
 /// Minimal <see cref="ISystemManagers"/> implementation. Owns:
@@ -145,6 +146,48 @@ public sealed class SystemManagers : ISystemManagers, IDisposable
     }
 
     public void InvalidateSurface() { }
+
+    /// <summary>
+    /// Loads a texture from an embedded resource in the SokolGum assembly.
+    /// Mirrors Raylib's same-named method. Used by FormsUtilities to load
+    /// the bundled UISpriteSheet.png for default Forms visuals.
+    /// </summary>
+    public Texture2D? LoadEmbeddedTexture2d(string embeddedTexture2dName)
+    {
+        var assembly = typeof(SystemManagers).Assembly;
+        using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(
+            assembly, $"SokolGum.Content.{embeddedTexture2dName}");
+        if (stream == null) return null;
+
+        using var memoryStream = new System.IO.MemoryStream();
+        stream.Position = 0;
+        stream.CopyTo(memoryStream);
+        var fileData = memoryStream.ToArray();
+
+        return DecodeRgba8(fileData, embeddedTexture2dName);
+    }
+
+    private static unsafe Texture2D? DecodeRgba8(byte[] bytes, string label)
+    {
+        int width = 0, height = 0, channels = 0;
+        byte* rgba;
+        fixed (byte* pBytes = bytes)
+        {
+            rgba = Sokol.StbImage.stbi_load_csharp(
+                in pBytes[0], bytes.Length,
+                ref width, ref height, ref channels, desired_channels: 4);
+        }
+        if (rgba is null) return null;
+        try
+        {
+            var pixels = new ReadOnlySpan<byte>(rgba, width * height * 4);
+            return Texture2D.FromRgba8(pixels, width, height, label);
+        }
+        finally
+        {
+            Sokol.StbImage.stbi_image_free_csharp(rgba);
+        }
+    }
 
     public void Dispose()
     {

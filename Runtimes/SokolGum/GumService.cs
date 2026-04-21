@@ -1,4 +1,6 @@
 using Gum.DataTypes;
+using Gum.Forms;
+using Gum.Forms.Controls;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Wireframe;
@@ -40,21 +42,30 @@ public sealed class GumService
             HasEvents = false,
         };
 
-        Cursor = new Cursor();
-        Keyboard = new Keyboard();
     }
 
     /// <summary>
     /// Gets the default cursor, fed by Sokol mouse events forwarded via
     /// <see cref="HandleSokolEvent"/>.
     /// </summary>
-    public Cursor Cursor { get; }
+    public Cursor Cursor => FormsUtilities.Cursor!;
 
     /// <summary>
     /// Gets the default keyboard, fed by Sokol key / char events forwarded via
     /// <see cref="HandleSokolEvent"/>.
     /// </summary>
-    public Keyboard Keyboard { get; }
+    public Keyboard Keyboard => FormsUtilities.Keyboard;
+
+    /// <summary>
+    /// The popup root, which mirrors <c>FrameworkElement.PopupRoot</c> so callers
+    /// can access it from the GumService instance (matches MonoGame/Raylib shape).
+    /// </summary>
+    public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
+
+    /// <summary>
+    /// The modal root, which mirrors <c>FrameworkElement.ModalRoot</c>.
+    /// </summary>
+    public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
 
     /// <summary>
     /// Forwards a Sokol app event into Gum's input buffers. Host apps should call
@@ -65,6 +76,16 @@ public sealed class GumService
     {
         Cursor.HandleSokolEvent(ev);
         Keyboard.HandleSokolEvent(ev);
+    }
+
+    /// <summary>
+    /// Registers the default keyboard as a UI input source so Forms controls
+    /// (TextBox focus navigation, shortcut keys, etc.) read from it. Mirrors
+    /// <c>MonoGameGum.GumService.UseKeyboardDefaults</c>.
+    /// </summary>
+    public void UseKeyboardDefaults()
+    {
+        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
     }
 
     private SystemManagers? _systemManagers;
@@ -125,12 +146,25 @@ public sealed class GumService
         }
         IsInitialized = true;
 
-        // TODO: wire FrameworkElement.MainCursor/MainKeyboard when Forms is linked (task #4)
-
         SystemManagers = new SystemManagers();
         SystemManagers.Default = SystemManagers;
         ISystemManagers.Default = SystemManagers;
         SystemManagers.Initialize();
+
+        // SystemManagers.Initialize must come first because it assigns the
+        // GraphicalUiElement.AddRenderableToManagers delegate. InitializeDefaults
+        // creates PopupRoot/ModalRoot and calls AddToManagers on them — that call
+        // silently no-ops if the delegate is still null, so the roots would never
+        // be added to MainLayer.Renderables and would not draw.
+        // Match MonoGame's GumService.Initialize default — V3 visuals use direct
+        // C# property assignment for colors (Background.Color = backgroundColor),
+        // which routes through NineSliceRuntime.Color -> ContainedNineSlice.Color.
+        // V2 routes colors via variable-based states ("Background.Color") through
+        // CustomSetPropertyOnRenderable, which has no "Color" handler on Sokol,
+        // so V2 colors silently no-op.
+        FormsUtilities.InitializeDefaults(
+            systemManagers: SystemManagers,
+            defaultVisualsVersion: Gum.Forms.DefaultVisualsVersion.Newest);
 
         Root.AddToManagers(SystemManagers, layer: null);
         Root.UpdateLayout();
@@ -228,20 +262,39 @@ public sealed class GumService
     #region Update / Draw
 
     /// <summary>
-    /// Per-frame tick. Advances sprite animation chains on <see cref="Root"/>.
-    /// Uses <c>sapp_frame_duration()</c> for the delta.
+    /// Total seconds since the start of the game — as last passed to
+    /// <see cref="Update(double)"/>. Used to compute per-frame deltas inside
+    /// Update, matching the Raylib/MonoGame GumService shape for eventual
+    /// source unification.
     /// </summary>
-    public void Update() => Update(sapp_frame_duration());
+    public double GameTime { get; private set; }
 
-    /// <inheritdoc cref="Update()"/>
-    /// <param name="secondsSinceLastFrame">Elapsed seconds — pass this to scale or pause time.</param>
-    public void Update(double secondsSinceLastFrame)
+    /// <summary>
+    /// Performs every-frame updates including cursor, keyboard, gamepad,
+    /// and control events. Matches the Raylib/MonoGame non-XNA signature
+    /// for the planned GumService unification.
+    /// </summary>
+    /// <param name="gameTime">
+    /// Total seconds since the game started (cumulative, not a per-frame
+    /// delta). Sokol apps can obtain this via <c>stm_sec(stm_since(start))</c>
+    /// from <c>Sokol.STM</c> — see Samples/SokolGum/Program.cs.
+    /// </param>
+    public void Update(double gameTime)
     {
-        Cursor.Activity(secondsSinceLastFrame);
-        Keyboard.Activity(secondsSinceLastFrame);
+        var difference = gameTime - GameTime;
+        GameTime = gameTime;
 
-        Root.AnimateSelf(secondsSinceLastFrame);
-        SystemManagers.Renderer.Update(secondsSinceLastFrame);
+        FormsUtilities.Update(gameTime, Root);
+
+        // End-of-frame: clear per-frame keyboard event buffers AFTER the
+        // frame's DoKeyboardAction has consumed them. Events arrive
+        // asynchronously in HandleSokolEvent between sokol_app ticks, so
+        // Keyboard.Activity (called inside FormsUtilities.Update) must NOT
+        // clear them at frame start — that would wipe events just captured.
+        Keyboard.PostFrameCleanup();
+
+        Root.AnimateSelf(difference);
+        SystemManagers.Renderer.Update(difference);
     }
 
     /// <summary>
@@ -312,5 +365,20 @@ public static class GraphicalUiElementExtensionMethods
     public static void RemoveFromRoot(this GraphicalUiElement element)
     {
         element.Parent = null;
+    }
+
+    /// <summary>
+    /// Adds this Forms control's underlying visual to the GumService root
+    /// container. Forms equivalent of <see cref="AddToRoot(GraphicalUiElement)"/>.
+    /// </summary>
+    public static void AddToRoot(this Gum.Forms.Controls.FrameworkElement element)
+    {
+        if (!GumService.Default.IsInitialized)
+        {
+            throw new InvalidOperationException(
+                "Cannot call AddToRoot because GumService.Default is not initialized — "
+                + "call GumService.Default.Initialize(...) first.");
+        }
+        GumService.Default.Root.Children.Add(element.Visual);
     }
 }
