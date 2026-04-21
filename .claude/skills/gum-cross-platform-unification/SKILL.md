@@ -44,6 +44,18 @@ For other disagreements: pick a default, but state the disagreement and the chos
 - ColoredRectangleRuntime unification first pass promoted MG+Raylib from `GraphicalUiElement` to `InteractiveGue` to match Skia. This would have made every decorative colored rectangle in every consumer project start absorbing clicks. Caught and reverted before merge. The correct resolution was the opposite direction — correct Skia down to `GraphicalUiElement`, since nothing in a decorative rectangle should eat events.
 - Takeaway: when two platforms agree and one doesn't, the outlier is more often wrong than the other two. Default to the majority behavior unless there's a platform-specific reason.
 
+## Incremental Unification Rule
+
+**Do not attempt to unify more than two platforms (one pair) in a single turn.** 
+
+If a runtime class exists on MonoGame, Raylib, Skia, and Sokol:
+1.  **Pick a pair** (e.g., MonoGame and Raylib).
+2.  Research, propose, and unify only those two.
+3.  **Validate** (build and run tests for that pair).
+4.  Only after the first pair is stable and verified, proceed to the next platform (e.g., adding Skia to the existing unified file).
+
+This ensures changes remain reviewable, TDD stays manageable, and build errors (like those often found in Sokol) don't block the entire unification process.
+
 ## Mechanical Steps
 
 1. Read all three per-platform source files end to end. Write down every difference.
