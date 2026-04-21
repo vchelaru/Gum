@@ -1,7 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.Forms;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Gum.Renderables;
 using Gum.Wireframe;
@@ -91,7 +91,7 @@ public class BasicShapes
             // );
 
 
-            GumUI.Update(0);
+            GumUI.Update(GetTime());
 
             GumUI.Draw();
 

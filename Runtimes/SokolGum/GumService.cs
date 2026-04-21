@@ -78,6 +78,16 @@ public sealed class GumService
         Keyboard.HandleSokolEvent(ev);
     }
 
+    /// <summary>
+    /// Registers the default keyboard as a UI input source so Forms controls
+    /// (TextBox focus navigation, shortcut keys, etc.) read from it. Mirrors
+    /// <c>MonoGameGum.GumService.UseKeyboardDefaults</c>.
+    /// </summary>
+    public void UseKeyboardDefaults()
+    {
+        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
+    }
+
     private SystemManagers? _systemManagers;
 
     public SystemManagers SystemManagers
@@ -252,19 +262,39 @@ public sealed class GumService
     #region Update / Draw
 
     /// <summary>
-    /// Per-frame tick. Advances sprite animation chains on <see cref="Root"/>.
-    /// Uses <c>sapp_frame_duration()</c> for the delta.
+    /// Total seconds since the start of the game — as last passed to
+    /// <see cref="Update(double)"/>. Used to compute per-frame deltas inside
+    /// Update, matching the Raylib/MonoGame GumService shape for eventual
+    /// source unification.
     /// </summary>
-    public void Update() => Update(sapp_frame_duration());
+    public double GameTime { get; private set; }
 
-    /// <inheritdoc cref="Update()"/>
-    /// <param name="secondsSinceLastFrame">Elapsed seconds — pass this to scale or pause time.</param>
-    public void Update(double secondsSinceLastFrame)
+    /// <summary>
+    /// Performs every-frame updates including cursor, keyboard, gamepad,
+    /// and control events. Matches the Raylib/MonoGame non-XNA signature
+    /// for the planned GumService unification.
+    /// </summary>
+    /// <param name="gameTime">
+    /// Total seconds since the game started (cumulative, not a per-frame
+    /// delta). Sokol apps can obtain this via <c>stm_sec(stm_since(start))</c>
+    /// from <c>Sokol.STM</c> — see Samples/SokolGum/Program.cs.
+    /// </param>
+    public void Update(double gameTime)
     {
-        FormsUtilities.Update(secondsSinceLastFrame, Root);
+        var difference = gameTime - GameTime;
+        GameTime = gameTime;
 
-        Root.AnimateSelf(secondsSinceLastFrame);
-        SystemManagers.Renderer.Update(secondsSinceLastFrame);
+        FormsUtilities.Update(gameTime, Root);
+
+        // End-of-frame: clear per-frame keyboard event buffers AFTER the
+        // frame's DoKeyboardAction has consumed them. Events arrive
+        // asynchronously in HandleSokolEvent between sokol_app ticks, so
+        // Keyboard.Activity (called inside FormsUtilities.Update) must NOT
+        // clear them at frame start — that would wipe events just captured.
+        Keyboard.PostFrameCleanup();
+
+        Root.AnimateSelf(difference);
+        SystemManagers.Renderer.Update(difference);
     }
 
     /// <summary>

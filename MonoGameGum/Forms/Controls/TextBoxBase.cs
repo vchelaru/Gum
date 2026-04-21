@@ -1445,7 +1445,7 @@ public abstract class TextBoxBase :
         // (used on iOS and as the pre-inline fallback) won't compile against it. FNA's own
         // native-keyboard story is different and out of scope here. FRB has its own path in
         // UpdateToIsFocused; Raylib does not need any of this.
-#if !FRB && !RAYLIB && !FNA
+#if !FRB && !RAYLIB && !FNA && !SOKOL
         if (!ShowNativeKeyboardOnFocus)
         {
             return;

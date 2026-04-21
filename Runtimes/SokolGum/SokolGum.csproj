@@ -148,16 +148,6 @@
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Menu.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\MenuItem.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\PasswordBox.cs" />
-		<!--
-			TextBox family removed until SokolGum's Text renderable exposes
-			WrappedText / LineHeightInPixels / MeasureString / HorizontalMeasurementStyle.
-			Tracked as a separate task.
-		-->
-		<Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBoxBase.cs" />
-		<Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBox.cs" />
-		<Compile Remove="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" />
-		<Compile Remove="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" />
-		<Compile Remove="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\DefaultFromFileTextBoxRuntime.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

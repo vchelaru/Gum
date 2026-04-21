@@ -186,9 +186,7 @@ public class FormsUtilities
                 TryAdd(typeof(RadioButton), (_, c) => new DefaultVisuals.V3.RadioButtonVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ScrollBar), (_, c) => new DefaultVisuals.V3.ScrollBarVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ScrollViewer), (_, c) => new DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: c));
-#if !SOKOL
                 TryAdd(typeof(TextBox), (_, c) => new DefaultVisuals.V3.TextBoxVisual(tryCreateFormsObject: c));
-#endif
                 TryAdd(typeof(Slider), (_, c) => new DefaultVisuals.V3.SliderVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(Splitter), (_, c) => new DefaultVisuals.V3.SplitterVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ToggleButton), (_, c) => new DefaultVisuals.V3.ToggleButtonVisual(tryCreateFormsObject: c));
@@ -697,11 +695,9 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.TextBoxBehaviorName))
             {
-#if !SOKOL
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
-#endif
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.WindowBehaviorName))
             {

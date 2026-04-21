@@ -1,15 +1,13 @@
 using System.Runtime.InteropServices;
-using RenderingLibrary.Content;
+using Gum.Wireframe;
 using SokolGum;
-using Gum.Graphics.Animation;
-using Gum.GueDeriving;
-using Gum.Renderables;
 using GumKeys = Gum.Forms.Input.Keys;
 using static Sokol.SApp;
 using static Sokol.SG;
 using static Sokol.SGP;
 using static Sokol.SGlue;
 using static Sokol.SLog;
+using static Sokol.STM;
 
 namespace SokolGumSample;
 
@@ -24,13 +22,15 @@ namespace SokolGumSample;
 public static unsafe class Program
 {
     private static sg_pass_action _passAction;
-    private static Texture2D? _gradientTexture;
-    private static Texture2D? _logoTexture;
-    private static Texture2D? _nineSliceTexture;
-    private static Font? _font;
-    private static AnimationChainList? _characterAnimations;
     private static Screen1? _screen1;
     private static Screen2? _screen2;
+    // sokol_time baseline — captured in Init after stm_setup, subtracted on
+    // every Frame tick so GumService.Update sees total seconds since startup.
+    // Matches Raylib's GetTime() convention so the two samples have identical
+    // "pass cumulative game time to Update" shape.
+    private static ulong _startTicks;
+
+    static GumService GumUi => GumService.Default;
 
     public static void Main()
     {
@@ -74,98 +74,25 @@ public static unsafe class Program
             logger = { func = &slog_func },
         });
         sgp_setup(new sgp_desc());
+        stm_setup();
+        _startTicks = stm_now();
 
         _passAction = default;
         _passAction.colors[0].load_action = sg_load_action.SG_LOADACTION_CLEAR;
         _passAction.colors[0].clear_value = new sg_color { r = 0.10f, g = 0.12f, b = 0.15f, a = 1.0f };
 
-        GumService.Default.Initialize();
+        GumUi.Initialize();
+        GumUi.UseKeyboardDefaults();
 
-        _gradientTexture = BuildGradientTexture(128, 128);
-        _nineSliceTexture = BuildNineSliceTestTexture();
-        _logoTexture = LoaderManager.Self.ContentLoader.LoadContent<Texture2D>("Assets/sokol_logo.png");
-        _font = LoaderManager.Self.ContentLoader.LoadContent<Font>("Assets/DroidSerif-Regular.ttf");
-        _characterAnimations = LoaderManager.Self.ContentLoader.LoadContent<AnimationChainList>("Assets/CharacterAnimations.achx");
-
-        var mainLayer = GumService.Default.SystemManagers.Renderer.MainLayer;
-
-        _screen1 = new Screen1(mainLayer, _gradientTexture, _nineSliceTexture, _logoTexture, _font, _characterAnimations);
+        _screen1 = new Screen1(GumUi.SystemManagers.Renderer.MainLayer);
         _screen2 = new Screen2();
         _screen1.AddToRoot();
-
-        // Uncomment to demo camera Zoom / Position (applied globally to
-        // every layer via Renderer.BeginFrame's sgp_project call):
-        //   _systemManagers.Renderer.Camera.Zoom = 1.15f;   // zoom in 15%
-        //   _systemManagers.Renderer.Camera.Position = new Vector2(-40, 0); // pan right 40px
-    }
-
-    /// <summary>
-    /// Build a diagonal gradient texture at runtime so the sprite test doesn't
-    /// depend on asset files. Red varies along X, green along Y, blue is half.
-    /// </summary>
-    private static Texture2D BuildGradientTexture(int width, int height)
-    {
-        var pixels = new byte[width * height * 4];
-        for (int y = 0; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                int i = (y * width + x) * 4;
-                pixels[i + 0] = (byte)(x * 255 / (width - 1));
-                pixels[i + 1] = (byte)(y * 255 / (height - 1));
-                pixels[i + 2] = 128;
-                pixels[i + 3] = 255;
-            }
-        }
-        return Texture2D.FromRgba8(pixels, width, height, "gradient");
-    }
-
-    /// <summary>
-    /// 48×48 nine-slice test texture with distinctly colored regions:
-    /// corners red, top/bottom orange (stretch horizontally), left/right
-    /// green (stretch vertically), centre blue (stretch both ways).
-    /// </summary>
-    private static Texture2D BuildNineSliceTestTexture()
-    {
-        const int size = 48;
-        const int border = 16;
-        var pixels = new byte[size * size * 4];
-        Span<byte> corner         = stackalloc byte[] { 220, 80, 80, 255 };
-        Span<byte> horizontalEdge = stackalloc byte[] { 255, 180, 80, 255 };
-        Span<byte> verticalEdge   = stackalloc byte[] { 80, 200, 100, 255 };
-        Span<byte> center         = stackalloc byte[] { 80, 130, 255, 255 };
-
-        for (int y = 0; y < size; y++)
-        {
-            bool inTop = y < border;
-            bool inBottom = y >= size - border;
-            bool inMidV = !inTop && !inBottom;
-            for (int x = 0; x < size; x++)
-            {
-                bool inLeft = x < border;
-                bool inRight = x >= size - border;
-                bool inMidH = !inLeft && !inRight;
-
-                Span<byte> c =
-                    (inTop || inBottom) && (inLeft || inRight) ? corner
-                    : (inTop || inBottom) && inMidH ? horizontalEdge
-                    : inMidV && (inLeft || inRight) ? verticalEdge
-                    : center;
-
-                int i = (y * size + x) * 4;
-                pixels[i + 0] = c[0];
-                pixels[i + 1] = c[1];
-                pixels[i + 2] = c[2];
-                pixels[i + 3] = c[3];
-            }
-        }
-        return Texture2D.FromRgba8(pixels, size, size, "nineslice-test");
     }
 
     [UnmanagedCallersOnly]
     private static void Event(sapp_event* ev)
     {
-        GumService.Default.HandleSokolEvent(*ev);
+        GumUi.HandleSokolEvent(*ev);
     }
 
     [UnmanagedCallersOnly]
@@ -175,8 +102,12 @@ public static unsafe class Program
 
         // Toggle screens before Update() — FormsUtilities.Update clears
         // _keysPushedThisFrame, so "was just pressed" checks must happen first.
-        var keyboard = GumService.Default.Keyboard;
-        if (keyboard.KeyPushed(GumKeys.Left) || keyboard.KeyPushed(GumKeys.Right))
+        // Skip the swap when a Forms control holds keyboard focus (e.g. TextBox
+        // consuming arrow keys for caret movement) so typing into a TextBox
+        // doesn't accidentally flip screens.
+        var keyboard = GumUi.Keyboard;
+        if (InteractiveGue.CurrentInputReceiver is null
+            && (keyboard.KeyPushed(GumKeys.Left) || keyboard.KeyPushed(GumKeys.Right)))
         {
             if (_screen1 is not null && _screen2 is not null)
             {
@@ -198,8 +129,8 @@ public static unsafe class Program
             }
         }
 
-        GumService.Default.Update();
-        GumService.Default.Draw();
+        GumUi.Update(stm_sec(stm_since(_startTicks)));
+        GumUi.Draw();
 
         sg_end_pass();
         sg_commit();
@@ -208,12 +139,8 @@ public static unsafe class Program
     [UnmanagedCallersOnly]
     private static void Cleanup()
     {
-        // Font has no per-font Dispose — its TTF buffer is owned by the
-        // FontAtlas which the SystemManagers disposes below.
-        _gradientTexture?.Dispose();
-        _nineSliceTexture?.Dispose();
-        _logoTexture?.Dispose();
-        GumService.Default.SystemManagers?.Dispose();
+        _screen1?.Dispose();
+        GumUi.SystemManagers?.Dispose();
         sgp_shutdown();
         sg_shutdown();
     }

@@ -45,6 +45,30 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.MaxLettersToShow = value;
     }
 
+    /// <summary>
+    /// Hard cap on wrapped-line count. Forwarded to the contained Text
+    /// renderable; see <see cref="Text.MaxNumberOfLines"/>.
+    /// </summary>
+    public int? MaxNumberOfLines
+    {
+        get => ContainedText.MaxNumberOfLines;
+        set => ContainedText.MaxNumberOfLines = value;
+    }
+
+    /// <summary>
+    /// Assigns text without running it through the localization service —
+    /// use this for user-entered text (e.g. TextBox contents) so a typed
+    /// string isn't silently translated. Sokol has no localization hook
+    /// yet so this is currently equivalent to setting <see cref="Text"/>,
+    /// but the signature matches the shared TextRuntime for source-level
+    /// cross-runtime compatibility.
+    /// </summary>
+    public void SetTextNoTranslate(string? value)
+    {
+        ContainedText.RawText = value;
+        NotifyPropertyChanged(nameof(Text));
+    }
+
     public TextOverflowHorizontalMode TextOverflowHorizontalMode
     {
         get => ContainedText.TextOverflowHorizontalMode;

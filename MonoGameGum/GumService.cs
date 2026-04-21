@@ -747,7 +747,7 @@ public class GumService
 #if XNALIKE
         var difference = gameTime.ElapsedGameTime.TotalSeconds;
 #else
-        var difference = GameTime - gameTime;
+        var difference = gameTime - GameTime;
 #endif
 
         DeferredQueue.ProcessPending();

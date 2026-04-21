@@ -1,4 +1,5 @@
 using System.Numerics;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using SokolGum;
 using Gum.DataTypes;
@@ -19,21 +20,28 @@ namespace SokolGumSample;
 /// wrappers, so they can't be Children of a ContainerRuntime. They live on
 /// the Layer directly and are tracked here so SetVisible can toggle them
 /// alongside the GUE subtree.
+///
+/// Owns its own content — procedural textures, PNG, font, and animations
+/// are built/loaded in the constructor and released via <see cref="Dispose"/>.
 /// </summary>
-public class Screen1 : ContainerRuntime
+public class Screen1 : ContainerRuntime, IDisposable
 {
     private readonly List<IRenderableIpso> _extraRenderables = new();
     private readonly Layer _layer;
 
-    public Screen1(
-        Layer layer,
-        Texture2D gradientTexture,
-        Texture2D nineSliceTexture,
-        Texture2D? logoTexture,
-        Font? font,
-        AnimationChainList? characterAnimations)
+    private readonly Texture2D _gradientTexture;
+    private readonly Texture2D _nineSliceTexture;
+    private readonly Texture2D? _logoTexture;
+
+    public Screen1(Layer layer)
     {
         _layer = layer;
+
+        _gradientTexture = BuildGradientTexture(128, 128);
+        _nineSliceTexture = BuildNineSliceTestTexture();
+        _logoTexture = LoaderManager.Self.ContentLoader.LoadContent<Texture2D>("Assets/sokol_logo.png");
+        var font = LoaderManager.Self.ContentLoader.LoadContent<Font>("Assets/DroidSerif-Regular.ttf");
+        var characterAnimations = LoaderManager.Self.ContentLoader.LoadContent<AnimationChainList>("Assets/CharacterAnimations.achx");
 
         Width = 0; WidthUnits = DimensionUnitType.RelativeToParent;
         Height = 0; HeightUnits = DimensionUnitType.RelativeToParent;
@@ -47,28 +55,28 @@ public class Screen1 : ContainerRuntime
         Children.Add(new ColoredRectangleRuntime { X = 480, Y = 40, Width = 200, Height = 100, Color = new Color(240, 190, 70), Rotation = 15f });
 
         // Row 2 — Sprites from the procedural gradient texture (sgp_draw_textured_rect).
-        Children.Add(new SpriteRuntime { X = 40,  Y = 160, Width = 200, Height = 100, Texture = gradientTexture });
-        Children.Add(new SpriteRuntime { X = 260, Y = 160, Width = 200, Height = 100, Texture = gradientTexture, Color = new Color(255, 180, 180) });
-        Children.Add(new SpriteRuntime { X = 480, Y = 160, Width = 200, Height = 100, Texture = gradientTexture, FlipHorizontal = true, FlipVertical = true });
+        Children.Add(new SpriteRuntime { X = 40,  Y = 160, Width = 200, Height = 100, Texture = _gradientTexture });
+        Children.Add(new SpriteRuntime { X = 260, Y = 160, Width = 200, Height = 100, Texture = _gradientTexture, Color = new Color(255, 180, 180) });
+        Children.Add(new SpriteRuntime { X = 480, Y = 160, Width = 200, Height = 100, Texture = _gradientTexture, FlipHorizontal = true, FlipVertical = true });
 
         // Row 3 — Sprite from a loaded PNG (stb_image via ContentLoader).
-        if (logoTexture is not null)
+        if (_logoTexture is not null)
         {
-            Children.Add(new SpriteRuntime { X = 40,  Y = 280, Width = logoTexture.Width,     Height = logoTexture.Height,     Texture = logoTexture });
-            Children.Add(new SpriteRuntime { X = 160, Y = 280, Width = logoTexture.Width * 2, Height = logoTexture.Height * 2, Texture = logoTexture });
-            Children.Add(new SpriteRuntime { X = 400, Y = 280, Width = logoTexture.Width,     Height = logoTexture.Height,     Texture = logoTexture, Color = new Color(180, 255, 180) });
+            Children.Add(new SpriteRuntime { X = 40,  Y = 280, Width = _logoTexture.Width,     Height = _logoTexture.Height,     Texture = _logoTexture });
+            Children.Add(new SpriteRuntime { X = 160, Y = 280, Width = _logoTexture.Width * 2, Height = _logoTexture.Height * 2, Texture = _logoTexture });
+            Children.Add(new SpriteRuntime { X = 400, Y = 280, Width = _logoTexture.Width,     Height = _logoTexture.Height,     Texture = _logoTexture, Color = new Color(180, 255, 180) });
         }
 
         // Row 4 — NineSlice at three sizes. The test texture has distinctly
         // colored corners/edges/center so any mis-mapped region is obvious.
         // The third uses CustomFrameTextureCoordinateWidth to pull the border
         // in from the default source/3, so its corners look half as thick.
-        Children.Add(new NineSliceRuntime { X = 40,  Y = 400, Width = 80,  Height = 60,  Texture = nineSliceTexture });
-        Children.Add(new NineSliceRuntime { X = 140, Y = 400, Width = 200, Height = 120, Texture = nineSliceTexture });
+        Children.Add(new NineSliceRuntime { X = 40,  Y = 400, Width = 80,  Height = 60,  Texture = _nineSliceTexture });
+        Children.Add(new NineSliceRuntime { X = 140, Y = 400, Width = 200, Height = 120, Texture = _nineSliceTexture });
         Children.Add(new NineSliceRuntime
         {
             X = 360, Y = 400, Width = 320, Height = 140,
-            Texture = nineSliceTexture,
+            Texture = _nineSliceTexture,
             CustomFrameTextureCoordinateWidth = 8f,
         });
 
@@ -322,5 +330,80 @@ public class Screen1 : ContainerRuntime
             var angle = -MathF.PI / 2 + i * MathF.PI / points;
             yield return new Vector2(cx + MathF.Cos(angle) * r, cy + MathF.Sin(angle) * r);
         }
+    }
+
+    /// <summary>
+    /// Build a diagonal gradient texture at runtime so the sprite test doesn't
+    /// depend on asset files. Red varies along X, green along Y, blue is half.
+    /// </summary>
+    private static Texture2D BuildGradientTexture(int width, int height)
+    {
+        var pixels = new byte[width * height * 4];
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int i = (y * width + x) * 4;
+                pixels[i + 0] = (byte)(x * 255 / (width - 1));
+                pixels[i + 1] = (byte)(y * 255 / (height - 1));
+                pixels[i + 2] = 128;
+                pixels[i + 3] = 255;
+            }
+        }
+        return Texture2D.FromRgba8(pixels, width, height, "gradient");
+    }
+
+    /// <summary>
+    /// 48×48 nine-slice test texture with distinctly colored regions:
+    /// corners red, top/bottom orange (stretch horizontally), left/right
+    /// green (stretch vertically), centre blue (stretch both ways).
+    /// </summary>
+    private static Texture2D BuildNineSliceTestTexture()
+    {
+        const int size = 48;
+        const int border = 16;
+        var pixels = new byte[size * size * 4];
+        Span<byte> corner         = stackalloc byte[] { 220, 80, 80, 255 };
+        Span<byte> horizontalEdge = stackalloc byte[] { 255, 180, 80, 255 };
+        Span<byte> verticalEdge   = stackalloc byte[] { 80, 200, 100, 255 };
+        Span<byte> center         = stackalloc byte[] { 80, 130, 255, 255 };
+
+        for (int y = 0; y < size; y++)
+        {
+            bool inTop = y < border;
+            bool inBottom = y >= size - border;
+            bool inMidV = !inTop && !inBottom;
+            for (int x = 0; x < size; x++)
+            {
+                bool inLeft = x < border;
+                bool inRight = x >= size - border;
+                bool inMidH = !inLeft && !inRight;
+
+                Span<byte> c =
+                    (inTop || inBottom) && (inLeft || inRight) ? corner
+                    : (inTop || inBottom) && inMidH ? horizontalEdge
+                    : inMidV && (inLeft || inRight) ? verticalEdge
+                    : center;
+
+                int i = (y * size + x) * 4;
+                pixels[i + 0] = c[0];
+                pixels[i + 1] = c[1];
+                pixels[i + 2] = c[2];
+                pixels[i + 3] = c[3];
+            }
+        }
+        return Texture2D.FromRgba8(pixels, size, size, "nineslice-test");
+    }
+
+    /// <summary>
+    /// Disposes textures owned by this screen. Font and AnimationChainList
+    /// are cached inside the ContentLoader and disposed with the
+    /// SystemManagers, so they're not released here.
+    /// </summary>
+    public void Dispose()
+    {
+        _gradientTexture?.Dispose();
+        _nineSliceTexture?.Dispose();
+        _logoTexture?.Dispose();
     }
 }

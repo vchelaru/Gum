@@ -36,13 +36,16 @@ public class Screen2 : ContainerRuntime
             label.Text = $"Button clicked @ {DateTime.Now:HH:mm:ss}";
         panel.AddChild(button);
 
-        //// TextBox
-        //var textBox = new TextBox();
-        //textBox.Placeholder = "Enter text here...";
-        //textBox.Width = 200;
-        //textBox.TextChanged += (_, _) =>
-        //    label.Text = $"TextBox: {textBox.Text}";
-        //panel.AddChild(textBox);
+        for(int i = 0; i < 2; i++)
+        {
+            // TextBox
+            var textBox = new TextBox();
+            textBox.Placeholder = "Enter text here...";
+            textBox.Width = 200;
+            textBox.TextChanged += (_, _) =>
+                label.Text = $"TextBox: {textBox.Text}";
+            panel.AddChild(textBox);
+        }
 
         // CheckBox
         var checkBox = new CheckBox();
