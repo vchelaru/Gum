@@ -110,4 +110,33 @@ for (int i = 0; i < 5; i++)
     button.Text = "Button " + i;
 }
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACo1QTU_DMAy9T9p_sHrqNBTtsguDw2AS4wQa5UvqJaOGWmQOatwBm_bfcVoNKNqBXJz3nv0Sv22_B5Bchot6lRyDVDUeNQwxCVlHG1Q6WdsKgtin12vL6OAUGN_h5ptIB5Ocf3QzLYrML7yXv8KDjo5HXe7xAHdVEbJYIc-q_kJm7ivaeEWuO3FHobbO3FMh5a3-Peic7mRmVmz2-YbBzGiFHNQjypEyC3RqusbMn5fkigr5oOcc6aWU_5pOl8G7WrBr1XrsN8352VeQEguQcqOJlhMYaxkOBzlvcwY9MfRlLdJkEAM_a0CTadS7gTcrpG3_vqNFJsOP-HSetAZ6gSGQ9uySfm_3BWmf8YcCAgAA)
+
+## Children
+
+StackPanel children can be directly accessed through its `Visual.Children` property.
+
+For example, the following code shows how to randomize items in a StackPanel.
+
+```csharp
+// Initialize
+StackPanel panel = new();
+panel.AddToRoot();
+panel.Anchor(Gum.Wireframe.Anchor.Center);
+
+for(int i = 0; i < 10; i++)
+{
+    var text = new TextRuntime();
+    panel.AddChild(text);
+    text.Text = "Text " + i;
+}
+
+// now randomize them:
+for(int i = 0; i < 10; i++)
+{
+    panel.Visual.Children.Move(i, System.Random.Shared.Next(10));
+}
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA51Oy07DMBD8FcsnR4qstNxScaA5IA4glERwIBysektWJGvkR3lU-XfspCB6xQfv7Ozszhz5jbsOIy-9DZDz4JBeHC-feCTlI1rYWzUCf845EnpUA34BL_lBWfamCAZ2yQjeWePV7vU-ESLbdDSP5JXWramN8X852vXGirPrJ1JWQB5s0u6jBMkzjOeLTSxdKIqLiq1Sk_B6u_xZR8eOWHwpkYcPfwrURlgH8jjC7J4kv6mqHgctkvpnlLBsl_X58npuFriULcMonv4VbnF-QBfUIGd3CyRvzQEE5qz5dB5GWSvSZpRNryxoeRf9xarIUsKJT9_L8SvBqAEAAA)
