@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using System.CodeDom.Compiler;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
@@ -137,15 +138,17 @@ public class NameVerifier : INameVerifier
 
     private readonly StandardElementsManager _standardElementsManager;
     private readonly IVariableSaveLogic _variableSaveLogic;
+    private readonly Plugins.IPluginManager _pluginManager;
     
     #endregion
     
     #region Folder
     
-    public NameVerifier(IVariableSaveLogic variableSaveLogic)
+    public NameVerifier(IVariableSaveLogic variableSaveLogic, Plugins.IPluginManager pluginManager)
     {
         _standardElementsManager = StandardElementsManager.Self;
         _variableSaveLogic = variableSaveLogic;
+        _pluginManager = pluginManager;
     }
     public bool IsFolderNameValid(string? folderName, out string whyNotValid)
     {
@@ -208,6 +211,11 @@ public class NameVerifier : INameVerifier
             }
         }
 
+        if(string.IsNullOrEmpty(whyNotValid) && categoryContainer is ElementSave element)
+        {
+            IsNameValidTopLevel(name, element, null, out whyNotValid);
+        }
+
         return string.IsNullOrEmpty(whyNotValid);
     }
     public bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
@@ -247,6 +255,12 @@ public class NameVerifier : INameVerifier
         {
             IsNameAlreadyUsed(instanceName, instanceSave, instanceContainer, out whyNotValid);
         }
+
+        if (string.IsNullOrEmpty(whyNotValid) && instanceContainer is ElementSave element)
+        {
+            IsNameValidTopLevel(instanceName, element, instanceSave, out whyNotValid);
+        }
+
         return string.IsNullOrEmpty(whyNotValid);
     }
     private void IsNameUsedByStandardVariables(string nameToCheck, out string whyNotValid)
@@ -262,6 +276,43 @@ public class NameVerifier : INameVerifier
         {
             whyNotValid = $"\"Name\" is a reserved keyword so it cannot be used as a name";
         }
+    }
+    public bool IsNameValidTopLevel(string name, ElementSave element, object? objectToIgnore, out string? whyNotValid)
+    {
+        whyNotValid = null;
+        var names = new List<TopLevelName>();
+
+        foreach (var instance in element.Instances)
+        {
+            names.Add(new TopLevelName(instance.Name, "Instance", instance));
+        }
+
+        foreach (var category in element.Categories)
+        {
+            names.Add(new TopLevelName(category.Name, "Category", category));
+        }
+
+        if (element.DefaultState != null)
+        {
+            foreach (var variable in element.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+            {
+                names.Add(new TopLevelName(variable.ExposedAsName, "Variable", variable));
+            }
+        }
+
+        _pluginManager.FillTopLevelNames(element, names);
+
+        string standardizedName = Standardize(name);
+
+        var match = names.FirstOrDefault(item => item.SourceObject != objectToIgnore && Standardize(item.Name) == standardizedName);
+
+        if (match != null)
+        {
+            whyNotValid = $"The name {name} is already used by a(n) {match.Type}";
+            return false;
+        }
+
+        return true;
     }
     public bool IsVariableNameValid(string variableName, ElementSave elementSave, VariableSave variableSave, out string whyNotValid)
     {
@@ -280,6 +331,12 @@ public class NameVerifier : INameVerifier
         {
             IsNameAlreadyUsed(variableName, variableSave, elementSave, out whyNotValid);
         }
+
+        if (string.IsNullOrEmpty(whyNotValid) && elementSave != null)
+        {
+            IsNameValidTopLevel(variableName, elementSave, variableSave, out whyNotValid);
+        }
+
         if (string.IsNullOrEmpty(whyNotValid))
         {
             var existingVariable = elementSave?.GetVariableFromThisOrBase(variableName);

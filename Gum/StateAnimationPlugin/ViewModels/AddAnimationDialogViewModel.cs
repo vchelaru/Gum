@@ -14,10 +14,13 @@ internal class AddAnimationDialogViewModel : DialogViewModel
         {
             if (Set(value))
             {
+                NotifyPropertyChanged(nameof(ValidationMessage));
                 AffirmativeCommand.NotifyCanExecuteChanged();
             }
         }
     }
+
+    public string? ValidationMessage => Validator?.Invoke(Name);
 
     public bool Loops
     {

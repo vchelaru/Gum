@@ -7,14 +7,27 @@
     xmlns:local="clr-namespace:StateAnimationPlugin.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="clr-namespace:StateAnimationPlugin.ViewModels"
+    xmlns:converters="clr-namespace:Gum.Converters;assembly=Gum"
     Width="300"
+    MinHeight="120"
     d:DataContext="{d:DesignInstance Type={x:Type viewmodels:AddAnimationDialogViewModel},
                                      IsDesignTimeCreatable=False}"
     dialogs:Dialog.DialogTitle="New Animation"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" Invert="False" />
+    </UserControl.Resources>
     <StackPanel Margin="4">
         <TextBlock Margin="0,0,0,4" Text="Animation name:" />
         <TextBox Margin="0,0,0,8" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+
+        <TextBlock
+            Margin="0,0,0,8"
+            Foreground="Red"
+            Text="{Binding ValidationMessage}"
+            TextWrapping="Wrap"
+            Visibility="{Binding ValidationMessage, Converter={StaticResource NullToVisibilityConverter}}" />
+
         <CheckBox IsChecked="{Binding Loops, Mode=TwoWay}">Loop animation</CheckBox>
     </StackPanel>
 </UserControl>

@@ -140,6 +140,7 @@ public interface IPluginManager
     IEnumerable<IPositionedSizedObject>? GetSelectedIpsos();
     System.Numerics.Vector2? GetWorldCursorPosition(InputLibrary.Cursor cursor);
     void FillWithErrors(List<ErrorViewModel> errors, PluginBase? plugin = null);
+    void FillTopLevelNames(ElementSave element, List<TopLevelName> names);
     bool GetIfShouldSuppressRemoveEditorHighlight();
     void FocusSearch();
     bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf);

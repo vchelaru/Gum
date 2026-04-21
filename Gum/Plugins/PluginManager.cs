@@ -657,6 +657,9 @@ public class PluginManager : IPluginManager
 
     }
 
+    public void FillTopLevelNames(ElementSave element, List<TopLevelName> names) =>
+        CallMethodOnPlugin(plugin => plugin.FillTopLevelNames(element, names));
+
     /// <summary>
     /// Returns whether any plugins are asking un-highlighting to be suppressed when moving over the editor.
     /// If true, then the editor will not un-highlight the currently-highlighted object. This allows other plugins
