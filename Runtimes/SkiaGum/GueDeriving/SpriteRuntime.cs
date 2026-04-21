@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Graphics.Animation;
 using Gum.Wireframe;
 using SkiaGum.Renderables;
@@ -15,31 +15,11 @@ public class SpriteRuntime : InteractiveGue
     {
         get
         {
-            if(mContainedSprite == null)
+            if (mContainedSprite == null)
             {
-                mContainedSprite = this.RenderableComponent as Sprite;
+                mContainedSprite = (Sprite)this.RenderableComponent;
             }
             return mContainedSprite;
-        }
-    }
-
-    public string SourceFile
-    {
-        // eventually we may want to store this off somehow
-        get => null;
-        set
-        {
-            if(string.IsNullOrEmpty(value))
-            {
-                Texture = null;
-            }
-            else
-            {
-                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                var contentLoader = loaderManager.ContentLoader;
-                var image = contentLoader.LoadContent<SKBitmap>(value);
-                Texture = image;
-            }
         }
     }
 
@@ -55,18 +35,36 @@ public class SpriteRuntime : InteractiveGue
         set => ContainedSprite.Image = value;
     }
 
-    #region AnimationChain
+    public SKColor Color
+    {
+        get => ContainedSprite.Color;
+        set => ContainedSprite.Color = value;
+    }
+
+    public string SourceFile
+    {
+        // eventually we may want to store this off somehow
+        get => null;
+        set
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                Texture = null;
+            }
+            else
+            {
+                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                var contentLoader = loaderManager.ContentLoader;
+                var image = contentLoader.LoadContent<SkiaSharp.SKBitmap>(value);
+                Texture = image;
+            }
+        }
+    }
 
     public bool Animate
     {
         get => ContainedSprite.AnimationLogic.Animate;
         set => ContainedSprite.AnimationLogic.Animate = value;
-    }
-
-    public string? CurrentChainName
-    {
-        get => ContainedSprite.AnimationLogic.CurrentChainName;
-        set => ContainedSprite.AnimationLogic.CurrentChainName = value;
     }
 
     public AnimationChainList? AnimationChains
@@ -75,8 +73,17 @@ public class SpriteRuntime : InteractiveGue
         set
         {
             ContainedSprite.AnimationLogic.AnimationChains = value;
-            ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame();
+            if (ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame())
+            {
+                UpdateTextureValuesFrom(ContainedSprite);
+            }
         }
+    }
+
+    public string? CurrentChainName
+    {
+        get => ContainedSprite.AnimationLogic.CurrentChainName;
+        set => ContainedSprite.AnimationLogic.CurrentChainName = value;
     }
 
     public int AnimationChainFrameIndex
@@ -109,17 +116,15 @@ public class SpriteRuntime : InteractiveGue
         remove => ContainedSprite.AnimationLogic.AnimationChainCycled -= value;
     }
 
-    #endregion
-
-    public SpriteRuntime(bool fullInstantiaton = true)
+    public SpriteRuntime(bool fullInstantiation = true)
     {
-        if(fullInstantiaton)
+        if (fullInstantiation)
         {
-            SetContainedObject(new Sprite());
+            mContainedSprite = new Sprite();
+            SetContainedObject(mContainedSprite);
 
             WidthUnits = DimensionUnitType.PercentageOfSourceFile;
             HeightUnits = DimensionUnitType.PercentageOfSourceFile;
-
             Width = 100;
             Height = 100;
         }
