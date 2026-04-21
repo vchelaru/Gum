@@ -135,6 +135,7 @@ removeButton.Click += (_, _) =>
     }
 };
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACnWQW0vDMBSA3wf7D8c8pXRIHYpgreB80IEgzMEUAmOumTuaJtCmczj63z3pZbQd9uU037nkfDkMBwBsmj3mCbsBm-ZyVBLUaHGl8FcSZrtVCgozOzF7iEDLH3iuTtwLha4z5_dxPDczY2yHvlHHVdAC732wwNhuCV4Gbfok8XNrCY9LLPTGpMBRW0CCQUjhFi5c9H1P6IPQQF_TPbUyydxGXDD3D4KBD-gWK9wwZ5TKxOzkJLfW6FqrOpT7t7M9tU7q6NehTnJ8fYLncu-UBJuVFF6lkmsrY8H6lQ8K19_gR8CXI1h6EN0dHXEDvPFsBrx8fFGEM9LIlaL3cIV1_em7VLf_M8QZuhZ6pyJkw0HxB_VbbiUkAgAA)
 
 ## Selection
@@ -171,6 +172,35 @@ listBox.SelectionChanged += (sender, args) =>
     System.Diagnostics.Debug.WriteLine($"Selected item: {listBox.SelectedObject}");
 };
 ```
+
+## Multi-Selection
+
+Multi-selection can be controlled through the SelectionMode property.&#x20;
+
+```csharp
+ListBox listBox = new();
+listBox.AddToRoot();
+listBox.Anchor(Anchor.Center);
+
+for(int i  = 0; i < 10; i++)
+{
+    ListBoxItem item = new();
+    item.UpdateToObject("Item " + i);
+    listBox.Items.Add(item);
+}
+
+// Uncomment one of the following:
+// Only 1 at a time
+//listBox.SelectionMode = SelectionMode.Single;
+
+// Multiple just by clicking to select/deselect
+listBox.SelectionMode = SelectionMode.Multiple;
+
+// Multiple, through CTRL and SHIFT clicks
+//listBox.SelectionMode = SelectionMode.Extended;
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA1VPwWrDMAz9FaNTCsVk3S1hh6WHUlgZbB07LDtkjbqqOHJxZDZW-u-zmpRSH_SkJ-n56QjLfhE7KCREnELsib97KD4gkfadAm5D0yF8ToGYhBpHfwgFPFEvlf81bsQHw_iTTcqaR8Y-tu3av3gvtyxvdj5kA9g5smDQ_jaRxGLIJKm8TFjHPL-fmzstNJ9VQ5zUfKzZpDd6WAp2hjRcTWhbKft2aBvBtX_-2uNGsrPE7LwxpANUhi5bF6M60-sRmepo93S94hVdUiPPK99i-vamtqvohA4OSzj9Aw4ZK_xeAQAA)
 
 ## Reordering With Drag+Drop
 
