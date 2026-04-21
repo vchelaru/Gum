@@ -31,6 +31,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Remove="Content\UISpriteSheet.png" />
+		<EmbeddedResource Include="Content\UISpriteSheet.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\Sokol\Sokol.csproj" />
 	</ItemGroup>
@@ -71,6 +76,9 @@
 		<Compile Include="..\..\GumRuntime\Input\TouchLocation.cs" Link="Input\TouchLocation.cs" />
 		<Compile Include="..\..\GumRuntime\Input\GamePad.cs" Link="Input\GamePad.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\Cursor.cs" Link="Input\Cursor.cs" />
+		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
+		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
+		<Compile Include="..\..\MonoGameGum\Input\KeyCombo.cs" Link="Input\KeyCombo.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -79,6 +87,91 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" Link="Animation\SpriteAnimationLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\IAnimatable.cs" Link="Renderables\IAnimatable.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum\Forms\Controls\**\*.cs" Link="Forms\Controls\%(RecursiveDir)%(Filename)%(Extension)" />
+
+		<Compile Include="..\..\MonoGameGum\Clipboard\ClipboardImplementation.cs" Link="Clipboard\ClipboardImplementation.cs" />
+
+		<Compile Include="..\..\MonoGameGum\Forms\Data\BinderHelpers.cs" Link="Forms\Data\BinderHelpers.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\Data\Binding.cs" Link="Forms\Data\Binding.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\Data\BindingExpressionBase.cs" Link="Forms\Data\BindingExpressionBase.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\Data\GumProperty.cs" Link="Forms\Data\GumProperty.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\Data\NpcBindingExpression.cs" Link="Forms\Data\NpcBindingExpression.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\Data\PropertyPathObserver.cs" Link="Forms\Data\PropertyPathObserver.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\Data\PropertyRegistry.cs" Link="Forms\Data\PropertyRegistry.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\Data\UntypedBindingExpressionBase.cs" Link="Forms\Data\UntypedBindingExpressionBase.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ButtonVisual.cs" Link="Forms\DefaultVisuals\ButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\CheckBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\ComboBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\LabelVisual.cs" Link="Forms\DefaultVisuals\LabelVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\ListBoxItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ListBoxVisual.cs" Link="Forms\DefaultVisuals\ListBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\RadioButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\ScrollBarVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\ScrollViewerVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SliderVisual.cs" Link="Forms\DefaultVisuals\SliderVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SplitterVisual.cs" Link="Forms\DefaultVisuals\SplitterVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\Styling.cs" Link="Forms\DefaultVisuals\Styling.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\V3\CheckBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ComboBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ItemsControlVisual.cs" Link="Forms\DefaultVisuals\V3\ItemsControlVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\LabelVisual.cs" Link="Forms\DefaultVisuals\V3\LabelVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\V3\RadioButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollBarVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SliderVisual.cs" Link="Forms\DefaultVisuals\V3\SliderVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SplitterVisual.cs" Link="Forms\DefaultVisuals\V3\SplitterVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\Styling.cs" Link="Forms\DefaultVisuals\V3\Styling.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\WindowVisual.cs" Link="Forms\DefaultVisuals\V3\WindowVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\WindowVisual.cs" Link="Forms\DefaultVisuals\WindowVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\Controls\GraphicalUiElementFormsExtensions.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\TextWrapping.cs" Link="Forms\TextWrapping.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\Window.cs" Link="Forms\Window.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs" Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Image.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Menu.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\MenuItem.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\PasswordBox.cs" />
+		<!--
+			TextBox family removed until SokolGum's Text renderable exposes
+			WrappedText / LineHeightInPixels / MeasureString / HorizontalMeasurementStyle.
+			Tracked as a separate task.
+		-->
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBoxBase.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBox.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\DefaultFromFileTextBoxRuntime.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!--
+		Global using so shared source files (e.g. MonoGameGum/Forms/**) don't need
+		explicit `using SokolGum;` inside #elif SOKOL import blocks. Types like
+		Color and Texture2D from SokolGum resolve here. Mirrors the
+		`<Using Include="Raylib_cs" />` in RaylibGum.csproj.
+		-->
+		<Using Include="SokolGum" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="TextCopy" Version="6.2.1" Condition="!$(TargetFramework.Contains('ios'))" />
 	</ItemGroup>
 
 </Project>

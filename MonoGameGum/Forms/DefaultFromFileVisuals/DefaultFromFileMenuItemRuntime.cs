@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Gum.Forms.DefaultFromFileVisuals;
 
-#if !RAYLIB
+#if !RAYLIB && !SOKOL
 internal class DefaultFromFileMenuItemRuntime : InteractiveGue
 {
     public DefaultFromFileMenuItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) :

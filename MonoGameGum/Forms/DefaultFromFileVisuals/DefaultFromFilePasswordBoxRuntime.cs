@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Gum.Forms.DefaultFromFileVisuals;
 
-#if !RAYLIB
+#if !RAYLIB && !SOKOL
 public class DefaultFromFilePasswordBoxRuntime : InteractiveGue
 {
     public DefaultFromFilePasswordBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) :

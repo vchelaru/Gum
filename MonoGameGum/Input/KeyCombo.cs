@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if RAYLIB
+#if RAYLIB || SOKOL
 using Keys = Gum.Forms.Input.Keys;
 #else
 using Microsoft.Xna.Framework.Input;

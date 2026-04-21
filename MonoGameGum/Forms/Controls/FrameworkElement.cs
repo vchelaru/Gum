@@ -41,6 +41,9 @@ using Gum.Converters;
 using RaylibGum;
 using Gum.Input;
 using Keys = Gum.Forms.Input.Keys;
+#elif SOKOL
+using Gum.Input;
+using Keys = Gum.Forms.Input.Keys;
 #endif
 
 
@@ -1025,7 +1028,7 @@ public class FrameworkElement : INotifyPropertyChanged
 #endif
     {
         // todo for raylib...
-#if !RAYLIB
+#if !RAYLIB && !SOKOL
         if (gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadRight)) ||
             gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down) ||
@@ -1654,7 +1657,7 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         bool isPushInputHeldDown = false;
 
-#if !RAYLIB
+#if !RAYLIB && !SOKOL
         for (int i = 0; i < GamePadsForUiControl.Count; i++)
         {
             isPushInputHeldDown = isPushInputHeldDown || (GamePadsForUiControl[i].ButtonDown(Buttons.A));

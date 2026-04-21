@@ -56,6 +56,8 @@ public class Styling
         }
 #elif RAYLIB
         this.SpriteSheet = spriteSheet.Value;
+#elif SOKOL
+        this.SpriteSheet = spriteSheet!;
 #endif
 
         if (ActiveStyle == null)

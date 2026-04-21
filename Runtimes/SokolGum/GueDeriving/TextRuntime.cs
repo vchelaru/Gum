@@ -213,7 +213,7 @@ public class TextRuntime : InteractiveGue
 
         if (!string.IsNullOrEmpty(font))
         {
-            var atlas = (ISystemManagers.Default as SokolGum.SystemManagers)?.Fonts;
+            var atlas = (ISystemManagers.Default as global::RenderingLibrary.SystemManagers)?.Fonts;
             var resolved = atlas?.GetOrLoadFont(font, isBold, isItalic);
             if (resolved is not null)
             {

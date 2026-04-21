@@ -697,7 +697,7 @@ public class ScrollViewer :
     public void OnFocusUpdatePreview(RoutedEventArgs args)
     {
         // todo - check for ESC and return handled, steal focus from children
-#if !FRB && !RAYLIB
+#if !FRB && !RAYLIB && !SOKOL
         foreach(var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             // eventually we want to support combos but for now use esc:

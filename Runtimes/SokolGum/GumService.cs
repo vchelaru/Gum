@@ -1,4 +1,6 @@
 using Gum.DataTypes;
+using Gum.Forms;
+using Gum.Forms.Controls;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Wireframe;
@@ -40,21 +42,30 @@ public sealed class GumService
             HasEvents = false,
         };
 
-        Cursor = new Cursor();
-        Keyboard = new Keyboard();
     }
 
     /// <summary>
     /// Gets the default cursor, fed by Sokol mouse events forwarded via
     /// <see cref="HandleSokolEvent"/>.
     /// </summary>
-    public Cursor Cursor { get; }
+    public Cursor Cursor => FormsUtilities.Cursor!;
 
     /// <summary>
     /// Gets the default keyboard, fed by Sokol key / char events forwarded via
     /// <see cref="HandleSokolEvent"/>.
     /// </summary>
-    public Keyboard Keyboard { get; }
+    public Keyboard Keyboard => FormsUtilities.Keyboard;
+
+    /// <summary>
+    /// The popup root, which mirrors <c>FrameworkElement.PopupRoot</c> so callers
+    /// can access it from the GumService instance (matches MonoGame/Raylib shape).
+    /// </summary>
+    public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
+
+    /// <summary>
+    /// The modal root, which mirrors <c>FrameworkElement.ModalRoot</c>.
+    /// </summary>
+    public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
 
     /// <summary>
     /// Forwards a Sokol app event into Gum's input buffers. Host apps should call
@@ -125,12 +136,25 @@ public sealed class GumService
         }
         IsInitialized = true;
 
-        // TODO: wire FrameworkElement.MainCursor/MainKeyboard when Forms is linked (task #4)
-
         SystemManagers = new SystemManagers();
         SystemManagers.Default = SystemManagers;
         ISystemManagers.Default = SystemManagers;
         SystemManagers.Initialize();
+
+        // SystemManagers.Initialize must come first because it assigns the
+        // GraphicalUiElement.AddRenderableToManagers delegate. InitializeDefaults
+        // creates PopupRoot/ModalRoot and calls AddToManagers on them — that call
+        // silently no-ops if the delegate is still null, so the roots would never
+        // be added to MainLayer.Renderables and would not draw.
+        // Match MonoGame's GumService.Initialize default — V3 visuals use direct
+        // C# property assignment for colors (Background.Color = backgroundColor),
+        // which routes through NineSliceRuntime.Color -> ContainedNineSlice.Color.
+        // V2 routes colors via variable-based states ("Background.Color") through
+        // CustomSetPropertyOnRenderable, which has no "Color" handler on Sokol,
+        // so V2 colors silently no-op.
+        FormsUtilities.InitializeDefaults(
+            systemManagers: SystemManagers,
+            defaultVisualsVersion: Gum.Forms.DefaultVisualsVersion.Newest);
 
         Root.AddToManagers(SystemManagers, layer: null);
         Root.UpdateLayout();
@@ -237,8 +261,7 @@ public sealed class GumService
     /// <param name="secondsSinceLastFrame">Elapsed seconds — pass this to scale or pause time.</param>
     public void Update(double secondsSinceLastFrame)
     {
-        Cursor.Activity(secondsSinceLastFrame);
-        Keyboard.Activity(secondsSinceLastFrame);
+        FormsUtilities.Update(secondsSinceLastFrame, Root);
 
         Root.AnimateSelf(secondsSinceLastFrame);
         SystemManagers.Renderer.Update(secondsSinceLastFrame);
@@ -312,5 +335,20 @@ public static class GraphicalUiElementExtensionMethods
     public static void RemoveFromRoot(this GraphicalUiElement element)
     {
         element.Parent = null;
+    }
+
+    /// <summary>
+    /// Adds this Forms control's underlying visual to the GumService root
+    /// container. Forms equivalent of <see cref="AddToRoot(GraphicalUiElement)"/>.
+    /// </summary>
+    public static void AddToRoot(this Gum.Forms.Controls.FrameworkElement element)
+    {
+        if (!GumService.Default.IsInitialized)
+        {
+            throw new InvalidOperationException(
+                "Cannot call AddToRoot because GumService.Default is not initialized — "
+                + "call GumService.Default.Initialize(...) first.");
+        }
+        GumService.Default.Root.Children.Add(element.Visual);
     }
 }
