@@ -20,6 +20,13 @@ using Rectangle = Raylib_cs.Rectangle;
 using Texture2D = Raylib_cs.Texture2D;
 using ContainedSpriteType = Gum.Renderables.Sprite;
 namespace Gum.GueDeriving;
+#elif SKIA
+using SkiaGum.Renderables;
+using Color = SkiaSharp.SKColor;
+using Rectangle = SkiaSharp.SKRect;
+using Texture2D = SkiaSharp.SKBitmap;
+using ContainedSpriteType = SkiaGum.Renderables.Sprite;
+namespace SkiaGum.GueDeriving;
 #else
 using RenderingLibrary.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
@@ -115,7 +122,7 @@ public class SpriteRuntime : GraphicalUiElement
     {
         get
         {
-#if RAYLIB
+#if RAYLIB || SKIA
             return ContainedSprite.Color;
 #else
             return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedSprite.Color);
@@ -123,7 +130,7 @@ public class SpriteRuntime : GraphicalUiElement
         }
         set
         {
-#if RAYLIB
+#if RAYLIB || SKIA
             ContainedSprite.Color = value;
 #else
             ContainedSprite.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
@@ -181,6 +188,7 @@ public class SpriteRuntime : GraphicalUiElement
         }
     }
 
+#if !SKIA
     /// <summary>
     /// The source rectangle in the texture to render, using platform-specific Rectangle type.
     /// Setting this also updates TextureLeft, TextureTop, TextureWidth, and TextureHeight.
@@ -202,6 +210,7 @@ public class SpriteRuntime : GraphicalUiElement
             TextureHeight = (int)value.Height;
         }
     }
+#endif
 
     #region AnimationChain
 
@@ -344,6 +353,7 @@ public class SpriteRuntime : GraphicalUiElement
 
     #region Source File/Texture
 
+#if !SKIA
     /// <summary>
     /// Obsolete. Use Texture instead.
     /// </summary>
@@ -353,6 +363,30 @@ public class SpriteRuntime : GraphicalUiElement
         get => this.Texture;
         set => this.Texture = value;
     }
+#else
+    /// <summary>
+    /// The file path to the texture. Setting this will load the texture via the LoaderManager.
+    /// </summary>
+    public string? SourceFile
+    {
+        // eventually we may want to store this off somehow
+        get => null;
+        set
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                Texture = null;
+            }
+            else
+            {
+                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                var contentLoader = loaderManager.ContentLoader;
+                var image = contentLoader.LoadContent<SkiaSharp.SKBitmap>(value);
+                Texture = image;
+            }
+        }
+    }
+#endif
 
     /// <summary>
     /// The underlying texture used by the sprite.
@@ -400,11 +434,22 @@ public class SpriteRuntime : GraphicalUiElement
                 }
             }
 
-#if RAYLIB
+#if RAYLIB || SKIA
             NotifyPropertyChanged();
 #endif
         }
     }
+
+#if SKIA
+    /// <summary>
+    /// The underlying SKImage used by the sprite.
+    /// </summary>
+    public SkiaSharp.SKImage? Image
+    {
+        get => ContainedSprite.Image;
+        set => ContainedSprite.Image = value;
+    }
+#endif
 
     /// <summary>
     /// Sets the texture via file name and updates animation frames if necessary.
@@ -461,7 +506,7 @@ public class SpriteRuntime : GraphicalUiElement
     {
         if (fullInstantiation)
         {
-#if RAYLIB
+#if RAYLIB || SKIA
             mContainedSprite = new ContainedSpriteType();
 #else
             mContainedSprite = new RenderingLibrary.Graphics.Sprite(null);
