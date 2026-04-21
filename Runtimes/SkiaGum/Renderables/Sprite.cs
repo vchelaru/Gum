@@ -8,8 +8,12 @@ using System;
 
 namespace SkiaGum.Renderables;
 
-public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable
+public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable, ICloneable
 {
+    public object Clone()
+    {
+        return this.MemberwiseClone();
+    }
     public SKBitmap? Texture 
     { 
         get => _texture;

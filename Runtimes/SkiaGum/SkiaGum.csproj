@@ -49,6 +49,7 @@
 		<Compile Include="..\..\MonoGameGum\GueDeriving\ColoredRectangleRuntime.cs" Link="GueDeriving\ColoredRectangleRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\TextRuntime.cs" Link="GueDeriving\TextRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\SpriteRuntime.cs" Link="GueDeriving\SpriteRuntime.cs" />
 
 	</ItemGroup>
 
