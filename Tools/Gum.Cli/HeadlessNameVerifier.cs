@@ -100,6 +100,13 @@ internal class HeadlessNameVerifier : INameVerifier
     public bool IsComponentNameAlreadyUsed(string name) => false;
 
     /// <inheritdoc/>
+    public bool IsNameValidTopLevel(string name, ElementSave element, object? objectToIgnore, out string? whyNotValid)
+    {
+        whyNotValid = null;
+        return true;
+    }
+
+    /// <inheritdoc/>
     public bool IsNameValidAndroidFile(string name, out string whyNotValid)
     {
         whyNotValid = null!;

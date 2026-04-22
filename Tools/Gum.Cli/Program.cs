@@ -16,6 +16,8 @@ public class Program
             ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
             ?? "unknown";
 
+        System.Console.WriteLine($"gumcli v{version}");
+
         var rootCommand = new RootCommand($"gumcli v{version} - create projects, check for errors, and generate code.");
 
         rootCommand.AddCommand(NewCommand.Create());

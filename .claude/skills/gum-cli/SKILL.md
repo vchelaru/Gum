@@ -1,6 +1,6 @@
 ---
 name: gum-cli
-description: Reference guide for GumCli — the headless command-line tool for Gum projects. Load this when working on gumcli commands (new, check, codegen, codegen-init), Gum.ProjectServices, HeadlessErrorChecker, ProjectLoader, HeadlessCodeGenerationService, CodeGenerationAutoSetupService, or the FormsTemplateCreator.
+description: Reference guide for GumCli — the headless command-line tool for Gum projects. Load this when working on gumcli commands (new, check, codegen, codegen-init, fonts, screenshot, svg), Gum.ProjectServices, HeadlessErrorChecker, ProjectLoader, HeadlessCodeGenerationService, CodeGenerationAutoSetupService, or the FormsTemplateCreator.
 ---
 
 # GumCli Reference
@@ -21,6 +21,8 @@ description: Reference guide for GumCli — the headless command-line tool for G
 | `gumcli codegen <project.gumx> [--element <name>...]` | Generate C# code. Requires `ProjectCodeSettings.codsj`. Per-element error check gates generation. |
 | `gumcli codegen-init <project.gumx> [--force] [--csproj <path>]` | Auto-detect `.csproj`, derive namespace and output library, write `ProjectCodeSettings.codsj`. Use `--csproj` when the Gum project is not inside the MonoGame project directory. |
 | `gumcli fonts <project.gumx>` | Generate missing bitmap font files (.fnt + .png). Windows-only (bmfont.exe). |
+| `gumcli screenshot <project.gumx> <element> [--output] [--width] [--height]` | Render a Screen or Component to a PNG via MonoGame DesktopGL. Pixel-accurate; cross-platform. |
+| `gumcli svg <project.gumx> <element> [--output] [--width] [--height]` | Render a Screen or Component to a vector SVG via SkiaGum's `SKSvgCanvas`. Bitmaps embed as base64. |
 
 **Exit codes:** 0 = success, 1 = errors found / generation blocked, 2 = load failure, bad args, or non-Windows (fonts).
 
@@ -32,7 +34,9 @@ Program.cs
   ├── CheckCommand    → ProjectLoader → HeadlessErrorChecker
   ├── CodegenCommand  → ProjectLoader → HeadlessErrorChecker (gates) → HeadlessCodeGenerationService
   ├── CodegenInitCommand → CodeGenerationAutoSetupService
-  └── FontsCommand    → ProjectLoader → HeadlessFontGenerationService (Windows-gated)
+  ├── FontsCommand    → ProjectLoader → HeadlessFontGenerationService (Windows-gated)
+  ├── ScreenshotCommand → MonoGameScreenshotService (Gum.ProjectServices.MonoGame)
+  └── SvgCommand      → SkiaGumSvgExportService (Gum.ProjectServices.SkiaGum)
 ```
 
 Each command class has a static `Create()` returning a `System.CommandLine` `Command` with handler, then a static `Execute()` doing the work.
