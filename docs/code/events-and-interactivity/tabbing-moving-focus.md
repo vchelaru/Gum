@@ -16,7 +16,13 @@ The keyboard can be used to interact with controls. Keyboards can be used to:
 * To click controls by pressing enter
 * To perform control-specific actions such as changing the value of a slider
 
-To enable gamepad control, add the following code. This code only needs to run once, so add it to your game's Initialize or other code which runs at startup.
+### Tab Key Capture (AcceptsTab)
+
+By default, the Tab key is used for navigation. However, certain controls like `TextBox` and `PasswordBox` can be configured to capture the Tab key to insert a tab character instead of moving focus.
+
+When a `TextBox` has its `AcceptsTab` property set to `true`, focus navigation via the Tab key is disabled for that control. You can still move focus using the mouse or other input methods. For more details, see the [TextBox Tab Key Behavior](../controls/textbox.md#tab-key-behavior) section.
+
+To enable keyboard tabbing, add the following code. This code only needs to run once, so add it to your game's Initialize or other code which runs at startup.
 
 ```csharp
 // Initialize

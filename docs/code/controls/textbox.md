@@ -98,6 +98,23 @@ panel.AddChild(textBox);
 
 <figure><img src="../../.gitbook/assets/13_09 59 12.gif" alt=""><figcaption><p>TextBox with IsReadOnly set to true responding to mouse click+drag and double-click</p></figcaption></figure>
 
+## MaxLength
+
+The `MaxLength` property can be used to restrict the number of characters that can be entered into a `TextBox`. This limit applies to both user typing and pasting. If a user attempts to type more characters than allowed, the extra characters are ignored. If a user pastes a string that would exceed the limit, the string is truncated to fit.
+
+The following code creates a `TextBox` with a `MaxLength` of 10:
+
+```csharp
+// Initialize
+var textBox = new TextBox();
+textBox.AddToRoot();
+textBox.MaxLength = 10;
+// only 10 characters show:
+textBox.Text = "abcdefghijklmnopqrs";
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA1WMsQrCMBRFfyW8SaGU2LHFQRcRdJGCg3WI5rV92iaavGhR_HcrddDxnsO5T1j6RWghZRcwguDJVB7SHfQw3pLD0qkWYR8BGWJSDT0QUrgpJxg7nttOTIXBu8iHNRpnhfmaeKZ1bjfW8h9dq26FpuK6LyfyR3wuelYEKZNEHY4ay6qm07lpjb1cnR9EBq83c7Gb4LUAAAA)
+
 ## Selection
 
 Selection can be performed programmatically or by the user using the cursor.
@@ -251,6 +268,12 @@ wrappedTextBox.TextWrapping = TextWrapping.Wrap;
 
 <figure><img src="../../.gitbook/assets/14_06 11 31.gif" alt=""><figcaption><p><code>TextWrapping.Wrap</code> causes text to wrap</p></figcaption></figure>
 
+## Enter Key Behavior
+
+The behavior of the Enter key depends on the `AcceptsReturn` property and whether the TextBox is bound to a data source.
+
+### Multi-Line Entry (AcceptsReturn)
+
 `AcceptsReturn` can be set to true to add newlines when the return (enter) key is pressed.
 
 ```csharp
@@ -266,10 +289,6 @@ wrappedTextBox.AcceptsReturn = true;
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1QywrCMBC8F_yHoScF8QGeWjzoRb0WwYuX0KxtsCYl3dQX_ruJKCj2tDuzszvD3nsREG-alTvFCdg6Gr4YpRUrUakbeTpuhcXZiromuaULL80Fc2g64436g3SvfwWjhZRbkxnDXcNQd4FSuvCnvuEoNH5jPMbmgKtxKEVLaIjh6oDtxxVKIzeShi_VSVx9JJJg4_sjQTFYVBXZ5M9-Taoo2RtPZ5OO5HlONTcZsbPai8JX0rgXPZ5dWeYvLQEAAA)
 
 <figure><img src="../../.gitbook/assets/14_06 12 55.gif" alt=""><figcaption><p>Manually adding newlines by pressing the return (enter) key</p></figcaption></figure>
-
-## Enter Key Behavior
-
-The enter key behavior can be customized for TextBoxes. By default the enter key only applies the Text property to a bound view model. The enter key can also insert multiple lines, but this is usually accompanied with a larger TextBox.
 
 ### Enter and Binding
 
@@ -299,11 +318,11 @@ mainPanel.AddChild(textBox);
 
 ## Tab Key Behavior
 
-The tab key behavior is controlled by the `AccetsTab` property. This value is false by default.
+The tab key behavior is controlled by the `AcceptsTab` property. This value is false by default.
 
 If this value is false, pressing the Tab key does not insert a tab `'\t'` character.
 
-If this value is true, pressing the Tab key inserts a tab `'\t'` character. Note that if this value is true, then tabbing to the next control by pressing tab is disabled. In other words, the TextBox keeps keeps focus after the tab key is pressed.
+If this value is true, pressing the Tab key inserts a tab `'\t'` character. Note that if this value is true, then tabbing to the next control by pressing tab is disabled. In other words, the TextBox keeps focus after the tab key is pressed. For more information on how focus navigation works, see the [Tabbing (Moving Focus)](../events-and-interactivity/tabbing-moving-focus.md) page.
 
 ## Extended Character Sets and Keyboards
 
