@@ -37,10 +37,21 @@ public class PasswordBox : TextBoxBase
     }
 
     SecureString securePassword = new SecureString();
+
+    /// <summary>
+    /// Gets the password as a <see cref="SecureString"/>.
+    /// </summary>
     public SecureString SecurePassword
     {
         get { return securePassword; }
     }
+
+    /// <summary>
+    /// Gets or sets the password as a plain string. 
+    /// </summary>
+    /// <remarks>
+    /// For security-sensitive scenarios, consider using <see cref="SecurePassword"/> instead.
+    /// </remarks>
     public string Password
     {
         get
@@ -80,6 +91,11 @@ public class PasswordBox : TextBoxBase
     // Update Gum's default to include this first:
     //public char PasswordChar { get; set; } = '●';
     private char _passwordChar = '*';
+
+    /// <summary>
+    /// Gets or sets the character used to mask the characters entered in the PasswordBox. 
+    /// The default value is an asterisk (*).
+    /// </summary>
     public char PasswordChar {
 
         get => _passwordChar;
@@ -95,6 +111,9 @@ public class PasswordBox : TextBoxBase
         }
     }
 
+    /// <summary>
+    /// Raised when the password changes.
+    /// </summary>
     public event EventHandler PasswordChanged;
 
     protected override string DisplayedText
