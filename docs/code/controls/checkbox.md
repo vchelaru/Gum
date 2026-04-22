@@ -53,6 +53,25 @@ checkBox3.IsChecked = null;
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA6tW8ix2L81VsiopKk3VUcrMyyzJTMzJrEpVslIqSyxSKC5JTM4OSMxLzVGwVchLLVcIhgtoaFrH5CHk9RxTUkLyg_LzS8ASIM3JGanJ2U75FVCtzlAuFo3OGZk5KRow9SB5GFvPsxisLzUFaArIkWhmG5FquBGy6UYoxqcl5hSjm29MqvnGyOYbo5ifV5qTY61UCwD-QP0DdAEAAA)
 
+### Three State CheckBox (IsThreeState)
+
+By default, a CheckBox only cycles between `Checked` and `Unchecked` when clicked. Setting `IsThreeState` to `true` allows the user to cycle through all three states by clicking.
+
+When `IsThreeState` is true, clicking the CheckBox follows this cycle:
+**Unchecked -> Checked -> Indeterminate -> Unchecked**
+
+The following code creates a CheckBox that supports three states:
+
+```csharp
+// Initialize
+var checkBox = new CheckBox();
+checkBox.AddToRoot();
+checkBox.Text = "Three State CheckBox";
+checkBox.IsThreeState = true;
+```
+
+[Try on XnaFiddle.NET](...)
+
 ## CheckBox Width and Height
 
 Default CheckBoxes have the following default values:
