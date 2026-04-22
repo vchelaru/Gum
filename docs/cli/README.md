@@ -34,6 +34,8 @@ Once installed, invoke it as `gumcli` from any terminal.
 | `codegen-init` | Initialize code generation settings |
 | `codegen` | Generate C# code for project elements |
 | `fonts` | Generate missing bitmap font files |
+| `screenshot` | Render a Screen or Component to a PNG file |
+| `svg` | Render a Screen or Component to an SVG file |
 
 ## Exit Codes
 

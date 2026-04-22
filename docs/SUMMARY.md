@@ -387,3 +387,5 @@
   * [codegen-init](cli/codegen-init.md)
   * [codegen](cli/codegen.md)
   * [fonts](cli/fonts.md)
+  * [screenshot](cli/screenshot.md)
+  * [svg](cli/svg.md)

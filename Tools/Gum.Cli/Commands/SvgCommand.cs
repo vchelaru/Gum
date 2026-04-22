@@ -2,7 +2,6 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.Reflection;
 using Gum.ProjectServices.SkiaGum;
 using Gum.ProjectServices.SvgExport;
 
@@ -69,13 +68,6 @@ public static class SvgCommand
 
     private static int Execute(string projectPath, string elementName, string outputPath, int? width, int? height)
     {
-        string version = Assembly.GetExecutingAssembly()
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-            ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
-            ?? "unknown";
-
-        Console.WriteLine($"gumcli v{version}");
-
         string fullProjectPath = Path.GetFullPath(projectPath);
 
         if (!File.Exists(fullProjectPath))
