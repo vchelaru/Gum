@@ -681,6 +681,7 @@ For the full list of color roles and what they affect, see the [Styling Using Ac
 | `Image` | `SpriteRuntime` |
 | `TextBlock` | `TextRuntime` |
 | `Rectangle` with `SolidColorBrush` | `ColoredRectangleRuntime` |
+| `Button.IsDefault` / `IsCancel` | Not supported (handle Enter/Esc globally in your game loop) |
 
 ## What Gum Does Not Have
 
@@ -696,6 +697,7 @@ Some WPF concepts do not exist in Gum:
 * **RelativeSource binding** -- bindings reference property names directly
 * **Measure/Arrange layout passes** -- Gum uses its own layout engine with unit types
 * **Margin / Padding properties** -- spacing is achieved through layout values, `Spacing`, and container nesting
+* **Button.IsDefault / IsCancel** -- Game UIs typically handle default/cancel actions via gamepad or global input state machines rather than localized button properties.
 
 ## Summary
 

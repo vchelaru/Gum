@@ -202,6 +202,25 @@ listBox.SelectionMode = SelectionMode.Multiple;
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA1VPwWrDMAz9FaNTCsVk3S1hh6WHUlgZbB07LDtkjbqqOHJxZDZW-u-zmpRSH_SkJ-n56QjLfhE7KCREnELsib97KD4gkfadAm5D0yF8ToGYhBpHfwgFPFEvlf81bsQHw_iTTcqaR8Y-tu3av3gvtyxvdj5kA9g5smDQ_jaRxGLIJKm8TFjHPL-fmzstNJ9VQ5zUfKzZpDd6WAp2hjRcTWhbKft2aBvBtX_-2uNGsrPE7LwxpANUhi5bF6M60-sRmepo93S94hVdUiPPK99i-vamtqvohA4OSzj9Aw4ZK_xeAQAA)
 
+### Accessing Multiple Selections
+
+When using `SelectionMode.Multiple` or `SelectionMode.Extended`, you can access all currently selected items using the `SelectedItems` property. This property returns a `System.Collections.IList` containing the selected objects.
+
+The `SelectedObject` and `SelectedIndex` properties are still available, but they will only return the **first** item in the selection.
+
+The following code shows how to iterate over all selected items:
+
+```csharp
+// Loop through all selected items
+foreach (var item in listBox.SelectedItems)
+{
+    System.Diagnostics.Debug.WriteLine($"Selected: {item}");
+}
+
+// Check how many items are selected
+int count = listBox.SelectedItems.Count;
+```
+
 ## Reordering With Drag+Drop
 
 The `DragDropReorderMode` controls whether the user can automatically reorder `ListBoxItems` by pushing on an item and dragging it to a new location. By default this value is set to `NoReorder`, but it can be changed to enable reordering.

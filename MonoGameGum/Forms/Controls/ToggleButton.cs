@@ -28,11 +28,13 @@ public class ToggleButton : ButtonBase
 
     /// <summary>
     /// Whether this toggle supports three states: checked (true), unchecked (false), and
-    /// indeterminate (null). When false, clicking cycles only between checked and unchecked.
+    /// indeterminate (null). When true, clicking the button cycles through Unchecked -> Checked -> Indeterminate.
+    /// When false, clicking cycles only between Checked and Unchecked.
     /// </summary>
     public bool IsThreeState { get; set; }
 
     private bool? isChecked = false;
+
 
     /// <summary>
     /// Gets or sets the checked state of the toggle. A value of <c>true</c> means checked,
@@ -41,8 +43,7 @@ public class ToggleButton : ButtonBase
     /// <remarks>
     /// Setting this property updates the visual state and raises <see cref="Checked"/>,
     /// <see cref="Unchecked"/>, or <see cref="Indeterminate"/> as appropriate.
-    /// The indeterminate state is only reachable programmatically — clicking the button
-    /// cycles between true and false regardless of <see cref="IsThreeState"/>.
+    /// If <see cref="IsThreeState"/> is true, clicking the button cycles through all three states.
     /// </remarks>
     public bool? IsChecked
     {
@@ -60,15 +61,15 @@ public class ToggleButton : ButtonBase
                 if (isChecked == true)
                 {
                     OnChecked();
-                    Checked?.Invoke(this, null);
+                    Checked?.Invoke(this, null!);
                 }
                 else if (isChecked == false)
                 {
-                    Unchecked?.Invoke(this, null);
+                    Unchecked?.Invoke(this, null!);
                 }
                 else if (isChecked == null)
                 {
-                    Indeterminate?.Invoke(this, null);
+                    Indeterminate?.Invoke(this, null!);
                 }
 
                 PushValueToViewModel();
@@ -184,13 +185,22 @@ public class ToggleButton : ButtonBase
 
     protected override void OnClick()
     {
-        if (IsChecked == true)
+        if (IsThreeState)
         {
-            IsChecked = false;
+            if (IsChecked == false) IsChecked = true;
+            else if (IsChecked == true) IsChecked = null;
+            else IsChecked = false; // Indeterminate -> Unchecked
         }
-        else // false or indeterminte
+        else
         {
-            IsChecked = true;
+            if (IsChecked == true)
+            {
+                IsChecked = false;
+            }
+            else // false or indeterminte
+            {
+                IsChecked = true;
+            }
         }
     }
 }

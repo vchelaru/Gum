@@ -156,10 +156,19 @@ public abstract class TextBoxBase :
         }
     }
 
+    /// <summary>
+    /// A list of keys that should be ignored by this control.
+    /// </summary>
     public List<Keys> IgnoredKeys => null;
 
+    /// <summary>
+    /// Whether this control is currently capable of receiving input. Always true for TextBoxBase.
+    /// </summary>
     public bool TakingInput => true;
 
+    /// <summary>
+    /// The next control to receive focus when the user presses the tab key.
+    /// </summary>
     public IInputReceiver NextInTabSequence { get; set; }
 
     public override bool IsEnabled
@@ -179,6 +188,10 @@ public abstract class TextBoxBase :
         }
     }
 
+    /// <summary>
+    /// The text currently displayed in the text box. This may differ from the actual
+    /// internal text (e.g. in a PasswordBox).
+    /// </summary>
     protected abstract string? DisplayedText { get; }
 
     TextWrapping textWrapping = TextWrapping.NoWrap;
@@ -349,16 +362,22 @@ public abstract class TextBoxBase :
 
     /// <summary>
     /// Whether pressing the tab key inserts a tab character. If true, then
-    /// tab characters can be inserted.
+    /// tab characters can be inserted and tab navigation (moving focus to the next control) is disabled.
     /// </summary>
     public bool AcceptsTab { get; set; } = false;
 
+    /// <summary>
+    /// Returns true if tab navigation is enabled. This is the inverse of <see cref="AcceptsTab"/>.
+    /// </summary>
     public override bool IsTabNavigationEnabled => AcceptsTab == false;
 
     #endregion
 
     #region Events
 
+    /// <summary>
+    /// Raised when a controller button is pushed while the control is focused.
+    /// </summary>
     public event Action<GamepadButton> ControllerButtonPushed;
     /// <summary>
     /// Raised before new text is inserted (by typing or pasting). Set
@@ -371,6 +390,9 @@ public abstract class TextBoxBase :
     /// </summary>
     public event EventHandler CaretIndexChanged;
     protected void RaiseCaretIndexChanged() => CaretIndexChanged?.Invoke(this, EventArgs.Empty);
+    /// <summary>
+    /// Raised when the selection (SelectionStart or SelectionLength) changes.
+    /// </summary>
     public event EventHandler SelectionChanged;
     protected void RaiseSelectionChanged() => SelectionChanged?.Invoke(this, EventArgs.Empty);
     protected virtual TextCompositionEventArgs RaisePreviewTextInput(string newText)
@@ -381,6 +403,9 @@ public abstract class TextBoxBase :
         return args;
     }
 
+    /// <summary>
+    /// The parent input receiver for this control.
+    /// </summary>
     public IInputReceiver? ParentInputReceiver =>
         this.GetParentInputReceiver();
 
