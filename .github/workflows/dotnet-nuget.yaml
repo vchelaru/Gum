@@ -70,6 +70,10 @@ on:
         description: 'Gum.Themes.Editor.Kni'
         type: boolean
         default: true
+      pkg_Sokol:
+        description: 'Gum.sokol'
+        type: boolean
+        default: true
       pkg_GumCli:
         description: 'GumCli'
         type: boolean
@@ -157,6 +161,7 @@ jobs:
         if ('${{ github.event.inputs.pkg_Expressions }}' -eq 'true') { $selected += 'Gum.Expressions' }
         if ('${{ github.event.inputs.pkg_ThemesMonoGame }}' -eq 'true') { $selected += 'Gum.Themes.Editor.MonoGame' }
         if ('${{ github.event.inputs.pkg_ThemesKni }}' -eq 'true') { $selected += 'Gum.Themes.Editor.Kni' }
+        if ('${{ github.event.inputs.pkg_Sokol }}' -eq 'true') { $selected += 'Gum.sokol' }
         if ('${{ github.event.inputs.pkg_GumCli }}' -eq 'true') { $selected += 'GumCli' }
 
         Write-Host "Selected packages: $($selected -join ', ')"
@@ -191,6 +196,7 @@ jobs:
         if ('${{ github.event.inputs.pkg_Expressions }}' -eq 'true') { $selected += 'Gum.Expressions' }
         if ('${{ github.event.inputs.pkg_ThemesMonoGame }}' -eq 'true') { $selected += 'Gum.Themes.Editor.MonoGame' }
         if ('${{ github.event.inputs.pkg_ThemesKni }}' -eq 'true') { $selected += 'Gum.Themes.Editor.Kni' }
+        if ('${{ github.event.inputs.pkg_Sokol }}' -eq 'true') { $selected += 'Gum.sokol' }
         if ('${{ github.event.inputs.pkg_GumCli }}' -eq 'true') { $selected += 'GumCli' }
 
         Write-Host "Selected packages: $($selected -join ', ')"
