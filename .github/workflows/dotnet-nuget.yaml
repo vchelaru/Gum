@@ -124,7 +124,7 @@ jobs:
       run: dotnet restore ${{ env.SOLUTION_FILE }} -p:IncludeAndroid=true
 
     - name: Build solution
-      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore -p:IncludeAnalyzers=true -p:IncludeAndroid=true
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore -p:IncludeAnalyzers=true -p:IncludeAndroid=true ${{ steps.ver.outputs.flag }}
 
     - name: Compute version override
       id: ver
