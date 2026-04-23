@@ -30,6 +30,7 @@
     -->
     <AssemblyName>Sokol.NET</AssemblyName>
     <RootNamespace>Sokol</RootNamespace>
+    <IsPackable>false</IsPackable>
     <!--
       These warnings come from the vendored Sokol.NET bindings we include
       verbatim via the Compile globs below — they aren't our code to fix:
