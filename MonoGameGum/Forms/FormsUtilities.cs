@@ -198,6 +198,10 @@ public class FormsUtilities
                 throw new ArgumentOutOfRangeException(nameof(defaultVisualsVersion), defaultVisualsVersion, null);
         }
 
+        // Tooltip is registered across all default visuals versions — it's a passive overlay with
+        // no V1/V2 equivalent, so the V3 visual is used regardless.
+        TryAdd(typeof(Tooltip), (_, c) => new DefaultVisuals.V3.TooltipVisual(tryCreateFormsObject: c));
+
         void TryAdd(Type formsType, Func<object, bool, GraphicalUiElement> factory)
         {
             if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
@@ -489,6 +493,8 @@ public class FormsUtilities
                 frameworkElementOver.UpdateState();
             }
         }
+
+        ToolTipService.Update(cursor, gameTimeSeconds);
 
         var didChangeFrameworkElement = frameworkElementOver != frameworkElementOverBefore;
 

@@ -241,6 +241,7 @@
   * [Slider](code/controls/slider.md)
   * [Splitter](code/controls/splitter.md)
   * [TextBox](code/controls/textbox.md)
+  * [Tooltip](code/controls/tooltip.md)
   * [Window](code/controls/window.md)
 * [Layout](code/layout/README.md)
   * [Introduction to Gum Layout](code/layout/introduction-to-gum-layout.md)

@@ -412,6 +412,65 @@ public class FrameworkElement : INotifyPropertyChanged
         set { Visual.Name = value; }
     }
 
+    private object? _toolTip;
+    /// <summary>
+    /// The tooltip content to display when the cursor hovers this element. Mirrors WPF's
+    /// <c>FrameworkElement.ToolTip</c>. In v1 only <see cref="string"/> content is supported;
+    /// other types throw <see cref="NotSupportedException"/>. Setting a non-null value materializes
+    /// a <see cref="Tooltip"/> instance (using <see cref="DefaultFormsTemplates"/>) and registers it
+    /// with <see cref="ToolTipService"/>. Setting to null removes the tooltip.
+    /// </summary>
+    /// <exception cref="NotSupportedException">Thrown when a non-null, non-string value is assigned.</exception>
+    public object? ToolTip
+    {
+        get => _toolTip;
+        set
+        {
+            if (value != null && value is not string && value is not Tooltip)
+            {
+                throw new NotSupportedException(
+                    $"FrameworkElement.ToolTip currently supports only string (or Tooltip) values. " +
+                    $"Got {value.GetType().FullName}. Non-string content is reserved for a future release.");
+            }
+
+            _toolTip = value;
+
+            if (value == null)
+            {
+                ToolTipService.RegisterTooltip(this, null);
+                return;
+            }
+
+            Tooltip tooltip;
+            if (value is Tooltip existing)
+            {
+                tooltip = existing;
+            }
+            else
+            {
+                tooltip = new Tooltip();
+                tooltip.Content = value;
+            }
+
+            ToolTipService.RegisterTooltip(this, tooltip);
+        }
+    }
+
+    /// <summary>
+    /// Raised just before the tooltip associated with this element opens. WPF parity with
+    /// <c>FrameworkElement.ToolTipOpening</c>.
+    /// </summary>
+    public event EventHandler? ToolTipOpening;
+
+    /// <summary>
+    /// Raised just before the tooltip associated with this element closes. WPF parity with
+    /// <c>FrameworkElement.ToolTipClosing</c>.
+    /// </summary>
+    public event EventHandler? ToolTipClosing;
+
+    internal void RaiseToolTipOpening() => ToolTipOpening?.Invoke(this, EventArgs.Empty);
+    internal void RaiseToolTipClosing() => ToolTipClosing?.Invoke(this, EventArgs.Empty);
+
     public FrameworkElement ParentFrameworkElement
     {
         get
