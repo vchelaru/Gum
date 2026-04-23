@@ -6,6 +6,20 @@ GumBatch is an object which supports _immediate mode_ rendering, similar to Mono
 
 For information on getting your project set up to use GumBatch, see the [Setup for GumBatch](../getting-started/setup/setup-for-gumbatch.md) page.
 
+{% hint style="info" %}
+GumBatch draws only what you pass it. In some cases controls may create additional controls on the popup layer, such as ComboBox and Tooltip. If your UI includes these controls, you may need to also draw your popup layers, as shown in the following code:
+
+
+
+```csharp
+Core.GumBatch.Begin();
+Core.GumBatch.Draw(YourCustomObjects);
+// Now draw the popup root so popups show up
+Core.GumBatch.Draw(GumService.Default.PopupRoot);
+Core.GumBatch.End();
+```
+{% endhint %}
+
 ### Rendering Strings
 
 GumBatch can be used to render strings directly. This requires a BitmapFont.
