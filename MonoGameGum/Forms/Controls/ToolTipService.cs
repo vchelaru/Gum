@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 
 #if FRB
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using ICursor = global::FlatRedBall.Gui.Cursor;
+using FlatRedBall.Gui;
 namespace FlatRedBall.Forms.Controls;
 #else
 namespace Gum.Forms.Controls;
