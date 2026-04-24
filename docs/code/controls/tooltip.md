@@ -24,7 +24,7 @@ button.ToolTip = "Click me";
 
 When the cursor hovers over the button and remains there for the `InitialShowDelay`, the tooltip appears near the cursor. When the cursor leaves, the tooltip is hidden.
 
-<figure><img src="../../.gitbook/assets/tooltip-placeholder.png" alt=""><figcaption><p>Tooltip shown on hover</p></figcaption></figure>
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA13KwQqCQBCA4VdZ5lQgYkIXo0N1yK4hWGQHy0mHdDfWWYuid88ScvH4f_wv2NRrU0HA2qADpiaZ1xAcoEU3Jo0XnVYIRwdIElNa0hMhgCbV4mSYlRRzIfEulr8YjWeJ7NxdZFmktkqxjbt2n3p97wcdU8ZFaxMbQ6S84MEZ4eNLifE83w9Vg1pU2JU1KVVGdPt_q5LO1_6D9weUDqjH_wAAAA)
 
 ## String-Only Content (v1)
 
@@ -39,15 +39,17 @@ button.ToolTip = "A helpful hint";
 // button.ToolTip = new StackPanel { ... };
 ```
 
+{% hint style="info" %}
 Rich, object-based content (for example a `StackPanel` with an icon and formatted text) is planned for a future release to match WPF more completely.
+{% endhint %}
 
 ## Tuning Delays with ToolTipService
 
 `ToolTipService` is a static class that controls global hover timing. Its three delays mirror WPF's defaults:
 
-* `InitialShowDelay` - time the cursor must rest on an element before the tooltip shows. Default: 500 ms.
+* `InitialShowDelay` - time the cursor must rest on an element before the tooltip shows. Default: 500 milliseconds.
 * `ShowDuration` - how long the tooltip stays visible while the cursor remains on the host. Default: 5 s.
-* `BetweenShowDelay` - after a tooltip closes, the next hover shows immediately if it happens within this window. Default: 100 ms.
+* `BetweenShowDelay` - after a tooltip closes, the next hover shows immediately if it happens within this window. Default: 100 milliseconds.
 
 You typically set these once during initialization:
 
@@ -81,10 +83,12 @@ button.Click += (_, _) =>
     else
     {
         // Show near a specific screen position (in gum units):
-        tooltip.Show(cursorX: 200, cursorY: 200);
+        tooltip.Show(cursorX: 50, cursorY: s00);
     }
 };
 ```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA2VQTUvDQBD9K8OeEghtiLeUHmwR7UnQgIqREpNJHUxmw35YseS_u8kmUulelvexb9_MSez0rW1FapTFSFhNfNAifRWOXDyRwloVLYq3SBCToaKhHxSp-CoUGCkbQx2sgfEImUdBuMp5UhZbyQbZOEdu4zhJHj_kkaFWsoVSVuhJ5x_S3q0xkqewzQjGLM8vrqsqkw9SmnMyw-__4XOLv-TJuG2o_PS-zRqCfQT7ENYDvrrJ-ZQzuEM1BHPznb7vkEMvTPpwZv2OKhybDGTvL2w0XjxYLmEsxuhmLEB3WFJNJehSITJ0UruturkDYjjYFqzbsg7Tyx-HlKC0Skv1nEISxxF49DKisy79SvS_73TzodcBAAA)
 
 `Show` adds the tooltip's visual to `FrameworkElement.PopupRoot` and clamps it to the screen. `Hide` removes it. `IsOpen` reports the current state.
 
@@ -124,10 +128,3 @@ button.ToolTipClosing += (_, _) =>
 };
 ```
 
-## Live Example
-
-{% hint style="info" %}
-**Coming soon** - an interactive XnaFiddle sample for Tooltip will be published once the feature is available in a released NuGet package. This docs page was written on feature day; XnaFiddle currently builds against the latest NuGet release and cannot yet reference the new Tooltip API.
-{% endhint %}
-
-[Try on XnaFiddle.NET](TODO)
