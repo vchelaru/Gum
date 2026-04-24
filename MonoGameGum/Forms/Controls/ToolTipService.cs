@@ -108,6 +108,12 @@ public static class ToolTipService
             _hoveredElement = hovered;
             _hoverStartTimeSeconds = gameTimeSeconds;
         }
+        else if (hovered != null && _currentOpenTooltip == null &&
+                 (cursor.XChange != 0 || cursor.YChange != 0))
+        {
+            // Cursor moved within the same element — restart the stationary-hover timer.
+            _hoverStartTimeSeconds = gameTimeSeconds;
+        }
 
         if (hovered == null)
         {

@@ -89,6 +89,24 @@ public class TooltipTests : BaseTestClass
     }
 
     [Fact]
+    public void Hover_WithMovement_ResetsDelay()
+    {
+        Button button = new Button();
+        button.AddToRoot();
+        button.ToolTip = "hello";
+
+        Mock<ICursor> cursor = SetupCursor();
+        cursor.Setup(x => x.VisualOver).Returns(button.Visual);
+        cursor.Setup(x => x.XChange).Returns(5);
+
+        TickTo(cursor, totalSeconds: 0.0);
+        TickTo(cursor, totalSeconds: 0.6);
+
+        FrameworkElement.PopupRoot.Children.Count.ShouldBe(0,
+            "because cursor movement should reset the stationary-hover timer");
+    }
+
+    [Fact]
     public void Leave_WhileOpen_RemovesVisualFromPopupRoot()
     {
         Button button = new Button();
