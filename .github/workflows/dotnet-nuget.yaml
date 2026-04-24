@@ -123,9 +123,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_FILE }} -p:IncludeAndroid=true
 
-    - name: Build solution
-      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore -p:IncludeAnalyzers=true -p:IncludeAndroid=true ${{ steps.ver.outputs.flag }}
-
     - name: Compute version override
       id: ver
       shell: pwsh
@@ -136,6 +133,9 @@ jobs:
         } else {
           echo "flag=" >> $env:GITHUB_OUTPUT
         }
+
+    - name: Build solution
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore -p:IncludeAnalyzers=true -p:IncludeAndroid=true ${{ steps.ver.outputs.flag }}
 
     # Vic says - why run tests? This seems redundant since we already run tests before merging into main
     # - name: Run tests
