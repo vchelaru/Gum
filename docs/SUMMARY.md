@@ -235,6 +235,7 @@
     * [Bottom-to-Top Stacking](code/controls/scrollviewer/bottom-to-top-stacking.md)
     * [Horizontal Scrolling](code/controls/scrollviewer/horizontal-scrolling.md)
     * [MakeSizedToChildren](code/controls/scrollviewer/makesizedtochildren.md)
+    * [Sticky Headers](code/controls/scrollviewer/sticky-headers.md)
     * [VerticalScrollBarValue](code/controls/scrollviewer/verticalscrollbarvalue.md)
     * [VerticalScrollBarVisibility](code/controls/scrollviewer/verticalscrollbarvisibility.md)
   * [StackPanel](code/controls/stackpanel.md)

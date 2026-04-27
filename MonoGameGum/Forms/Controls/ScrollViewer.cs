@@ -76,6 +76,12 @@ public class ScrollViewer :
     public const string VerticalScrollBarInstanceName = "VerticalScrollBarInstance";
     public const string HorizontalScrollBarInstanceName = "HorizontalScrollBarInstance";
 
+    /// <summary>
+    /// Name of the optional overlay container that hosts sticky-header visuals
+    /// in the underlying Visual.
+    /// </summary>
+    public const string StickyHeaderOverlayInstanceName = "StickyHeaderOverlayInstance";
+
     public const string ScrollViewerCategoryName = "ScrollViewerCategory";
     public const string ScrollBarVisibilityCategoryName = "ScrollBarVisibility";
 
@@ -117,6 +123,25 @@ public class ScrollViewer :
 
     protected GraphicalUiElement clipContainer;
     public GraphicalUiElement ClipContainer => clipContainer;
+
+    GraphicalUiElement? _stickyHeaderOverlay;
+    /// <summary>
+    /// The container that hosts sticky-header visuals. Lives as a sibling of
+    /// <see cref="InnerPanel"/> inside <see cref="ClipContainer"/>. Null if the
+    /// underlying visual does not provide a child named
+    /// <see cref="StickyHeaderOverlayInstanceName"/>; in that case sticky-header
+    /// registration is a no-op.
+    /// </summary>
+    public GraphicalUiElement? StickyHeaderOverlay => _stickyHeaderOverlay;
+
+    private sealed class StickyHeaderEntry
+    {
+        public GraphicalUiElement Header;
+        public GraphicalUiElement Placeholder;
+        public EventHandler HeaderSizeChangedHandler;
+    }
+
+    private readonly List<StickyHeaderEntry> _stickyHeaders = new();
 
     ScrollBarVisibility verticalScrollBarVisibility = ScrollBarVisibility.Auto;
     public ScrollBarVisibility VerticalScrollBarVisibility
@@ -435,6 +460,7 @@ public class ScrollViewer :
     {
         innerPanel = Visual.GetGraphicalUiElementByName("InnerPanelInstance");
         clipContainer = Visual.GetGraphicalUiElementByName("ClipContainerInstance");
+        _stickyHeaderOverlay = Visual.GetGraphicalUiElementByName(StickyHeaderOverlayInstanceName);
     }
 
     /// <inheritdoc/>
@@ -607,6 +633,8 @@ public class ScrollViewer :
         reactToInnerPanelPositionOrSizeChanged = true;
 
         ScrollChanged?.Invoke(this, EventArgs.Empty);
+
+        RecomputeStickyHeaders();
     }
 
     private void HandleHorizontalScrollBarValueChanged(object sender, EventArgs e)
@@ -634,6 +662,7 @@ public class ScrollViewer :
                 UpdateVerticalScrollBarValues();
             }
         }
+        RecomputeStickyHeaders();
     }
 
     private void HandleVisualSizeChanged(object sender, EventArgs args)
@@ -649,6 +678,7 @@ public class ScrollViewer :
                 UpdateVerticalScrollBarValues();
             }
         }
+        RecomputeStickyHeaders();
     }
 
     private void HandleVerticalScrollBarThumbSizeChanged(object sender, EventArgs args)
@@ -673,6 +703,187 @@ public class ScrollViewer :
         {
             UpdateVerticalScrollBarValues();
             UpdateHorizontalScrollBarValues();
+        }
+    }
+
+    #endregion
+
+    #region Sticky headers
+
+    /// <summary>
+    /// Registers a header visual to be pinned to the top of the viewport while
+    /// its corresponding placeholder is scrolled out of view. The header is
+    /// reparented into <see cref="StickyHeaderOverlay"/>; the placeholder must
+    /// already be a child of <see cref="InnerPanel"/> (or somewhere it will be
+    /// laid out by the scroll content). The placeholder's height is sized to
+    /// match the header and is kept in sync as the header resizes.
+    /// </summary>
+    /// <remarks>
+    /// If the underlying visual does not provide a sticky-header overlay
+    /// container, this method is a no-op.
+    /// </remarks>
+    public void RegisterStickyHeader(GraphicalUiElement header, GraphicalUiElement placeholder)
+    {
+        if (header == null)
+        {
+            throw new ArgumentNullException(nameof(header));
+        }
+        if (placeholder == null)
+        {
+            throw new ArgumentNullException(nameof(placeholder));
+        }
+        if (_stickyHeaderOverlay == null)
+        {
+            return;
+        }
+
+        // Reparent the header into the overlay. The header positions itself
+        // freely (Regular layout) so direct Y assignment is not clobbered by
+        // the inner panel's stack.
+        if (header.Parent != _stickyHeaderOverlay)
+        {
+            header.Parent = _stickyHeaderOverlay;
+        }
+
+        // Size the placeholder to occupy the slot the header would have had in
+        // the stack. We track height only; width follows the parent's stack.
+        placeholder.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        placeholder.Height = header.GetAbsoluteHeight();
+
+        StickyHeaderEntry entry = new()
+        {
+            Header = header,
+            Placeholder = placeholder,
+        };
+        entry.HeaderSizeChangedHandler = (_, _) =>
+        {
+            entry.Placeholder.Height = entry.Header.GetAbsoluteHeight();
+            RecomputeStickyHeaders();
+        };
+        header.SizeChanged += entry.HeaderSizeChangedHandler;
+
+        _stickyHeaders.Add(entry);
+        RecomputeStickyHeaders();
+    }
+
+    /// <inheritdoc cref="RegisterStickyHeader(GraphicalUiElement, GraphicalUiElement)"/>
+    public void RegisterStickyHeader(FrameworkElement header, FrameworkElement placeholder)
+    {
+        if (header == null)
+        {
+            throw new ArgumentNullException(nameof(header));
+        }
+        if (placeholder == null)
+        {
+            throw new ArgumentNullException(nameof(placeholder));
+        }
+        RegisterStickyHeader(header.Visual, placeholder.Visual);
+    }
+
+    /// <inheritdoc cref="RegisterStickyHeader(GraphicalUiElement, GraphicalUiElement)"/>
+    public void RegisterStickyHeader(FrameworkElement header, GraphicalUiElement placeholder)
+    {
+        if (header == null)
+        {
+            throw new ArgumentNullException(nameof(header));
+        }
+        RegisterStickyHeader(header.Visual, placeholder);
+    }
+
+    /// <inheritdoc cref="RegisterStickyHeader(GraphicalUiElement, GraphicalUiElement)"/>
+    public void RegisterStickyHeader(GraphicalUiElement header, FrameworkElement placeholder)
+    {
+        if (placeholder == null)
+        {
+            throw new ArgumentNullException(nameof(placeholder));
+        }
+        RegisterStickyHeader(header, placeholder.Visual);
+    }
+
+    /// <summary>
+    /// Removes a previously-registered sticky header. The header and its
+    /// placeholder remain where they are; the caller is responsible for any
+    /// further teardown.
+    /// </summary>
+    public void UnregisterStickyHeader(GraphicalUiElement header)
+    {
+        if (header == null)
+        {
+            return;
+        }
+        for (int i = _stickyHeaders.Count - 1; i >= 0; i--)
+        {
+            StickyHeaderEntry entry = _stickyHeaders[i];
+            if (entry.Header == header)
+            {
+                entry.Header.SizeChanged -= entry.HeaderSizeChangedHandler;
+                _stickyHeaders.RemoveAt(i);
+            }
+        }
+        RecomputeStickyHeaders();
+    }
+
+    /// <inheritdoc cref="UnregisterStickyHeader(GraphicalUiElement)"/>
+    public void UnregisterStickyHeader(FrameworkElement header)
+    {
+        if (header == null)
+        {
+            return;
+        }
+        UnregisterStickyHeader(header.Visual);
+    }
+
+    /// <summary>
+    /// Removes all sticky-header registrations.
+    /// </summary>
+    public void ClearStickyHeaders()
+    {
+        for (int i = 0; i < _stickyHeaders.Count; i++)
+        {
+            StickyHeaderEntry entry = _stickyHeaders[i];
+            entry.Header.SizeChanged -= entry.HeaderSizeChangedHandler;
+        }
+        _stickyHeaders.Clear();
+    }
+
+    private void RecomputeStickyHeaders()
+    {
+        if (_stickyHeaderOverlay == null || _stickyHeaders.Count == 0)
+        {
+            return;
+        }
+
+        // Sort by placeholder absolute Y so the "next header" relationship
+        // matches what the user sees, regardless of registration order.
+        _stickyHeaders.Sort(static (a, b) =>
+            a.Placeholder.AbsoluteTop.CompareTo(b.Placeholder.AbsoluteTop));
+
+        float overlayTop = _stickyHeaderOverlay.AbsoluteTop;
+
+        for (int i = 0; i < _stickyHeaders.Count; i++)
+        {
+            StickyHeaderEntry entry = _stickyHeaders[i];
+
+            float naturalRelY = entry.Placeholder.AbsoluteTop - overlayTop;
+            // Pin against the top of the overlay (Y=0) once we've scrolled
+            // past the placeholder.
+            float headerY = Math.Max(naturalRelY, 0f);
+
+            // Bump: if the next header's placeholder is closing in on our
+            // bottom edge, slide off to make room.
+            if (i + 1 < _stickyHeaders.Count)
+            {
+                float nextRelY = _stickyHeaders[i + 1].Placeholder.AbsoluteTop - overlayTop;
+                float maxY = nextRelY - entry.Header.GetAbsoluteHeight();
+                if (headerY > maxY)
+                {
+                    headerY = maxY;
+                }
+            }
+
+            entry.Header.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            entry.Header.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+            entry.Header.Y = headerY;
         }
     }
 

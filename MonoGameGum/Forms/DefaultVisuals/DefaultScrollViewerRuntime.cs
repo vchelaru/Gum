@@ -124,6 +124,18 @@ public class DefaultScrollViewerRuntime : InteractiveGue
                             InnerPanel.HasEvents = false;
                             InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
                             ClipContainer.Children.Add(InnerPanel);
+
+                            // Overlay sibling for sticky headers. Added after the inner panel
+                            // so it renders on top, and inside the clip container so the
+                            // existing scissor clip applies.
+                            ContainerRuntime stickyHeaderOverlay = new ContainerRuntime();
+                            stickyHeaderOverlay.Name = "StickyHeaderOverlayInstance";
+                            stickyHeaderOverlay.Height = 0f;
+                            stickyHeaderOverlay.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                            stickyHeaderOverlay.Width = 0f;
+                            stickyHeaderOverlay.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                            stickyHeaderOverlay.HasEvents = false;
+                            ClipContainer.Children.Add(stickyHeaderOverlay);
                         }
                     }
                 }

@@ -241,6 +241,227 @@ public class ScrollViewerTests : BaseTestClass
 
     }
 
+    #region Sticky Headers
+
+    [Fact]
+    public void StickyHeaderOverlay_ShouldBeAvailable_ForDefaultVisual()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.StickyHeaderOverlay.ShouldNotBeNull();
+        scrollViewer.StickyHeaderOverlay!.Name.ShouldBe("StickyHeaderOverlayInstance");
+    }
+
+    [Fact]
+    public void ClearStickyHeaders_ShouldRemoveAllRegistrations()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime header1 = MakeStickyHeader(20);
+        ContainerRuntime placeholder1 = new();
+        scrollViewer.AddChild(placeholder1);
+
+        ContainerRuntime header2 = MakeStickyHeader(20);
+        ContainerRuntime placeholder2 = new();
+        scrollViewer.AddChild(placeholder2);
+
+        scrollViewer.RegisterStickyHeader(header1, placeholder1);
+        scrollViewer.RegisterStickyHeader(header2, placeholder2);
+
+        scrollViewer.ClearStickyHeaders();
+
+        // After clearing, header height changes should no longer touch placeholder
+        // (the size-changed handler was unsubscribed).
+        placeholder1.Height = 5;
+        header1.Height = 99;
+        placeholder1.Height.ShouldBe(5);
+    }
+
+    [Fact]
+    public void RegisterStickyHeader_FrameworkElementOverload_ShouldDelegateToVisualOverload()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        Button header = new();
+        header.Visual.Height = 25;
+        header.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+
+        Button placeholder = new();
+        scrollViewer.AddChild(placeholder);
+
+        scrollViewer.RegisterStickyHeader(header, placeholder);
+
+        header.Visual.Parent.ShouldBe(scrollViewer.StickyHeaderOverlay);
+        placeholder.Visual.Height.ShouldBe(25);
+    }
+
+    [Fact]
+    public void RegisterStickyHeader_ShouldBumpFirstHeader_WhenSecondHeaderApproachesTop()
+    {
+        const float headerHeight = 20f;
+        const float middleItemHeight = 100f;
+
+        ScrollViewer scrollViewer = BuildScrollViewerWithTwoSections(headerHeight, middleItemHeight,
+            out ContainerRuntime header1,
+            out ContainerRuntime placeholder1,
+            out ContainerRuntime header2,
+            out ContainerRuntime placeholder2);
+
+        // Scroll far enough that placeholder2's top is within headerHeight of the
+        // overlay top — header1 should slide up to make room.
+        // Placeholder2 natural offset from overlay = headerHeight + middleItemHeight = 120.
+        // After scrolling 110, placeholder2 sits at +10 from overlay top, so header1
+        // (height 20) must be at -10.
+        scrollViewer.VerticalScrollBarValue = 110;
+
+        float overlayTop = scrollViewer.StickyHeaderOverlay!.AbsoluteTop;
+        (header1.AbsoluteTop - overlayTop).ShouldBe(-10f, tolerance: 0.5f);
+        // header2 just reached the top
+        (header2.AbsoluteTop - overlayTop).ShouldBe(10f, tolerance: 0.5f);
+    }
+
+    [Fact]
+    public void RegisterStickyHeader_ShouldPinHeader_WhenScrolledPastNaturalPosition()
+    {
+        const float headerHeight = 20f;
+        const float middleItemHeight = 100f;
+
+        ScrollViewer scrollViewer = BuildScrollViewerWithTwoSections(headerHeight, middleItemHeight,
+            out ContainerRuntime header1,
+            out ContainerRuntime placeholder1,
+            out ContainerRuntime header2,
+            out ContainerRuntime placeholder2);
+
+        // Scroll past header1's natural position but well before header2 arrives.
+        scrollViewer.VerticalScrollBarValue = 50;
+
+        float overlayTop = scrollViewer.StickyHeaderOverlay!.AbsoluteTop;
+        (header1.AbsoluteTop - overlayTop).ShouldBe(0f, tolerance: 0.5f);
+    }
+
+    [Fact]
+    public void RegisterStickyHeader_ShouldReparentHeaderToOverlay()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime header = MakeStickyHeader(30);
+        ContainerRuntime placeholder = new();
+        scrollViewer.AddChild(placeholder);
+
+        scrollViewer.RegisterStickyHeader(header, placeholder);
+
+        header.Parent.ShouldBe(scrollViewer.StickyHeaderOverlay);
+        scrollViewer.StickyHeaderOverlay!.Children.ShouldContain(header);
+    }
+
+    [Fact]
+    public void RegisterStickyHeader_ShouldSizePlaceholderToHeader()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime header = MakeStickyHeader(33);
+        ContainerRuntime placeholder = new();
+        scrollViewer.AddChild(placeholder);
+
+        scrollViewer.RegisterStickyHeader(header, placeholder);
+
+        placeholder.HeightUnits.ShouldBe(global::Gum.DataTypes.DimensionUnitType.Absolute);
+        placeholder.Height.ShouldBe(33f);
+
+        // Resizing the header should keep the placeholder in sync.
+        header.Height = 77;
+        placeholder.Height.ShouldBe(77f);
+    }
+
+    [Fact]
+    public void UnregisterStickyHeader_ShouldStopSyncingPlaceholder()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime header = MakeStickyHeader(20);
+        ContainerRuntime placeholder = new();
+        scrollViewer.AddChild(placeholder);
+
+        scrollViewer.RegisterStickyHeader(header, placeholder);
+        scrollViewer.UnregisterStickyHeader(header);
+
+        // After unregistering, placeholder is no longer driven by header height.
+        placeholder.Height = 7;
+        header.Height = 99;
+        placeholder.Height.ShouldBe(7f);
+    }
+
+    private static ContainerRuntime MakeStickyHeader(float height)
+    {
+        ContainerRuntime header = new();
+        header.Width = 0;
+        header.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        header.Height = height;
+        header.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        return header;
+    }
+
+    private static ScrollViewer BuildScrollViewerWithTwoSections(
+        float headerHeight,
+        float middleItemHeight,
+        out ContainerRuntime header1,
+        out ContainerRuntime placeholder1,
+        out ContainerRuntime header2,
+        out ContainerRuntime placeholder2)
+    {
+        ScrollViewer scrollViewer = new();
+        // Hide scroll bars so they don't add layout margins that confuse the math.
+        scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        scrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        header1 = MakeStickyHeader(headerHeight);
+        placeholder1 = new ContainerRuntime();
+        placeholder1.Width = 0;
+        placeholder1.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        scrollViewer.AddChild(placeholder1);
+
+        ContainerRuntime middle = new();
+        middle.Width = 0;
+        middle.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        middle.Height = middleItemHeight;
+        middle.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        scrollViewer.AddChild(middle);
+
+        header2 = MakeStickyHeader(headerHeight);
+        placeholder2 = new ContainerRuntime();
+        placeholder2.Width = 0;
+        placeholder2.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        scrollViewer.AddChild(placeholder2);
+
+        ContainerRuntime tail = new();
+        tail.Width = 0;
+        tail.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        tail.Height = 200;
+        tail.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        scrollViewer.AddChild(tail);
+
+        scrollViewer.RegisterStickyHeader(header1, placeholder1);
+        scrollViewer.RegisterStickyHeader(header2, placeholder2);
+
+        // Force scroll bar maximum to be recomputed now that content is in place.
+        scrollViewer.UpdateVerticalScrollBarValues();
+
+        return scrollViewer;
+    }
+
+    #endregion
+
     #region Visual
     [Fact]
     public void Visual_HasEvents_ShouldBeTrue()
