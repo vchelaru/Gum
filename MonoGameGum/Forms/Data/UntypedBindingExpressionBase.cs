@@ -2,6 +2,10 @@
 using System.Diagnostics;
 using Gum.Wireframe;
 
+#if !FRB
+using Gum.Mvvm;
+#endif
+
 
 #if FRB
 using FlatRedBall.Forms.Controls;

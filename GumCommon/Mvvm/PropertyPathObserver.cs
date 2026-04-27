@@ -1,43 +1,66 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-[assembly: InternalsVisibleTo("MonoGameGum.Tests")]
-[assembly: InternalsVisibleTo("MonoGameGum.Tests.V2")]
 
 #if FRB
 namespace FlatRedBall.Forms.Data;
 #endif
 
 #if !FRB
-namespace Gum.Forms.Data;
+namespace Gum.Mvvm;
 #endif
 
 /// <summary>
 /// Watches a dotted-path (e.g. "Foo.Bar.Baz") on any INotifyPropertyChanged root
-/// and raises ValueChanged whenever the final value changes (or any segment in between changes).
+/// and raises <see cref="ValueChanged"/> whenever the final value changes (or any
+/// segment in between changes).
 /// </summary>
-internal class PropertyPathObserver : IDisposable
+public class PropertyPathObserver : IDisposable
 {
     private readonly PathSegment[] _segments;
     private readonly List<WeakListener> _listeners = new();
     private readonly List<WeakCollectionListener> _collectionListeners = new();
     private object? _currentRoot;
+
+    /// <summary>
+    /// The root object the observer is currently attached to, if any.
+    /// </summary>
     public object? CurrentRoot => _currentRoot;
+
+    /// <summary>
+    /// The resolved type of the value at the leaf of the path, if known.
+    /// </summary>
     public Type? LeafType { get; private set; }
+
+    /// <summary>
+    /// True when <see cref="LeafType"/> has been resolved (i.e. the path could be walked).
+    /// </summary>
     public bool HasResolution => LeafType is not null;
+
+    /// <summary>
+    /// The parsed path segments. Exposed for callers that need to walk the path
+    /// themselves (e.g. for two-way write-back).
+    /// </summary>
+    public PathSegment[] Segments => _segments;
 
     /// <summary> Raised whenever the value at the end of the path has changed. </summary>
     public event Action? ValueChanged;
 
+    /// <summary>
+    /// Creates an observer for the given dotted path. Call <see cref="Attach"/>
+    /// with a root object to start observing.
+    /// </summary>
     public PropertyPathObserver(string path)
     {
-        _segments = BinderHelpers.ParseSegments(path);
+        _segments = PathSegmentParser.ParseSegments(path);
     }
 
+    /// <summary>
+    /// Detaches all listeners and clears the current root.
+    /// </summary>
     public void Detach()
     {
         DetachAll();
@@ -50,6 +73,8 @@ internal class PropertyPathObserver : IDisposable
     /// </summary>
     public void Attach(object newRoot)
     {
+        ArgumentNullException.ThrowIfNull(newRoot);
+
         _currentRoot = newRoot;
         LeafType = newRoot.GetType();
 
@@ -59,7 +84,7 @@ internal class PropertyPathObserver : IDisposable
         {
             if (cursor is INotifyPropertyChanged inpc)
             {
-                var wl = new WeakListener(this, inpc, i);
+                WeakListener wl = new(this, inpc, i);
                 _listeners.Add(wl);
             }
             // move next
@@ -86,13 +111,46 @@ internal class PropertyPathObserver : IDisposable
             {
                 if (cursor is INotifyCollectionChanged incc)
                 {
-                    var cl = new WeakCollectionListener(this, incc);
+                    WeakCollectionListener cl = new(this, incc);
                     _collectionListeners.Add(cl);
                 }
 
                 cursor = GetIndexedValue(cursor, _segments[i].Index.Value);
             }
         }
+    }
+
+    /// <summary>
+    /// Walks the path on the current root and returns the leaf value, or null if any
+    /// intermediate is null. Returns null if no root is attached.
+    /// </summary>
+    public object? GetCurrentValue()
+    {
+        if (_currentRoot is null)
+        {
+            return null;
+        }
+        return WalkSegments(_currentRoot, _segments, _segments.Length);
+    }
+
+    /// <summary>
+    /// Walks the first <paramref name="count"/> segments starting from <paramref name="root"/>
+    /// and returns the resulting object, or null if any intermediate is null.
+    /// </summary>
+    public static object? WalkSegments(object? root, PathSegment[] segments, int count)
+    {
+        object? cursor = root;
+        for (int i = 0; i < count && cursor != null; i++)
+        {
+            PropertyInfo? pi = cursor.GetType().GetProperty(segments[i].Name);
+            cursor = pi?.GetValue(cursor);
+
+            if (segments[i].Index.HasValue && cursor != null)
+            {
+                cursor = GetIndexedValue(cursor, segments[i].Index.Value);
+            }
+        }
+        return cursor;
     }
 
     private void OnSegmentChanged(int level, string propName)
@@ -120,7 +178,7 @@ internal class PropertyPathObserver : IDisposable
         {
             if (cursor is INotifyPropertyChanged inpc)
             {
-                var wl = new WeakListener(this, inpc, next);
+                WeakListener wl = new(this, inpc, next);
                 _listeners.Add(wl);
             }
             PropertyInfo? pi = cursor?.GetType().GetProperty(_segments[next].Name);
@@ -140,7 +198,7 @@ internal class PropertyPathObserver : IDisposable
             {
                 if (cursor is INotifyCollectionChanged incc)
                 {
-                    var cl = new WeakCollectionListener(this, incc);
+                    WeakCollectionListener cl = new(this, incc);
                     _collectionListeners.Add(cl);
                 }
 
@@ -237,7 +295,7 @@ internal class PropertyPathObserver : IDisposable
 
     private void DetachAll()
     {
-        foreach (var wl in _listeners)
+        foreach (WeakListener wl in _listeners)
         {
             wl.Detach();
         }
@@ -248,13 +306,14 @@ internal class PropertyPathObserver : IDisposable
 
     private void DetachAllCollectionListeners()
     {
-        foreach (var cl in _collectionListeners)
+        foreach (WeakCollectionListener cl in _collectionListeners)
         {
             cl.Detach();
         }
         _collectionListeners.Clear();
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         DetachAll();
@@ -284,7 +343,7 @@ internal class PropertyPathObserver : IDisposable
 
         private void OnChanged(object? _, PropertyChangedEventArgs e)
         {
-            if (_weakObs.TryGetTarget(out var obs))
+            if (_weakObs.TryGetTarget(out PropertyPathObserver? obs))
             {
                 obs.OnSegmentChanged(_level, e.PropertyName!);
             }
@@ -326,7 +385,7 @@ internal class PropertyPathObserver : IDisposable
 
         private void OnCollectionChanged(object? _, NotifyCollectionChangedEventArgs e)
         {
-            if (_weakObs.TryGetTarget(out var obs))
+            if (_weakObs.TryGetTarget(out PropertyPathObserver? obs))
             {
                 obs.OnValueChanged();
             }

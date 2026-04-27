@@ -144,7 +144,7 @@ public class BindableGueTests
         gue.X.ShouldBe(42);
     }
 
-    [Fact(Skip = "For Vic K - we need to fix this!")]
+    [Fact]
     public async Task SetBinding_NestedProperties_ShouldUpdate()
     {
         BindableGueDerived sut = new();
