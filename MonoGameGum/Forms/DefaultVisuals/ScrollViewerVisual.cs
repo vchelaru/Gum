@@ -25,6 +25,12 @@ public class ScrollViewerVisual : InteractiveGue
     public GraphicalUiElement? HorizontalScrollBarInstance { get; private set; }
     public ContainerRuntime InnerPanelInstance { get; private set; }
     public ContainerRuntime ClipContainerInstance { get; private set; }
+
+    /// <summary>
+    /// Overlay container that hosts sticky headers; sibling of
+    /// <see cref="InnerPanelInstance"/> inside <see cref="ClipContainerInstance"/>.
+    /// </summary>
+    public ContainerRuntime StickyHeaderOverlayInstance { get; private set; }
     public ContainerRuntime ScrollAndClipContainer { get; private set; }
     public ContainerRuntime ClipContainerContainer { get; private set; }
     public NineSliceRuntime FocusedIndicator { get; private set; }
@@ -183,6 +189,18 @@ public class ScrollViewerVisual : InteractiveGue
                         InnerPanelInstance.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
                         InnerPanelInstance.HasEvents = false;
                         ClipContainerInstance.AddChild(InnerPanelInstance);
+
+                        // Overlay sibling for sticky headers. Added after InnerPanelInstance
+                        // so it renders on top, but inside ClipContainerInstance so the
+                        // existing scissor clip applies.
+                        StickyHeaderOverlayInstance = new ContainerRuntime();
+                        StickyHeaderOverlayInstance.Name = "StickyHeaderOverlayInstance";
+                        StickyHeaderOverlayInstance.Height = 0f;
+                        StickyHeaderOverlayInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                        StickyHeaderOverlayInstance.Width = 0f;
+                        StickyHeaderOverlayInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                        StickyHeaderOverlayInstance.HasEvents = false;
+                        ClipContainerInstance.AddChild(StickyHeaderOverlayInstance);
                     }
                 }
 

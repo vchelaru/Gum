@@ -52,6 +52,13 @@ public class ScrollViewerVisual : InteractiveGue
     public ContainerRuntime ClipContainerInstance { get; private set; }
 
     /// <summary>
+    /// Overlay container hosting sticky headers. A sibling of <see cref="InnerPanelInstance"/>
+    /// inside <see cref="ClipContainerInstance"/>; populated by
+    /// <see cref="ScrollViewer.RegisterStickyHeader(GraphicalUiElement, GraphicalUiElement)"/>.
+    /// </summary>
+    public ContainerRuntime StickyHeaderOverlayInstance { get; private set; }
+
+    /// <summary>
     /// The container that holds the scroll bars and the clipped content area.
     /// </summary>
     public ContainerRuntime ScrollAndClipContainer { get; private set; }
@@ -251,6 +258,18 @@ public class ScrollViewerVisual : InteractiveGue
                         InnerPanelInstance.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
                         InnerPanelInstance.HasEvents = false;
                         ClipContainerInstance.AddChild(InnerPanelInstance);
+
+                        // Overlay sibling for sticky headers. Added after InnerPanelInstance
+                        // so it renders on top, but inside ClipContainerInstance so the
+                        // existing scissor clip applies.
+                        StickyHeaderOverlayInstance = new ContainerRuntime();
+                        StickyHeaderOverlayInstance.Name = "StickyHeaderOverlayInstance";
+                        StickyHeaderOverlayInstance.Height = 0f;
+                        StickyHeaderOverlayInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                        StickyHeaderOverlayInstance.Width = 0f;
+                        StickyHeaderOverlayInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                        StickyHeaderOverlayInstance.HasEvents = false;
+                        ClipContainerInstance.AddChild(StickyHeaderOverlayInstance);
                     }
                 }
 
