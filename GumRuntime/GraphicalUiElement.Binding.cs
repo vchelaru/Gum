@@ -1,3 +1,4 @@
+using Gum.Mvvm;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -18,21 +19,55 @@ public class BindingContextChangedEventArgs : EventArgs
 
 public partial class GraphicalUiElement
 {
-    struct VmToUiProperty
+    class VmToUiProperty
     {
-        public string VmProperty;
-        public string UiProperty;
+        public string VmProperty = string.Empty;
+        public string UiProperty = string.Empty;
 
-        public Delegate Delegate;
+        public Delegate? Delegate;
 
         public string? ToStringFormat;
+
+        /// <summary>
+        /// For property bindings whose <see cref="VmProperty"/> path contains a '.',
+        /// an observer that watches the dotted path on the active BindingContext and
+        /// raises ValueChanged whenever the leaf value changes.
+        /// </summary>
+        public PropertyPathObserver? PathObserver;
+
+        /// <summary>
+        /// Named handler subscribed to <see cref="PathObserver"/>'s ValueChanged event.
+        /// Stored so we can reliably unsubscribe when the binding is replaced or removed
+        /// (anonymous lambdas captured at subscription time can't be unsubscribed).
+        /// </summary>
+        public Action? PathObserverValueChangedHandler;
+
+        // Treat any path containing '.' (multi-segment) or '[' (indexed segment) as a
+        // dotted path. Both require the PropertyPathObserver walk; only a bare property
+        // name takes the flat-binding fast path.
+        public bool IsDottedPath => VmProperty.Contains('.') || VmProperty.Contains('[');
+
+        /// <summary>
+        /// Detaches the dotted-path observer (if any) and unsubscribes the stored
+        /// ValueChanged handler. Safe to call when no observer is attached.
+        /// </summary>
+        public void Detach()
+        {
+            if (PathObserver != null)
+            {
+                if (PathObserverValueChangedHandler != null)
+                {
+                    PathObserver.ValueChanged -= PathObserverValueChangedHandler;
+                }
+                PathObserver.Detach();
+            }
+            PathObserverValueChangedHandler = null;
+        }
 
         public override string ToString()
         {
             return $"VM:{VmProperty} UI{UiProperty}";
         }
-
-        public static VmToUiProperty Unassigned => new VmToUiProperty();
     }
 
     partial void OnConstructor()
@@ -141,7 +176,11 @@ public partial class GraphicalUiElement
         {
             UnsubscribeEventsOnOldViewModel(oldViewModel);
         }
-        if (vmPropsToUiProps.Count > 0 && newContext is INotifyPropertyChanged viewModel)
+
+        // Re-attach all dotted-path observers to the new context.
+        DetachAllPathObservers();
+
+        if (HasFlatPropertyBinding() && newContext is INotifyPropertyChanged viewModel)
         {
             TrySubscribeToViewModelChanges(viewModel);
         }
@@ -216,7 +255,74 @@ public partial class GraphicalUiElement
         {
             return;
         }
+        // Dotted-path bindings receive notifications via their PropertyPathObserver,
+        // not via this root-level handler.
         UpdateToVmProperty(e.PropertyName);
+    }
+
+    private bool HasFlatPropertyBinding()
+    {
+        // Only flat property bindings need a root-level INPC subscription.
+        // Dotted-path bindings manage their own subscriptions via PropertyPathObserver,
+        // and event bindings use a separate AddEventHandler / RemoveEventHandler path
+        // (see vmEventsToUiMethods).
+        foreach (var binding in vmPropsToUiProps.Values)
+        {
+            if (!binding.IsDottedPath)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Detects whether a dotted VM path resolves to an event on the leaf's parent
+    /// type. Detecting "is this an event" requires walking the path on a real
+    /// BindingContext (we have to know the type of the second-to-last segment
+    /// resolves to). When BindingContext is null we can't yet decide, so we defer
+    /// the check until <see cref="UpdateToVmProperty"/> runs after a context is
+    /// assigned. Returns true if the path was confirmed to target an event and
+    /// should throw.
+    /// </summary>
+    private bool IsDottedPathTargetingEvent(string vmProperty)
+    {
+        var context = BindingContext;
+        if (context == null)
+        {
+            return false;
+        }
+
+        PathSegment[] segments = PathSegmentParser.ParseSegments(vmProperty);
+        object? parent = PropertyPathObserver.WalkSegments(context, segments, segments.Length - 1);
+        if (parent == null)
+        {
+            return false;
+        }
+
+        var leafName = segments[segments.Length - 1].Name;
+        return parent.GetType().GetEvent(leafName) != null;
+    }
+
+    private void ThrowIfDottedPathTargetsEvent(string vmProperty)
+    {
+        if (IsDottedPathTargetingEvent(vmProperty))
+        {
+            throw new NotSupportedException(
+                $"Dotted binding paths are not supported for event bindings. Got '{vmProperty}'.");
+        }
+    }
+
+    private void DetachAllPathObservers()
+    {
+        // Detach observers from their current roots without unsubscribing the
+        // ValueChanged handler — observers will be re-attached to the new
+        // BindingContext shortly. Full handler unsubscription happens only when
+        // a binding is overwritten or cleared (see VmToUiProperty.Detach).
+        foreach (var binding in vmPropsToUiProps.Values)
+        {
+            binding.PathObserver?.Detach();
+        }
     }
 
     public void SetBinding(string uiProperty, string vmProperty, string? toStringFormat = null)
@@ -231,8 +337,9 @@ public partial class GraphicalUiElement
         }
         else
         {
-            if (vmPropsToUiProps.ContainsKey(vmProperty))
+            if (vmPropsToUiProps.TryGetValue(vmProperty, out var existingByVm))
             {
+                existingByVm.Detach();
                 vmPropsToUiProps.Remove(vmProperty);
             }
             // This prevents single UI properties from being bound to multiple VM properties
@@ -242,6 +349,7 @@ public partial class GraphicalUiElement
 
                 foreach (var kvp in toRemove)
                 {
+                    kvp.Value.Detach();
                     vmPropsToUiProps.Remove(kvp.Key);
                 }
             }
@@ -251,14 +359,31 @@ public partial class GraphicalUiElement
             newBinding.VmProperty = vmProperty;
             newBinding.ToStringFormat = toStringFormat;
 
+            if (newBinding.IsDottedPath)
+            {
+                // Eagerly detect dotted-event-target if BindingContext is already set.
+                // If BindingContext is null, the check is deferred to UpdateToVmProperty
+                // (which runs once a context becomes available). Either way, dotted-path
+                // event bindings are never permitted.
+                ThrowIfDottedPathTargetsEvent(vmProperty);
+                PropertyPathObserver observer = new(vmProperty);
+                newBinding.PathObserver = observer;
+                Action handler = () => ApplyVmValueToUi(newBinding, observer.GetCurrentValue());
+                newBinding.PathObserverValueChangedHandler = handler;
+                observer.ValueChanged += handler;
+            }
+
             vmPropsToUiProps.Add(vmProperty, newBinding);
 
             if (BindingContext != null)
             {
                 UpdateToVmProperty(vmProperty);
 
-                // Do the if check here before an "is" check for faster early out
-                if (_isSubscribedToViewModelPropertyChanged == false && BindingContext is INotifyPropertyChanged notifyPropertyChanged)
+                // Flat-path bindings need a root-level INPC subscription. Dotted-path
+                // bindings manage their own subscriptions via PropertyPathObserver.
+                if (!newBinding.IsDottedPath
+                    && _isSubscribedToViewModelPropertyChanged == false
+                    && BindingContext is INotifyPropertyChanged notifyPropertyChanged)
                 {
                     TrySubscribeToViewModelChanges(notifyPropertyChanged);
                 }
@@ -275,9 +400,41 @@ public partial class GraphicalUiElement
 
         if (isBoundToVmProperty)
         {
-
             var bindingContextObjectToUse = BindingContextBinding == vmPropertyName ?
                 BindingContextBindingPropertyOwner : BindingContext;
+
+            // Dotted-path property binding: walk the path through PropertyPathObserver.
+            if (BindingContextBinding != vmPropertyName
+                && vmPropsToUiProps.TryGetValue(vmPropertyName, out var maybeDotted)
+                && maybeDotted.IsDottedPath)
+            {
+                if (bindingContextObjectToUse != null && maybeDotted.PathObserver is { } observer)
+                {
+                    // Deferred event-target check: when SetBinding ran without a
+                    // BindingContext, we couldn't walk the path to confirm the leaf
+                    // was an event. Now that we have a context, validate before
+                    // attaching the observer.
+                    PathSegment[] segs = observer.Segments;
+                    object? leafParent = PropertyPathObserver.WalkSegments(
+                        bindingContextObjectToUse, segs, segs.Length - 1);
+                    if (leafParent != null
+                        && leafParent.GetType().GetEvent(segs[segs.Length - 1].Name) != null)
+                    {
+                        throw new NotSupportedException(
+                            $"Dotted binding paths are not supported for event bindings. Got '{vmPropertyName}'.");
+                    }
+
+                    if (!ReferenceEquals(observer.CurrentRoot, bindingContextObjectToUse))
+                    {
+                        observer.Detach();
+                        observer.Attach(bindingContextObjectToUse);
+                    }
+                    ApplyVmValueToUi(maybeDotted, observer.GetCurrentValue());
+                    updated = true;
+                }
+                TryPushBindingContextChangeToChildren(vmPropertyName);
+                return updated;
+            }
 
             var bindingContextObjectType = bindingContextObjectToUse?.GetType();
 
@@ -313,35 +470,7 @@ public partial class GraphicalUiElement
                 else
                 {
                     var binding = vmPropsToUiProps[vmPropertyName];
-
-                    var thisType = this.GetType();
-
-                    PropertyInfo? uiProperty = thisType.GetProperty(binding.UiProperty);
-
-                    if (uiProperty == null)
-                    {
-                        var message = $"The type {thisType} does not have a property {binding.UiProperty}. If this property exists, make sure that it's not private.";
-                        throw new Exception(message);
-                    }
-
-                    var convertedValue = ConvertValue(vmValue, uiProperty.PropertyType, binding.ToStringFormat);
-
-                    try
-                    {
-                        uiProperty.SetValue(this, convertedValue, null);
-                    }
-                    catch
-                    {
-#if FULL_DIAGNOSTICS
-                        if (convertedValue != null && uiProperty.PropertyType != convertedValue.GetType())
-                        {
-                            throw new InvalidCastException(
-                                $"Error applying binding: The bound property {convertedValue.GetType()} {vmPropertyName} with value {convertedValue} " +
-                                $"could not be converted to {uiProperty.PropertyType} which is the type of {binding.UiProperty}");
-                        }
-#endif
-                        throw;
-                    }
+                    ApplyVmValueToUi(binding, vmValue);
                 }
                 updated = true;
             }
@@ -352,9 +481,47 @@ public partial class GraphicalUiElement
         return updated;
     }
 
+    private void ApplyVmValueToUi(VmToUiProperty binding, object? vmValue)
+    {
+        var thisType = this.GetType();
+
+        PropertyInfo? uiProperty = thisType.GetProperty(binding.UiProperty);
+
+        if (uiProperty == null)
+        {
+            var message = $"The type {thisType} does not have a property {binding.UiProperty}. If this property exists, make sure that it's not private.";
+            throw new Exception(message);
+        }
+
+        var convertedValue = ConvertValue(vmValue, uiProperty.PropertyType, binding.ToStringFormat);
+
+        try
+        {
+            uiProperty.SetValue(this, convertedValue, null);
+        }
+        catch
+        {
+#if FULL_DIAGNOSTICS
+            if (convertedValue != null && uiProperty.PropertyType != convertedValue.GetType())
+            {
+                throw new InvalidCastException(
+                    $"Error applying binding: The bound property {convertedValue.GetType()} {binding.VmProperty} with value {convertedValue} " +
+                    $"could not be converted to {uiProperty.PropertyType} which is the type of {binding.UiProperty}");
+            }
+#endif
+            throw;
+        }
+    }
+
     private void BindEvent(string vmPropertyName, object? bindingContextObjectToUse, EventInfo foundEvent)
     {
         var binding = vmPropsToUiProps[vmPropertyName];
+
+        if (binding.IsDottedPath)
+        {
+            throw new NotSupportedException(
+                $"Dotted binding paths are not supported for event bindings. Got '{vmPropertyName}' for UI member '{binding.UiProperty}'.");
+        }
 
         var isAlreadyBound = vmEventsToUiMethods.ContainsKey(vmPropertyName);
 
@@ -387,15 +554,71 @@ public partial class GraphicalUiElement
             return;
         }
 
-        var kvp = vmPropsToUiProps.FirstOrDefault(item => item.Value.UiProperty == uiPropertyName);
-
-        if (
-            kvp.Value.UiProperty == uiPropertyName &&
-            BindingContext?.GetType().GetProperty(kvp.Value.VmProperty) is { } vmp &&
-            GetType().GetProperty(kvp.Value.UiProperty) is { } uip)
+        VmToUiProperty? matched = null;
+        foreach (var binding in vmPropsToUiProps.Values)
         {
+            if (binding.UiProperty == uiPropertyName)
+            {
+                matched = binding;
+                break;
+            }
+        }
+
+        if (matched == null || BindingContext == null)
+        {
+            return;
+        }
+
+        PropertyInfo? uip = GetType().GetProperty(matched.UiProperty);
+        if (uip == null)
+        {
+            return;
+        }
+
+        if (matched.IsDottedPath)
+        {
+            PathSegment[] segments = matched.PathObserver?.Segments
+                ?? PathSegmentParser.ParseSegments(matched.VmProperty);
+
+            // TODO: indexed leaf write-back (e.g. "Items[0].Name" or "Items[0]") is a
+            // documented non-goal — short-circuit silently rather than attempt a
+            // PropertyInfo.SetValue against an indexed leaf.
+            if (segments[segments.Length - 1].Index.HasValue)
+            {
+                return;
+            }
+
+            object? parent = PropertyPathObserver.WalkSegments(BindingContext, segments, segments.Length - 1);
+            if (parent == null)
+            {
+                // Intermediate is null — silently no-op.
+                return;
+            }
+
+            // NOTE: If any intermediate along the path is a value type (struct), the
+            // walk above produces a boxed copy. Writing through `leafProperty.SetValue`
+            // mutates that copy rather than the original storage location. This is the
+            // same limitation as standard reflection-based property setters; correcting
+            // it would require generating per-path setter delegates that re-assign each
+            // boxed segment back into its parent. For now, two-way binding through
+            // struct intermediates is unsupported.
+            string leafName = segments[segments.Length - 1].Name;
+            PropertyInfo? leafProperty = parent.GetType().GetProperty(leafName);
+            if (leafProperty == null)
+            {
+                return;
+            }
+
             object? uiValue = uip.GetValue(this, null);
-            vmp.SetValue(BindingContext, uiValue, null);
+            leafProperty.SetValue(parent, uiValue, null);
+        }
+        else
+        {
+            if (BindingContext.GetType().GetProperty(matched.VmProperty) is { } vmp)
+            {
+                object? uiValue = uip.GetValue(this, null);
+                vmp.SetValue(BindingContext, uiValue, null);
+            }
         }
     }
 

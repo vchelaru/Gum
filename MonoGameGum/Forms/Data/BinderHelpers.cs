@@ -4,33 +4,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+
+#if !FRB
+using Gum.Mvvm;
+#endif
 
 #if FRB
 using FlatRedBall.Forms.Controls;
-namespace FlatRedBall.Forms.Data;
 #endif
 
 #if !FRB
 using Gum.Forms.Controls;
-namespace Gum.Forms.Data;
-
 #endif
 
-/// <summary>
-/// Represents a single segment of a binding path, consisting of a property/field name
-/// and an optional integer index (e.g. "Items[0]" has Name="Items", Index=0).
-/// </summary>
-internal readonly struct PathSegment
-{
-    public string Name { get; }
-    public int? Index { get; }
+[assembly: InternalsVisibleTo("MonoGameGum.Tests")]
+[assembly: InternalsVisibleTo("MonoGameGum.Tests.V2")]
 
-    public PathSegment(string name, int? index = null)
-    {
-        Name = name;
-        Index = index;
-    }
-}
+#if FRB
+namespace FlatRedBall.Forms.Data;
+#endif
+
+#if !FRB
+namespace Gum.Forms.Data;
+#endif
 
 internal static class BinderHelpers
 {
@@ -38,36 +35,7 @@ internal static class BinderHelpers
     /// Parses a binding path string into an array of <see cref="PathSegment"/> values.
     /// Supports dotted property access and integer indexers (e.g. "Items[0].Text").
     /// </summary>
-    public static PathSegment[] ParseSegments(string path)
-    {
-        string[] dotParts = path.Split('.');
-        PathSegment[] result = new PathSegment[dotParts.Length];
-
-        for (int i = 0; i < dotParts.Length; i++)
-        {
-            string part = dotParts[i];
-            int bracketStart = part.IndexOf('[');
-            if (bracketStart >= 0)
-            {
-                int bracketEnd = part.IndexOf(']', bracketStart);
-                if (bracketEnd < 0)
-                {
-                    throw new FormatException($"Missing closing bracket in path segment '{part}'.");
-                }
-
-                string name = part.Substring(0, bracketStart);
-                string indexStr = part.Substring(bracketStart + 1, bracketEnd - bracketStart - 1);
-                int index = int.Parse(indexStr);
-                result[i] = new PathSegment(name, index);
-            }
-            else
-            {
-                result[i] = new PathSegment(part);
-            }
-        }
-
-        return result;
-    }
+    public static PathSegment[] ParseSegments(string path) => PathSegmentParser.ParseSegments(path);
 
     public static bool CanWritePath(Type targetType, string path)
     {
