@@ -54,7 +54,7 @@ public class ScrollViewerVisual : InteractiveGue
     /// <summary>
     /// Overlay container hosting sticky headers. A sibling of <see cref="InnerPanelInstance"/>
     /// inside <see cref="ClipContainerInstance"/>; populated by
-    /// <see cref="ScrollViewer.RegisterStickyHeader(GraphicalUiElement, GraphicalUiElement)"/>.
+    /// <see cref="ScrollViewer.RegisterStickyHeader(GraphicalUiElement)"/>.
     /// </summary>
     public ContainerRuntime StickyHeaderOverlayInstance { get; private set; }
 

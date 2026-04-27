@@ -6,17 +6,22 @@ A sticky header is a header item inside a `ScrollViewer` that scrolls with the c
 
 Sticky headers are supported directly on `ScrollViewer`, which means they also work for any control that derives from `ScrollViewer`, including `ItemsControl` and `ListBox`.
 
-## How It Works
+## Registering a Sticky Header
 
-Each sticky header you register lives in a special overlay container that is a sibling of the inner panel. A separate **placeholder** visual stays in the normal scrollable content where the header would otherwise have been; the placeholder reserves the vertical space so the surrounding items do not shift. As the user scrolls, the `ScrollViewer` recomputes each header's position based on its placeholder's location and pins or bumps the header as needed.
+To make a child a sticky header, add it to the `ScrollViewer` as you normally would, then call `RegisterStickyHeader`:
 
-You are responsible for adding both the header and its placeholder to the layout, then calling `RegisterStickyHeader` to wire them together.
+```csharp
+scrollViewer.AddChild(header);
+scrollViewer.RegisterStickyHeader(header);
+```
+
+The `ScrollViewer` takes care of the rest. Internally it pulls the header out of the scrollable stack into an overlay layer, drops in a same-height placeholder so the surrounding items don't shift, and tracks scroll position to pin or bump the header as needed. If the header's height changes later (because its text or contents change), the placeholder is updated automatically — you don't need to re-register.
+
+`RegisterStickyHeader` accepts both Forms controls (`FrameworkElement`) and raw visuals (`GraphicalUiElement`). The header must already be a child of the `ScrollViewer` before you register it; otherwise an `ArgumentException` is thrown.
 
 ## Code Example - Sectioned List with Sticky Headers
 
-The following code creates a `ScrollViewer` containing three sections. Each section has a colored header and several rows. As the user scrolls, the headers pin to the top of the viewport in turn.
-
-The header and placeholder are both `Panel` instances (Forms controls), and the header's background is a `ColoredRectangleRuntime`. `RegisterStickyHeader` accepts either Forms controls or raw visuals, and you can mix them — see the next section.
+The following code creates a `ScrollViewer` containing three sections. Each section's header is a `Panel` (a Forms control) with a colored background and a `Label`. As the user scrolls, the headers pin to the top of the viewport in turn.
 
 ```csharp
 //initialize
@@ -31,9 +36,8 @@ string[] sectionNames = { "Vegetables", "Fruits", "Grains" };
 
 foreach (var name in sectionNames)
 {
-    // 1. The header that will be pinned at the top. Panels default to
-    //    sizing to their children, so dock it to fill horizontally and
-    //    set a fixed height.
+    // Build the header. Panels default to sizing to their children, so dock
+    // to fill horizontally and set a fixed height.
     var header = new Panel();
     header.Dock(Gum.Wireframe.Dock.FillHorizontally);
     header.Height = 30;
@@ -49,19 +53,12 @@ foreach (var name in sectionNames)
     headerLabel.X = 8;
     header.AddChild(headerLabel);
 
-    // 2. The placeholder. Add it to the scroll viewer's stack where the
-    //    header would normally have lived. Its height will be set
-    //    automatically by RegisterStickyHeader to match the header.
-    var placeholder = new Panel();
-    placeholder.Dock(Gum.Wireframe.Dock.FillHorizontally);
-    scrollViewer.AddChild(placeholder);
+    // Add the header to the scroll viewer in its natural place in the stack,
+    // then mark it as sticky.
+    scrollViewer.AddChild(header);
+    scrollViewer.RegisterStickyHeader(header);
 
-    // 3. Register the pair. RegisterStickyHeader reparents the header
-    //    into the scroll viewer's overlay, sizes the placeholder to match,
-    //    and starts tracking scroll position.
-    scrollViewer.RegisterStickyHeader(header, placeholder);
-
-    // 4. Normal items follow the placeholder in the stack.
+    // Normal items follow.
     for (int i = 0; i < 8; i++)
     {
         var label = new Label();
@@ -73,36 +70,19 @@ foreach (var name in sectionNames)
 
 <figure><img src="../../../.gitbook/assets/sticky-headers.gif" alt=""><figcaption><p>Sticky headers pin to the top of the viewport as the user scrolls</p></figcaption></figure>
 
-## Mixing FrameworkElement and Visual Registrations
-
-`RegisterStickyHeader` has overloads for both Forms controls (`FrameworkElement`) and raw visuals (`GraphicalUiElement`), and you can mix them. For example, a `Button` can serve as a sticky header backed by a `Panel` placeholder:
-
-```csharp
-var headerButton = new Button();
-headerButton.Text = "Section Header";
-
-var placeholder = new Panel();
-placeholder.Dock(Gum.Wireframe.Dock.FillHorizontally);
-scrollViewer.AddChild(placeholder);
-
-scrollViewer.RegisterStickyHeader(headerButton, placeholder);
-```
-
 ## Unregistering and Clearing
 
-Use `UnregisterStickyHeader` to remove a single registration and `ClearStickyHeaders` to remove all of them. Unregistering does not destroy the header or placeholder visuals — it only stops the `ScrollViewer` from tracking them. If you also want the visuals removed from the screen, do that yourself afterwards.
+`UnregisterStickyHeader` removes a single registration; `ClearStickyHeaders` removes all of them. In both cases, each header is moved back to its placeholder's slot in the stack and the placeholder is destroyed — undoing exactly what `RegisterStickyHeader` did.
 
 ```csharp
-scrollViewer.UnregisterStickyHeader(headerButton);
+scrollViewer.UnregisterStickyHeader(header);
 scrollViewer.ClearStickyHeaders();
 ```
 
-## Resizing Headers
-
-If a header's height changes (for example, because its text is updated and the header is sized to its content), the placeholder is updated automatically and the pinned positions are recomputed. You do not need to re-register.
+If you want to remove the header from the screen entirely, call `scrollViewer.RemoveChild(header)` after unregistering.
 
 ## Notes and Limitations
 
-* Sticky headers are vertical only. There is currently no horizontal equivalent.
-* Headers are pinned in the order their placeholders appear in the layout, not the order they were registered, so registration order does not matter.
+* Sticky headers pin vertically. Horizontal scrolling is supported underneath them — when the user scrolls horizontally, the header stays locked to the top of the viewport rather than scrolling sideways with the content, which matches iOS-style behavior.
+* Headers are pinned in the order their placeholders appear in the stack, not the order they were registered, so registration order does not matter.
 * If the underlying Visual does not provide a `StickyHeaderOverlayInstance` container (for example, a fully custom Visual), `RegisterStickyHeader` becomes a no-op. Use the default `ScrollViewer` Visual or include a child container named `StickyHeaderOverlayInstance` inside `ClipContainerInstance` in your custom Visual.
