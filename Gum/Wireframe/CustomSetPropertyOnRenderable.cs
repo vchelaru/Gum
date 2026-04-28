@@ -51,14 +51,15 @@ public class CustomSetPropertyOnRenderable
 {
     public static ILocalizationService? LocalizationService { get; set; }
 
+#if !FRB
     /// <summary>
     /// Optional font service used for on-demand font creation. In the Gum tool this is
     /// assigned at startup; game runtimes can assign their own implementation.
     /// </summary>
-#if !FRB
     public static IRuntimeFontService? FontService { get; set; }
 #endif
 
+#if !RAYLIB
     /// <summary>
     /// Optional in-memory font creator. When set, font generation bypasses disk entirely —
     /// the creator produces a <see cref="BitmapFont"/> directly from raw pixel data and
@@ -66,6 +67,7 @@ public class CustomSetPropertyOnRenderable
     /// <see cref="FontService"/> path.
     /// </summary>
     public static IInMemoryFontCreator? InMemoryFontCreator { get; set; }
+#endif
 
     public static event Action<string>? PropertyAssignmentError;
 

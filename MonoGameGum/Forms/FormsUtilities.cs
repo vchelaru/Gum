@@ -173,6 +173,9 @@ public class FormsUtilities
             case DefaultVisualsVersion.V3:
                 TryAdd(typeof(Button), (_, c) => new DefaultVisuals.V3.ButtonVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(CheckBox), (_, c) => new DefaultVisuals.V3.CheckBoxVisual(tryCreateFormsObject: c));
+#if !FRB
+                TryAdd(typeof(Gum.Forms.Controls.Games.DialogBox), (_, c) => new DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));
+#endif
                 TryAdd(typeof(ComboBox), (_, c) => new DefaultVisuals.V3.ComboBoxVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ItemsControl), (_, c) => new DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(Label), (_, c) => new DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));

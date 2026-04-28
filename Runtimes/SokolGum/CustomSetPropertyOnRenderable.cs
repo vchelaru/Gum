@@ -56,7 +56,7 @@ public static class CustomSetPropertyOnRenderable
     {
         bool handled = renderable switch
         {
-            Text t      => TrySetOnText(t, element, propertyName, value),
+            Text t      => TrySetPropertyOnText(t, element, propertyName, value),
             Sprite s    => TrySetOnSprite(s, element, propertyName, value),
             NineSlice n => TrySetOnNineSlice(n, element, propertyName, value),
             _           => false,
@@ -166,7 +166,9 @@ public static class CustomSetPropertyOnRenderable
             layer.Add(renderable);
     }
 
-    private static bool TrySetOnText(Text text, GraphicalUiElement element, string propertyName, object value)
+    #region Text
+
+    private static bool TrySetPropertyOnText(Text text, GraphicalUiElement element, string propertyName, object value)
     {
         var textRuntime = element as TextRuntime;
 
@@ -272,6 +274,29 @@ public static class CustomSetPropertyOnRenderable
                 return false;
         }
     }
+
+    public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "alpha",
+        "red",
+        "blue",
+        "green",
+        "color",
+        "font",
+        "fontsize",
+        "outlinethickness",
+        "isitalic",
+        "isbold",
+        "usefontsmoothing",
+        "fontscale",
+        "lineheightmultiplier",
+        // Added Sept 30, 2025 to handle parsing custom blocks
+        "custom"
+
+    };
+
+
+    #endregion
 
     private static bool TrySetOnSprite(Sprite sprite, GraphicalUiElement element, string propertyName, object value)
     {

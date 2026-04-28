@@ -214,6 +214,7 @@
   * [Button](code/controls/button.md)
   * [CheckBox](code/controls/checkbox.md)
   * [ComboBox](code/controls/combobox.md)
+  * [DialogBox](code/controls/dialogbox.md)
   * [File Dialog (native)](code/controls/file-dialog-native.md)
   * [FrameworkElement](code/controls/frameworkelement/README.md)
     * [BindingContext](code/controls/frameworkelement/bindingcontext.md)

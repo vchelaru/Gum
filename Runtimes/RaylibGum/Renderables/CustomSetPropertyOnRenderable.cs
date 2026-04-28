@@ -53,18 +53,26 @@ public class CustomSetPropertyOnRenderable
 {
     public static ILocalizationService LocalizationService { get; set; }
 
-#if GUM
-    private static readonly FontManager _fontManager;
+#if !FRB
+    /// <summary>
+    /// Optional font service used for on-demand font creation. In the Gum tool this is
+    /// assigned at startup; game runtimes can assign their own implementation.
+    /// </summary>
+    public static IRuntimeFontService? FontService { get; set; }
+#endif
+
+#if !RAYLIB
+    /// <summary>
+    /// Optional in-memory font creator. When set, font generation bypasses disk entirely —
+    /// the creator produces a <see cref="BitmapFont"/> directly from raw pixel data and
+    /// .fnt metadata. If null or if creation fails, falls back to the disk-based
+    /// <see cref="FontService"/> path.
+    /// </summary>
+    public static IInMemoryFontCreator? InMemoryFontCreator { get; set; }
 #endif
 
     public static event Action<string>? PropertyAssignmentError;
 
-    static CustomSetPropertyOnRenderable()
-    {
-#if GUM
-        _fontManager = Builder.Get<FontManager>();
-#endif
-    }
 
     /// <summary>
     /// Additional logic to perform before falling back to reflection. 
@@ -328,6 +336,8 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
+    #region Text
+
     private static bool TrySetPropertyOnText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
@@ -482,6 +492,29 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
+    // For some reason this crashes on web when uploading to itch:
+    //public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+    // OrdinalIgnoreCase works fine:
+    public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "alpha",
+        "red",
+        "blue",
+        "green",
+        "color",
+        "font",
+        "fontsize",
+        "outlinethickness",
+        "isitalic",
+        "isbold",
+        "usefontsmoothing",
+        "fontscale",
+        "lineheightmultiplier",
+        // Added Sept 30, 2025 to handle parsing custom blocks
+        "custom"
+
+    };
+
     private static void UpdateToFontValues(Text asText, GraphicalUiElement graphicalUiElement)
     {
         var textRuntime = graphicalUiElement as TextRuntime;
@@ -533,6 +566,8 @@ public class CustomSetPropertyOnRenderable
         }
 
     }
+
+    #endregion
 
     public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string value)
     {

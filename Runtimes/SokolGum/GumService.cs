@@ -88,6 +88,25 @@ public sealed class GumService
         Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
     }
 
+    private Gum.Async.SingleThreadSynchronizationContext? _syncContext;
+
+    /// <summary>
+    /// The active single-threaded synchronization context, or <c>null</c> if
+    /// <see cref="UseSingleThreadedAsync"/> has not been called.
+    /// </summary>
+    public Gum.Async.SingleThreadSynchronizationContext? SynchronizationContext => _syncContext;
+
+    /// <summary>
+    /// Installs a <see cref="Gum.Async.SingleThreadSynchronizationContext"/> on the calling
+    /// thread so that <c>await</c> continuations resume on the game's primary thread.
+    /// Call once after <c>Initialize</c>. Subsequent calls are no-ops.
+    /// </summary>
+    public void UseSingleThreadedAsync()
+    {
+        if (_syncContext != null) return;
+        _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
+    }
+
     private SystemManagers? _systemManagers;
 
     public SystemManagers SystemManagers
@@ -283,6 +302,8 @@ public sealed class GumService
     {
         var difference = gameTime - GameTime;
         GameTime = gameTime;
+
+        _syncContext?.Update();
 
         FormsUtilities.Update(gameTime, Root);
 
