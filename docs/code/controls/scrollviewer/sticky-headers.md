@@ -70,6 +70,31 @@ foreach (var name in sectionNames)
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA31UwW7iQAz9FSvaA0goZeGyotpDAbWstKpW0G1XKj0MiSEWw0w1MykFxL_XMwkQsrQcSPCz_exnm130y97lq6jnTI6tKLekFjbqPUdsjJ_I4NyIFUYvrYgUORKSthj1ojdhwCZGS_lIuEYDP0HhGiYVU6N5PVVVn_gmTR_0WGt3AVJJpk2jeMQDVA7Nf05PlLqMmbrtdh0aIS0yx1inwJzhPp5fwGLiSKt77sEyuoNp3m53Oo-4QCdmEm3xu1Xab01Orma7M4JUaYM9J59rgyLJoOFFUJwZSJ0RNadqN1XAn6sr6OckU3AZQoYi5VLhj1AoLaQ4F7l04DRY2nK5_o39yECScYxB1QKrIdXJ8piNXeYkJbBKtNXKCSk3IFTK_A4EY--YMpEXIy6CfJEFczmjQB8m4OGyqCGTNM5GHkzxLZONKly1sKPs3fYl4C-vjJfdJx4KJx42r2jjIa1QWRbLw94U38yslrlDzlEvui-S5cLonFssyh9oyfqnY9ZbqIXEca4cJ6w1dAr7srVPgwILM4Yn126WEykc9mWO543yTg_8tBr1FM0LzfwWM5RlH-G9VnWwxQ_47iX1m3UB_cfQjy9rCH4net4adqhsYLln5f3CW3HAvMN-WEq43AgJr1IkYbGDp-O2WqclzFDBijXhCBCWYUqWm3Lf6hdfrezQ7ZnPGBdk-dwnIcsoOFb8j6z32qy4MHK4sjDneL0uKfkgoUHKAbE27Wt--GvtDlgnoHC4_eK7WfiXx3mYjfx0Kv4jqzP5VvwN7Pxs9qEU2BVsnT583xdoJfiyGPIwIO-yn6p9tP8AgXGfnocFAAA)
 
+## Terminating a Sticky Region
+
+By default, the last sticky header stays pinned all the way to the bottom of the scroll content. If you have non-section content below your last section (a footer, a "load more" button, an empty-state panel, etc.) and you want the sticky header to scroll off when that content arrives — instead of staying pinned over it — call `AddStickyHeaderTerminator` at the point in the build where the sticky region should end:
+
+```csharp
+scrollViewer.AddChild(header);
+scrollViewer.RegisterStickyHeader(header);
+scrollViewer.AddChild(item1);
+scrollViewer.AddChild(item2);
+
+scrollViewer.AddStickyHeaderTerminator();   // section ends here
+
+scrollViewer.AddChild(footer);              // optional: any non-section content
+```
+
+The terminator is an invisible, zero-height marker that gets added to the inner panel at the current position. When the user scrolls and the terminator reaches the top of the viewport, it bumps the previous sticky header off — and because the terminator itself never pins, no header is shown after it (until the next sticky header arrives, if any).
+
+`AddStickyHeaderTerminator` returns the marker visual. Pass it to `RemoveChild` if you later want to undo the termination — the previously-bumped header will then pin indefinitely again.
+
+```csharp
+var terminator = scrollViewer.AddStickyHeaderTerminator();
+// ...later...
+scrollViewer.RemoveChild(terminator);
+```
+
 ## Unregistering and Clearing
 
 `UnregisterStickyHeader` removes a single registration; `ClearStickyHeaders` removes all of them. In both cases, each header is moved back to its placeholder's slot in the stack and the placeholder is destroyed — undoing exactly what `RegisterStickyHeader` did.

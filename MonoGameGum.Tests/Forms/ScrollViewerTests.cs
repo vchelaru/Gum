@@ -545,6 +545,112 @@ public class ScrollViewerTests : BaseTestClass
         scrollViewer.StickyHeaderOverlay!.Children.ShouldNotContain(header);
     }
 
+    [Fact]
+    public void AddStickyHeaderTerminator_ShouldBumpPreviousHeader_WhenScrolledTo()
+    {
+        const float headerHeight = 20f;
+        const float itemHeight = 100f;
+
+        ScrollViewer scrollViewer = new();
+        scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        scrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime header = MakeStickyHeader(headerHeight);
+        scrollViewer.AddChild(header);
+
+        ContainerRuntime item = new();
+        item.Width = 0;
+        item.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        item.Height = itemHeight;
+        item.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        scrollViewer.AddChild(item);
+
+        scrollViewer.RegisterStickyHeader(header);
+        scrollViewer.AddStickyHeaderTerminator();
+
+        // Tail content so we can scroll the terminator up to the top.
+        ContainerRuntime tail = new();
+        tail.Width = 0;
+        tail.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        tail.Height = 200;
+        tail.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        scrollViewer.AddChild(tail);
+
+        scrollViewer.UpdateVerticalScrollBarValues();
+
+        // Terminator's natural Y from the overlay = headerHeight + itemHeight = 120.
+        // After scrolling 110, terminator sits at +10, so the header (20 tall)
+        // must be bumped to -10.
+        scrollViewer.VerticalScrollBarValue = 110;
+
+        float overlayTop = scrollViewer.StickyHeaderOverlay!.AbsoluteTop;
+        (header.AbsoluteTop - overlayTop).ShouldBe(-10f, tolerance: 0.5f);
+    }
+
+    [Fact]
+    public void AddStickyHeaderTerminator_ShouldAddInvisibleZeroHeightMarkerToInnerPanel()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        int beforeCount = scrollViewer.InnerPanel.Children.Count;
+        GraphicalUiElement? marker = scrollViewer.AddStickyHeaderTerminator();
+
+        marker.ShouldNotBeNull();
+        scrollViewer.InnerPanel.Children.Count.ShouldBe(beforeCount + 1);
+        scrollViewer.InnerPanel.Children[scrollViewer.InnerPanel.Children.Count - 1].ShouldBe(marker);
+        marker!.Height.ShouldBe(0f);
+    }
+
+    [Fact]
+    public void RemoveChild_OnTerminator_ShouldDropTerminatorRegistration()
+    {
+        const float headerHeight = 20f;
+        const float itemHeight = 100f;
+
+        ScrollViewer scrollViewer = new();
+        scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        scrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime header = MakeStickyHeader(headerHeight);
+        scrollViewer.AddChild(header);
+
+        ContainerRuntime item = new();
+        item.Width = 0;
+        item.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        item.Height = itemHeight;
+        item.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        scrollViewer.AddChild(item);
+
+        scrollViewer.RegisterStickyHeader(header);
+        GraphicalUiElement terminator = scrollViewer.AddStickyHeaderTerminator()!;
+
+        // Tail so we have somewhere to scroll.
+        ContainerRuntime tail = new();
+        tail.Width = 0;
+        tail.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        tail.Height = 200;
+        tail.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        scrollViewer.AddChild(tail);
+
+        scrollViewer.UpdateVerticalScrollBarValues();
+
+        // Remove the terminator. The header should now pin without ever being
+        // bumped, even when scrolled far past where the terminator used to be.
+        scrollViewer.RemoveChild(terminator);
+        scrollViewer.InnerPanel.Children.ShouldNotContain(terminator);
+
+        scrollViewer.VerticalScrollBarValue = 110;
+
+        float overlayTop = scrollViewer.StickyHeaderOverlay!.AbsoluteTop;
+        (header.AbsoluteTop - overlayTop).ShouldBe(0f, tolerance: 0.5f);
+    }
+
     private static ContainerRuntime MakeStickyHeader(float height)
     {
         ContainerRuntime header = new();
