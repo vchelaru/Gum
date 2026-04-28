@@ -137,9 +137,16 @@ public class ScrollViewer :
 
     private sealed class StickyHeaderEntry
     {
-        public GraphicalUiElement Header;
+        // For real sticky headers: Header is the user-supplied visual that
+        // gets pinned, Placeholder is the internally-created stack child that
+        // reserves space for it. For terminator entries, IsTerminator is true,
+        // Header is null, and Placeholder is the (zero-height, invisible)
+        // marker living in the stack — its top edge bumps the previous sticky
+        // header off when scrolled to.
+        public GraphicalUiElement? Header;
         public GraphicalUiElement Placeholder;
-        public EventHandler HeaderSizeChangedHandler;
+        public EventHandler? HeaderSizeChangedHandler;
+        public bool IsTerminator;
     }
 
     private readonly List<StickyHeaderEntry> _stickyHeaders = new();
@@ -579,7 +586,23 @@ public class ScrollViewer :
         {
             UnregisterStickyHeader(child);
         }
+        else
+        {
+            // If the visual is a registered terminator, drop the registration
+            // so the stack-side cleanup doesn't run against a stale entry.
+            // The visual is already a child of innerPanel, so the standard
+            // remove below will dispose it.
+            for (int i = _stickyHeaders.Count - 1; i >= 0; i--)
+            {
+                StickyHeaderEntry entry = _stickyHeaders[i];
+                if (entry.IsTerminator && entry.Placeholder == child)
+                {
+                    _stickyHeaders.RemoveAt(i);
+                }
+            }
+        }
         this.InnerPanel.Children.Remove(child);
+        RecomputeStickyHeaders();
     }
 
     private bool IsRegisteredStickyHeader(GraphicalUiElement visual)
@@ -865,9 +888,57 @@ public class ScrollViewer :
         }
     }
 
+    /// <summary>
+    /// Adds an invisible, zero-height marker at the current end of
+    /// <see cref="InnerPanel"/>'s children that ends the active sticky region.
+    /// The previous sticky header is bumped off the top when this terminator
+    /// scrolls up to it; nothing pins after the terminator (until the next
+    /// sticky header arrives, if any).
+    /// </summary>
+    /// <returns>
+    /// The marker visual. Pass it to <see cref="RemoveChild(GraphicalUiElement)"/>
+    /// to remove the terminator (the previously-bumped header will then pin
+    /// indefinitely, or until the next bumper).
+    /// </returns>
+    /// <remarks>
+    /// If the underlying visual does not provide a sticky-header overlay
+    /// container, this method is a no-op and returns null.
+    /// </remarks>
+    public GraphicalUiElement? AddStickyHeaderTerminator()
+    {
+        if (_stickyHeaderOverlay == null)
+        {
+            return null;
+        }
+
+        InteractiveGue marker = new(new InvisibleRenderable());
+        marker.Width = 0;
+        marker.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        marker.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        marker.Height = 0;
+        marker.HasEvents = false;
+        innerPanel.Children.Add(marker);
+
+        _stickyHeaders.Add(new StickyHeaderEntry
+        {
+            Placeholder = marker,
+            IsTerminator = true,
+        });
+        RecomputeStickyHeaders();
+        return marker;
+    }
+
     private void RestoreEntry(StickyHeaderEntry entry)
     {
-        entry.Header.SizeChanged -= entry.HeaderSizeChangedHandler;
+        if (entry.IsTerminator)
+        {
+            // Terminator: just remove the marker from the stack. There's no
+            // header to restore.
+            innerPanel.Children.Remove(entry.Placeholder);
+            return;
+        }
+
+        entry.Header!.SizeChanged -= entry.HeaderSizeChangedHandler;
 
         // Put the header back where its placeholder is, then drop the placeholder.
         int placeholderIndex = innerPanel.Children.IndexOf(entry.Placeholder);
@@ -893,7 +964,7 @@ public class ScrollViewer :
         }
 
         // Defensive cleanup: if anyone reached past the API and yanked a
-        // placeholder out of the inner panel, drop the stale registration
+        // placeholder/marker out of the inner panel, drop the stale entry
         // (and unsubscribe its handler) instead of computing positions
         // against a detached visual.
         for (int i = _stickyHeaders.Count - 1; i >= 0; i--)
@@ -901,7 +972,10 @@ public class ScrollViewer :
             StickyHeaderEntry entry = _stickyHeaders[i];
             if (entry.Placeholder.Parent != innerPanel)
             {
-                entry.Header.SizeChanged -= entry.HeaderSizeChangedHandler;
+                if (!entry.IsTerminator)
+                {
+                    entry.Header!.SizeChanged -= entry.HeaderSizeChangedHandler;
+                }
                 _stickyHeaders.RemoveAt(i);
             }
         }
@@ -910,8 +984,10 @@ public class ScrollViewer :
             return;
         }
 
-        // Sort by placeholder absolute Y so the "next header" relationship
+        // Sort by placeholder absolute Y so the "next entry" relationship
         // matches what the user sees, regardless of registration order.
+        // Terminators participate in the sort — they bump preceding headers
+        // when scrolled up to.
         _stickyHeaders.Sort(static (a, b) =>
             a.Placeholder.AbsoluteTop.CompareTo(b.Placeholder.AbsoluteTop));
 
@@ -920,25 +996,32 @@ public class ScrollViewer :
         for (int i = 0; i < _stickyHeaders.Count; i++)
         {
             StickyHeaderEntry entry = _stickyHeaders[i];
+            if (entry.IsTerminator)
+            {
+                // Terminators never pin and never get their Y rewritten —
+                // they're just stack children whose top participates in the
+                // bump math for the preceding header.
+                continue;
+            }
 
             float naturalRelY = entry.Placeholder.AbsoluteTop - overlayTop;
             // Pin against the top of the overlay (Y=0) once we've scrolled
             // past the placeholder.
             float headerY = Math.Max(naturalRelY, 0f);
 
-            // Bump: if the next header's placeholder is closing in on our
-            // bottom edge, slide off to make room.
+            // Bump: if the next entry (header or terminator) is closing in
+            // on our bottom edge, slide off to make room.
             if (i + 1 < _stickyHeaders.Count)
             {
                 float nextRelY = _stickyHeaders[i + 1].Placeholder.AbsoluteTop - overlayTop;
-                float maxY = nextRelY - entry.Header.GetAbsoluteHeight();
+                float maxY = nextRelY - entry.Header!.GetAbsoluteHeight();
                 if (headerY > maxY)
                 {
                     headerY = maxY;
                 }
             }
 
-            entry.Header.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            entry.Header!.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
             entry.Header.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
             entry.Header.Y = headerY;
         }
