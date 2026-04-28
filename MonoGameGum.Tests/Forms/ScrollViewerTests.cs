@@ -244,38 +244,25 @@ public class ScrollViewerTests : BaseTestClass
     #region Sticky Headers
 
     [Fact]
-    public void StickyHeaderOverlay_ShouldBeAvailable_ForDefaultVisual()
-    {
-        ScrollViewer scrollViewer = new();
-        scrollViewer.StickyHeaderOverlay.ShouldNotBeNull();
-        scrollViewer.StickyHeaderOverlay!.Name.ShouldBe("StickyHeaderOverlayInstance");
-    }
-
-    [Fact]
-    public void ClearStickyHeaders_ShouldRemoveAllRegistrations()
+    public void ClearStickyHeaders_ShouldRestoreAllHeaders()
     {
         ScrollViewer scrollViewer = new();
         scrollViewer.Visual.Width = 200;
         scrollViewer.Visual.Height = 200;
 
         ContainerRuntime header1 = MakeStickyHeader(20);
-        ContainerRuntime placeholder1 = new();
-        scrollViewer.AddChild(placeholder1);
-
+        scrollViewer.AddChild(header1);
         ContainerRuntime header2 = MakeStickyHeader(20);
-        ContainerRuntime placeholder2 = new();
-        scrollViewer.AddChild(placeholder2);
+        scrollViewer.AddChild(header2);
 
-        scrollViewer.RegisterStickyHeader(header1, placeholder1);
-        scrollViewer.RegisterStickyHeader(header2, placeholder2);
+        scrollViewer.RegisterStickyHeader(header1);
+        scrollViewer.RegisterStickyHeader(header2);
 
         scrollViewer.ClearStickyHeaders();
 
-        // After clearing, header height changes should no longer touch placeholder
-        // (the size-changed handler was unsubscribed).
-        placeholder1.Height = 5;
-        header1.Height = 99;
-        placeholder1.Height.ShouldBe(5);
+        header1.Parent.ShouldBe(scrollViewer.InnerPanel);
+        header2.Parent.ShouldBe(scrollViewer.InnerPanel);
+        scrollViewer.StickyHeaderOverlay!.Children.Count.ShouldBe(0);
     }
 
     [Fact]
@@ -288,14 +275,11 @@ public class ScrollViewerTests : BaseTestClass
         Button header = new();
         header.Visual.Height = 25;
         header.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        scrollViewer.AddChild(header);
 
-        Button placeholder = new();
-        scrollViewer.AddChild(placeholder);
-
-        scrollViewer.RegisterStickyHeader(header, placeholder);
+        scrollViewer.RegisterStickyHeader(header);
 
         header.Visual.Parent.ShouldBe(scrollViewer.StickyHeaderOverlay);
-        placeholder.Visual.Height.ShouldBe(25);
     }
 
     [Fact]
@@ -306,21 +290,43 @@ public class ScrollViewerTests : BaseTestClass
 
         ScrollViewer scrollViewer = BuildScrollViewerWithTwoSections(headerHeight, middleItemHeight,
             out ContainerRuntime header1,
-            out ContainerRuntime placeholder1,
-            out ContainerRuntime header2,
-            out ContainerRuntime placeholder2);
+            out ContainerRuntime header2);
 
-        // Scroll far enough that placeholder2's top is within headerHeight of the
-        // overlay top — header1 should slide up to make room.
-        // Placeholder2 natural offset from overlay = headerHeight + middleItemHeight = 120.
-        // After scrolling 110, placeholder2 sits at +10 from overlay top, so header1
-        // (height 20) must be at -10.
+        // Scroll until placeholder2 sits at +10 from overlay top; header1
+        // (height 20) must then be at -10 to make room.
         scrollViewer.VerticalScrollBarValue = 110;
 
         float overlayTop = scrollViewer.StickyHeaderOverlay!.AbsoluteTop;
         (header1.AbsoluteTop - overlayTop).ShouldBe(-10f, tolerance: 0.5f);
-        // header2 just reached the top
         (header2.AbsoluteTop - overlayTop).ShouldBe(10f, tolerance: 0.5f);
+    }
+
+    [Fact]
+    public void RegisterStickyHeader_ShouldInsertPlaceholderAtHeaderIndex()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime first = MakeStickyHeader(10);
+        scrollViewer.AddChild(first);
+        ContainerRuntime header = MakeStickyHeader(30);
+        scrollViewer.AddChild(header);
+        ContainerRuntime last = MakeStickyHeader(10);
+        scrollViewer.AddChild(last);
+
+        scrollViewer.RegisterStickyHeader(header);
+
+        // Header is now in the overlay; a placeholder should occupy index 1
+        // in the inner panel between `first` and `last`, and have the header's height.
+        scrollViewer.InnerPanel.Children.Count.ShouldBe(3);
+        scrollViewer.InnerPanel.Children[0].ShouldBe(first);
+        scrollViewer.InnerPanel.Children[2].ShouldBe(last);
+
+        GraphicalUiElement placeholder = (GraphicalUiElement)scrollViewer.InnerPanel.Children[1];
+        placeholder.ShouldNotBe(header);
+        placeholder.Height.ShouldBe(30f);
+        placeholder.HeightUnits.ShouldBe(global::Gum.DataTypes.DimensionUnitType.Absolute);
     }
 
     [Fact]
@@ -331,9 +337,7 @@ public class ScrollViewerTests : BaseTestClass
 
         ScrollViewer scrollViewer = BuildScrollViewerWithTwoSections(headerHeight, middleItemHeight,
             out ContainerRuntime header1,
-            out ContainerRuntime placeholder1,
-            out ContainerRuntime header2,
-            out ContainerRuntime placeholder2);
+            out ContainerRuntime header2);
 
         // Scroll past header1's natural position but well before header2 arrives.
         scrollViewer.VerticalScrollBarValue = 50;
@@ -350,54 +354,195 @@ public class ScrollViewerTests : BaseTestClass
         scrollViewer.Visual.Height = 200;
 
         ContainerRuntime header = MakeStickyHeader(30);
-        ContainerRuntime placeholder = new();
-        scrollViewer.AddChild(placeholder);
+        scrollViewer.AddChild(header);
 
-        scrollViewer.RegisterStickyHeader(header, placeholder);
+        scrollViewer.RegisterStickyHeader(header);
 
         header.Parent.ShouldBe(scrollViewer.StickyHeaderOverlay);
         scrollViewer.StickyHeaderOverlay!.Children.ShouldContain(header);
     }
 
     [Fact]
-    public void RegisterStickyHeader_ShouldSizePlaceholderToHeader()
+    public void RegisterStickyHeader_ShouldSyncPlaceholderHeight_WhenHeaderResizes()
     {
         ScrollViewer scrollViewer = new();
         scrollViewer.Visual.Width = 200;
         scrollViewer.Visual.Height = 200;
 
         ContainerRuntime header = MakeStickyHeader(33);
-        ContainerRuntime placeholder = new();
-        scrollViewer.AddChild(placeholder);
+        scrollViewer.AddChild(header);
 
-        scrollViewer.RegisterStickyHeader(header, placeholder);
+        scrollViewer.RegisterStickyHeader(header);
 
-        placeholder.HeightUnits.ShouldBe(global::Gum.DataTypes.DimensionUnitType.Absolute);
+        GraphicalUiElement placeholder = (GraphicalUiElement)scrollViewer.InnerPanel.Children[0];
         placeholder.Height.ShouldBe(33f);
 
-        // Resizing the header should keep the placeholder in sync.
         header.Height = 77;
         placeholder.Height.ShouldBe(77f);
     }
 
     [Fact]
-    public void UnregisterStickyHeader_ShouldStopSyncingPlaceholder()
+    public void RegisterStickyHeader_ShouldThrow_WhenHeaderIsNotChildOfInnerPanel()
+    {
+        ScrollViewer scrollViewer = new();
+        ContainerRuntime header = MakeStickyHeader(20);
+        // Note: header was NOT added to the scroll viewer.
+
+        Should.Throw<ArgumentException>(() => scrollViewer.RegisterStickyHeader(header));
+    }
+
+    [Fact]
+    public void RegisterStickyHeader_AfterUnregister_ShouldNotLeaveResidualPlaceholders()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime first = MakeStickyHeader(10);
+        scrollViewer.AddChild(first);
+        ContainerRuntime header = MakeStickyHeader(20);
+        scrollViewer.AddChild(header);
+        ContainerRuntime last = MakeStickyHeader(10);
+        scrollViewer.AddChild(last);
+
+        // Cycle through register / unregister several times. Each cycle should
+        // leave the inner panel with exactly the original three children and no
+        // leftover placeholders, and the overlay should only contain the header
+        // while registered.
+        for (int i = 0; i < 3; i++)
+        {
+            scrollViewer.RegisterStickyHeader(header);
+
+            scrollViewer.InnerPanel.Children.Count.ShouldBe(3);
+            scrollViewer.InnerPanel.Children[0].ShouldBe(first);
+            scrollViewer.InnerPanel.Children[2].ShouldBe(last);
+            scrollViewer.InnerPanel.Children[1].ShouldNotBe(header); // it's the placeholder
+            scrollViewer.StickyHeaderOverlay!.Children.Count.ShouldBe(1);
+            scrollViewer.StickyHeaderOverlay.Children[0].ShouldBe(header);
+
+            scrollViewer.UnregisterStickyHeader(header);
+
+            scrollViewer.InnerPanel.Children.Count.ShouldBe(3);
+            scrollViewer.InnerPanel.Children[0].ShouldBe(first);
+            scrollViewer.InnerPanel.Children[1].ShouldBe(header);
+            scrollViewer.InnerPanel.Children[2].ShouldBe(last);
+            scrollViewer.StickyHeaderOverlay!.Children.Count.ShouldBe(0);
+        }
+    }
+
+    [Fact]
+    public void RegisterStickyHeader_AfterReorderingBetweenUnregisterAndRegister_ShouldPinAtNewPosition()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime first = MakeStickyHeader(10);
+        scrollViewer.AddChild(first);
+        ContainerRuntime header = MakeStickyHeader(20);
+        scrollViewer.AddChild(header);
+        ContainerRuntime last = MakeStickyHeader(10);
+        scrollViewer.AddChild(last);
+
+        scrollViewer.RegisterStickyHeader(header);
+        scrollViewer.UnregisterStickyHeader(header);
+
+        // Move header from index 1 to index 0 in the inner panel.
+        scrollViewer.InnerPanel.Children.Remove(header);
+        scrollViewer.InnerPanel.Children.Insert(0, header);
+
+        scrollViewer.RegisterStickyHeader(header);
+
+        // Placeholder should now occupy index 0, and the original `first`
+        // child has shifted to index 1.
+        scrollViewer.InnerPanel.Children.Count.ShouldBe(3);
+        scrollViewer.InnerPanel.Children[0].ShouldNotBe(header); // placeholder at the new slot
+        scrollViewer.InnerPanel.Children[1].ShouldBe(first);
+        scrollViewer.InnerPanel.Children[2].ShouldBe(last);
+        scrollViewer.StickyHeaderOverlay!.Children.Count.ShouldBe(1);
+        scrollViewer.StickyHeaderOverlay.Children[0].ShouldBe(header);
+    }
+
+    [Fact]
+    public void RemoveChild_OnRegisteredStickyHeader_ShouldRemoveBothHeaderAndPlaceholder()
     {
         ScrollViewer scrollViewer = new();
         scrollViewer.Visual.Width = 200;
         scrollViewer.Visual.Height = 200;
 
         ContainerRuntime header = MakeStickyHeader(20);
-        ContainerRuntime placeholder = new();
-        scrollViewer.AddChild(placeholder);
+        scrollViewer.AddChild(header);
+        scrollViewer.RegisterStickyHeader(header);
 
-        scrollViewer.RegisterStickyHeader(header, placeholder);
+        // Sanity check: placeholder is in the inner panel, header is in the overlay.
+        scrollViewer.InnerPanel.Children.Count.ShouldBe(1);
+        scrollViewer.StickyHeaderOverlay!.Children.ShouldContain(header);
+
+        scrollViewer.RemoveChild(header);
+
+        // Both should be gone.
+        scrollViewer.InnerPanel.Children.Count.ShouldBe(0);
+        scrollViewer.StickyHeaderOverlay.Children.ShouldNotContain(header);
+    }
+
+    [Fact]
+    public void RecomputeStickyHeaders_ShouldDropStaleRegistration_WhenPlaceholderRemovedExternally()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime header = MakeStickyHeader(20);
+        scrollViewer.AddChild(header);
+        scrollViewer.RegisterStickyHeader(header);
+
+        // User reaches past the API and rips the placeholder out of the stack.
+        GraphicalUiElement placeholder = (GraphicalUiElement)scrollViewer.InnerPanel.Children[0];
+        scrollViewer.InnerPanel.Children.Remove(placeholder);
+
+        // Trigger a recompute via a visual size change. The defensive cleanup
+        // should drop the stale entry (and unsubscribe its SizeChanged handler)
+        // without throwing.
+        Should.NotThrow(() => scrollViewer.Visual.Height = 250);
+
+        // After the cleanup, resizing the header must not write back to the
+        // detached placeholder.
+        header.Height = 99;
+        placeholder.Height.ShouldBe(20f);
+    }
+
+    [Fact]
+    public void StickyHeaderOverlay_ShouldBeAvailable_ForDefaultVisual()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.StickyHeaderOverlay.ShouldNotBeNull();
+        scrollViewer.StickyHeaderOverlay!.Name.ShouldBe("StickyHeaderOverlayInstance");
+    }
+
+    [Fact]
+    public void UnregisterStickyHeader_ShouldRestoreHeaderToPlaceholderSlot()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime first = MakeStickyHeader(10);
+        scrollViewer.AddChild(first);
+        ContainerRuntime header = MakeStickyHeader(20);
+        scrollViewer.AddChild(header);
+        ContainerRuntime last = MakeStickyHeader(10);
+        scrollViewer.AddChild(last);
+
+        scrollViewer.RegisterStickyHeader(header);
         scrollViewer.UnregisterStickyHeader(header);
 
-        // After unregistering, placeholder is no longer driven by header height.
-        placeholder.Height = 7;
-        header.Height = 99;
-        placeholder.Height.ShouldBe(7f);
+        // The header is back in the inner panel at its original index, the
+        // placeholder is gone, and the overlay no longer contains the header.
+        scrollViewer.InnerPanel.Children.Count.ShouldBe(3);
+        scrollViewer.InnerPanel.Children[0].ShouldBe(first);
+        scrollViewer.InnerPanel.Children[1].ShouldBe(header);
+        scrollViewer.InnerPanel.Children[2].ShouldBe(last);
+        scrollViewer.StickyHeaderOverlay!.Children.ShouldNotContain(header);
     }
 
     private static ContainerRuntime MakeStickyHeader(float height)
@@ -414,9 +559,7 @@ public class ScrollViewerTests : BaseTestClass
         float headerHeight,
         float middleItemHeight,
         out ContainerRuntime header1,
-        out ContainerRuntime placeholder1,
-        out ContainerRuntime header2,
-        out ContainerRuntime placeholder2)
+        out ContainerRuntime header2)
     {
         ScrollViewer scrollViewer = new();
         // Hide scroll bars so they don't add layout margins that confuse the math.
@@ -426,10 +569,7 @@ public class ScrollViewerTests : BaseTestClass
         scrollViewer.Visual.Height = 200;
 
         header1 = MakeStickyHeader(headerHeight);
-        placeholder1 = new ContainerRuntime();
-        placeholder1.Width = 0;
-        placeholder1.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        scrollViewer.AddChild(placeholder1);
+        scrollViewer.AddChild(header1);
 
         ContainerRuntime middle = new();
         middle.Width = 0;
@@ -439,10 +579,7 @@ public class ScrollViewerTests : BaseTestClass
         scrollViewer.AddChild(middle);
 
         header2 = MakeStickyHeader(headerHeight);
-        placeholder2 = new ContainerRuntime();
-        placeholder2.Width = 0;
-        placeholder2.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        scrollViewer.AddChild(placeholder2);
+        scrollViewer.AddChild(header2);
 
         ContainerRuntime tail = new();
         tail.Width = 0;
@@ -451,10 +588,9 @@ public class ScrollViewerTests : BaseTestClass
         tail.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
         scrollViewer.AddChild(tail);
 
-        scrollViewer.RegisterStickyHeader(header1, placeholder1);
-        scrollViewer.RegisterStickyHeader(header2, placeholder2);
+        scrollViewer.RegisterStickyHeader(header1);
+        scrollViewer.RegisterStickyHeader(header2);
 
-        // Force scroll bar maximum to be recomputed now that content is in place.
         scrollViewer.UpdateVerticalScrollBarValues();
 
         return scrollViewer;
