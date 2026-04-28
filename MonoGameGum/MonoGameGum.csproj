@@ -181,14 +181,12 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
-		<ProjectReference Include="..\Tools\Gum.Analyzers\Gum.Analyzers.csproj"
-						  Condition="'$(IncludeAnalyzers)' == 'true'"
-						  OutputItemType="Analyzer"
-						  ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\Tools\Gum.Analyzers\Gum.Analyzers.csproj" Condition="'$(IncludeAnalyzers)' == 'true'" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Folder Include="Animation\Content\" />
+		<Folder Include="Forms\Controls\Games\" />
 		<Folder Include="Forms\Input\" />
 		<Folder Include="Renderables\Fonts\" />
 		<Folder Include="Utilities\" />
@@ -205,13 +203,11 @@
 			Android is different — Mono.Android base types are not in DesktopGL — so the
 			Android TFM swaps to MonoGame.Framework.Android.
 		-->
-		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1"
-						  Condition="!$(TargetFramework.Contains('android'))">
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" Condition="!$(TargetFramework.Contains('android'))">
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 
-		<PackageReference Include="MonoGame.Framework.Android" Version="3.8.4.1"
-						  Condition="$(TargetFramework.Contains('android'))">
+		<PackageReference Include="MonoGame.Framework.Android" Version="3.8.4.1" Condition="$(TargetFramework.Contains('android'))">
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 
@@ -221,8 +217,7 @@
 			iOS is excluded because clipboard operations are stubbed there (see
 			ClipboardImplementation.cs) — the iOS stub-out predates multi-targeting.
 		-->
-		<PackageReference Include="TextCopy" Version="6.2.1"
-						  Condition="!$(TargetFramework.Contains('ios'))" />
+		<PackageReference Include="TextCopy" Version="6.2.1" Condition="!$(TargetFramework.Contains('ios'))" />
 	</ItemGroup>
 
 </Project>

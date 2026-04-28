@@ -7033,6 +7033,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             UpdateTextureValuesFrom(asSprite!);
         }
 
+        if (this is InteractiveGue interactive
+            && interactive.FormsControlAsObject is IUpdateEveryFrame updatable)
+        {
+            updatable.Activity(secondDifference);
+        }
+
         if (Children != null)
         {
             for (int i = 0; i < this.Children.Count; i++)

@@ -1,57 +1,74 @@
 # async Programming
 
-### Introduction
+## Introduction
 
-UI events may require interacting with systems that are async by default (return Tasks). MonoGame projects do not have a default synchronization context for keeping async code on the primary thread, but this can be added fairly easily.
+UI events may interact with systems that are async (return `Task`). MonoGame
+projects have no default synchronization context, so without one your `await`
+continuations are not guaranteed to resume on the primary thread — touching UI
+state from the wrong thread can crash or render mid-update.
 
-This tutorial shows how to add and work with a synchronization context to allow async calls without leaving the primary thread. The MonoGameGumFromFile project shows how to add a synchronization context. You can view this project [here](https://github.com/vchelaru/Gum/tree/main/Samples/MonoGameGumFromFile).
+Gum ships with `Gum.Async.SingleThreadSynchronizationContext` to keep all
+continuations on the primary thread, and exposes a single-line opt-in.
 
-### Why is a Synchronization Context Needed?
-
-When a method makes an async call, its continuation is not guaranteed to be on the same thread as the code preceding the async call. For example, consider the following code:
+## Why a Synchronization Context Is Needed
 
 ```csharp
-// Assume this is a click handler for a button:
+// Click handler on a button:
 async void HandleButtonClicked(object sender, EventArgs args)
 {
-  AnnounceButtonClicked();
-  await Task.Delay(1000);
-  // ------Remainder of method may not be on the primary thread
-  Button.IsEnabled = false;
+    AnnounceButtonClicked();
+    await Task.Delay(1000);
+    // ----- Without a sync context, this line may run on a different thread.
+    button.IsEnabled = false;
 }
 ```
 
-Unfortunatey, the code above may end up crashing or having other unexpected behaviors since the Button's IsEnabled is potentially being assigned on a non-primary thread. This is problematic because the UI may get updated mid-update, causing unexpected results.
+Without a sync context, the line after the `await` can land on a thread other
+than the one running `Game.Update` / `Game.Draw`. Mutating UI from there is
+unsafe. Installing a single-threaded sync context routes every continuation
+back to the primary thread.
 
-Instead, we would like to keep all methods on the primary thread so that we can confidently interact with the UI without worrying about making changes mid-render.
+## One-Line Opt-In (Recommended)
 
-### Adding the SingleThreadSynchronizationContext
-
-The MonoGameGumFromFile sample includes a class called `SingleThreadSynchronizationContext` which provides a simple synchronization context for keeping all async call continuation on the primary thread. You can download the file and add it to your project from here:
-
-{% embed url="https://github.com/vchelaru/Gum/blob/main/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Managers/SingleThreadSynchronizationContext.cs" %}
-
-Once you have added it to your project, you need to add an instance to your Game class, initialize it in your Initialize method, and call its Update method in the Game's Update, as shown in the following code snippet:
+Call `UseSingleThreadedAsync` once, after `Initialize`:
 
 ```csharp
-public class YourGame : Game
+protected override void Initialize()
 {
-    SingleThreadSynchronizationContext synchronizationContext;
-    //...
-    protected override void Initialize()
-    {
-        synchronizationContext = new SingleThreadSynchronizationContext();
-        //...
-    }
-    
-    protected override void Update(GameTime gameTime)
-    {
-        synchronizationContext.Update();
-        //...
-    }
-    //...
+    GumService.Default.Initialize(this, DefaultVisualsVersion.Newest);
+    GumService.Default.UseSingleThreadedAsync(); // ← this is all you need
+    base.Initialize();
+}
 ```
 
-After adding the SingleThreadSynchronizationContext class and after modifying your Game class as shown above, you can make async calls safely.
+`GumService.Update` (which you already call each frame) drains queued
+continuations, so there is no per-frame plumbing. Calling
+`UseSingleThreadedAsync` more than once is a no-op.
 
-Keep in mind that the SingleThreadSynchronizationContext class can be modified for your own needs if you are comfortable making these changes.
+After this, `await` lines in event handlers — including
+`await dialogBox.ShowAsync(...)` (see [DialogBox](controls/dialogbox.md)) —
+are safe to follow with UI mutations.
+
+### When *Not* to Call It
+
+Skip `UseSingleThreadedAsync` if you've already installed your own
+`SynchronizationContext`. Installing two would route continuations through the
+wrong queue. The one-liner is opt-in for exactly this reason.
+
+## Manual Setup (Advanced / Pre-existing Projects)
+
+If you copied `SingleThreadSynchronizationContext` into your own project from an
+older version of this guide and pump `Update()` yourself, that still works — do
+**not** also call `UseSingleThreadedAsync`. The two installs would conflict.
+
+If you want to take ownership of the context for advanced reasons (custom
+queueing, screen-change `Clear()` calls, etc.), you can access the installed
+instance via `GumService.Default.SynchronizationContext` after calling
+`UseSingleThreadedAsync`.
+
+## Platform Coverage
+
+`UseSingleThreadedAsync` is available on MonoGame, KNI, FNA, Raylib, and Sokol.
+Under FlatRedBall, the FRB runtime supplies its own thread/instruction model;
+this opt-in is intentionally not exposed there — use FRB's own facilities
+(e.g. `InstructionManager`) for primary-thread work.

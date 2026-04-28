@@ -43,7 +43,7 @@ public enum TextPositionRoundingMode
 /// render callbacks emit into sokol_gp, so text batches alongside other
 /// renderables in scene-graph order.
 /// </summary>
-public sealed class Text : RenderableBase, IText
+public sealed class Text : RenderableBase, IText, IWrappedText
 {
     /// <summary>
     /// Process-wide default measurer wired by <see cref="SokolGum.SystemManagers.Initialize"/>.
@@ -138,6 +138,9 @@ public sealed class Text : RenderableBase, IText
 
     public TextOverflowHorizontalMode TextOverflowHorizontalMode { get; set; } = TextOverflowHorizontalMode.TruncateWord;
     public TextOverflowVerticalMode   TextOverflowVerticalMode   { get; set; } = TextOverflowVerticalMode.SpillOver;
+
+    public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
+    public bool IsMidWordLineBreakEnabled { get; set; }
 
     /// <summary>Line-to-line spacing multiplier. 1.0 = font-native line height.</summary>
     public float LineHeightMultiplier { get; set; } = 1f;

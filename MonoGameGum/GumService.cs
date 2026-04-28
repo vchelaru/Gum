@@ -165,6 +165,33 @@ public class GumService
         Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
     }
 
+#if !FRB
+    private Gum.Async.SingleThreadSynchronizationContext? _syncContext;
+
+    /// <summary>
+    /// The active single-threaded synchronization context, or <c>null</c> if
+    /// <see cref="UseSingleThreadedAsync"/> has not been called.
+    /// </summary>
+    public Gum.Async.SingleThreadSynchronizationContext? SynchronizationContext => _syncContext;
+
+    /// <summary>
+    /// Installs a <see cref="Gum.Async.SingleThreadSynchronizationContext"/> on the calling
+    /// thread so that <c>await</c> continuations (including
+    /// <c>await dialogBox.ShowAsync(...)</c>) resume on the game's primary thread. Call once,
+    /// after <c>Initialize</c>. Subsequent calls are no-ops.
+    /// </summary>
+    /// <remarks>
+    /// Off by default. Skip this call if you've already installed your own
+    /// <see cref="System.Threading.SynchronizationContext"/> — installing two would
+    /// route continuations through the wrong queue.
+    /// </remarks>
+    public void UseSingleThreadedAsync()
+    {
+        if (_syncContext != null) return;
+        _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
+    }
+#endif
+
 
     /// <summary>
     /// Gets whether GumService has been initialized.
@@ -750,6 +777,9 @@ public class GumService
         var difference = gameTime - GameTime;
 #endif
 
+#if !FRB
+        _syncContext?.Update();
+#endif
         DeferredQueue.ProcessPending();
 #if !IOS && !ANDROID
         _hotReloadManager?.Update(Root);
