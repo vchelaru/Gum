@@ -22,6 +22,7 @@ public static class StandardFormsBehaviorNames
     public const string SplitterBehaviorName = "SplitterBehavior";
     public const string StackPanelBehaviorName = "StackPanelBehavior";
     public const string TextBoxBehaviorName = "TextBoxBehavior";
+    public const string TooltipBehaviorName = "TooltipBehavior";
     public const string WindowBehaviorName = "WindowBehavior";
 
     public static readonly HashSet<string> All = new HashSet<string>
@@ -44,6 +45,7 @@ public static class StandardFormsBehaviorNames
         SplitterBehaviorName,
         StackPanelBehaviorName,
         TextBoxBehaviorName,
+        TooltipBehaviorName,
         WindowBehaviorName,
     };
 }

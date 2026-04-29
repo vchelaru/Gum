@@ -1,5 +1,8 @@
+using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Forms.DefaultFromFileVisuals;
+using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using MonoGameGum.Input;
@@ -220,5 +223,44 @@ public class TooltipTests : BaseTestClass
             totalGameTime: TimeSpan.FromSeconds(totalSeconds),
             elapsedGameTime: TimeSpan.FromMilliseconds(16));
         GumService.Default.Update(gameTime);
+    }
+
+    [Fact]
+    public void ToGraphicalUiElement_ShouldCreateFromFileTooltip_IfBehaviorAttached()
+    {
+        GumProjectSave gumProject = new GumProjectSave();
+        var tooltipComponent = new ComponentSave();
+        tooltipComponent.States.Add(new Gum.DataTypes.Variables.StateSave() { Name = "Default" });
+        gumProject.Components.Add(tooltipComponent);
+        tooltipComponent.Name = "TestTooltipComponent";
+        tooltipComponent.Behaviors.Add(new Gum.DataTypes.Behaviors.ElementBehaviorReference
+        { BehaviorName = Gum.DataTypes.Behaviors.StandardFormsBehaviorNames.TooltipBehaviorName });
+
+        ObjectFinder.Self.GumProjectSave = gumProject;
+
+        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+
+        var gue = tooltipComponent.ToGraphicalUiElement();
+
+        (gue is DefaultFromFileTooltipRuntime).ShouldBeTrue();
+        ((InteractiveGue)gue).FormsControlAsObject.ShouldBeOfType<Tooltip>();
+    }
+
+    [Fact]
+    public void ToGraphicalUiElement_ShouldNotCreateFromFileTooltip_IfBehaviorMissing()
+    {
+        GumProjectSave gumProject = new GumProjectSave();
+        var component = new ComponentSave();
+        component.States.Add(new Gum.DataTypes.Variables.StateSave() { Name = "Default" });
+        gumProject.Components.Add(component);
+        component.Name = "PlainComponent";
+
+        ObjectFinder.Self.GumProjectSave = gumProject;
+
+        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+
+        var gue = component.ToGraphicalUiElement();
+
+        (gue is DefaultFromFileTooltipRuntime).ShouldBeFalse();
     }
 }
