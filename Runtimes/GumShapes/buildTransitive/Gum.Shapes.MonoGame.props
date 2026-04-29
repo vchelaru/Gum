@@ -1,0 +1,24 @@
+<Project>
+
+  <!-- Skip Apos.Shapes content compilation for platforms with pre-built XNBs.
+       Other MonoGamePlatform values (Android, iOS, MacOS Metal, etc.) fall through
+       and Apos.Shapes' content pipeline runs as today. -->
+  <PropertyGroup Condition="'$(MonoGamePlatform)' == 'DesktopGL' OR '$(MonoGamePlatform)' == 'WindowsDX'">
+    <SkipAposShapeContent>true</SkipAposShapeContent>
+  </PropertyGroup>
+
+  <!-- DesktopGL (OpenGL) -->
+  <ItemGroup Condition="'$(MonoGamePlatform)' == 'DesktopGL'">
+    <Content Include="$(MSBuildThisFileDirectory)MonoGame/Content/DesktopGL/apos-shapes.xnb"
+             Link="Content/apos-shapes.xnb"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- WindowsDX (DirectX/HLSL) -->
+  <ItemGroup Condition="'$(MonoGamePlatform)' == 'WindowsDX'">
+    <Content Include="$(MSBuildThisFileDirectory)MonoGame/Content/WindowsDX/apos-shapes.xnb"
+             Link="Content/apos-shapes.xnb"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

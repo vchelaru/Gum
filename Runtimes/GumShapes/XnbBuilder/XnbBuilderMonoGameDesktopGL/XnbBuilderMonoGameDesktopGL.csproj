@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Builds the Apos.Shapes shader XNB for MonoGame DesktopGL (OpenGL).
+		Uses the non-KNI Apos.Shapes package so the produced XNB is bytewise
+		matched to what Gum.Shapes.MonoGame consumers will load at runtime.
+		This project is never run - only built.
+	-->
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<MonoGamePlatform>DesktopGL</MonoGamePlatform>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\Program.cs" Link="Program.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Apos.Shapes" Version="0.6.8" />
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+		<PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
+	</ItemGroup>
+
+</Project>
