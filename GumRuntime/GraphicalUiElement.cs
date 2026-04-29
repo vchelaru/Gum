@@ -7033,11 +7033,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             UpdateTextureValuesFrom(asSprite!);
         }
 
+#if !FRB
         if (this is InteractiveGue interactive
             && interactive.FormsControlAsObject is IUpdateEveryFrame updatable)
         {
             updatable.Activity(secondDifference);
         }
+#endif
 
         if (Children != null)
         {
@@ -7088,7 +7090,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    #endregion
+#endregion
 }
 
 #region GraphicalUiElementExtensions
@@ -7208,7 +7210,7 @@ public static class GraphicalUiElementExtensions
 
 
 #endif
-    #endregion
+#endregion
 
 }
 #endregion

@@ -1007,7 +1007,7 @@ public class ScrollViewer :
             float naturalRelY = entry.Placeholder.AbsoluteTop - overlayTop;
             // Pin against the top of the overlay (Y=0) once we've scrolled
             // past the placeholder.
-            float headerY = Math.Max(naturalRelY, 0f);
+            float headerY = System.Math.Max(naturalRelY, 0f);
 
             // Bump: if the next entry (header or terminator) is closing in
             // on our bottom edge, slide off to make room.
