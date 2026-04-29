@@ -40,21 +40,24 @@ git log --no-merges <prev-tag>..HEAD --format="%h %s"
 ```
 
 Look at:
-- **PR title** — usually the headline
-- **PR body** — often has user impact already written
+- **PR title** — usually the headline. **In this repo, PR bodies are almost always empty**, so don't expect user-impact text there. Skip the per-PR `gh pr view` calls unless the title is ambiguous; they cost time and rarely add information.
 - **Individual commits in the PR** — supply detail when titles are terse
-- **Files touched** — used for categorization (Tool vs Runtimes)
+- **Files touched** — used for categorization (Tool vs Runtimes). Pull these via `--json files` on the bulk `pr list` call rather than per-PR.
 - **Author** — for `(thanks @author)` attribution
+
+**Filter out GitBook auto-sync commits** (`GITBOOK-NNN: ...`) — these are docs auto-syncs from the GitBook integration, not changelog material.
 
 If a commit message is sparse and intent is genuinely unclear from the diff, **add it to the Open Questions block** rather than guessing.
 
 ## Step 3: Translate into user-impact bullets
 
-The release-notes style is **user-impact-first, not mechanical**. The reader is a Gum customer trying to decide whether this release matters to them and what they'll see differently. Use the March 28, 2026 release as a tone reference:
+The release-notes style is **user-impact-first, not mechanical**. The reader is a Gum customer trying to decide whether this release matters to them and what they'll see differently. Use the **most recent prior release** as a tone reference (find it via `gh release list --repo vchelaru/Gum --limit 5`):
 
 ```bash
-gh release view Release_March_28_2026 --repo vchelaru/Gum
+gh release view <prior-release-tag> --repo vchelaru/Gum
 ```
+
+Do **not** hard-code a specific tag here — this skill is run monthly and the "tone reference" should always be the previous month's notes, not a fixed example that ages.
 
 Examples of the translation:
 - Mechanical: *"Refactored TextRuntime font loading."* → User-impact: *"Better error messages when attempting and failing to load fonts due to Gum not being initialized."*
@@ -114,18 +117,37 @@ PLACEHOLDER!!!! Full Changelog link
 
 The user fills this in after they cut the tag.
 
-## Step 8: Open Questions block
+## Step 8: Resolve sparse/unclear PRs with parallel subagents
+
+Before writing the Open Questions block, identify every PR whose intent you couldn't confidently translate from title + commit messages alone (titles like "Try me2", "Update GraphicalUiElement.cs", "Font service", or one-word names with no body). For each one, **spawn a `general-purpose` subagent in parallel** (single message, multiple Agent calls) to read the diff and propose a user-impact bullet.
+
+Subagent prompt template:
+
+> Read the diff for PR #NNNN in this repo: `gh pr view NNNN --repo vchelaru/Gum --json files,commits` plus `gh pr diff NNNN --repo vchelaru/Gum`. The PR title is "<title>" and the body is empty. In under 100 words, tell me:
+> 1. What this PR actually changes from a user's perspective (one-sentence bullet, in the user-impact style of Gum release notes — e.g. "NineSlices can now optionally tile the middle section sprites" not "Added IsTilingMiddleSections property").
+> 2. Which section it belongs in: Gum Tool, Gum Runtimes, both (cross-cutting via GumCommon), or neither (internal/refactor with no user impact, omit from notes).
+> 3. Confidence: high / medium / low. If low, say what's still unclear.
+
+Do **not** spawn subagents for PRs with self-explanatory titles ("Fixed crash when generating fonts for projects with Skia elements", "Added F2 rename for behavior instances") — only the genuinely ambiguous ones. Aim for 3–10 subagents per release; if you're spawning more, your title-reading bar is too low.
+
+Use the subagent results to either:
+- **High confidence** → fold the bullet directly into the appropriate section, no Open Question needed.
+- **Medium/low confidence** → put the proposed bullet in the Open Questions block as "I think this is X — confirm?" with a link, rather than the unhelpful "what was this?".
+
+## Step 9: Open Questions block
 
 Append a section at the bottom titled `## Open Questions`. It is **not** part of the release notes — the user will delete it before publishing. Include:
 
 - **Biggest Changes ranking** — your proposed Top 4 with one-line rationale, plus the additional candidates with one-line rationale, in a way that lets the user re-rank by reordering lines.
 - **Categorization uncertainties** — any PR/commit you weren't sure where to file.
-- **Sparse/unclear commits** — any commit whose intent you couldn't confidently translate.
+- **Medium/low-confidence subagent translations** (from Step 8) — present as "I think this is X, confirm?" not as "what was this?".
 - **Anything else** flagged during drafting.
+
+**Always include a clickable PR link** for any referenced PR: `https://github.com/vchelaru/Gum/pull/NNNN`. Inline it the first time the PR appears in the Open Questions section so the user can jump straight to the diff. Without the link, the user has no fast way to verify your read.
 
 Format as a numbered list so the user can answer "1. swap candidate B into Top 4" etc.
 
-## Step 9: Write the file and open it
+## Step 10: Write the file and open it
 
 Write to `temp/release-notes-YYYY-MM-DD.md` at the repo root, where the date is parsed from the release tag from Step 1 question 1.
 
@@ -137,7 +159,7 @@ start temp/release-notes-YYYY-MM-DD.md
 
 Confirm the path in chat so the user can find it again.
 
-## Step 10: Walk through Open Questions
+## Step 11: Walk through Open Questions
 
 After the file is open, work through the Open Questions block with the user **one question at a time**. As each is resolved, edit the file directly (move bullets between sections, swap Biggest Changes entries, fill in clarified user-impact descriptions). Once all are resolved, delete the Open Questions block.
 
