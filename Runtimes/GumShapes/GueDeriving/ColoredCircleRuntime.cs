@@ -10,6 +10,10 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving;
 
+/// <summary>
+/// Runtime that draws a circle (or ellipse) sized by its Width and Height. Adds no properties beyond
+/// the AposShapeRuntime common set - color, gradient, drop shadow, and fill/stroke are inherited.
+/// </summary>
 public class ColoredCircleRuntime : AposShapeRuntime
 {
     protected override RenderableShapeBase ContainedRenderable => ContainedCircle;
@@ -27,6 +31,13 @@ public class ColoredCircleRuntime : AposShapeRuntime
         }
     }
 
+    /// <summary>
+    /// Initializes a new ColoredCircleRuntime. When fullInstantiation is true (the default), an underlying
+    /// Apos.Shapes Circle renderable is created and default values are applied (Width = Height = 100,
+    /// IsFilled = true, StrokeWidth = 1, Color = White).
+    /// Pass false only when the runtime is being constructed by deserialization, which sets up
+    /// the renderable separately.
+    /// </summary>
     public ColoredCircleRuntime(bool fullInstantiation = true)
     {
         if (fullInstantiation)

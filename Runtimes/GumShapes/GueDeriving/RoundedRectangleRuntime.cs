@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving;
 
+/// <summary>
+/// Runtime that draws a rectangle with rounded corners, sized by its Width and Height.
+/// Use CornerRadius to control how rounded the corners are; a value of 0 produces a sharp-cornered rectangle.
+/// </summary>
 public class RoundedRectangleRuntime : AposShapeRuntime
 {
     protected override RenderableShapeBase ContainedRenderable => ContainedRectangle;
@@ -25,12 +29,22 @@ public class RoundedRectangleRuntime : AposShapeRuntime
         }
     }
 
+    /// <summary>
+    /// Gets or sets the radius, in pixels, of each rounded corner. A value of 0 produces a sharp-cornered rectangle.
+    /// </summary>
     public float CornerRadius
     {
         get => ContainedRectangle.CornerRadius;
         set => ContainedRectangle.CornerRadius = value;
     }
 
+    /// <summary>
+    /// Initializes a new RoundedRectangleRuntime. When fullInstantiation is true (the default), an underlying
+    /// Apos.Shapes RoundedRectangle renderable is created and default values are applied (Width = Height = 100,
+    /// CornerRadius = 5, Color = White).
+    /// Pass false only when the runtime is being constructed by deserialization, which sets up
+    /// the renderable separately.
+    /// </summary>
     public RoundedRectangleRuntime(bool fullInstantiation = true)
     {
         if (fullInstantiation)

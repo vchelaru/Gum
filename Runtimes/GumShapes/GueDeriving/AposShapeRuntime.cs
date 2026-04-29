@@ -21,8 +21,13 @@ namespace MonoGameGum.GueDeriving;
 /// </summary>
 public abstract class AposShapeRuntime : GraphicalUiElement
 {
+    /// <summary>
+    /// Registers the Arc, ColoredCircle, Line, and RoundedRectangle runtime types with Gum so that
+    /// instances loaded from .gumx project files are instantiated as the corresponding *Runtime classes.
+    /// Called automatically by the runtime via the [ModuleInitializer] attribute - applications do not
+    /// need to call this directly.
+    /// </summary>
 #pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
-    // This is needed so we can register the shapes types
     [System.Runtime.CompilerServices.ModuleInitializer]
 #pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     public static void RegisterRuntimeTypes()
@@ -70,6 +75,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         }
     }
 
+    /// <summary>
+    /// The underlying Apos.Shapes renderable that draws this shape. Derived runtime classes return
+    /// the concrete renderable they wrap (for example, ArcRuntime returns its Arc, ColoredCircleRuntime
+    /// returns its Circle).
+    /// </summary>
     protected abstract RenderableShapeBase ContainedRenderable { get; }
 
     #region Solid colors
@@ -333,7 +343,9 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     }
 
     /// <summary>
-    /// [Planned for future release] The inner radius before the gradient starts to interpolate colors when using Radial gradient.
+    /// The inner radius before the gradient starts to interpolate colors when using a Radial gradient.
+    /// Inside this radius the shape is filled with Color1; the gradient interpolates from Color1 to Color2
+    /// between this value and GradientOuterRadius.
     /// </summary>
     public float GradientInnerRadius
     {
@@ -342,7 +354,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     }
 
     /// <summary>
-    /// [Planned for future release] The unit type used to interpret the inner radius when using a Radial gradient.
+    /// Gets or sets the unit type used to interpret the inner radius when using a Radial gradient.
+    /// Supported values are Absolute (pixels), PercentageOfParent (percentage of the shape's Width, so
+    /// 100 = Width), and RelativeToParent (pixels offset from the shape's Width, so 0 = Width and
+    /// -10 = Width - 10). Note that the shape's natural inscribed radius is Width / 2, so a value of
+    /// 50 (PercentageOfParent) or -Width/2 (RelativeToParent) corresponds to that.
     /// </summary>
     public DimensionUnitType GradientInnerRadiusUnits
     {
@@ -361,6 +377,10 @@ public abstract class AposShapeRuntime : GraphicalUiElement
 
     /// <summary>
     /// Gets or sets the unit type used to interpret the outer radius of the gradient. This is only applicable when using a Radial gradient.
+    /// Supported values are Absolute (pixels), PercentageOfParent (percentage of the shape's Width, so
+    /// 100 = Width), and RelativeToParent (pixels offset from the shape's Width, so 0 = Width and
+    /// -10 = Width - 10). Note that the shape's natural inscribed radius is Width / 2, so a value of
+    /// 50 (PercentageOfParent) or -Width/2 (RelativeToParent) corresponds to that.
     /// </summary>
     public DimensionUnitType GradientOuterRadiusUnits
     {
@@ -496,7 +516,10 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     }
 
     /// <summary>
-    /// Gets or sets the unit of measurement used for the stroke width.
+    /// Gets or sets the unit of measurement used for the stroke width. Supported values are
+    /// Absolute (StrokeWidth is interpreted as world-space pixels) and ScreenPixel (StrokeWidth
+    /// is divided by the camera's zoom each frame so the stroke appears the same size on screen
+    /// regardless of camera zoom).
     /// </summary>
     public DimensionUnitType StrokeWidthUnits
     {
@@ -508,6 +531,11 @@ public abstract class AposShapeRuntime : GraphicalUiElement
 
 
 
+    /// <summary>
+    /// Applies StrokeWidthUnits to the contained renderable's StrokeWidth before rendering.
+    /// This is done in PreRender (rather than in the property setter) because the camera zoom
+    /// can change between frames, and ScreenPixel scaling depends on it.
+    /// </summary>
     public override void PreRender()
     {
         if (this.EffectiveManagers != null)

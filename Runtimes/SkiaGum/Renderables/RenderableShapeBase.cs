@@ -899,7 +899,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
                     effectiveOuterRadius = Width * GradientOuterRadius / 100;
                     break;
                 case Gum.DataTypes.DimensionUnitType.RelativeToParent:
-                    effectiveOuterRadius = Width / 2 + GradientOuterRadius;
+                    effectiveOuterRadius = Width + GradientOuterRadius;
                     break;
             }
 
@@ -916,7 +916,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
                     effectiveInnerRadius = Width * GradientInnerRadius / 100;
                     break;
                 case Gum.DataTypes.DimensionUnitType.RelativeToContainer:
-                    effectiveInnerRadius = Width / 2 + GradientInnerRadius;
+                    effectiveInnerRadius = Width + GradientInnerRadius;
                     break;
             }
 

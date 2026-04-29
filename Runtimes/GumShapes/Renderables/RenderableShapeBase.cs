@@ -504,17 +504,18 @@ public abstract class RenderableShapeBase : RenderableBase
         }
         else
         {
-            var effectiveGradientX2 = effectiveGradientX1 + _gradientOuterRadius;
+            var effectiveOuterRadius = ResolveRadius(_gradientOuterRadius, _gradientOuterRadiusUnits, Width);
+            var effectiveInnerRadius = ResolveRadius(_gradientInnerRadius, _gradientInnerRadiusUnits, Width);
+
+            var effectiveGradientX2 = effectiveGradientX1 + effectiveOuterRadius;
             var effectiveGradientY2 = effectiveGradientY1;
 
-            float aOffset = this.GradientInnerRadius;
-            
-            return new Gradient(new Vector2(effectiveGradientX1, effectiveGradientY1), 
+            return new Gradient(new Vector2(effectiveGradientX1, effectiveGradientY1),
                 firstColor,
                 new Vector2(effectiveGradientX2, effectiveGradientY2),
                 secondColor,
                 s:Gradient.Shape.Radial,
-                aOffset:aOffset);
+                aOffset:effectiveInnerRadius);
         }
 
         // todo - eventually support rotation
@@ -533,6 +534,21 @@ public abstract class RenderableShapeBase : RenderableBase
         //    effectiveGradientY2 += rectToUse.Top;
         //}
 
+    }
+
+    internal static float ResolveRadius(float value, DimensionUnitType units, float width)
+    {
+        switch (units)
+        {
+            case DimensionUnitType.Absolute:
+                return value;
+            case DimensionUnitType.PercentageOfParent:
+                return width * value / 100f;
+            case DimensionUnitType.RelativeToParent:
+                return width + value;
+            default:
+                return value;
+        }
     }
 
     /// <summary>
