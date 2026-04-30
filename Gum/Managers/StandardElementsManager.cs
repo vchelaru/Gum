@@ -52,6 +52,9 @@ public class StandardElementsManager
     static StateSave? filledCircleState;
     static StateSave? lineState;
     static StateSave? roundedRectangleState;
+    static StateSave? canvasState;
+    static StateSave? svgState;
+    static StateSave? lottieAnimationState;
 
     public const string ScreenBoundsName = "<SCREEN BOUNDS>";
 
@@ -1017,6 +1020,119 @@ public class StandardElementsManager
         }
 
         return arcState;
+    }
+
+    #endregion
+
+    #region Headless extended-type registration
+
+    private static bool _extendedDefaultsRegistered;
+
+    // INTERIM: bridges shape (Arc/ColoredCircle/RoundedRectangle/Line) and Skia
+    // (Canvas/Svg/LottieAnimation) standard types into headless consumers
+    // (Gum.ProjectServices, gumcli) that don't load the WPF Skia plugin or a runtime.
+    // Remove once these are promoted to first-class entries in RefreshDefaults() and the
+    // matching switches in MainSkiaPlugin.HandleGetDefaultStateForType,
+    // AposShapeRuntime.HandleCustomGetDefaultState, and the Skia SystemManagers go away.
+    public void RegisterExtendedDefaultStates()
+    {
+        if (_extendedDefaultsRegistered) return;
+        _extendedDefaultsRegistered = true;
+
+        var existing = CustomGetDefaultState;
+        CustomGetDefaultState = type => existing?.Invoke(type) ?? GetExtendedDefaultState(type);
+    }
+
+    private static StateSave? GetExtendedDefaultState(string type) => type switch
+    {
+        "Arc"              => GetArcState(),
+        "ColoredCircle"    => GetColoredCircleState(),
+        "RoundedRectangle" => GetRoundedRectangleState(),
+        "Line"             => GetLineState(),
+        "Canvas"           => GetCanvasState(),
+        "Svg"              => GetSvgState(),
+        "LottieAnimation"  => GetLottieAnimationState(),
+        _ => null,
+    };
+
+    #endregion
+
+    #region Canvas State
+
+    public static StateSave GetCanvasState()
+    {
+        if (canvasState == null)
+        {
+            canvasState = new StateSave();
+            canvasState.Name = "Default";
+
+            AddVisibleVariable(canvasState);
+            AddClipsChildren(canvasState);
+            AddPositioningVariables(canvasState);
+            AddDimensionsVariables(canvasState, 64, 64, DimensionVariableAction.ExcludeFileOptions);
+            AddVariableReferenceList(canvasState);
+            AddEventVariables(canvasState);
+        }
+
+        return canvasState;
+    }
+
+    #endregion
+
+    #region Svg State
+
+    public static StateSave GetSvgState()
+    {
+        if (svgState == null)
+        {
+            svgState = new StateSave();
+            svgState.Name = "Default";
+
+            AddVisibleVariable(svgState);
+            AddPositioningVariables(svgState);
+            AddDimensionsVariables(svgState, 100, 100, DimensionVariableAction.AllowFileOptions);
+            AddColorVariables(svgState);
+
+            foreach (var variableSave in svgState.Variables.Where(item => item.Type == typeof(DimensionUnitType).Name))
+            {
+                variableSave.Value = DimensionUnitType.Absolute;
+                variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
+            }
+
+            svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
+
+            AddBlendVariable(svgState);
+
+            svgState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
+
+            AddVariableReferenceList(svgState);
+            AddEventVariables(svgState);
+        }
+        return svgState;
+    }
+
+    #endregion
+
+    #region Lottie Animation State
+
+    public static StateSave GetLottieAnimationState()
+    {
+        if (lottieAnimationState == null)
+        {
+            lottieAnimationState = new StateSave();
+            lottieAnimationState.Name = "Default";
+
+            AddVisibleVariable(lottieAnimationState);
+            AddPositioningVariables(lottieAnimationState);
+            AddDimensionsVariables(lottieAnimationState, 100, 100, DimensionVariableAction.AllowFileOptions);
+
+            lottieAnimationState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
+
+            AddBlendVariable(lottieAnimationState);
+            AddVariableReferenceList(lottieAnimationState);
+            AddEventVariables(lottieAnimationState);
+        }
+        return lottieAnimationState;
     }
 
     #endregion
