@@ -85,6 +85,18 @@ public class Renderer : IRenderer
         _camera.ClientWidth = Raylib.GetScreenWidth();
         _camera.ClientHeight = Raylib.GetScreenHeight();
 
+        var camera2D = new Camera2D
+        {
+            Zoom = _camera.Zoom,
+            Target = new System.Numerics.Vector2(_camera.X, _camera.Y),
+            Offset = _camera.CameraCenterOnScreen == CameraCenterOnScreen.Center
+                ? new System.Numerics.Vector2(_camera.ClientWidth / 2f, _camera.ClientHeight / 2f)
+                : System.Numerics.Vector2.Zero,
+            Rotation = 0,
+        };
+
+        Raylib.BeginMode2D(camera2D);
+
         for (int i = 0; i < layers.Count; i++)
         {
             Layer layer = layers[i];
@@ -98,6 +110,8 @@ public class Renderer : IRenderer
             }
             RenderLayer(managers, layer, prerender: false);
         }
+
+        Raylib.EndMode2D();
     }
     public void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true)
     {
@@ -141,10 +155,16 @@ public class Renderer : IRenderer
 
         if (element.ClipsChildren)
         {
-            var scissorX = (int)element.GetAbsoluteX();
-            var scissorY = (int)element.GetAbsoluteY();
-            var scissorWidth = (int)(element.GetAbsoluteRight() - element.GetAbsoluteLeft());
-            var scissorHeight = (int)(element.GetAbsoluteBottom() - element.GetAbsoluteTop());
+            var zoom = _camera.Zoom;
+            var offsetX = _camera.CameraCenterOnScreen == CameraCenterOnScreen.Center
+                ? _camera.ClientWidth / 2f : 0f;
+            var offsetY = _camera.CameraCenterOnScreen == CameraCenterOnScreen.Center
+                ? _camera.ClientHeight / 2f : 0f;
+
+            var scissorX = (int)((element.GetAbsoluteLeft() - _camera.X) * zoom + offsetX);
+            var scissorY = (int)((element.GetAbsoluteTop() - _camera.Y) * zoom + offsetY);
+            var scissorWidth = (int)((element.GetAbsoluteRight() - element.GetAbsoluteLeft()) * zoom);
+            var scissorHeight = (int)((element.GetAbsoluteBottom() - element.GetAbsoluteTop()) * zoom);
             Raylib.BeginScissorMode(scissorX, scissorY, scissorWidth, scissorHeight);
         }
 
