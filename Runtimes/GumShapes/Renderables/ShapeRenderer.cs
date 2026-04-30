@@ -48,7 +48,10 @@ public class ShapeRenderer
         var gumService = GumService.Default;
         if(gumService.IsInitialized == false)
         {
-            throw new InvalidOperationException("GumService must be initialized before ShapeRenderer.");
+            throw new InvalidOperationException(
+                "ShapeRenderer cannot be initialized through the parameterless overload because GumService is not initialized. " +
+                "Either initialize GumService first, or call ShapeRenderer.Self.Initialize(graphicsDevice, contentManager) directly " +
+                "(useful when rendering through GumBatch without GumService).");
         }
 
         Initialize(gumService.Game.GraphicsDevice, gumService.Game.Content);

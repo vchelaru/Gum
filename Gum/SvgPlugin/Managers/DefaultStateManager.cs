@@ -20,105 +20,13 @@ namespace SkiaPlugin.Managers;
 
 public static class DefaultStateManager
 {
-    #region Fields/Properties
-
-    static StateSave? canvasState;
-    static StateSave? svgState;
-
-    static StateSave? lottieAnimationState;
-
-    #endregion
-
-    #region Svg State
-    public static StateSave GetSvgState()
-    {
-        if (svgState == null)
-        {
-            svgState = new StateSave();
-            svgState.Name = "Default";
-            StandardElementsManager.AddVisibleVariable(svgState);
-            StandardElementsManager.AddPositioningVariables(svgState);
-            StandardElementsManager.AddDimensionsVariables(svgState, 100, 100,
-                Gum.Managers.StandardElementsManager.DimensionVariableAction.AllowFileOptions);
-            StandardElementsManager.AddColorVariables(svgState);
-
-            foreach (var variableSave in svgState.Variables.Where(item => item.Type == typeof(DimensionUnitType).Name))
-            {
-                variableSave.Value = DimensionUnitType.Absolute;
-                variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
-                //variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
-
-            }
-
-            svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category="Source" });
-
-            StandardElementsManager.AddBlendVariable(svgState);
-
-            svgState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
-
-            StandardElementsManager.AddVariableReferenceList(svgState);
-
-            StandardElementsManager.AddEventVariables(svgState);
-        }
-        return svgState;
-    }
-    #endregion
-
-    #region Canvas State
-
-    public static StateSave GetCanvasState()
-    {
-        if (canvasState == null)
-        {
-            canvasState = new StateSave();
-            canvasState.Name = "Default";
-
-            StandardElementsManager.AddVisibleVariable(canvasState);
-
-            StandardElementsManager.AddClipsChildren(canvasState);
-
-            StandardElementsManager.AddPositioningVariables(canvasState);
-
-            StandardElementsManager.AddDimensionsVariables(canvasState, 64, 64,
-                StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
-
-            StandardElementsManager.AddVariableReferenceList(canvasState);
-
-            StandardElementsManager.AddEventVariables(canvasState);
-        }
-
-        return canvasState;
-    }
-
-    #endregion
-
-    #region Lottie Animation State
-    public static StateSave GetLottieAnimationState()
-    {
-        if (lottieAnimationState == null)
-        {
-            lottieAnimationState = new StateSave();
-            lottieAnimationState.Name = "Default";
-            StandardElementsManager.AddVisibleVariable(lottieAnimationState);
-            StandardElementsManager.AddPositioningVariables(lottieAnimationState);
-            StandardElementsManager.AddDimensionsVariables(lottieAnimationState, 100, 100,
-                Gum.Managers.StandardElementsManager.DimensionVariableAction.AllowFileOptions);
-
-            // Do we support colors?
-            //StandardElementsManager.AddColorVariables(lottieAnimationState);
-
-            lottieAnimationState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
-
-            StandardElementsManager.AddBlendVariable(lottieAnimationState);
-
-
-            StandardElementsManager.AddVariableReferenceList(lottieAnimationState);
-
-            StandardElementsManager.AddEventVariables(lottieAnimationState);
-        }
-        return lottieAnimationState;
-    }
-    #endregion
+    // Canvas/Svg/LottieAnimation default-state metadata moved to GumCommon's
+    // StandardElementsManager so headless consumers (Gum.ProjectServices, gumcli) can
+    // resolve them without loading SkiaGum. These forwarders are kept so existing
+    // callers (StandardAdder, MainSkiaPlugin, Skia SystemManagers) continue to compile.
+    public static StateSave GetSvgState() => StandardElementsManager.GetSvgState();
+    public static StateSave GetCanvasState() => StandardElementsManager.GetCanvasState();
+    public static StateSave GetLottieAnimationState() => StandardElementsManager.GetLottieAnimationState();
 
 
     #region Property Grid Utilities

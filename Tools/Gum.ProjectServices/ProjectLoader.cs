@@ -24,6 +24,10 @@ public class ProjectLoader : IProjectLoader
         string projectDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath)) ?? "";
 
         StandardElementsManager.Self.Initialize();
+        // INTERIM: bridges shapes (Arc/ColoredCircle/RoundedRectangle/Line) and Skia
+        // (Canvas/Svg/LottieAnimation) into headless loading. Remove once these are
+        // promoted to first-class standard types in StandardElementsManager.RefreshDefaults().
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
 
         var gumLoadResult = new GumLoadResult();
         try
