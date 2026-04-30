@@ -245,4 +245,68 @@ namespace RenderingLibrary
         }
 #endregion
     }
+
+    /// <summary>
+    /// Extensions that compute screen-space scissor rectangles from world-space
+    /// renderable bounds. Lives in this file (rather than its own) to avoid having
+    /// to add a new linked-Compile entry to every consumer csproj (FRB, RaylibGum,
+    /// SokolGum, SkiaGum, etc.). Takes IRenderableIpso/Layer so kept off the Camera
+    /// class itself — Camera should remain a pure transform primitive.
+    /// </summary>
+    public static class CameraScissorExtensions
+    {
+        public static System.Drawing.Rectangle GetScissorRectangleFor(this Camera camera, Layer layer, IRenderableIpso ipso)
+        {
+            if (ipso == null)
+            {
+                return new System.Drawing.Rectangle(0, 0, camera.ClientWidth, camera.ClientHeight);
+            }
+
+            float worldX = ipso.GetAbsoluteLeft();
+            float worldY = ipso.GetAbsoluteTop();
+
+            float screenX, screenY;
+            if (layer != null)
+            {
+                layer.WorldToScreen(camera, worldX, worldY, out screenX, out screenY);
+            }
+            else
+            {
+                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+            }
+
+            int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
+            int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
+
+            worldX = ipso.GetAbsoluteRight();
+            worldY = ipso.GetAbsoluteBottom();
+            if (layer != null)
+            {
+                layer.WorldToScreen(camera, worldX, worldY, out screenX, out screenY);
+            }
+            else
+            {
+                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+            }
+
+            int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
+            int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
+
+            left = System.Math.Max(0, left);
+            top = System.Math.Max(0, top);
+            right = System.Math.Max(0, right);
+            bottom = System.Math.Max(0, bottom);
+
+            left = System.Math.Min(left, camera.ClientWidth);
+            right = System.Math.Min(right, camera.ClientWidth);
+
+            top = System.Math.Min(top, camera.ClientHeight);
+            bottom = System.Math.Min(bottom, camera.ClientHeight);
+
+            int width = System.Math.Max(0, right - left);
+            int height = System.Math.Max(0, bottom - top);
+
+            return new System.Drawing.Rectangle(left, top, width, height);
+        }
+    }
 }

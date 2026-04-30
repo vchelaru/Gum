@@ -798,89 +798,9 @@ public class Renderer : IRenderer
         }
     }
 
-    internal Rectangle GetScissorRectangleFor(Camera camera, Layer layer, IRenderableIpso ipso)
-    {
-        if (ipso == null)
-        {
-            return new Rectangle(
-                0, 0,
-                camera.ClientWidth,
-                camera.ClientHeight
-
-                );
-        }
-        else
-        {
-
-            float worldX = ipso.GetAbsoluteLeft();
-            float worldY = ipso.GetAbsoluteTop();
-
-            float screenX;
-            float screenY;
-            // Route through the Layer (when present) so LayerCameraSettings is honored. This
-            // keeps the scissor rect in sync with SpriteRenderer.GetZoomAndMatrix, which also
-            // applies layer position/zoom/IsInScreenSpace.
-            if (layer != null)
-            {
-                layer.WorldToScreen(camera, worldX, worldY, out screenX, out screenY);
-            }
-            else
-            {
-                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
-            }
-
-            int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
-            int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
-
-            worldX = ipso.GetAbsoluteRight();
-            worldY = ipso.GetAbsoluteBottom();
-            if (layer != null)
-            {
-                layer.WorldToScreen(camera, worldX, worldY, out screenX, out screenY);
-            }
-            else
-            {
-                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
-            }
-
-            int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
-            int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
-
-
-
-            left = System.Math.Max(0, left);
-            top = System.Math.Max(0, top);
-            right = System.Math.Max(0, right);
-            bottom = System.Math.Max(0, bottom);
-
-            left = System.Math.Min(left, camera.ClientWidth);
-            right = System.Math.Min(right, camera.ClientWidth);
-
-            top = System.Math.Min(top, camera.ClientHeight);
-            bottom = System.Math.Min(bottom, camera.ClientHeight);
-
-
-            int width = System.Math.Max(0, right - left);
-            int height = System.Math.Max(0, bottom - top);
-
-            // ScissorRectangles are relative to the viewport in Gum, so we need to adjust for that:
-            // In updating, no they are not, it causes problems in both FRB and MonoGame Gum, so why are these adjustments here?
-            //left += this.GraphicsDevice.Viewport.X;
-            //right += this.GraphicsDevice.Viewport.X;
-
-            //top += this.GraphicsDevice.Viewport.Y;
-            //bottom += this.GraphicsDevice.Viewport.Y;
-
-            Rectangle thisRectangle = new Rectangle(
-                left,
-                top,
-                width,
-                height);
-
-            return thisRectangle;
-        }
-
-    }
+    // GetScissorRectangleFor moved to Camera.cs as an extension method
+    // (CameraScissorExtensions.GetScissorRectangleFor) so Raylib/Sokol/Skia
+    // backends can share the world->screen scissor math.
 
 
     private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable)
@@ -917,18 +837,13 @@ public class Renderer : IRenderer
 
         if (renderable.ClipsChildren)
         {
-            var clipRectangle = GetScissorRectangleFor(Camera, layer, renderable);
+            var clipRectangle = Camera.GetScissorRectangleFor(layer, renderable);
 
             if (renderState.ClipRectangle == null || clipRectangle != renderState.ClipRectangle.Value)
             {
-                //todo: Don't just overwrite it, constrain this rect to the existing one, if it's not null: 
-
-                var adjustedRectangle = clipRectangle;
-                if (renderState.ClipRectangle != null)
-                {
-                    adjustedRectangle = ConstrainRectangle(clipRectangle, renderState.ClipRectangle.Value);
-                }
-
+                var adjustedRectangle = renderState.ClipRectangle != null
+                    ? Rectangle.Intersect(clipRectangle, renderState.ClipRectangle.Value)
+                    : clipRectangle;
 
                 renderState.ClipRectangle = adjustedRectangle;
                 shouldResetStates = true;
@@ -943,16 +858,9 @@ public class Renderer : IRenderer
         }
     }
 
-    private Rectangle ConstrainRectangle(Rectangle childRectangle, Rectangle parentRectangle)
-    {
-        int x = System.Math.Max(childRectangle.X, parentRectangle.X);
-        int y = System.Math.Max(childRectangle.Y, parentRectangle.Y);
-
-        int right = System.Math.Min(childRectangle.Right, parentRectangle.Right);
-        int bottom = System.Math.Min(childRectangle.Bottom, parentRectangle.Bottom);
-
-        return new Rectangle(x, y, right - x, bottom - y);
-    }
+    // ConstrainRectangle removed — replaced with System.Drawing.Rectangle.Intersect,
+    // which has identical math for the overlapping case and returns Rectangle.Empty
+    // (rather than negative dims) when rects don't overlap.
 
     // Made public to allow custom renderable objects to be removed:
     public void RemoveRenderable(IRenderableIpso renderable)

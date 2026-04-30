@@ -22,6 +22,10 @@ public class Renderer : IRenderer
     List<Layer> _layers;
     ReadOnlyCollection<Layer> _layersReadOnly;
 
+    // Raylib's BeginScissorMode replaces the active scissor rather than intersecting,
+    // so we must track ancestors and intersect manually for nested ClipsChildren.
+    Stack<System.Drawing.Rectangle> _scissorStack = new();
+
 #if XNALIKE
     SpriteRenderer spriteRenderer = new SpriteRenderer();
 #endif
@@ -123,11 +127,12 @@ public class Renderer : IRenderer
 
     private void Render(ReadOnlyCollection<IRenderableIpso> renderables, ISystemManagers managers, Layer layer)
     {
+        _scissorStack.Clear();
         for(int i = 0; i < renderables.Count; i++)
         {
             IRenderableIpso renderable = renderables[i];
 
-            DrawGumRecursively(renderable);
+            DrawGumRecursively(renderable, layer);
 
             //if (renderable is GraphicalUiElement graphicalUiElement)
             //{
@@ -149,23 +154,18 @@ public class Renderer : IRenderer
         }
     }
 
-    private void DrawGumRecursively(IRenderableIpso element)
+    private void DrawGumRecursively(IRenderableIpso element, Layer layer)
     {
         element.Render(null);
 
         if (element.ClipsChildren)
         {
-            var zoom = _camera.Zoom;
-            var offsetX = _camera.CameraCenterOnScreen == CameraCenterOnScreen.Center
-                ? _camera.ClientWidth / 2f : 0f;
-            var offsetY = _camera.CameraCenterOnScreen == CameraCenterOnScreen.Center
-                ? _camera.ClientHeight / 2f : 0f;
-
-            var scissorX = (int)((element.GetAbsoluteLeft() - _camera.X) * zoom + offsetX);
-            var scissorY = (int)((element.GetAbsoluteTop() - _camera.Y) * zoom + offsetY);
-            var scissorWidth = (int)((element.GetAbsoluteRight() - element.GetAbsoluteLeft()) * zoom);
-            var scissorHeight = (int)((element.GetAbsoluteBottom() - element.GetAbsoluteTop()) * zoom);
-            Raylib.BeginScissorMode(scissorX, scissorY, scissorWidth, scissorHeight);
+            var rect = _camera.GetScissorRectangleFor(layer, element);
+            var effective = _scissorStack.Count > 0
+                ? System.Drawing.Rectangle.Intersect(_scissorStack.Peek(), rect)
+                : rect;
+            _scissorStack.Push(effective);
+            Raylib.BeginScissorMode(effective.X, effective.Y, effective.Width, effective.Height);
         }
 
         if (element.Children != null)
@@ -174,16 +174,24 @@ public class Renderer : IRenderer
             {
                 if (child is GraphicalUiElement childGue && childGue.Visible)
                 {
-                    DrawGumRecursively(childGue);
+                    DrawGumRecursively(childGue, layer);
                 }
             }
         }
 
         if (element.ClipsChildren)
         {
-            Raylib.EndScissorMode();
+            _scissorStack.Pop();
+            if (_scissorStack.Count > 0)
+            {
+                var parent = _scissorStack.Peek();
+                Raylib.BeginScissorMode(parent.X, parent.Y, parent.Width, parent.Height);
+            }
+            else
+            {
+                Raylib.EndScissorMode();
+            }
         }
-
     }
 
 }
