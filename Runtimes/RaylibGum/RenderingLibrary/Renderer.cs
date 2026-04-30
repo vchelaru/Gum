@@ -22,6 +22,10 @@ public class Renderer : IRenderer
     List<Layer> _layers;
     ReadOnlyCollection<Layer> _layersReadOnly;
 
+    // Raylib's BeginScissorMode replaces the active scissor rather than intersecting,
+    // so we must track ancestors and intersect manually for nested ClipsChildren.
+    Stack<System.Drawing.Rectangle> _scissorStack = new();
+
 #if XNALIKE
     SpriteRenderer spriteRenderer = new SpriteRenderer();
 #endif
@@ -85,6 +89,18 @@ public class Renderer : IRenderer
         _camera.ClientWidth = Raylib.GetScreenWidth();
         _camera.ClientHeight = Raylib.GetScreenHeight();
 
+        var camera2D = new Camera2D
+        {
+            Zoom = _camera.Zoom,
+            Target = new System.Numerics.Vector2(_camera.X, _camera.Y),
+            Offset = _camera.CameraCenterOnScreen == CameraCenterOnScreen.Center
+                ? new System.Numerics.Vector2(_camera.ClientWidth / 2f, _camera.ClientHeight / 2f)
+                : System.Numerics.Vector2.Zero,
+            Rotation = 0,
+        };
+
+        Raylib.BeginMode2D(camera2D);
+
         for (int i = 0; i < layers.Count; i++)
         {
             Layer layer = layers[i];
@@ -98,6 +114,8 @@ public class Renderer : IRenderer
             }
             RenderLayer(managers, layer, prerender: false);
         }
+
+        Raylib.EndMode2D();
     }
     public void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true)
     {
@@ -109,11 +127,12 @@ public class Renderer : IRenderer
 
     private void Render(ReadOnlyCollection<IRenderableIpso> renderables, ISystemManagers managers, Layer layer)
     {
+        _scissorStack.Clear();
         for(int i = 0; i < renderables.Count; i++)
         {
             IRenderableIpso renderable = renderables[i];
 
-            DrawGumRecursively(renderable);
+            DrawGumRecursively(renderable, layer);
 
             //if (renderable is GraphicalUiElement graphicalUiElement)
             //{
@@ -135,17 +154,18 @@ public class Renderer : IRenderer
         }
     }
 
-    private void DrawGumRecursively(IRenderableIpso element)
+    private void DrawGumRecursively(IRenderableIpso element, Layer layer)
     {
         element.Render(null);
 
         if (element.ClipsChildren)
         {
-            var scissorX = (int)element.GetAbsoluteX();
-            var scissorY = (int)element.GetAbsoluteY();
-            var scissorWidth = (int)(element.GetAbsoluteRight() - element.GetAbsoluteLeft());
-            var scissorHeight = (int)(element.GetAbsoluteBottom() - element.GetAbsoluteTop());
-            Raylib.BeginScissorMode(scissorX, scissorY, scissorWidth, scissorHeight);
+            var rect = _camera.GetScissorRectangleFor(layer, element);
+            var effective = _scissorStack.Count > 0
+                ? System.Drawing.Rectangle.Intersect(_scissorStack.Peek(), rect)
+                : rect;
+            _scissorStack.Push(effective);
+            Raylib.BeginScissorMode(effective.X, effective.Y, effective.Width, effective.Height);
         }
 
         if (element.Children != null)
@@ -154,16 +174,24 @@ public class Renderer : IRenderer
             {
                 if (child is GraphicalUiElement childGue && childGue.Visible)
                 {
-                    DrawGumRecursively(childGue);
+                    DrawGumRecursively(childGue, layer);
                 }
             }
         }
 
         if (element.ClipsChildren)
         {
-            Raylib.EndScissorMode();
+            _scissorStack.Pop();
+            if (_scissorStack.Count > 0)
+            {
+                var parent = _scissorStack.Peek();
+                Raylib.BeginScissorMode(parent.X, parent.Y, parent.Width, parent.Height);
+            }
+            else
+            {
+                Raylib.EndScissorMode();
+            }
         }
-
     }
 
 }
