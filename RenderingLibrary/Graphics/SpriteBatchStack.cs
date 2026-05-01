@@ -179,13 +179,12 @@ namespace RenderingLibrary.Graphics
             SpriteBatch.Begin();
         }
 
-        public void PushRenderStates(SpriteSortMode sortMode, 
+        public void PushRenderStates(SpriteSortMode sortMode,
             BlendState blendState, SamplerState samplerState,
             DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect,
             Microsoft.Xna.Framework.Matrix transformMatrix, Rectangle scissorRectangle,
             object? objectChangingState)
         {
-
 
             mStateStack.Add(currentParameters);
 
@@ -210,10 +209,10 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public void ReplaceRenderStates(SpriteSortMode sortMode, 
-            BlendState blendState, 
+        public void ReplaceRenderStates(SpriteSortMode sortMode,
+            BlendState blendState,
             SamplerState samplerState,
-            DepthStencilState depthStencilState, RasterizerState rasterizerState, 
+            DepthStencilState depthStencilState, RasterizerState rasterizerState,
             Effect effect, Microsoft.Xna.Framework.Matrix transformMatrix,
             Rectangle scissorRectangle,
             object? objectChangingState)

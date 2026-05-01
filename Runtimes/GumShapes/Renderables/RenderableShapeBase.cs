@@ -425,9 +425,21 @@ public abstract class RenderableShapeBase : RenderableBase
         }
     }
 
+    /// <summary>
+    /// Invoked by <see cref="PreRender"/> each frame. The wrapping <see cref="MonoGameGum.GueDeriving.AposShapeRuntime"/>
+    /// hooks this so it can resolve unit-bearing properties (notably StrokeWidth with ScreenPixel units,
+    /// which depends on the current camera zoom) into the renderable's plain pixel values just before drawing.
+    ///
+    /// This indirection exists because the renderer adds the *renderable* (this object) to the layer, not
+    /// the runtime that wraps it - so the runtime's PreRender override is never reached by the renderer's
+    /// PreRender walk. Without this callback, runtime-level properties like StrokeWidth never propagate to
+    /// the renderable and the renderable keeps its default values.
+    /// </summary>
+    internal Action? OnPreRender;
+
     public override void PreRender()
     {
-        //do nothing?
+        OnPreRender?.Invoke();
     }
 
     protected Gradient GetGradient(float absoluteLeft, float absoluteTop)

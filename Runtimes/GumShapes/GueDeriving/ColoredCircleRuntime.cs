@@ -42,7 +42,7 @@ public class ColoredCircleRuntime : AposShapeRuntime
     {
         if (fullInstantiation)
         {
-            SetContainedObject(new Circle());
+            SetContainedShape(new Circle());
             StrokeWidth = 1;
             IsFilled = true;
             this.Color = Color.White;
@@ -82,7 +82,7 @@ public class ColoredCircleRuntime : AposShapeRuntime
         // Should this call SetContainedObject?
         if(this.mContainedCircle != null)
         {
-            SetContainedObject(new Circle());
+            SetContainedShape(new Circle());
         }
 
         return toReturn;

@@ -45,8 +45,9 @@ public interface IGumHotReloadManager
     /// Checks for a pending reload and, if enough time has elapsed since the last file change, performs the reload.
     /// This is not typically called directly — <see cref="GumService"/> calls this automatically each frame.
     /// </summary>
-    /// <param name="root">The root <see cref="GraphicalUiElement"/> whose children will be reloaded.</param>
-    void Update(GraphicalUiElement root);
+    /// <param name="roots">The roots whose direct children will be rebuilt from the reloaded project.
+    /// Typically the same collection passed to <see cref="GumService.Update(GameTime, IEnumerable{GraphicalUiElement})"/>.</param>
+    void Update(IEnumerable<GraphicalUiElement> roots);
 }
 
 /// <summary>
@@ -99,18 +100,37 @@ public class GumHotReloadManager : IGumHotReloadManager
     }
 
     /// <inheritdoc/>
-    public void Update(GraphicalUiElement root)
+    public void Update(IEnumerable<GraphicalUiElement> roots)
     {
         if (_pendingReload && (DateTime.UtcNow - _lastChangeTime) >= TimeSpan.FromMilliseconds(200))
         {
+            System.Diagnostics.Debug.WriteLine(
+                $"[HotReload] PerformReload firing, elapsedSinceLastChange=" +
+                $"{(DateTime.UtcNow - _lastChangeTime).TotalMilliseconds:0}ms");
             _pendingReload = false;
-            PerformReload(root);
+            PerformReload(roots);
         }
     }
 
     private void HandleFileChange(object sender, FileSystemEventArgs e)
     {
         var extension = Path.GetExtension(e.FullPath).ToLowerInvariant();
+
+        long size = -1;
+        string mtime = "-";
+        try
+        {
+            if (File.Exists(e.FullPath))
+            {
+                size = new FileInfo(e.FullPath).Length;
+                mtime = File.GetLastWriteTimeUtc(e.FullPath).ToString("HH:mm:ss.fff");
+            }
+        }
+        catch { }
+        System.Diagnostics.Debug.WriteLine(
+            $"[HotReload] event={e.ChangeType} file={Path.GetFileName(e.FullPath)} ext={extension} " +
+            $"size={size} mtime={mtime} now={DateTime.UtcNow:HH:mm:ss.fff}");
+
         if (extension == ".gumx" || extension == ".gucx" || extension == ".gusx" || extension == ".gutx"
             || extension == ".fnt" || extension == ".ganx")
         {
@@ -190,15 +210,41 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
     }
 
-    private void PerformReload(GraphicalUiElement root)
+    private void PerformReload(IEnumerable<GraphicalUiElement> roots)
     {
+        // Materialize so we can iterate twice and so the caller's collection
+        // is safe from us modifying it via the rebuild step.
+        var rootList = roots.ToList();
+
         CopyAndUnloadChangedFonts();
 
         var savedRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
 
+        var gumxMtime = File.Exists(_projectSourcePath)
+            ? File.GetLastWriteTimeUtc(_projectSourcePath).ToString("HH:mm:ss.fff")
+            : "-";
+        var gumxSize = File.Exists(_projectSourcePath) ? new FileInfo(_projectSourcePath).Length : -1;
+        System.Diagnostics.Debug.WriteLine(
+            $"[HotReload] loading gumx={Path.GetFileName(_projectSourcePath)} " +
+            $"size={gumxSize} mtime={gumxMtime}");
+
         GumProjectSave newProject = GumProjectSave.Load(_projectSourcePath);
         newProject.Initialize();
         ObjectFinder.Self.GumProjectSave = newProject;
+
+        foreach (var element in newProject.AllElements)
+        {
+            var defaultState = element.DefaultState;
+            if (defaultState?.Variables == null) continue;
+            foreach (var v in defaultState.Variables)
+            {
+                if (v.Name == "BackInnerBorder.Width")
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"[HotReload]   {element.Name}.{v.Name} = {v.Value}");
+                }
+            }
+        }
 
         // Point at the source project directory so TryLoadAnimation finds the updated .ganx files
         var sourceDirectory = Path.GetDirectoryName(_projectSourcePath)?.Replace('\\', '/');
@@ -225,29 +271,74 @@ public class GumHotReloadManager : IGumHotReloadManager
             byName[element.Name] = element;
         }
 
-        // Snapshot element names before modifying the collection
-        var childElementNames = root.Children
-            .Select(c => c.ElementSave?.Name)
-            .ToList();
+        System.Diagnostics.Debug.WriteLine(
+            $"[HotReload] rootList.Count = {rootList.Count}");
 
-        // Remove existing children
-        foreach (var child in root.Children.ToList())
+        int reappliedCount = 0;
+        int visitedCount = 0;
+        foreach (var root in rootList)
         {
-            child.RemoveFromManagers();
-            child.Parent = null;
+            ReapplyRecursively(root, byName, ref reappliedCount, ref visitedCount);
         }
 
-        // Recreate each child from the updated ElementSave, preserving order
-        foreach (var name in childElementNames)
+        System.Diagnostics.Debug.WriteLine(
+            $"[HotReload] DONE visited={visitedCount} reapplied={reappliedCount}");
+
+        ReloadCompleted?.Invoke();
+    }
+
+    /// <summary>
+    /// Walks the visual tree under <paramref name="element"/> and re-applies the new project's
+    /// default-state variables in place on each visual whose ElementSave matches a project element.
+    /// Preserves runtime-added children and runtime-set state — only the design-time variables are reset.
+    /// When re-applying at level N, descent skips children that came from N's design-time InstanceSaves
+    /// (those values were already covered by N's qualified-name variables like "BackInnerBorder.Width").
+    /// </summary>
+    private void ReapplyRecursively(
+        GraphicalUiElement element,
+        Dictionary<string, ElementSave> byName,
+        ref int reappliedCount,
+        ref int visitedCount)
+    {
+        visitedCount++;
+
+        var name = element.ElementSave?.Name;
+        HashSet<string>? designTimeChildNames = null;
+
+        if (name != null && byName.TryGetValue(name, out var newEs))
         {
-            if (name != null && byName.TryGetValue(name, out var newEs))
+            // Re-point so the visual references the live project's ElementSave.
+            element.ElementSave = newEs;
+
+            if (newEs.DefaultState != null)
             {
-                var newChild = newEs.ToGraphicalUiElement(ISystemManagers.Default, addToManagers: false);
-                root.Children.Add(newChild);
+                element.SetVariablesRecursively(newEs, newEs.DefaultState);
+                reappliedCount++;
+                System.Diagnostics.Debug.WriteLine(
+                    $"[HotReload]   reapplied '{name}' on visual name={element.Name ?? "<null>"}");
+            }
+
+            // After re-applying, do not re-enter design-time instance children — their values are
+            // owned by the parent's qualified-name variables we just set. Only descend into
+            // runtime-added children to find further matches.
+            if (newEs.Instances != null)
+            {
+                designTimeChildNames = new HashSet<string>(
+                    newEs.Instances.Select(i => i.Name).Where(n => n != null)!,
+                    StringComparer.OrdinalIgnoreCase);
             }
         }
 
-        ReloadCompleted?.Invoke();
+        foreach (var child in element.Children.ToList())
+        {
+            if (designTimeChildNames != null
+                && child.Name != null
+                && designTimeChildNames.Contains(child.Name))
+            {
+                continue;
+            }
+            ReapplyRecursively(child, byName, ref reappliedCount, ref visitedCount);
+        }
     }
 }
 #endif // !IOS && !ANDROID

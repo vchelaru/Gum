@@ -124,8 +124,13 @@ public class ContainerRuntime : InteractiveGue
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
 
-    public override string BatchKey => Children?.LastOrDefault()?.BatchKey ?? string.Empty;
-
-    public virtual void StartBatch(ISystemManagers systemManagers) => Children?.FirstOrDefault()?.StartBatch(systemManagers);
-    public virtual void EndBatch(ISystemManagers systemManagers) => Children?.FirstOrDefault()?.EndBatch(systemManagers);
+    // Container is a transparent wrapper whose own Render is a no-op (InvisibleRenderable).
+    // BatchKey must match what StartBatch actually begins — and StartBatch begins nothing
+    // here. Returning a child's BatchKey to "pre-claim" a batch is a broken peephole: the
+    // claim suppresses the first child's batch transition (keys match, transition skipped),
+    // but the matching batch was never actually started. The first descendant shape then
+    // queues into a stale or absent batch, producing intermittent draw-order artifacts that
+    // depend on whatever state leaked in from the prior Renderer.Begin/End cycle. Empty key
+    // lets each child fire its own transition normally.
+    public override string BatchKey => string.Empty;
 }

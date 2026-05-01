@@ -501,9 +501,7 @@ public class Renderer : IRenderer
 
         Render(layer.Renderables, managers, layer, prerender);
 
-        lastBatchOwner?.EndBatch(managers);
-        lastBatchOwner = null;
-        currentBatchKey = string.Empty;
+        _batchOrchestrator.FlushAndReset(managers);
 
 #if !NET8_0_OR_GREATER
         spriteRenderer.EndSpriteBatch();
@@ -522,12 +520,57 @@ public class Renderer : IRenderer
 
     public void Draw(IRenderableIpso renderable)
     {
+        // The layered Draw paths run a full PreRender pass on layer.Renderables before
+        // BeginSpriteBatch (see Draw(SystemManagers, Layer) and RenderLayer). That pass is
+        // what fires hooks like RenderableShapeBase.PreRender -> AposShapeRuntime.PreRender,
+        // which is where the runtime's StrokeWidth (and ScreenPixel resolution) gets pushed
+        // onto the contained renderable.
+        //
+        // The GumBatch entry path (Renderer.Begin/Draw/End) had no equivalent walk, so any
+        // GumBatch consumer (FRB2 GumRenderBatch, immediate-mode samples) saw shape runtimes
+        // render with their renderable's default values. Invoke the PreRender walk here.
+        //
+        // We deliberately do NOT do the IsRenderTarget rendering pass here: BeginSpriteBatch
+        // has already started the outer SpriteBatch by the time we arrive, and
+        // RenderToRenderTarget would change the render target and start its own SpriteBatch
+        // cycle, breaking the outer one. Render targets nested inside a GumBatch.Draw tree
+        // are not supported on this path.
+        InvokePreRenderRecursively(renderable);
+
         Draw(SystemManagers.Default, _layers[0], renderable, forceRenderHierarchy:false, isPreRender:false);
+    }
+
+    private void InvokePreRenderRecursively(IRenderableIpso renderable)
+    {
+        if (!renderable.Visible && !renderable.IsRenderTarget)
+        {
+            return;
+        }
+
+        renderable.PreRender();
+
+        var children = renderable.Children;
+        if (children != null)
+        {
+            var count = children.Count;
+            for (int i = 0; i < count; i++)
+            {
+                InvokePreRenderRecursively(children[i]);
+            }
+        }
     }
 
     public void End()
     {
         spriteRenderer.ForcedMatrix = null;
+
+        // Mirror RenderLayer's end-of-walk: flush any pending custom batch and reset state
+        // before ending SpriteBatch. Without this, the next Renderer.Begin cycle inherits
+        // the dangling owner/key — causing custom-batch draws (e.g. Apos.Shapes shapes)
+        // to leak across cycles and flush at non-deterministic times. This matters most
+        // for consumers that do many small Begin/End cycles (FRB2's GumRenderable, the
+        // immediate-mode samples).
+        _batchOrchestrator.FlushAndReset(SystemManagers.Default);
 
         spriteRenderer.EndSpriteBatch();
     }
@@ -725,8 +768,7 @@ public class Renderer : IRenderer
 
     Sprite renderTargetRenderableSprite = new Sprite((Texture2D)null);
 
-    string currentBatchKey = string.Empty;
-    IRenderable? lastBatchOwner;
+    readonly BatchOrchestrator _batchOrchestrator = new();
 
     private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy, bool isPreRender)
     {
@@ -761,17 +803,7 @@ public class Renderer : IRenderer
             }
             else
             {
-                if(!string.IsNullOrEmpty(renderable.BatchKey) && renderable.BatchKey != currentBatchKey)
-                {
-                    if(lastBatchOwner != null)
-                    {
-                        lastBatchOwner.EndBatch(managers);
-                    }
-
-                    currentBatchKey = renderable.BatchKey;
-                    lastBatchOwner = renderable;
-                    renderable.StartBatch(managers);
-                }
+                _batchOrchestrator.OnRenderable(renderable, managers);
 
                 renderable.Render(managers);
 
@@ -786,12 +818,7 @@ public class Renderer : IRenderer
             {
                 mRenderStateVariables.ClipRectangle = oldClip;
 
-                if (lastBatchOwner != null)
-                {
-                    lastBatchOwner.EndBatch(managers);
-                    lastBatchOwner = null;
-                    currentBatchKey = string.Empty;
-                }
+                _batchOrchestrator.FlushAndReset(managers);
 
                 spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, $"Un-set {renderable} Clip");
             }
