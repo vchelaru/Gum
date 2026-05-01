@@ -28,6 +28,19 @@ Key contract difference: each `Renderer.Draw` is one top-level renderable. If a 
 
 `Renderer.End` was historically asymmetric with `RenderLayer`'s end-of-walk: it called `EndSpriteBatch` but **did not** call `lastBatchOwner.EndBatch`. That meant pending custom-batch draws could leak across cycles.
 
+## PreRender Walk: Layered Path Has Two Phases, GumBatch Path Has One
+
+The layered path runs a recursive `PreRender` pass on `layer.Renderables` **before** `BeginSpriteBatch`. That pass does two jobs:
+
+1. Calls `renderable.PreRender()` on every visible renderable, depth-first. This is the hook `RenderableShapeBase.PreRender` uses to invoke `OnPreRender`, which is wired by `AposShapeRuntime.SetContainedShape` to call `AposShapeRuntime.PreRender`. That's where runtime-only properties (notably `StrokeWidth` with its unit handling) get pushed onto the contained renderable. Without this walk, the renderable keeps its own default values (e.g. `RenderableShapeBase._strokeWidth = 2`) regardless of what the runtime was assigned.
+2. For any renderable with `IsRenderTarget == true`, calls `RenderToRenderTarget` — which sets a render target on the GraphicsDevice and runs its own SpriteBatch cycle inside.
+
+Phase 2 is why the full PreRender walk **must** run before `BeginSpriteBatch` — once the outer SpriteBatch is begun, you can't safely change the render target or start a nested cycle.
+
+The GumBatch path (`Renderer.Begin/Draw/End`) calls `BeginSpriteBatch` immediately in `Begin`, so it can't host phase 2. `Renderer.Draw(IRenderableIpso)` does run a phase-1-only walk via `InvokePreRenderRecursively` before forwarding to the inner draw, so `AposShapeRuntime.PreRender` and similar hooks fire correctly. **Render targets nested inside a `GumBatch.Draw` tree are not supported on this path** — phase 2 is intentionally skipped to avoid clobbering the outer SpriteBatch.
+
+Practical consequence: any new "runtime resolves a property in `PreRender` and pushes it to the renderable" pattern (the `AposShapeRuntime.StrokeWidth` shape) works on both entry paths, but only the layered path renders nested render targets.
+
 ## Two Independent Batchers
 
 1. **MonoGame `SpriteBatch`** — wrapped by `SpriteBatchStack` (push/pop of render-state parameters). Used by sprites, text, NineSlice, SolidRectangle. Anything inheriting `SpriteBatchRenderableBase` declares `BatchKey="SpriteBatch"`.
