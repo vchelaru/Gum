@@ -164,3 +164,9 @@ If you want the matching Forms control rather than the raw visual, use `Framewor
 var frameworkElementOver = GumUI.Cursor.FrameworkElementOver;
 System.Diagnostics.Debug.WriteLine($"Forms control over: {frameworkElementOver?.GetType().Name ?? "<null>"}");
 ```
+
+## Cursor Position Does Not Match the Rendered UI
+
+If `VisualOver` reports the wrong control — or `null` when the cursor is clearly over a control — the cursor's coordinates may not match where Gum is being drawn on screen. This commonly happens when the game renders Gum to a `RenderTarget2D`, draws it with a `SpriteBatch` translation/scale, or otherwise transforms the output.
+
+The `Cursor` class has a `TransformMatrix` property that offsets and scales cursor input to match the rendered UI. See [TransformMatrix](../gum-code-reference/cursor/transformmatrix.md) for an example that compensates for a translated `SpriteBatch` draw.

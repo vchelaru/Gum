@@ -86,6 +86,12 @@ protected override void Update(GameTime gameTime)
 
 <figure><img src="../../.gitbook/assets/20_17 44 14.gif" alt=""><figcaption><p>Cursor.WindowOver displaying the element that the cursor is over</p></figcaption></figure>
 
+## Adjusting the Cursor for Scaled or Offset Rendering
+
+If your game draws Gum's output through a `RenderTarget2D`, scales it with a `SpriteBatch` matrix, or otherwise transforms the rendered UI, the raw cursor position will no longer line up with what the player sees. The `Cursor` exposes a `TransformMatrix` property that compensates for these transformations so clicks land on the visual under the mouse.
+
+See [TransformMatrix](../gum-code-reference/cursor/transformmatrix.md) for a full example.
+
 ## Disabling the Cursor Globally
 
 The Cursor instance reported by GumService can be replaced with a custom implementation of the `ICursor` interface. A custom `ICursor` class can be created to modify its behavior. For example, the following implementation disables all behavior:
