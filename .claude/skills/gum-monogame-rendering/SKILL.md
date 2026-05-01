@@ -147,6 +147,24 @@ So a GUE delegates to its contained renderable's BatchKey. Concrete BatchKey val
 | `RenderableShapeBase` (RoundedRectangle, Circle, Line, Arc — Apos.Shapes) | `"Apos.Shapes"` |
 | Skia equivalents | `""` (Skia doesn't use this batching machinery) |
 
+## Matrix Routing: SpriteBatch vs ShapeBatch Must Agree
+
+Sprites and shapes go through **different** transform paths even when they're queued in the same Renderer.Draw walk. Lining them up on screen requires the effective vertex transform to match. There are three matrix sources to keep in mind:
+
+1. **`SpriteBatch.Begin(transformMatrix:)`** — set by `SpriteBatchStack.ReplaceRenderStates/PushRenderStates` to `ForcedMatrix ?? spriteBatchTransformMatrix`. **When a custom Effect is bound to SpriteBatch (which Gum always does in `UsingEffect` mode — `BasicEffect` for `UseBasicEffectRendering=true`, the custom effect manager otherwise), MonoGame stores this on the unused default `_spriteEffect` and ignores it for vertex transformation.** Its only practical role in Gum is being read back via `SpriteRenderer.CurrentTransformMatrix` (= `mSpriteBatch.CurrentParameters?.TransformMatrix`) so `RenderableShapeBase.StartBatch` can pass it as ShapeBatch's `view`.
+
+2. **`basicEffect.World/View/Projection`** (BasicEffect path) — these are what *actually* transforms sprite vertices. `World=Identity`, `View = ForcedMatrix ?? GetZoomAndMatrix(layer, camera)` (with an optional `* CenterTranslation(-W/2,-H/2)` for top-left/IsInScreenSpace cameras), `Projection = CreateOrthographic(W, -H, -1, 1)` (centered ortho).
+
+3. **`ShapeBatch.Begin(view:)`** — Apos.Shapes' own view matrix, with its own default projection `CreateOrthographicOffCenter(0, W, H, 0, 0, 1)` (top-left ortho). `RenderableShapeBase.StartBatch` reads `SpriteRenderer.CurrentTransformMatrix` and passes it here so shape and sprite see the same view.
+
+**Equivalence:** `View(=Forced) * CenterTranslation * Ortho(W,-H)` ≡ `View(=Forced) * OrthoOffCenter(0,W,H,0)`. So passing `ForcedMatrix` as `view` to ShapeBatch produces the same effective transform as setting it on `basicEffect.View` (with center translate) — *provided neither is also applied a second time*.
+
+**The one-application rule:** `ForcedMatrix` (the matrix passed to `GumBatch.Begin`) must end up applied to vertices **exactly once** on each side. Splitting it across `basicEffect.World` *and* leaving `Camera.Zoom` baked into `basicEffect.View` (via `GetZoomAndMatrix`) is the trap that bit FRB2: when a consumer sets both `Camera.Zoom = scale` and `ForcedMatrix = Scale(scale)` (which FRB2 must, because the cursor reads `Camera.Zoom` for hit-testing), sprites end up with `Scale²` while shapes still get `Scale¹` — they drift apart, increasingly visibly as scale moves away from 1.
+
+The current routing (since the FRB2 fix): `basicEffect.World = Identity` and `basicEffect.View = ForcedMatrix ?? GetZoomAndMatrix(...)`. `ForcedMatrix`, when set, **replaces** the camera-derived view rather than composing with it. Consumers that want both a custom matrix *and* `Camera.Zoom` to apply must combine them themselves.
+
+When changing matrix routing, verify alignment with a two-rectangle test (one `ColoredRectangleRuntime`, one `RoundedRectangleRuntime`, identical Gum coords) at a non-identity scale. Drift between them is the canary for a double-application bug.
+
 ## Diagnostic: One-Frame Render Trace
 
 When debugging draw-order bugs, the lowest-cost approach is to add a static `RenderTrace.IsEnabled` toggle and emit `Debug.WriteLine` calls from `Renderer.Draw`, `Renderer.Begin/End`, the `StartBatch/EndBatch` hooks, and `SpriteBatchStack.Begin/End/Push/Pop/Replace`. Indent by recursion depth. Toggle on for one frame via a key press. The trace shows you the exact GPU paint order.
@@ -166,3 +184,4 @@ When changing batch logic:
 3. Does the transition logic flush in BOTH directions (custom→sprite and sprite→custom)? Empty BatchKey on a renderable with no real batch shouldn't trigger machinery, but transitions to/from non-empty keys must always flush the outgoing batch.
 4. Does mid-walk re-begin of SpriteBatch use `Begin(false)` (preserves params, no stack change) or `BeginType.Push` (changes stack)? Mismatching causes stack underflow at outer EndSpriteBatch.
 5. Are you assuming `currentBatchKey` is `""` at the start of a Renderer.Begin cycle? It's not — it persists from the previous cycle. Reset it explicitly if you need a clean state.
+6. If you touch `basicEffect.World/View` or `ShapeBatch.Begin(view:)`, does `ForcedMatrix` end up applied **exactly once** to sprite vertices and once to shape vertices? Remember that `SpriteBatch`'s own `transformMatrix` is ignored when a custom Effect is bound — only `basicEffect`'s World*View*Projection moves sprite vertices.

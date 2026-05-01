@@ -195,7 +195,13 @@ public class SpriteRenderer
             //    }
             //}
 
-            basicEffect.World = ForcedMatrix ?? Microsoft.Xna.Framework.Matrix.Identity;
+            // ForcedMatrix is the matrix passed to GumBatch.Begin (or null in the layered
+            // path). When it is set, treat it as a full override of the camera-derived view
+            // matrix — applying it as both World *and* mixing it with GetZoomAndMatrix in
+            // View double-applies the scale (sprites end up at scale^2 while ShapeBatch
+            // only applies it once, so sprite and shape draws drift apart on a resized
+            // window). World stays Identity; ForcedMatrix is folded into View below.
+            basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
 
             //effect.Projection = Matrix.CreateOrthographic(100, 100, 0.0001f, 1000);
             basicEffect.Projection = Microsoft.Xna.Framework.Matrix.CreateOrthographic(
@@ -203,7 +209,7 @@ public class SpriteRenderer
                 -height,
                 -1, 1);
 
-            basicEffect.View =  GetZoomAndMatrix(layer, camera);
+            basicEffect.View = ForcedMatrix ?? GetZoomAndMatrix(layer, camera);
 
             var shouldOffset = camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft ||
                 layer.LayerCameraSettings?.IsInScreenSpace == true;
