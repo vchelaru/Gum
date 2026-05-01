@@ -26,7 +26,7 @@ Used by FRB2's `GumRenderBatch`, the immediate-mode samples, and any "I have one
 
 Key contract difference: each `Renderer.Draw` is one top-level renderable. If a consumer draws N elements, that's `Begin → Draw → Draw → ... → End`. **Multiple Begin/End cycles per frame are normal.** FRB2's Solitaire trace shows one cycle per card.
 
-`Renderer.End` was historically asymmetric with `RenderLayer`'s end-of-walk: it called `EndSpriteBatch` but **did not** call `lastBatchOwner.EndBatch`. That meant pending custom-batch draws could leak across cycles.
+`Renderer.End` historically was asymmetric with `RenderLayer`'s end-of-walk: it called `EndSpriteBatch` but **did not** flush the pending custom batch, so draws leaked across cycles. Fixed: `Renderer.End` now calls `_batchOrchestrator.FlushAndReset(...)` before `EndSpriteBatch`. If you change the End logic, preserve that ordering.
 
 ## PreRender Walk: Layered Path Has Two Phases, GumBatch Path Has One
 
@@ -132,7 +132,7 @@ ObservableCollection<IRenderableIpso> IRenderableIpso.Children
 
 So the rendered children list is the **contained renderable's** children — not the public `GUE.Children` wrapper. The two lists are populated together (when a child GUE is parented, it's added to `mContainedObjectAsIpso.Children`), but if you instrument or audit one and not the other, you'll get misleading results. Always verify against `((IRenderableIpso)visual).Children`.
 
-`renderable.BatchKey` invocation goes through `GraphicalUiElement.BatchKey` (line 592):
+`renderable.BatchKey` invocation goes through `GraphicalUiElement.BatchKey`:
 
 ```csharp
 public virtual string BatchKey => mContainedObjectAsIpso?.BatchKey ?? string.Empty;
@@ -151,17 +151,31 @@ So a GUE delegates to its contained renderable's BatchKey. Concrete BatchKey val
 
 Sprites and shapes go through **different** transform paths even when they're queued in the same Renderer.Draw walk. Lining them up on screen requires the effective vertex transform to match. There are three matrix sources to keep in mind:
 
-1. **`SpriteBatch.Begin(transformMatrix:)`** — set by `SpriteBatchStack.ReplaceRenderStates/PushRenderStates` to `ForcedMatrix ?? spriteBatchTransformMatrix`. **When a custom Effect is bound to SpriteBatch (which Gum always does in `UsingEffect` mode — `BasicEffect` for `UseBasicEffectRendering=true`, the custom effect manager otherwise), MonoGame stores this on the unused default `_spriteEffect` and ignores it for vertex transformation.** Its only practical role in Gum is being read back via `SpriteRenderer.CurrentTransformMatrix` (= `mSpriteBatch.CurrentParameters?.TransformMatrix`) so `RenderableShapeBase.StartBatch` can pass it as ShapeBatch's `view`.
+1. **`SpriteBatch.Begin(transformMatrix:)`** — set by `SpriteBatchStack.ReplaceRenderStates/PushRenderStates` to the composed view (see "Compose, don't replace" below). **When a custom Effect is bound to SpriteBatch (which Gum always does in `UsingEffect` mode — `BasicEffect` for `UseBasicEffectRendering=true`, the custom effect manager otherwise), MonoGame stores this on the unused default `_spriteEffect` and ignores it for vertex transformation.** Its only practical role in Gum is being read back via `SpriteRenderer.CurrentTransformMatrix` (= `mSpriteBatch.CurrentParameters?.TransformMatrix`) so `RenderableShapeBase.StartBatch` can pass it as ShapeBatch's `view`.
 
-2. **`basicEffect.World/View/Projection`** (BasicEffect path) — these are what *actually* transforms sprite vertices. `World=Identity`, `View = ForcedMatrix ?? GetZoomAndMatrix(layer, camera)` (with an optional `* CenterTranslation(-W/2,-H/2)` for top-left/IsInScreenSpace cameras), `Projection = CreateOrthographic(W, -H, -1, 1)` (centered ortho).
+2. **`basicEffect.World/View/Projection`** (BasicEffect path) and the matching `effectManager.ParameterViewProj` (custom-effect path) — these are what *actually* transforms sprite vertices. Both branches now use the same composed view; see "Compose, don't replace" below for the formula. `World=Identity`, `Projection = CreateOrthographic(W, -H, -1, 1)` (centered ortho), with an optional `* CenterTranslation(-W/2,-H/2)` folded into `View` for top-left / `IsInScreenSpace` cameras.
 
 3. **`ShapeBatch.Begin(view:)`** — Apos.Shapes' own view matrix, with its own default projection `CreateOrthographicOffCenter(0, W, H, 0, 0, 1)` (top-left ortho). `RenderableShapeBase.StartBatch` reads `SpriteRenderer.CurrentTransformMatrix` and passes it here so shape and sprite see the same view.
 
 **Equivalence:** `View(=Forced) * CenterTranslation * Ortho(W,-H)` ≡ `View(=Forced) * OrthoOffCenter(0,W,H,0)`. So passing `ForcedMatrix` as `view` to ShapeBatch produces the same effective transform as setting it on `basicEffect.View` (with center translate) — *provided neither is also applied a second time*.
 
-**The one-application rule:** `ForcedMatrix` (the matrix passed to `GumBatch.Begin`) must end up applied to vertices **exactly once** on each side. Splitting it across `basicEffect.World` *and* leaving `Camera.Zoom` baked into `basicEffect.View` (via `GetZoomAndMatrix`) is the trap that bit FRB2: when a consumer sets both `Camera.Zoom = scale` and `ForcedMatrix = Scale(scale)` (which FRB2 must, because the cursor reads `Camera.Zoom` for hit-testing), sprites end up with `Scale²` while shapes still get `Scale¹` — they drift apart, increasingly visibly as scale moves away from 1.
+**Compose, don't replace.** `ForcedMatrix` is a *world transform that the consumer wants applied on top of the camera view* — not a replacement for it. The current routing:
 
-The current routing (since the FRB2 fix): `basicEffect.World = Identity` and `basicEffect.View = ForcedMatrix ?? GetZoomAndMatrix(...)`. `ForcedMatrix`, when set, **replaces** the camera-derived view rather than composing with it. Consumers that want both a custom matrix *and* `Camera.Zoom` to apply must combine them themselves.
+- `basicEffect.World = Identity`
+- `basicEffect.View = ForcedMatrix.HasValue ? ForcedMatrix.Value * GetZoomAndMatrix(...) : GetZoomAndMatrix(...)` (then `* CenterTranslation` if `shouldOffset`)
+- The custom-effect path (`Renderer.UseCustomEffectRendering=true`) follows the same compose rule on its own `view` local before feeding `view * projection` into `effectManager.ParameterViewProj`. Both branches must stay in sync — if you change one, change the other.
+- `SpriteBatch.transformMatrix = ForcedMatrix.HasValue ? ForcedMatrix.Value * spriteBatchTransformMatrix : spriteBatchTransformMatrix` — read back by shapes via `SpriteRenderer.CurrentTransformMatrix`, so `ShapeBatch.Begin(view:)` sees the same composition. `spriteBatchTransformMatrix` is `GetZoomAndMatrix(layer, camera)` regardless of `UsingEffect` (a pre-#2590 layer-zoom-only special case was the cause of one regression).
+
+This keeps camera position/zoom contributing for `GumBatch` consumers (otherwise they render with no camera at all), and keeps sprite/shape vertices aligned (both apply the same composed view exactly once).
+
+**The double-application trap:** the routing breaks the moment the consumer's `ForcedMatrix` *already includes* something that's also baked into `Camera.Zoom` / `GetZoomAndMatrix`. Example: FRB2's `GumRenderBatch` historically did both `Camera.Zoom = scale` and `Begin(Matrix.Scale(scale))` — the comment said "the cursor reads `Camera.Zoom` for hit-testing, but rendering needs the matrix." Under compose semantics that gives sprites and shapes a consistent `scale²` (worse than the pre-fix `s` vs `s²` drift, but at least *aligned*). The clean answer is on the consumer side: set `Camera.Zoom` for hit-testing OR pass `ForcedMatrix`, not both. If hit-testing must keep reading `Camera.Zoom`, pass `ForcedMatrix = null` (or `Identity`) and let `GetZoomAndMatrix` do all the work.
+
+**Past wrong turns documented here so they don't get re-tried:**
+- `World = ForcedMatrix; View = GetZoomAndMatrix` (pre-#2589): aligned for compose-style consumers but *unaligned with shapes* — shapes only saw `ForcedMatrix` (or `spriteBatchTransformMatrix`), so sprite=`F·G` vs shape=`F` drifted at non-1 scale.
+- `World = Identity; View = ForcedMatrix ?? GetZoomAndMatrix` (#2589, replace semantics): aligned sprites with shapes BUT silently dropped camera position/zoom whenever `ForcedMatrix` was set, breaking every `GumBatch` consumer that didn't bake camera into its own matrix. Reverted to compose in #2590.
+- `spriteBatchTransformMatrix = GetZoomMatrixFromLayerCameraSettings()` under `UsingEffect` (pre-#2590): this matrix is ignored by MonoGame for sprite vertex transformation when a custom Effect is bound, so historically it was set to a weak layer-zoom-only matrix. But it's read back via `SpriteRenderer.CurrentTransformMatrix` and fed into `ShapeBatch.Begin(view:)` — so it must match `basicEffect.View` or shapes desync from sprites at any non-zero `Camera.Zoom`/position. Unified to `GetZoomAndMatrix(layer, camera)` for both paths in #2590.
+
+**Regression test:** `Tests/MonoGameGum.IntegrationTests/MonoGameGum/Rendering/MatrixRoutingTests.cs` asserts that `SpriteRenderer.CurrentTransformMatrix` (the shape-side view) equals the composed `ForcedMatrix * GetZoomAndMatrix` for every combination of `Camera.Zoom` ∈ {1, 2}, scroll, and `ForcedMatrix` ∈ {null, scale}. Each of the past wrong turns above fails at least one row in this test. **Run it before merging any change to matrix routing.**
 
 When changing matrix routing, verify alignment with a two-rectangle test (one `ColoredRectangleRuntime`, one `RoundedRectangleRuntime`, identical Gum coords) at a non-identity scale. Drift between them is the canary for a double-application bug.
 

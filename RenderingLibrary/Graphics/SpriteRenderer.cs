@@ -41,7 +41,19 @@ public class SpriteRenderer
 
     BasicEffect basicEffect;
 
-    // This is used by GumBatch to force a matrix for all calls in its own Begin/End pair
+    /// <summary>
+    /// Optional consumer-supplied transform that <b>composes on top of</b> the camera-derived
+    /// view (it does not replace it). Set by <c>Renderer.Begin(spriteBatchMatrix)</c> /
+    /// <c>GumBatch.Begin(matrix)</c> for the duration of one Begin/End pair. When non-null,
+    /// the effective view becomes <c>ForcedMatrix * GetZoomAndMatrix(layer, camera)</c> on
+    /// both the sprite path (basicEffect.View) and the shape path (the view fed into
+    /// <c>ShapeBatch.Begin</c> via <see cref="CurrentTransformMatrix"/>).
+    ///
+    /// <para>If you also set <c>Renderer.Camera.Zoom</c>, the zoom is applied <b>twice</b>
+    /// (once via the camera, once via your matrix). Pick one source — typically: leave
+    /// <c>ForcedMatrix</c> null and drive scaling via <c>Camera.Zoom</c>, OR pass a
+    /// transform here and leave <c>Camera.Zoom = 1</c>.</para>
+    /// </summary>
     public Microsoft.Xna.Framework.Matrix? ForcedMatrix { get; set; }
 
     /// <summary>
@@ -90,21 +102,14 @@ public class SpriteRenderer
 
     public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, object objectStartingSpriteBatch)
     {
-        var spriteBatchTransformMatrix =  Renderer.UsingEffect 
-            ? GetZoomMatrixFromLayerCameraSettings()
-            : GetZoomAndMatrix(layer, camera);
-
-        Microsoft.Xna.Framework.Matrix GetZoomMatrixFromLayerCameraSettings()
-        {
-            if(layer.LayerCameraSettings?.Zoom != null)
-            {
-                return Microsoft.Xna.Framework.Matrix.CreateScale(layer.LayerCameraSettings.Zoom.Value);
-            }
-            else
-            {
-                return Microsoft.Xna.Framework.Matrix.Identity;
-            }
-        }
+        // Use the full camera transform for both UsingEffect and non-UsingEffect paths.
+        // Historically the UsingEffect branch returned a layer-zoom-only matrix because the
+        // SpriteBatch.transformMatrix is ignored when a custom Effect is bound (basicEffect's
+        // World*View*Projection drives sprite vertices instead). But this same matrix is read
+        // back via SpriteRenderer.CurrentTransformMatrix and passed to ShapeBatch.Begin(view:)
+        // — so making it weaker than basicEffect.View desyncs sprites and shapes.
+        // See Tests/MonoGameGum.IntegrationTests/MonoGameGum/Rendering/MatrixRoutingTests.cs.
+        var spriteBatchTransformMatrix = GetZoomAndMatrix(layer, camera);
 
         var samplerState = GetSamplerState(renderStates);
 
@@ -150,9 +155,16 @@ public class SpriteRenderer
             var effectManager = Renderer.CustomEffectManager;
 
             var projection = Microsoft.Xna.Framework.Matrix.CreateOrthographic(width, -height, -1, 1);
-            var view = GetZoomAndMatrix(layer, camera);
 
-            if (camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft || 
+            // Compose ForcedMatrix on top of the camera view, matching the BasicEffect
+            // path below. Without this, GumBatch.Begin(matrix) would be silently dropped
+            // for any consumer using UseCustomEffectRendering=true.
+            var cameraView = GetZoomAndMatrix(layer, camera);
+            var view = ForcedMatrix.HasValue
+                ? ForcedMatrix.Value * cameraView
+                : cameraView;
+
+            if (camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft ||
                 layer.LayerCameraSettings?.IsInScreenSpace == true)
             {
                 view *= Microsoft.Xna.Framework.Matrix.CreateTranslation(-camera.ClientWidth / 2.0f, -camera.ClientHeight / 2.0f, 0);
@@ -195,12 +207,11 @@ public class SpriteRenderer
             //    }
             //}
 
-            // ForcedMatrix is the matrix passed to GumBatch.Begin (or null in the layered
-            // path). When it is set, treat it as a full override of the camera-derived view
-            // matrix — applying it as both World *and* mixing it with GetZoomAndMatrix in
-            // View double-applies the scale (sprites end up at scale^2 while ShapeBatch
-            // only applies it once, so sprite and shape draws drift apart on a resized
-            // window). World stays Identity; ForcedMatrix is folded into View below.
+            // ForcedMatrix (set via GumBatch.Begin) composes ON TOP of the camera-derived
+            // view rather than replacing it — so camera position/zoom continue to apply
+            // for GumBatch consumers. Sprite and shape paths must apply the same composed
+            // transform; the SpriteBatch.transformMatrix lines below feed shapes the same
+            // composed value via SpriteRenderer.CurrentTransformMatrix.
             basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
 
             //effect.Projection = Matrix.CreateOrthographic(100, 100, 0.0001f, 1000);
@@ -209,7 +220,10 @@ public class SpriteRenderer
                 -height,
                 -1, 1);
 
-            basicEffect.View = ForcedMatrix ?? GetZoomAndMatrix(layer, camera);
+            var cameraView = GetZoomAndMatrix(layer, camera);
+            basicEffect.View = ForcedMatrix.HasValue
+                ? ForcedMatrix.Value * cameraView
+                : cameraView;
 
             var shouldOffset = camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft ||
                 layer.LayerCameraSettings?.IsInScreenSpace == true;
@@ -256,7 +270,7 @@ public class SpriteRenderer
                 depthStencilState,
                 rasterizerState,
                 effectiveEffect,
-                ForcedMatrix ?? spriteBatchTransformMatrix,
+                ForcedMatrix.HasValue ? ForcedMatrix.Value * spriteBatchTransformMatrix : spriteBatchTransformMatrix,
                 scissorRectangle,
                 objectStartingSpriteBatch
                 );
@@ -270,7 +284,7 @@ public class SpriteRenderer
                 depthStencilState,
                 rasterizerState,
                 effectiveEffect,
-                ForcedMatrix ?? spriteBatchTransformMatrix,
+                ForcedMatrix.HasValue ? ForcedMatrix.Value * spriteBatchTransformMatrix : spriteBatchTransformMatrix,
                 scissorRectangle,
                 objectStartingSpriteBatch);
         }
