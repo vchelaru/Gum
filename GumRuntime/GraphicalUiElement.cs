@@ -2395,6 +2395,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     }
                     else
                     {
+                        bool hasCountedVisibleChild = false;
                         for (int i = 0; i < mWhatThisContains.Count; i++)
                         {
                             var element = mWhatThisContains[i];
@@ -2406,8 +2407,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 var elementHeight = element.GetRequiredParentHeight();
                                 if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                                 {
-                                    // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
-                                    if (i != 0)
+                                    // Stack spacing is only added between visible children, so skip it
+                                    // for the first visible child regardless of its index in mWhatThisContains.
+                                    if (hasCountedVisibleChild)
                                     {
                                         maxHeight += StackSpacing;
                                     }
@@ -2417,6 +2419,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 {
                                     maxHeight = System.Math.Max(maxHeight, elementHeight);
                                 }
+                                hasCountedVisibleChild = true;
                             }
                         }
                     }
@@ -2653,6 +2656,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight)
     {
         float maxCellHeight = maxHeight;
+        bool hasCountedVisibleChild = false;
         for (int i = 0; i < Children!.Count; i++)
         {
             var element = Children[i];
@@ -2676,8 +2680,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                 {
-                    // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
-                    if (i != 0)
+                    // Stack spacing is only added between visible children, so skip it
+                    // for the first visible child regardless of its index in Children.
+                    if (hasCountedVisibleChild)
                     {
                         var maxHeightWithSpacing = maxCellHeight + StackSpacing;
 
@@ -2711,6 +2716,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
                     maxCellHeight = System.Math.Max(maxCellHeight, elementHeight);
                 }
+                hasCountedVisibleChild = true;
             }
         }
 
@@ -2822,6 +2828,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     }
                     else
                     {
+                        bool hasCountedVisibleChild = false;
                         for (int i = 0; i < mWhatThisContains.Count; i++)
                         {
                             var element = mWhatThisContains[i];
@@ -2834,8 +2841,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                                 if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                                 {
-                                    // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
-                                    if (i != 0)
+                                    // Stack spacing is only added between visible children, so skip it
+                                    // for the first visible child regardless of its index in mWhatThisContains.
+                                    if (hasCountedVisibleChild)
                                     {
                                         maxWidth += StackSpacing;
                                     }
@@ -2845,6 +2853,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 {
                                     maxWidth = System.Math.Max(maxWidth, elementWidth);
                                 }
+                                hasCountedVisibleChild = true;
                             }
                         }
                     }
@@ -3079,6 +3088,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth)
     {
         float maxCellWidth = maxWidth;
+        bool hasCountedVisibleChild = false;
         for (int i = 0; i < this.Children!.Count; i++)
         {
             var element = this.Children[i];
@@ -3103,8 +3113,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                 {
-                    // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
-                    if (i != 0)
+                    // Stack spacing is only added between visible children, so skip it
+                    // for the first visible child regardless of its index in Children.
+                    if (hasCountedVisibleChild)
                     {
                         var maxWidthWithSpacing = maxCellWidth + StackSpacing;
 
@@ -3138,6 +3149,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
                     maxCellWidth = System.Math.Max(maxCellWidth, elementWidth);
                 }
+                hasCountedVisibleChild = true;
             }
         }
 

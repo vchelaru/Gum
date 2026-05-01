@@ -2272,6 +2272,73 @@ public class LayoutUnitTests : BaseTestClass
         parent.GetAbsoluteWidth().ShouldBe(120);
     }
 
+    [Fact]
+    public void WidthRelativeToChildren_LeftToRightStack_ShouldGiveSameWidth_WhenTogglingVisibilityOfFirstOrLastChild()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.StackSpacing = 15;
+
+        ContainerRuntime child1 = new();
+        child1.Width = 21;
+        child1.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Width = 21;
+        child2.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        parent.GetAbsoluteWidth().ShouldBe(57);
+
+        child2.Visible = false;
+        var widthWithLastHidden = parent.GetAbsoluteWidth();
+        child2.Visible = true;
+
+        child1.Visible = false;
+        var widthWithFirstHidden = parent.GetAbsoluteWidth();
+
+        widthWithFirstHidden.ShouldBe(widthWithLastHidden);
+        widthWithFirstHidden.ShouldBe(21);
+    }
+
+    [Fact]
+    public void HeightRelativeToChildren_TopToBottomStack_ShouldGiveSameHeight_WhenTogglingVisibilityOfFirstOrLastChild()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.StackSpacing = 15;
+
+        ContainerRuntime child1 = new();
+        child1.Height = 21;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Height = 21;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child2);
+
+        // Both visible: 21 + 15 + 21 = 57
+        parent.GetAbsoluteHeight().ShouldBe(57);
+
+        // Hide last child -> only child1 contributes -> 21
+        child2.Visible = false;
+        var heightWithLastHidden = parent.GetAbsoluteHeight();
+        child2.Visible = true;
+
+        // Hide first child -> only child2 contributes -> should also be 21
+        child1.Visible = false;
+        var heightWithFirstHidden = parent.GetAbsoluteHeight();
+
+        heightWithFirstHidden.ShouldBe(heightWithLastHidden);
+        heightWithFirstHidden.ShouldBe(21);
+    }
+
     #endregion
 
     #region Nested Layout Propagation
