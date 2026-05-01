@@ -21,17 +21,26 @@ namespace MonoGameGum.GueDeriving;
 /// </summary>
 public abstract class AposShapeRuntime : GraphicalUiElement
 {
+    private static bool _registered;
+
     /// <summary>
     /// Registers the Arc, ColoredCircle, Line, and RoundedRectangle runtime types with Gum so that
     /// instances loaded from .gumx project files are instantiated as the corresponding *Runtime classes.
     /// Called automatically by the runtime via the [ModuleInitializer] attribute - applications do not
     /// need to call this directly.
+    ///
+    /// On Mono/WASM (Blazor) the [ModuleInitializer] does not fire reliably until a type from this
+    /// assembly is touched, which is too late if the .gumx loads before any shape type is referenced.
+    /// To handle that, GumService.Initialize and ShapeRenderer.Initialize also call this method via
+    /// reflection / direct call. The guard below makes those redundant calls cheap no-ops.
     /// </summary>
 #pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     [System.Runtime.CompilerServices.ModuleInitializer]
 #pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     public static void RegisterRuntimeTypes()
     {
+        if (_registered) return;
+        _registered = true;
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Arc",

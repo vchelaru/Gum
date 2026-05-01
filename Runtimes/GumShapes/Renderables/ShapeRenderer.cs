@@ -66,6 +66,11 @@ public class ShapeRenderer
         ValidateAposShapesVersion();
         IsInitialized = true;
         _sb = new ShapeBatch(graphicsDevice, contentManager);
+
+        // Belt-and-suspenders for consumers using GumBatch directly (without GumService).
+        // GumService.Initialize already triggers this via reflection scan; calling it here
+        // covers the path that bypasses GumService. Idempotent via the guard inside.
+        MonoGameGum.GueDeriving.AposShapeRuntime.RegisterRuntimeTypes();
     }
 
     [Conditional("DEBUG")]

@@ -12,6 +12,7 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using ToolsUtilities;
@@ -605,28 +606,47 @@ public class GumService
     }
 
 #if XNALIKE
-    // In December 31, 2024 we moved to using ModuleInitializer 
-    // More info: https://github.com/vchelaru/Gum/issues/275
-    // Therefore, this is no longer needed. However, old projects
-    // may still use this. Not sure when we can remove this, sometime
-    // in the future....
+    // Originally added so codegen-emitted user types could self-register. Module initializers
+    // replaced that path for newer Gum (https://github.com/vchelaru/Gum/issues/275), but we
+    // still need a reflection-based hook for two reasons:
+    //   1. Older projects emit a static "RegisterRuntimeType" (singular) in the entry assembly.
+    //   2. Mono/WASM (Blazor) does not fire [ModuleInitializer] until a type in the module is
+    //      touched. Extension packages like Gum.Shapes.KNI expose a public static
+    //      "RegisterRuntimeTypes" (plural) we can call directly to force registration before
+    //      .gumx load. RegisterRuntimeTypes is idempotent (guarded), so calling it on top of an
+    //      already-fired ModuleInitializer is a no-op.
     private void RegisterRuntimeTypesThroughReflection()
     {
-        // Get the currently executing assembly
-        Assembly executingAssembly = Assembly.GetEntryAssembly();
-
-        // Get all types in the assembly
+        // (1) Legacy entry-assembly hook (singular method name).
+        Assembly? executingAssembly = Assembly.GetEntryAssembly();
         var types = executingAssembly?.GetTypes();
-
         if (types != null)
         {
             foreach (Type type in types)
             {
                 var method = type.GetMethod("RegisterRuntimeType", BindingFlags.Static | BindingFlags.Public);
+                method?.Invoke(null, null);
+            }
+        }
 
-                if (method != null)
+        // (2) Extension-package hook (plural method name) across all loaded assemblies. This is
+        // what unblocks Apos shapes on Blazor/WASM.
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            if (assembly.IsDynamic) continue;
+            Type[] assemblyTypes;
+            try { assemblyTypes = assembly.GetTypes(); }
+            catch (ReflectionTypeLoadException ex) { assemblyTypes = ex.Types.Where(t => t != null).ToArray()!; }
+            catch { continue; }
+
+            foreach (var type in assemblyTypes)
+            {
+                if (type == null) continue;
+                var method = type.GetMethod("RegisterRuntimeTypes", BindingFlags.Static | BindingFlags.Public);
+                if (method != null && method.GetParameters().Length == 0)
                 {
-                    method.Invoke(null, null);
+                    try { method.Invoke(null, null); }
+                    catch { /* a misbehaving extension shouldn't break Gum init */ }
                 }
             }
         }
