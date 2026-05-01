@@ -501,9 +501,18 @@ public class Renderer : IRenderer
 
         Render(layer.Renderables, managers, layer, prerender);
 
-        lastBatchOwner?.EndBatch(managers);
-        lastBatchOwner = null;
-        currentBatchKey = string.Empty;
+        // If the walk ended inside a custom batch, flush it. We also re-Push SpriteBatch state
+        // so the stack depth matches what line 498 Push'd — every mid-walk transition into a
+        // custom batch did an EndSpriteBatch (Pop), and that pop must be balanced before the
+        // outer end-of-layer sequence runs. Without this re-Push, EndSpriteBatch on .NET<8
+        // would Pop an empty stack, and on .NET8+ subsequent layers would see drifted state.
+        if (lastBatchOwner != null)
+        {
+            lastBatchOwner.EndBatch(managers);
+            lastBatchOwner = null;
+            currentBatchKey = string.Empty;
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera, "Restore SpriteBatch stack after custom batch at end of layer");
+        }
 
 #if !NET8_0_OR_GREATER
         spriteRenderer.EndSpriteBatch();
@@ -528,6 +537,19 @@ public class Renderer : IRenderer
     public void End()
     {
         spriteRenderer.ForcedMatrix = null;
+
+        // Flush any pending custom batch (e.g. Apos.Shapes ShapeBatch). If the walk ended in
+        // a custom batch, the SpriteBatch was already End'd at that mid-walk transition — so
+        // we must re-Push it here to keep the SpriteBatchStack depth matching what Begin
+        // (called by GumBatch.Begin) originally pushed. Otherwise the EndSpriteBatch below
+        // would Pop an empty stack.
+        if (lastBatchOwner != null)
+        {
+            lastBatchOwner.EndBatch(SystemManagers.Default);
+            lastBatchOwner = null;
+            currentBatchKey = string.Empty;
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, _layers[0], BeginType.Push, mCamera, "Restore SpriteBatch stack after custom batch at end of GumBatch");
+        }
 
         spriteRenderer.EndSpriteBatch();
     }
@@ -761,16 +783,60 @@ public class Renderer : IRenderer
             }
             else
             {
-                if(!string.IsNullOrEmpty(renderable.BatchKey) && renderable.BatchKey != currentBatchKey)
+                // Batch-key transition handling.
+                //
+                // Each renderable belongs to one of two kinds of batches:
+                //   - Default SpriteBatch: BatchKey is null/empty (sprites, text). The outer
+                //     RenderLayer/Begin call has already started this batch.
+                //   - Custom batch: BatchKey is non-empty (e.g. Apos.Shapes "Apos.Shapes" key).
+                //     Started/ended by the renderable's StartBatch/EndBatch hooks.
+                //
+                // For correct painter's-algorithm draw order across mixed batches, every batch
+                // transition must flush the OUTGOING batch to the GPU before queueing into the
+                // INCOMING one. SpriteBatch and custom batches submit independently at their
+                // respective End() calls, so the order End() is called in == GPU paint order.
+                //
+                // Without flushing on sprite→custom, queued sprites would end up flushed AFTER
+                // shapes (when SpriteBatch.End fires later), making shapes visually appear UNDER
+                // sprites that came before them. Without flushing on custom→sprite, the reverse:
+                // shapes leak past their intended z-order and appear on top of subsequent sprites.
+                //
+                // Mid-walk SpriteBatch re-begins use BeginType.Push so each Pop (issued when
+                // exiting SpriteBatch into a custom batch) is balanced by a matching Push when
+                // returning to SpriteBatch — keeping the SpriteBatchStack depth stable across
+                // the walk and matching the depth the outer Begin originally pushed.
+                var newBatchKey = renderable.BatchKey ?? string.Empty;
+                if (newBatchKey != currentBatchKey)
                 {
-                    if(lastBatchOwner != null)
+                    bool wasInCustomBatch = lastBatchOwner != null;
+                    bool willBeInCustomBatch = !string.IsNullOrEmpty(newBatchKey);
+
+                    if (wasInCustomBatch)
                     {
-                        lastBatchOwner.EndBatch(managers);
+                        lastBatchOwner!.EndBatch(managers);
+                        lastBatchOwner = null;
+                    }
+                    else
+                    {
+                        // Was in default SpriteBatch — flush queued sprites before the custom
+                        // batch starts queueing shapes that should appear on top of them.
+                        spriteRenderer.EndSpriteBatch();
                     }
 
-                    currentBatchKey = renderable.BatchKey;
-                    lastBatchOwner = renderable;
-                    renderable.StartBatch(managers);
+                    if (willBeInCustomBatch)
+                    {
+                        renderable.StartBatch(managers);
+                        lastBatchOwner = renderable;
+                    }
+                    else
+                    {
+                        // Returning to default SpriteBatch. Use BeginType.Push to balance the
+                        // EndSpriteBatch (Pop) issued when we transitioned out of SpriteBatch
+                        // earlier — every mid-walk Pop must be matched by a mid-walk Push so
+                        // the SpriteBatchStack depth stays consistent across the walk.
+                        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera, $"Resume SpriteBatch after {currentBatchKey} batch");
+                    }
+                    currentBatchKey = newBatchKey;
                 }
 
                 renderable.Render(managers);
