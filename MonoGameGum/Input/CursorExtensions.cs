@@ -183,7 +183,8 @@ public static class CursorExtensions
                     $"A child is receiving events instead of the parent.\n" +
                     GetStack(interactiveGue);
             }
-            return $"The cursor is over {NameOrType(cursor.VisualOver)} instead of {NameOrType(interactiveGue)}";
+            return $"The cursor is over {NameOrType(cursor.VisualOver)} instead of {NameOrType(interactiveGue)}. " +
+                DescribeRelationship(cursor.VisualOver as GraphicalUiElement, interactiveGue);
         }
 
         var rootParent = interactiveGue.GetTopParent();
@@ -251,8 +252,49 @@ public static class CursorExtensions
             : gue.GetType().Name;
 
         return string.IsNullOrEmpty(gue.Name)
-            ? typeName
-            : $"{typeName} named {gue.Name}";
+            ? $"[{typeName}]"
+            : $"[{typeName} named {gue.Name}]";
+    }
+
+    private static string DescribeRelationship(GraphicalUiElement? a, GraphicalUiElement b)
+    {
+        if (a == null) return string.Empty;
+
+        if (IsDescendantOf(b, a))
+        {
+            return $"{NameOrType(a)} is an ancestor of {NameOrType(b)}.\n" + GetAncestorTree(b, a);
+        }
+
+        var lca = GetLowestCommonAncestor(a, b);
+        if (lca != null)
+        {
+            return $"They share the common ancestor {NameOrType(lca)}.\n" +
+                $"Path to {NameOrType(a)}:\n{GetAncestorTree(a, lca)}" +
+                $"Path to {NameOrType(b)}:\n{GetAncestorTree(b, lca)}";
+        }
+
+        return $"They do not share a common ancestor — they are likely under separate roots passed to GumService.Update.\n" +
+            $"Path to {NameOrType(a)}:\n{GetAncestorTree(a)}" +
+            $"Path to {NameOrType(b)}:\n{GetAncestorTree(b)}";
+    }
+
+    private static GraphicalUiElement? GetLowestCommonAncestor(GraphicalUiElement a, GraphicalUiElement b)
+    {
+        var ancestors = new HashSet<GraphicalUiElement>();
+        GraphicalUiElement? current = a;
+        while (current != null)
+        {
+            ancestors.Add(current);
+            current = current.Parent as GraphicalUiElement;
+        }
+
+        current = b;
+        while (current != null)
+        {
+            if (ancestors.Contains(current)) return current;
+            current = current.Parent as GraphicalUiElement;
+        }
+        return null;
     }
 
 
