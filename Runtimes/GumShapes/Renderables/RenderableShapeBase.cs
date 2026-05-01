@@ -604,7 +604,13 @@ public abstract class RenderableShapeBase : RenderableBase
                 "ShapeRenderer is null - did you remember to call ShapeRenderer.Self.Initialize()? " +
                 "For more information see documentation: https://docs.flatredball.com/gum/code/standard-visuals/shapes-apos.shapes#monogame");
         }
-        sb.Begin();
+
+        // Match the view matrix that the active SpriteBatch is using so shapes scale with
+        // camera zoom and any matrix passed to GumBatch.Begin. Without this, ShapeBatch
+        // always renders in raw screen pixels while sprites/text track the canvas.
+        var managers = systemManagers as SystemManagers;
+        var view = managers?.Renderer?.SpriteRenderer?.CurrentTransformMatrix;
+        sb.Begin(view: view);
     }
 
     public override void EndBatch(ISystemManagers systemManagers)

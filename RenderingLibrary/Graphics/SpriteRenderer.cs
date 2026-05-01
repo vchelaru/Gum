@@ -44,6 +44,14 @@ public class SpriteRenderer
     // This is used by GumBatch to force a matrix for all calls in its own Begin/End pair
     public Microsoft.Xna.Framework.Matrix? ForcedMatrix { get; set; }
 
+    /// <summary>
+    /// The transform matrix currently applied to the active SpriteBatch, or null if no batch
+    /// is active. Custom batches (e.g. Apos.Shapes ShapeBatch) read this so their view matrix
+    /// stays in sync with SpriteBatch — without it, anything drawn outside SpriteBatch would
+    /// ignore camera zoom and any matrix passed to GumBatch.Begin.
+    /// </summary>
+    public Microsoft.Xna.Framework.Matrix? CurrentTransformMatrix => mSpriteBatch?.CurrentParameters?.TransformMatrix;
+
     public IEnumerable<BeginParameters> LastFrameDrawStates
     {
         get
