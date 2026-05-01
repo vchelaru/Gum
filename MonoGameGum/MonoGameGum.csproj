@@ -141,6 +141,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\IAnimation.cs" Link="Renderables\IAnimation.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\BatchOrchestrator.cs" Link="RenderingLibrary\BatchOrchestrator.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\SpriteBatchRenderableBase.cs" Link="Renderables\SpriteBatchRenderableBase.cs" />

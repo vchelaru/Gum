@@ -501,9 +501,7 @@ public class Renderer : IRenderer
 
         Render(layer.Renderables, managers, layer, prerender);
 
-        lastBatchOwner?.EndBatch(managers);
-        lastBatchOwner = null;
-        currentBatchKey = string.Empty;
+        _batchOrchestrator.FlushAndReset(managers);
 
 #if !NET8_0_OR_GREATER
         spriteRenderer.EndSpriteBatch();
@@ -529,15 +527,13 @@ public class Renderer : IRenderer
     {
         spriteRenderer.ForcedMatrix = null;
 
-        // Mirror RenderLayer's end-of-walk: flush any pending custom batch and reset the
-        // BatchKey/owner fields. Without this, the next Renderer.Begin cycle inherits the
-        // dangling lastBatchOwner and currentBatchKey — causing custom-batch draws (e.g.
-        // Apos.Shapes shapes) to leak across cycles and be flushed at non-deterministic
-        // times, which produces draw-order artifacts in consumers that do many small
-        // Begin/End cycles (FRB2's GumRenderable, immediate-mode samples).
-        lastBatchOwner?.EndBatch(SystemManagers.Default);
-        lastBatchOwner = null;
-        currentBatchKey = string.Empty;
+        // Mirror RenderLayer's end-of-walk: flush any pending custom batch and reset state
+        // before ending SpriteBatch. Without this, the next Renderer.Begin cycle inherits
+        // the dangling owner/key — causing custom-batch draws (e.g. Apos.Shapes shapes)
+        // to leak across cycles and flush at non-deterministic times. This matters most
+        // for consumers that do many small Begin/End cycles (FRB2's GumRenderable, the
+        // immediate-mode samples).
+        _batchOrchestrator.FlushAndReset(SystemManagers.Default);
 
         spriteRenderer.EndSpriteBatch();
     }
@@ -735,8 +731,7 @@ public class Renderer : IRenderer
 
     Sprite renderTargetRenderableSprite = new Sprite((Texture2D)null);
 
-    string currentBatchKey = string.Empty;
-    IRenderable? lastBatchOwner;
+    readonly BatchOrchestrator _batchOrchestrator = new();
 
     private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy, bool isPreRender)
     {
@@ -771,17 +766,7 @@ public class Renderer : IRenderer
             }
             else
             {
-                if(!string.IsNullOrEmpty(renderable.BatchKey) && renderable.BatchKey != currentBatchKey)
-                {
-                    if(lastBatchOwner != null)
-                    {
-                        lastBatchOwner.EndBatch(managers);
-                    }
-
-                    currentBatchKey = renderable.BatchKey;
-                    lastBatchOwner = renderable;
-                    renderable.StartBatch(managers);
-                }
+                _batchOrchestrator.OnRenderable(renderable, managers);
 
                 renderable.Render(managers);
 
@@ -796,12 +781,7 @@ public class Renderer : IRenderer
             {
                 mRenderStateVariables.ClipRectangle = oldClip;
 
-                if (lastBatchOwner != null)
-                {
-                    lastBatchOwner.EndBatch(managers);
-                    lastBatchOwner = null;
-                    currentBatchKey = string.Empty;
-                }
+                _batchOrchestrator.FlushAndReset(managers);
 
                 spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, $"Un-set {renderable} Clip");
             }

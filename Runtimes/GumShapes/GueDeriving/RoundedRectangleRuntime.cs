@@ -49,7 +49,7 @@ public class RoundedRectangleRuntime : AposShapeRuntime
     {
         if (fullInstantiation)
         {
-            SetContainedObject(new RoundedRectangle());
+            SetContainedShape(new RoundedRectangle());
 
             // Make defaults 100 to match Glue
             Width = 100;

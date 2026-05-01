@@ -532,29 +532,55 @@ public abstract class AposShapeRuntime : GraphicalUiElement
 
 
     /// <summary>
+    /// Wires <paramref name="shape"/> into this runtime as the contained renderable AND hooks its
+    /// PreRender so that <see cref="PreRender"/> on this runtime is actually invoked each frame.
+    ///
+    /// IMPORTANT: derived ctors must call this instead of <c>SetContainedObject</c> directly. The
+    /// renderer adds the renderable (the shape) to the layer, not this runtime, so the renderer's
+    /// PreRender walk only reaches the shape's PreRender - never the runtime's. Without this hook,
+    /// values that the runtime resolves in PreRender (like unit-bearing StrokeWidth) never reach
+    /// the renderable. See the long comment on <see cref="StrokeWidth"/> below.
+    /// </summary>
+    protected void SetContainedShape(RenderableShapeBase shape)
+    {
+        SetContainedObject(shape);
+        shape.OnPreRender = PreRender;
+    }
+
+    /// <summary>
     /// Applies StrokeWidthUnits to the contained renderable's StrokeWidth before rendering.
-    /// This is done in PreRender (rather than in the property setter) because the camera zoom
-    /// can change between frames, and ScreenPixel scaling depends on it.
+    ///
+    /// DO NOT "simplify" this by turning <see cref="StrokeWidth"/> into a passthrough property
+    /// that writes straight to <c>ContainedRenderable.StrokeWidth</c>. The runtime needs to keep
+    /// the user-supplied value AND the units (Absolute vs ScreenPixel) so that ScreenPixel can be
+    /// re-resolved against the current camera zoom every frame - the camera zoom can change between
+    /// frames, so a one-shot push at set time would go stale.
+    ///
+    /// This override is reached because <see cref="SetContainedShape"/> hooks the renderable's
+    /// PreRender to call back into here. (The renderer's PreRender walk only visits renderables in
+    /// the layer, not GraphicalUiElement wrappers, so without that hook this method would be dead
+    /// code and StrokeWidth would never propagate.)
     /// </summary>
     public override void PreRender()
     {
-        if (this.EffectiveManagers != null)
+        var strokeWidth = StrokeWidth;
+
+        if (StrokeWidthUnits == DimensionUnitType.ScreenPixel)
         {
-            var camera = this.EffectiveManagers.Renderer.Camera;
-            var strokeWidth = StrokeWidth;
-
-            switch (StrokeWidthUnits)
+            // Only ScreenPixel needs the camera zoom; if managers are not yet available
+            // (e.g. unit tests, or before the runtime is added to the system) fall back to
+            // the unscaled value rather than skipping the push entirely.
+            var camera = this.EffectiveManagers?.Renderer?.Camera;
+            if (camera != null)
             {
-                case DimensionUnitType.Absolute:
-                    // do nothing
-                    break;
-                case DimensionUnitType.ScreenPixel:
-                    strokeWidth /= camera.Zoom;
-                    break;
+                strokeWidth /= camera.Zoom;
             }
-
-            ContainedRenderable.StrokeWidth = strokeWidth;
         }
-        base.PreRender();
+
+        ContainedRenderable.StrokeWidth = strokeWidth;
+
+        // NOTE: do NOT call base.PreRender() here. base.PreRender() forwards to
+        // mContainedObjectAsIpso.PreRender() (the shape) - and the shape's PreRender is what just
+        // called us via OnPreRender. Calling it again would recurse infinitely.
     }
 }

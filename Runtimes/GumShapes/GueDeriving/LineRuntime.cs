@@ -37,7 +37,7 @@ public class LineRuntime : AposShapeRuntime
     {
         if (fullInstantiation)
         {
-            SetContainedObject(new Line());
+            SetContainedShape(new Line());
             Color = Microsoft.Xna.Framework.Color.White;
             Width = 100;
             Height = 0;

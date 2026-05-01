@@ -151,8 +151,17 @@ public class GumService
     public void EnableHotReload(string absoluteGumxSourcePath)
     {
         _hotReloadManager = new GumHotReloadManager();
+        _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
         _hotReloadManager.Start(absoluteGumxSourcePath);
     }
+
+    /// <summary>
+    /// Raised after a hot-reload pass completes (Root.Children rebuilt from updated
+    /// ElementSaves). Subscribe from your game to react to project changes — e.g. rebuild
+    /// entity-attached Gum visuals that aren't part of Root.Children and therefore weren't
+    /// touched by the in-place patch.
+    /// </summary>
+    public event Action? HotReloadCompleted;
 #endif
 
     public void UseKeyboardDefaults()
@@ -782,7 +791,7 @@ public class GumService
 #endif
         DeferredQueue.ProcessPending();
 #if !IOS && !ANDROID
-        _hotReloadManager?.Update(Root);
+        _hotReloadManager?.Update(roots);
 #endif
         GameTime = gameTime;
 #if XNALIKE

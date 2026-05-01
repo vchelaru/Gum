@@ -80,7 +80,7 @@ public class ArcRuntime : AposShapeRuntime
     {
         if (fullInstantiation)
         {
-            SetContainedObject(new Arc());
+            SetContainedShape(new Arc());
             this.Color = Microsoft.Xna.Framework.Color.White;
             Width = 100;
             Height = 100;
