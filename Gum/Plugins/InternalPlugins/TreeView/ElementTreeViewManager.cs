@@ -156,6 +156,89 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public const int DerivedInstanceImageIndex = 9;
     public const int LockedInstanceImageIndex = 10;
 
+    // Per-type standard element icons. Indices must match the TryInjectIcon
+    // call order in ElementTreeViewCreator.InjectDynamicIcons.
+    public const int ContainerImageIndex = 11;
+    public const int SpriteImageIndex = 12;
+    public const int NineSliceImageIndex = 13;
+    public const int TextImageIndex = 14;
+    public const int RectangleImageIndex = 15;
+    public const int ColoredRectangleImageIndex = 16;
+    public const int CircleImageIndex = 17;
+    public const int ColoredCircleImageIndex = 18;
+    public const int RoundedRectangleImageIndex = 19;
+    public const int PolygonImageIndex = 20;
+    public const int ArcImageIndex = 21;
+    public const int LineImageIndex = 22;
+    public const int CanvasImageIndex = 23;
+    public const int LottieAnimationImageIndex = 24;
+    public const int SvgImageIndex = 25;
+
+    // Per-type instance icons (same shapes, blue tint instead of purple).
+    // Indices must match the TryInjectIcon call order in
+    // ElementTreeViewCreator.InjectDynamicIcons.
+    public const int ContainerInstanceImageIndex = 26;
+    public const int SpriteInstanceImageIndex = 27;
+    public const int NineSliceInstanceImageIndex = 28;
+    public const int TextInstanceImageIndex = 29;
+    public const int RectangleInstanceImageIndex = 30;
+    public const int ColoredRectangleInstanceImageIndex = 31;
+    public const int CircleInstanceImageIndex = 32;
+    public const int ColoredCircleInstanceImageIndex = 33;
+    public const int RoundedRectangleInstanceImageIndex = 34;
+    public const int PolygonInstanceImageIndex = 35;
+    public const int ArcInstanceImageIndex = 36;
+    public const int LineInstanceImageIndex = 37;
+    public const int CanvasInstanceImageIndex = 38;
+    public const int LottieAnimationInstanceImageIndex = 39;
+    public const int SvgInstanceImageIndex = 40;
+
+    /// <summary>
+    /// Returns the per-type (blue-tinted) icon for an instance whose BaseType
+    /// is a standard element. Falls back to the generic
+    /// <see cref="InstanceImageIndex"/> for component-typed instances or
+    /// unrecognized types.
+    /// </summary>
+    public static int GetImageIndexForInstance(string? baseType) => baseType switch
+    {
+        "Container" => ContainerInstanceImageIndex,
+        "Sprite" => SpriteInstanceImageIndex,
+        "NineSlice" => NineSliceInstanceImageIndex,
+        "Text" => TextInstanceImageIndex,
+        "Rectangle" => RectangleInstanceImageIndex,
+        "ColoredRectangle" => ColoredRectangleInstanceImageIndex,
+        "Circle" => CircleInstanceImageIndex,
+        "ColoredCircle" => ColoredCircleInstanceImageIndex,
+        "RoundedRectangle" => RoundedRectangleInstanceImageIndex,
+        "Polygon" => PolygonInstanceImageIndex,
+        "Arc" => ArcInstanceImageIndex,
+        "Line" => LineInstanceImageIndex,
+        "Canvas" => CanvasInstanceImageIndex,
+        "LottieAnimation" => LottieAnimationInstanceImageIndex,
+        "Svg" => SvgInstanceImageIndex,
+        _ => InstanceImageIndex,
+    };
+
+    public static int GetImageIndexForStandardElement(string? name) => name switch
+    {
+        "Container" => ContainerImageIndex,
+        "Sprite" => SpriteImageIndex,
+        "NineSlice" => NineSliceImageIndex,
+        "Text" => TextImageIndex,
+        "Rectangle" => RectangleImageIndex,
+        "ColoredRectangle" => ColoredRectangleImageIndex,
+        "Circle" => CircleImageIndex,
+        "ColoredCircle" => ColoredCircleImageIndex,
+        "RoundedRectangle" => RoundedRectangleImageIndex,
+        "Polygon" => PolygonImageIndex,
+        "Arc" => ArcImageIndex,
+        "Line" => LineImageIndex,
+        "Canvas" => CanvasImageIndex,
+        "LottieAnimation" => LottieAnimationImageIndex,
+        "Svg" => SvgImageIndex,
+        _ => StandardElementImageIndex,
+    };
+
     static ElementTreeViewManager mSelf;
 
     // Part of the phantom right-click workaround. Subscribed in Initialize(),
@@ -446,7 +529,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         bool showExclamation = element.IsSourceFileMissing || hasErrors;
         int normalIndex = element is ScreenSave ? ScreenImageIndex
                         : element is ComponentSave ? ComponentImageIndex
-                        : StandardElementImageIndex;
+                        : GetImageIndexForStandardElement(element.Name);
         int desiredIndex = showExclamation ? ExclamationIndex : normalIndex;
 
         if (treeNode.ImageIndex != desiredIndex)
@@ -963,7 +1046,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 if (GetTreeNodeFor(standardSave) == null &&  ShouldShow(standardSave))
                 {
-                    AddTreeNodeForElement(standardSave, mStandardElementsTreeNode, StandardElementImageIndex);
+                    AddTreeNodeForElement(standardSave, mStandardElementsTreeNode, GetImageIndexForStandardElement(standardSave.Name));
                 }
             }
         }
@@ -1717,7 +1800,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             var element = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            int desiredImageIndex = InstanceImageIndex;
+            int desiredImageIndex = GetImageIndexForInstance(instance.BaseType);
             if (element == null || element.IsSourceFileMissing)
             {
                 desiredImageIndex = ExclamationIndex;
@@ -1787,7 +1870,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         bool validBaseType = ObjectFinder.Self.GetElementSave(instance.BaseType) != null;
 
         if (validBaseType || tolerateMissingTypes)
-            treeNode.ImageIndex = instance.Locked ? LockedInstanceImageIndex : InstanceImageIndex;
+            treeNode.ImageIndex = instance.Locked ? LockedInstanceImageIndex : GetImageIndexForInstance(instance.BaseType);
         else
             treeNode.ImageIndex = ExclamationIndex;
 

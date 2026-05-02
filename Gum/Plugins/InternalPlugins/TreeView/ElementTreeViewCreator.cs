@@ -399,6 +399,74 @@ internal class ElementTreeViewCreator
                 "pack://application:,,,/Gum;component/Content/Icons/InheritedInstance.png");
             TryInjectIcon("instance_locked.png",
                 "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/instance_locked.png");
+
+            // Per-type standard element icons. Order must match the *ImageIndex
+            // constants in ElementTreeViewManager (Container=11 .. Svg=25).
+            TryInjectIcon("Container.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Container.png");
+            TryInjectIcon("Sprite.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Sprite.png");
+            TryInjectIcon("NineSlice.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/NineSlice.png");
+            TryInjectIcon("Text.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Text.png");
+            TryInjectIcon("Rectangle.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Rectangle.png");
+            TryInjectIcon("ColoredRectangle.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/ColoredRectangle.png");
+            TryInjectIcon("Circle.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Circle.png");
+            TryInjectIcon("ColoredCircle.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/ColoredCircle.png");
+            TryInjectIcon("RoundedRectangle.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/RoundedRectangle.png");
+            TryInjectIcon("Polygon.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Polygon.png");
+            TryInjectIcon("Arc.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Arc.png");
+            TryInjectIcon("Line.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Line.png");
+            TryInjectIcon("Canvas.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Canvas.png");
+            TryInjectIcon("LottieAnimation.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/LottieAnimation.png");
+            TryInjectIcon("Svg.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Svg.png");
+
+            // Per-type instance icons. Same source PNGs as above, but cached
+            // under a separate key so they can be tinted blue (instances)
+            // independently from purple (standard elements). Order must match
+            // the *InstanceImageIndex constants in ElementTreeViewManager.
+            TryInjectIcon("Container_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Container.png");
+            TryInjectIcon("Sprite_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Sprite.png");
+            TryInjectIcon("NineSlice_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/NineSlice.png");
+            TryInjectIcon("Text_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Text.png");
+            TryInjectIcon("Rectangle_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Rectangle.png");
+            TryInjectIcon("ColoredRectangle_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/ColoredRectangle.png");
+            TryInjectIcon("Circle_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Circle.png");
+            TryInjectIcon("ColoredCircle_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/ColoredCircle.png");
+            TryInjectIcon("RoundedRectangle_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/RoundedRectangle.png");
+            TryInjectIcon("Polygon_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Polygon.png");
+            TryInjectIcon("Arc_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Arc.png");
+            TryInjectIcon("Line_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Line.png");
+            TryInjectIcon("Canvas_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Canvas.png");
+            TryInjectIcon("LottieAnimation_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/LottieAnimation.png");
+            TryInjectIcon("Svg_Instance.png",
+                "pack://application:,,,/Gum;component/Content/Icons/UpdatedTreeViewIcons/Svg.png");
         }
 
         void TryInjectIcon(string key, string packUri)
@@ -439,6 +507,36 @@ internal class ElementTreeViewCreator
                 ["redExclamation.png"] = red,
                 ["state.png"] = blue,
                 ["behavior.png"] = manilla,
+                ["Container.png"] = purple,
+                ["Sprite.png"] = purple,
+                ["NineSlice.png"] = purple,
+                ["Text.png"] = purple,
+                ["Rectangle.png"] = purple,
+                ["ColoredRectangle.png"] = purple,
+                ["Circle.png"] = purple,
+                ["ColoredCircle.png"] = purple,
+                ["RoundedRectangle.png"] = purple,
+                ["Polygon.png"] = purple,
+                ["Arc.png"] = purple,
+                ["Line.png"] = purple,
+                ["Canvas.png"] = purple,
+                ["LottieAnimation.png"] = purple,
+                ["Svg.png"] = purple,
+                ["Container_Instance.png"] = blue,
+                ["Sprite_Instance.png"] = blue,
+                ["NineSlice_Instance.png"] = blue,
+                ["Text_Instance.png"] = blue,
+                ["Rectangle_Instance.png"] = blue,
+                ["ColoredRectangle_Instance.png"] = blue,
+                ["Circle_Instance.png"] = blue,
+                ["ColoredCircle_Instance.png"] = blue,
+                ["RoundedRectangle_Instance.png"] = blue,
+                ["Polygon_Instance.png"] = blue,
+                ["Arc_Instance.png"] = blue,
+                ["Line_Instance.png"] = blue,
+                ["Canvas_Instance.png"] = blue,
+                ["LottieAnimation_Instance.png"] = blue,
+                ["Svg_Instance.png"] = blue,
             };
         }
     }
