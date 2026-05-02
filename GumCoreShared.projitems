@@ -9,6 +9,20 @@
     <Import_RootNamespace>GumCoreShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\BundleGumFileProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\DependencyWarning.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GlobMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundleFormat.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundleFormatException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundleInclusion.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundleLoader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundleReader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundleWriter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumProjectDependencyWalker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\IGumFileProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\LooseFileGumFileProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\WalkResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Collections\GraphicalUiElementCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorInstanceSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorReference.cs" />
