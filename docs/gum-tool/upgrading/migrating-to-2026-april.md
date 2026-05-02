@@ -6,15 +6,44 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## Upgrading Gum Tool
 
-{% hint style="info" %}
-The 2026 April release of the Gum tool is not yet available. This page will be updated with download links when the release is published.
-{% endhint %}
+{% tabs %}
+{% tab title="Windows" %}
+
+
+To upgrade the Gum tool:
+
+1. Download Gum.zip from the release on Github:\
+   [https://github.com/vchelaru/Gum/releases/tag/Release\_May\_02\_2026](https://github.com/vchelaru/Gum/releases/tag/Release_May_02_2026)
+2. Delete the old tool from your machine
+3. Unzip the gum tool to the same location as to not break any file associations
+{% endtab %}
+
+{% tab title="Linux" %}
+Run the upgrade `gum upgrade` or `~/bin/gum upgrade`
+{% endtab %}
+{% endtabs %}
 
 ## Upgrading Runtime
 
-{% hint style="info" %}
-The 2026 April NuGet packages are not yet available. This page will be updated with version numbers when the packages are published.
-{% endhint %}
+Upgrade your Gum NuGet packages to version **2026.5.2.1**. For more information, see the NuGet packages for your particular platform:
+
+* MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
+* KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
+* FNA - [https://www.nuget.org/packages/Gum.FNA/](https://www.nuget.org/packages/Gum.FNA/)
+* raylib - [https://www.nuget.org/packages/Gum.raylib](https://www.nuget.org/packages/Gum.raylib)
+* .NET MAUI - [https://www.nuget.org/packages/Gum.SkiaSharp.Maui](https://www.nuget.org/packages/Gum.SkiaSharp.Maui)
+* SkiaSharp - [https://www.nuget.org/packages/Gum.SkiaSharp/](https://www.nuget.org/packages/Gum.SkiaSharp/)
+
+If using GumCommon directly, you can update the GumCommon NuGet:
+
+* GumCommon - [https://www.nuget.org/packages/FlatRedBall.GumCommon](https://www.nuget.org/packages/FlatRedBall.GumCommon)
+
+If using the Apos.Shapes library, update the library for your target platform:
+
+* Gum.Shapes.MonoGame - [https://www.nuget.org/packages/Gum.Shapes.MonoGame](https://www.nuget.org/packages/Gum.Shapes.MonoGame)
+* Gum.Shapes.KNI - [https://www.nuget.org/packages/Gum.Shapes.KNI](https://www.nuget.org/packages/Gum.Shapes.KNI)
+
+For other platforms you need to build Gum from source
 
 See below for breaking changes and updates.
 
@@ -50,10 +79,10 @@ The following types moved from `RaylibGum.Input` to `Gum.Input`: `Cursor`, `Keyb
 
 Update any `using` directives or fully-qualified references:
 
-| Old                          | New                      |
-| ---------------------------- | ------------------------ |
-| `using RaylibGum.Input;`     | `using Gum.Input;`       |
-| `RaylibGum.Input.Cursor`     | `Gum.Input.Cursor`       |
-| `RaylibGum.Input.GamePad`    | `Gum.Input.GamePad`      |
+| Old                       | New                 |
+| ------------------------- | ------------------- |
+| `using RaylibGum.Input;`  | `using Gum.Input;`  |
+| `RaylibGum.Input.Cursor`  | `Gum.Input.Cursor`  |
+| `RaylibGum.Input.GamePad` | `Gum.Input.GamePad` |
 
 MonoGame projects are unaffected — the `MonoGameGum.Input` namespace has not changed. This change only impacts raylib-based projects.
