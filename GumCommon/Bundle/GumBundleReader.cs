@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+#if NET7_0_OR_GREATER
 using System.Formats.Tar;
+#endif
 using System.IO;
 using System.IO.Compression;
 
@@ -18,6 +20,11 @@ public static class GumBundleReader
     /// </summary>
     public static GumBundle Read(Stream input)
     {
+#if !NET7_0_OR_GREATER
+        throw new NotSupportedException(
+            "GumBundleReader.Read requires .NET 7 or later (System.Formats.Tar). " +
+            "On older targets, .gumpkg bundle loading is not available — load loose files instead.");
+#else
         if (input == null)
         {
             throw new ArgumentNullException(nameof(input));
@@ -90,8 +97,10 @@ public static class GumBundleReader
         }
 
         return new GumBundle(version, entries, orderedPaths);
+#endif
     }
 
+#if NET7_0_OR_GREATER
     private static int ReadFully(Stream stream, byte[] buffer, int offset, int count)
     {
         int total = 0;
@@ -106,4 +115,5 @@ public static class GumBundleReader
         }
         return total;
     }
+#endif
 }

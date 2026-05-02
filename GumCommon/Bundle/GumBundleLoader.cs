@@ -44,6 +44,11 @@ public static class GumBundleLoader
             return new BundleResolution(usedBundle: false, resolvedGumxPath: gumxPath, previousHook: null);
         }
 
+#if !NET7_0_OR_GREATER
+        // .gumpkg loading requires System.Formats.Tar (net7+). On older targets fall back to
+        // loose-file resolution; downstream Load will surface a clear "not found" for the .gumx.
+        return new BundleResolution(usedBundle: false, resolvedGumxPath: gumxPath, previousHook: null);
+#else
         GumBundle bundle;
         using (FileStream fs = File.OpenRead(bundlePath))
         {
@@ -77,6 +82,7 @@ public static class GumBundleLoader
         };
 
         return new BundleResolution(usedBundle: true, resolvedGumxPath: gumxPath, previousHook: previousHook);
+#endif
     }
 
     private static string? TryMakeRelative(string incomingPath, string projectRoot)

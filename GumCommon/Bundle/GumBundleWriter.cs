@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+#if NET7_0_OR_GREATER
 using System.Formats.Tar;
+#endif
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -19,6 +21,11 @@ public static class GumBundleWriter
     /// </summary>
     public static void Write(Stream output, IEnumerable<(string path, byte[] content)> entries)
     {
+#if !NET7_0_OR_GREATER
+        throw new NotSupportedException(
+            "GumBundleWriter.Write requires .NET 7 or later (System.Formats.Tar). " +
+            "On older targets, .gumpkg bundle creation is not available.");
+#else
         if (output == null)
         {
             throw new ArgumentNullException(nameof(output));
@@ -64,5 +71,6 @@ public static class GumBundleWriter
                 brotli.Write(endOfArchive, 0, endOfArchive.Length);
             }
         }
+#endif
     }
 }

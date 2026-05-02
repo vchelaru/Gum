@@ -12,6 +12,37 @@ For bugs, you may be given a general bug report or you may be given a call stack
 
 In either case, your job is to produce a focused code change that implements the new feature or fixes the bug, with clear notes explaining what you did and why.
 
+# GumCoreShared.projitems — keep FRB1 in sync
+
+FRB1 (FlatRedBall) consumes Gum sources via `GumCoreShared.shproj`, which imports `GumCoreShared.projitems`. If you add, rename, move, or delete any `.cs` file under `GumCommon/` or `MonoGameGum/`, you MUST update `GumCoreShared.projitems` in the same change. Otherwise FRB1 builds will break.
+
+Workflow when adding new `.cs` files to `GumCommon/` or `MonoGameGum/`:
+
+1. Add the file as normal under the project directory.
+2. Open `GumCoreShared.projitems` and add a `<Compile Include="$(MSBuildThisFileDirectory)<relative\path\to\file.cs>" />` line in alphabetical order alongside the existing entries.
+3. When deleting or renaming a file, update or remove the corresponding entry.
+
+This applies to ALL files in `GumCommon/` and `MonoGameGum/` by default. If a particular file genuinely should not be shared with FRB1 (rare), call it out in your final notes so the user can confirm the exclusion.
+
+# Multi-target gating — FRB1 still targets .NET 6
+
+`GumCommon` itself targets `net8.0`, but FRB1 consumes the same source files via `GumCoreShared.shproj` and multi-targets down to `net6.0`. Any BCL API introduced after .NET 6 will compile fine in `GumCommon` and break the FRB1 build silently if you don't gate it.
+
+When you use a BCL API (or any framework feature) added in .NET 7+, wrap it in a preprocessor gate matching the minimum target that has it:
+
+- **`System.Formats.Tar`** — net7+. Gate with `#if NET7_0_OR_GREATER`.
+- **Generic math interfaces (`INumber<T>`, etc.)** — net7+. Gate with `#if NET7_0_OR_GREATER`.
+- **`TimeProvider`, frozen collections** — net8+. Gate with `#if NET8_0_OR_GREATER`.
+- When in doubt, check the API's "Applies to" table on learn.microsoft.com.
+
+Gating pattern:
+
+1. Wrap the `using` directive: `#if NET7_0_OR_GREATER\nusing System.Formats.Tar;\n#endif`.
+2. Inside the method body, gate the implementation and provide a `NotSupportedException` (or graceful no-op) for older targets so the public signature stays stable: `#if !NET7_0_OR_GREATER\nthrow new NotSupportedException("...");\n#else\n...real implementation...\n#endif`.
+3. Keep public method signatures the same on every target — callers should compile everywhere even if they get a runtime exception when the feature isn't available.
+
+Don't `#if` away entire types or methods unless you've confirmed no caller references them across targets — that's a much harder refactor.
+
 # Bug fix workflow: test-first
 
 When fixing a bug that can be reproduced in a unit test, always write the failing test **before** implementing the fix. The workflow is:
