@@ -1,0 +1,14 @@
+ExampleSpriteFrame.png
+FontCache/Font18Arial.fnt
+FontCache/Font18Arial_0.png
+FromZipFileGumProject.gumx
+Screens/FirstScreen.gusx
+Standards/Circle.gutx
+Standards/ColoredRectangle.gutx
+Standards/Component.gutx
+Standards/Container.gutx
+Standards/NineSlice.gutx
+Standards/Polygon.gutx
+Standards/Rectangle.gutx
+Standards/Sprite.gutx
+Standards/Text.gutx

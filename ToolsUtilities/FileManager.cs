@@ -756,7 +756,12 @@ namespace ToolsUtilities
 #else
                 if (CustomGetStreamFromFile != null)
                 {
-                    return CustomGetStreamFromFile(fileName);
+                    var customStream = CustomGetStreamFromFile(fileName);
+                    if (customStream == null)
+                    {
+                        throw new FileNotFoundException($"CustomGetStreamFromFile returned null for {fileName}", fileName);
+                    }
+                    return customStream;
                 }
                 else
                 {
