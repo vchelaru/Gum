@@ -277,6 +277,21 @@
 		<Resource Include="Content\Icons\UpdatedTreeViewIcons\StandardElement.png" />
 		<Resource Include="Content\Icons\UpdatedTreeViewIcons\behavior.png" />
 		<Resource Include="Content\Icons\UpdatedTreeViewIcons\folder.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Container.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Sprite.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\NineSlice.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Text.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Rectangle.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\ColoredRectangle.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Circle.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\ColoredCircle.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\RoundedRectangle.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Polygon.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Arc.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Line.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Canvas.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\LottieAnimation.png" />
+		<Resource Include="Content\Icons\UpdatedTreeViewIcons\Svg.png" />
 		<Content Include="Content\Icons\Origins\Baseline.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
