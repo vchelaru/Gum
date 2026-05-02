@@ -1900,4 +1900,52 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     #endregion
+
+    #region MoveToLayer
+
+    [Fact]
+    public void MoveToLayer_ScreenLikeElement_ShouldMoveContainedChildrenToTargetLayer()
+    {
+        // Reproduces the regression where a screen GUE (no contained ipso)
+        // hits the wrong branch in MoveToLayer and silently fails to move
+        // its children's ipsos onto the requested layer.
+        GraphicalUiElement screen = new();
+        screen.ElementSave = new ScreenSave();
+
+        ContainerRuntime childA = new();
+        ContainerRuntime childB = new();
+        childA.ElementGueContainingThis = screen;
+        childB.ElementGueContainingThis = screen;
+
+        Layer targetLayer = new();
+
+        screen.MoveToLayer(targetLayer);
+
+        targetLayer.Renderables.ShouldContain(childA.RenderableComponent);
+        targetLayer.Renderables.ShouldContain(childB.RenderableComponent);
+    }
+
+    [Fact]
+    public void MoveToLayer_LeafElement_ShouldMoveContainedIpsoToTargetLayer()
+    {
+        ContainerRuntime leaf = new();
+
+        Layer targetLayer = new();
+
+        leaf.MoveToLayer(targetLayer);
+
+        targetLayer.Renderables.ShouldContain(leaf.RenderableComponent);
+    }
+
+    [Fact]
+    public void MoveToLayer_NullLayerWithNoManagers_ShouldThrow()
+    {
+        // A leaf GUE that has never been added to managers and is asked to
+        // move to a null layer has nowhere to go and should throw.
+        ContainerRuntime leaf = new();
+
+        Should.Throw<InvalidOperationException>(() => leaf.MoveToLayer(null));
+    }
+
+    #endregion
 }

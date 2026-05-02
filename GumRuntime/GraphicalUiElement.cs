@@ -5856,7 +5856,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             layerToAddTo = mManagers?.Renderer.Layers[0];
         }
 
-        bool hasContainedObject = mContainedObjectAsIpso == null;
+        bool hasContainedObject = mContainedObjectAsIpso != null;
         if (hasContainedObject)
         {
             if(layerToAddTo == null)
