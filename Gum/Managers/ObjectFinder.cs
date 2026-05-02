@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -748,24 +749,55 @@ public class ObjectFinder : IObjectFinder
 
     public IEnumerable<string> GetAllFilesInProject()
     {
-        List<string> toReturn = new List<string>();
-
-        FillListWithReferencedFiles(toReturn, GumProjectSave.Screens);
-        FillListWithReferencedFiles(toReturn, GumProjectSave.Components);
-        FillListWithReferencedFiles(toReturn, GumProjectSave.StandardElements);
-
-        return toReturn.Distinct();
+        return CollectReferencedFilesViaWalker(scopeElement: null).Distinct();
     }
 
     public List<string> GetFilesReferencedBy(ElementSave element)
     {
-        List<string> toReturn = new List<string>();
-
-        FillListWithReferencedFiles(toReturn, element);
-
-        return toReturn.Distinct().ToList();
+        return CollectReferencedFilesViaWalker(scopeElement: element).Distinct().ToList();
     }
 
+    private List<string> CollectReferencedFilesViaWalker(ElementSave? scopeElement)
+    {
+        List<string> result = new List<string>();
+        if (GumProjectSave == null)
+        {
+            return result;
+        }
+
+        string gumProjectDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName);
+
+        Gum.Bundle.GumProjectDependencyWalker walker = new Gum.Bundle.GumProjectDependencyWalker();
+        Gum.Bundle.WalkResult walkResult = walker.Walk(
+            GumProjectSave,
+            gumProjectDirectory,
+            Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.FontCache | Gum.Bundle.GumBundleInclusion.ExternalFiles,
+            scopeElement);
+
+        // Walker emits relative-to-project paths (forward-slashed). Existing callers expect
+        // absolute paths normalized through FilePath. Skip the .gumx itself to match the
+        // historical contract — it was never returned by these methods.
+        string gumxFileName = string.IsNullOrEmpty(GumProjectSave.FullFileName)
+            ? string.Empty
+            : Path.GetFileName(GumProjectSave.FullFileName);
+
+        foreach (string relative in walkResult.AllIncludedFiles)
+        {
+            if (!string.IsNullOrEmpty(gumxFileName)
+                && string.Equals(relative, gumxFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+            // Paths stored in SourceFile/CustomFontFile may be absolute (rooted) — preserve those
+            // verbatim. Pure-relative walker output (e.g. "Components/X.gucx", "FontCache/foo.fnt")
+            // gets the project directory prepended so callers see absolute paths as before.
+            string absolute = Path.IsPathRooted(relative) ? relative : gumProjectDirectory + relative;
+            result.Add(new FilePath(absolute).StandardizedCaseSensitive);
+        }
+        return result;
+    }
+
+    [Obsolete("Use GumProjectDependencyWalker via GetAllFilesInProject/GetFilesReferencedBy.")]
     private void FillListWithReferencedFiles<T>(List<string> files, IList<T> elements) where T : ElementSave
     {
         // These files are all relative to the project, so we don't have to worry
@@ -776,7 +808,7 @@ public class ObjectFinder : IObjectFinder
         }
     }
 
-    [Obsolete("Use FillListWithReferencedFilePaths")]
+    [Obsolete("Use GumProjectDependencyWalker via GetAllFilesInProject/GetFilesReferencedBy.")]
     private void FillListWithReferencedFiles(List<string> absoluteFiles, ElementSave element)
     {
         List<FilePath> files = new List<FilePath>();
@@ -786,6 +818,7 @@ public class ObjectFinder : IObjectFinder
         absoluteFiles.AddRange(files.Select(item => item.StandardizedCaseSensitive));
     }
 
+    [Obsolete("Use GumProjectDependencyWalker via GetAllFilesInProject/GetFilesReferencedBy.")]
     private void FillWithReferencedFilePaths(List<FilePath> absoluteFiles, ElementSave element)
     { 
         RecursiveVariableFinder rvf;

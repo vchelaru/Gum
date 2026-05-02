@@ -22,6 +22,7 @@ public class Program
 
         rootCommand.AddCommand(NewCommand.Create());
         rootCommand.AddCommand(CheckCommand.Create());
+        rootCommand.AddCommand(PackCommand.Create());
         rootCommand.AddCommand(CodegenCommand.Create());
         rootCommand.AddCommand(CodegenInitCommand.Create());
         rootCommand.AddCommand(FontsCommand.Create());

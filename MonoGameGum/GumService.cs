@@ -1,6 +1,7 @@
 ﻿#if MONOGAME || KNI || FNA
 #define XNALIKE
 #endif
+using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.StateAnimation.SaveClasses;
@@ -472,7 +473,12 @@ public class GumService
 
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
-            gumProject = GumProjectSave.Load(gumProjectFile, out GumLoadResult loadResult);
+            // Resolve loose-vs-bundle: if a sibling .gumpkg exists (and no loose .gumx),
+            // installs a CustomGetStreamFromFile hook that serves entries from the bundle.
+            // The hook stays installed so runtime asset loads (textures/fonts) also resolve
+            // from the bundle. Plan §4: loose wins when both exist.
+            BundleResolution bundleResolution = GumBundleLoader.Resolve(gumProjectFile);
+            gumProject = GumProjectSave.Load(bundleResolution.ResolvedGumxPath, out GumLoadResult loadResult);
             LastLoadResult = loadResult;
 
             if (gumProject == null || !string.IsNullOrEmpty(loadResult.ErrorMessage) || loadResult.MissingFiles.Count > 0)

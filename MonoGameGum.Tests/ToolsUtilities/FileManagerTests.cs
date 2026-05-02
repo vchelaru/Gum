@@ -1,6 +1,7 @@
 ﻿using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,8 +9,26 @@ using ToolsUtilities;
 using Xunit;
 
 namespace MonoGameGum.Tests.ToolsUtilities;
-public class FileManagerTests
+public class FileManagerTests : IDisposable
 {
+    private readonly Func<string, Stream>? _previousHook = FileManager.CustomGetStreamFromFile;
+
+    public void Dispose()
+    {
+        FileManager.CustomGetStreamFromFile = _previousHook;
+    }
+
+    [Fact]
+    public void GetStreamForFile_ShouldThrowFileNotFoundException_WhenCustomHookReturnsNull()
+    {
+        FileManager.CustomGetStreamFromFile = _ => null!;
+
+        var ex = Should.Throw<IOException>(() => FileManager.GetStreamForFile("anything.gumx"));
+
+        ex.InnerException.ShouldBeOfType<FileNotFoundException>();
+        ((FileNotFoundException)ex.InnerException!).FileName.ShouldBe("anything.gumx");
+    }
+
     [Fact]
     public void FromFileText_ShouldLoad_WhenPathHasDotDotSlash()
     {
