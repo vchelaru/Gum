@@ -217,6 +217,8 @@
 		</Compile>
 	</ItemGroup>
 	<ItemGroup>
+	  <PackageReference Include="BrotliSharpLib" Version="0.3.3" />
+	  <PackageReference Include="SharpCompress" Version="0.47.4" />
 	  <PackageReference Include="CsvHelper" Version="33.1.0" />
 	  <PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
 	  <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />

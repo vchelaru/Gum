@@ -16,6 +16,10 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\FlatRedBall\Engines\Forms\FlatRedBall.Forms\StateInterpolation\StateInterpolation.FNA\StateInterpolation.FNA.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="BrotliSharpLib" Version="0.3.3" />
+        <PackageReference Include="SharpCompress" Version="0.47.4" />
+    </ItemGroup>
 
     <Import Project="..\..\..\GumCoreShared.projitems" Label="Shared" />
     <Import Project="..\..\..\..\FlatRedBall\FRBDK\Glue\GumPlugin\GumPlugin\GumCoreShared.FlatRedBall.projitems" Label="Shared" />

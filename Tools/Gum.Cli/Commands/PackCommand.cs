@@ -4,6 +4,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using Gum.Bundle;
+using Gum.Managers;
 using Gum.ProjectServices;
 
 namespace Gum.Cli.Commands;
@@ -71,6 +72,12 @@ public static class PackCommand
         }
 
         string projectDirectory = Path.GetDirectoryName(fullPath) ?? "";
+
+        // FontReferenceCollector (used by the walker for FontCache enumeration) resolves
+        // component-instance BaseTypes via ObjectFinder.Self. Wire the loaded project in
+        // before walking so inherited font variables (e.g. Strong.Font from Standards/Text)
+        // resolve correctly.
+        ObjectFinder.Self.GumProjectSave = loadResult.Project;
 
         string resolvedOutputPath = outputPath != null
             ? Path.GetFullPath(outputPath)

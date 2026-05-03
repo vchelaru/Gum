@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using ToolsUtilities;
 
 namespace Gum.Bundle;
@@ -25,34 +26,51 @@ public static class GumBundleLoader
             throw new ArgumentException("Gumx path must be non-empty.", nameof(gumxPath));
         }
 
-        // Loose wins when both exist (plan §4.1 / §4.2).
-        if (File.Exists(gumxPath))
+        // Normalize through FileManager so a relative input ("GumProject/GumProject.gumx")
+        // resolves against FileManager.RelativeDirectory the same way GumProjectSave.Load
+        // will resolve it. Without this, a desktop app launching from its bin/ folder
+        // would probe ./GumProject/... while the deployed files live at ./Content/GumProject/...
+        // and the loader would fall through to loose-mode and fail with "not found".
+        string resolvedGumxPath = FileManager.IsRelative(gumxPath)
+            ? FileManager.MakeAbsolute(gumxPath)
+            : gumxPath;
+
+        // Loose wins when both exist (plan §4.1 / §4.2). File.Exists returns false on
+        // platforms without a real filesystem (Blazor WASM); on those targets the
+        // convention is "ship the bundle" so falling through to bundle mode is correct.
+        // Probing through CustomGetStreamFromFile would be unreliable: a host hook may
+        // succeed for any input (e.g. a CDN catch-all) and falsely claim loose exists.
+        if (File.Exists(resolvedGumxPath))
         {
-            return new BundleResolution(usedBundle: false, resolvedGumxPath: gumxPath, previousHook: null);
+            return new BundleResolution(usedBundle: false, resolvedGumxPath: resolvedGumxPath, previousHook: null);
         }
 
-        string? directory = Path.GetDirectoryName(gumxPath);
-        string nameWithoutExtension = Path.GetFileNameWithoutExtension(gumxPath);
+        string? directory = Path.GetDirectoryName(resolvedGumxPath);
+        string nameWithoutExtension = Path.GetFileNameWithoutExtension(resolvedGumxPath);
         string bundlePath = string.IsNullOrEmpty(directory)
             ? nameWithoutExtension + ".gumpkg"
             : Path.Combine(directory!, nameWithoutExtension + ".gumpkg");
 
-        if (!File.Exists(bundlePath))
-        {
-            // Neither exists. Return as-is; downstream Load will surface a "not found" error
-            // with its own message (matches existing GumProjectSave.Load behavior).
-            return new BundleResolution(usedBundle: false, resolvedGumxPath: gumxPath, previousHook: null);
-        }
-
 #if !NET7_0_OR_GREATER
         // .gumpkg loading requires System.Formats.Tar (net7+). On older targets fall back to
         // loose-file resolution; downstream Load will surface a clear "not found" for the .gumx.
-        return new BundleResolution(usedBundle: false, resolvedGumxPath: gumxPath, previousHook: null);
+        return new BundleResolution(usedBundle: false, resolvedGumxPath: resolvedGumxPath, previousHook: null);
 #else
-        GumBundle bundle;
-        using (FileStream fs = File.OpenRead(bundlePath))
+        // Read the bundle through the same file seam as the rest of the loader. On desktop
+        // this is File.OpenRead; on TitleContainer-backed platforms (Blazor WASM / Android /
+        // iOS) the host-installed CustomGetStreamFromFile hook routes the read through
+        // TitleContainer.OpenStream. If neither resolves the file, we silently return loose
+        // mode so the downstream "not found" path produces a familiar error.
+        Stream? bundleStream = TryOpenBundle(bundlePath);
+        if (bundleStream == null)
         {
-            bundle = GumBundleReader.Read(fs);
+            return new BundleResolution(usedBundle: false, resolvedGumxPath: resolvedGumxPath, previousHook: null);
+        }
+
+        GumBundle bundle;
+        using (bundleStream)
+        {
+            bundle = GumBundleReader.Read(bundleStream);
         }
 
         BundleGumFileProvider provider = new BundleGumFileProvider(bundle);
@@ -81,8 +99,28 @@ public static class GumBundleLoader
                 incomingPath);
         };
 
-        return new BundleResolution(usedBundle: true, resolvedGumxPath: gumxPath, previousHook: previousHook);
+        return new BundleResolution(usedBundle: true, resolvedGumxPath: resolvedGumxPath, previousHook: previousHook);
 #endif
+    }
+
+    private static Stream? TryOpenBundle(string bundlePath)
+    {
+        if (File.Exists(bundlePath))
+        {
+            return File.OpenRead(bundlePath);
+        }
+
+        if (FileManager.CustomGetStreamFromFile == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return FileManager.CustomGetStreamFromFile(bundlePath);
+        }
+        catch (FileNotFoundException) { return null; }
+        catch (DirectoryNotFoundException) { return null; }
     }
 
     private static string? TryMakeRelative(string incomingPath, string projectRoot)
@@ -92,8 +130,13 @@ public static class GumBundleLoader
             return null;
         }
 
-        string normalizedIncoming = incomingPath.Replace('\\', '/');
-        string normalizedRoot = projectRoot.Replace('\\', '/').TrimEnd('/');
+        // Normalize separators AND collapse runs of slashes — on Blazor WASM, Gum's
+        // FileManager.MakeAbsolute can occasionally produce paths with doubled slashes
+        // (e.g. "//Content/foo") when concatenating against a RelativeDirectory that
+        // already starts with one. Without collapsing, the literal prefix-match below
+        // would fail and the bundled asset would silently fall through to the host hook.
+        string normalizedIncoming = CollapseSlashes(incomingPath.Replace('\\', '/'));
+        string normalizedRoot = CollapseSlashes(projectRoot.Replace('\\', '/')).TrimEnd('/');
 
         if (normalizedRoot.Length == 0 || normalizedRoot == ".")
         {
@@ -112,6 +155,33 @@ public static class GumBundleLoader
         }
 
         return null;
+    }
+
+    private static string CollapseSlashes(string path)
+    {
+        if (string.IsNullOrEmpty(path) || path.IndexOf("//", StringComparison.Ordinal) < 0)
+        {
+            return path;
+        }
+        StringBuilder sb = new StringBuilder(path.Length);
+        bool prevSlash = false;
+        foreach (char c in path)
+        {
+            if (c == '/')
+            {
+                if (!prevSlash)
+                {
+                    sb.Append('/');
+                }
+                prevSlash = true;
+            }
+            else
+            {
+                sb.Append(c);
+                prevSlash = false;
+            }
+        }
+        return sb.ToString();
     }
 }
 
