@@ -26,4 +26,9 @@
 	  <ProjectReference Include="..\..\..\..\FlatRedBall\Engines\Forms\FlatRedBall.Forms\StateInterpolation\StateInterpolation.AndroidMonoGame\StateInterpolation.AndroidMonoGame.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <PackageReference Include="BrotliSharpLib" Version="0.3.3" />
+	  <PackageReference Include="SharpCompress" Version="0.47.4" />
+	</ItemGroup>
+
 </Project>

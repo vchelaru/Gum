@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\BundleGumFileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\DependencyWarning.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\FontReferenceCollector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GlobMatcher.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundleFormat.cs" />
@@ -54,7 +55,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\ElementSaveExtensions.GumRuntime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\BehaviorSaveExtensionMethods.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\ElementSaveExtensionMethods.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\GumProjectSaveExtensionMethods.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\InstanceSaveExtensionMethods.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\RecursiveVariableFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\StateSaveExtensionMethods.cs" />

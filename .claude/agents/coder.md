@@ -24,6 +24,24 @@ Workflow when adding new `.cs` files to `GumCommon/` or `MonoGameGum/`:
 
 This applies to ALL files in `GumCommon/` and `MonoGameGum/` by default. If a particular file genuinely should not be shared with FRB1 (rare), call it out in your final notes so the user can confirm the exclusion.
 
+## NuGet packages — keep FRB1-side csproj files in sync
+
+`GumCommon.csproj` and `MonoGameGum.csproj` declare their own `<PackageReference>` items, but the FRB1-side projects under `GumCore/GumCoreXnaPc/` consume the source files via `GumCoreShared.projitems` (and `MonoGameGum`'s shared projitems) and do **not** inherit those package references. If a shared `.cs` file gains a new `using` that resolves through a NuGet package, you MUST also add the matching `<PackageReference>` to every csproj that imports the relevant `.projitems`. Otherwise those builds break with `CS0246`.
+
+Projects that import `GumCoreShared.projitems` (verify by grepping if unsure):
+
+- `GumCore/GumCoreXnaPc/GumCore.DesktopGlNet6/GumCore.DesktopGlNet6.csproj`
+- `GumCore/GumCoreXnaPc/GumCore.FNA/GumCore.FNA.csproj`
+- `GumCore/GumCoreXnaPc/GumCore.Kni.DesktopGL/GumCore.Kni.DesktopGL.csproj`
+- `GumCore/GumCoreXnaPc/GumCore.Kni.Web/GumCore.Kni.Web.csproj`
+- `GumCore/GumCoreXnaPc/GumCoreAndroid/GumCoreAndroid.csproj` (and the sibling `GumCoreAndroid.csproj`)
+- `GumCore/GumCoreXnaPc/GumCoreUwp/GumCoreUwp.csproj`
+- `GumCore/GumCoreXnaPc/GumCoreiOS/GumCoreiOS.csproj` (and the sibling `GumCoreiOS.csproj`)
+- `GumCore/GumCoreXnaPc/GumCoreDesktopGL.csproj`
+- `GumCore/GumCoreXnaPc/GumCoreXnaPc.csproj`
+
+Pin to the same version used in `GumCommon.csproj` / `MonoGameGum.csproj` so a single bump propagates predictably. Mention the package additions explicitly in your final notes so the user can audit them.
+
 # Multi-target gating — FRB1 still targets .NET 6
 
 `GumCommon` itself targets `net8.0`, but FRB1 consumes the same source files via `GumCoreShared.shproj` and multi-targets down to `net6.0`. Any BCL API introduced after .NET 6 will compile fine in `GumCommon` and break the FRB1 build silently if you don't gate it.
