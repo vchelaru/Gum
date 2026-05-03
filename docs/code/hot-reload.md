@@ -48,7 +48,7 @@ Hot reload is focused on Gum element definitions. The following are **not** auto
 
 * **Textures and images** — If you change a `.png` file, the cached texture is still used. Restart the game to pick up texture changes.
 * **Animation files** — `.ganx` animation definitions are not reloaded.
-* **Runtime state** — Any properties set programmatically at runtime (e.g., changing `Text` or `Width` in code) are lost when the element is recreated. Only values defined in the Gum project are restored.
+* **Runtime state** — Any properties set programmatically at runtime (e.g., changing `Text` or `Width` in code) are lost when the element is recreated. Only values defined in the Gum project are restored. See [Preserving Runtime State](#preserving-runtime-state) below for the recommended pattern.
 
 ## Platform Support
 
@@ -70,8 +70,44 @@ When `EnableHotReload` is called, Gum creates a `FileSystemWatcher` on the direc
 3. All children of the root element are removed and recreated from the updated element definitions, preserving their order.
 
 {% hint style="warning" %}
-Because elements are fully recreated during hot reload, any runtime state set in code is lost. If your game sets properties on UI elements after creation (e.g., populating a label with a score), that code needs to run again after a reload. For development purposes, this is usually acceptable — hot reload is a development-time feature, not intended for production builds.
+Because elements are fully recreated during hot reload, any runtime state set in code is lost. If your game sets properties on UI elements after creation (e.g., populating a label with a score, hiding a panel), that code needs to run again after a reload.
 {% endhint %}
+
+## Preserving Runtime State
+
+Hot reload rebuilds elements from the Gum project, so values your code wrote at runtime are not preserved. The recommended pattern is to subscribe to the `HotReloadCompleted` event and re-apply any runtime state your game relies on.
+
+`HotReloadCompleted` fires after Gum has finished rebuilding the element tree but before the next frame draws, so changes made in the handler are visible immediately.
+
+```csharp
+// Initialize
+GumUI.HotReloadCompleted += ReapplyRuntimeState;
+
+void ReapplyRuntimeState()
+{
+    // Hide UI that should not be visible at this point in the game.
+    _winOverlay.IsVisible = false;
+
+    // Re-populate dynamic content driven by game state.
+    _scoreLabel.Text = _player.Score.ToString();
+
+    // Re-bind anything that was wired up after element creation.
+    _inventoryListBox.ItemsSource = _player.Inventory;
+}
+```
+
+{% hint style="info" %}
+Only re-apply state that originated in your code. Values authored in the Gum tool are already restored by the reload itself.
+{% endhint %}
+
+Common things to re-apply in a `HotReloadCompleted` handler:
+
+* Visibility of overlays, modals, or panels that were hidden or shown by game code.
+* Text values that reflect game state (scores, names, timers, currency).
+* Data bindings or `ItemsSource` assignments on `ListBox`, `ComboBox`, etc.
+* Event handler subscriptions on buttons or other interactive elements, if they were attached to specific instances rather than registered through Forms.
+
+If your game has a single screen-level "apply current state to UI" method, calling it from `HotReloadCompleted` is usually the simplest approach.
 
 ## Disabling Hot Reload
 
