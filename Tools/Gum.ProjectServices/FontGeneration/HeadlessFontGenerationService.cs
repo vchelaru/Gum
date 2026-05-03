@@ -1,8 +1,7 @@
+using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
-using Gum.Wireframe;
-using GumRuntime;
 using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
@@ -253,181 +252,14 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
     /// <summary>
     /// Collects all unique fonts required by the given elements without performing any I/O.
-    /// Keyed by <see cref="BmfcSave.FontCacheFileName"/> so duplicate font+size+style combinations
-    /// are automatically deduplicated.
+    /// Delegates to <see cref="FontReferenceCollector"/> in GumCommon so this code path is
+    /// shared with <see cref="GumProjectDependencyWalker"/> (used by <c>gumcli pack</c>).
     /// </summary>
     internal Dictionary<string, BmfcSave> CollectRequiredFonts(GumProjectSave project, IEnumerable<ElementSave> elements)
     {
-        string fontRanges = project.FontRanges;
-        int spacingHorizontal = project.FontSpacingHorizontal;
-        int spacingVertical = project.FontSpacingVertical;
-
-        Dictionary<string, BmfcSave> bitmapFonts = new Dictionary<string, BmfcSave>();
-
-        foreach (ElementSave element in elements)
-        {
-            foreach (StateSave state in element.AllStates)
-            {
-                // Resolve variable references so that font properties set via references
-                // (e.g. "FontSize = HeaderText.FontSize") are baked into the state before
-                // we read them. In the tool this happens on every edit, but in the headless/CLI
-                // path the references may not have been applied yet.
-                element.ApplyVariableReferences(state);
-
-                BmfcSave? bmfcSave = TryGetBmfcSaveFor(null, state, fontRanges, spacingHorizontal, spacingVertical, forcedValues: null);
-                if (bmfcSave != null)
-                {
-                    bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
-                }
-                foreach (InstanceSave instance in element.Instances)
-                {
-                    BmfcSave? bmfcSaveInner = TryGetBmfcSaveFor(instance, state, fontRanges, spacingHorizontal, spacingVertical, forcedValues: null);
-                    if (bmfcSaveInner != null)
-                    {
-                        bitmapFonts[bmfcSaveInner.FontCacheFileName] = bmfcSaveInner;
-                    }
-
-                    // TryGetBmfcSaveFor only finds font properties set directly on this instance
-                    // (e.g., "MyComponentInstance.Font"). For component instances, font properties
-                    // live on inner Text instances and may be partially exposed. Use
-                    // RecursiveVariableFinder to resolve through the component hierarchy.
-                    CollectFontsFromNestedTextInstances(element, state, instance,
-                        bitmapFonts, fontRanges, spacingHorizontal, spacingVertical);
-                }
-            }
-        }
-
-        return bitmapFonts;
-    }
-
-    /// <summary>
-    /// For a component instance, descends into the component to find Text instances and resolves
-    /// their font properties using <see cref="RecursiveVariableFinder"/>. This handles the case
-    /// where a screen has a component instance with an overridden FontSize, but the Font (family)
-    /// comes from the component's inner Text definition.
-    /// </summary>
-    private void CollectFontsFromNestedTextInstances(ElementSave outerElement, StateSave outerState,
-        InstanceSave componentInstance, Dictionary<string, BmfcSave> bitmapFonts,
-        string fontRanges, int spacingHorizontal, int spacingVertical)
-    {
-        ElementSave? componentElement = ObjectFinder.Self.GetElementSave(componentInstance);
-        if (componentElement == null)
-        {
-            return;
-        }
-
-        foreach (InstanceSave innerInstance in componentElement.Instances)
-        {
-            ElementSave? innerElement = ObjectFinder.Self.GetElementSave(innerInstance);
-            if (innerElement == null)
-            {
-                continue;
-            }
-
-            if (innerElement is StandardElementSave standard && standard.Name == "Text")
-            {
-                // Build element stack: outer element → component → Text standard element
-                // RecursiveVariableFinder.GetValueByBottomName starts from the bottom (Text)
-                // and climbs up through exposed variables to find overrides.
-                List<ElementWithState> elementStack = new List<ElementWithState>
-                {
-                    new ElementWithState(outerElement) { StateName = outerState.Name, InstanceName = componentInstance.Name },
-                    new ElementWithState(componentElement) { InstanceName = innerInstance.Name },
-                    new ElementWithState(innerElement)
-                };
-
-                BmfcSave? bmfcSave = TryGetBmfcSaveFromStack(elementStack,
-                    fontRanges, spacingHorizontal, spacingVertical);
-                if (bmfcSave != null)
-                {
-                    bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
-                }
-            }
-            else
-            {
-                // Recurse into nested components (component containing component containing Text)
-                CollectFontsFromNestedTextInstances(outerElement, outerState, componentInstance,
-                    componentElement, innerInstance, bitmapFonts, fontRanges, spacingHorizontal, spacingVertical);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Recursive overload for deeper nesting (component → component → ... → Text).
-    /// Builds the element stack progressively as it descends.
-    /// </summary>
-    private void CollectFontsFromNestedTextInstances(ElementSave outerElement, StateSave outerState,
-        InstanceSave outerInstance, ElementSave parentComponent, InstanceSave innerInstance,
-        Dictionary<string, BmfcSave> bitmapFonts,
-        string fontRanges, int spacingHorizontal, int spacingVertical)
-    {
-        ElementSave? innerElement = ObjectFinder.Self.GetElementSave(innerInstance);
-        if (innerElement == null)
-        {
-            return;
-        }
-
-        if (innerElement is StandardElementSave standard && standard.Name == "Text")
-        {
-            List<ElementWithState> elementStack = new List<ElementWithState>
-            {
-                new ElementWithState(outerElement) { StateName = outerState.Name, InstanceName = outerInstance.Name },
-                new ElementWithState(parentComponent) { InstanceName = innerInstance.Name },
-                new ElementWithState(innerElement)
-            };
-
-            BmfcSave? bmfcSave = TryGetBmfcSaveFromStack(elementStack,
-                fontRanges, spacingHorizontal, spacingVertical);
-            if (bmfcSave != null)
-            {
-                bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
-            }
-        }
-        else
-        {
-            // Continue descending
-            foreach (InstanceSave deeperInstance in innerElement.Instances)
-            {
-                CollectFontsFromNestedTextInstances(outerElement, outerState, outerInstance,
-                    innerElement, deeperInstance, bitmapFonts, fontRanges, spacingHorizontal, spacingVertical);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Resolves font properties through a component hierarchy using <see cref="RecursiveVariableFinder"/>
-    /// and returns a <see cref="BmfcSave"/> if both Font and FontSize are found.
-    /// </summary>
-    private static BmfcSave? TryGetBmfcSaveFromStack(List<ElementWithState> elementStack,
-        string fontRanges, int spacingHorizontal, int spacingVertical)
-    {
-        RecursiveVariableFinder rfv = new RecursiveVariableFinder(elementStack);
-
-        string? fontValue = rfv.GetValueByBottomName("Font") as string;
-        int? fontSize = rfv.GetValueByBottomName("FontSize") as int?;
-
-        if (fontValue == null || fontSize == null)
-        {
-            return null;
-        }
-
-        int outlineValue = rfv.GetValueByBottomName("OutlineThickness") as int? ?? 0;
-        bool fontSmoothing = rfv.GetValueByBottomName("UseFontSmoothing") as bool? ?? true;
-        bool isItalic = rfv.GetValueByBottomName("IsItalic") as bool? ?? false;
-        bool isBold = rfv.GetValueByBottomName("IsBold") as bool? ?? false;
-
-        BmfcSave bmfcSave = new BmfcSave();
-        bmfcSave.FontSize = fontSize.Value;
-        bmfcSave.FontName = fontValue;
-        bmfcSave.OutlineThickness = outlineValue;
-        bmfcSave.UseSmoothing = fontSmoothing;
-        bmfcSave.IsItalic = isItalic;
-        bmfcSave.IsBold = isBold;
-        bmfcSave.Ranges = fontRanges;
-        bmfcSave.SpacingHorizontal = spacingHorizontal;
-        bmfcSave.SpacingVertical = spacingVertical;
-
-        return bmfcSave;
+        FontReferenceCollector collector = new FontReferenceCollector(
+            instance => ObjectFinder.Self.GetElementSave(instance));
+        return collector.Collect(project, elements);
     }
 
     private async Task GenerateMissingFontsFor(GumProjectSave project, IEnumerable<ElementSave> elements,

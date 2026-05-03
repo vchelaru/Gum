@@ -5,6 +5,7 @@ using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using RenderingLibrary.Graphics.Fonts;
 
 namespace Gum.Bundle;
@@ -15,8 +16,12 @@ namespace Gum.Bundle;
 /// "what does this project depend on" — `gumcli pack` consumes the walker's output.
 /// </summary>
 /// <remarks>
-/// The walker is intentionally standalone — it does not depend on the <see cref="Gum.Managers.ObjectFinder"/>
-/// singleton, so callers (CLI, build tasks) can pack a project without first wiring it into the tool.
+/// Font-cache enumeration relies on <see cref="FontReferenceCollector"/>, which uses
+/// <see cref="Gum.Managers.ObjectFinder"/> to resolve component-instance BaseTypes when
+/// climbing inherited variables. Callers must therefore set
+/// <c>ObjectFinder.Self.GumProjectSave</c> before invoking <see cref="Walk(GumProjectSave, string, GumBundleInclusion)"/>
+/// when <see cref="GumBundleInclusion.FontCache"/> is requested. The non-font walks remain
+/// free of singleton state.
 /// </remarks>
 public class GumProjectDependencyWalker
 {
@@ -67,10 +72,22 @@ public class GumProjectDependencyWalker
             {
                 CollectFileAndFontReferences(project, projectRootDirectory, inclusion, fontCache, external, missing);
             }
+
+            if (inclusion.HasFlag(GumBundleInclusion.FontCache))
+            {
+                CollectFontCacheReferences(project, project.AllElements, projectRootDirectory,
+                    inclusion.HasFlag(GumBundleInclusion.ExternalFiles), fontCache, external, missing);
+            }
         }
         else
         {
             CollectForSingleElement(project, scopeElement, projectRootDirectory, inclusion, core, fontCache, external, missing);
+
+            if (inclusion.HasFlag(GumBundleInclusion.FontCache))
+            {
+                CollectFontCacheReferences(project, new[] { scopeElement }, projectRootDirectory,
+                    inclusion.HasFlag(GumBundleInclusion.ExternalFiles), fontCache, external, missing);
+            }
         }
 
         // Enforce precedence: Core wins over FontCache wins over External.
@@ -328,6 +345,9 @@ public class GumProjectDependencyWalker
                 includeFontCache, includeExternal, fontCache, external, missing);
         }
 
+        // Custom font (UseCustomFont=true with a CustomFontFile path) is an ExternalFiles concern;
+        // the standard font-cache .fnt + .png pages are emitted by CollectFontCacheReferences via
+        // FontReferenceCollector, which handles partial state overrides + Standards inheritance.
         VariableSave? useCustomFontVariable = state.GetVariableSave(instancePrefix + "UseCustomFont");
         bool useCustomFont = useCustomFontVariable?.Value is bool b && b;
 
@@ -340,26 +360,35 @@ public class GumProjectDependencyWalker
                     includeFontCache, includeExternal, fontCache, external, missing);
             }
         }
-        else
-        {
-            // Derive font cache .fnt name from the standard font variables; this mirrors the runtime's
-            // own derivation in BmfcSave.GetFontCacheFileNameFor.
-            string? fontName = state.GetVariableSave(instancePrefix + "Font")?.Value as string;
-            int? fontSize = state.GetVariableSave(instancePrefix + "FontSize")?.Value as int?;
-            int? outlineThickness = state.GetVariableSave(instancePrefix + "OutlineThickness")?.Value as int?;
-            bool? useFontSmoothing = state.GetVariableSave(instancePrefix + "UseFontSmoothing")?.Value as bool?;
-            bool? isItalic = state.GetVariableSave(instancePrefix + "IsItalic")?.Value as bool?;
-            bool? isBold = state.GetVariableSave(instancePrefix + "IsBold")?.Value as bool?;
+    }
 
-            if (fontName != null && fontSize.HasValue && outlineThickness.HasValue
-                && useFontSmoothing.HasValue && isItalic.HasValue && isBold.HasValue)
-            {
-                string fntRelative = BmfcSave.GetFontCacheFileNameFor(
-                    fontSize.Value, fontName, outlineThickness.Value, useFontSmoothing.Value,
-                    isItalic.Value, isBold.Value);
-                AddFontCacheFntAndPages(fntRelative, ownerName, projectRootDirectory,
-                    includeFontCache, includeExternal, fontCache, external, missing);
-            }
+    private static void CollectFontCacheReferences(
+        GumProjectSave project,
+        IEnumerable<ElementSave> elements,
+        string projectRootDirectory,
+        bool includeExternal,
+        HashSet<string> fontCache,
+        HashSet<string> external,
+        List<DependencyWarning> missing)
+    {
+        // FontReferenceCollector relies on StateSave.ParentContainer (set by ElementSave.Initialize)
+        // and on ObjectFinder.Self resolving instance BaseTypes. Idempotent; calling Initialize
+        // here makes the walker correct even when callers used GumProjectSave.Load directly
+        // without going through ProjectLoader.
+        StandardElementsManager.Self.Initialize();
+        project.Initialize(tolerateMissingDefaultStates: true);
+
+        FontReferenceCollector collector = new FontReferenceCollector(
+            instance => ObjectFinder.Self.GetElementSave(instance));
+
+        Dictionary<string, BmfcSave> fonts = collector.Collect(project, elements);
+
+        foreach (BmfcSave bmfc in fonts.Values)
+        {
+            string fntRelative = bmfc.FontCacheFileName;
+            string ownerName = string.IsNullOrEmpty(bmfc.FontName) ? "(font)" : bmfc.FontName;
+            AddFontCacheFntAndPages(fntRelative, ownerName, projectRootDirectory,
+                includeFontCache: true, includeExternal, fontCache, external, missing);
         }
     }
 

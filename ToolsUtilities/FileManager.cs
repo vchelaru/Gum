@@ -164,7 +164,29 @@ namespace ToolsUtilities
                 }
                 else
                 {
-                    return File.Exists(fileName);
+                    if (File.Exists(fileName))
+                    {
+                        return true;
+                    }
+
+                    // A host (e.g. Gum's own bundle loader, or a game-installed asset zip)
+                    // may resolve files that aren't on the real filesystem. Probe through
+                    // the same seam GetStreamForFile uses so consumers like the deferred-
+                    // font loader (CustomSetPropertyOnRenderable.GetFontFromBitmapFontFile)
+                    // see bundled .fnt files as existing instead of silently substituting
+                    // the default font.
+                    if (CustomGetStreamFromFile != null)
+                    {
+                        try
+                        {
+                            using var stream = CustomGetStreamFromFile(fileName);
+                            return stream != null;
+                        }
+                        catch (FileNotFoundException) { return false; }
+                        catch (DirectoryNotFoundException) { return false; }
+                    }
+
+                    return false;
                 }
             }
             else

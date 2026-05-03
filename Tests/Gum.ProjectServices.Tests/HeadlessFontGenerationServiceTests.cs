@@ -245,6 +245,27 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void CollectRequiredFonts_ShouldResolvePartialOverride_ViaStandardsInheritance()
+    {
+        // Forms-Styles shape: a component with a Text-derived instance whose state sets
+        // only a subset of font variables. The rest must inherit from the Text standard's
+        // default state. Regression guard for the same bug GumProjectDependencyWalker
+        // had — both consumers go through FontReferenceCollector now, so this asserts
+        // the shared path also handles partial overrides.
+        ComponentSave styles = new ComponentSave { Name = "Styles" };
+        Project.Components.Add(styles);
+        AddTextInstance(styles, "Strong");
+        StateSave defaultState = AddState(styles);
+        SetVar(defaultState, "Strong.FontSize", 20);
+        SetVar(defaultState, "Strong.IsBold", true);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new ElementSave[] { styles });
+
+        string expected = BmfcSave.GetFontCacheFileNameFor(20, "Arial", 0, useFontSmoothing: true, isItalic: false, isBold: true);
+        result.Keys.ShouldContain(expected);
+    }
+
+    [Fact]
     public void CollectRequiredFonts_ShouldDeduplicate_WhenTwoStatesSpecifySameFontAndSize()
     {
         ScreenSave screen = new ScreenSave { Name = "Screen" };
