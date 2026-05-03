@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-#if NET7_0_OR_GREATER
-using System.Formats.Tar;
-#endif
 using System.IO;
 using System.IO.Compression;
 
@@ -11,6 +8,18 @@ namespace Gum.Bundle;
 /// <summary>
 /// Reads a `.gumpkg` bundle stream into a <see cref="GumBundle"/>: validates header,
 /// decompresses brotli payload, and materializes every tar entry into memory.
+/// <para>
+/// Both the brotli decompression (<c>BrotliSharpLib</c>) and the tar parsing
+/// (<c>SharpCompress</c>) are pure-managed rather than the BCL equivalents
+/// (<c>System.IO.Compression.BrotliStream</c> / <c>System.Formats.Tar</c>).
+/// The framework versions both throw <c>PlatformNotSupportedException</c> on
+/// Blazor WebAssembly — brotli because Mono does not link the native brotli
+/// library, and tar because the formats package depends on POSIX file metadata
+/// APIs that aren't surfaced on browser-WASM. Blazor is the primary target the
+/// `.gumpkg` format was meant to optimize for, so the reader path must be fully
+/// managed. The on-disk format is unchanged — pure-managed and BCL implementations
+/// read the same byte stream.
+/// </para>
 /// </summary>
 public static class GumBundleReader
 {
@@ -20,11 +29,6 @@ public static class GumBundleReader
     /// </summary>
     public static GumBundle Read(Stream input)
     {
-#if !NET7_0_OR_GREATER
-        throw new NotSupportedException(
-            "GumBundleReader.Read requires .NET 7 or later (System.Formats.Tar). " +
-            "On older targets, .gumpkg bundle loading is not available — load loose files instead.");
-#else
         if (input == null)
         {
             throw new ArgumentNullException(nameof(input));
@@ -59,31 +63,43 @@ public static class GumBundleReader
 
         try
         {
-            using BrotliStream brotli = new BrotliStream(input, CompressionMode.Decompress, leaveOpen: true);
-            using TarReader tar = new TarReader(brotli, leaveOpen: true);
-
-            TarEntry? entry;
-            while ((entry = tar.GetNextEntry(copyData: false)) != null)
+            // BrotliSharpLib + SharpCompress (not System.IO.Compression / System.Formats.Tar)
+            // — see class XML doc for the Blazor WASM rationale. Same wire format; these are
+            // purely the decoder choices.
+            //
+            // SharpCompress's TarReader.OpenReader does a format-detection rewind that
+            // requires a seekable input. BrotliStream is forward-only, so we materialize
+            // the decompressed payload into a MemoryStream first. Bundles are small
+            // (typically <1MB compressed, a few MB decompressed) so the buffering cost is
+            // negligible compared to the runtime asset loads that follow.
+            MemoryStream decompressed = new MemoryStream();
+            using (BrotliSharpLib.BrotliStream brotli = new BrotliSharpLib.BrotliStream(input, CompressionMode.Decompress, leaveOpen: true))
             {
-                if (entry.EntryType != TarEntryType.RegularFile && entry.EntryType != TarEntryType.V7RegularFile)
+                brotli.CopyTo(decompressed);
+            }
+            decompressed.Position = 0;
+
+            using SharpCompress.Readers.IReader tar = SharpCompress.Readers.Tar.TarReader.OpenReader(
+                decompressed, new SharpCompress.Readers.ReaderOptions());
+
+            while (tar.MoveToNextEntry())
+            {
+                if (tar.Entry.IsDirectory)
                 {
                     continue;
                 }
 
                 byte[] content;
-                if (entry.DataStream == null)
+                using (SharpCompress.Common.EntryStream entryStream = tar.OpenEntryStream())
+                using (MemoryStream buffer = new MemoryStream())
                 {
-                    content = Array.Empty<byte>();
-                }
-                else
-                {
-                    using MemoryStream buffer = new MemoryStream();
-                    entry.DataStream.CopyTo(buffer);
+                    entryStream.CopyTo(buffer);
                     content = buffer.ToArray();
                 }
 
-                entries[entry.Name] = content;
-                orderedPaths.Add(entry.Name);
+                string key = tar.Entry.Key ?? string.Empty;
+                entries[key] = content;
+                orderedPaths.Add(key);
             }
         }
         catch (GumBundleFormatException)
@@ -97,10 +113,8 @@ public static class GumBundleReader
         }
 
         return new GumBundle(version, entries, orderedPaths);
-#endif
     }
 
-#if NET7_0_OR_GREATER
     private static int ReadFully(Stream stream, byte[] buffer, int offset, int count)
     {
         int total = 0;
@@ -115,5 +129,4 @@ public static class GumBundleReader
         }
         return total;
     }
-#endif
 }

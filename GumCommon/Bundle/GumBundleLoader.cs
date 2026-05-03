@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using ToolsUtilities;
 
 namespace Gum.Bundle;
@@ -129,8 +130,13 @@ public static class GumBundleLoader
             return null;
         }
 
-        string normalizedIncoming = incomingPath.Replace('\\', '/');
-        string normalizedRoot = projectRoot.Replace('\\', '/').TrimEnd('/');
+        // Normalize separators AND collapse runs of slashes — on Blazor WASM, Gum's
+        // FileManager.MakeAbsolute can occasionally produce paths with doubled slashes
+        // (e.g. "//Content/foo") when concatenating against a RelativeDirectory that
+        // already starts with one. Without collapsing, the literal prefix-match below
+        // would fail and the bundled asset would silently fall through to the host hook.
+        string normalizedIncoming = CollapseSlashes(incomingPath.Replace('\\', '/'));
+        string normalizedRoot = CollapseSlashes(projectRoot.Replace('\\', '/')).TrimEnd('/');
 
         if (normalizedRoot.Length == 0 || normalizedRoot == ".")
         {
@@ -149,6 +155,33 @@ public static class GumBundleLoader
         }
 
         return null;
+    }
+
+    private static string CollapseSlashes(string path)
+    {
+        if (string.IsNullOrEmpty(path) || path.IndexOf("//", StringComparison.Ordinal) < 0)
+        {
+            return path;
+        }
+        StringBuilder sb = new StringBuilder(path.Length);
+        bool prevSlash = false;
+        foreach (char c in path)
+        {
+            if (c == '/')
+            {
+                if (!prevSlash)
+                {
+                    sb.Append('/');
+                }
+                prevSlash = true;
+            }
+            else
+            {
+                sb.Append(c);
+                prevSlash = false;
+            }
+        }
+        return sb.ToString();
     }
 }
 
