@@ -1,9 +1,12 @@
+using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.ProjectServices;
 using Moq;
+using RenderingLibrary.Graphics;
 using Shouldly;
+using ToolsUtilities;
 
 namespace Gum.ProjectServices.Tests;
 
@@ -377,6 +380,142 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         errors.Count.ShouldBe(1);
         errors[0].Severity.ShouldBe(ErrorSeverity.Warning);
         errors[0].Message.ShouldContain("State suffix");
+    }
+
+    #endregion
+
+    #region ACHX Origin Errors
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotWarn_WhenAchxHasNoOffsets()
+    {
+        string achxPath = WriteTempAchx(includeOffset: false);
+        try
+        {
+            ComponentSave component = BuildComponentWithSpriteUsingSourceFile(
+                achxPath,
+                xOrigin: HorizontalAlignment.Left,
+                yOrigin: VerticalAlignment.Top);
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            errors.ShouldBeEmpty();
+        }
+        finally
+        {
+            File.Delete(achxPath);
+        }
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotWarn_WhenAchxHasOffsetsAndOriginIsCenter()
+    {
+        string achxPath = WriteTempAchx(includeOffset: true);
+        try
+        {
+            ComponentSave component = BuildComponentWithSpriteUsingSourceFile(
+                achxPath,
+                xOrigin: HorizontalAlignment.Center,
+                yOrigin: VerticalAlignment.Center);
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            errors.ShouldBeEmpty();
+        }
+        finally
+        {
+            File.Delete(achxPath);
+        }
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotWarn_WhenSourceFileIsNotAchx()
+    {
+        ComponentSave component = BuildComponentWithSpriteUsingSourceFile(
+            "image.png",
+            xOrigin: HorizontalAlignment.Left,
+            yOrigin: VerticalAlignment.Top);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldWarn_WhenAchxHasOffsetsAndOriginNotCenter()
+    {
+        string achxPath = WriteTempAchx(includeOffset: true);
+        try
+        {
+            ComponentSave component = BuildComponentWithSpriteUsingSourceFile(
+                achxPath,
+                xOrigin: HorizontalAlignment.Left,
+                yOrigin: VerticalAlignment.Top);
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            ErrorResult warning = errors.ShouldHaveSingleItem();
+            warning.Severity.ShouldBe(ErrorSeverity.Warning);
+            warning.Message.ShouldContain("Center");
+            warning.Message.ShouldContain("AnimatedSprite");
+        }
+        finally
+        {
+            File.Delete(achxPath);
+        }
+    }
+
+    private ComponentSave BuildComponentWithSpriteUsingSourceFile(
+        string sourceFile,
+        HorizontalAlignment xOrigin,
+        VerticalAlignment yOrigin)
+    {
+        ComponentSave component = new ComponentSave { Name = "AnimatedThing" };
+        component.Instances.Add(new InstanceSave { Name = "AnimatedSprite", BaseType = "Sprite" });
+
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "AnimatedSprite.SourceFile",
+            Value = sourceFile,
+            Type = "string",
+        });
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "AnimatedSprite.XOrigin",
+            Value = xOrigin,
+            Type = nameof(HorizontalAlignment),
+        });
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "AnimatedSprite.YOrigin",
+            Value = yOrigin,
+            Type = nameof(VerticalAlignment),
+        });
+        component.States.Add(defaultState);
+        Project.Components.Add(component);
+        return component;
+    }
+
+    private static string WriteTempAchx(bool includeOffset)
+    {
+        AnimationChainListSave achx = new AnimationChainListSave();
+        AnimationChainSave chain = new AnimationChainSave { Name = "Chain1" };
+        AnimationFrameSave frame = new AnimationFrameSave
+        {
+            TextureName = "tex.png",
+            FrameLength = 0.1f,
+        };
+        if (includeOffset)
+        {
+            frame.RelativeY = -3f;
+        }
+        chain.Frames.Add(frame);
+        achx.AnimationChains.Add(chain);
+
+        string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".achx");
+        FileManager.XmlSerialize(achx, path);
+        return path;
     }
 
     #endregion

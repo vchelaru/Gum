@@ -61,17 +61,25 @@ Gating pattern:
 
 Don't `#if` away entire types or methods unless you've confirmed no caller references them across targets — that's a much harder refactor.
 
-# Bug fix workflow: test-first
+# Test-Driven Development (Required)
 
-When fixing a bug that can be reproduced in a unit test, always write the failing test **before** implementing the fix. The workflow is:
+**For new features: you must TDD.** Write a failing test that captures the desired behavior, then implement to make it pass.
 
-1. Write a unit test that reproduces the reported bug
-2. Run the test and verify it **fails** — this confirms the test actually captures the bug
-3. Implement the fix
+**For bug fixes: TDD is CRITICAL.** Always reproduce the bug with a failing test *before* touching production code. Without a failing test, you are fixing based on speculation and will play whack-a-mole with symptoms instead of the real defect. A green test that would have been red before your change is the only proof that the bug existed and is now gone.
+
+The workflow:
+
+1. Write a unit test that captures the desired behavior or reproduces the bug
+2. Run the test via Bash and verify it **fails** — and fails for the right reason
+3. Implement the change
 4. Run the test again and verify it **passes**
 5. Run the full related test suite to check for regressions
 
-Never apply a fix based on speculation alone. A test that was written alongside the fix and only ever seen passing proves nothing — it might not even exercise the bug.
+**Run tests via Bash yourself.** Do not reason about expected failures as a substitute for seeing the failure message. Do not wait for the user to run them. A test you wrote alongside the fix and only ever saw pass proves nothing.
+
+No "the cause is obvious, I'll skip the test" exception — that reasoning is how silent regressions ship. **If you're about to edit production code without a failing test open, stop.**
+
+Exceptions are rare: genuinely untestable changes (cosmetic renames, doc-only edits, build/csproj plumbing) or trivial one-liners where a test would cost more than it's worth. When in doubt, write the test.
 
 # Boyscout Principle — Leave It Better Than You Found It
 
@@ -86,7 +94,7 @@ Gum is a mature codebase. When you load context in an area (reading methods, und
 
 # After editing
 
-Write unit tests for new features and bug fixes unless the change is trivial or untestable. Always build and run tests via Bash to verify your changes — both the red/green cycle for bug fixes and regression checks for new features. Output: changed files + brief why. Focus on correctness and brevity over cleverness.
+By the time you reach this stage, the new tests should already exist and be green (see "Test-Driven Development (Required)" above). Build via Bash and run the related test suite to check for regressions in adjacent areas. Output: changed files + brief why. Focus on correctness and brevity over cleverness.
 
 **Zero new warnings policy** — after every change, verify that no new compiler warnings were introduced. If a warning cannot be fixed (e.g., an unused event on a test fake that satisfies an interface contract), suppress it with `#pragma warning disable`/`restore` and a comment explaining why the suppression is justified.
 
