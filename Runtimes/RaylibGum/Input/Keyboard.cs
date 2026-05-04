@@ -1,9 +1,6 @@
 using Gum.Wireframe;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GumKeys = Gum.Forms.Input.Keys;
 
 namespace Gum.Input;
@@ -149,24 +146,19 @@ public class Keyboard : IInputReceiverKeyboard
     /// <summary>
     /// Returns true if either the left or right shift key is currently pressed down.
     /// </summary>
-    public bool IsShiftDown =>
-        Raylib.IsKeyDown(KeyboardKey.LeftShift) ||
-        Raylib.IsKeyDown(KeyboardKey.RightShift);
+    public bool IsShiftDown => KeyDown(GumKeys.LeftShift) || KeyDown(GumKeys.RightShift);
 
     /// <summary>
     /// Returns true if either the left or right control key is currently pressed down.
     /// </summary>
-    public bool IsCtrlDown =>
-        Raylib.IsKeyDown(KeyboardKey.LeftControl) ||
-        Raylib.IsKeyDown(KeyboardKey.RightControl);
+    public bool IsCtrlDown => KeyDown(GumKeys.LeftControl) || KeyDown(GumKeys.RightControl);
 
     /// <summary>
     /// Returns true if either the left or right alt key is currently pressed down.
     /// </summary>
-    public bool IsAltDown =>
-        Raylib.IsKeyDown(KeyboardKey.LeftAlt) ||
-        Raylib.IsKeyDown(KeyboardKey.RightAlt);
+    public bool IsAltDown => KeyDown(GumKeys.LeftAlt) || KeyDown(GumKeys.RightAlt);
 
+    /// <inheritdoc/>
     IEnumerable<GumKeys> IInputReceiverKeyboard.KeysTyped =>
         _gumToRaylib.Keys.Where(KeyTyped);
 
@@ -175,7 +167,7 @@ public class Keyboard : IInputReceiverKeyboard
     {
         if (_gumToRaylib.TryGetValue(key, out KeyboardKey raylibKey))
         {
-            return Raylib.IsKeyDown(raylibKey);
+            return IsKeyDown(raylibKey);
         }
         return false;
     }
@@ -195,7 +187,7 @@ public class Keyboard : IInputReceiverKeyboard
     {
         if (_gumToRaylib.TryGetValue(key, out KeyboardKey raylibKey))
         {
-            return Raylib.IsKeyReleased(raylibKey);
+            return IsKeyReleased(raylibKey);
         }
         return false;
     }
@@ -279,4 +271,20 @@ public class Keyboard : IInputReceiverKeyboard
     /// This method exists for unit testing purposes.
     /// </remarks>
     protected virtual bool IsKeyPressedRepeat(KeyboardKey key) => Raylib.IsKeyPressedRepeat(key);
+
+    /// <summary>
+    /// Returns true if the given Raylib key is currently held down.
+    /// </summary>
+    /// <remarks>
+    /// This method exists for unit testing purposes.
+    /// </remarks>
+    protected virtual bool IsKeyDown(KeyboardKey key) => Raylib.IsKeyDown(key);
+
+    /// <summary>
+    /// Returns true if the given Raylib key was released this frame.
+    /// </summary>
+    /// <remarks>
+    /// This method exists for unit testing purposes.
+    /// </remarks>
+    protected virtual bool IsKeyReleased(KeyboardKey key) => Raylib.IsKeyReleased(key);
 }
