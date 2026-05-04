@@ -155,6 +155,16 @@
         </Style.Triggers>
     </Style>
 
+    <!--  Hyperlink  -->
+    <Style TargetType="{x:Type Hyperlink}">
+        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Link}" />
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!--  Label  -->
     <Style TargetType="{x:Type Label}">
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
