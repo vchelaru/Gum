@@ -241,6 +241,16 @@ public class Keyboard : IInputReceiverKeyboard
                 _lastStringTyped += char.ConvertFromUtf32(codepoint);
                 codepoint = GetCharPressed();
             }
+
+            // Raylib's GetCharPressed only emits printable codepoints, so Enter never arrives
+            // as a character. MonoGame's Keyboard.GetStringTyped injects '\n' on Enter (see
+            // HandleNumPadEnter), and TextBox.HandleCharEntered relies on that for AcceptsReturn
+            // / multi-line input. Mirror the behavior here so multi-line TextBoxes work in raylib.
+            if (IsKeyPressed(KeyboardKey.Enter) || IsKeyPressedRepeat(KeyboardKey.Enter)
+                || IsKeyPressed(KeyboardKey.KpEnter) || IsKeyPressedRepeat(KeyboardKey.KpEnter))
+            {
+                _lastStringTyped += '\n';
+            }
         }
 
 

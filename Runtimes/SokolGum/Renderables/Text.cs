@@ -43,8 +43,18 @@ public enum TextPositionRoundingMode
 /// render callbacks emit into sokol_gp, so text batches alongside other
 /// renderables in scene-graph order.
 /// </summary>
-public sealed class Text : RenderableBase, IText, IWrappedText
+public sealed class Text : RenderableBase, IText, IWrappedText, ICloneable
 {
+    public Text Clone()
+    {
+        var newInstance = (Text)this.MemberwiseClone();
+        ((IRenderableIpso)newInstance).SetParentDirect(null);
+        newInstance._children = new();
+        return newInstance;
+    }
+
+    object ICloneable.Clone() => Clone();
+
     /// <summary>
     /// Process-wide default measurer wired by <see cref="SokolGum.SystemManagers.Initialize"/>.
     /// Tests can swap in a <c>FakeTextMeasurer</c> without touching fontstash.

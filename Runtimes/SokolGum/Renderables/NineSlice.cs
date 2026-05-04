@@ -22,8 +22,18 @@ namespace Gum.Renderables;
 /// expose <c>AnimationChains</c> on their SpriteRuntime but not their
 /// NineSliceRuntime yet.
 /// </summary>
-public sealed class NineSlice : RenderableBase, ITextureCoordinate, IAnimatable
+public sealed class NineSlice : RenderableBase, ITextureCoordinate, IAnimatable, ICloneable
 {
+    public NineSlice Clone()
+    {
+        var newInstance = (NineSlice)this.MemberwiseClone();
+        ((IRenderableIpso)newInstance).SetParentDirect(null);
+        newInstance._children = new();
+        return newInstance;
+    }
+
+    object ICloneable.Clone() => Clone();
+
     public Texture2D? Texture { get; set; }
     public Rectangle? SourceRectangle { get; set; }
     public Color Color = Color.White;

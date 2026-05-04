@@ -68,8 +68,18 @@ public enum TextPositionRoundingMode
 
 
 public class Text : IVisible, IRenderableIpso,
-    IWrappedText
+    IWrappedText, ICloneable
 {
+    public Text Clone()
+    {
+        var newInstance = (Text)this.MemberwiseClone();
+        newInstance.mParent = null;
+        newInstance.mChildren = new();
+        return newInstance;
+    }
+
+    object ICloneable.Clone() => Clone();
+
     /// <summary>
     /// The line height as defined by the font, ignoring FontScale.
     /// </summary>
