@@ -23,9 +23,9 @@ namespace GumRuntime
     {
         static Dictionary<string, Type> mElementToGueTypes = new Dictionary<string, Type>();
         static Dictionary<string, Func<GraphicalUiElement>> mElementToGueTypeFuncs = new Dictionary<string, Func<GraphicalUiElement>>();
-        static Func<GraphicalUiElement> TemplateFunc;
+        static Func<GraphicalUiElement>? TemplateFunc;
 
-        public static Func<StateSave, string, string, object> CustomEvaluateExpression;
+        public static Func<StateSave, string, string, object>? CustomEvaluateExpression;
 
         public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType, bool overwriteIfAlreadyExists = true)
         {
@@ -230,7 +230,7 @@ namespace GumRuntime
             graphicalElement.AddStates(elementSave.States);
         }
 
-        public static Func<string, ISystemManagers, IRenderable> CustomCreateGraphicalComponentFunc { get; set; }
+        public static Func<string, ISystemManagers, IRenderable>? CustomCreateGraphicalComponentFunc { get; set; }
 
         public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, ElementSave elementSave, ISystemManagers systemManagers)
         {
