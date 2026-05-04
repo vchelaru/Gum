@@ -16,6 +16,121 @@ namespace RaylibGum.Tests.Inputs;
 public class KeyboardTests : BaseTestClass
 {
     [Fact]
+    public void GetStringTyped_AppendsNewline_WhenEnterIsPressed()
+    {
+        var sut = new Mock<Keyboard>();
+        sut.Protected()
+            .Setup<int>("GetCharPressed")
+            .Returns(0);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressed", ItExpr.IsAny<KeyboardKey>())
+            .Returns((KeyboardKey k) => k == KeyboardKey.Enter);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressedRepeat", ItExpr.IsAny<KeyboardKey>())
+            .Returns(false);
+
+        sut.Object.Activity(1);
+
+        sut.Object.GetStringTyped().ShouldBe("\n");
+    }
+
+    [Fact]
+    public void GetStringTyped_AppendsNewline_WhenEnterRepeats()
+    {
+        var sut = new Mock<Keyboard>();
+        sut.Protected()
+            .Setup<int>("GetCharPressed")
+            .Returns(0);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressed", ItExpr.IsAny<KeyboardKey>())
+            .Returns(false);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressedRepeat", ItExpr.IsAny<KeyboardKey>())
+            .Returns((KeyboardKey k) => k == KeyboardKey.Enter);
+
+        sut.Object.Activity(1);
+
+        sut.Object.GetStringTyped().ShouldBe("\n");
+    }
+
+    [Fact]
+    public void GetStringTyped_AppendsNewline_WhenKpEnterIsPressed()
+    {
+        var sut = new Mock<Keyboard>();
+        sut.Protected()
+            .Setup<int>("GetCharPressed")
+            .Returns(0);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressed", ItExpr.IsAny<KeyboardKey>())
+            .Returns((KeyboardKey k) => k == KeyboardKey.KpEnter);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressedRepeat", ItExpr.IsAny<KeyboardKey>())
+            .Returns(false);
+
+        sut.Object.Activity(1);
+
+        sut.Object.GetStringTyped().ShouldBe("\n");
+    }
+
+    [Fact]
+    public void GetStringTyped_AppendsNewlineAfterCharacters_WhenEnterIsPressed()
+    {
+        var sut = new Mock<Keyboard>();
+        var codepoints = new Queue<int>(new[] { 72, 105, 0 });
+        sut.Protected()
+            .Setup<int>("GetCharPressed")
+            .Returns(() => codepoints.Count > 0 ? codepoints.Dequeue() : 0);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressed", ItExpr.IsAny<KeyboardKey>())
+            .Returns((KeyboardKey k) => k == KeyboardKey.Enter);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressedRepeat", ItExpr.IsAny<KeyboardKey>())
+            .Returns(false);
+
+        sut.Object.Activity(1);
+
+        sut.Object.GetStringTyped().ShouldBe("Hi\n");
+    }
+
+    [Fact]
+    public void GetStringTyped_AppendsSingleNewline_WhenEnterAndKpEnterBothPressed()
+    {
+        var sut = new Mock<Keyboard>();
+        sut.Protected()
+            .Setup<int>("GetCharPressed")
+            .Returns(0);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressed", ItExpr.IsAny<KeyboardKey>())
+            .Returns((KeyboardKey k) => k == KeyboardKey.Enter || k == KeyboardKey.KpEnter);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressedRepeat", ItExpr.IsAny<KeyboardKey>())
+            .Returns(false);
+
+        sut.Object.Activity(1);
+
+        sut.Object.GetStringTyped().ShouldBe("\n");
+    }
+
+    [Fact]
+    public void GetStringTyped_DoesNotAppendNewline_WhenEnterIsNotPressed()
+    {
+        var sut = new Mock<Keyboard>();
+        sut.Protected()
+            .Setup<int>("GetCharPressed")
+            .Returns(0);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressed", ItExpr.IsAny<KeyboardKey>())
+            .Returns(false);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressedRepeat", ItExpr.IsAny<KeyboardKey>())
+            .Returns(false);
+
+        sut.Object.Activity(1);
+
+        sut.Object.GetStringTyped().ShouldBe(string.Empty);
+    }
+
+    [Fact]
     public void GetStringTyped_ShouldReturnSameValue_WhenCalledMultipleTimes()
     {
         var sut = new Mock<Keyboard>();

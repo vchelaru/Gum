@@ -1,11 +1,16 @@
 ﻿using Gum;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using System;
 
 namespace SkiaGum.Renderables;
 
-public class NineSlice : IRenderable
+public class NineSlice : IRenderable, ICloneable
 {
+    public NineSlice Clone() => (NineSlice)this.MemberwiseClone();
+
+    object ICloneable.Clone() => Clone();
+
     public BlendState BlendState => BlendState.NonPremultiplied;
 
     public bool Wrap => false;

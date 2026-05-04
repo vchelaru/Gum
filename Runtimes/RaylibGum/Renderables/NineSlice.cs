@@ -11,8 +11,18 @@ using ToolsUtilitiesStandard.Helpers;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
-public class NineSlice : RenderableBase, ITextureCoordinate
+public class NineSlice : RenderableBase, ITextureCoordinate, ICloneable
 {
+    public NineSlice Clone()
+    {
+        var newInstance = (NineSlice)this.MemberwiseClone();
+        ((IRenderableIpso)newInstance).SetParentDirect(null);
+        newInstance._children = new();
+        return newInstance;
+    }
+
+    object ICloneable.Clone() => Clone();
+
     public Texture2D? Texture { get; set; }
 
     public Raylib_cs.Rectangle? SourceRectangle

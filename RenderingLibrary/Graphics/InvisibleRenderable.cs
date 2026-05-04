@@ -28,7 +28,7 @@ public class InvisibleRenderable : RenderableBase, ICloneable, IRenderableIpso
     public InvisibleRenderable Clone()
     {
         var newInstance = (InvisibleRenderable)this.MemberwiseClone();
-        ((IRenderableIpso)this).SetParentDirect(null);
+        ((IRenderableIpso)newInstance).SetParentDirect(null);
 
         newInstance._children = new ();
 
