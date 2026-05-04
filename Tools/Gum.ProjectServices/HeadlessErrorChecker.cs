@@ -1,7 +1,10 @@
+using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using RenderingLibrary.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ToolsUtilities;
@@ -59,6 +62,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.AddRange(GetMissingBaseTypeErrorsFor(element));
             errors.AddRange(GetParentErrorsFor(element));
             errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
+            errors.AddRange(GetAchxOriginErrorsFor(element, project));
 
             foreach (var source in _additionalErrorSources)
             {
@@ -119,6 +123,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
+        errors.AddRange(GetAchxOriginErrorsFor(element, project));
 
         foreach (var source in _additionalErrorSources)
         {
@@ -411,6 +416,117 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         }
 
         return errors;
+    }
+
+    #endregion
+
+    #region ACHX Origin Errors
+
+    private static List<ErrorResult> GetAchxOriginErrorsFor(ElementSave elementSave, GumProjectSave project)
+    {
+        var errors = new List<ErrorResult>();
+
+        if (elementSave.DefaultState == null)
+        {
+            return errors;
+        }
+
+        var rfv = new RecursiveVariableFinder(elementSave.DefaultState);
+
+        if (elementSave.IsOfType("Sprite"))
+        {
+            AddAchxOriginErrorIfNeeded(errors, elementSave, project, rfv, instanceName: null);
+        }
+
+        foreach (var instance in elementSave.Instances)
+        {
+            if (instance.IsOfType("Sprite"))
+            {
+                AddAchxOriginErrorIfNeeded(errors, elementSave, project, rfv, instance.Name);
+            }
+        }
+
+        return errors;
+    }
+
+    private static void AddAchxOriginErrorIfNeeded(
+        List<ErrorResult> errors,
+        ElementSave elementSave,
+        GumProjectSave project,
+        RecursiveVariableFinder rfv,
+        string? instanceName)
+    {
+        var prefix = instanceName == null ? string.Empty : instanceName + ".";
+
+        var sourceFile = rfv.GetValue<string>(prefix + "SourceFile");
+        if (string.IsNullOrEmpty(sourceFile) || !sourceFile.EndsWith(".achx", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var absolutePath = sourceFile;
+        if (FileManager.IsRelative(absolutePath) && !string.IsNullOrEmpty(project.FullFileName))
+        {
+            absolutePath = FileManager.GetDirectory(project.FullFileName) + sourceFile;
+        }
+
+        if (!System.IO.File.Exists(absolutePath))
+        {
+            // A missing source file is surfaced separately by IsSourceFileMissing.
+            return;
+        }
+
+        AnimationChainListSave? achx;
+        try
+        {
+            achx = AnimationChainListSave.FromFile(absolutePath);
+        }
+        catch
+        {
+            return;
+        }
+
+        if (achx?.AnimationChains == null || !HasAnyNonZeroFrameOffset(achx))
+        {
+            return;
+        }
+
+        var xOrigin = rfv.GetValue<HorizontalAlignment>(prefix + "XOrigin");
+        var yOrigin = rfv.GetValue<VerticalAlignment>(prefix + "YOrigin");
+
+        if (xOrigin == HorizontalAlignment.Center && yOrigin == VerticalAlignment.Center)
+        {
+            return;
+        }
+
+        var who = instanceName ?? elementSave.Name;
+        errors.Add(new ErrorResult
+        {
+            ElementName = elementSave.Name,
+            Message =
+                $"Sprite {who} references an .achx ({sourceFile}) with per-frame offsets, " +
+                $"but XOrigin/YOrigin is not Center. The FlatRedBall AnimationEditor authors " +
+                $"RelativeX/RelativeY values against a center-anchored Sprite, so a non-Center " +
+                $"origin will cause the animation to drift as frames change size. " +
+                $"Set XOrigin and YOrigin to Center.",
+            Severity = ErrorSeverity.Warning
+        });
+    }
+
+    private static bool HasAnyNonZeroFrameOffset(AnimationChainListSave achx)
+    {
+        foreach (var chain in achx.AnimationChains)
+        {
+            if (chain.Frames == null) continue;
+            foreach (var frame in chain.Frames)
+            {
+                if (frame.RelativeX != 0 || frame.RelativeY != 0)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     #endregion

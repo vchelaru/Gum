@@ -11,6 +11,10 @@ This project (Gum) provides UI solutions for game developers using C#. It includ
 
 For every task, invoke the appropriate agent from `.claude/agents/` before proceeding. The agent's instructions provide guidelines for how the task should be performed. Before doing any work, announce which agent you are using such as "Invoking coder agent for this task..."
 
+**Re-read the agent file at the start of each new task — not once per session.** Long sessions drift; reloading the discipline keeps it active. Inline coding without re-reading the agent file first is not an option, even for "small" follow-ups in the same conversation.
+
+Also load any skill whose trigger matches the files you're about to edit, before making changes.
+
 Available agents:
 - **coder** — Writing or modifying code and unit tests for new features or bugs
 - **qa** — Testing, reviewing changes, and verifying correctness

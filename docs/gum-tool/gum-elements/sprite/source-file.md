@@ -40,6 +40,16 @@ When referencing an .achx file, be sure to also check the **Animate** checkbox a
 .achx files are XML files which reference one or more other PNG files. If you are moving an .achx file be sure to also move the referenced PNG files.
 {% endhint %}
 
+#### Per-Frame Offsets and Sprite Origin
+
+Frames in an .achx can carry per-frame `RelativeX` / `RelativeY` offsets, typically authored in the FlatRedBall AnimationEditor to keep visual content (e.g. the bottom of a collapsing object) anchored as the source rectangle changes size from frame to frame.
+
+The AnimationEditor authors these offsets against a **center-anchored** Sprite. When a Sprite in Gum plays back an .achx with non-zero offsets, set both **XOrigin** and **YOrigin** to **Center** so the offsets compensate as intended.
+
+{% hint style="warning" %}
+If the Sprite's origin is left at the default (top-left) and its Width/Height units track the source file (such as `PercentageOfSourceFile`), frames that change size will drift — typically the visual will appear to climb or slide as the animation progresses, even though the offsets look correct in the AnimationEditor. The Gum tool will surface a warning in the Errors tab when it detects this combination.
+{% endhint %}
+
 ### Referencing URLs
 
 Gum Sprites can also reference URLs. Gum can display images from URLs with standard file extensions such as .png and .jpg
