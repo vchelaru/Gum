@@ -272,6 +272,7 @@
     * [Customizing Menu and MenuItem](code/styling/code-only-styling/customizing-menu-and-menuitem.md)
   * [Control Customization in Gum Tool](code/styling/control-customization-in-gum-tool.md)
   * [Runtime Variable References](code/styling/runtime-variable-references.md)
+  * [Editor Theme](code/styling/editor-theme.md)
 * [Standard Visuals](code/standard-visuals/README.md)
   * [CircleRuntime](code/standard-visuals/circleruntime.md)
   * [ColoredRectangleRuntime](code/standard-visuals/coloredrectangleruntime.md)
