@@ -113,6 +113,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         errors[0].Message.ShouldContain("ToggleSprite");
         errors[0].Message.ShouldContain("IToggle");
         errors[0].ElementName.ShouldBe("ToggleButton");
+        errors[0].Code.ShouldBe("GUM0001");
     }
 
     [Fact]

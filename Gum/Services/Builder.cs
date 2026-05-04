@@ -149,6 +149,7 @@ file static class ServiceCollectionExtensions
             new TypeManagerTypeResolverAdapter(provider.GetRequiredService<Reflection.ITypeManager>()));
         services.AddSingleton<ProjectServices.IHeadlessErrorChecker>(provider =>
             new ProjectServices.HeadlessErrorChecker(provider.GetRequiredService<ProjectServices.ITypeResolver>()));
+        services.AddSingleton<ProjectServices.IErrorDocsRegistry, ProjectServices.ErrorDocsRegistry>();
         services.AddSingleton<ErrorChecker>();
         services.AddSingleton<IErrorChecker>(provider => provider.GetRequiredService<ErrorChecker>());
         services.AddSingleton<IVariableSaveLogic, VariableSaveLogic>();

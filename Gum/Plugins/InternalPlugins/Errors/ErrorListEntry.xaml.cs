@@ -1,4 +1,6 @@
-﻿using System.Windows.Controls;
+using System.Diagnostics;
+using System.Windows.Controls;
+using System.Windows.Navigation;
 
 namespace Gum.Plugins.Errors
 {
@@ -10,6 +12,17 @@ namespace Gum.Plugins.Errors
         public ErrorListEntry()
         {
             InitializeComponent();
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = e.Uri.AbsoluteUri,
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
+            e.Handled = true;
         }
     }
 }

@@ -14,11 +14,16 @@ public class ErrorChecker : IErrorChecker
 {
     private readonly IHeadlessErrorChecker _headlessErrorChecker;
     private readonly IPluginManager _pluginManager;
+    private readonly IErrorDocsRegistry _errorDocsRegistry;
 
-    public ErrorChecker(IHeadlessErrorChecker headlessErrorChecker, IPluginManager pluginManager)
+    public ErrorChecker(
+        IHeadlessErrorChecker headlessErrorChecker,
+        IPluginManager pluginManager,
+        IErrorDocsRegistry errorDocsRegistry)
     {
         _headlessErrorChecker = headlessErrorChecker;
         _pluginManager = pluginManager;
+        _errorDocsRegistry = errorDocsRegistry;
     }
 
     public ErrorViewModel[] GetErrorsFor(ElementSave? element, GumProjectSave project)
@@ -35,6 +40,14 @@ public class ErrorChecker : IErrorChecker
             }
 
             _pluginManager.FillWithErrors(list);
+
+            foreach (var vm in list)
+            {
+                if (vm.Code != null && vm.HelpUrl == null)
+                {
+                    vm.HelpUrl = _errorDocsRegistry.GetUrl(vm.Code);
+                }
+            }
         }
 
         return list.ToArray();
@@ -60,11 +73,17 @@ public class ErrorChecker : IErrorChecker
         return list.ToArray();
     }
 
-    private static ErrorViewModel ToViewModel(ErrorResult errorResult)
+    private ErrorViewModel ToViewModel(ErrorResult errorResult)
     {
-        return new ErrorViewModel
+        ErrorViewModel vm = new ErrorViewModel
         {
-            Message = errorResult.Message
+            Message = errorResult.Message,
+            Code = errorResult.Code
         };
+        if (errorResult.Code != null)
+        {
+            vm.HelpUrl = _errorDocsRegistry.GetUrl(errorResult.Code);
+        }
+        return vm;
     }
 }

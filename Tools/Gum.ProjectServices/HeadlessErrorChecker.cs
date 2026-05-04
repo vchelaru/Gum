@@ -249,7 +249,8 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.Add(new ErrorResult
             {
                 ElementName = component.Name,
-                Message = message
+                Message = message,
+                Code = "GUM0001"
             });
         }
     }

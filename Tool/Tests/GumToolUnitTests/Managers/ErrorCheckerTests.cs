@@ -16,7 +16,8 @@ public class ErrorCheckerTests : BaseTestClass
         ITypeResolver typeResolver = new DefaultTypeResolver();
         IHeadlessErrorChecker headlessErrorChecker = new HeadlessErrorChecker(typeResolver);
         Mock<IPluginManager> mockPluginManager = new Mock<IPluginManager>();
-        _sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object);
+        IErrorDocsRegistry errorDocsRegistry = new ErrorDocsRegistry();
+        _sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry);
     }
 
     [Fact]
