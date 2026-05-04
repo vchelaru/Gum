@@ -878,19 +878,6 @@ public class CopyPasteLogic : ICopyPasteLogic
                     }
                 }
 
-                // This used to be done here when we paste, but now we're
-                // going to remove it when the cut happens - just like text
-                // editors.  Undo will handle this if we mess up.
-                // bool shouldSaveSource = false;
-                //if (mIsCtrlXCut)
-                //{
-                //    if (sourceElement.Instances.Contains(sourceInstance))
-                //    {
-                //        ElementCommands.Self.RemoveInstance(sourceInstance, sourceElement);
-                //        shouldSaveSource = true;
-                //    }
-                //}
-
                 newInstance.ParentContainer = targetElement;
                 // We need to call InstanceAdd before we select the new object - the Undo manager expects it
                 // This includes before other managers refresh
@@ -1018,7 +1005,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
         _selectedState.SelectedElement = toAdd;
 
-        PluginManager.Self.ElementDuplicate(CopiedData.CopiedElement, toAdd);
+        _pluginManager.ElementDuplicate(CopiedData.CopiedElement, toAdd);
 
         _fileCommands.TryAutoSaveElement(toAdd);
         _fileCommands.TryAutoSaveProject();
