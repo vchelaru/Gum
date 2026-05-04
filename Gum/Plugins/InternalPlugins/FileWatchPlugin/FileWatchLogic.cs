@@ -53,78 +53,36 @@ public class FileWatchLogic
     {
         HashSet<FilePath> directories = new HashSet<FilePath>();
 
-        void AddRange(List<string> files)
+        // One walk over the entire project graph. The walker is shared with
+        // bundling/codegen, so it covers every file the project references.
+        IEnumerable<string> filesReferenced;
+        try
         {
-            var directoriesToAdd = files
-                .Select(item =>
-                {
-                    FilePath filePath = null;
-                    try
-                    {
-                        filePath = ((FilePath)item).GetDirectoryContainingThis();
-                    }
-                    catch
-                    {
-                        // This can happen if there's an invalid file path like 
-                        // "..\..\..\..\..\" in a root
-                        // For info see https://github.com/vchelaru/Gum/issues/200
-                        // leave it as null, will filter out later
-                    }
-
-                    return filePath;
-                })
-                .Where(item => item != null)
-                // to make it easier to debug:
-                .ToHashSet();
-            foreach (var directory in directoriesToAdd)
-            {
-                // check if the root of this directory is already here:
-                var isAlreadyHandled = directories
-                    .Any(item => item.IsRootOf(directory));
-
-                if (!isAlreadyHandled)
-                {
-                    directories.Add(directory);
-                }
-
-            }
+            filesReferenced = ObjectFinder.Self.GetAllFilesInProject();
+        }
+        catch (Exception e)
+        {
+            _guiCommands.PrintOutput(e.ToString());
+            filesReferenced = Array.Empty<string>();
         }
 
-        foreach (var screen in _projectState.GumProjectSave.Screens)
+        foreach (var item in filesReferenced)
         {
+            FilePath? directory;
             try
             {
-                var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(screen);
+                directory = ((FilePath)item).GetDirectoryContainingThis();
+            }
+            catch
+            {
+                // Invalid paths like "..\..\..\..\..\" in a root. See issue #200.
+                continue;
+            }
 
-                AddRange(filesReferenced);
-            }
-            catch (Exception e)
+            // Skip if any already-tracked directory is a root of this one.
+            if (!directories.Any(existing => existing.IsRootOf(directory)))
             {
-                _guiCommands.PrintOutput(e.ToString());
-            }
-        }
-        foreach (var component in _projectState.GumProjectSave.Components)
-        {
-            try
-            {
-                var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(component);
-                AddRange(filesReferenced);
-            }
-            catch (Exception e)
-            {
-                _guiCommands.PrintOutput(e.ToString());
-            }
-        }
-        foreach (var standardElement in _projectState.GumProjectSave.StandardElements)
-        {
-            try
-            {
-                var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(standardElement);
-                AddRange(filesReferenced);
-            }
-            catch (Exception e)
-            {
-                _guiCommands.PrintOutput(e.ToString());
+                directories.Add(directory);
             }
         }
 

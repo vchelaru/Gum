@@ -20,7 +20,7 @@ namespace Gum.Commands;
 public class FileCommands : IFileCommands
 {
     private readonly ILocalizationService _localizationService;
-    private readonly IFileWatchManager _fileWatchManager;
+    private readonly IFileWatchIgnoreList _fileWatchIgnoreList;
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IUndoManager> _undoManager;
     private readonly IDialogService _dialogService;
@@ -35,7 +35,7 @@ public class FileCommands : IFileCommands
         IGuiCommands guiCommands,
         ILocalizationService localizationService,
         IOutputManager outputManager,
-        IFileWatchManager fileWatchManager,
+        IFileWatchIgnoreList fileWatchIgnoreList,
         IProjectManager projectManager,
         IProjectState projectState)
     {
@@ -44,7 +44,7 @@ public class FileCommands : IFileCommands
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _localizationService = localizationService;
-        _fileWatchManager = fileWatchManager;
+        _fileWatchIgnoreList = fileWatchIgnoreList;
         _outputManager = outputManager;
         _projectManager = projectManager;
         _projectState = projectState;
@@ -286,7 +286,7 @@ public class FileCommands : IFileCommands
                 }
                 else
                 {
-                    _fileWatchManager.IgnoreNextChangeUntil(fileName.FullPath);
+                    _fileWatchIgnoreList.IgnoreNextChangeUntil(fileName.FullPath);
 
                     const int maxNumberOfTries = 5;
                     const int msBetweenSaves = 100;
@@ -489,7 +489,7 @@ public class FileCommands : IFileCommands
                 //PluginManager.Self.BeforeBehaviorSave(behavior);
 
                 string fileName = GetFullPathXmlFile( behavior).FullPath;
-                _fileWatchManager.IgnoreNextChangeUntil(fileName);
+                _fileWatchIgnoreList.IgnoreNextChangeUntil(fileName);
                 // if it's readonly, let's warn the user
                 bool isReadOnly = ProjectManager.IsFileReadOnly(fileName);
 

@@ -166,6 +166,7 @@ public class PluginManager : IPluginManager
 
             if (container.IsEnabled)
             {
+                var sw = System.Diagnostics.Stopwatch.StartNew();
                 try
                 {
                     methodToCall(plugin);
@@ -176,6 +177,18 @@ public class PluginManager : IPluginManager
                     _dialogService.ShowMessage("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
 #endif
                     container.Fail(e, "Failed in " + methodName);
+                }
+                finally
+                {
+                    sw.Stop();
+                    // Surface slow plugin callbacks (>50ms) so startup/load
+                    // hot spots are visible without flooding output.
+                    if (sw.ElapsedMilliseconds > 50)
+                    {
+                        var line = $"[plugin] {methodName} on {plugin.FriendlyName} took {sw.ElapsedMilliseconds} ms";
+                        System.Diagnostics.Debug.WriteLine(line);
+                        Console.WriteLine(line);
+                    }
                 }
             }
         }      

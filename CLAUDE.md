@@ -39,3 +39,12 @@ If a change spans both (e.g. editing `GumCommon` which is linked into both), bui
 ## Code Style
 
 See `.claude/code-style.md` for all code style rules. Read that file before writing or editing any code.
+
+## Investigating Third-Party Libraries
+
+**Never decompile DLLs or NuGet assemblies** (no `dotnet-ildasm`, `ilspycmd`, ILSpy, dnSpy, etc.) to inspect third-party code. If you need to know the API surface of a library:
+1. Check the library's GitHub repo or published docs.
+2. Read how Gum already calls it (the call sites in this repo are usually enough).
+3. Ask the user.
+
+Decompilation is a last resort and requires explicit user permission.
