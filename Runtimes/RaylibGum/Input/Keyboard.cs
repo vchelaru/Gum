@@ -16,7 +16,6 @@ public class Keyboard : IInputReceiverKeyboard
     double _lastGameTime;
     double _lastGetStringTypedCall = -999;
     string _lastStringTyped = "";
-    List<GumKeys>? _cachedKeysTyped;
 
     #region Key translation tables
 
@@ -145,27 +144,6 @@ public class Keyboard : IInputReceiverKeyboard
         { GumKeys.OemBackslash, KeyboardKey.Backslash },
     };
 
-    /// <summary>
-    /// Inverse of <see cref="_gumToRaylib"/>, built lazily for use by <see cref="KeysTyped"/>
-    /// translation. Entries where multiple Gum keys map to the same Raylib key (e.g.
-    /// <see cref="GumKeys.OemPipe"/> and <see cref="GumKeys.OemBackslash"/> both map to
-    /// <see cref="KeyboardKey.Backslash"/>) resolve to the first Gum key encountered.
-    /// </summary>
-    private static readonly Dictionary<KeyboardKey, GumKeys> _raylibToGum = BuildRaylibToGum();
-
-    private static Dictionary<KeyboardKey, GumKeys> BuildRaylibToGum()
-    {
-        Dictionary<KeyboardKey, GumKeys> result = new();
-        foreach (KeyValuePair<GumKeys, KeyboardKey> pair in _gumToRaylib)
-        {
-            if (!result.ContainsKey(pair.Value))
-            {
-                result[pair.Value] = pair.Key;
-            }
-        }
-        return result;
-    }
-
     #endregion
 
     /// <summary>
@@ -189,31 +167,8 @@ public class Keyboard : IInputReceiverKeyboard
         Raylib.IsKeyDown(KeyboardKey.LeftAlt) ||
         Raylib.IsKeyDown(KeyboardKey.RightAlt);
 
-    IEnumerable<GumKeys> IInputReceiverKeyboard.KeysTyped
-    {
-        get
-        {
-            // Raylib.GetKeyPressed drains the native key queue, so we cache per frame
-            // to keep this property idempotent — see Activity for cache invalidation.
-            if (_cachedKeysTyped == null)
-            {
-                List<GumKeys> drained = new();
-                int key = GetKeyPressed();
-                while (key > 0)
-                {
-                    // Drop Raylib keys without a Gum counterpart (e.g. Raylib's Menu);
-                    // callers cast to GumKeys and wouldn't know what to do with them.
-                    if (_raylibToGum.TryGetValue((KeyboardKey)key, out GumKeys gumKey))
-                    {
-                        drained.Add(gumKey);
-                    }
-                    key = GetKeyPressed();
-                }
-                _cachedKeysTyped = drained;
-            }
-            return _cachedKeysTyped;
-        }
-    }
+    IEnumerable<GumKeys> IInputReceiverKeyboard.KeysTyped =>
+        _gumToRaylib.Keys.Where(KeyTyped);
 
     /// <inheritdoc/>
     public bool KeyDown(GumKeys key)
@@ -230,7 +185,7 @@ public class Keyboard : IInputReceiverKeyboard
     {
         if (_gumToRaylib.TryGetValue(key, out KeyboardKey raylibKey))
         {
-            return Raylib.IsKeyPressed(raylibKey);
+            return IsKeyPressed(raylibKey);
         }
         return false;
     }
@@ -247,16 +202,17 @@ public class Keyboard : IInputReceiverKeyboard
 
     /// <inheritdoc/>
     /// <remarks>
-    /// Delegates to <see cref="Raylib.IsKeyPressedRepeat(KeyboardKey)"/>, which returns true on
-    /// initial press and on OS-driven repeat intervals. This matches MonoGame's
+    /// Returns true on initial press and on OS-driven repeat intervals (via
+    /// <see cref="Raylib.IsKeyPressedRepeat(KeyboardKey)"/>). This matches MonoGame's
     /// <c>Keyboard.KeyTyped</c> semantics (push + repeat-rate) closely enough for
-    /// keyboard-driven Forms controls.
+    /// keyboard-driven Forms controls. <c>KeysTyped</c> is also derived from this method,
+    /// so non-character key repeat (e.g. holding Delete in a TextBox) flows through here.
     /// </remarks>
     public bool KeyTyped(GumKeys key)
     {
         if (_gumToRaylib.TryGetValue(key, out KeyboardKey raylibKey))
         {
-            return Raylib.IsKeyPressed(raylibKey) || Raylib.IsKeyPressedRepeat(raylibKey);
+            return IsKeyPressed(raylibKey) || IsKeyPressedRepeat(raylibKey);
         }
         return false;
     }
@@ -267,7 +223,6 @@ public class Keyboard : IInputReceiverKeyboard
     /// <param name="gameTime">The number of seconds since the start of the game.</param>
     public void Activity(double gameTime)
     {
-        _cachedKeysTyped = null;
         _lastGameTime = gameTime;
     }
 
@@ -310,12 +265,18 @@ public class Keyboard : IInputReceiverKeyboard
     protected virtual int GetCharPressed() => Raylib.GetCharPressed();
 
     /// <summary>
-    /// Retrieves the next pressed key code from Raylib's internal key queue (Raylib key space).
+    /// Returns true if the given Raylib key was pressed this frame (initial press only).
     /// </summary>
     /// <remarks>
-    /// This method exists for unit testing purposes. Returns 0 when the queue is drained,
-    /// matching Raylib's native sentinel.
+    /// This method exists for unit testing purposes.
     /// </remarks>
-    /// <returns>The Raylib key code as an int, or 0 if the queue is empty.</returns>
-    protected virtual int GetKeyPressed() => Raylib.GetKeyPressed();
+    protected virtual bool IsKeyPressed(KeyboardKey key) => Raylib.IsKeyPressed(key);
+
+    /// <summary>
+    /// Returns true if the given Raylib key fired an OS-driven repeat this frame.
+    /// </summary>
+    /// <remarks>
+    /// This method exists for unit testing purposes.
+    /// </remarks>
+    protected virtual bool IsKeyPressedRepeat(KeyboardKey key) => Raylib.IsKeyPressedRepeat(key);
 }
