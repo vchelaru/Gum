@@ -31,10 +31,7 @@ public class FileWatchManager : IFileWatchManager
 {
     #region Fields/Properties
 
-    ConcurrentDictionary<FilePath, int> changesToIgnore = new();
-    ConcurrentDictionary<FilePath, DateTime> timedChangesToIgnore = new();
-
-    public IReadOnlyDictionary<FilePath, DateTime> TimedChangesToIgnore => timedChangesToIgnore;
+    public IReadOnlyDictionary<FilePath, DateTime> TimedChangesToIgnore => _ignoreList.TimedChangesToIgnore;
 
     /// <summary>
     /// These are the files that are waiting to be flushed by passing the
@@ -52,6 +49,9 @@ public class FileWatchManager : IFileWatchManager
 
     bool IsFlushing;
     private readonly IGuiCommands _guiCommands;
+    private readonly IProjectManager _projectManager;
+    private readonly FileChangeReactionLogic _fileChangeReactionLogic;
+    private readonly IFileWatchIgnoreList _ignoreList;
 
     public bool PrintFileChangesToOutput { get; set; }
 
@@ -68,14 +68,21 @@ public class FileWatchManager : IFileWatchManager
 
     #endregion
 
-    public FileWatchManager(IGuiCommands guiCommands)
+    public FileWatchManager(
+        IGuiCommands guiCommands,
+        IProjectManager projectManager,
+        FileChangeReactionLogic fileChangeReactionLogic,
+        IFileWatchIgnoreList ignoreList)
     {
         _guiCommands = guiCommands;
+        _projectManager = projectManager;
+        _fileChangeReactionLogic = fileChangeReactionLogic;
+        _ignoreList = ignoreList;
     }
 
     public void EnableWithDirectories(HashSet<FilePath> directories)
     {
-        var gumProject = Locator.GetRequiredService<IProjectManager>().GumProjectSave;
+        var gumProject = _projectManager.GumProjectSave;
         if(gumProject == null)
         {
             return;
@@ -143,16 +150,15 @@ public class FileWatchManager : IFileWatchManager
     private void HandleRename(object? sender, RenamedEventArgs e)
     {
         var fileName = new FilePath(e.FullPath);
-        // Some file types are updated via an atomic-save pattern used by editors
-        // such as Vim, JetBrains IDEs, and certain VS Code save modes: the editor
-        // writes to a temp file and then renames it over the target. The
-        // FileSystemWatcher fires a Renamed event rather than a Changed event in
-        // that case, so we must handle renames for these extensions explicitly.
-        // - PNG: texture files edited externally
-        // - CSV: Open Office and similar tools rename on save
-        // - RESX: localization files edited in atomic-save editors
+        // Atomic-save pattern: editors (Vim, JetBrains, some VS Code modes) and
+        // tools that write files programmatically often write to a temp file
+        // and rename it over the target. The FileSystemWatcher then fires a
+        // Renamed event rather than a Changed event, so we forward renames for
+        // every extension we know how to react to.
         var extension = fileName.Extension;
-        if(extension == "png" || extension == "csv" || extension == "resx")
+        if(extension is "png" or "csv" or "resx"
+            or "gumx" or "gusx" or "gutx" or "gucx" or "ganx" or "behx" or "fnt"
+            or "achx" or "gif" or "tga" or "bmp")
         {
             HandleFileSystemChange(fileName);
         }
@@ -179,8 +185,26 @@ public class FileWatchManager : IFileWatchManager
 
     private void HandleFileSystemChange(FilePath fileName)
     {
-        bool wasIgnored = TryGetIgnoreFileChange(fileName);
+        bool wasIgnored = _ignoreList.TryGetIgnoreFileChange(fileName);
         string? skipReason = wasIgnored ? "on ignore list" : null;
+
+        if(!wasIgnored && IsTransientTempFile(fileName))
+        {
+            wasIgnored = true;
+            skipReason = "atomic-save temp file";
+        }
+
+        // Subdirectory create/rename events surface here as well; queuing a
+        // directory path would cause File.Open in Flush to throw. Folder
+        // paths almost never have an extension, so gate the disk hit on
+        // that — file events (which dominate by far) skip the syscall.
+        if(!wasIgnored
+            && string.IsNullOrEmpty(fileName.Extension)
+            && Directory.Exists(fileName.Standardized))
+        {
+            wasIgnored = true;
+            skipReason = "path is a directory";
+        }
 
         if(!wasIgnored)
         {
@@ -211,58 +235,63 @@ public class FileWatchManager : IFileWatchManager
         }
     }
 
-    bool TryGetIgnoreFileChange(FilePath fileName)
-    {
-        if (changesToIgnore.TryGetValue(fileName, out int timesToIgnore))
-        {
-            changesToIgnore[fileName] = Math.Max(0, timesToIgnore - 1);
-            if (timesToIgnore > 0)
-            {
-                return true;
-            }
-        }
-        if (timedChangesToIgnore.TryGetValue(fileName, out DateTime timeToIgnoreUntil))
-        {
-            if (timeToIgnoreUntil > DateTime.Now)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public void IgnoreNextChangeUntil(FilePath filePath, DateTime? time = null)
-    {
-        time = time ?? DateTime.Now.AddSeconds(5);
-        timedChangesToIgnore.AddOrUpdate(
-            filePath,
-            time.Value,
-            (key, existing) => time.Value > existing ? time.Value : existing);
-    }
+        => _ignoreList.IgnoreNextChangeUntil(filePath, time);
 
-    public void ClearIgnoredFiles()
-    {
-        changesToIgnore.Clear();
-    }
+    public void ClearIgnoredFiles() => _ignoreList.ClearIgnoredFiles();
 
     public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromMilliseconds(500)) - DateTime.Now;
 
-    /// <summary>
-    /// Returns true if the file can be opened for reading, meaning it is not currently
-    /// locked by another process (e.g. git writing it to disk).
-    /// </summary>
-    private bool IsFileReady(FilePath file)
+    private enum FileReadiness
     {
+        Ready,
+        Locked,
+        Drop,
+    }
+
+    /// <summary>
+    /// Determines whether a queued file change should be processed now, retried
+    /// next flush, or dropped from the queue entirely.
+    /// </summary>
+    /// <remarks>
+    /// Drop covers the normal atomic-save aftermath: an editor writes to a
+    /// temp file and renames it over the target, so the original temp path
+    /// no longer exists by the time we flush. Returning Locked there would
+    /// keep the entry in the queue forever.
+    /// </remarks>
+    private FileReadiness GetFileReadiness(FilePath file)
+    {
+        var path = file.Standardized;
+        if (Directory.Exists(path) || !File.Exists(path))
+        {
+            return FileReadiness.Drop;
+        }
+
         try
         {
-            using var stream = File.Open(file.Standardized, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return true;
+            using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return FileReadiness.Ready;
         }
         catch (IOException)
         {
-            return false;
+            return FileReadiness.Locked;
         }
+        catch (UnauthorizedAccessException)
+        {
+            return FileReadiness.Drop;
+        }
+    }
+
+    private static bool IsTransientTempFile(FilePath file)
+    {
+        // Covers patterns like "Foo.gucx.tmp.17756.1777860550017" emitted by
+        // tools that do atomic writes (write to .tmp, rename onto target).
+        if (file.Extension == "tmp")
+        {
+            return true;
+        }
+        var fullName = System.IO.Path.GetFileName(file.Standardized);
+        return fullName.Contains(".tmp.", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -278,35 +307,61 @@ public class FileWatchManager : IFileWatchManager
         // endif
 
         IsFlushing = true;
-
-        var candidateFiles = _changedFilesWaitingForFlush.Keys.ToList();
-        var filesToProcess = new List<FilePath>();
-        foreach (var file in candidateFiles)
+        try
         {
-            if (IsFileReady(file))
+            var candidateFiles = _changedFilesWaitingForFlush.Keys.ToList();
+            var filesToProcess = new List<FilePath>();
+            foreach (var file in candidateFiles)
             {
-                _changedFilesWaitingForFlush.TryRemove(file, out _);
-                filesToProcess.Add(file);
+                var readiness = GetFileReadiness(file);
+                if (readiness == FileReadiness.Ready)
+                {
+                    _changedFilesWaitingForFlush.TryRemove(file, out _);
+                    filesToProcess.Add(file);
+                }
+                else if (readiness == FileReadiness.Drop)
+                {
+                    // File no longer exists (e.g. atomic-save temp that was
+                    // renamed away) or is otherwise unprocessable. Drop it
+                    // silently — this is the normal path during agent edits
+                    // and doesn't warrant user-visible noise.
+                    _changedFilesWaitingForFlush.TryRemove(file, out _);
+                }
+                // else Locked: leave in queue and retry next cycle (e.g. git is writing it).
             }
-            // else: file still locked (e.g. git is writing it); leave in queue and retry next cycle
-        }
 
-        foreach (var file in filesToProcess)
+            foreach (var file in filesToProcess)
+            {
+                try
+                {
+                    if (PrintFileChangesToOutput)
+                    {
+                        var stopwatch = Stopwatch.StartNew();
+                        _fileChangeReactionLogic.ReactToFileChanged(file);
+                        stopwatch.Stop();
+                        _guiCommands.PrintOutput($"File change processed: {file} (took {stopwatch.ElapsedMilliseconds}ms)");
+                    }
+                    else
+                    {
+                        _fileChangeReactionLogic.ReactToFileChanged(file);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // One bad reload must not poison the rest of the queue.
+                    // Only surface this when the user has opted in to file-change
+                    // diagnostics; otherwise it would just be noise.
+                    if (PrintFileChangesToOutput)
+                    {
+                        _guiCommands.PrintOutput($"Error reacting to file change for {file}: {ex.Message}");
+                    }
+                }
+            }
+        }
+        finally
         {
-            if (PrintFileChangesToOutput)
-            {
-                var stopwatch = Stopwatch.StartNew();
-                Locator.GetRequiredService<FileChangeReactionLogic>().ReactToFileChanged(file);
-                stopwatch.Stop();
-                _guiCommands.PrintOutput($"File change processed: {file} (took {stopwatch.ElapsedMilliseconds}ms)");
-            }
-            else
-            {
-                Locator.GetRequiredService<FileChangeReactionLogic>().ReactToFileChanged(file);
-            }
+            IsFlushing = false;
         }
-
-        IsFlushing = false;
     }
 
 }

@@ -9,18 +9,18 @@ namespace Gum.Services.Fonts;
 
 /// <summary>
 /// Tool-specific implementation of <see cref="IFontGenerationCallbacks"/> that routes output
-/// to <see cref="IGuiCommands"/> and file-change suppression to <see cref="IFileWatchManager"/>.
+/// to <see cref="IGuiCommands"/> and file-change suppression to <see cref="IFileWatchIgnoreList"/>.
 /// </summary>
 public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
 {
     private readonly IGuiCommands _guiCommands;
-    private readonly IFileWatchManager _fileWatchManager;
+    private readonly IFileWatchIgnoreList _fileWatchIgnoreList;
     private Spinner? _currentSpinner;
 
-    public ToolFontGenerationCallbacks(IGuiCommands guiCommands, IFileWatchManager fileWatchManager)
+    public ToolFontGenerationCallbacks(IGuiCommands guiCommands, IFileWatchIgnoreList fileWatchIgnoreList)
     {
         _guiCommands = guiCommands;
-        _fileWatchManager = fileWatchManager;
+        _fileWatchIgnoreList = fileWatchIgnoreList;
     }
 
     /// <inheritdoc/>
@@ -56,7 +56,7 @@ public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
     }
 
     /// <inheritdoc/>
-    public void OnIgnoreFileChange(FilePath filePath) => _fileWatchManager.IgnoreNextChangeUntil(filePath);
+    public void OnIgnoreFileChange(FilePath filePath) => _fileWatchIgnoreList.IgnoreNextChangeUntil(filePath);
 
     private sealed class SpinnerHandle : IDisposable
     {

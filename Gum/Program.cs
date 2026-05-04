@@ -83,7 +83,7 @@ namespace Gum
 
             app.MainWindow = host.Services.GetRequiredService<MainWindow>();
             app.MainWindow.Visibility = Visibility.Visible;
-                
+
             await InitializeGum(host.Services).ConfigureAwait(true);
 
             if (CommandLineManager.Self.ShouldExitImmediately)
@@ -132,7 +132,7 @@ namespace Gum
             VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
 
 
-            // ProjectManager.Initialize used to happen here, but I 
+            // ProjectManager.Initialize used to happen here, but I
             // moved it down because it may load a project, and if it
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
@@ -143,7 +143,7 @@ namespace Gum
 
             PeriodicUiTimer fileWatchTimer = services.GetRequiredService<PeriodicUiTimer>();
 
-            var fileWatchManager = Locator.GetRequiredService<IFileWatchManager>(); 
+            var fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
 
             fileWatchTimer.Tick += () =>
             {
