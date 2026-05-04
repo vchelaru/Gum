@@ -23,12 +23,7 @@ public class MainVariableGridPlugin : PriorityPlugin
     PropertyGridManager _propertyGridManager;
     private readonly IVariableReferenceLogic _variableReferenceLogic;
     private readonly ISelectedState _selectedState;
-
-    // When an instance is selected, the default state is force-selected first,
-    // which fires HandleStateSelected → RefreshEntireGrid(force: true).
-    // Then HandleInstanceSelected fires and would refresh again redundantly.
-    // This flag lets us skip the second refresh.
-    bool _stateJustRefreshedGrid;
+    private readonly VariableGridSelectionCoordinator _selectionCoordinator = new();
 
     public MainVariableGridPlugin()
     {
@@ -90,7 +85,7 @@ public class MainVariableGridPlugin : PriorityPlugin
 
     private void HandleElementSelected(ElementSave? save)
     {
-        _stateJustRefreshedGrid = false;
+        _selectionCoordinator.Reset();
         // when an element is selected, so is a state. States
         // also refresh the grid so we don't need to also refresh
         // here.
@@ -104,10 +99,10 @@ public class MainVariableGridPlugin : PriorityPlugin
 
     private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
     {
-        if (_stateJustRefreshedGrid)
+        if (!_selectionCoordinator.ShouldRefreshOnInstanceSelected(save2))
         {
-            // HandleStateSelected already refreshed the grid during this
-            // synchronous selection cascade — no need to refresh again.
+            // HandleStateSelected already refreshed the grid for this instance
+            // during the synchronous selection cascade — no need to refresh again.
             return;
         }
 
@@ -132,9 +127,12 @@ public class MainVariableGridPlugin : PriorityPlugin
     private void HandleStateSelected(StateSave? save)
     {
         _propertyGridManager.RefreshEntireGrid(force: true);
-        // Signal that the grid was just refreshed, so if HandleInstanceSelected
-        // fires next in the same synchronous cascade it can skip its refresh.
-        _stateJustRefreshedGrid = true;
+        // Record which instance the grid was just refreshed for, so that if
+        // HandleInstanceSelected fires next in the same synchronous cascade for
+        // that same instance it can skip its refresh. A later instance change
+        // (e.g. user clicks a sibling instance after a state-pane click) won't
+        // match and will refresh — see issue #2615.
+        _selectionCoordinator.OnStateRefreshed(_selectedState.SelectedInstance);
     }
 
     private void HandleCustomStateSelected(StateSave? save)
@@ -146,7 +144,7 @@ public class MainVariableGridPlugin : PriorityPlugin
 
     private void HandleTreeNodeSelected(TreeNode? node)
     {
-        _stateJustRefreshedGrid = false;
+        _selectionCoordinator.Reset();
         var selectedState = _selectedState;
         var shouldShowButton = (selectedState.SelectedBehavior != null ||
             selectedState.SelectedComponent != null ||
