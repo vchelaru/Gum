@@ -13,6 +13,7 @@ using Gum.Commands;
 using Gum.Mvvm;
 using System.Windows;
 using Gum.Dialogs;
+using Gum.Logic;
 using Gum.Plugins.InternalPlugins.StatePlugin.Views;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -29,15 +30,17 @@ public class StateTreeViewRightClickService
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
+    private readonly ICopyPasteLogic _copyPasteLogic;
 
     System.Windows.Controls.ContextMenu _contextMenu;
 
-    public StateTreeViewRightClickService(ISelectedState selectedState, 
-        IElementCommands elementCommands, 
+    public StateTreeViewRightClickService(ISelectedState selectedState,
+        IElementCommands elementCommands,
         IEditCommands editCommands,
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        ICopyPasteLogic copyPasteLogic)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -45,6 +48,7 @@ public class StateTreeViewRightClickService
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _copyPasteLogic = copyPasteLogic;
     }
 
     public void SetContextMenu(System.Windows.Controls.ContextMenu contextMenu, FrameworkElement contextMenuOwner)
@@ -84,6 +88,11 @@ public class StateTreeViewRightClickService
 
             AddMenuItem("Add Category", () => _dialogService.Show<AddCategoryDialogViewModel>());
 
+            if (_copyPasteLogic.CopiedData.CopiedCategory != null)
+            {
+                AddMenuItem("Paste Category", () => _copyPasteLogic.OnPaste(CopyType.Category));
+            }
+
             if (_selectedState.SelectedStateSave != null)
             {
                 bool isDefault = _selectedState.SelectedStateSave == _selectedState.SelectedElement?.DefaultState;
@@ -121,6 +130,8 @@ public class StateTreeViewRightClickService
 
                 AddMenuItem("Rename Category", RenameCategoryClick);
 
+                AddMenuItem("Copy [" + _selectedState.SelectedStateCategorySave.Name + "]",
+                    () => _copyPasteLogic.OnCopy(CopyType.Category));
 
                 AddMenuItem("Delete [" + _selectedState.SelectedStateCategorySave.Name + "]", DeleteCategoryClick);
             }

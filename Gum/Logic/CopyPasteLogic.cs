@@ -26,6 +26,7 @@ public enum CopyType
 {
     InstanceOrElement = 1,
     State = 2,
+    Category = 3,
 }
 
 public enum TopOrRecursive
@@ -46,6 +47,7 @@ public class CopiedData
     public List<InstanceSave> CopiedInstancesRecursive = new List<InstanceSave>();
     public List<StateSave> CopiedStates = new List<StateSave>();
     public ElementSave CopiedElement = null;
+    public StateSaveCategory CopiedCategory = null;
 }
 
 #endregion
@@ -166,6 +168,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         CopiedData.CopiedElement = null;
         CopiedData.CopiedInstancesRecursive.Clear();
         CopiedData.CopiedStates.Clear();
+        CopiedData.CopiedCategory = null;
 
         if (copyType == CopyType.InstanceOrElement)
         {
@@ -181,6 +184,18 @@ public class CopyPasteLogic : ICopyPasteLogic
         else if (copyType == CopyType.State)
         {
             StoreCopiedState();
+        }
+        else if (copyType == CopyType.Category)
+        {
+            StoreCopiedCategory();
+        }
+    }
+
+    private void StoreCopiedCategory()
+    {
+        if (_selectedState.SelectedStateCategorySave != null)
+        {
+            CopiedData.CopiedCategory = _selectedState.SelectedStateCategorySave.Clone();
         }
     }
 
@@ -366,7 +381,55 @@ public class CopyPasteLogic : ICopyPasteLogic
         {
             PastedCopiedState();
         }
+        else if (_copyType == CopyType.Category && CopiedData.CopiedCategory != null)
+        {
+            PasteCopiedCategory();
+        }
 
+    }
+
+    private void PasteCopiedCategory()
+    {
+        var targetElement = _selectedState.SelectedElement;
+
+        if (targetElement == null)
+        {
+            return;
+        }
+
+        StateSaveCategory newCategory = CopiedData.CopiedCategory.Clone();
+        newCategory.Name = StringFunctions.MakeStringUnique(
+            newCategory.Name,
+            targetElement.Categories.Select(item => item.Name));
+
+        foreach (var state in newCategory.States)
+        {
+            state.ParentContainer = targetElement;
+        }
+
+        targetElement.Categories.Add(newCategory);
+
+        var targetInstanceNames = new HashSet<string>(targetElement.Instances.Select(item => item.Name));
+        var missingInstanceNames = newCategory.States
+            .SelectMany(state => state.Variables)
+            .Select(variable => variable.SourceObject)
+            .Where(name => !string.IsNullOrEmpty(name) && !targetInstanceNames.Contains(name))
+            .Distinct()
+            .ToList();
+
+        _guiCommands.RefreshStateTreeView();
+        _fileCommands.TryAutoSaveElement(targetElement);
+
+        if (missingInstanceNames.Count > 0)
+        {
+            string message =
+                $"The category {newCategory.Name} was pasted, but the following instance(s) " +
+                $"referenced by its states do not exist on {targetElement.Name}. " +
+                $"These variables were copied but will not apply until matching instances exist:\n\n" +
+                string.Join("\n", missingInstanceNames);
+
+            _dialogService.ShowMessage(message, "Pasted category has missing instance references");
+        }
     }
 
     private void PasteCopiedInstanceSaves(TopOrRecursive topOrRecursive)
@@ -878,19 +941,6 @@ public class CopyPasteLogic : ICopyPasteLogic
                     }
                 }
 
-                // This used to be done here when we paste, but now we're
-                // going to remove it when the cut happens - just like text
-                // editors.  Undo will handle this if we mess up.
-                // bool shouldSaveSource = false;
-                //if (mIsCtrlXCut)
-                //{
-                //    if (sourceElement.Instances.Contains(sourceInstance))
-                //    {
-                //        ElementCommands.Self.RemoveInstance(sourceInstance, sourceElement);
-                //        shouldSaveSource = true;
-                //    }
-                //}
-
                 newInstance.ParentContainer = targetElement;
                 // We need to call InstanceAdd before we select the new object - the Undo manager expects it
                 // This includes before other managers refresh
@@ -1018,7 +1068,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
         _selectedState.SelectedElement = toAdd;
 
-        PluginManager.Self.ElementDuplicate(CopiedData.CopiedElement, toAdd);
+        _pluginManager.ElementDuplicate(CopiedData.CopiedElement, toAdd);
 
         _fileCommands.TryAutoSaveElement(toAdd);
         _fileCommands.TryAutoSaveProject();

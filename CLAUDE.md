@@ -44,6 +44,12 @@ If a change spans both (e.g. editing `GumCommon` which is linked into both), bui
 
 See `.claude/code-style.md` for all code style rules. Read that file before writing or editing any code.
 
+## Static Singletons in the Tool
+
+The Gum tool has been progressively migrated to constructor-injected services (`ISelectedState`, `IDialogService`, `IUndoManager`, `PluginManager`, etc.). When editing tool code, prefer the injected service over the static singleton if both exist (e.g. use the injected `_pluginManager` rather than `PluginManager.Self`).
+
+**`ObjectFinder.Self` is the exception.** It is intentionally still a static singleton across the entire codebase (tool, runtimes, tests). There is no `IObjectFinder` interface, and replacing it is a project-wide refactor — do not attempt it as drive-by cleanup. Calls to `ObjectFinder.Self.GetBaseElements(...)`, `ObjectFinder.Self.GetDefaultChildName(...)`, etc. are acceptable in any context.
+
 ## Investigating Third-Party Libraries
 
 **Never decompile DLLs or NuGet assemblies** (no `dotnet-ildasm`, `ilspycmd`, ILSpy, dnSpy, etc.) to inspect third-party code. If you need to know the API surface of a library:

@@ -6,6 +6,7 @@ using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -329,6 +330,142 @@ public class CopyPasteLogicTests : BaseTestClass
             "because the paste should not be allowed since the pasted state " +
             "sets the BadVariable which doesn't exist on the component");
     }
+
+    #region Category
+
+    [Fact]
+    public void OnPaste_Category_ShouldAddCategoryToTargetElement()
+    {
+        ComponentSave sourceComponent = new() { Name = "Source" };
+        sourceComponent.States.Add(new StateSave { Name = "Default", ParentContainer = sourceComponent });
+        StateSaveCategory sourceCategory = new() { Name = "Colors" };
+        sourceCategory.States.Add(new StateSave { Name = "Red" });
+        sourceCategory.States.Add(new StateSave { Name = "Blue" });
+        sourceComponent.Categories.Add(sourceCategory);
+
+        ComponentSave targetComponent = new() { Name = "Target" };
+        targetComponent.States.Add(new StateSave { Name = "Default", ParentContainer = targetComponent });
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(sourceComponent);
+        _selectedState.Setup(x => x.SelectedStateCategorySave).Returns(sourceCategory);
+        _selectedState.Setup(x => x.SelectedStateSave).Returns((StateSave?)null);
+
+        _copyPasteLogic.OnCopy(CopyType.Category);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(targetComponent);
+
+        _copyPasteLogic.OnPaste(CopyType.Category);
+
+        targetComponent.Categories.Count.ShouldBe(1);
+        targetComponent.Categories[0].Name.ShouldBe("Colors");
+        targetComponent.Categories[0].States.Count.ShouldBe(2);
+        targetComponent.Categories[0].States.ShouldNotContain(sourceCategory.States[0],
+            "because pasted states should be clones, not the same instances as the source");
+    }
+
+    [Fact]
+    public void OnPaste_Category_ShouldUniquifyName_IfTargetHasCategoryWithSameName()
+    {
+        ComponentSave sourceComponent = new() { Name = "Source" };
+        sourceComponent.States.Add(new StateSave { Name = "Default", ParentContainer = sourceComponent });
+        StateSaveCategory sourceCategory = new() { Name = "Colors" };
+        sourceCategory.States.Add(new StateSave { Name = "Red" });
+        sourceComponent.Categories.Add(sourceCategory);
+
+        ComponentSave targetComponent = new() { Name = "Target" };
+        targetComponent.States.Add(new StateSave { Name = "Default", ParentContainer = targetComponent });
+        targetComponent.Categories.Add(new StateSaveCategory { Name = "Colors" });
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(sourceComponent);
+        _selectedState.Setup(x => x.SelectedStateCategorySave).Returns(sourceCategory);
+        _selectedState.Setup(x => x.SelectedStateSave).Returns((StateSave?)null);
+
+        _copyPasteLogic.OnCopy(CopyType.Category);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(targetComponent);
+
+        _copyPasteLogic.OnPaste(CopyType.Category);
+
+        targetComponent.Categories.Count.ShouldBe(2);
+        targetComponent.Categories.Select(item => item.Name).ShouldContain("Colors");
+        targetComponent.Categories.Any(item => item.Name != "Colors").ShouldBeTrue(
+            "because the pasted category's name should be uniquified");
+    }
+
+    [Fact]
+    public void OnPaste_Category_ShouldShowToast_IfReferencedInstancesMissingOnTarget()
+    {
+        ComponentSave sourceComponent = new() { Name = "Source" };
+        sourceComponent.States.Add(new StateSave { Name = "Default", ParentContainer = sourceComponent });
+        StateSaveCategory sourceCategory = new() { Name = "Colors" };
+        StateSave redState = new() { Name = "Red" };
+        redState.SetValue("ColoredRectangleInstance.Red", 255f, "float");
+        sourceCategory.States.Add(redState);
+        sourceComponent.Categories.Add(sourceCategory);
+
+        ComponentSave targetComponent = new() { Name = "Target" };
+        targetComponent.States.Add(new StateSave { Name = "Default", ParentContainer = targetComponent });
+
+        var dialogService = _mocker.GetMock<IDialogService>();
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(sourceComponent);
+        _selectedState.Setup(x => x.SelectedStateCategorySave).Returns(sourceCategory);
+        _selectedState.Setup(x => x.SelectedStateSave).Returns((StateSave?)null);
+
+        _copyPasteLogic.OnCopy(CopyType.Category);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(targetComponent);
+
+        _copyPasteLogic.OnPaste(CopyType.Category);
+
+        targetComponent.Categories.Count.ShouldBe(1,
+            "because the paste should still succeed even if some referenced instances are missing");
+        dialogService.Verify(
+            x => x.ShowMessage(
+                It.Is<string>(message => message.Contains("ColoredRectangleInstance")),
+                It.IsAny<string?>(),
+                It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public void OnPaste_Category_ShouldNotShowToast_IfAllReferencedInstancesPresentOnTarget()
+    {
+        ComponentSave sourceComponent = new() { Name = "Source" };
+        sourceComponent.States.Add(new StateSave { Name = "Default", ParentContainer = sourceComponent });
+        StateSaveCategory sourceCategory = new() { Name = "Colors" };
+        StateSave redState = new() { Name = "Red" };
+        redState.SetValue("ColoredRectangleInstance.Red", 255f, "float");
+        sourceCategory.States.Add(redState);
+        sourceComponent.Categories.Add(sourceCategory);
+
+        ComponentSave targetComponent = new() { Name = "Target" };
+        targetComponent.States.Add(new StateSave { Name = "Default", ParentContainer = targetComponent });
+        targetComponent.Instances.Add(new InstanceSave
+        {
+            Name = "ColoredRectangleInstance",
+            ParentContainer = targetComponent
+        });
+
+        var dialogService = _mocker.GetMock<IDialogService>();
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(sourceComponent);
+        _selectedState.Setup(x => x.SelectedStateCategorySave).Returns(sourceCategory);
+        _selectedState.Setup(x => x.SelectedStateSave).Returns((StateSave?)null);
+
+        _copyPasteLogic.OnCopy(CopyType.Category);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(targetComponent);
+
+        _copyPasteLogic.OnPaste(CopyType.Category);
+
+        targetComponent.Categories.Count.ShouldBe(1);
+        dialogService.Verify(
+            x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Never);
+    }
+
+    #endregion
 
     [Fact]
     public void OnPaste_Instance_ShouldSortVariables()

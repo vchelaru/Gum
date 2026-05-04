@@ -52,17 +52,18 @@ public class MainStatePlugin : PriorityPlugin
         var elementCommands = Locator.GetRequiredService<IElementCommands>();
         var editCommands = Locator.GetRequiredService<IEditCommands>();
         var dialogService = Locator.GetRequiredService<IDialogService>();
-        _stateTreeViewRightClickService = new StateTreeViewRightClickService(
-            _selectedState, 
-            elementCommands, 
-            editCommands, 
-            dialogService, 
-            _guiCommands, 
-            _fileCommands);
         _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
         _objectFinder = ObjectFinder.Self;
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
         _copyPasteLogic = Locator.GetRequiredService<ICopyPasteLogic>();
+        _stateTreeViewRightClickService = new StateTreeViewRightClickService(
+            _selectedState,
+            elementCommands,
+            editCommands,
+            dialogService,
+            _guiCommands,
+            _fileCommands,
+            _copyPasteLogic);
 
         _stateTreeViewManager = new StateTreeViewManager(
             _stateTreeViewRightClickService,

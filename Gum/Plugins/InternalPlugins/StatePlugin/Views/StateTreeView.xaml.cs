@@ -144,10 +144,22 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
 
                     e.Handled = true;
                 }
+                else if(_selectedState.SelectedStateCategorySave != null)
+                {
+                    _copyPasteLogic.OnCopy(CopyType.Category);
+                    e.Handled = true;
+                }
             }
             else if(_hotkeyManager.Paste.IsPressed(e))
             {
-                _copyPasteLogic.OnPaste(CopyType.State);
+                if(_copyPasteLogic.CopiedData.CopiedCategory != null)
+                {
+                    _copyPasteLogic.OnPaste(CopyType.Category);
+                }
+                else
+                {
+                    _copyPasteLogic.OnPaste(CopyType.State);
+                }
                 e.Handled = true;
             }
         }
