@@ -8,8 +8,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Application = System.Windows.Application;
 using Color = System.Drawing.Color;
@@ -272,6 +274,33 @@ internal class ElementTreeViewCreator
 
             return (int)Math.Round(value * 255);
         }
+    }
+
+    /// <summary>
+    /// Returns a WPF <see cref="System.Windows.Media.ImageSource"/> for the given
+    /// ImageList key (e.g. "Container_Instance.png"), pulled from the currently
+    /// tinted ImageList so the result tracks the active theme. Returns null if
+    /// the ImageList hasn't been built yet or the key isn't present.
+    /// </summary>
+    internal System.Windows.Media.ImageSource? GetWpfImageSourceForKey(string key)
+    {
+        var imageList = ObjectTreeView?.ImageList;
+        if (imageList == null) return null;
+        if (!imageList.Images.ContainsKey(key)) return null;
+
+        if (imageList.Images[key] is not Bitmap bitmap) return null;
+
+        using var ms = new MemoryStream();
+        bitmap.Save(ms, ImageFormat.Png);
+        ms.Position = 0;
+
+        var bmp = new BitmapImage();
+        bmp.BeginInit();
+        bmp.CacheOption = BitmapCacheOption.OnLoad;
+        bmp.StreamSource = ms;
+        bmp.EndInit();
+        bmp.Freeze();
+        return bmp;
     }
 
     internal void UpdateTreeviewIcons(
