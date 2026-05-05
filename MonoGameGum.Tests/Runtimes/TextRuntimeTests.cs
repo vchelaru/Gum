@@ -755,6 +755,23 @@ $"chars count=223\r\n";
     }
 
     [Fact]
+    public void WrappedText_ShouldPreserveLength_IfTextEndsWithSpace()
+    {
+        // Repro for https://github.com/vchelaru/Gum/issues/2617 — a trailing
+        // space caused WrappedText to gain a phantom extra space, throwing off
+        // TextBox caret math (caretIndex landed past the end of Text and a
+        // subsequent backspace tried to remove past the string end).
+        Text.IsMidWordLineBreakEnabled = false;
+        var text = new Text();
+        text.Width = 1000;
+
+        text.RawText = "abc ";
+
+        var totalLength = text.WrappedText.Sum(line => line.Length);
+        totalLength.ShouldBe(text.RawText.Length);
+    }
+
+    [Fact]
     public void WrappedText_ShouldWrap_IfOnlyLettersExist()
     {
         Text text = new();

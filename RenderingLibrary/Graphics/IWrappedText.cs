@@ -254,11 +254,15 @@ public static class IWrappedTextExtensions
                 //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
                 {
 
-                    if ((remainingWordsToProcess.Count > 1 || currentWord == "") &&
+                    if (remainingWordsToProcess.Count > 1 &&
                         // Update Feb 19, 2023
                         // don't insert space after if it's a newline. That messes up indexes.
                         !containsNewline)
                     {
+                        // A trailing empty word (from RawText ending in a space) used to also
+                        // hit this branch via `currentWord == ""`, appending a phantom extra
+                        // space. That made WrappedText longer than RawText and pushed TextBox
+                        // caretIndex past Text.Length on click — see issue #2617.
                         currentLine = currentLine + currentWord + ' ';
                     }
                     else
