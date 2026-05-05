@@ -325,6 +325,15 @@ public class HotkeyManager : IHotkeyManager
                 _editCommands.AskToRenameBehavior(selectedBehavior);
                 e.Handled = true;
             }
+            else if(_selectedState.SelectedTreeNode is { } selectedTreeNode
+                && (selectedTreeNode.IsScreensFolderTreeNode() || selectedTreeNode.IsComponentsFolderTreeNode()))
+            {
+                _dialogService.Show<RenameFolderDialogViewModel>(vm =>
+                {
+                    vm.FolderNode = selectedTreeNode;
+                });
+                e.Handled = true;
+            }
         }
     }
 
