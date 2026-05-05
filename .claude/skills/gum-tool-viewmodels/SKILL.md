@@ -37,9 +37,16 @@ Multiple dependencies are expressed with multiple attributes:
 public bool CanImport => IsPreviewLoaded && !IsLoading;
 ```
 
-## Visibility: ViewModel Properties, Not Converters
+## View Logic on the VM, Not in XAML
 
-Do **not** use `IValueConverter` in XAML for visibility or other transformations. Instead, expose a `System.Windows.Visibility` property on the ViewModel with `[DependsOn]`:
+The boundary is **logic vs. theming**:
+
+- **Logic** — what to show, when, in what state — lives on the VM as `[DependsOn]` computed properties. Examples: `Visibility`, `FontStyle`, display strings, enabled/disabled flags. XAML binds directly. Unit-testable.
+- **Theming** — which brush, which font size — stays in XAML so `{DynamicResource ...}` can repaint on a runtime theme switch. Not testable, by necessity (DynamicResource only resolves through a `FrameworkElement`).
+
+Do **not** use `IValueConverter` or `DataTrigger` for logic. The one exception is themed brushes (see below).
+
+Visibility example:
 
 ```csharp
 [DependsOn(nameof(ErrorMessage))]
@@ -53,7 +60,16 @@ XAML then binds directly:
 <TextBlock Visibility="{Binding ErrorMessageVisibility}" />
 ```
 
-This keeps XAML simple and makes the logic unit-testable.
+VMs in `GumCommon` or runtime projects must stay UI-agnostic — this rule is for tool code only.
+
+### Exception: themed brushes
+
+Light/dark theming uses brushes defined in `Gum/Themes/Frb.Brushes.{Light,Dark}.xaml` (e.g. `Frb.Brushes.Error`). These must be resolved with `{DynamicResource ...}` so a runtime theme switch repaints — that only works from a `FrameworkElement`, not from a VM-side `Brush` property. The right pattern:
+
+- Keep the *logical* state on the VM (`IsOrphaned`, `IsInvalid`, etc., still `[DependsOn]`-driven and unit-testable).
+- Apply the brush via a `Style` with a `DataTrigger` keyed off that VM bool, e.g. `<Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Error}" />`.
+
+This is the only situation where `DataTrigger` is preferred over a VM-side property.
 
 ## Common Pitfalls
 
