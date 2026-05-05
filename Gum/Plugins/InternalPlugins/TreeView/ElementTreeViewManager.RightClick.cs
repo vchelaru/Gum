@@ -27,11 +27,35 @@ public partial class ElementTreeViewManager
 
     #region Menu helpers
 
+    private static readonly string[] StandardInstanceTypes =
+    {
+        "Circle",
+        "ColoredRectangle",
+        "Container",
+        "NineSlice",
+        "Polygon",
+        "Rectangle",
+        "Sprite",
+        "Text",
+    };
+
     private void AddMenuItem(string text, Action clickAction)
     {
         var menuItem = new MenuItem { Header = text };
         menuItem.Click += (_, _) => clickAction();
         _contextMenu.Items.Add(menuItem);
+    }
+
+    private System.Windows.Controls.Image? CreateIconImageForKey(string key)
+    {
+        var source = _viewCreator.GetWpfImageSourceForKey(key);
+        if (source == null) return null;
+        return new System.Windows.Controls.Image
+        {
+            Source = source,
+            Width = 16,
+            Height = 16,
+        };
     }
 
     private void AddSeparator() => _contextMenu.Items.Add(new Separator());
@@ -416,7 +440,11 @@ public partial class ElementTreeViewManager
         {
             foreach (var component in favoritedComponents)
             {
-                var menuItem = new MenuItem { Header = component.Name };
+                var menuItem = new MenuItem
+                {
+                    Header = component.Name,
+                    Icon = CreateIconImageForKey("Component.png"),
+                };
                 parentMenuItem.Items.Add(menuItem);
 
                 var componentName = component.Name;
@@ -444,21 +472,13 @@ public partial class ElementTreeViewManager
             parentMenuItem.Items.Add(new Separator());
         }
 
-        // Add child menu items for each type
-        var types = new[] {
-            "Circle",
-            "ColoredRectangle",
-            "Container",
-            "NineSlice",
-            "Polygon",
-            "Rectangle",
-            "Sprite",
-            "Text"
-        };
-
-        foreach (var type in types)
+        foreach (var type in StandardInstanceTypes)
         {
-            var menuItem = new MenuItem { Header = type };
+            var menuItem = new MenuItem
+            {
+                Header = type,
+                Icon = CreateIconImageForKey($"{type}_Instance.png"),
+            };
             parentMenuItem.Items.Add(menuItem);
 
             menuItem.Click += (_, _) =>
@@ -487,20 +507,13 @@ public partial class ElementTreeViewManager
         var parentMenuItem = new MenuItem { Header = itemText };
         _contextMenu.Items.Add(parentMenuItem);
 
-        var types = new[] {
-            "Circle",
-            "ColoredRectangle",
-            "Container",
-            "NineSlice",
-            "Polygon",
-            "Rectangle",
-            "Sprite",
-            "Text"
-        };
-
-        foreach (var type in types)
+        foreach (var type in StandardInstanceTypes)
         {
-            var menuItem = new MenuItem { Header = type };
+            var menuItem = new MenuItem
+            {
+                Header = type,
+                Icon = CreateIconImageForKey($"{type}_Instance.png"),
+            };
             parentMenuItem.Items.Add(menuItem);
 
             menuItem.Click += (_, _) =>
