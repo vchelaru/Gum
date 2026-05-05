@@ -23,7 +23,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly IFileCommands _fileCommands;
     private readonly IProjectState _projectState;
 
-    public ITreeNode? FolderNode { get; set; }
+    public ITreeNode? FolderNode { get => Get<ITreeNode?>(); set => Set(value); }
 
     public RenameFolderDialogViewModel(
         INameVerifier nameVerifier,
@@ -39,6 +39,15 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         _fileLocations = fileLocations;
         _fileCommands = fileCommands;
         _projectState = projectState;
+        PreSelect = true;
+
+        PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(FolderNode))
+            {
+                Value = FolderNode?.Text;
+            }
+        };
     }
 
     public override void OnAffirmative()
