@@ -23,22 +23,25 @@ public class MainBehaviorsPlugin : PriorityPlugin
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
     private readonly IUndoManager _undoManager;
-    
+    private readonly IProjectManager _projectManager;
+
     BehaviorsViewModel viewModel;
     DataUiGrid stateDataUiGrid;
     PluginTab behaviorsTab;
 
-    public MainBehaviorsPlugin()
+    [ImportingConstructor]
+    public MainBehaviorsPlugin(ISelectedState selectedState)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState = selectedState;
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();
+        _projectManager = Locator.GetRequiredService<IProjectManager>();
     }
 
     public override void StartUp()
     {
 
-        viewModel = new BehaviorsViewModel(_selectedState);
+        viewModel = new BehaviorsViewModel(_selectedState, _projectManager);
         viewModel.ApplyChangedValues += HandleApplyBehaviorChanges;
 
 
@@ -174,6 +177,10 @@ public class MainBehaviorsPlugin : PriorityPlugin
 
                 _guiCommands.RefreshStateTreeView();
                 _fileCommands.TryAutoSaveElement(component);
+                // _elementCommands.AddBehaviorTo only raises BehaviorReferencesChanged
+                // when a real (project-existing) behavior is added. Pure removals — e.g.
+                // unchecking only a stale orphan — would otherwise leave error state stale.
+                PluginManager.Self.BehaviorReferencesChanged(component);
             }
             viewModel.UpdateTo(component);
 

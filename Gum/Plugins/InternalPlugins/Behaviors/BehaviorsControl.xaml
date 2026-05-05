@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Gum.Plugins.Behaviors.BehaviorsControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,13 +8,34 @@
     d:DesignHeight="300"
     d:DesignWidth="300"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <!--
+            Style trigger (rather than VM-side Brush/FontStyle) is used here so the
+            error color comes from the themed DynamicResource and tracks light/dark
+            mode at runtime. The VM still drives the logical state via IsOrphaned.
+        -->
+        <Style x:Key="BehaviorNameTextStyle" TargetType="TextBlock">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsOrphaned}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Error}" />
+                    <Setter Property="FontStyle" Value="Italic" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
     <Grid>
         <Grid Visibility="{Binding AddedListVisibility}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <ListBox ItemsSource="{Binding AddedBehaviors}" SelectedItem="{Binding SelectedBehavior}" />
+            <ListBox ItemsSource="{Binding AddedBehaviors}" SelectedItem="{Binding SelectedBehavior}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Style="{StaticResource BehaviorNameTextStyle}" Text="{Binding DisplayText}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
             <Button Grid.Row="1" Click="HandleEditClick">Edit</Button>
 
         </Grid>
@@ -33,9 +54,11 @@
 
             <ListBox Grid.ColumnSpan="2" ItemsSource="{Binding AllBehaviors}">
                 <ListBox.ItemTemplate>
-                    <HierarchicalDataTemplate>
-                        <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" />
-                    </HierarchicalDataTemplate>
+                    <DataTemplate>
+                        <CheckBox IsChecked="{Binding IsChecked}">
+                            <TextBlock Style="{StaticResource BehaviorNameTextStyle}" Text="{Binding DisplayText}" />
+                        </CheckBox>
+                    </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
 
