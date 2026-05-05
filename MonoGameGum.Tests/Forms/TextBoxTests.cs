@@ -46,6 +46,87 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Backspace_ShouldNotLeaveBlankSpaceBelowText_Multiline()
+    {
+        TextBox textBox = new();
+        textBox.AcceptsReturn = true;
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.Height = 60;
+        textBox.IsFocused = true;
+
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+
+        for (int i = 0; i < 10; i++)
+        {
+            textBox.HandleCharEntered('\n');
+        }
+        visual.TextInstance.Y.ShouldBeLessThan(0f, "sanity: typing should have scrolled the text up");
+
+        for (int i = 0; i < 10; i++)
+        {
+            textBox.HandleBackspace();
+        }
+
+        visual.TextInstance.Y.ShouldBe(0f,
+            "because once content shrinks back to a single line, no vertical scroll is needed and there should be no blank band above the text");
+    }
+
+    [Fact]
+    public void CaretAboveVisibleArea_ShouldShiftTextDown_Multiline()
+    {
+        TextBox textBox = new();
+        textBox.AcceptsReturn = true;
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.Height = 60;
+        textBox.IsFocused = true;
+
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+
+        for (int i = 0; i < 10; i++)
+        {
+            textBox.HandleCharEntered('\n');
+        }
+
+        float scrolledY = visual.TextInstance.Y;
+        scrolledY.ShouldBeLessThan(0f, "because adding many lines should have scrolled the text up");
+
+        textBox.CaretIndex = 0;
+
+        visual.TextInstance.Y.ShouldBeGreaterThan(scrolledY,
+            "because the caret moved back to line 0 and the text needs to shift down to keep it in view");
+    }
+
+    [Fact]
+    public void CaretBelowVisibleArea_ShouldShiftTextUp_Multiline()
+    {
+        TextBox textBox = new();
+        textBox.AcceptsReturn = true;
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.Height = 60;
+        textBox.IsFocused = true;
+
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        float originalTextY = visual.TextInstance.Y;
+
+        for (int i = 0; i < 10; i++)
+        {
+            textBox.HandleCharEntered('\n');
+        }
+
+        visual.TextInstance.Y.ShouldBeLessThan(originalTextY,
+            "because the caret moved past the bottom of the visible area and the text should scroll up");
+
+        // Caret should be roughly at the bottom of the visual after typing past
+        // the bottom. Tolerance matches the convention used by the existing X-axis
+        // scroll tests (font/layout geometry has small implementation-dependent
+        // variance).
+        float caretAbsoluteCenter = visual.CaretInstance.AbsoluteTop + visual.CaretInstance.GetAbsoluteHeight() / 2f;
+        float visualBottom = visual.AbsoluteTop + visual.GetAbsoluteHeight();
+        caretAbsoluteCenter.ShouldBeLessThanOrEqualTo(visualBottom,
+            "because the caret center should remain inside the visible area after vertical scrolling");
+    }
+
+    [Fact]
     public void CaretIndex_ShouldAdjustCaretPosition()
     {
         TextBox textBox = new();
@@ -76,6 +157,9 @@ public class TextBoxTests : BaseTestClass
         TextBox textBox = new();
         textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
         textBox.AcceptsReturn = true;
+        // Tall enough to fit all 4 lines without triggering the vertical scroll
+        // logic; this test only cares that caret Y moves with the line index.
+        textBox.Height = 200;
 
         textBox.HandleCharEntered('\n');
         textBox.HandleCharEntered('\n');
@@ -104,6 +188,28 @@ public class TextBoxTests : BaseTestClass
 
         textBox.CaretIndex = 4;
         caret.AbsoluteTop.ShouldBe(positionAt3); // Should not move past the last line
+    }
+
+    [Fact]
+    public void CaretMovingWithinVisibleArea_ShouldNotShiftText_Multiline()
+    {
+        TextBox textBox = new();
+        textBox.AcceptsReturn = true;
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.Height = 200;
+        textBox.IsFocused = true;
+
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        float originalTextY = visual.TextInstance.Y;
+
+        textBox.HandleCharEntered('a');
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('b');
+
+        textBox.CaretIndex = 0;
+
+        visual.TextInstance.Y.ShouldBe(originalTextY,
+            "because both lines fit within the visible area; no scrolling should occur");
     }
 
     [Fact]
@@ -248,6 +354,54 @@ public class TextBoxTests : BaseTestClass
         textBox.IsFocused = true;
         textBox.IsFocused = false;
         lostFocusRaised.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SingleLine_ShouldNotShiftTextVertically_OnTyping()
+    {
+        TextBox textBox = new();
+        textBox.IsFocused = true;
+
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        float originalTextY = visual.TextInstance.Y;
+        float originalCaretY = visual.CaretInstance.Y;
+
+        for (int i = 0; i < 40; i++)
+        {
+            textBox.HandleCharEntered('a');
+        }
+
+        visual.TextInstance.Y.ShouldBe(originalTextY,
+            "because single-line mode should never scroll text vertically");
+        visual.CaretInstance.Y.ShouldBe(originalCaretY,
+            "because single-line mode should never shift the caret vertically");
+    }
+
+    [Fact]
+    public void SingleLine_ShouldNotShiftTextVertically_WhenCaretWouldBeOutOfBoundsY()
+    {
+        TextBox textBox = new();
+        textBox.IsFocused = true;
+
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+
+        // Force the text instance well outside the visible vertical range so the
+        // caret would be visually clipped. Single-line mode must NOT react to this
+        // by shifting Y; only the horizontal axis should be considered.
+        visual.TextInstance.Y = 500f;
+        float forcedTextY = visual.TextInstance.Y;
+
+        for (int i = 0; i < 10; i++)
+        {
+            textBox.HandleCharEntered('a');
+        }
+
+        visual.TextInstance.Y.ShouldBe(forcedTextY,
+            "because single-line mode must opt out of vertical scrolling entirely");
+
+        textBox.CaretIndex = 0;
+        visual.TextInstance.Y.ShouldBe(forcedTextY,
+            "because moving the caret in single-line mode must never trigger a vertical shift");
     }
 
     [Fact]

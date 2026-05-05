@@ -246,8 +246,7 @@ public class TextBox : TextBoxBase
 
             if (!wasHandledByEvent)
             {
-                UpdateCaretPositionFromCaretIndex();
-                OffsetTextToKeepCaretInView();
+                RefreshCaretAfterEdit();
             }
 
             if(caretIndex != caretIndexBefore)
@@ -263,11 +262,12 @@ public class TextBox : TextBoxBase
     /// <param name="isCtrlDown">Whether the ctrl key is held. If true, the entire word is deleted rather than a single character.</param>
     public override void HandleBackspace(bool isCtrlDown = false)
     {
-        //if (IsFocused && caretIndex > 0 && Text != null)
         if ((caretIndex > 0 || selectionLength > 0) && Text != null)
         {
             if (selectionLength > 0)
             {
+                // DeleteSelection routes through the CaretIndex setter, which already
+                // calls RefreshCaretAfterEdit internally — no extra call needed here.
                 DeleteSelection();
             }
             else if (isCtrlDown)
@@ -280,16 +280,18 @@ public class TextBox : TextBoxBase
                 SetTextNoTranslate(Text.Remove(indexToDeleteTo, caretIndex - indexToDeleteTo));
 
                 caretIndex = indexToDeleteTo;
+                RefreshCaretAfterEdit();
             }
             else
             {
                 var whereToRemoveFrom = caretIndex - 1;
-                // Move the care to the left one before removing from the text. Otherwise, if the
-                // caret is at the end of the word, modifying the word will shift the caret to the left, 
-                // and that could cause it to shift over two times.
+                // Move the caret left one before removing from the text. Otherwise, if the
+                // caret is at the end of the word, modifying the word will shift the caret to
+                // the left, and that could cause it to shift over two times.
                 caretIndex--;
                 // Use SetTextNoTranslate because this is user-initiated editing
                 SetTextNoTranslate(this.Text.Remove(whereToRemoveFrom, 1));
+                RefreshCaretAfterEdit();
             }
         }
     }
@@ -298,12 +300,14 @@ public class TextBox : TextBoxBase
     {
         if (selectionLength > 0)
         {
+            // DeleteSelection routes through the CaretIndex setter, see note above.
             DeleteSelection();
         }
         else if (caretIndex < (Text?.Length ?? 0))
         {
             // Use SetTextNoTranslate because this is user-initiated editing
             SetTextNoTranslate(this.Text.Remove(caretIndex, 1));
+            RefreshCaretAfterEdit();
         }
     }
 
@@ -356,8 +360,7 @@ public class TextBox : TextBoxBase
             }
 
             TruncateTextToMaxLength();
-            UpdateCaretPositionFromCaretIndex();
-            OffsetTextToKeepCaretInView();
+            RefreshCaretAfterEdit();
         }
     }
 

@@ -83,7 +83,19 @@ Exceptions are rare: genuinely untestable changes (cosmetic renames, doc-only ed
 
 # Boyscout Principle — Leave It Better Than You Found It
 
-Gum is a mature codebase. When you load context in an area (reading methods, understanding call chains), take the opportunity to fix compiler warnings and clean up code in the methods and files you're already touching. You've already done the context-loading work, so these fixes are low-risk and high-value. Keep it non-invasive — don't refactor unrelated code or restructure classes, just fix warnings, remove dead code, and tidy what's in your path.
+Gum is a mature codebase. When you load context in an area (reading methods, understanding call chains), take the opportunity to fix compiler warnings, clean up code, and address inconsistencies in the methods and files you're already touching. You've already done the context-loading work, so these fixes are low-risk and high-value.
+
+**"Not in scope" is the wrong default.** When you're working on a feature, the *plan* defines feature scope, but boyscout is about leveraging context already loaded — a separate axis. If you notice an inconsistency, a missing call, a stale comment, or an asymmetric API while reading code adjacent to your task, lean toward fixing it in the same change. Reasons:
+
+- Context is the expensive part. You've already paid for it. A reviewer or future agent picking up the "follow-up" has to re-do that context work, which is roughly 2× the total cost.
+- Deferred fixes accumulate. "I'll do it later" usually means "nobody will" — the inconsistency stays in the codebase indefinitely.
+- Adjacent fixes are *safer* now than later, because you understand the call graph that exposes them. Coming back cold is when you ship the wrong fix.
+
+If you catch yourself writing "this is a pre-existing inconsistency, not in scope to fix here" or "I'll flag it as a follow-up," stop and ask: *do I have the context to fix it now?* If yes, fix it. Call out the boyscout fix in your final notes so the user can see what you bundled and push back if they disagree.
+
+**When to actually defer.** Reserve "out of scope" for things that genuinely require new context: refactors that span unrelated files, behavior changes that need their own design discussion, anything where the fix is non-obvious or risky. The test is whether you'd need to load *new* files to do it well — if the fix lives in the files you're already editing, it's in.
+
+Keep boyscout fixes non-invasive in the structural sense — don't restructure classes or rewrite APIs as drive-by work — but do fix warnings, plug missing calls, remove dead code, align asymmetric helpers, and tidy what's in your path.
 
 # Before editing
 
