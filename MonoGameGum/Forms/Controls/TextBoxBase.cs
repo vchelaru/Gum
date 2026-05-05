@@ -196,9 +196,25 @@ public abstract class TextBoxBase :
 
     TextWrapping textWrapping = TextWrapping.NoWrap;
     /// <summary>
-    /// Gets or sets the text wrapping behavior. When set to <see cref="Gum.Forms.TextWrapping.Wrap"/>,
-    /// text wraps to multiple lines. Defaults to <see cref="Gum.Forms.TextWrapping.NoWrap"/>.
+    /// Controls visual wrapping behavior of the displayed text. When set to
+    /// <see cref="Gum.Forms.TextWrapping.Wrap"/>, text that exceeds the container's width
+    /// wraps to additional visual lines. When <see cref="Gum.Forms.TextWrapping.NoWrap"/>
+    /// (the default), text continues horizontally and the visible region scrolls
+    /// horizontally to keep the caret in view.
     /// </summary>
+    /// <remarks>
+    /// This property is independent of <see cref="AcceptsReturn"/>:
+    /// <list type="bullet">
+    ///   <item><description><b>NoWrap, AcceptsReturn=false</b> (default) — single-line input. The text never grows vertically through user typing; horizontal scrolling keeps the caret visible.</description></item>
+    ///   <item><description><b>NoWrap, AcceptsReturn=true</b> — code-editor feel. User can type Enter for explicit newlines; long lines overflow horizontally rather than wrapping.</description></item>
+    ///   <item><description><b>Wrap, AcceptsReturn=false</b> — read-mostly multi-line display. Long text wraps; user can't add explicit newlines via Enter.</description></item>
+    ///   <item><description><b>Wrap, AcceptsReturn=true</b> — standard multi-line text area.</description></item>
+    /// </list>
+    /// The Visual is placed in its "Multi" / "MultiNoWrap" <c>LineModeCategory</c> state
+    /// whenever either property would produce vertical content (wrapping enabled OR Enter inserts newlines);
+    /// otherwise the "Single" state is used. Vertical scrolling is enabled in any non-single state;
+    /// horizontal scrolling is enabled whenever wrapping is off.
+    /// </remarks>
     public TextWrapping TextWrapping
     {
         get => textWrapping;
@@ -208,7 +224,8 @@ public abstract class TextBoxBase :
             {
                 textWrapping = value;
                 UpdateStateForSingleOrMultiLine();
-                // RefreshTemplateFromSelectionInstance after UpdateToTextWrappingChanged so the state has applied when we clone
+                // Refresh the selection template after the state has been applied so the
+                // clone picks up the new "Multi" / "MultiNoWrap" / "Single" variable values.
                 RefreshTemplateFromSelectionInstance();
             }
         }
@@ -681,7 +698,7 @@ public abstract class TextBoxBase :
 
         int index = 0;
 
-        if (TextWrapping == TextWrapping.NoWrap && !AcceptsReturn)
+        if (IsSingleLineMode)
         {
             var textToUse = DisplayedText;
             index = GetIndex(cursorOffset, textToUse);
@@ -969,8 +986,7 @@ public abstract class TextBoxBase :
         if (oldIndex != caretIndex)
         {
             UpdateToCaretChanged(oldIndex, caretIndex, isShiftDown);
-            UpdateCaretPositionFromCaretIndex();
-            OffsetTextToKeepCaretInView();
+            RefreshCaretAfterEdit();
             CaretIndexChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -1350,9 +1366,21 @@ public abstract class TextBoxBase :
         lineNumber = System.Math.Min(lineNumber, coreTextObject.WrappedText.Count - 1);
     }
 
+    /// <summary>
+    /// Recomputes the caret position from <see cref="caretIndex"/> and then shifts the
+    /// text/caret pair to keep the caret inside the visible region. Call after any edit
+    /// that changes the displayed text or caret position outside of the
+    /// <see cref="CaretIndex"/> setter (which already does this internally).
+    /// </summary>
+    protected void RefreshCaretAfterEdit()
+    {
+        UpdateCaretPositionFromCaretIndex();
+        OffsetTextToKeepCaretInView();
+    }
+
     protected void UpdateCaretPositionFromCaretIndex()
     {
-        if (TextWrapping == TextWrapping.NoWrap && AcceptsReturn == false)
+        if (IsSingleLineMode)
         {
             // make sure we measure a valid string
             var stringToMeasure = DisplayedText ?? "";
@@ -1376,28 +1404,8 @@ public abstract class TextBoxBase :
             float caretY = GetCenterOfYForLinePixelsFromSmall(
                 // lineNumber can be -1, so treat it as 0 if so:
                 System.Math.Max(0, lineNumber));
-            
-            switch(caretComponent.YOrigin)
-            {
-                case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
-                    // do nothing
-                    break;
-                case global::RenderingLibrary.Graphics.VerticalAlignment.Top:
-                    caretY -= coreTextObject.LineHeightMultiplier * coreTextObject.LineHeightInPixels / 2.0f;
-                    break;
-            }
 
-
-            switch (caretComponent.YUnits)
-            {
-                case global::Gum.Converters.GeneralUnitType.PixelsFromSmall:
-                    caretComponent.Y = caretY;
-
-                    break;
-                case global::Gum.Converters.GeneralUnitType.PixelsFromMiddle:
-                    caretComponent.Y = caretY - textComponent.GetAbsoluteHeight() / 2.0f;
-                    break;
-            }
+            caretComponent.Y = ResolveLineYForComponent(caretY, caretComponent);
         }
     }
 
@@ -1560,11 +1568,24 @@ public abstract class TextBoxBase :
 
     bool _acceptsReturn;
     /// <summary>
-    /// Whether pressing the return key adds a newline to the text box. If false, the return key does not add a newline.
+    /// Controls whether pressing the Enter / Return key inserts a newline (<c>'\n'</c>) into the
+    /// text. When <c>false</c> (the default), Enter is treated as a commit gesture (binding sources
+    /// with <see cref="UpdateSourceTrigger.LostFocus"/> are pushed) and no newline is added.
     /// </summary>
     /// <remarks>
-    /// Setting this value to true makes the Visual use its 
-    /// LineModeCategoryState.Multi state.</remarks>
+    /// This property only governs the keyboard behavior. It does NOT control visual layout
+    /// directly, and it does NOT prevent the underlying text from containing <c>'\n'</c>
+    /// characters — code that assigns <see cref="TextBox.Text"/> programmatically, paste,
+    /// and so on can introduce newlines regardless of this setting.
+    /// <para>
+    /// The Visual's "Multi" / "MultiNoWrap" <c>LineModeCategory</c> state is selected when
+    /// <em>either</em> <see cref="AcceptsReturn"/> is <c>true</c> <em>or</em>
+    /// <see cref="TextWrapping"/> is <see cref="Gum.Forms.TextWrapping.Wrap"/>; setting
+    /// this property alone to <c>true</c> with wrapping off produces the "MultiNoWrap" state
+    /// (top-aligned, lines may overflow horizontally). See <see cref="TextWrapping"/> for the
+    /// full mode matrix.
+    /// </para>
+    /// </remarks>
     public bool AcceptsReturn
     {
         get => _acceptsReturn;
@@ -1574,12 +1595,40 @@ public abstract class TextBoxBase :
             {
                 _acceptsReturn = value;
                 UpdateStateForSingleOrMultiLine();
-                // RefreshTemplateFromSelectionInstance after UpdateToTextWrappingChanged so the state has applied when we clone
+                // Refresh the selection template after the state has been applied so the
+                // clone picks up the new "Multi" / "MultiNoWrap" / "Single" variable values.
                 RefreshTemplateFromSelectionInstance();
             }
         }
     }
 
+    /// <summary>
+    /// True when the text box is configured as single-line — neither
+    /// <see cref="TextWrapping"/> is set to <see cref="Gum.Forms.TextWrapping.Wrap"/>
+    /// nor <see cref="AcceptsReturn"/> is enabled. This is the inverse of the
+    /// condition that drives the Visual into its "Multi" / "MultiNoWrap" state.
+    /// <para>
+    /// "Single-line" here refers to <em>configuration intent</em>, not the actual content:
+    /// the underlying text can still contain <c>'\n'</c> characters (assigned programmatically
+    /// or via paste) and render across multiple visual lines, but the layout uses the "Single"
+    /// state and vertical scrolling is disabled. This intentional asymmetry matches the
+    /// invariant that single-line text boxes never shift the text vertically, even in
+    /// pathological cases.
+    /// </para>
+    /// </summary>
+    private bool IsSingleLineMode =>
+        TextWrapping == TextWrapping.NoWrap && !AcceptsReturn;
+
+    /// <summary>
+    /// Applies the appropriate <c>LineModeCategory</c> state on the Visual based on the
+    /// current <see cref="TextWrapping"/> and <see cref="AcceptsReturn"/> values:
+    /// <list type="bullet">
+    ///   <item><description><c>"Single"</c> — neither wrapping nor Enter-to-newline; the visual is laid out for a single line.</description></item>
+    ///   <item><description><c>"Multi"</c> — wrapping is enabled (with or without AcceptsReturn).</description></item>
+    ///   <item><description><c>"MultiNoWrap"</c> — AcceptsReturn is enabled but wrapping is not. Falls back to <c>"Multi"</c> if the visual doesn't define a separate state for this case.</description></item>
+    /// </list>
+    /// Called whenever either property changes.
+    /// </summary>
     private void UpdateStateForSingleOrMultiLine()
     {
         if( Visual.Categories.TryGetValue("LineModeCategory", out StateSaveCategory? category))
@@ -1659,7 +1708,7 @@ public abstract class TextBoxBase :
         selectionStartEnds.Clear();
         var substring = DisplayedText.Substring(0, selectionStart);
 
-        if (this.TextWrapping == TextWrapping.Wrap || AcceptsReturn)
+        if (!IsSingleLineMode)
         {
             GetLineNumber(selectionStart, out int startLineNumber, out int absoluteStartOfFirstLine, out int startRelativeIndexInLine);
 
@@ -1701,26 +1750,7 @@ public abstract class TextBoxBase :
                 var selectionPosition = new SelectionPosition();
                 selectionPosition.XStart = startXForSelection;
                 var offsetPixelsFromSmall = GetCenterOfYForLinePixelsFromSmall(i);
-
-                switch (selectionTemplate.YOrigin)
-                {
-                    case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
-                        // do nothing
-                        break;
-                    case global::RenderingLibrary.Graphics.VerticalAlignment.Top:
-                        offsetPixelsFromSmall -= coreTextObject.LineHeightMultiplier * coreTextObject.LineHeightInPixels / 2.0f;
-                        break;
-                }
-
-                switch (selectionTemplate.YUnits)
-                {
-                    case global::Gum.Converters.GeneralUnitType.PixelsFromSmall:
-                        selectionPosition.Y = offsetPixelsFromSmall;
-                        break;
-                    case global::Gum.Converters.GeneralUnitType.PixelsFromMiddle:
-                        selectionPosition.Y = offsetPixelsFromSmall - textComponent.GetAbsoluteHeight() / 2.0f;
-                        break;
-                }
+                selectionPosition.Y = ResolveLineYForComponent(offsetPixelsFromSmall, selectionTemplate);
 
                 selectionPosition.Width = endXForSelection - startXForSelection;
 
@@ -1752,28 +1782,89 @@ public abstract class TextBoxBase :
     /// </summary>
     const float edgeToTextPadding = 5;
 
+    private enum LayoutAxis { Horizontal, Vertical }
+
     protected void OffsetTextToKeepCaretInView()
     {
-        // intentionally don't check AcceptsReturn here:
-        if (this.TextWrapping == TextWrapping.NoWrap )
+        // Horizontal scrolling fires whenever wrapping is off — that covers both
+        // single-line (NoWrap + !AcceptsReturn) and "MultiNoWrap" (NoWrap + AcceptsReturn),
+        // since in both cases each visual line can extend past the right edge.
+        if (this.TextWrapping == TextWrapping.NoWrap)
+        {
+            KeepCaretEdgeInsideParent(LayoutAxis.Horizontal);
+        }
+
+        // Vertical scrolling fires only when the configuration permits multi-line layout
+        // (Wrap and/or AcceptsReturn). Single-line mode opts out entirely — even if the
+        // displayed text contains '\n' characters via programmatic assignment, or the text
+        // instance has been positioned out of bounds vertically by external code, we never
+        // shift Y. See IsSingleLineMode docs for the rationale.
+        if (!IsSingleLineMode)
+        {
+            KeepCaretEdgeInsideParent(LayoutAxis.Vertical);
+            ClampVerticalScrollToContent();
+        }
+    }
+
+    /// <summary>
+    /// After a vertical scroll, prevents the bottom of the (possibly shorter,
+    /// post-delete) text from leaving an empty band at the bottom of the
+    /// container while <see cref="textComponent"/>'s Y is still negative.
+    /// Mirrors how the single-line horizontal branch self-corrects when the
+    /// caret moves back toward the start.
+    /// </summary>
+    private void ClampVerticalScrollToContent()
+    {
+        if (this.textComponent.Y >= 0)
+        {
+            return;
+        }
+
+        // textComponent.GetAbsoluteHeight() reflects layout-computed size, which
+        // in Multi state is bounded by the parent (HeightUnits=RelativeToParent).
+        // For the clamp we want the actual content height — line count × line
+        // height — so we don't over-clamp and undo a legitimate scroll.
+        var lineCount = coreTextObject.WrappedText?.Count ?? 0;
+        float contentHeight = lineCount * coreTextObject.LineHeightInPixels;
+        float containerHeight = caretComponent.EffectiveParentGue.GetAbsoluteHeight();
+        float maxScrollUp = System.Math.Max(0f, contentHeight - containerHeight);
+        float clamped = System.Math.Max(this.textComponent.Y, -maxScrollUp);
+        float delta = clamped - this.textComponent.Y;
+
+        if (delta != 0f)
+        {
+            this.textComponent.Y += delta;
+            this.caretComponent.Y += delta;
+        }
+    }
+
+    /// <summary>
+    /// Shifts <see cref="textComponent"/> and <see cref="caretComponent"/> along
+    /// <paramref name="axis"/> so the caret stays just inside the parent's bounds
+    /// on that axis, padded by <see cref="edgeToTextPadding"/>. Only shifts when
+    /// the caret would otherwise exit the visible region, and shifts by the
+    /// minimum amount; no-op when the caret is already inside the band.
+    /// </summary>
+    private void KeepCaretEdgeInsideParent(LayoutAxis axis)
+    {
+        if (axis == LayoutAxis.Horizontal)
         {
             this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
             this.caretComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
-            float leftOfCaret = caretComponent.GetAbsoluteLeft();
-            float rightOfCaret = caretComponent.GetAbsoluteLeft() + caretComponent.GetAbsoluteWidth();
-
-            float leftOfParent = caretComponent.EffectiveParentGue.GetAbsoluteLeft();
-            float rightOfParent = leftOfParent + caretComponent.EffectiveParentGue.GetAbsoluteWidth();
+            float nearOfCaret = caretComponent.GetAbsoluteLeft();
+            float farOfCaret = nearOfCaret + caretComponent.GetAbsoluteWidth();
+            float nearOfParent = caretComponent.EffectiveParentGue.GetAbsoluteLeft();
+            float farOfParent = nearOfParent + caretComponent.EffectiveParentGue.GetAbsoluteWidth();
 
             float shiftAmount = 0;
-            if (rightOfCaret > rightOfParent)
+            if (farOfCaret > farOfParent)
             {
-                shiftAmount = rightOfParent - rightOfCaret - edgeToTextPadding;
+                shiftAmount = farOfParent - farOfCaret - edgeToTextPadding;
             }
-            if (leftOfCaret < leftOfParent)
+            if (nearOfCaret < nearOfParent)
             {
-                shiftAmount = leftOfParent - leftOfCaret + edgeToTextPadding;
+                shiftAmount = nearOfParent - nearOfCaret + edgeToTextPadding;
             }
 
             if (shiftAmount != 0)
@@ -1784,7 +1875,33 @@ public abstract class TextBoxBase :
         }
         else
         {
-            // do nothing...except we may want to offset Y at some point
+            // Intentionally don't touch YUnits here — unlike the horizontal
+            // branch, the multi-line LineModeCategory state does not set
+            // YUnits to PixelsFromSmall (TextInstance and CaretInstance
+            // remain PixelsFromMiddle in Multi/MultiNoWrap states). Shifting
+            // by a delta works correctly in any unit (it's a pixel offset
+            // regardless of origin), and reassigning units would change the
+            // meaning of the existing Y value.
+            float nearOfCaret = caretComponent.GetAbsoluteTop();
+            float farOfCaret = nearOfCaret + caretComponent.GetAbsoluteHeight();
+            float nearOfParent = caretComponent.EffectiveParentGue.GetAbsoluteTop();
+            float farOfParent = nearOfParent + caretComponent.EffectiveParentGue.GetAbsoluteHeight();
+
+            float shiftAmount = 0;
+            if (farOfCaret > farOfParent)
+            {
+                shiftAmount = farOfParent - farOfCaret - edgeToTextPadding;
+            }
+            if (nearOfCaret < nearOfParent)
+            {
+                shiftAmount = nearOfParent - nearOfCaret + edgeToTextPadding;
+            }
+
+            if (shiftAmount != 0)
+            {
+                this.textComponent.Y += shiftAmount;
+                this.caretComponent.Y += shiftAmount;
+            }
         }
     }
 
@@ -1873,6 +1990,27 @@ public abstract class TextBoxBase :
 
     float CoreTextObjectHeight =>
         coreTextObject.GetAbsoluteBottom() - coreTextObject.GetAbsoluteTop();
+
+    /// <summary>
+    /// Adjusts a center-of-line Y (in PixelsFromSmall, as produced by
+    /// <see cref="GetCenterOfYForLinePixelsFromSmall"/>) into the value to assign
+    /// to <paramref name="target"/>'s Y, honoring the target's YOrigin and YUnits.
+    /// Used for both caret placement and selection-rectangle placement so the two
+    /// stay in sync.
+    /// </summary>
+    private float ResolveLineYForComponent(float centerOfLineY, GraphicalUiElement target)
+    {
+        var adjusted = centerOfLineY;
+        if (target.YOrigin == global::RenderingLibrary.Graphics.VerticalAlignment.Top)
+        {
+            adjusted -= coreTextObject.LineHeightMultiplier * coreTextObject.LineHeightInPixels / 2.0f;
+        }
+        if (target.YUnits == global::Gum.Converters.GeneralUnitType.PixelsFromMiddle)
+        {
+            adjusted -= textComponent.GetAbsoluteHeight() / 2.0f;
+        }
+        return adjusted;
+    }
 
     private float GetCenterOfYForLinePixelsFromSmall(int lineNumber)
     {
