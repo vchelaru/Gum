@@ -528,9 +528,33 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     /// Gets or sets the unit of measurement used for the stroke width. Supported values are
     /// Absolute (StrokeWidth is interpreted as world-space pixels) and ScreenPixel (StrokeWidth
     /// is divided by the camera's zoom each frame so the stroke appears the same size on screen
-    /// regardless of camera zoom).
+    /// regardless of camera zoom). When ScreenPixel is selected the same factor is also applied
+    /// to <see cref="StrokeDashLength"/> and <see cref="StrokeGapLength"/> so dash patterns scale
+    /// with the stroke instead of going out of proportion at non-1.0 zoom.
     /// </summary>
     public DimensionUnitType StrokeWidthUnits
+    {
+        get;
+        set;
+    }
+
+    /// <summary>
+    /// Length of each dash segment in pixels when stroking a dashed outline. A value of 0 (the
+    /// default) produces a solid stroke. Has no effect when <see cref="IsFilled"/> is true.
+    /// Like <see cref="StrokeWidth"/> this value is held on the runtime and pushed to the
+    /// renderable each frame in <see cref="PreRender"/> so ScreenPixel scaling stays in sync.
+    /// </summary>
+    public float StrokeDashLength
+    {
+        get;
+        set;
+    }
+
+    /// <summary>
+    /// Length of the gap between dashes in pixels when stroking a dashed outline. Ignored when
+    /// <see cref="StrokeDashLength"/> is 0 or when <see cref="IsFilled"/> is true.
+    /// </summary>
+    public float StrokeGapLength
     {
         get;
         set;
@@ -573,6 +597,8 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     public override void PreRender()
     {
         var strokeWidth = StrokeWidth;
+        var strokeDashLength = StrokeDashLength;
+        var strokeGapLength = StrokeGapLength;
 
         if (StrokeWidthUnits == DimensionUnitType.ScreenPixel)
         {
@@ -582,11 +608,16 @@ public abstract class AposShapeRuntime : GraphicalUiElement
             var camera = this.EffectiveManagers?.Renderer?.Camera;
             if (camera != null)
             {
-                strokeWidth /= camera.Zoom;
+                var zoom = camera.Zoom;
+                strokeWidth /= zoom;
+                strokeDashLength /= zoom;
+                strokeGapLength /= zoom;
             }
         }
 
         ContainedRenderable.StrokeWidth = strokeWidth;
+        ContainedRenderable.StrokeDashLength = strokeDashLength;
+        ContainedRenderable.StrokeGapLength = strokeGapLength;
 
         // NOTE: do NOT call base.PreRender() here. base.PreRender() forwards to
         // mContainedObjectAsIpso.PreRender() (the shape) - and the shape's PreRender is what just

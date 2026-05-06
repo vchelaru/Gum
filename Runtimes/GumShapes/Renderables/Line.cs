@@ -49,6 +49,15 @@ internal class Line : RenderableShapeBase
         float antiAliasSize,
         Color? forcedColor = null)
     {
+        // Match Skia's semantics: dashing only kicks in when IsFilled is false. Skia lines also
+        // require IsFilled = false to render as a stroke, so users authoring dashed strokes already
+        // have to set this; keeping the trigger identical avoids cross-runtime surprises.
+        if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0)
+        {
+            RenderDashed(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize, forcedColor);
+            return;
+        }
+
         if (IsRounded)
         {
             RenderRounded(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize, forcedColor);
@@ -56,6 +65,42 @@ internal class Line : RenderableShapeBase
         else
         {
             RenderButt(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize, forcedColor);
+        }
+    }
+
+    private void RenderDashed(Apos.Shapes.ShapeBatch sb,
+        float absoluteLeft,
+        float absoluteTop,
+        Vector2 a,
+        Vector2 b,
+        float antiAliasSize,
+        Color? forcedColor)
+    {
+        var delta = b - a;
+        var length = delta.Length();
+        if (length <= 0) return;
+
+        var direction = delta / length;
+        var period = StrokeDashLength + StrokeGapLength;
+
+        // Skia's default phase is 0: the first dash starts at t=0 and the last dash is clipped wherever
+        // it lands. We mirror that here rather than the "fit to path" mode from the upstream PR; the
+        // exact pattern is more predictable for short lines (where rescaling would visibly change dash
+        // sizes) and matches what users authoring against the Skia runtime already see.
+        for (float t = 0; t < length; t += period)
+        {
+            var dashEnd = MathHelper.Min(t + StrokeDashLength, length);
+            var segA = a + direction * t;
+            var segB = a + direction * dashEnd;
+
+            if (IsRounded)
+            {
+                RenderRounded(sb, absoluteLeft, absoluteTop, segA, segB, antiAliasSize, forcedColor);
+            }
+            else
+            {
+                RenderButt(sb, absoluteLeft, absoluteTop, segA, segB, antiAliasSize, forcedColor);
+            }
         }
     }
 
