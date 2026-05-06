@@ -296,6 +296,19 @@ public abstract class SkiaShapeRuntime : InteractiveGue
 
     #endregion
 
+    /// <summary>
+    /// Passthrough to <see cref="GraphicalUiElement.SetContainedObject"/>. Exists for symmetry
+    /// with <c>AposShapeRuntime.SetContainedShape</c>, which also hooks the renderable's PreRender
+    /// callback so unit-bearing properties (e.g. ScreenPixel stroke width) re-resolve each frame.
+    /// Skia doesn't need that hook, so this overload just forwards. Having the same method name
+    /// available on both runtimes lets unified shape-runtime files (e.g. RoundedRectangleRuntime)
+    /// share one constructor without #if-gating the contained-object setup.
+    /// </summary>
+    protected void SetContainedShape(RenderableShapeBase shape)
+    {
+        SetContainedObject(shape);
+    }
+
     public override void PreRender()
     {
         var strokeWidth = StrokeWidth;

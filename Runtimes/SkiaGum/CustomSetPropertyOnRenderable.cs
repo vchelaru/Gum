@@ -270,6 +270,31 @@ public class CustomSetPropertyOnRenderable
                     }
                     handled = true;
                     break;
+                // Mirror StrokeWidth routing: dashed-stroke values live on the runtime so the Apos
+                // ScreenPixel-scaling pass in PreRender stays consistent with StrokeWidth. Skia's
+                // runtime is a passthrough setter so this path produces the same end state there.
+                case nameof(RoundedRectangleRuntime.StrokeDashLength):
+                    if (graphicalUiElement is RoundedRectangleRuntime rrDashRuntime)
+                    {
+                        rrDashRuntime.StrokeDashLength = (float)value;
+                    }
+                    else
+                    {
+                        asRoundedRectangle.StrokeDashLength = (float)value;
+                    }
+                    handled = true;
+                    break;
+                case nameof(RoundedRectangleRuntime.StrokeGapLength):
+                    if (graphicalUiElement is RoundedRectangleRuntime rrGapRuntime)
+                    {
+                        rrGapRuntime.StrokeGapLength = (float)value;
+                    }
+                    else
+                    {
+                        asRoundedRectangle.StrokeGapLength = (float)value;
+                    }
+                    handled = true;
+                    break;
             }
             if (!handled)
             {
@@ -292,6 +317,28 @@ public class CustomSetPropertyOnRenderable
                     else
                     {
                         asLine.StrokeWidth = (float)value;
+                    }
+                    handled = true;
+                    break;
+                case nameof(LineRuntime.StrokeDashLength):
+                    if (graphicalUiElement is LineRuntime lineDashRuntime)
+                    {
+                        lineDashRuntime.StrokeDashLength = (float)value;
+                    }
+                    else
+                    {
+                        asLine.StrokeDashLength = (float)value;
+                    }
+                    handled = true;
+                    break;
+                case nameof(LineRuntime.StrokeGapLength):
+                    if (graphicalUiElement is LineRuntime lineGapRuntime)
+                    {
+                        lineGapRuntime.StrokeGapLength = (float)value;
+                    }
+                    else
+                    {
+                        asLine.StrokeGapLength = (float)value;
                     }
                     handled = true;
                     break;
@@ -324,6 +371,14 @@ public class CustomSetPropertyOnRenderable
             {
                 case nameof(ColoredCircleRuntime.StrokeWidth):
                     ((ColoredCircleRuntime)graphicalUiElement).StrokeWidth = (float)value;
+                    handled = true;
+                    break;
+                case nameof(ColoredCircleRuntime.StrokeDashLength):
+                    ((ColoredCircleRuntime)graphicalUiElement).StrokeDashLength = (float)value;
+                    handled = true;
+                    break;
+                case nameof(ColoredCircleRuntime.StrokeGapLength):
+                    ((ColoredCircleRuntime)graphicalUiElement).StrokeGapLength = (float)value;
                     handled = true;
                     break;
             }

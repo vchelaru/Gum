@@ -134,13 +134,21 @@ internal class Arc : RenderableShapeBase
         }
         else
         {
+            // Apos.Shapes 0.6.x DrawRing's signature is (radius1, radius2) but the shader actually
+            // uses them as (centerline, totalThickness): see RingSDF, abs(length(p) - r) - th * 0.5.
+            // The shader also does radius1 -= 1f internally, so the rendered band sits one pixel
+            // inside what the caller thinks it asked for. Without the +1f compensation here, an Arc
+            // sized to fit a NxN bounding box renders with a visible 1-pixel gap at its outer edge -
+            // confirmed visually by overlaying a thick Arc on a same-size filled Circle and seeing a
+            // thin background-color ring around the outside of the Arc.
+            var compensatedRadius = radius + 1f;
             if (UseGradient && forcedColor == null)
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop);
                 sb.DrawRing(center,
                     startAngleRadians,
                     endAngleRadians,
-                    radius,
+                    compensatedRadius,
                     lineThickness,
                     gradient,
                     gradient,
@@ -153,7 +161,7 @@ internal class Arc : RenderableShapeBase
                 sb.DrawRing(center,
                     startAngleRadians,
                     endAngleRadians,
-                    radius,
+                    compensatedRadius,
                     lineThickness,
                     color,
                     color,
