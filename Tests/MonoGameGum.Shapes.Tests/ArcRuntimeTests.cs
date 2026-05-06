@@ -46,4 +46,30 @@ public class ArcRuntimeTests
 
         shape.StrokeWidth.ShouldBe(8);
     }
+
+    // Same propagation guard as StrokeWidth: dashed-stroke values live on the runtime so the
+    // ScreenPixel scaling in AposShapeRuntime.PreRender stays in sync with StrokeWidth, then get
+    // pushed to the renderable each frame. If this test starts seeing the dashed values arrive
+    // pre-PreRender, somebody simplified the runtime to a passthrough and the screen-pixel
+    // scaling will silently stop working at non-1.0 camera zoom.
+    [Fact]
+    public void StrokeDashAndGap_ShouldPropagateToRenderable_WhenRenderablePreRenderCalled()
+    {
+        ColoredCircleRuntime sut = new ColoredCircleRuntime();
+        sut.SetProperty("StrokeDashLength", 6.0f);
+        sut.SetProperty("StrokeGapLength", 4.0f);
+        sut.StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        var renderable = (IRenderable)sut.RenderableComponent;
+        var shape = (RenderableShapeBase)sut.RenderableComponent;
+
+        // Sanity: pristine renderable defaults are 0 - the runtime values have not yet propagated.
+        shape.StrokeDashLength.ShouldBe(0);
+        shape.StrokeGapLength.ShouldBe(0);
+
+        renderable.PreRender();
+
+        shape.StrokeDashLength.ShouldBe(6);
+        shape.StrokeGapLength.ShouldBe(4);
+    }
 }
