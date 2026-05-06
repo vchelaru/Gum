@@ -52,6 +52,12 @@ Hot reload is focused on Gum element definitions. The following are **not** auto
 
 ## Platform Support
 
+{% hint style="info" %}
+Hot reload requires loose project files on disk; it does not watch inside `.gumpkg` bundles. If a sibling `.gumpkg` exists alongside the loose `.gumx`, the loose path wins (see [pack](../cli/pack.md)) and watchers fire normally. A bundle-only deployment (no loose `.gumx`) loads at startup but cannot hot-reload.
+
+If hot reload from a `.gumpkg` (e.g. for a hot-swap-on-deploy workflow) would be useful to you, let us know on [Discord](https://discord.gg/EvqwmSQuBz) or file an issue on [GitHub](https://github.com/vchelaru/Gum/issues) — real usage reports help us prioritize.
+{% endhint %}
+
 Hot reload is available on desktop platforms:
 
 * MonoGame

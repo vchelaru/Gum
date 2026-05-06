@@ -56,6 +56,15 @@ RelativeDirectory is used whenever files are loaded. These operations include:
 
 It's recommended practice to set the RelativeDirectory to your Gum project's location and to leave it there so you never have to consider subfolders in any code that accesses files directly or indirectly.
 
+### Loading from a `.gumpkg` Bundle
+
+In addition to loose files, Gum can load a project from a single-file `.gumpkg` bundle produced by [`gumcli pack`](../../cli/pack.md). When `GumService.Initialize` is called with a `.gumx` path:
+
+* If the loose `.gumx` exists, Gum loads from loose files (the dev-time path; hot reload also works in this mode).
+* If only a sibling `.gumpkg` exists, Gum reads element XML, textures, and fonts from inside the bundle via `FileManager.CustomGetStreamFromFile`. No loose copy is needed in the output directory.
+
+This means a published build can ship a single `.gumpkg` next to the executable instead of a folder tree of `.gusx`/`.gucx`/`.png`/`.fnt` files. See the [pack](../../cli/pack.md) page for the producer side and the runtime contract.
+
 ### File Caching
 
 By default Gum caches loaded textures. In other words, the following code only results in a single file IO operation:

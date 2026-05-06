@@ -40,6 +40,42 @@ public class PackCommandTests : IDisposable
     }
 
     [Fact]
+    public void Pack_exits_with_2_when_include_is_empty()
+    {
+        string projectPath = CreateCleanProject("EmptyInclude");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, "--include", "");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("--include");
+        File.Exists(outputPath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Pack_exits_with_2_when_include_value_is_unknown()
+    {
+        string projectPath = CreateCleanProject("BogusInclude");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, "--include", "bogus");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("Unknown");
+        File.Exists(outputPath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Pack_exits_with_2_when_project_file_does_not_exist()
+    {
+        string projectPath = Path.Combine(_tempDirectory, "DoesNotExist", "Missing.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath);
+
+        result.ExitCode.ShouldBe(2);
+    }
+
+    [Fact]
     public void Pack_is_deterministic_across_invocations()
     {
         string projectPath = CreateProjectWithSpriteAndFont("Deterministic");
@@ -87,6 +123,39 @@ public class PackCommandTests : IDisposable
     }
 
     [Fact]
+    public void Pack_summary_output_includes_counts_and_byte_sizes()
+    {
+        string projectPath = CreateProjectWithSpriteAndFont("Summary");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
+
+        result.ExitCode.ShouldBe(0);
+        result.StandardOutput.ShouldContain("Packed");
+        result.StandardOutput.ShouldContain("Core:");
+        result.StandardOutput.ShouldContain("FontCache:");
+        result.StandardOutput.ShouldContain("External:");
+        result.StandardOutput.ShouldContain("Uncompressed:");
+        result.StandardOutput.ShouldContain("Compressed:");
+        result.StandardOutput.ShouldContain("Ratio:");
+    }
+
+    [Fact]
+    public void Pack_with_core_and_external_excludes_fontcache()
+    {
+        string projectPath = CreateProjectWithSpriteAndFont("CoreExternal");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, "--include", "core,external");
+
+        result.ExitCode.ShouldBe(0);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(outputPath);
+        entries.Keys.ShouldContain("Components/SpriteHolder.gucx");
+        entries.Keys.ShouldContain("Textures/bg.png");
+        entries.Keys.Any(k => k.StartsWith("FontCache/")).ShouldBeFalse();
+    }
+
+    [Fact]
     public void Pack_with_core_only_excludes_fontcache_and_external()
     {
         string projectPath = CreateProjectWithSpriteAndFont("CoreOnly");
@@ -98,6 +167,35 @@ public class PackCommandTests : IDisposable
         Dictionary<string, byte[]> entries = ReadBundleEntries(outputPath);
         entries.Keys.ShouldNotContain("Textures/bg.png");
         entries.Keys.ShouldContain("Components/SpriteHolder.gucx");
+    }
+
+    [Fact]
+    public void Pack_with_external_only_excludes_core_and_fontcache()
+    {
+        string projectPath = CreateProjectWithSpriteAndFont("ExternalOnly");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, "--include", "external");
+
+        result.ExitCode.ShouldBe(0);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(outputPath);
+        entries.Keys.ShouldContain("Textures/bg.png");
+        entries.Keys.ShouldNotContain("Components/SpriteHolder.gucx");
+        entries.Keys.Any(k => k.EndsWith(".gumx")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Pack_with_fontcache_only_produces_empty_bundle_when_project_has_no_fonts()
+    {
+        string projectPath = CreateProjectWithSpriteAndFont("FontCacheOnly");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, "--include", "fontcache");
+
+        result.ExitCode.ShouldBe(0);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(outputPath);
+        entries.Keys.ShouldNotContain("Components/SpriteHolder.gucx");
+        entries.Keys.ShouldNotContain("Textures/bg.png");
     }
 
     [Fact]
