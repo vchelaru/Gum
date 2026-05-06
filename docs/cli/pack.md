@@ -75,4 +75,4 @@ The bundle loader requires .NET 7 or greater (it uses `System.Formats.Tar`). On 
 |------|---------|
 | 0 | Bundle written successfully |
 | 1 | One or more dependency files were missing on disk |
-| 2 | Project failed to load, or an invalid `--include` value was supplied |
+| 2 | Project failed to load, project file not found or unreadable, or an invalid `--include` value was supplied |

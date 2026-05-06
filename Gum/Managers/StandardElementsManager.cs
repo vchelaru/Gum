@@ -96,13 +96,16 @@ public class StandardElementsManager
     #endregion
 
     bool hasInitialized = false;
+    readonly object initLock = new object();
 
     public void Initialize()
     {
-        if(!hasInitialized)
+        if (hasInitialized) return;
+        lock (initLock)
         {
-            hasInitialized = true;
+            if (hasInitialized) return;
             RefreshDefaults();
+            hasInitialized = true;
         }
     }
 
