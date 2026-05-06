@@ -14,4 +14,11 @@ public static class GumBundleFormat
 
     /// <summary>Total length of the fixed header (magic bytes + version byte).</summary>
     public const int HeaderLength = 5;
+
+    /// <summary>
+    /// Minimum length of a valid decompressed tar payload: every well-formed tar — including
+    /// the empty case — ends with two 512-byte zero blocks (the end-of-archive marker), so
+    /// any decompressed payload shorter than this is truncated/corrupt.
+    /// </summary>
+    public const int MinimumTarPayloadLength = 1024;
 }

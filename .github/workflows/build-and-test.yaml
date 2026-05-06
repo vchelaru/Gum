@@ -99,6 +99,49 @@ jobs:
           dotnet restore "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln"
           dotnet build "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0
 
+      # ---------------------------------------------------------------------
+      # Test allow-list policy
+      #
+      # GitHub Actions runners have no GPU. We can only run test projects whose
+      # tests do not instantiate a real GraphicsDevice / window / native renderer.
+      # Auto-discovery (`dotnet test <solution>`) is tempting but unsafe here —
+      # it would pull in projects whose tests open raylib windows, spin up
+      # MonoGame integration harnesses, etc. So we maintain an explicit list.
+      #
+      # When you add a new test project, decide which bucket it belongs to and
+      # update both this list and the comments below.
+      #
+      # Bucket A — RUN IN CI (headless: pure data, IO, codegen, analyzers, or
+      # MonoGame's headless TestGame harness):
+      #   - MonoGameGum.Tests              (headless TestGame harness)
+      #   - SokolGum.Tests                 (Sokol; headless)
+      #   - GumToolUnitTests               (WPF tool unit tests; Windows only)
+      #   - Gum.Bundle.Tests               (brotli/tar/format; pure IO)
+      #   - Gum.ProjectServices.Tests      (headless project loading, codegen)
+      #   - Gum.Analyzers.Tests            (Roslyn analyzers; pure compilation)
+      #   - Gum.Cli.Tests                  (CLI subcommand smoke tests; fonts
+      #                                     tests self-gate by OS, no screenshot
+      #                                     tests exist yet — if one is added,
+      #                                     fence it with a Trait and exclude here)
+      #
+      # Bucket B — DEFERRED, NEEDS INVESTIGATION (likely safe in part, but may
+      # mix headless and graphics-using tests in the same project; would need
+      # xUnit traits or filter-by-class to split):
+      #   - MonoGameGum.Tests.V2           (V1 is headless; V2 likely is too —
+      #                                     verify before enabling)
+      #   - MonoGameGum.Tests.V3           (same — verify before enabling)
+      #
+      # Bucket C — WILL NOT RUN IN CI (require a real graphics device / window;
+      # do NOT add these even if they look tempting):
+      #   - MonoGameGum.IntegrationTests   (integration → real GraphicsDevice)
+      #   - MonoGameGum.Shapes.Tests       (shape rendering → GraphicsDevice)
+      #   - MonoGameFum.FromFile.Tests     (instantiates real visuals)
+      #   - RaylibGum.Tests                (raylib opens a window on init)
+      #   - SkiaGum.Tests                  (Skia pipeline wires through window
+      #                                     plumbing that doesn't cooperate
+      #                                     headless on CI runners)
+      # ---------------------------------------------------------------------
+
       - name: MonoGameGum.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
@@ -112,6 +155,26 @@ jobs:
       - name: GumToolUnitTests (Windows Only)
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
         run: dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        continue-on-error: true
+
+      - name: Gum.Bundle.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/Gum.Bundle.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        continue-on-error: true
+
+      - name: Gum.ProjectServices.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/Gum.ProjectServices.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        continue-on-error: true
+
+      - name: Gum.Analyzers.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/Gum.Analyzers.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        continue-on-error: true
+
+      - name: Gum.Cli.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/Gum.Cli.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
         continue-on-error: true
 
       - name: Publish Test Results

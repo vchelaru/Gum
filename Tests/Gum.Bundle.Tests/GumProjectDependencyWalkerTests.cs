@@ -5,6 +5,8 @@ using System.Linq;
 using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 
@@ -201,6 +203,101 @@ public class GumProjectDependencyWalkerTests : IDisposable
         result.FontCacheFiles.ShouldBeEmpty();
         result.ExternalFiles.ShouldBeEmpty();
         result.CoreFiles.ShouldContain("Screens/MainMenu.gusx");
+    }
+
+    [Fact]
+    public void Walk_with_ExternalFiles_flag_collects_SourceFile_for_Svg_instance()
+    {
+        // Regression guard: the walker must collect Svg instances' SourceFile, not just Sprite.
+        // Prior to flag-driven resolution this worked by coincidence (variable name match);
+        // after the refactor it works because Svg's standard-element root SourceFile carries
+        // IsFile=true. Either way, breaking Svg/Lottie support should fail this test loudly.
+        const string svgPath = "Vectors/icon.svg";
+
+        StandardElementSave svgStandard = TestProjectBuilder.BuildStandard("Svg");
+        svgStandard.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "SourceFile",
+            Type = "string",
+            Value = "",
+            IsFile = true,
+            SetsValue = true,
+        });
+
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        InstanceSave svgInstance = new InstanceSave { Name = "Icon", BaseType = "Svg", ParentContainer = screen };
+        screen.Instances.Add(svgInstance);
+        // Note: no IsFile on the instance variable — the flag lives on the standard-element root.
+        screen.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Icon.SourceFile",
+            Type = "string",
+            Value = svgPath,
+            SetsValue = true,
+        });
+
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen },
+            standards: new[] { svgStandard });
+
+        string root = CreateProjectRoot(new[]
+        {
+            ("Screens/MainMenu.gusx", EmptyContent),
+            ("Standards/Svg.gutx", EmptyContent),
+            (svgPath, EmptyContent),
+        });
+
+        ObjectFinder.Self.GumProjectSave = project;
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.ExternalFiles);
+
+        result.ExternalFiles.ShouldContain(svgPath);
+    }
+
+    [Fact]
+    public void Walk_with_ExternalFiles_flag_collects_file_variable_resolved_via_standard_element_IsFile_flag()
+    {
+        // Proves flag-driven resolution end-to-end: a custom standard with a non-"SourceFile"
+        // IsFile variable still gets bundled. A name-based regression would silently drop this.
+        const string assetPath = "Assets/diagram.dot";
+
+        StandardElementSave customStandard = TestProjectBuilder.BuildStandard("DiagramElement");
+        customStandard.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "DiagramFile",
+            Type = "string",
+            Value = "",
+            IsFile = true,
+            SetsValue = true,
+        });
+
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        InstanceSave diagramInstance = new InstanceSave { Name = "Chart", BaseType = "DiagramElement", ParentContainer = screen };
+        screen.Instances.Add(diagramInstance);
+        screen.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Chart.DiagramFile",
+            Type = "string",
+            Value = assetPath,
+            SetsValue = true,
+        });
+
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen },
+            standards: new[] { customStandard });
+
+        string root = CreateProjectRoot(new[]
+        {
+            ("Screens/MainMenu.gusx", EmptyContent),
+            ("Standards/DiagramElement.gutx", EmptyContent),
+            (assetPath, EmptyContent),
+        });
+
+        ObjectFinder.Self.GumProjectSave = project;
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.ExternalFiles);
+
+        result.ExternalFiles.ShouldContain(assetPath);
     }
 
     [Fact]

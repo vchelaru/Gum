@@ -420,43 +420,13 @@ public class ObjectFinder : IObjectFinder
         partialFileName = partialFileName.ToLower().Replace("\\", "/");
 
         List<ElementSave> referencingElements = new List<ElementSave>();
-        foreach(var item in GumProjectSave.Screens)
+        foreach (ElementSave element in GumProjectSave.AllElements)
         {
-            List<string> files = new List<string>();
-
-            FillListWithReferencedFiles(files, item);
-
+            List<string> files = GetFilesReferencedBy(element);
             if (files.Any(file => file.ToLower().Replace("\\", "/").Contains(partialFileName)))
             {
-                referencingElements.Add(item);
+                referencingElements.Add(element);
             }
-
-        }
-
-        foreach (var item in GumProjectSave.Components)
-        {
-            List<string> files = new List<string>();
-
-            FillListWithReferencedFiles(files, item);
-
-            if (files.Any(file => file.ToLower().Replace("\\", "/").Contains(partialFileName)))
-            {
-                referencingElements.Add(item);
-            }
-
-        }
-
-        foreach (var item in GumProjectSave.StandardElements)
-        {
-            List<string> files = new List<string>();
-
-            FillListWithReferencedFiles(files, item);
-
-            if (files.Any(file => file.ToLower().Replace("\\", "/").Contains(partialFileName)))
-            {
-                referencingElements.Add(item);
-            }
-
         }
 
         return referencingElements;
@@ -796,127 +766,6 @@ public class ObjectFinder : IObjectFinder
         }
         return result;
     }
-
-    [Obsolete("Use GumProjectDependencyWalker via GetAllFilesInProject/GetFilesReferencedBy.")]
-    private void FillListWithReferencedFiles<T>(List<string> files, IList<T> elements) where T : ElementSave
-    {
-        // These files are all relative to the project, so we don't have to worry
-        // about making them absolute/relative again.  It should just work.
-        foreach (ElementSave element in elements)
-        {
-            FillListWithReferencedFiles(files, element);
-        }
-    }
-
-    [Obsolete("Use GumProjectDependencyWalker via GetAllFilesInProject/GetFilesReferencedBy.")]
-    private void FillListWithReferencedFiles(List<string> absoluteFiles, ElementSave element)
-    {
-        List<FilePath> files = new List<FilePath>();
-
-        FillWithReferencedFilePaths(files, element);
-
-        absoluteFiles.AddRange(files.Select(item => item.StandardizedCaseSensitive));
-    }
-
-    [Obsolete("Use GumProjectDependencyWalker via GetAllFilesInProject/GetFilesReferencedBy.")]
-    private void FillWithReferencedFilePaths(List<FilePath> absoluteFiles, ElementSave element)
-    { 
-        RecursiveVariableFinder rvf;
-        string value;
-
-        foreach (var state in element.AllStates)
-        {
-            rvf = new RecursiveVariableFinder(element.DefaultState);
-
-            value = rvf.GetValue<string>("SourceFile");
-            if (!string.IsNullOrEmpty(value))
-            {
-                absoluteFiles.Add(value);
-            }
-
-            value = rvf.GetValue<string>("CustomFontFile");
-            if (!string.IsNullOrEmpty(value))
-            {
-                absoluteFiles.Add(value);
-            }
-
-            List<Gum.Wireframe.ElementWithState> elementStack = new List<Wireframe.ElementWithState>();
-            var elementWithState = new Gum.Wireframe.ElementWithState(element);
-            elementWithState.StateName = state.Name;
-            elementStack.Add(elementWithState);
-
-            foreach (InstanceSave instance in element.Instances)
-            {
-                // August 5, 2018 - why are we not considering
-                // the file name of the element? Isn't that a referenced
-                // file?
-                var instanceElement = GetElementSave(instance);
-                string gumProjectDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName);
-                if(instanceElement != null)
-                {
-                    var prefix = gumProjectDirectory;
-                    if(instanceElement is ComponentSave)
-                    {
-                        prefix += "Components/";
-                    }
-                    else // standard element
-                    {
-                        prefix += "Standards/";
-                    }
-                    absoluteFiles.Add(prefix + instanceElement.Name + "." + instanceElement.FileExtension);
-                }
-
-
-                rvf = new RecursiveVariableFinder(instance, elementStack);
-
-                value = rvf.GetValue<string>("SourceFile");
-                if (!string.IsNullOrEmpty(value))
-                {
-                    absoluteFiles.Add(value);
-                }
-
-                if(rvf.GetValue("UseCustomFont") is bool asBool)
-                {
-
-                    if(asBool == true)
-                    {
-                        value = rvf.GetValue<string>("CustomFontFile");
-                        if (!string.IsNullOrEmpty(value))
-                        {
-                            absoluteFiles.Add(value);
-                        }
-                    }
-                    else
-                    {
-                        var fontSize = rvf.GetValue<int?>("FontSize");
-                        var font = rvf.GetValue<string?>("Font");
-                        var outlineThickness = rvf.GetValue<int?>("OutlineThickness");
-                        var useFontSmoothing = rvf.GetValue<bool?>("UseFontSmoothing");
-                        var isItalic = rvf.GetValue<bool?>("IsItalic");
-                        var isBold = rvf.GetValue<bool?>("IsBold");
-
-                        if(fontSize != null && font != null && outlineThickness != null && useFontSmoothing != null &&
-                            isItalic != null && isBold != null)
-                        {
-                            string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                                fontSize.Value,
-                                font,
-                                outlineThickness.Value,
-                                useFontSmoothing.Value,
-                                isItalic.Value,
-                                isBold.Value);
-
-                            absoluteFiles.Add(
-                                gumProjectDirectory + fontName);
-
-                        }
-                    }
-                }
-
-            }
-        }
-    }
-
 
     #endregion
 

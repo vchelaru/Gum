@@ -338,10 +338,52 @@ public class GumProjectDependencyWalker
         string ownerName = instance == null ? element.Name : element.Name + "." + instance.Name;
         string instancePrefix = instance == null ? string.Empty : instance.Name + ".";
 
-        VariableSave? sourceFileVariable = state.GetVariableSave(instancePrefix + "SourceFile");
-        if (sourceFileVariable?.Value is string sourceFile && !string.IsNullOrEmpty(sourceFile))
+        // Flag-driven scan: any variable whose root (defined on the standard element) has
+        // IsFile=true is treated as an external file reference. This generalizes the prior
+        // hardcoded "SourceFile" lookup so future IsFile variables on standard elements
+        // (or custom standards) are bundled automatically.
+        // CustomFontFile is excluded here and handled below — it has conditional semantics
+        // (only collected when UseCustomFont is true).
+        foreach (VariableSave variable in state.Variables)
         {
-            AddExternalOrFontCache(sourceFile, ownerName, projectRootDirectory,
+            if (variable.Value is not string variableValue || string.IsNullOrEmpty(variableValue))
+            {
+                continue;
+            }
+
+            // Only consider variables that belong to this state's scope: when scoped to an
+            // instance, the variable name must be prefixed with "<instance>."; when scoped
+            // to the element itself, the variable must have no prefix.
+            if (instance == null)
+            {
+                if (variable.Name.Contains('.'))
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                if (!variable.Name.StartsWith(instancePrefix, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+            }
+
+            string leafName = instance == null
+                ? variable.Name
+                : variable.Name.Substring(instancePrefix.Length);
+
+            if (string.Equals(leafName, "CustomFontFile", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (!IsFileVariable(variable, leafName, element, instance))
+            {
+                continue;
+            }
+
+            AddExternalOrFontCache(variableValue, ownerName, projectRootDirectory,
                 includeFontCache, includeExternal, fontCache, external, missing);
         }
 
@@ -360,6 +402,26 @@ public class GumProjectDependencyWalker
                     includeFontCache, includeExternal, fontCache, external, missing);
             }
         }
+    }
+
+    private static bool IsFileVariable(VariableSave variable, string leafName, ElementSave element, InstanceSave? instance)
+    {
+        // Most authoritative source first: the variable on the state itself may already carry
+        // the flag (common in fixtures and in-memory projects built without standard-element
+        // initialization).
+        if (variable.IsFile)
+        {
+            return true;
+        }
+
+        // Fall back to the standard-element root variable, which is where the IsFile flag is
+        // populated by StandardElementsManager.RefreshDefaults() for the built-in standards
+        // (Sprite/SourceFile, Svg/SourceFile, LottieAnimation/SourceFile, Text/CustomFontFile).
+        VariableSave? rootVariable = instance == null
+            ? ObjectFinder.Self.GetRootVariable(leafName, element)
+            : ObjectFinder.Self.GetRootVariable(variable.Name, instance);
+
+        return rootVariable?.IsFile == true;
     }
 
     private static void CollectFontCacheReferences(

@@ -38,6 +38,16 @@ Once installed, invoke it as `gumcli` from any terminal.
 | `screenshot` | Render a Screen or Component to a PNG file |
 | `svg` | Render a Screen or Component to an SVG file |
 
+## Output Streams
+
+`gumcli` writes machine-readable command output (JSON, file paths, summaries) to **stdout**, and informational chrome (the version banner, progress messages, error details) to **stderr**. This split means automation can consume stdout directly without filtering:
+
+```
+gumcli check MyProject/MyProject.gumx --json | jq .
+```
+
+When debugging, capture both streams with `2>&1`.
+
 ## Exit Codes
 
 | Code | Meaning |

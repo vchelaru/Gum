@@ -82,7 +82,6 @@ Components/Elements/PercentBar.gucx
 Components/Elements/PercentBarIcon.gucx
 Components/Elements/VerticalLines.gucx
 Components/Styles.gucx
-EventExport/gum_events.json
 GumProject.gumx
 Screens/DemoScreenGum.gusx
 Screens/DemoScreenGumAnimations.ganx
