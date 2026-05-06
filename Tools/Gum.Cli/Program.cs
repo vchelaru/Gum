@@ -16,7 +16,10 @@ public class Program
             ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
             ?? "unknown";
 
-        System.Console.WriteLine($"gumcli v{version}");
+        // Banner goes to stderr so stdout stays clean for machine-readable output
+        // (e.g. `gumcli check foo.gumx --json | jq .`). This matches the convention
+        // used by gh/aws/kubectl: informational chrome on stderr, command output on stdout.
+        System.Console.Error.WriteLine($"gumcli v{version}");
 
         var rootCommand = new RootCommand($"gumcli v{version} - create projects, check for errors, and generate code.");
 

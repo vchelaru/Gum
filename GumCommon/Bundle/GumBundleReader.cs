@@ -77,6 +77,19 @@ public static class GumBundleReader
             {
                 brotli.CopyTo(decompressed);
             }
+
+            // BrotliSharpLib decodes truncated input silently, returning whatever it managed
+            // to produce instead of throwing — so a half-bundle decompresses to 0 bytes and
+            // the tar reader below sees an empty stream and reports zero entries. Detect that
+            // here: every well-formed bundle (including the intentionally-empty one) carries
+            // at least the 1024-byte tar end-of-archive marker, so anything shorter is truncated.
+            if (decompressed.Length < GumBundleFormat.MinimumTarPayloadLength)
+            {
+                throw new GumBundleFormatException(
+                    $"Bundle payload is truncated; decompressed tar stream is {decompressed.Length} bytes, " +
+                    $"shorter than the {GumBundleFormat.MinimumTarPayloadLength}-byte tar end-of-archive marker required for any valid bundle.");
+            }
+
             decompressed.Position = 0;
 
             using SharpCompress.Readers.IReader tar = SharpCompress.Readers.Tar.TarReader.OpenReader(
