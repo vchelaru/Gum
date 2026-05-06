@@ -247,7 +247,50 @@ public class CustomSetPropertyOnRenderable
         bool handled = false;
         if(containedObjectAsIpso is Arc asArc)
         {
-            handled = TrySetPropertiesOnRenderableBase(asArc, graphicalUiElement, propertyName, value);
+            // Mirror RoundedRectangle/Line/ColoredCircle: stroke values must land on the runtime so
+            // AposShapeRuntime.PreRender (which pushes the runtime values to the renderable each
+            // frame, applying ScreenPixel zoom) does not clobber a value written straight to the
+            // renderable. See issue #2629.
+            switch (propertyName)
+            {
+                case nameof(ArcRuntime.StrokeWidth):
+                    if (graphicalUiElement is ArcRuntime arcStrokeRuntime)
+                    {
+                        arcStrokeRuntime.StrokeWidth = (float)value;
+                    }
+                    else
+                    {
+                        asArc.StrokeWidth = (float)value;
+                    }
+                    handled = true;
+                    break;
+                case nameof(ArcRuntime.StrokeDashLength):
+                    if (graphicalUiElement is ArcRuntime arcDashRuntime)
+                    {
+                        arcDashRuntime.StrokeDashLength = (float)value;
+                    }
+                    else
+                    {
+                        asArc.StrokeDashLength = (float)value;
+                    }
+                    handled = true;
+                    break;
+                case nameof(ArcRuntime.StrokeGapLength):
+                    if (graphicalUiElement is ArcRuntime arcGapRuntime)
+                    {
+                        arcGapRuntime.StrokeGapLength = (float)value;
+                    }
+                    else
+                    {
+                        asArc.StrokeGapLength = (float)value;
+                    }
+                    handled = true;
+                    break;
+            }
+            if (!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asArc, graphicalUiElement, propertyName, value);
+            }
             if(!handled)
             {
                 handled = TrySetPropertyOnArc(asArc, graphicalUiElement, propertyName, value);

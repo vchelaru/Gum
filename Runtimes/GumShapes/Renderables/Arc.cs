@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Math;
 using System;
@@ -11,6 +11,16 @@ namespace MonoGameAndGum.Renderables;
 
 internal class Arc : RenderableShapeBase
 {
+    public Arc()
+    {
+        // Arc historically defaulted to a thicker stroke than the rest of the shapes (10 vs the
+        // base's 2). Thickness used to be its own backing field; now that it routes through
+        // base.StrokeWidth (matching Skia and unifying with the rest of the shape pipeline) the
+        // ctor seeds the same default. ArcRuntime also seeds its runtime-level StrokeWidth to 10
+        // so PreRender doesn't overwrite this.
+        StrokeWidth = 10;
+        IsFilled = false;
+    }
 
     public float StartAngle
     {
@@ -24,11 +34,17 @@ internal class Arc : RenderableShapeBase
         set;
     } = 90;
 
+    /// <summary>
+    /// Façade for <see cref="RenderableShapeBase.StrokeWidth"/>. Kept for back-compat with the
+    /// older Apos-only Arc API and with .gumx default state which stores this variable as
+    /// "Thickness". Matches Skia's Arc, so the two backends now agree on a single underlying
+    /// field.
+    /// </summary>
     public float Thickness
     {
-        get;
-        set;
-    } = 10;
+        get => StrokeWidth;
+        set => StrokeWidth = value;
+    }
 
     bool _isEndRounded;
     public bool IsEndRounded
@@ -56,7 +72,7 @@ internal class Arc : RenderableShapeBase
             absoluteLeft + Width / 2.0f,
             absoluteTop + Width / 2.0f);
 
-        var radius = Width / 2 - Thickness / 2;
+        var radius = Width / 2 - StrokeWidth / 2;
 
         if(HasDropshadow)
         {
@@ -67,25 +83,25 @@ internal class Arc : RenderableShapeBase
             dropshadowCenter.X += DropshadowOffsetX;
             dropshadowCenter.Y += DropshadowOffsetY;
 
-            RenderInternal(sb, 
-                absoluteLeft: shadowLeft, 
-                absoluteTop: shadowTop, 
-                center: dropshadowCenter, 
+            RenderInternal(sb,
+                absoluteLeft: shadowLeft,
+                absoluteTop: shadowTop,
+                center: dropshadowCenter,
                 radius: radius,
                 antiAliasSize: MathFunctions.RoundToInt(DropshadowBlurX),
-                lineThickness: Thickness - DropshadowBlurX,
+                lineThickness: StrokeWidth - DropshadowBlurX,
                 forcedColor: DropshadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, 1, Thickness);
+        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, 1, StrokeWidth);
     }
 
-    private void RenderInternal(Apos.Shapes.ShapeBatch sb, 
-        float absoluteLeft, 
-        float absoluteTop, 
-        Vector2 center, 
+    private void RenderInternal(Apos.Shapes.ShapeBatch sb,
+        float absoluteLeft,
+        float absoluteTop,
+        Vector2 center,
         float radius,
-        int antiAliasSize, 
+        int antiAliasSize,
         float lineThickness,
         Color? forcedColor = null)
     {

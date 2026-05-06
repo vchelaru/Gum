@@ -1,9 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- Github Actions failed if including windows or mac catalyst. For now we're only going to target ios/android to get things working. 
-		If anyone wants to add these platforms back in in the future, a PR is welcome-->
+		<!-- Github Actions failed if including windows or mac catalyst on non-Windows runners. For now we're only going to target ios/android in CI.
+		Windows is added below ONLY when building on a Windows host (so local devs can run with "Windows Machine" in VS without breaking CI).
+		If anyone wants to add macOS back in in the future, a PR is welcome-->
 		<TargetFrameworks>net9.0-android;net9.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
 		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
 

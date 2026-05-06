@@ -33,12 +33,16 @@ public class ArcRuntime : AposShapeRuntime
     }
 
     /// <summary>
-    /// Gets or sets the thickness of the arc, in pixels.
+    /// Gets or sets the thickness of the arc, in pixels. Façade for
+    /// <see cref="AposShapeRuntime.StrokeWidth"/> - the value is held on the runtime so PreRender
+    /// can apply <see cref="AposShapeRuntime.StrokeWidthUnits"/> (e.g. ScreenPixel zoom scaling)
+    /// before pushing it to the renderable each frame. Matches Skia's ArcRuntime, which routes
+    /// Thickness through base.StrokeWidth the same way.
     /// </summary>
     public float Thickness
     {
-        get => ContainedArc.Thickness;
-        set => ContainedArc.Thickness = value;
+        get => StrokeWidth;
+        set => StrokeWidth = value;
     }
 
     /// <summary>
@@ -84,6 +88,10 @@ public class ArcRuntime : AposShapeRuntime
             this.Color = Microsoft.Xna.Framework.Color.White;
             Width = 100;
             Height = 100;
+
+            // Seed the runtime auto-property StrokeWidth so PreRender pushes the legacy
+            // Arc default (10) to the renderable instead of overwriting it with 0.
+            StrokeWidth = 10;
 
             IsEndRounded = true;
 
