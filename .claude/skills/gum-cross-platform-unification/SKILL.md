@@ -1,6 +1,6 @@
 ---
 name: gum-cross-platform-unification
-description: Rules for unifying per-platform runtime files (MonoGame/Raylib/Skia/KNI/FNA) into a single source with #if directives. Load this when consolidating duplicate Runtime classes (SpriteRuntime, NineSliceRuntime, etc.) into MonoGameGum/GueDeriving/*.cs and linking them into Runtimes/RaylibGum and Runtimes/SkiaGum csprojs.
+description: Rules for unifying per-platform runtime files (MonoGame/Raylib/Skia/KNI/FNA, plus the Apos.Shapes ↔ SkiaGum shape-runtime pair under MonoGameGumShapes/KniGumShapes/SkiaGum) into a single source with #if directives. Load this when consolidating duplicate Runtime classes (SpriteRuntime, NineSliceRuntime, RoundedRectangleRuntime, ColoredCircleRuntime, etc.) into MonoGameGum/GueDeriving/*.cs (or SkiaGum/GueDeriving/*.cs for the Apos↔Skia pair) and linking them into the per-backend csprojs.
 ---
 
 # Gum Cross-Platform Runtime Unification
@@ -10,6 +10,12 @@ description: Rules for unifying per-platform runtime files (MonoGame/Raylib/Skia
 Per-platform runtimes (e.g. `ColoredRectangleRuntime`, `TextRuntime`, `ContainerRuntime`) historically live as three separate files — one each in `MonoGameGum/GueDeriving/`, `Runtimes/RaylibGum/GueDeriving/`, and `Runtimes/SkiaGum/GueDeriving/`. Unification collapses them into **one source file in `MonoGameGum/GueDeriving/`** with `#if RAYLIB / #if SKIA / #if XNALIKE` directives, then links that file into the Raylib and Skia csprojs via `<Compile Include="..\..\MonoGameGum\GueDeriving\FooRuntime.cs" Link="GueDeriving\FooRuntime.cs" />`.
 
 Reference implementations: `TextRuntime.cs` (#2509, #2510) and `ContainerRuntime.cs` (#2511). Read those before doing a new one — they set the idioms for `using` aliasing (`Color`, renderable type), `XNALIKE` symbol, namespace switching.
+
+### Apos.Shapes ↔ SkiaGum shape runtime pair
+
+Shape runtimes that exist on the Apos.Shapes side (`MonoGameGumShapes` / `KniGumShapes`) and SkiaGum — `RoundedRectangleRuntime`, `ArcRuntime`, `ColoredCircleRuntime`, `LineRuntime` — follow the same source-sharing pattern but with a different canonical home: **`Runtimes/SkiaGum/GueDeriving/`** rather than `MonoGameGum/GueDeriving/`. The Apos csprojs file-link via `<Compile Include="..\SkiaGum\GueDeriving\FooRuntime.cs" Link="GueDeriving\FooRuntime.cs" />`.
+
+Why a different home: these runtimes wrap Skia-specific renderables on one side and Apos.Shapes-specific renderables on the other. Neither platform's renderable surface aligns with the MonoGame/Raylib/Sokol axis, so putting the canonical file in `MonoGameGum/GueDeriving/` would be misleading. Reference implementation: `RoundedRectangleRuntime.cs`. Platform divergence uses `#if SKIA` (no `RAYLIB` / `XNALIKE` involved on this pair).
 
 ## Disagreements Are the Whole Job
 
@@ -87,4 +93,15 @@ This table tracks the unification progress across platforms. **✅ Unified** mea
 | **CircleRuntime** | ✅ Unified | ❌ Local | ❌ Local | ❌ Local |
 | **PolygonRuntime** | ✅ Unified | ❌ Local | ❌ Local | ❌ Local |
 | **RectangleRuntime** | ✅ Unified | ❌ Local | ❌ Local | ❌ Local |
+
+### Apos.Shapes ↔ SkiaGum shape runtime pair
+
+Canonical home is `Runtimes/SkiaGum/GueDeriving/`. ✅ Unified means `MonoGameGumShapes` and `KniGumShapes` both file-link the SkiaGum source.
+
+| Runtime | SkiaGum | MonoGameGumShapes | KniGumShapes |
+| :--- | :---: | :---: | :---: |
+| **RoundedRectangleRuntime** | ✅ Unified | ✅ Unified | ✅ Unified |
+| **ArcRuntime** | ❌ Local | ❌ Local | ❌ Local |
+| **ColoredCircleRuntime** | ❌ Local | ❌ Local | ❌ Local |
+| **LineRuntime** | ❌ Local | ❌ Local | ❌ Local |
 

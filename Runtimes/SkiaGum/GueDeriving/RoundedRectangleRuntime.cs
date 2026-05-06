@@ -1,25 +1,46 @@
-﻿using Gum.Converters;
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
+
+#if SKIA
 using SkiaGum.Renderables;
 using SkiaSharp;
-
 namespace SkiaGum.GueDeriving;
+#else
+using MonoGameAndGum.Renderables;
+namespace MonoGameGum.GueDeriving;
+#endif
 
-public class RoundedRectangleRuntime : SkiaShapeRuntime, IClipPath
+/// <summary>
+/// Runtime that draws a rectangle with rounded corners, sized by its Width and Height.
+/// Use <see cref="CornerRadius"/> to control how rounded the corners are; a value of 0 produces a
+/// sharp-cornered rectangle.
+/// </summary>
+/// <remarks>
+/// Source-shared between SkiaGum and MonoGameGumShapes (and KniGumShapes) via a Compile/Link in
+/// the Apos-side csprojs - see CustomSetPropertyOnRenderable.cs for the same pattern. Platform
+/// differences are gated behind <c>#if SKIA</c>; the cross-platform shape (constructor defaults,
+/// CornerRadius property, base wiring) is shared.
+/// </remarks>
+public class RoundedRectangleRuntime
+#if SKIA
+    : SkiaShapeRuntime, IClipPath
+#else
+    : AposShapeRuntime
+#endif
 {
     #region Contained Renderable
-    protected override Renderables.RenderableShapeBase ContainedRenderable => ContainedRoundedRectangle;
+    protected override RenderableShapeBase ContainedRenderable => ContainedRoundedRectangle;
 
-    RoundedRectangle mContainedRoundedRectangle;
+    RoundedRectangle? mContainedRoundedRectangle;
     RoundedRectangle ContainedRoundedRectangle
     {
         get
         {
             if (mContainedRoundedRectangle == null)
             {
-                mContainedRoundedRectangle = this.RenderableComponent as RoundedRectangle;
+                mContainedRoundedRectangle = (RoundedRectangle)this.RenderableComponent;
             }
             return mContainedRoundedRectangle;
         }
@@ -27,12 +48,25 @@ public class RoundedRectangleRuntime : SkiaShapeRuntime, IClipPath
 
     #endregion
 
+    /// <summary>
+    /// Gets or sets the radius, in pixels, of each rounded corner. A value of 0 produces a
+    /// sharp-cornered rectangle.
+    /// </summary>
     public float CornerRadius
     {
+#if SKIA
         get;
         set;
+#else
+        get => ContainedRoundedRectangle.CornerRadius;
+        set => ContainedRoundedRectangle.CornerRadius = value;
+#endif
     }
 
+#if SKIA
+    // Skia-only: per-corner overrides and unit-aware corner radius. Apos.Shapes' RoundedRectangle
+    // renderable doesn't currently expose per-corner radii or ScreenPixel scaling. Tracked as a
+    // future parity item; gated here so unification doesn't block on the deeper Apos work.
 
     public float? CustomRadiusTopLeft { get; set; } = null;
     public float? CustomRadiusTopRight { get; set; } = null;
@@ -45,23 +79,31 @@ public class RoundedRectangleRuntime : SkiaShapeRuntime, IClipPath
     }
 
     public SKPath GetClipPath() => ContainedRoundedRectangle.GetClipPath();
+#endif
 
+    /// <summary>
+    /// Initializes a new RoundedRectangleRuntime. When <paramref name="fullInstantiation"/> is
+    /// true (the default), an underlying RoundedRectangle renderable is created and default values
+    /// are applied (Width = Height = 100, CornerRadius = 5). Pass false only when the runtime is
+    /// being constructed by deserialization, which sets up the renderable separately.
+    /// </summary>
     public RoundedRectangleRuntime(bool fullInstantiation = true)
     {
         if (fullInstantiation)
         {
-            SetContainedObject(new RoundedRectangle());
+            SetContainedShape(new RoundedRectangle());
 
-            // Make defaults 100 to match Glue
+            // Defaults of 100 to match Glue / FRB conventions.
             Width = 100;
             Height = 100;
+
+            CornerRadius = 5;
 
             DropshadowAlpha = 255;
             DropshadowRed = 0;
             DropshadowGreen = 0;
             DropshadowBlue = 0;
 
-            CornerRadius = 5;
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
             DropshadowBlurX = 0;
@@ -88,6 +130,17 @@ public class RoundedRectangleRuntime : SkiaShapeRuntime, IClipPath
             Red2 = 255;
             Green2 = 255;
             Blue2 = 0;
+
+#if !SKIA
+            // Apos: explicitly set the solid Color to white so the rectangle renders white by
+            // default when IsFilled is true. Skia intentionally does NOT set this - the Skia path
+            // is also used by MAUI, where the renderable's default color is the right one to keep
+            // (overriding to white here breaks MAUI rendering in some host configurations). This
+            // divergence is the only intentional default-color difference between the two paths.
+            Red = 255;
+            Green = 255;
+            Blue = 255;
+#endif
         }
     }
 
@@ -95,11 +148,17 @@ public class RoundedRectangleRuntime : SkiaShapeRuntime, IClipPath
     {
         var toReturn = (RoundedRectangleRuntime)base.Clone();
 
+        // Reset the cached renderable reference so the clone re-resolves it from its own
+        // RenderableComponent rather than holding a reference to the source instance's renderable.
+        // Without this, mutating the clone's CornerRadius (or any property routed through the
+        // cached field) would update the original. Skia previously did this; Apos previously did
+        // not (latent bug, fixed by unification).
         toReturn.mContainedRoundedRectangle = null;
 
         return toReturn;
     }
 
+#if SKIA
     public override void PreRender()
     {
         if (this.EffectiveManagers != null)
@@ -134,5 +193,5 @@ public class RoundedRectangleRuntime : SkiaShapeRuntime, IClipPath
         }
         base.PreRender();
     }
-
+#endif
 }
