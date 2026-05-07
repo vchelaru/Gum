@@ -22,6 +22,8 @@ LeftProperty = RightSide
   - Local: `OtherInstance.X` (same element)
   - Cross-element: `Components/MyComp.InstanceName.Width` (slash-separated element path)
   - Expressions: `OtherInstance.Width + 10`, `OtherInstance.Width * 2`, `!OtherInstance.Visible`
+  - Conditional/comparison/logical operators: ternary `cond ? a : b`, `==`, `!=`, `<`, `>`, `<=`, `>=`, `&&`, `||`, `!`
+  - Category-state LHS: `<CategoryName>State = "StateName"` assigns the categorical state by name
   - Literals: `X = 42`
 - **Comments:** Lines starting with `//` are skipped. Invalid lines are auto-commented on validation failure.
 - **Shorthand:** Writing just `OtherInstance.X` (no left side) auto-expands to `X = OtherInstance.X`.

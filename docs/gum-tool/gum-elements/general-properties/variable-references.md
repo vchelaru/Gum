@@ -140,6 +140,61 @@ Math operations can reference both constant values (1, 2, 3) or other variables:
 Width = (OtherInstance.Height * 3) + 10
 ```
 
+## Conditional and Logical Expressions
+
+Variable references support conditional (ternary) expressions, comparison operators, and logical operators. These can be combined to drive variable values from boolean conditions or to switch between values based on other variables.
+
+### Conditional (Ternary) Expressions
+
+A conditional expression uses the C# `cond ? a : b` syntax. If `cond` evaluates to `true`, the result is `a`; otherwise the result is `b`. The condition can be a boolean variable or a comparison:
+
+```csharp
+Width = IsTall ? 200 : 50
+X = Count > 0 ? StartX : 0
+```
+
+Ternary expressions can be nested. Use parenthesis to make the order of evaluation clear:
+
+```csharp
+Width = X > 200 ? 300 : (X > 100 ? 200 : 100)
+```
+
+### Comparison Operators
+
+The operators `==`, `!=`, `<`, `>`, `<=`, and `>=` can be used to compare values. The result is a `bool`, so comparisons are most often used as the condition of a ternary or as the right side of a `bool` assignment:
+
+```csharp
+Visible = Count > 0
+Color = Score >= HighScore ? Gold : Silver
+```
+
+### Logical Operators
+
+The logical operators `&&` (and) and `||` (or) combine two `bool` values into a single `bool`. Both operands must be `bool`:
+
+```csharp
+Visible = IsEnabled && IsHovered
+Visible = IsError || IsWarning
+```
+
+### Boolean Negation
+
+The `!` operator inverts a `bool` value:
+
+```csharp
+Visible = !IsDisabled
+```
+
+### Category-State Assignment
+
+Variable references can drive a component's categorical state by assigning to `<CategoryName>State`. The right side must resolve to a `string` matching one of the state names defined in that category. This is useful for switching visual states from a `bool` or other variable. For example, on a button-derived component with a `ButtonCategory` containing `Enabled` and `Disabled` states:
+
+```csharp
+ButtonCategoryState = IsEnabled ? "Enabled" : "Disabled"
+```
+
+If the right side is a literal string, Gum validates it against the category's state names and comments out the line if there is no match.
+
 {% hint style="warning" %}
 Gum treats the prefixes `Components/`, `Screens/`, and `Standards/` as special prefixes and does not consider this to be a division operator. Therefore, you should not name variables Components, Screens, or Standards as these are reserved words. Other variable references can freely use the forward slash character to create division.
 
