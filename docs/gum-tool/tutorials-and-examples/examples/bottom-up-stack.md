@@ -17,7 +17,7 @@ This container to stack needs the following variables set:
     <figure><img src="../../../.gitbook/assets/ChildrenLayoutTopToBottom.png" alt=""><figcaption><p><code>Children Layout</code> set to <code>Top to Bottom Stack</code></p></figcaption></figure>
 *   `Height Units` set to `Relative to Children` so the container resizes itself as more children are added
 
-    <figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p><code>Height Units</code> set to <code>Relative to Children</code></p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/gb-022.png" alt=""><figcaption><p><code>Height Units</code> set to <code>Relative to Children</code></p></figcaption></figure>
 *   `Height` set to `0` so the effective height of the container is based purely on its children
 
     <figure><img src="../../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p><code>Height</code> set to <code>0</code></p></figcaption></figure>

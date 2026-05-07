@@ -123,7 +123,7 @@ Once this value is changed, the RectangleSizeCategory lists this as a variable t
 
 If we select any of the other states in the category, they show that they explicitly set the Width value as well (the value has a white background instead of light green). The value is inherited from the default state.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Width value set by Medium state</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/gb-016.png" alt=""><figcaption><p>Width value set by Medium state</p></figcaption></figure>
 
 Once a variable is set in a category, all states are required to set this value. A variable cannot be removed from a single state in a category. Rather, to remove a variable, all states in the category must remove the variable. This can be done by selecting the category and pressing the X button next to the variable name.
 

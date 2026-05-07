@@ -38,7 +38,7 @@ If an object does not have a parent, then the width of the canvas is used.
 
 `Ratio of Parent` can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Parent](height-units.md#ratio-of-parent), but operates horizontally rather than vertically.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Blue rectangle using a ratio value of 2, next to siblings each using a ratio value of 1</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/gb-004.png" alt=""><figcaption><p>Blue rectangle using a ratio value of 2, next to siblings each using a ratio value of 1</p></figcaption></figure>
 
 `Ratio of Parent` is usually used with a parent that has its `Children Layout` set to `Left to Right Stack` or `Top to Bottom Stack`. For more information, see the [Children Layout](../container/children-layout.md) page.
 
