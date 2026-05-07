@@ -5,7 +5,7 @@ using Gum.Managers;
 using Microsoft.CodeAnalysis.CSharp;
 using Shouldly;
 
-namespace GumToolUnitTests.VariableGrid;
+namespace GumExpressions.Tests;
 
 public class EvaluatedSyntaxTests : BaseTestClass
 {
@@ -14,7 +14,9 @@ public class EvaluatedSyntaxTests : BaseTestClass
     private static EvaluatedSyntax Evaluate(string expression, StateSave state)
     {
         string csharp = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
-        Microsoft.CodeAnalysis.SyntaxNode syntax = CSharpSyntaxTree.ParseText(csharp).GetCompilationUnitRoot();
+        // Parse as an expression (matches GumExpressionService) so top-level ternaries are not
+        // mis-parsed as nullable variable declarations.
+        Microsoft.CodeAnalysis.SyntaxNode syntax = Microsoft.CodeAnalysis.CSharp.SyntaxFactory.ParseExpression(csharp);
         return EvaluatedSyntax.FromSyntaxNode(syntax, state);
     }
 
@@ -224,6 +226,101 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
     #endregion
 
+    #region ComparisonOperators
+
+    [Fact]
+    public void FromSyntaxNode_EqualityOfNumericValues_ReturnsBool()
+    {
+        StateSave state = BuildState(
+            ("Instance.A", 10f, "float"),
+            ("Instance.B", 10f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.A == Instance.B", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(true);
+        result.EvaluatedType.ShouldBe("bool");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_EqualityOfStrings_ReturnsBool()
+    {
+        StateSave state = BuildState(
+            ("Instance.Name", "Hello", "string"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Name == \"Hello\"", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(true);
+        result.EvaluatedType.ShouldBe("bool");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_GreaterThanOrEqual_ReturnsBool()
+    {
+        StateSave state = BuildState(("Instance.Width", 50f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Width >= 50", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(true);
+        result.EvaluatedType.ShouldBe("bool");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_GreaterThan_ReturnsBool()
+    {
+        StateSave state = BuildState(("Instance.Width", 100f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Width > 50", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(true);
+        result.EvaluatedType.ShouldBe("bool");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_InequalityOfNumericValues_ReturnsBool()
+    {
+        StateSave state = BuildState(
+            ("Instance.A", 10f, "float"),
+            ("Instance.B", 20f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.A != Instance.B", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(true);
+        result.EvaluatedType.ShouldBe("bool");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_LessThanOrEqual_ReturnsBool()
+    {
+        StateSave state = BuildState(("Instance.Width", 50f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Width <= 50", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(true);
+        result.EvaluatedType.ShouldBe("bool");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_LessThan_ReturnsBool()
+    {
+        StateSave state = BuildState(
+            ("Instance.IntVal", 5, "int"),
+            ("Instance.FloatVal", 10f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IntVal < Instance.FloatVal", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(true);
+        result.EvaluatedType.ShouldBe("bool");
+    }
+
+    #endregion
+
     #region ConvertSyntax
 
     [Fact]
@@ -386,6 +483,52 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
     #endregion
 
+    #region LogicalOperators
+
+    [Fact]
+    public void FromSyntaxNode_LogicalAnd_ReturnsBool()
+    {
+        StateSave state = BuildState(
+            ("Instance.IsVisible", true, "bool"),
+            ("Instance.IsEnabled", false, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsVisible && Instance.IsEnabled", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(false);
+        result.EvaluatedType.ShouldBe("bool");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_LogicalOr_ReturnsBool()
+    {
+        StateSave state = BuildState(
+            ("Instance.IsVisible", true, "bool"),
+            ("Instance.IsEnabled", false, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsVisible || Instance.IsEnabled", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(true);
+        result.EvaluatedType.ShouldBe("bool");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_LogicalAndWithComparison_ReturnsBool()
+    {
+        StateSave state = BuildState(
+            ("Instance.Count", 5, "int"),
+            ("Instance.IsVisible", true, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Count > 0 && Instance.IsVisible", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(true);
+        result.EvaluatedType.ShouldBe("bool");
+    }
+
+    #endregion
+
     #region Negation
 
     [Fact]
@@ -455,6 +598,90 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
         result.ShouldNotBeNull();
         result.Value.ShouldBe(42f);
+    }
+
+    #endregion
+
+    #region Ternary
+
+    [Fact]
+    public void FromSyntaxNode_TernaryArithmeticInBranches_EvaluatesSelectedBranch()
+    {
+        StateSave state = BuildState(
+            ("Instance.IsTall", true, "bool"),
+            ("Instance.Width", 50f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsTall ? Instance.Width * 2 : Instance.Width", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(100f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_TernaryBoolIdentifierCondition_TreatsAsBool()
+    {
+        // Reading a bool variable should yield the bool Value, not the string "true"/"false".
+        // Covers Gap 4 (the existing ! operator already exercises this, but ternary
+        // verifies the bool is propagated end-to-end through the condition slot).
+        StateSave state = BuildState(
+            ("Instance.IsEnabled", true, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsEnabled ? \"On\" : \"Off\"", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe("On");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_TernaryFalseCondition_PicksWhenFalse()
+    {
+        StateSave state = BuildState(
+            ("Instance.IsVisible", false, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsVisible ? 100 : 200", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(200);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_TernaryNonBoolCondition_ReturnsNullValue()
+    {
+        // Defensive: a non-bool condition (e.g., int) should not crash; it should yield null.
+        StateSave state = BuildState(
+            ("Instance.Count", 5, "int"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Count ? 1 : 0", state);
+
+        // Whether result itself is null or just its Value, the line should be rejected gracefully.
+        if (result != null)
+        {
+            result.Value.ShouldBeNull();
+        }
+    }
+
+    [Fact]
+    public void FromSyntaxNode_TernaryStringBranches_ResolvesToString()
+    {
+        StateSave state = BuildState(
+            ("Instance.IsActive", true, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsActive ? \"Enabled\" : \"Disabled\"", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe("Enabled");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_TernaryTrueCondition_PicksWhenTrue()
+    {
+        StateSave state = BuildState(
+            ("Instance.IsVisible", true, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsVisible ? 100 : 200", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(100);
     }
 
     #endregion

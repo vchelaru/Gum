@@ -278,7 +278,208 @@ public class VariableReferenceLogicTests : BaseTestClass
 
     #endregion
 
+    #region CategoryStateLeftSide
+
+    [Fact]
+    public void DoVariableReferenceReaction_CategoryStateLiteralAssignment_AcceptsLine()
+    {
+        // "ButtonCategoryState = \"Disabled\"" is a synthetic category-state LHS that the
+        // runtime routes through GraphicalUiElement.SetProperty. Validation should accept
+        // it when "Disabled" exists in ButtonCategory.
+        ComponentSave button = BuildButtonComponentWithCategory("ButtonCategory", "Enabled", "Disabled");
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "ButtonCategoryState = \"Disabled\"",
+            out StateSave defaultState,
+            out VariableListSave<string> varList);
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(button);
+        project.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenInheritsFromButton(screen, button);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldBe("ButtonCategoryState = \"Disabled\"");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_CategoryStateNonexistentLiteral_CommentsLine()
+    {
+        // Literal RHS that does not name a real state in the category should be rejected.
+        ComponentSave button = BuildButtonComponentWithCategory("ButtonCategory", "Enabled", "Disabled");
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "ButtonCategoryState = \"NonexistentState\"",
+            out StateSave defaultState,
+            out VariableListSave<string> varList);
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(button);
+        project.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenInheritsFromButton(screen, button);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldStartWith("//");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_CategoryStateNonexistentCategory_CommentsLine()
+    {
+        // No <CategoryName> matching "MissingCategory" exists anywhere in the chain.
+        ComponentSave button = BuildButtonComponentWithCategory("ButtonCategory", "Enabled");
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "MissingCategoryState = \"Foo\"",
+            out StateSave defaultState,
+            out VariableListSave<string> varList);
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(button);
+        project.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenInheritsFromButton(screen, button);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldStartWith("//");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_CategoryStateTernaryRhs_AcceptsLineLeniently()
+    {
+        // Non-literal RHS: a ternary that resolves to a string should be accepted even
+        // though we cannot statically verify the resulting state name.
+        ComponentSave button = BuildButtonComponentWithCategory("ButtonCategory", "Enabled", "Disabled");
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"",
+            out StateSave defaultState,
+            out VariableListSave<string> varList);
+
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "IsEnabled",
+            Value = true,
+            Type = "bool",
+            SetsValue = true
+        });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(button);
+        project.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenInheritsFromButton(screen, button);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldBe("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_InheritedCategoryState_AcceptsLine()
+    {
+        // The matching category lives on the base component, not directly on the
+        // current element; FindCategoryForStateLeftSide must walk the inheritance chain.
+        ComponentSave baseButton = BuildButtonComponentWithCategory("ButtonCategory", "Enabled", "Disabled");
+        baseButton.Name = "BaseButton";
+
+        ComponentSave derivedButton = new ComponentSave { Name = "DerivedButton", BaseType = "BaseButton" };
+        StateSave derivedDefault = new StateSave { Name = "Default", ParentContainer = derivedButton };
+        derivedButton.States.Add(derivedDefault);
+
+        VariableListSave<string> varList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varList.Value.Add("ButtonCategoryState = \"Disabled\"");
+        derivedDefault.VariableLists.Add(varList);
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(baseButton);
+        project.Components.Add(derivedButton);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: derivedButton,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: derivedDefault,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldBe("ButtonCategoryState = \"Disabled\"");
+    }
+
+    #endregion
+
     #region Helpers
+
+    private static ComponentSave BuildButtonComponentWithCategory(string categoryName, params string[] stateNames)
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = button };
+        button.States.Add(defaultState);
+
+        StateSaveCategory category = new StateSaveCategory { Name = categoryName };
+        foreach (string stateName in stateNames)
+        {
+            category.States.Add(new StateSave { Name = stateName, ParentContainer = button });
+        }
+        button.Categories.Add(category);
+
+        return button;
+    }
+
+    private static ScreenSave BuildScreenWithVariableReference(string line, out StateSave defaultState, out VariableListSave<string> varList)
+    {
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+
+        varList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varList.Value.Add(line);
+        defaultState.VariableLists.Add(varList);
+
+        return screen;
+    }
+
+    private static void ScreenInheritsFromButton(ScreenSave screen, ComponentSave button)
+    {
+        // Make the screen carry the category by base inheritance via instances:
+        // simplest setup is to set BaseType so FindCategoryForStateLeftSide walks
+        // GetBaseElements. Screens cannot set BaseType to a Component normally, so we
+        // attach the category directly on the screen element when no inheritance applies.
+        screen.Categories.Add(new StateSaveCategory
+        {
+            Name = button.Categories[0].Name,
+            States = new List<StateSave>(button.Categories[0].States)
+        });
+    }
 
     private static StateSave BuildStateWithVariableReferences(string listName, string item)
     {
