@@ -34,6 +34,11 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     private readonly List<ImportTreeNodeViewModel> _allLeafItems = new List<ImportTreeNodeViewModel>();
     private readonly HashSet<string> _autoAddedComponentNames = new HashSet<string>();
+    // Behaviors and Standards aren't pulled in by the dependency resolver from a user's perspective —
+    // the user picks them directly. Track explicit user picks so RecomputeTransitiveDependencies
+    // doesn't clobber them when it rebuilds those groups from resolver output. (#2642)
+    private readonly HashSet<string> _userExplicitBehaviorNames = new HashSet<string>();
+    private readonly HashSet<string> _userExplicitStandardNames = new HashSet<string>();
     private ImportTreeNodeViewModel? _behaviorsGroupNode;
     private ImportTreeNodeViewModel? _standardsGroupNode;
     private bool _recomputeQueued = false;
@@ -326,6 +331,8 @@ public class ImportFromGumxViewModel : DialogViewModel
             leaf.PropertyChanged -= OnItemPropertyChanged;
         _allLeafItems.Clear();
         _autoAddedComponentNames.Clear();
+        _userExplicitBehaviorNames.Clear();
+        _userExplicitStandardNames.Clear();
         RootNodes.Clear();
         _behaviorsGroupNode = null;
         _standardsGroupNode = null;
@@ -388,21 +395,55 @@ public class ImportFromGumxViewModel : DialogViewModel
     {
         if (e.PropertyName == nameof(ImportTreeNodeViewModel.InclusionState) && !_recomputeQueued)
         {
-            // User directly changed a component — remove it from auto-added tracking so it isn't reset
-            if (sender is ImportTreeNodeViewModel vm && vm.ElementType == ElementItemType.Component)
+            if (sender is ImportTreeNodeViewModel vm)
             {
-                _autoAddedComponentNames.Remove(vm.FullName);
+                // User directly changed a component — remove it from auto-added tracking so it isn't reset
+                if (vm.ElementType == ElementItemType.Component)
+                {
+                    _autoAddedComponentNames.Remove(vm.FullName);
+                }
+                // Behaviors / Standards: track explicit user picks so the recompute pass
+                // doesn't wipe them out (#2642).
+                else if (vm.ElementType == ElementItemType.Behavior)
+                {
+                    if (vm.InclusionState == InclusionState.Explicit) { _userExplicitBehaviorNames.Add(vm.FullName); }
+                    else { _userExplicitBehaviorNames.Remove(vm.FullName); }
+                }
+                else if (vm.ElementType == ElementItemType.Standard)
+                {
+                    if (vm.InclusionState == InclusionState.Explicit) { _userExplicitStandardNames.Add(vm.FullName); }
+                    else { _userExplicitStandardNames.Remove(vm.FullName); }
+                }
             }
             _recomputeQueued = true;
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
+            // Application.Current is null in unit tests; the test drives recompute directly.
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            if (dispatcher != null)
+            {
+                dispatcher.BeginInvoke(() =>
+                {
+                    _recomputeQueued = false;
+                    RecomputeTransitiveDependencies();
+                });
+            }
+            else
             {
                 _recomputeQueued = false;
-                RecomputeTransitiveDependencies();
-            });
+            }
         }
     }
 
-    private void RecomputeTransitiveDependencies()
+    /// <summary>
+    /// Test seam: directly load a source project without the file/URL fetch step.
+    /// Production callers go through <see cref="LoadPreviewCommand"/>.
+    /// </summary>
+    internal void InitializeFromProjectForTesting(GumProjectSave project)
+    {
+        _sourceProject = project;
+        PopulateItems(project);
+    }
+
+    internal void RecomputeTransitiveDependencies()
     {
         if (_sourceProject == null) { return; }
 
@@ -451,25 +492,25 @@ public class ImportFromGumxViewModel : DialogViewModel
             }
         }
 
-        // Auto-check required behaviors, uncheck others
+        // Auto-check required behaviors, plus any the user explicitly picked; uncheck others
         var requiredBehaviorNames = new HashSet<string>(deps.Behaviors.Select(b => b.Name));
         foreach (ImportTreeNodeViewModel item in _allLeafItems.Where(i => i.ElementType == ElementItemType.Behavior))
         {
+            bool shouldBeExplicit = requiredBehaviorNames.Contains(item.FullName)
+                || _userExplicitBehaviorNames.Contains(item.FullName);
             item.PropertyChanged -= OnItemPropertyChanged;
-            item.InclusionState = requiredBehaviorNames.Contains(item.FullName)
-                ? InclusionState.Explicit
-                : InclusionState.NotIncluded;
+            item.InclusionState = shouldBeExplicit ? InclusionState.Explicit : InclusionState.NotIncluded;
             item.PropertyChanged += OnItemPropertyChanged;
         }
 
-        // Auto-check differing standards, uncheck others
+        // Auto-check differing standards, plus any the user explicitly picked; uncheck others
         var differingStandardNames = new HashSet<string>(deps.DifferingStandards.Select(s => s.Name));
         foreach (ImportTreeNodeViewModel item in _allLeafItems.Where(i => i.ElementType == ElementItemType.Standard))
         {
+            bool shouldBeExplicit = differingStandardNames.Contains(item.FullName)
+                || _userExplicitStandardNames.Contains(item.FullName);
             item.PropertyChanged -= OnItemPropertyChanged;
-            item.InclusionState = differingStandardNames.Contains(item.FullName)
-                ? InclusionState.Explicit
-                : InclusionState.NotIncluded;
+            item.InclusionState = shouldBeExplicit ? InclusionState.Explicit : InclusionState.NotIncluded;
             item.PropertyChanged += OnItemPropertyChanged;
         }
     }
