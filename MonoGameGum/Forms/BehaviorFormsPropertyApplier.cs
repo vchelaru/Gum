@@ -41,7 +41,7 @@ internal static class BehaviorFormsPropertyApplier
                 continue;
             }
 
-            object? value = new RecursiveVariableFinder(elementSave.DefaultState).GetValue(declaration.Name);
+            object? value = ReadEffectiveValue(visual!, declaration.Name);
             if (value == null)
             {
                 continue;
@@ -66,6 +66,27 @@ internal static class BehaviorFormsPropertyApplier
                 // FrameworkElement's property. Silently skip rather than crash construction.
             }
         }
+    }
+
+    private static object? ReadEffectiveValue(GraphicalUiElement visual, string propertyName)
+    {
+        // Prefer a parent-level instance-qualified override (e.g. screen state's
+        // "ButtonInstance.ToolTip") over the element's own default. This matches how Gum
+        // resolves instance variables at design time.
+        GraphicalUiElement? container = visual.ElementGueContainingThis as GraphicalUiElement
+            ?? visual.Parent as GraphicalUiElement;
+
+        if (container?.ElementSave != null && !string.IsNullOrEmpty(visual.Name))
+        {
+            string qualified = visual.Name + "." + propertyName;
+            object? overrideValue = new RecursiveVariableFinder(container.ElementSave.DefaultState).GetValue(qualified);
+            if (overrideValue != null)
+            {
+                return overrideValue;
+            }
+        }
+
+        return new RecursiveVariableFinder(visual.ElementSave.DefaultState).GetValue(propertyName);
     }
 
     private static IEnumerable<VariableSave> EnumerateFormsPropertyDeclarations(
