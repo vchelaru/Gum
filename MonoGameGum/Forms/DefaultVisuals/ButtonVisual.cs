@@ -7,7 +7,7 @@ using RenderingLibrary.Graphics;
 
 #if XNALIKE
 using Microsoft.Xna.Framework;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using Microsoft.Xna.Framework.Graphics;
 #else
 using Gum.GueDeriving;

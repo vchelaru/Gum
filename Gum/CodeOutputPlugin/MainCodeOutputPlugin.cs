@@ -84,7 +84,10 @@ public class MainCodeOutputPlugin : PluginBase
         _elementSettingsManager = new CodeOutputElementSettingsManager(_projectDirectoryProvider);
         var typeStringResolver = new ToolTypeStringResolver();
 
-        _codeGenerator = new CodeGenerator(_codeGenerationNameVerifier, _localizationService, _elementSettingsManager, _projectDirectoryProvider, typeStringResolver);
+        var codeGenLoggerForDetection = new ToolCodeGenLogger(Locator.GetRequiredService<IOutputManager>());
+        var syntaxVersionDetectionService = new SyntaxVersionDetectionService(codeGenLoggerForDetection);
+
+        _codeGenerator = new CodeGenerator(_codeGenerationNameVerifier, _localizationService, _elementSettingsManager, _projectDirectoryProvider, typeStringResolver, syntaxVersionDetectionService);
 
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, _codeGenerationNameVerifier, _projectDirectoryProvider);
 

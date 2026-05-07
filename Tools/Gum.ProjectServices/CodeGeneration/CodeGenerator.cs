@@ -64,6 +64,15 @@ public class CodeGenerationContext
     public ElementSave Element { get; set; }
     public StringBuilder StringBuilder { get; set; } = new StringBuilder();
 
+    /// <summary>
+    /// The resolved syntax version of the runtime referenced by this project. Determines which
+    /// namespace generated code should target for runtime types (e.g. <c>SpriteRuntime</c>):
+    /// version 0 emits the legacy <c>MonoGameGum.GueDeriving</c> / <c>SkiaGum.GueDeriving</c>
+    /// namespaces; version &gt;= 1 emits the unified <c>Gum.GueDeriving</c> namespace.
+    /// Defaults to 0 so existing call sites that don't supply a version preserve legacy behavior.
+    /// </summary>
+    public int ResolvedSyntaxVersion { get; set; }
+
     CodeOutputProjectSettings _codeOutputProjectSettings = new ();
     public CodeOutputProjectSettings CodeOutputProjectSettings
     {
@@ -252,6 +261,7 @@ public class CodeGenerator
     private readonly ITypeStringResolver? _typeStringResolver;
     private readonly CodeOutputElementSettingsManager _elementSettingsManager;
     private readonly IProjectDirectoryProvider _projectDirectoryProvider;
+    private readonly ISyntaxVersionDetectionService? _syntaxVersionDetectionService;
 
     /// <summary>
     /// The current project directory (folder containing the .gumx file). Read lazily from the
@@ -274,13 +284,54 @@ public class CodeGenerator
 
     public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier, LocalizationService localizationService,
         CodeOutputElementSettingsManager elementSettingsManager, IProjectDirectoryProvider projectDirectoryProvider,
-        ITypeStringResolver? typeStringResolver = null)
+        ITypeStringResolver? typeStringResolver = null,
+        ISyntaxVersionDetectionService? syntaxVersionDetectionService = null)
     {
         _codeGenerationNameVerifier = codeGenerationNameVerifier;
         _localizationService = localizationService;
         _elementSettingsManager = elementSettingsManager;
         _projectDirectoryProvider = projectDirectoryProvider;
         _typeStringResolver = typeStringResolver;
+        _syntaxVersionDetectionService = syntaxVersionDetectionService;
+    }
+
+    /// <summary>
+    /// Returns the namespace generated code should reference for runtime types
+    /// (<c>SpriteRuntime</c>, <c>ContainerRuntime</c>, etc.) based on the resolved
+    /// runtime syntax version. Version 0 keeps the legacy split namespaces; version &gt;= 1
+    /// emits the unified <c>Gum.GueDeriving</c> namespace.
+    /// </summary>
+    public static string GetGueDerivingNamespace(int syntaxVersion, bool isSkia)
+    {
+        if (syntaxVersion >= 1)
+        {
+            return "Gum.GueDeriving";
+        }
+        return isSkia ? "SkiaGum.GueDeriving" : "MonoGameGum.GueDeriving";
+    }
+
+    /// <summary>
+    /// Resolves the effective syntax version for the supplied project settings using the
+    /// injected <see cref="ISyntaxVersionDetectionService"/> when available. Falls back to
+    /// parsing <see cref="CodeOutputProjectSettings.SyntaxVersion"/> directly (treating
+    /// auto-detect <c>"*"</c> as version 0) when no detection service is wired in.
+    /// </summary>
+    internal int ResolveSyntaxVersion(CodeOutputProjectSettings projectSettings)
+    {
+        if (_syntaxVersionDetectionService != null)
+        {
+            SyntaxVersionResult result = _syntaxVersionDetectionService.Detect(projectSettings, _projectDirectoryProvider.ProjectDirectory);
+            return result.Version;
+        }
+
+        if (projectSettings.SyntaxVersion != null
+            && projectSettings.SyntaxVersion != "*"
+            && int.TryParse(projectSettings.SyntaxVersion, out int explicitVersion))
+        {
+            return explicitVersion;
+        }
+
+        return 0;
     }
 
     #region Using Statements
@@ -298,13 +349,13 @@ public class CodeGenerator
             context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
         {
             neededUsings.Add("MonoGameGum");
-            neededUsings.Add("MonoGameGum.GueDeriving");
+            neededUsings.Add(GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false));
         }
 
         if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia)
         {
             // https://github.com/vchelaru/Gum/issues/895
-            neededUsings.Add("SkiaGum.GueDeriving");
+            neededUsings.Add(GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: true));
         }
 
         foreach (var instance in context.Element.Instances)
@@ -441,7 +492,7 @@ public class CodeGenerator
 
         if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
         {
-            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings);
+            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings, context.ResolvedSyntaxVersion);
             header += " : " + inheritance;
         }
 
@@ -535,7 +586,7 @@ public class CodeGenerator
         return className;
     }
 
-    public static string? GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
+    public static string? GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings, int resolvedSyntaxVersion = 0)
     {
         string? inheritance = null;
         if (element is ScreenSave)
@@ -603,7 +654,7 @@ public class CodeGenerator
                 var standardElement = ObjectFinder.Self.GetStandardElement(element.BaseType);
                 if(standardElement != null)
                 {
-                    inheritance = "global::MonoGameGum.GueDeriving." + element.BaseType + "Runtime";
+                    inheritance = "global::" + GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: false) + "." + element.BaseType + "Runtime";
                 }
                 else
                 {
@@ -612,7 +663,7 @@ public class CodeGenerator
             }
             else
             {
-                inheritance = "SkiaGum.GueDeriving.ContainerRuntime";
+                inheritance = GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: true) + ".ContainerRuntime";
             }
         }
         else
@@ -1285,7 +1336,7 @@ public class CodeGenerator
                 
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = this.Visual?.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
-                    $"global::MonoGameGum.GueDeriving.{className};");
+                    $"global::{GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false)}.{className};");
             }
         }
         else
@@ -1295,7 +1346,7 @@ public class CodeGenerator
             {
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
-                    $"global::MonoGameGum.GueDeriving.{GetClassNameForType(instance, context.VisualApi, context)};");
+                    $"global::{GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false)}.{GetClassNameForType(instance, context.VisualApi, context)};");
 
             }
             else
@@ -1340,7 +1391,7 @@ public class CodeGenerator
         {
             if(isInstanceStandard)
             {
-                context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::SkiaGum.GueDeriving.{GetClassNameForType(instance, visualApi, context)}();");
+                context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::{GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: true)}.{GetClassNameForType(instance, visualApi, context)}();");
             }
             else
             {
@@ -1351,7 +1402,7 @@ public class CodeGenerator
         {
             if(isInstanceStandard)
             {
-                context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::MonoGameGum.GueDeriving.{GetClassNameForType(instance, visualApi, context)}();");
+                context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::{GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false)}.{GetClassNameForType(instance, visualApi, context)}();");
             }
             else
             {
@@ -1445,11 +1496,11 @@ public class CodeGenerator
             if(inheritsFromText)
             {
                 // special case for label:
-                builder.AppendLine(context.Tabs + "var visual = new global::MonoGameGum.GueDeriving.TextRuntime();");
+                builder.AppendLine(context.Tabs + $"var visual = new global::{GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false)}.TextRuntime();");
             }
             else
             {
-                builder.AppendLine(context.Tabs + "var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();");
+                builder.AppendLine(context.Tabs + $"var visual = new global::{GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false)}.ContainerRuntime();");
             }
 
 
@@ -3218,6 +3269,7 @@ public class CodeGenerator
         context.TabCount = 0;
         context.CodeOutputProjectSettings = projectSettings;
         context.ElementSettings = elementSettings;
+        context.ResolvedSyntaxVersion = ResolveSyntaxVersion(projectSettings);
 
         var stringBuilder = context.StringBuilder;
 
@@ -3333,6 +3385,7 @@ public class CodeGenerator
         var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
         context.Instance = instance;
         context.CodeOutputProjectSettings = codeOutputProjectSettings;
+        context.ResolvedSyntaxVersion = ResolveSyntaxVersion(codeOutputProjectSettings);
         var stringBuilder = context.StringBuilder;
 
         FillWithInstanceDeclaration(context);
@@ -3502,6 +3555,7 @@ public class CodeGenerator
 
         var context = new CodeGenerationContext(_codeGenerationNameVerifier, container);
         context.CodeOutputProjectSettings = codeOutputProjectSettings;
+        context.ResolvedSyntaxVersion = ResolveSyntaxVersion(codeOutputProjectSettings);
 
 
         FillWithVariablesInState(stateSave, stringBuilder, 0, context);

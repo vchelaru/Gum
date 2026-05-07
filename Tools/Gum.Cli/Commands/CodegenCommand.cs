@@ -105,8 +105,11 @@ public static class CodegenCommand
         var codeGenNameVerifier = new CodeGenerationNameVerifier(nameVerifier);
         var elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         var localizationService = new Gum.Localization.LocalizationService();
+        var syntaxVersionDetectionService = new SyntaxVersionDetectionService(logger);
         var codeGenerator = new CodeGenerator(
-            codeGenNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider);
+            codeGenNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider,
+            typeStringResolver: null,
+            syntaxVersionDetectionService: syntaxVersionDetectionService);
 
         var customCodeGenerator = new CustomCodeGenerator(codeGenerator, codeGenNameVerifier);
         var fileLocationsService = new CodeGenerationFileLocationsService(

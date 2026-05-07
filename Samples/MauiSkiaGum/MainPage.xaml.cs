@@ -1,6 +1,6 @@
 ﻿using MauiSkiaGum.Components;
 using SkiaGum.Content;
-using SkiaGum.GueDeriving;
+using Gum.GueDeriving;
 using SkiaGum.Maui;
 using SkiaSharp;
 

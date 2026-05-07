@@ -12,7 +12,7 @@ Custom properties are typically added to views to control additional visuals. Fo
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Microsoft.Xna.Framework;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using System;
 
 namespace MonoGameAndGum;

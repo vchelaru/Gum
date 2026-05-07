@@ -2,7 +2,11 @@
 using SkiaGum.Renderables;
 using SkiaSharp;
 
+#if FRB
 namespace SkiaGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 
 public class LineGridRuntime: SkiaShapeRuntime

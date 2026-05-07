@@ -87,13 +87,15 @@ namespace Gum.ProjectServices.CodeGeneration
             string inheritance = string.Empty;
             
             
+            int resolvedSyntaxVersion = _codeGenerator.ResolveSyntaxVersion(projectSettings);
             if(projectSettings.InheritanceLocation == InheritanceLocation.InCustomCode)
             {
-                inheritance = CodeGenerator.GetInheritance(element, projectSettings) ?? string.Empty;
+                inheritance = CodeGenerator.GetInheritance(element, projectSettings, resolvedSyntaxVersion) ?? string.Empty;
             }
 
             var context = new CodeGenerationContext(_nameVerifier, element);
             context.CodeOutputProjectSettings = projectSettings;
+            context.ResolvedSyntaxVersion = resolvedSyntaxVersion;
 
             // intentionally do not include "public" or "internal" so the user can customize this as desired
             // https://github.com/vchelaru/Gum/issues/581

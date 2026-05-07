@@ -7,18 +7,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
 namespace MonoGameGum.GueDeriving
+#else
+namespace Gum.GueDeriving
+#endif
 {
     public class RectangleRuntime : GraphicalUiElement
     {
-        RenderingLibrary.Math.Geometry.LineRectangle containedLineRectangle;
-        RenderingLibrary.Math.Geometry.LineRectangle ContainedLineRectangle
+        global::RenderingLibrary.Math.Geometry.LineRectangle containedLineRectangle;
+        global::RenderingLibrary.Math.Geometry.LineRectangle ContainedLineRectangle
         {
             get
             {
                 if (containedLineRectangle == null)
                 {
-                    containedLineRectangle = this.RenderableComponent as RenderingLibrary.Math.Geometry.LineRectangle;
+                    containedLineRectangle = this.RenderableComponent as global::RenderingLibrary.Math.Geometry.LineRectangle;
                 }
                 return containedLineRectangle;
             }
@@ -105,11 +109,11 @@ namespace MonoGameGum.GueDeriving
         {
             get
             {
-                return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedLineRectangle.Color);
+                return global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedLineRectangle.Color);
             }
             set
             {
-                ContainedLineRectangle.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+                ContainedLineRectangle.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
                 NotifyPropertyChanged();
             }
         }
@@ -122,7 +126,7 @@ namespace MonoGameGum.GueDeriving
         {
             if (fullInstantiation)
             {
-                var rectangle = new RenderingLibrary.Math.Geometry.LineRectangle(systemManagers);
+                var rectangle = new global::RenderingLibrary.Math.Geometry.LineRectangle(systemManagers);
                 SetContainedObject(rectangle);
                 containedLineRectangle = rectangle;
 

@@ -1,4 +1,4 @@
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using Moq;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;

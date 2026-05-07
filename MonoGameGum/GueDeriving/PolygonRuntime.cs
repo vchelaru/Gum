@@ -8,21 +8,25 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
 namespace MonoGameGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 /// <summary>
 /// A visual polygon element which can display any arbitrary convex or concave shape.
 /// </summary>
 public class PolygonRuntime : InteractiveGue
 {
-    RenderingLibrary.Math.Geometry.LinePolygon containedPolygon;
-    RenderingLibrary.Math.Geometry.LinePolygon ContainedPolygon
+    global::RenderingLibrary.Math.Geometry.LinePolygon containedPolygon;
+    global::RenderingLibrary.Math.Geometry.LinePolygon ContainedPolygon
     {
         get
         {
             if (containedPolygon == null)
             {
-                containedPolygon = this.RenderableComponent as RenderingLibrary.Math.Geometry.LinePolygon;
+                containedPolygon = this.RenderableComponent as global::RenderingLibrary.Math.Geometry.LinePolygon;
             }
             return containedPolygon;
         }
@@ -107,11 +111,11 @@ public class PolygonRuntime : InteractiveGue
     {
         get
         {
-            return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedPolygon.Color);
+            return global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedPolygon.Color);
         }
         set
         {
-            ContainedPolygon.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            ContainedPolygon.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
             NotifyPropertyChanged();
         }
     }
@@ -120,7 +124,7 @@ public class PolygonRuntime : InteractiveGue
     {
         if (fullInstantiation)
         {
-            var polygon = new RenderingLibrary.Math.Geometry.LinePolygon(systemManagers ?? SystemManagers.Default);
+            var polygon = new global::RenderingLibrary.Math.Geometry.LinePolygon(systemManagers ?? SystemManagers.Default);
             SetContainedObject(polygon);
             containedPolygon = polygon;
 

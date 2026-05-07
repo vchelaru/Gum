@@ -13,7 +13,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
 namespace MonoGameGum.GueDeriving
+#else
+namespace Gum.GueDeriving
+#endif
 {
     public class NineSliceRuntime : InteractiveGue
     {
@@ -127,11 +131,11 @@ namespace MonoGameGum.GueDeriving
         {
             get
             {
-                return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedNineSlice.Color);
+                return global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedNineSlice.Color);
             }
             set
             {
-                ContainedNineSlice.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+                ContainedNineSlice.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
                 NotifyPropertyChanged();
             }
         }

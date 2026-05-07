@@ -21,7 +21,7 @@ The detected version is displayed in the Code tab under "Project-Wide Code Gener
 | Version | Introduced | Changes |
 |---|---|---|
 | 0 | 2026.4.x | Baseline. Attribute system introduced. No breaking changes from prior releases. All existing namespace conventions are preserved. |
-| 1 | TBD | Runtime class namespace unification (non-breaking). Runtime classes like `TextRuntime`, `SpriteRuntime`, etc. become available in a unified namespace. Old namespaces continue to work via compatibility shims marked `[Obsolete]`. |
+| 1 | 2026.5.x | Runtime class namespace unification (non-breaking). Runtime classes like `TextRuntime`, `SpriteRuntime`, etc. move to the unified `Gum.GueDeriving` namespace. Old namespaces (`MonoGameGum.GueDeriving`, `SkiaGum.GueDeriving`) continue to work via compatibility shims marked `[Obsolete]`. See [Syntax Version 1](syntax-version-1.md) for details. |
 | 2 | TBD | Layout enum namespace unification (breaking). Enums like `DimensionUnitType`, `ChildrenLayout`, `HorizontalAlignment`, etc. move to a unified namespace. The bundled Roslyn analyzer provides one-click migration. |
 
 When a new syntax version is introduced, the corresponding monthly migration page will document the specific changes. See the [runtime refactoring plan](../../contributing/runtime-refactoring.md) for full details.

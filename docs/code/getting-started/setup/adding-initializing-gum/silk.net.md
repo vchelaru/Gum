@@ -49,7 +49,7 @@ Gum requires SkiaSharp to render in Silk.NET. A full Silk.NET project requires a
 using SkiaSharp;
 using RenderingLibrary;
 using Gum.Wireframe;
-using SkiaGum.GueDeriving;
+using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
 using SkiaGum;
 using SilkNetGum.Screens;

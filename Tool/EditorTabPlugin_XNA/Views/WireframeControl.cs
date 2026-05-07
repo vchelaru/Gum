@@ -10,7 +10,7 @@ using Gum.ToolCommands;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;

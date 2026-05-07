@@ -48,7 +48,7 @@ label.Visual.Width = 300;
 label.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 label.Visual.Height = 100;
 label.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-var textRuntime = (MonoGameGum.GueDeriving.TextRuntime)label.TextComponent;
+var textRuntime = (Gum.GueDeriving.TextRuntime)label.TextComponent;
 textRuntime.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center;
 textRuntime.VerticalAlignment = RenderingLibrary.Graphics.VerticalAlignment.Center;
 ```

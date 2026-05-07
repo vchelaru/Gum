@@ -6,10 +6,18 @@ using RenderingLibrary.Graphics;
 #if SKIA
 using SkiaGum.Renderables;
 using SkiaSharp;
-namespace SkiaGum.GueDeriving;
 #else
 using MonoGameAndGum.Renderables;
+#endif
+
+#if FRB
+#if SKIA
+namespace SkiaGum.GueDeriving;
+#else
 namespace MonoGameGum.GueDeriving;
+#endif
+#else
+namespace Gum.GueDeriving;
 #endif
 
 /// <summary>

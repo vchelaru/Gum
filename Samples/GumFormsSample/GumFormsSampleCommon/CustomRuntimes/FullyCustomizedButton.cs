@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Gum.Forms.Controls;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
 
 namespace GumFormsSample

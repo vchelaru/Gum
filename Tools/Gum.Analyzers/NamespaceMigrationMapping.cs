@@ -27,13 +27,43 @@ internal static class NamespaceMigrationMapping
 {
     /// <summary>
     /// All known type migrations. Each entry maps an old (namespace, type) pair to a new namespace.
-    /// This table is empty during Phase 1 — entries will be added in Phase 2 when enums are moved.
+    /// Entries are added when types move; the analyzer reads from this table to raise <c>GUM001</c>
+    /// and the code fix uses it to rewrite <c>using</c> directives.
     /// </summary>
     public static readonly ImmutableArray<TypeMigration> Migrations = ImmutableArray.Create<TypeMigration>(
-        // Phase 2 entries will look like:
-        // new TypeMigration("Gum.DataTypes", "Gum.Layout", "DimensionUnitType"),
-        // new TypeMigration("Gum.Managers", "Gum.Layout", "ChildrenLayout"),
-        // new TypeMigration("RenderingLibrary.Graphics", "Gum.Layout", "HorizontalAlignment"),
+        // Runtime namespace unification (syntax version 1):
+        // MonoGameGum.GueDeriving → Gum.GueDeriving
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "TextRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "ContainerRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "SpriteRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "ColoredRectangleRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "NineSliceRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "CircleRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "PolygonRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "RectangleRuntime"),
+        // Apos shapes (also previously MonoGameGum.GueDeriving)
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "AposShapeRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "ArcRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "ColoredCircleRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "LineRuntime"),
+        new TypeMigration("MonoGameGum.GueDeriving", "Gum.GueDeriving", "RoundedRectangleRuntime"),
+        // SkiaGum.GueDeriving → Gum.GueDeriving (Skia-only types)
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "ArcRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "CircleRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "ColoredCircleRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "LineGridRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "LineRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "LottieAnimationRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "PolygonRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "RoundedRectangleRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "SkiaShapeRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "SolidRectangleRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "SvgRuntime"),
+        // SkiaGum-side shims for shared types (Text, Container, Sprite, ColoredRectangle)
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "TextRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "ContainerRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "SpriteRuntime"),
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "ColoredRectangleRuntime")
     );
 
     /// <summary>

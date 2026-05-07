@@ -4,7 +4,7 @@ using Gum.Localization;
 using Gum.Mvvm;
 using Gum.Wireframe;
 using MonoGameGum.Forms.DefaultVisuals;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using Moq;
 using Shouldly;
 using System;

@@ -1,5 +1,5 @@
 using Gum.Wireframe;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using Moq;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;

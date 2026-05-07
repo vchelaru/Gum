@@ -13,16 +13,19 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if XNALIKE
-using BlendState = Microsoft.Xna.Framework.Graphics.BlendState;
+using BlendStateAlias = global::Microsoft.Xna.Framework.Graphics.BlendState;
+#elif RAYLIB || SOKOL
+using BlendStateAlias = global::Gum.BlendState;
+#elif SKIA
+// SkiaGum has no BlendState property on ContainerRuntime
+#else
+using BlendStateAlias = global::Gum.BlendState;
 #endif
 
-#if RAYLIB || SOKOL
-using BlendState = Gum.BlendState;
-namespace Gum.GueDeriving;
-#elif SKIA
-namespace SkiaGum.GueDeriving;
-#else
+#if FRB
 namespace MonoGameGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
 #endif
 
 
@@ -54,7 +57,7 @@ public class ContainerRuntime : InteractiveGue
 
 
 #if !SKIA && !SOKOL
-    public BlendState BlendState
+    public BlendStateAlias BlendState
     {
 #if XNALIKE
         get => RenderableComponent.BlendState.ToXNA();

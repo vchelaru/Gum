@@ -107,7 +107,7 @@ For more details see the [Runtime Generation Details](runtime-generation-details
 Add the following using statement at the end of the Project-wide Using Statement box so that references to standard runtime types are found.
 
 ```csharp
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 ```
 
 If you plan on creating Screens, you should also add using statements for your component runtimes

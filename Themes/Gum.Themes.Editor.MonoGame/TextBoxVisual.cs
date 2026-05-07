@@ -1,7 +1,7 @@
 using BaseTextBoxVisual = Gum.Forms.DefaultVisuals.V3.TextBoxVisual;
 using Gum.Forms.DefaultVisuals.V3;
 using Microsoft.Xna.Framework;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 
 namespace Gum.Themes.Editor;
 

@@ -1,7 +1,7 @@
 using Gum.DataTypes;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using Shouldly;
 using System.Text.Json;
 using Xunit;

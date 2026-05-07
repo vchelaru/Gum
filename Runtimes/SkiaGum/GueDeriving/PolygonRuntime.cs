@@ -4,7 +4,11 @@ using SkiaGum.Renderables;
 using SkiaSharp;
 using System.Collections.Generic;
 
+#if FRB
 namespace SkiaGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 public class PolygonRuntime : SkiaShapeRuntime
 {

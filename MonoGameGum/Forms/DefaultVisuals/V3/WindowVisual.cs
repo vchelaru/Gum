@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 #if XNALIKE
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 #else
 using Gum.GueDeriving;

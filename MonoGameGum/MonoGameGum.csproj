@@ -182,7 +182,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
-		<ProjectReference Include="..\Tools\Gum.Analyzers\Gum.Analyzers.csproj" Condition="'$(IncludeAnalyzers)' == 'true'" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\Tools\Gum.Analyzers\Gum.Analyzers.csproj" Condition="'$(IncludeAnalyzers)' != 'false'" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 	<ItemGroup>

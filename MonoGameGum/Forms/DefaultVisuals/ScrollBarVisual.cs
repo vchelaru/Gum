@@ -15,7 +15,7 @@ using Gum.DataTypes;
 #if XNALIKE
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 #else
 using Gum.GueDeriving;
 #endif

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if XNALIKE
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 #else
 using Gum.GueDeriving;
 #endif

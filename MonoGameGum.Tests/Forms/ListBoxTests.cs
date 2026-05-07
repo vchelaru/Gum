@@ -2,7 +2,7 @@
 using Gum.Forms.DefaultVisuals;
 using Gum.Wireframe;
 using MonoGameGum.Forms.DefaultVisuals;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using MonoGameGum.Input;
 using Moq;
 using RenderingLibrary;

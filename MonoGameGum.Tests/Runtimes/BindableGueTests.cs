@@ -1,7 +1,7 @@
 ﻿using Gum.Mvvm;
 using Gum.Wireframe;
 using MonoGameGum.Forms;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
