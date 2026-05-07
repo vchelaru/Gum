@@ -1,6 +1,6 @@
 ---
 name: gum-forms-controls
-description: Reference guide for Forms controls — classes inheriting from FrameworkElement. Load this when working on Button, CheckBox, ListBox, ComboBox, TextBox, ScrollViewer, or any class in Gum.Forms.Controls (or FlatRedBall.Forms.Controls). Also load when working on FrameworkElement itself, the Visual/InteractiveGue relationship, state machines, DefaultVisuals, or ReactToVisualChanged.
+description: Forms controls (FrameworkElement subclasses). Triggers: Button, CheckBox, ListBox, ComboBox, TextBox, ScrollViewer, anything in Gum.Forms.Controls or FlatRedBall.Forms.Controls, FrameworkElement itself, the Visual/InteractiveGue relationship, state machines, DefaultVisuals, ReactToVisualChanged.
 ---
 
 # Gum Forms Controls Reference

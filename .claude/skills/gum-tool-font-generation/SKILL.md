@@ -1,6 +1,6 @@
 ---
 name: gum-tool-font-generation
-description: Reference guide for Gum's bitmap font generation pipeline — how the tool converts font properties into .fnt/.png files via bmfont.exe. Load this when working on BmfcSave, HeadlessFontGenerationService, FontManager, BmfcTemplate.bmfc, font cache naming, texture size estimation, or the GumProjectFontGenerator CLI.
+description: Gum bitmap font generation — tool converts font properties into .fnt/.png via bmfont.exe. Triggers: BmfcSave, HeadlessFontGenerationService, FontManager, BmfcTemplate.bmfc, font cache naming, texture size estimation, GumProjectFontGenerator CLI.
 ---
 
 # Font Generation Pipeline

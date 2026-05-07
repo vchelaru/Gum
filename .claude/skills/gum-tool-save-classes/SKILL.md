@@ -1,6 +1,6 @@
 ---
 name: gum-tool-save-classes
-description: Reference guide for Gum's save/load data model. Load this when working with GumProjectSave, ScreenSave, ComponentSave, StandardElementSave, ElementSave, StateSave, VariableSave, InstanceSave, BehaviorSave, or any serialization/deserialization of Gum project files.
+description: Gum save/load data model. Triggers: GumProjectSave, ScreenSave, ComponentSave, StandardElementSave, ElementSave, StateSave, VariableSave, InstanceSave, BehaviorSave, project file (de)serialization.
 ---
 
 # Gum Save/Load Data Model Reference

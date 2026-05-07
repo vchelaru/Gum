@@ -1,6 +1,6 @@
 ---
 name: gum-tool-plugins
-description: Reference guide for the Gum tool's plugin system, including visualization plugins (EditorTabPlugin_XNA, TextureCoordinateSelectionPlugin). Load this when working on plugin registration, PluginBase, PriorityPlugin, PluginManager, plugin events, visualization/rendering concerns, or finding which internal plugin owns a feature.
+description: Gum tool plugin system, including visualization plugins (EditorTabPlugin_XNA, TextureCoordinateSelectionPlugin). Triggers: plugin registration, PluginBase, PriorityPlugin, PluginManager, plugin events, finding which internal plugin owns a feature.
 ---
 
 # Gum Tool Plugin System Reference

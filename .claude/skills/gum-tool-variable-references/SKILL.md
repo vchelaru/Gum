@@ -1,6 +1,6 @@
 ---
 name: gum-tool-variable-references
-description: Reference guide for Gum's variable reference system — Excel-like cross-instance/cross-element variable binding using Roslyn-parsed assignment syntax. Load this when working on VariableReferenceLogic, EvaluatedSyntax, ApplyVariableReferences, VariableChangedThroughReference, or the VariableReferences VariableListSave.
+description: Gum variable references — Excel-like cross-instance/cross-element binding via Roslyn-parsed assignments. Triggers: VariableReferenceLogic, EvaluatedSyntax, ApplyVariableReferences, VariableChangedThroughReference, VariableReferences VariableListSave.
 ---
 
 # Variable References

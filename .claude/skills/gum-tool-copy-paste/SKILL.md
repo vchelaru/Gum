@@ -1,6 +1,6 @@
 ---
 name: gum-tool-copy-paste
-description: Reference guide for Gum's copy/paste system. Load this when working on CopyPasteLogic, ICopyPasteLogic, OnCopy, OnPaste, OnCut, PasteInstanceSaves, CopiedData, clipboard behavior, or multi-paste selection tracking.
+description: Gum copy/paste. Triggers: CopyPasteLogic, ICopyPasteLogic, OnCopy/OnPaste/OnCut, PasteInstanceSaves, CopiedData, clipboard behavior, multi-paste selection tracking.
 ---
 
 # Gum Copy/Paste Reference

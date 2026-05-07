@@ -1,6 +1,6 @@
 ---
 name: gum-unit-tests
-description: Reference guide for writing unit tests in the Gum repository. Load this when writing or modifying tests in Gum.ProjectServices.Tests, Gum.Cli.Tests, or any other Gum test project.
+description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectServices.Tests, Gum.Cli.Tests, or any other Gum test project.
 ---
 
 # Gum Unit Test Reference

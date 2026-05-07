@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: "Test-first discipline for Gum. Triggers whenever editing any source file under GumCommon/, Gum/, MonoGameGum/, RenderingLibrary/, KniGum/, FnaGum/, SkiaGum/, RaylibGum/, or Tools/Gum.ProjectServices/ for a behavior change (bug fix or new feature). Not for docs, renames, csproj/projitems plumbing, or style-only edits."
+description: "Test-first discipline for Gum. Triggers: behavior changes (bug fix or feature) under GumCommon/, Gum/, MonoGameGum/, RenderingLibrary/, KniGum/, FnaGum/, SkiaGum/, RaylibGum/, Tools/Gum.ProjectServices/. Skip for docs, renames, csproj/projitems plumbing, style-only edits."
 ---
 
 # Behavior changes require a failing test first

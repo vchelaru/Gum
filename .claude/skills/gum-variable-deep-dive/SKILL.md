@@ -1,10 +1,6 @@
 ---
 name: gum-variable-deep-dive
-description: >
-  Deep dive into the full variable lifecycle — from VariableSave on ElementSave through
-  runtime application on GraphicalUiElement and Forms controls. Load this when working on
-  styling, theming, RefreshStyles, or when you need to understand how variable values flow
-  from save data to live visuals.
+description: Full variable lifecycle — VariableSave on ElementSave through runtime application on GraphicalUiElement and Forms controls. Triggers: styling, theming, RefreshStyles, value flow from save data to live visuals.
 ---
 
 # Variable Lifecycle Deep Dive

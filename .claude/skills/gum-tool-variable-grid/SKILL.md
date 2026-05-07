@@ -1,6 +1,6 @@
 ---
 name: gum-tool-variable-grid
-description: Reference guide for Gum's Variables tab and DataUiGrid system. Load this when working on the Variables tab, DataUiGrid control, MemberCategory, InstanceMember, category population, property grid refresh, or category expansion state persistence.
+description: Gum Variables tab and DataUiGrid. Triggers: Variables tab, DataUiGrid control, MemberCategory, InstanceMember, category population, property grid refresh, expansion state persistence.
 ---
 
 # Gum Variables Tab & DataUiGrid Reference

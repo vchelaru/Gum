@@ -1,6 +1,6 @@
 ---
 name: gum-forms-behaviors
-description: Covers Gum's behaviors system and the design-time → runtime Forms wrapping lifecycle. Load this when working on BehaviorSave, ElementBehaviorReference, StandardFormsBehaviorNames, FormsUtilities.RegisterFromFileFormRuntimeDefaults, DefaultFromFileXxxRuntime classes, or when investigating why Forms properties cannot be set at design time in the Gum tool.
+description: Gum's behaviors system and the design-time → runtime Forms wrapping lifecycle. Triggers: BehaviorSave, ElementBehaviorReference, StandardFormsBehaviorNames, FormsUtilities.RegisterFromFileFormRuntimeDefaults, DefaultFromFile*Runtime classes, Forms properties not settable at design time.
 ---
 
 # Gum Forms Behaviors

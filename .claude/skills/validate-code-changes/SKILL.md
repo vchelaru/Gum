@@ -1,6 +1,6 @@
 ---
 name: validate-code-changes
-description: Validate all code changes on the current branch. Spawns QA and refactoring agents in parallel to review for correctness, edge cases, code quality, and pattern adherence. Use when ready to review branch changes before merging.
+description: Validate code changes on the current branch — spawns QA + refactoring agents in parallel to check correctness, edge cases, quality. Use before merging.
 disable-model-invocation: true
 ---
 

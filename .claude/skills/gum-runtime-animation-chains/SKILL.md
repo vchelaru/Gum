@@ -1,6 +1,6 @@
 ---
 name: gum-runtime-animation-chains
-description: Reference guide for AnimationChain playback on Sprites and NineSlices — the .achx → AnimationChain pipeline, SpriteAnimationLogic tick loop, the apply-frame vs render-time split, and the RelativeX/Y anchor mismatch with FRB AnimationEditor. Load when working on .achx files, AnimationChain, AnimationFrame, AnimationChainList, SpriteAnimationLogic, ApplyAnimationFrame, RelativeX/Y offsets, CurrentChainName, or animation playback in Sprite / NineSlice.
+description: AnimationChain playback on Sprites and NineSlices — .achx -> AnimationChain pipeline, SpriteAnimationLogic tick loop, apply-frame vs render-time split, RelativeX/Y mismatch with FRB AnimationEditor. Triggers: .achx, AnimationChain, AnimationFrame, AnimationChainList, SpriteAnimationLogic, ApplyAnimationFrame, RelativeX/Y offsets, CurrentChainName.
 ---
 
 # Runtime Animation Chains

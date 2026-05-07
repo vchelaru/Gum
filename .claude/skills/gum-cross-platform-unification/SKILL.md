@@ -1,6 +1,6 @@
 ---
 name: gum-cross-platform-unification
-description: Rules for unifying per-platform runtime files (MonoGame/Raylib/Skia/KNI/FNA, plus the Apos.Shapes ↔ SkiaGum shape-runtime pair under MonoGameGumShapes/KniGumShapes/SkiaGum) into a single source with #if directives. Load this when consolidating duplicate Runtime classes (SpriteRuntime, NineSliceRuntime, RoundedRectangleRuntime, ColoredCircleRuntime, etc.) into MonoGameGum/GueDeriving/*.cs (or SkiaGum/GueDeriving/*.cs for the Apos↔Skia pair) and linking them into the per-backend csprojs.
+description: Unifying per-platform runtime files (MonoGame/Raylib/Skia/KNI/FNA, plus the Apos.Shapes ↔ SkiaGum shape-runtime pair) into one source with #if directives. Triggers: consolidating duplicate Runtime classes (SpriteRuntime, NineSliceRuntime, RoundedRectangleRuntime, ColoredCircleRuntime…) into MonoGameGum/GueDeriving or SkiaGum/GueDeriving and linking into per-backend csprojs.
 ---
 
 # Gum Cross-Platform Runtime Unification

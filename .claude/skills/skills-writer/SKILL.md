@@ -1,6 +1,6 @@
 ---
 name: skills-writer
-description: Creates and updates skill files (.claude/skills/*/SKILL.md) by reading source code and condensing knowledge into concise reference guides. Use when asked to create a new skill, update an existing skill, or document a subsystem for Claude Code agent context.
+description: Creates and updates skill files (.claude/skills/*/SKILL.md). Triggers: creating/updating a skill, documenting a subsystem for agent context.
 ---
 
 # Skills Writer
@@ -30,9 +30,34 @@ A skill earns its place by covering what these sources *don't*: internal archite
 
 - **Length**: aim under 100 lines. Hard ceiling 500. Bloat costs agent context on every load.
 - **Naming**: kebab-case noun phrases (e.g., `gum-tool-undo`).
-- **Frontmatter**: `name` and `description` (third person, specific — state what the skill covers *and* when to load it).
+- **Frontmatter**: `name` and `description`. **The description is loaded into every session's skill listing** — it pays for itself in context tokens forever. Keep it brutally short. See "Writing the description" below.
 - **Structure**: `##` sections. Tables for file maps. Prose for relationships and gotchas.
 - **Progressive disclosure**: keep SKILL.md to high-level architecture; spill advanced content into sibling files (e.g., `[xnafiddle.md](xnafiddle.md)`) only when it's bulky enough to justify a second file.
+
+## Writing the description
+
+The description's **only job** is to tell future-Claude *when this skill is relevant*. It is a trigger, not a summary.
+
+**Hard rules:**
+- **One sentence. Under ~250 chars.** Ideally under 200. The skill body covers the rest.
+- **Drop boilerplate.** No "Reference guide for…", no "Load this when working on…", no "Covers Gum's…". The fact that this is a skill is implicit — these phrases are dead weight on every entry.
+- **Lead with the topic, then trigger identifiers.** Format: `<Topic> — <one-line hook>. Triggers: <distinctive identifiers, file paths, or scenarios>.`
+- **Pick the 3–8 most distinctive triggers, not all of them.** Generic words ("file", "system", "behavior") don't help; specific class names, file paths, and method names do. The rest belong inside the file.
+- **No multi-line YAML (`description: >`).** Keep it on one line. It folds anyway, and one line is easier to scan when auditing.
+
+**Example.** Same triggers, ~40% fewer tokens:
+
+Good:
+```
+description: Gum's undo/redo. Triggers: History tab, UndoManager, UndoPlugin, UndoSnapshot, stale references after undo.
+```
+
+Bad (boilerplate, padded):
+```
+description: Reference guide for Gum's undo/redo system. Load this when working on undo/redo behavior, the History tab, UndoManager, UndoPlugin, UndoSnapshot, or stale reference issues after undo.
+```
+
+Multiply by every skill, every session. It adds up.
 
 ## Include
 

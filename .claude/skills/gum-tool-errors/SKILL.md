@@ -1,6 +1,6 @@
 ---
 name: gum-tool-errors
-description: Reference guide for Gum's error detection and display system. Load this when working on the Errors tab, error icons ("!" mark) in the tree view, ErrorChecker, ErrorViewModel, IErrorChecker, AllErrorsViewModel, MainErrorsPlugin, RequestErrorRefreshMessage, or adding new error checks.
+description: Gum error detection/display. Triggers: Errors tab, '!' icons in tree view, ErrorChecker, ErrorViewModel, IErrorChecker, AllErrorsViewModel, MainErrorsPlugin, RequestErrorRefreshMessage, adding new error checks.
 ---
 
 # Gum Tool Error System Reference

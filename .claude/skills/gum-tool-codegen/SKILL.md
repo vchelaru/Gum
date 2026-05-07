@@ -1,6 +1,6 @@
 ---
 name: gum-tool-codegen
-description: Reference guide for the Gum tool's C# code generation system. Load this when working on CodeGenerator, CodeOutputPlugin, generated code structure, .codsj settings, OutputLibrary selection, Forms codegen, state generation, or the tool-side code generation pipeline. For CLI/headless codegen, see the gum-cli skill instead.
+description: Gum tool C# code generation. Triggers: CodeGenerator, CodeOutputPlugin, generated code structure, .codsj settings, OutputLibrary selection, Forms codegen, state generation. For CLI/headless codegen see gum-cli.
 ---
 
 # Gum Tool Code Generation System

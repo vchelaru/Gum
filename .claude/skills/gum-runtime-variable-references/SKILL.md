@@ -1,5 +1,6 @@
 ---
-description: Reference guide for runtime variable reference propagation and the optional Gum.Expressions NuGet. Load this when working on ApplyAllVariableReferences, GumExpressionService, runtime styling/theming, or the GumExpressions project.
+name: gum-runtime-variable-references
+description: Runtime variable reference propagation and the optional Gum.Expressions NuGet. Triggers: ApplyAllVariableReferences, GumExpressionService, runtime styling/theming, GumExpressions project.
 ---
 
 # Runtime Variable References

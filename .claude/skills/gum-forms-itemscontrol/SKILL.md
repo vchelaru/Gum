@@ -1,6 +1,6 @@
 ---
 name: gum-forms-itemscontrol
-description: Reference guide for ItemsControl and ListBox — the Items/ListBoxItems relationship, templates, InnerPanel sync, and gotchas. Load this when working on ItemsControl, ListBox, ListBoxItem, VisualTemplate, FrameworkElementTemplate, Items collection behavior, ListBoxItems desync, or adding/removing items from a list box.
+description: ItemsControl and ListBox — Items/ListBoxItems relationship, templates, InnerPanel sync. Triggers: ItemsControl, ListBox, ListBoxItem, VisualTemplate, FrameworkElementTemplate, Items collection, ListBoxItems desync, list box item add/remove.
 ---
 
 # ItemsControl and ListBox Reference
