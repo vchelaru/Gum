@@ -1,6 +1,6 @@
 ---
 name: gum-tool-viewmodels
-description: Reference guide for Gum tool ViewModel conventions. Load this when working on ViewModels, XAML views, data binding, DependsOn, or visibility properties in the Gum tool.
+description: Gum tool ViewModel conventions. Triggers: ViewModels, XAML views, data binding, DependsOn, visibility properties.
 ---
 
 # Gum Tool ViewModel Conventions

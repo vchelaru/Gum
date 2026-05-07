@@ -1,6 +1,6 @@
 ---
 name: gum-tool-tree-view
-description: Reference guide for Gum's main element tree view (the left-hand panel showing Screens / Components / Standard / Behaviors). Load this when working on tree view icons, the ImageList, ElementTreeViewManager, ElementTreeViewCreator, MainTreeViewPlugin, MultiSelectTreeView, or when changing how nodes are added/refreshed/themed. For the "!" error overlay logic itself, see gum-tool-errors. For tree-view selection plumbing, see gum-tool-selection.
+description: Gum main element tree view (Screens/Components/Standard/Behaviors panel). Triggers: tree view icons, ImageList, ElementTreeViewManager, ElementTreeViewCreator, MainTreeViewPlugin, MultiSelectTreeView, node add/refresh/theming. For '!' overlay see gum-tool-errors; for selection plumbing see gum-tool-selection.
 ---
 
 # Gum Tool Tree View Reference

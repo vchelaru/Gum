@@ -1,6 +1,6 @@
 ---
 name: gum-runtime-binding
-description: Reference guide for Gum's runtime data binding system — BindingContext, SetBinding on both GraphicalUiElement visuals and FrameworkElement Forms controls, binding types (string, Binding object, lambda), and how the two systems differ.
+description: Gum runtime data binding — BindingContext, SetBinding on GraphicalUiElement visuals and FrameworkElement Forms controls, binding types (string, Binding, lambda), differences between the two systems.
 ---
 
 # Gum Runtime Binding

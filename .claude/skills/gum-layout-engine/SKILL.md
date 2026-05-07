@@ -1,12 +1,6 @@
 ---
 name: gum-layout-engine
-description: >
-  Deep reference for maintainers of the Gum layout engine — the UpdateLayout
-  call chain, UpdateChildren ordering, stacking position pipeline, dirty state
-  tracking, and performance optimizations inside GraphicalUiElement.
-  Load when debugging layout performance, optimizing UpdateLayout/UpdateChildren,
-  working on RefreshParentRowColumnDimensionForThis, GetWhatToStackAfter,
-  MakeDirty, ResumeLayoutUpdateIfDirtyRecursive, or _cachedSiblingIndex.
+description: Deep internals of Gum's layout engine — UpdateLayout call chain, UpdateChildren ordering, stacking pipeline, dirty state, perf. Triggers: debugging/optimizing UpdateLayout/UpdateChildren, RefreshParentRowColumnDimensionForThis, GetWhatToStackAfter, MakeDirty, ResumeLayoutUpdateIfDirtyRecursive, _cachedSiblingIndex.
 trigger_phrase: UpdateLayout internals|UpdateChildren|GetWhatToStackAfter|RefreshParentRowColumnDimensionForThis|MakeDirty|ResumeLayoutUpdateIfDirtyRecursive|_cachedSiblingIndex|layout performance|ChildrenUpdateDepth|GetIfShouldCallUpdateOnParent|UseFixedStackChildrenSize|UpdateLayoutCallCount
 ---
 

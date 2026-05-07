@@ -1,6 +1,6 @@
 ---
 name: gum-tool-selection
-description: Reference guide for Gum's editor selection system. Load this when working on click/drag selection, the rectangle/marquee selector, input handlers (move, resize, rotate, polygon points), the IsActive flag, locked instance behavior, SelectionManager coordination, or the selection event cascade (plugin events, forced default state, tree view sync).
+description: Gum editor selection — click/drag, marquee, input handlers (move/resize/rotate/polygon points), IsActive flag, locked instances, SelectionManager coordination, selection event cascade (plugin events, forced default state, tree view sync).
 ---
 
 # Gum Editor Selection System Reference

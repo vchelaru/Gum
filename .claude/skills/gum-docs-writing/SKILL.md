@@ -1,6 +1,6 @@
 ---
 name: gum-docs-writing
-description: Reference guide for writing Gum documentation in GitBook markdown. Load when writing or editing docs/ files, adding pages to SUMMARY.md, using GitBook hints/figures, linking between pages, or adding images.
+description: Writing Gum docs in GitBook markdown. Triggers: editing docs/, SUMMARY.md, GitBook hints/figures, cross-page links, doc images.
 type: skill
 ---
 

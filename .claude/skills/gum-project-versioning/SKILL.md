@@ -1,6 +1,6 @@
 ---
 name: gum-project-versioning
-description: Reference guide for Gum's .gumx schema versioning and migration strategy. Load this when changing the shape of GumProjectSave, ElementSave, or any other serialized save class — particularly when deciding whether a change needs a version bump, when adding a backward-compat shim, or when writing XmlSerializer-aware properties that must round-trip across tool versions.
+description: Gum's .gumx schema versioning and migration strategy. Triggers: shape changes to GumProjectSave, ElementSave, or any serialized save class — version bumps, backward-compat shims, XmlSerializer-aware properties that must round-trip across tool versions.
 ---
 
 # Gum Project Versioning Reference

@@ -1,6 +1,6 @@
 ---
 name: gum-monthly-release
-description: Draft an end-of-month Gum release notes markdown file from PRs and commits since the last release. Produces a draft in /temp/ matching the established release-notes style (Breaking Changes, Biggest Changes, Gum Tool, Gum Runtimes, Tutorials and Templates, Full Changelog), with image placeholders and an open-questions block at the bottom. The user manually triggers this skill near the end of each month and iterates on the draft afterward.
+description: Drafts the end-of-month Gum release notes from PRs and commits since the last release. Outputs a draft in /temp/ matching the Breaking Changes / Biggest Changes / Gum Tool / Gum Runtimes / Tutorials and Templates / Full Changelog format with image placeholders. User-triggered near month end.
 disable-model-invocation: true
 ---
 

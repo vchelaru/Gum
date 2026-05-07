@@ -1,6 +1,6 @@
 ---
 name: gum-cli
-description: Reference guide for GumCli — the headless command-line tool for Gum projects. Load this when working on gumcli commands (new, check, codegen, codegen-init, fonts, screenshot, svg), Gum.ProjectServices, HeadlessErrorChecker, ProjectLoader, HeadlessCodeGenerationService, CodeGenerationAutoSetupService, or the FormsTemplateCreator.
+description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands (new, check, codegen, codegen-init, fonts, screenshot, svg), Gum.ProjectServices, HeadlessErrorChecker, ProjectLoader, HeadlessCodeGenerationService, CodeGenerationAutoSetupService, FormsTemplateCreator.
 ---
 
 # GumCli Reference

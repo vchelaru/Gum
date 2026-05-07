@@ -1,6 +1,6 @@
 ---
 name: gum-localization
-description: Reference guide for Gum's localization system — ILocalizationService, CSV/RESX loading in both the tool and runtime, Text vs TextNoTranslate paths, Forms control localization patterns, and gotchas.
+description: Gum's localization — ILocalizationService, CSV/RESX loading (tool + runtime), Text vs TextNoTranslate paths, Forms control localization.
 ---
 
 # Gum Localization

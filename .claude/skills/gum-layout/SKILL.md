@@ -1,12 +1,6 @@
 ---
 name: gum-layout
-description: >
-  Reference guide for Gum's layout system — dimension units, position units,
-  children layout modes, layout calculation flow, and layout suspension.
-  Load when working on Width/HeightUnits, XUnits/YUnits, stacking, wrapping,
-  auto-sizing, Anchor/Dock, or GraphicalUiElement layout logic.
-  For deep engine internals (debugging/optimizing UpdateLayout, UpdateChildren,
-  dirty state), see the gum-layout-engine skill instead.
+description: Gum's layout system — dimension units, position units, children layout modes, layout calculation flow, suspension. Triggers: Width/HeightUnits, XUnits/YUnits, stacking, wrapping, auto-sizing, Anchor/Dock, GraphicalUiElement layout logic. For engine internals see gum-layout-engine.
 trigger_phrase: layout|WidthUnits|HeightUnits|DimensionUnitType|XUnits|YUnits|ChildrenLayout|UpdateLayout|StackSpacing|WrapsChildren|Anchor|Dock|SuspendLayout|ResumeLayout|RelativeToChildren|RelativeToParent|PercentageOfParent|Ratio
 ---
 

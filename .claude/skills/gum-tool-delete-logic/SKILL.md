@@ -1,6 +1,6 @@
 ---
 name: gum-tool-delete-logic
-description: Reference guide for Gum's delete architecture. Load this when working on delete commands, IEditCommands delete methods, IDeleteLogic, DeleteLogic, DeleteOptionsWindow, HandleDeleteCommand, AskToDeleteState, AskToDeleteStateCategory, or DeleteSelection.
+description: Gum delete architecture. Triggers: delete commands, IEditCommands delete methods, IDeleteLogic, DeleteLogic, DeleteOptionsWindow, HandleDeleteCommand, AskToDeleteState, AskToDeleteStateCategory, DeleteSelection.
 ---
 
 # Gum Delete Logic Reference

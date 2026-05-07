@@ -1,6 +1,6 @@
 ---
 name: gum-tool-output
-description: Reference guide for Gum's Output tab system. Load this when working on the Output tab, IOutputManager, MainOutputViewModel, GuiCommands.PrintOutput, or adding output/error messages to the tool.
+description: Gum Output tab. Triggers: IOutputManager, MainOutputViewModel, GuiCommands.PrintOutput, adding output/error messages.
 ---
 
 # Gum Tool Output System Reference

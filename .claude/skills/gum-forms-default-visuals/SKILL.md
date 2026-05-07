@@ -1,6 +1,6 @@
 ---
 name: gum-forms-default-visuals
-description: Reference guide for Forms DefaultVisuals — the code-only visual classes that back Forms controls. Load when working on ButtonVisual, any *Visual class in DefaultVisuals/, Styling, DefaultFormsTemplates registration, or building custom code-only Forms visuals.
+description: Forms DefaultVisuals — code-only visual classes backing Forms controls. Triggers: ButtonVisual, any *Visual class in DefaultVisuals/, Styling, DefaultFormsTemplates registration, custom code-only Forms visuals.
 ---
 
 # Forms Default Visuals

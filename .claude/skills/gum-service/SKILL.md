@@ -1,6 +1,6 @@
 ---
 name: gum-service
-description: Reference guide for GumService — the runtime entry point for MonoGame/Raylib/KNI/FNA games. Load this when working on GumService initialization, Uninitialize, DeferredQueue, hot reload, or the Root/PopupRoot/ModalRoot containers.
+description: GumService — runtime entry point for MonoGame/Raylib/KNI/FNA. Triggers: GumService init, Uninitialize, DeferredQueue, hot reload, Root/PopupRoot/ModalRoot containers.
 ---
 
 # GumService Reference

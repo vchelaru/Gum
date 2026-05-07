@@ -1,6 +1,6 @@
 ---
 name: gum-tool-file-watch
-description: Reference guide for Gum's FileWatch system. Load this when working on file watching, external file change detection, IgnoreNextChangeUntil, FileWatchManager, FileWatchLogic, FileChangeReactionLogic, or reloading assets/elements when files change on disk.
+description: Gum FileWatch system. Triggers: external file change detection, IgnoreNextChangeUntil, FileWatchManager, FileWatchLogic, FileChangeReactionLogic, reloading assets/elements when files change on disk.
 ---
 
 # Gum Tool File Watch System Reference

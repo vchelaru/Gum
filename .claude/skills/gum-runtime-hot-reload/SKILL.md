@@ -1,6 +1,6 @@
 ---
 name: gum-runtime-hot-reload
-description: Reference guide for runtime hot reload — the FileSystemWatcher-based system that rebuilds the Gum element tree at runtime when .gumx/.gusx/.gucx/.gutx/.fnt files change on disk. Load this when working on GumHotReloadManager, IGumHotReloadManager, GumService.EnableHotReload, the hot reload debounce, or font cache eviction during reload.
+description: Runtime hot reload — FileSystemWatcher rebuilds the Gum element tree when .gumx/.gusx/.gucx/.gutx/.fnt files change. Triggers: GumHotReloadManager, IGumHotReloadManager, GumService.EnableHotReload, debounce, font cache eviction during reload.
 ---
 
 # Runtime Hot Reload Reference

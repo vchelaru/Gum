@@ -1,6 +1,6 @@
 ---
 name: gum-tool-dialogs
-description: Reference guide for Gum's dialog/popup systems. Load this when working on dialog windows, DialogService, DialogWindow, DeleteOptionsWindow, dialog scrolling, dialog layout, or adding new dialog types.
+description: Gum dialog/popup systems. Triggers: DialogService, DialogWindow, DeleteOptionsWindow, dialog scrolling/layout, adding new dialog types.
 ---
 
 # Gum Dialog Systems Reference

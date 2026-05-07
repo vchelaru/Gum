@@ -1,6 +1,6 @@
 ---
 name: gum-runtime-fonts
-description: Reference guide for Gum's runtime font loading system in MonoGame/KNI — the three font loading paths (custom font, font-property cache lookup, in-memory generation), the lookup cascade, FontCache naming, and common gotchas. Load when working on TextRuntime font properties, BitmapFont loading, CustomSetPropertyOnRenderable.UpdateToFontValues, IInMemoryFontCreator, or font-related documentation.
+description: Gum runtime font loading (MonoGame/KNI) — three loading paths (custom, font-property cache, in-memory generation), lookup cascade, FontCache naming. Triggers: TextRuntime font properties, BitmapFont loading, CustomSetPropertyOnRenderable.UpdateToFontValues, IInMemoryFontCreator.
 ---
 
 # Runtime Font Loading
