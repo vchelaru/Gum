@@ -27,6 +27,7 @@ public class ImportFromGumxViewModel : DialogViewModel
     private readonly GumxDependencyResolver _dependencyResolver;
     private readonly GumxImportService _importService;
     private readonly IProjectState _projectState;
+    private readonly IDialogService _dialogService;
 
     private GumProjectSave? _sourceProject;
     private string _sourceBase = string.Empty;
@@ -152,12 +153,14 @@ public class ImportFromGumxViewModel : DialogViewModel
         GumxSourceService sourceService,
         GumxDependencyResolver dependencyResolver,
         GumxImportService importService,
-        IProjectState projectState)
+        IProjectState projectState,
+        IDialogService dialogService)
     {
         _sourceService = sourceService;
         _dependencyResolver = dependencyResolver;
         _importService = importService;
         _projectState = projectState;
+        _dialogService = dialogService;
 
         AffirmativeText = "Import";
         SourceType = SourceType.LocalFile;
@@ -192,18 +195,32 @@ public class ImportFromGumxViewModel : DialogViewModel
             var result = await _importService.ImportAsync(
                 selections, _sourceProject, _sourceBase, DestinationSubfolder);
 
+            // If conflicts came back, ask the user once how to handle the whole batch and retry.
+            if (result.ConflictingElements.Count > 0)
+            {
+                ConflictResolution? resolution = PromptConflictResolution(result.ConflictingElements);
+                if (resolution == null || resolution == ConflictResolution.Cancel)
+                {
+                    string elementList = FormatConflictList(result.ConflictingElements);
+                    _isImportComplete = true;
+                    ErrorMessage =
+                        $"Import cancelled: {result.ConflictingElements.Count} element(s) already exist " +
+                        $"in this project: {elementList}";
+                    return;
+                }
+
+                result = await _importService.ImportAsync(
+                    selections, _sourceProject, _sourceBase, DestinationSubfolder, resolution.Value);
+            }
+
             _isImportComplete = true;
 
             if (result.ConflictingElements.Count > 0)
             {
-                string elementList = string.Join(", ", result.ConflictingElements.Take(5));
-                if (result.ConflictingElements.Count > 5)
-                {
-                    elementList += $" (and {result.ConflictingElements.Count - 5} more)";
-                }
+                // Defensive: a retry pass should not produce new conflicts, but report them if it does.
                 ErrorMessage =
                     $"Import cancelled: {result.ConflictingElements.Count} element(s) already exist " +
-                    $"in this project: {elementList}";
+                    $"in this project: {FormatConflictList(result.ConflictingElements)}";
             }
             else if (result.SkippedElements.Count > 0)
             {
@@ -230,6 +247,46 @@ public class ImportFromGumxViewModel : DialogViewModel
         {
             IsLoading = false;
         }
+    }
+
+    /// <summary>
+    /// Asks the user how to handle existing destination files. Returns the chosen resolution,
+    /// or <see cref="ConflictResolution.Cancel"/> if the user dismisses the dialog.
+    /// </summary>
+    /// <remarks>Virtual so tests can override without spinning up a WPF dialog.</remarks>
+    protected internal virtual ConflictResolution? PromptConflictResolution(IReadOnlyList<string> conflictingElements)
+    {
+        string elementList = FormatConflictList(conflictingElements, max: 10);
+        string message =
+            $"The following {conflictingElements.Count} element(s) already exist in this project:\n\n" +
+            $"{elementList}\n\n" +
+            "How would you like to proceed?";
+
+        // ShowChoices<T> can't return Nullable<T> when T is a value type, so use string keys
+        // (which can come back as null on cancel) and map to the enum locally.
+        var options = new Dictionary<string, string>
+        {
+            ["skip"] = "Skip Existing",
+            ["overwrite"] = "Overwrite All",
+        };
+
+        string? key = _dialogService.ShowChoices(message, options, title: "Import Conflicts", canCancel: true);
+        return key switch
+        {
+            "skip" => ConflictResolution.Skip,
+            "overwrite" => ConflictResolution.Overwrite,
+            _ => null,
+        };
+    }
+
+    private static string FormatConflictList(IReadOnlyList<string> names, int max = 5)
+    {
+        string list = string.Join(", ", names.Take(max));
+        if (names.Count > max)
+        {
+            list += $" (and {names.Count - max} more)";
+        }
+        return list;
     }
 
     private bool CanExecuteLoadPreview() => !IsLoading && !string.IsNullOrWhiteSpace(SourcePath);

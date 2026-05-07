@@ -4,6 +4,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
+using Gum.Services.Dialogs;
 using Gum.Settings;
 using Gum.ToolStates;
 using ImportFromGumxPlugin.Services;
@@ -28,6 +29,8 @@ public class ImportFromGumxViewModelTests
 {
     private readonly ImportFromGumxViewModel _sut;
 
+    private readonly FakeDialogService _dialogService;
+
     public ImportFromGumxViewModelTests()
     {
         GumxSourceService sourceService = new GumxSourceService();
@@ -36,7 +39,8 @@ public class ImportFromGumxViewModelTests
         GumxImportService importService = new GumxImportService(
             new FakeImportLogic(), projectState, new FakeFileCommands(), sourceService);
 
-        _sut = new ImportFromGumxViewModel(sourceService, resolver, importService, projectState);
+        _dialogService = new FakeDialogService();
+        _sut = new ImportFromGumxViewModel(sourceService, resolver, importService, projectState, _dialogService);
     }
 
     [Fact]
@@ -212,6 +216,50 @@ public class ImportFromGumxViewModelTests
         secondLeaf.InclusionState.ShouldBe(InclusionState.NotIncluded);
     }
 
+    // ── conflict-resolution dialog (#2644) ────────────────────────────────
+
+    [Fact]
+    public void PromptConflictResolution_OffersSkipAndOverwriteAndAllowsCancel()
+    {
+        ConflictResolution? captured = null;
+        _dialogService.ChoiceDialogStub = vm =>
+        {
+            // Validate the options surfaced to the user — Skip and Overwrite, plus a Cancel path.
+            vm.OptionValues.Count.ShouldBe(2);
+            vm.OptionValues.ShouldContain("Skip Existing");
+            vm.OptionValues.ShouldContain("Overwrite All");
+            vm.CanCancel.ShouldBeTrue();
+            // Don't pick anything → SelectedValue is left as the default first option ("Skip Existing").
+            // To simulate "Cancel", clear the selection.
+            vm.SelectedValue = null;
+        };
+
+        captured = _sut.PromptConflictResolution(new[] { "Behaviors/Clickable", "Components/Button" });
+
+        _dialogService.ShowChoiceCallCount.ShouldBe(1);
+        captured.ShouldBeNull();
+    }
+
+    [Fact]
+    public void PromptConflictResolution_UserPicksSkip_ReturnsSkip()
+    {
+        _dialogService.ChoiceDialogStub = vm => vm.SelectedValue = "Skip Existing";
+
+        ConflictResolution? result = _sut.PromptConflictResolution(new[] { "Behaviors/Clickable" });
+
+        result.ShouldBe(ConflictResolution.Skip);
+    }
+
+    [Fact]
+    public void PromptConflictResolution_UserPicksOverwrite_ReturnsOverwrite()
+    {
+        _dialogService.ChoiceDialogStub = vm => vm.SelectedValue = "Overwrite All";
+
+        ConflictResolution? result = _sut.PromptConflictResolution(new[] { "Components/Button" });
+
+        result.ShouldBe(ConflictResolution.Overwrite);
+    }
+
     private ImportTreeNodeViewModel FindLeaf(string fullName, ElementItemType elementType)
     {
         foreach (ImportTreeNodeViewModel root in _sut.RootNodes)
@@ -238,6 +286,40 @@ public class ImportFromGumxViewModelTests
     }
 
     // ── fakes ─────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Records the last <see cref="Show{T}(Action{T}?, out T)"/> invocation. The IDialogService
+    /// extension <c>ShowChoices&lt;T&gt;</c> resolves a <see cref="ChoiceDialogViewModel"/> via this
+    /// method, so capturing here is enough to verify the conflict-resolution flow.
+    /// </summary>
+    private class FakeDialogService : IDialogService
+    {
+        public Action<ChoiceDialogViewModel>? ChoiceDialogStub { get; set; }
+        public ChoiceDialogViewModel? LastChoiceDialog { get; private set; }
+        public int ShowChoiceCallCount { get; private set; }
+
+        public MessageDialogResult ShowMessage(string message, string? title = null, MessageDialogStyle? style = null)
+            => MessageDialogResult.Canceled;
+        public bool Show<T>(T dialogViewModel) where T : DialogViewModel => false;
+        public bool Show<T>(Action<T>? initializer, out T viewModel) where T : DialogViewModel
+        {
+            // Hand-roll a ChoiceDialogViewModel since the test bypasses DI.
+            if (typeof(T) == typeof(ChoiceDialogViewModel))
+            {
+                ChoiceDialogViewModel choice = new ChoiceDialogViewModel();
+                initializer?.Invoke((T)(object)choice);
+                ChoiceDialogStub?.Invoke(choice);
+                LastChoiceDialog = choice;
+                ShowChoiceCallCount++;
+                viewModel = (T)(object)choice;
+                return false;
+            }
+            viewModel = null!;
+            return false;
+        }
+        public string? GetUserString(string message, string? title = null, GetUserStringOptions? options = null) => null;
+        public List<string>? OpenFile(OpenFileDialogOptions? options = null) => null;
+    }
 
     private class FakeImportLogic : IImportLogic
     {
