@@ -76,3 +76,33 @@ public class MyScreen
 ```
 
 The only change is the `using` directive — the class API is unchanged.
+
+## Troubleshooting
+
+### `RenderingLibrary` references stop compiling after migration
+
+If your code is declared **inside the `Gum.*` namespace tree** (for example, `namespace Gum.GueDeriving;` to add a custom runtime, or `namespace Gum.MyExtensions;` for helpers), unqualified references to the top-level `RenderingLibrary` namespace may stop resolving:
+
+```csharp
+namespace Gum.GueDeriving;
+
+public class MyCustomRuntime : ContainerRuntime
+{
+    void Setup()
+    {
+        RenderingLibrary.Camera camera; // CS0234: 'Camera' does not exist
+    }
+}
+```
+
+This happens because there is also a `Gum.RenderingLibrary` namespace (a small set of blend-related helpers), and C# searches the containing namespace chain first — so when your file is inside `Gum.*`, `Gum.RenderingLibrary` shadows the top-level `RenderingLibrary`.
+
+**Fix:** prefix the global namespace alias:
+
+```csharp
+global::RenderingLibrary.Camera camera;
+```
+
+Or move your code out of the `Gum.*` namespace tree (for example, into `MyGame.Extensions`) and import what you need with a `using` directive. That's the recommended structure for user code anyway.
+
+Most users will not encounter this — code declared in your own namespace (`MyGame`, `Acme.Game`, etc.) and importing Gum types via `using Gum.GueDeriving;` is unaffected.
