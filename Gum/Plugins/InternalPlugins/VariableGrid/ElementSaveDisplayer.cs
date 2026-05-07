@@ -600,6 +600,16 @@ public class ElementSaveDisplayer
 
             foreach (var formsProperty in behavior.FormsProperties)
             {
+                if (string.IsNullOrEmpty(formsProperty.Name))
+                {
+                    // Can occur when a project is at the legacy (v1) gumx format and the
+                    // .behx uses the v2 compact attribute form for FormsProperty entries —
+                    // VariableSave properties stay null because the legacy serializer
+                    // expects element-form children, not attributes. Skip rather than
+                    // crash; the project needs to be saved at v2 for FormsProperty to work.
+                    continue;
+                }
+
                 string variableName = instance != null
                     ? instance.Name + "." + formsProperty.Name
                     : formsProperty.Name;
