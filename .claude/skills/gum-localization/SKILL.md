@@ -15,12 +15,15 @@ Localization is opt-in via a nullable static property. When set, text assigned t
 
 **Access at runtime:** `GumService.Default.LocalizationService` forwards to the static property above.
 
+**Runtime language switching:** `ILocalizationService.CurrentLanguageChanged` fires when `CurrentLanguage` is reassigned to a different value. `GumService` subscribes and walks `Root`/`PopupRoot`/`ModalRoot` re-translating every text-bearing element that was assigned via the localized path. Manual entry point: `GumService.Default.RefreshLocalization()`. Per-element entry: `GraphicalUiElement.RefreshLocalization()` recurses into `Children`. The per-element re-translate is delegated through `GraphicalUiElement.RefreshLocalizationOnElementAction` (wired by `GumService` since `GumRuntime` cannot reference `CustomSetPropertyOnRenderable`). Originating string IDs live in a static `ConditionalWeakTable<GraphicalUiElement, string>` on `CustomSetPropertyOnRenderable`, populated whenever `TrySetPropertyOnText` runs the localization path and cleared by `SetTextNoTranslate`.
+
 ## ILocalizationService
 
-`GumCommon/Localization/ILocalizationService.cs` — five members:
+`GumCommon/Localization/ILocalizationService.cs` — six members:
 
 - `CurrentLanguage` (int) — index into the translation arrays (0 = default/source language)
 - `Languages` (`IReadOnlyList<string>`) — language names populated after loading; empty until a database is loaded
+- `CurrentLanguageChanged` (`event Action?`) — fires when `CurrentLanguage` is reassigned to a different value; subscribed by `GumService` to drive automatic re-translation of live visuals
 - `AddDatabase(Dictionary<string, string[]>, List<string>)` — loads translations; key = string ID, value = array where `[0]` is the ID and `[1..N]` are translations per language
 - `Clear()` — resets the database and Languages list
 - `Translate(string stringId)` — returns the translated string for `CurrentLanguage`
@@ -126,7 +129,7 @@ PasswordBox uses `TextNoTranslate` for mask characters (e.g., "●●●●") si
 
 1. **"(loc)" suffix is intentional** — When a database is loaded but a string ID isn't found, `Translate()` appends "(loc)". This is a debugging feature, not a bug. Empty databases return strings unchanged (no suffix).
 
-2. **Translation happens at assignment time, not read time** — The renderable stores only the final translated string. Changing `CurrentLanguage` after setting text does NOT retroactively update existing UI. You must re-assign `Text` to all controls.
+2. **Translation happens at assignment time, not read time** — The renderable stores only the final translated string. Live UI is kept in sync by a separate path: `CustomSetPropertyOnRenderable` records the original raw value in a `ConditionalWeakTable<GraphicalUiElement, string>` whenever the localized `Text` path runs, and `GumService` subscribes to `ILocalizationService.CurrentLanguageChanged` to walk the live tree and re-call `SetProperty("Text", storedKey)` on every tracked element. `SetTextNoTranslate` clears the entry, so user input and explicit literals survive language switches. Programmatic dynamic strings assigned via the localized `Text` property still get re-translated on language change and will pick up the `(loc)` suffix — use `SetTextNoTranslate` for those. Bound `Text` is overwritten by refresh; the design assumes bindings and runtime language switching aren't combined.
 
 3. **Null service = no localization** — If `LocalizationService` is null, all text passes through unchanged. This is the expected state when localization isn't needed.
 
@@ -143,14 +146,16 @@ PasswordBox uses `TextNoTranslate` for mask characters (e.g., "●●●●") si
 - `GumCommon/Localization/ILocalizationService.cs` — interface (`CurrentLanguage`, `Languages`, `AddDatabase`, `Clear`, `Translate`)
 - `GumCommon/Localization/LocalizationService.cs` — default implementation
 - `GumCommon/Localization/LocalizationServiceExtensions.cs` — CSV/RESX loaders
-- `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` — static `LocalizationService` property and translation logic in `TrySetPropertyOnText`
+- `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` — static `LocalizationService` property (with `LocalizationServiceChanged` event), `_localizationKeys` `ConditionalWeakTable`, `TryGetLocalizationKey`, and translation logic in `TrySetPropertyOnText`
 - `Gum/Commands/FileCommands.cs` — `LoadLocalizationFile()` (CSV/RESX branch, `LocalizationLoaded` event)
 - `Gum/Commands/IFileCommands.cs` — `LocalizationLoaded` event declaration
 - `Gum/Managers/FileChangeReactionLogic.cs` — `IsLocalizationFileThatShouldTriggerReload()` (list + satellite matching)
 - `Gum/Plugins/InternalPlugins/ProjectPropertiesWindowPlugin/` — Language dropdown + `LocalizationFiles` list editor UI
 - `WpfDataUi/Controls/MultiFileDisplay.xaml(.cs)` — `IDataUi` control for `List<string>` file-path lists; composes `FilePickingLogic`
 - `WpfDataUi/Controls/FilePickingLogic.cs` — shared file-dialog/relative-path plumbing (pattern like `TextBoxDisplayLogic`)
-- `MonoGameGum/GumService.cs` — runtime auto-load of `.gumx` `LocalizationFiles`; collision warnings surface on `GumLoadResult.Warnings`
+- `MonoGameGum/GumService.cs` — runtime auto-load of `.gumx` `LocalizationFiles`; collision warnings surface on `GumLoadResult.Warnings`; `RefreshLocalization()` walks the three roots; constructor wires the `RefreshLocalizationOnElementAction` delegate and subscribes to `LocalizationServiceChanged`
+- `GumRuntime/GraphicalUiElement.cs` — `RefreshLocalization()` recursion + `RefreshLocalizationOnElementAction` static delegate hook
+- `MonoGameGum.Tests/Localization/RefreshLocalizationTests.cs` — runtime language-switch tests (Forms controls, BBCode-from-translation, TextNoTranslate survival, popup/modal roots)
 - `MonoGameGum/GueDeriving/TextRuntime.cs` — `Text` property and `SetTextNoTranslate` method
 - `MonoGameGum/Forms/Controls/` — Forms control localization pattern
 - `MonoGameGum.Tests/Localization/LocalizationServiceExtensionsTests.cs` — CSV/RESX loader tests

@@ -5452,6 +5452,36 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <summary>
+    /// Optional delegate that re-translates the <c>Text</c> property on a single
+    /// element using the most recently assigned localization key, if any. Wired
+    /// by MonoGameGum since GumRuntime cannot reference
+    /// <c>CustomSetPropertyOnRenderable</c> directly. Used by
+    /// <c>GumService.RefreshLocalization</c>.
+    /// </summary>
+    public static Action<GraphicalUiElement>? RefreshLocalizationOnElementAction;
+
+    /// <summary>
+    /// Re-applies the most recently assigned localization key on this element
+    /// and all descendants via <see cref="RefreshLocalizationOnElementAction"/>.
+    /// Each element that had its <c>Text</c> set via the localization path
+    /// re-runs <c>SetProperty("Text", key)</c>, which routes through translation
+    /// again with the current language.
+    /// </summary>
+    /// <remarks>
+    /// Elements whose text was assigned via <c>SetTextNoTranslate</c> (e.g. user
+    /// input in a <c>TextBox</c>) are skipped. Bound Text values may be overwritten
+    /// — refresh while bindings are active is not supported.
+    /// </remarks>
+    public void RefreshLocalization()
+    {
+        RefreshLocalizationOnElementAction?.Invoke(this);
+        for (int i = 0; i < Children.Count; i++)
+        {
+            Children[i].RefreshLocalization();
+        }
+    }
+
     string NameOrType => !string.IsNullOrEmpty(Name) ? Name : $"<{GetType().Name}>";
 
     string ParentQualifiedName => Parent as GraphicalUiElement == null ? NameOrType : (Parent as GraphicalUiElement).ParentQualifiedName + "." + NameOrType;
