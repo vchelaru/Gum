@@ -604,9 +604,42 @@ public class ElementSaveDisplayer
                     ? instance.Name + "." + formsProperty.Name
                     : formsProperty.Name;
 
-                bool alreadyAdded = categories.Any(c => c.Members.Any(m => m.Name == variableName));
-                if (alreadyAdded)
+                // If a member with this name already exists in another category — typically
+                // because the standard properties pass picked up a value the user authored
+                // on the component's default state — relocate it. The behavior owns the
+                // categorization for FormsProperties; preserving the existing member also
+                // keeps any DetailText, displayer hints, and converter wiring it accumulated.
+                InstanceMember? existing = null;
+                MemberCategory? sourceCategory = null;
+                foreach (var candidate in categories)
                 {
+                    var match = candidate.Members.FirstOrDefault(m => m.Name == variableName);
+                    if (match != null)
+                    {
+                        existing = match;
+                        sourceCategory = candidate;
+                        break;
+                    }
+                }
+
+                if (behaviorCategory == null)
+                {
+                    behaviorCategory = categories.FirstOrDefault(c => c.Name == categoryName);
+                    if (behaviorCategory == null)
+                    {
+                        behaviorCategory = new MemberCategory(categoryName);
+                        categories.Add(behaviorCategory);
+                    }
+                }
+
+                if (existing != null)
+                {
+                    if (sourceCategory == behaviorCategory)
+                    {
+                        continue;
+                    }
+                    sourceCategory!.Members.Remove(existing);
+                    behaviorCategory.Members.Add(existing);
                     continue;
                 }
 
@@ -634,16 +667,6 @@ public class ElementSaveDisplayer
                     _fileCommands,
                     _setVariableLogic,
                     _wireframeObjectManager);
-
-                if (behaviorCategory == null)
-                {
-                    behaviorCategory = categories.FirstOrDefault(c => c.Name == categoryName);
-                    if (behaviorCategory == null)
-                    {
-                        behaviorCategory = new MemberCategory(categoryName);
-                        categories.Add(behaviorCategory);
-                    }
-                }
 
                 behaviorCategory.Members.Add(srim);
             }

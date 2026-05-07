@@ -104,4 +104,35 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         behaviorCategory.ShouldNotBeNull();
         behaviorCategory.Members.Any(m => m.Name == "ToolTip").ShouldBeTrue();
     }
+
+    [Fact]
+    public void AddBehaviorFormsPropertyMembers_VariableAlreadyInGeneralCategory_MovesToBehaviorCategory()
+    {
+        // Simulates the case where the component has set a default value for the
+        // FormsProperty: the standard properties path adds the variable under
+        // "General" first; the helper must reclaim it into "Behavior".
+        var generalCategory = new MemberCategory("General");
+        var existingMember = new WpfDataUi.DataTypes.InstanceMember
+        {
+            Name = "ButtonInstance.ToolTip"
+        };
+        generalCategory.Members.Add(existingMember);
+        List<MemberCategory> categories = new List<MemberCategory> { generalCategory };
+
+        _displayer.AddBehaviorFormsPropertyMembers(
+            elementWithBehaviors: _buttonComponent,
+            instanceOwner: _screen,
+            instance: _buttonInstance,
+            stateSave: _screenDefaultState,
+            stateSaveCategory: null,
+            categories: categories);
+
+        generalCategory.Members.ShouldNotContain(existingMember,
+            "the existing entry should be moved out of General");
+
+        var behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        behaviorCategory.ShouldNotBeNull();
+        behaviorCategory.Members.ShouldContain(existingMember,
+            "the existing entry should be reused (preserves its DetailText, displayer hints, etc.) rather than rebuilt");
+    }
 }
