@@ -46,7 +46,8 @@ internal class MainImportFromGumxPlugin : PluginBase
             sourceService,
             dependencyResolver,
             importService,
-            projectState);
+            projectState,
+            _dialogService);
 
         var window = new Gum.Services.Dialogs.DialogWindow
         {

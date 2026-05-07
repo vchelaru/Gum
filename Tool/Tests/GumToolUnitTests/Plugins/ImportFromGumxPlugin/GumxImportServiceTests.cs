@@ -89,6 +89,15 @@ public class GumxImportServiceTests : IDisposable
 
     private static GumProjectSave SourceProject() => new GumProjectSave();
 
+    // ── helpers for writing source behaviors ──────────────────────────────
+
+    private void WriteSourceBehavior(string name)
+    {
+        string file = Path.Combine(_sourceDir, "Behaviors", $"{name}.{BehaviorReference.Extension}");
+        Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+        File.WriteAllText(file, $"<BehaviorSave><Name>{name}</Name></BehaviorSave>");
+    }
+
     // ── conflict detection ────────────────────────────────────────────────
 
     [Fact]
@@ -303,6 +312,244 @@ public class GumxImportServiceTests : IDisposable
         result.SkippedElements.ShouldBeEmpty();
         result.ConflictingElements.ShouldBeEmpty();
         _importLogic.ImportedComponentPaths.ShouldNotBeEmpty();
+    }
+
+    // ── conflict resolution: Skip ─────────────────────────────────────────
+
+    [Fact]
+    public async Task ImportAsync_SkipResolution_ConflictingComponentLeftUntouched_NonConflictingImported()
+    {
+        // Arrange — one conflicting component (already on disk), one new
+        string conflictingName = "ExistingButton";
+        string newName = "NewButton";
+
+        string destComponentDir = Path.Combine(_projectDir, "Components");
+        Directory.CreateDirectory(destComponentDir);
+        string conflictingDestPath = Path.Combine(destComponentDir, $"{conflictingName}.{GumProjectSave.ComponentExtension}");
+        const string originalContent = "<ComponentSave><Name>ExistingButton</Name><Marker>original</Marker></ComponentSave>";
+        File.WriteAllText(conflictingDestPath, originalContent);
+
+        WriteSourceComponent(conflictingName);
+        WriteSourceComponent(newName);
+
+        ComponentSave conflictingComponent = ComponentNoAssets(conflictingName);
+        ComponentSave newComponent = ComponentNoAssets(newName);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(conflictingComponent);
+        source.Components.Add(newComponent);
+
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = new() { conflictingComponent, newComponent },
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new(),
+            Standards = new(),
+        };
+
+        // Act
+        ImportResult result = await _sut.ImportAsync(
+            selections, source, _sourceDir, destinationSubfolder: "",
+            conflictResolution: ConflictResolution.Skip);
+
+        // Assert — conflicting file unchanged on disk, new file written, no cancellation
+        result.ConflictingElements.ShouldBeEmpty();
+        File.ReadAllText(conflictingDestPath).ShouldBe(originalContent);
+
+        string newDestPath = Path.Combine(destComponentDir, $"{newName}.{GumProjectSave.ComponentExtension}");
+        File.Exists(newDestPath).ShouldBeTrue();
+
+        // ImportLogic was called only for the new component
+        _importLogic.ImportedComponentPaths.Count.ShouldBe(1);
+        _importLogic.ImportedComponentPaths[0].ShouldEndWith($"{newName}.{GumProjectSave.ComponentExtension}");
+    }
+
+    [Fact]
+    public async Task ImportAsync_SkipResolution_ConflictingBehavior_NotWritten()
+    {
+        // Arrange
+        string conflictingName = "ExistingBehavior";
+
+        string destBehaviorDir = Path.Combine(_projectDir, "Behaviors");
+        Directory.CreateDirectory(destBehaviorDir);
+        string destPath = Path.Combine(destBehaviorDir, $"{conflictingName}.{BehaviorReference.Extension}");
+        const string originalContent = "<BehaviorSave><Name>ExistingBehavior</Name><Marker>original</Marker></BehaviorSave>";
+        File.WriteAllText(destPath, originalContent);
+
+        WriteSourceBehavior(conflictingName);
+
+        BehaviorSave behavior = new BehaviorSave { Name = conflictingName };
+        GumProjectSave source = SourceProject();
+        source.Behaviors.Add(behavior);
+
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = new(),
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new() { behavior },
+            Standards = new(),
+        };
+
+        // Act
+        ImportResult result = await _sut.ImportAsync(
+            selections, source, _sourceDir, destinationSubfolder: "",
+            conflictResolution: ConflictResolution.Skip);
+
+        // Assert
+        result.ConflictingElements.ShouldBeEmpty();
+        File.ReadAllText(destPath).ShouldBe(originalContent);
+        _importLogic.ImportedBehaviorPaths.ShouldBeEmpty();
+    }
+
+    // ── conflict resolution: Overwrite ────────────────────────────────────
+
+    [Fact]
+    public async Task ImportAsync_OverwriteResolution_ConflictingComponent_FileReplaced()
+    {
+        // Arrange
+        string componentName = "Button";
+
+        string destComponentDir = Path.Combine(_projectDir, "Components");
+        Directory.CreateDirectory(destComponentDir);
+        string destPath = Path.Combine(destComponentDir, $"{componentName}.{GumProjectSave.ComponentExtension}");
+        File.WriteAllText(destPath, "<ComponentSave><Name>Button</Name><Marker>original</Marker></ComponentSave>");
+
+        // Source content has a different marker so we can verify the overwrite landed
+        string srcDir = Path.Combine(_sourceDir, "Components");
+        Directory.CreateDirectory(srcDir);
+        const string newContent = "<ComponentSave><Name>Button</Name><Marker>updated</Marker></ComponentSave>";
+        File.WriteAllText(Path.Combine(srcDir, $"{componentName}.{GumProjectSave.ComponentExtension}"), newContent);
+
+        ComponentSave component = ComponentNoAssets(componentName);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = new() { component },
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new(),
+            Standards = new(),
+        };
+
+        // Act
+        ImportResult result = await _sut.ImportAsync(
+            selections, source, _sourceDir, destinationSubfolder: "",
+            conflictResolution: ConflictResolution.Overwrite);
+
+        // Assert — file on disk replaced; ImportLogic NOT called for an already-registered element
+        // (the project save+reload at end of import picks up the new content).
+        result.ConflictingElements.ShouldBeEmpty();
+        File.ReadAllText(destPath).ShouldBe(newContent);
+        _importLogic.ImportedComponentPaths.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ImportAsync_OverwriteResolution_ConflictingBehavior_FileReplaced()
+    {
+        // Arrange
+        string behaviorName = "Clickable";
+
+        string destBehaviorDir = Path.Combine(_projectDir, "Behaviors");
+        Directory.CreateDirectory(destBehaviorDir);
+        string destPath = Path.Combine(destBehaviorDir, $"{behaviorName}.{BehaviorReference.Extension}");
+        File.WriteAllText(destPath, "<BehaviorSave><Name>Clickable</Name><Marker>original</Marker></BehaviorSave>");
+
+        string srcDir = Path.Combine(_sourceDir, "Behaviors");
+        Directory.CreateDirectory(srcDir);
+        const string newContent = "<BehaviorSave><Name>Clickable</Name><Marker>updated</Marker></BehaviorSave>";
+        File.WriteAllText(Path.Combine(srcDir, $"{behaviorName}.{BehaviorReference.Extension}"), newContent);
+
+        BehaviorSave behavior = new BehaviorSave { Name = behaviorName };
+        GumProjectSave source = SourceProject();
+        source.Behaviors.Add(behavior);
+
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = new(),
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new() { behavior },
+            Standards = new(),
+        };
+
+        // Act
+        ImportResult result = await _sut.ImportAsync(
+            selections, source, _sourceDir, destinationSubfolder: "",
+            conflictResolution: ConflictResolution.Overwrite);
+
+        // Assert
+        result.ConflictingElements.ShouldBeEmpty();
+        File.ReadAllText(destPath).ShouldBe(newContent);
+        _importLogic.ImportedBehaviorPaths.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ImportAsync_OverwriteResolution_NonConflictingComponent_StillRegisteredViaImportLogic()
+    {
+        // A NEW (non-conflicting) component must still be registered via IImportLogic, even when
+        // the resolution is Overwrite — Overwrite only changes the path for already-existing files.
+        string newName = "NewButton";
+        WriteSourceComponent(newName);
+
+        ComponentSave newComponent = ComponentNoAssets(newName);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(newComponent);
+
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = new() { newComponent },
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new(),
+            Standards = new(),
+        };
+
+        // Act
+        ImportResult result = await _sut.ImportAsync(
+            selections, source, _sourceDir, destinationSubfolder: "",
+            conflictResolution: ConflictResolution.Overwrite);
+
+        // Assert
+        result.ConflictingElements.ShouldBeEmpty();
+        _importLogic.ImportedComponentPaths.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task ImportAsync_DefaultResolutionStillCancelsOnConflict()
+    {
+        // Regression: omitting the conflictResolution parameter must preserve the legacy
+        // "cancel and report" behavior expected by existing callers.
+        string componentName = "MyButton";
+
+        string destComponentDir = Path.Combine(_projectDir, "Components");
+        Directory.CreateDirectory(destComponentDir);
+        File.WriteAllText(
+            Path.Combine(destComponentDir, $"{componentName}.{GumProjectSave.ComponentExtension}"),
+            "existing");
+
+        WriteSourceComponent(componentName);
+        ComponentSave component = ComponentNoAssets(componentName);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = new() { component },
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new(),
+            Standards = new(),
+        };
+
+        // Act — no conflictResolution argument
+        ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
+
+        // Assert
+        result.ConflictingElements.ShouldContain(componentName);
+        _importLogic.ImportedComponentPaths.ShouldBeEmpty();
     }
 
     // ── test doubles ──────────────────────────────────────────────────────

@@ -26,6 +26,19 @@ public class ImportResult
 }
 
 /// <summary>
+/// How the import service should treat selected elements whose destination file already exists.
+/// </summary>
+public enum ConflictResolution
+{
+    /// <summary>Default: abort the entire import and surface the conflict list.</summary>
+    Cancel,
+    /// <summary>Leave each conflicting destination file untouched; import only non-conflicting elements.</summary>
+    Skip,
+    /// <summary>Replace conflicting destination files with the source content.</summary>
+    Overwrite,
+}
+
+/// <summary>
 /// The user's explicit selections from the import preview dialog.
 /// </summary>
 public class ImportSelections
@@ -71,7 +84,8 @@ public class GumxImportService
         ImportSelections selections,
         GumProjectSave source,
         string sourceBase,
-        string destinationSubfolder)
+        string destinationSubfolder,
+        ConflictResolution conflictResolution = ConflictResolution.Cancel)
     {
         string projectDir = _projectState.ProjectDirectory
             ?? throw new InvalidOperationException("No project is loaded");
@@ -79,13 +93,17 @@ public class GumxImportService
         var result = new ImportResult();
         var nameMap = BuildNameMap(selections, destinationSubfolder);
 
-        // Cancel early if any destination files already exist
+        // Conflicts are file-level: a destination element file already exists at the same path.
+        // The set of names is needed downstream regardless of resolution so writers can decide
+        // whether to skip the file write (Skip) or skip the IImportLogic registration (Overwrite,
+        // since the element is already known in-memory and will refresh on the post-import reload).
         var conflicts = FindConflictingElements(selections, nameMap, projectDir);
-        if (conflicts.Count > 0)
+        if (conflicts.Count > 0 && conflictResolution == ConflictResolution.Cancel)
         {
             result.ConflictingElements.AddRange(conflicts);
             return result;
         }
+        var conflictNameSet = new HashSet<string>(conflicts, StringComparer.Ordinal);
 
         // Pre-fetch all assets for all candidate elements in parallel, so we can gate each
         // element's import on whether its required assets are actually available.
@@ -117,25 +135,25 @@ public class GumxImportService
         foreach (var element in skippedElements)
             result.SkippedElements.Add(element.Name);
 
-        // 1. Standards
+        // 1. Standards (always overwritten by design — see GumxImportServiceTests on standards)
         foreach (var standard in selections.Standards.Where(s => !skippedElements.Contains(s)))
             await WriteAndImportStandardAsync(standard, source, sourceBase, projectDir);
 
         // 2. Transitive components — topological order (already sorted by GumxDependencyResolver)
         foreach (var component in selections.TransitiveComponents.Where(c => !skippedElements.Contains(c)))
-            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap);
+            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap, conflictNameSet, conflictResolution);
 
         // 3. Behaviors (no asset dependencies)
         foreach (var behavior in selections.Behaviors)
-            await WriteAndImportBehaviorAsync(behavior, source, sourceBase, projectDir);
+            await WriteAndImportBehaviorAsync(behavior, source, sourceBase, projectDir, conflictNameSet, conflictResolution);
 
         // 4. Direct components
         foreach (var component in selections.DirectComponents.Where(c => !skippedElements.Contains(c)))
-            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap);
+            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap, conflictNameSet, conflictResolution);
 
         // 5. Screens
         foreach (var screen in selections.DirectScreens.Where(s => !skippedElements.Contains(s)))
-            await WriteAndImportScreenAsync(screen, source, sourceBase, projectDir, nameMap);
+            await WriteAndImportScreenAsync(screen, source, sourceBase, projectDir, nameMap, conflictNameSet, conflictResolution);
 
         // 6. Write pre-fetched asset files to disk for imported elements
         var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
@@ -339,10 +357,16 @@ public class GumxImportService
         GumProjectSave source,
         string sourceBase,
         string projectDir,
-        Dictionary<string, string> nameMap)
+        Dictionary<string, string> nameMap,
+        HashSet<string> conflictNameSet,
+        ConflictResolution conflictResolution)
     {
         string sourceName = component.Name;
         string destName = nameMap.TryGetValue(sourceName, out var mapped) ? mapped : sourceName;
+
+        // Skip resolution: leave the existing destination file alone and don't register anything.
+        bool isConflict = conflictNameSet.Contains(destName);
+        if (isConflict && conflictResolution == ConflictResolution.Skip) { return; }
 
         string relativeSrc = $"Components/{sourceName}.{GumProjectSave.ComponentExtension}";
         string destPath = Path.Combine(projectDir, "Components", $"{destName}.{GumProjectSave.ComponentExtension}");
@@ -350,7 +374,9 @@ public class GumxImportService
         bool wrote = await CopyElementFileWithRemapAsync(
             relativeSrc, sourceBase, destPath, sourceName, destName, nameMap);
 
-        if (wrote)
+        // Overwrite resolution: the element is already in the in-memory project, so skip
+        // ImportLogic registration. The end-of-import save+reload picks up the new file content.
+        if (wrote && !isConflict)
         {
             _importLogic.ImportComponent(new FilePath(destPath), saveProject: false);
         }
@@ -360,12 +386,17 @@ public class GumxImportService
         BehaviorSave behavior,
         GumProjectSave source,
         string sourceBase,
-        string projectDir)
+        string projectDir,
+        HashSet<string> conflictNameSet,
+        ConflictResolution conflictResolution)
     {
+        bool isConflict = conflictNameSet.Contains(behavior.Name);
+        if (isConflict && conflictResolution == ConflictResolution.Skip) { return; }
+
         string relativeSrc = $"Behaviors/{behavior.Name}.{BehaviorReference.Extension}";
         string destPath = Path.Combine(projectDir, "Behaviors", $"{behavior.Name}.{BehaviorReference.Extension}");
 
-        if (await CopyElementFileAsync(relativeSrc, sourceBase, destPath))
+        if (await CopyElementFileAsync(relativeSrc, sourceBase, destPath) && !isConflict)
         {
             _importLogic.ImportBehavior(new FilePath(destPath), saveProject: false);
         }
@@ -376,10 +407,15 @@ public class GumxImportService
         GumProjectSave source,
         string sourceBase,
         string projectDir,
-        Dictionary<string, string> nameMap)
+        Dictionary<string, string> nameMap,
+        HashSet<string> conflictNameSet,
+        ConflictResolution conflictResolution)
     {
         string sourceName = screen.Name;
         string destName = nameMap.TryGetValue(sourceName, out var mapped) ? mapped : sourceName;
+
+        bool isConflict = conflictNameSet.Contains(destName);
+        if (isConflict && conflictResolution == ConflictResolution.Skip) { return; }
 
         string relativeSrc = $"Screens/{sourceName}.{GumProjectSave.ScreenExtension}";
         string destPath = Path.Combine(projectDir, "Screens", $"{destName}.{GumProjectSave.ScreenExtension}");
@@ -387,7 +423,7 @@ public class GumxImportService
         bool wrote = await CopyElementFileWithRemapAsync(
             relativeSrc, sourceBase, destPath, sourceName, destName, nameMap);
 
-        if (wrote)
+        if (wrote && !isConflict)
         {
             _importLogic.ImportScreen(new FilePath(destPath), saveProject: false);
         }
