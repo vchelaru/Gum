@@ -1,6 +1,8 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+[assembly: InternalsVisibleTo("GumToolUnitTests")]
 [assembly: AssemblyTitle("ImportFromGumxPlugin")]
 [assembly: AssemblyDescription("Gum plugin for importing components and screens from any .gumx file")]
 [assembly: AssemblyCompany("")]
