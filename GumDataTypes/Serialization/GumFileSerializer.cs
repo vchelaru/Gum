@@ -130,7 +130,8 @@ public static class GumFileSerializer
     private static bool IsElementContentCompact(string content) =>
         content.Contains("<Variable ")
         || content.Contains("<Instance ")
-        || content.Contains("<InstanceSave ");
+        || content.Contains("<InstanceSave ")
+        || content.Contains("<FormsProperty ");
 
     /// <summary>
     /// Reads a file and detects whether it is in compact (v2) format or legacy (v1) format.
@@ -179,9 +180,12 @@ public static class GumFileSerializer
         {
             if (IsElementContentCompact(content))
             {
-                var compactSerializer = GetCompactSerializer(typeof(BehaviorSave));
+                bool hasLegacyInstances = content.Contains("<InstanceSave>");
+                var serializer = hasLegacyInstances
+                    ? GetLegacyInstancesCompactSerializer(typeof(BehaviorSave))
+                    : GetCompactSerializer(typeof(BehaviorSave));
                 using var reader = new StringReader(content);
-                return (BehaviorSave)compactSerializer.Deserialize(reader);
+                return (BehaviorSave)serializer.Deserialize(reader);
             }
         }
 

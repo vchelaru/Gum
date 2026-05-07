@@ -467,6 +467,10 @@ public class ElementSaveDisplayer
 
         }
 
+        AddBehaviorFormsPropertyMembers(
+            instanceElementSave ?? instanceOwner,
+            instanceOwner, instance, stateSave, stateSaveCategory, categories);
+
         // do variable lists last:
         for (int i = 0; i < defaultState.VariableLists.Count; i++)
         {
@@ -563,6 +567,121 @@ public class ElementSaveDisplayer
     }
 
 
+
+    internal void AddBehaviorFormsPropertyMembers(
+        ElementSave? elementWithBehaviors,
+        ElementSave instanceOwner,
+        InstanceSave? instance,
+        StateSave stateSave,
+        StateSaveCategory? stateSaveCategory,
+        List<MemberCategory> categories)
+    {
+        if (elementWithBehaviors?.Behaviors == null || elementWithBehaviors.Behaviors.Count == 0)
+        {
+            return;
+        }
+
+        var allBehaviors = ObjectFinder.Self.GumProjectSave?.Behaviors;
+        if (allBehaviors == null)
+        {
+            return;
+        }
+
+        const string categoryName = "Behavior";
+        MemberCategory? behaviorCategory = null;
+
+        foreach (var behaviorRef in elementWithBehaviors.Behaviors)
+        {
+            var behavior = allBehaviors.FirstOrDefault(b => b.Name == behaviorRef.BehaviorName);
+            if (behavior == null)
+            {
+                continue;
+            }
+
+            foreach (var formsProperty in behavior.FormsProperties)
+            {
+                if (string.IsNullOrEmpty(formsProperty.Name))
+                {
+                    // Can occur when a project is at the legacy (v1) gumx format and the
+                    // .behx uses the v2 compact attribute form for FormsProperty entries —
+                    // VariableSave properties stay null because the legacy serializer
+                    // expects element-form children, not attributes. Skip rather than
+                    // crash; the project needs to be saved at v2 for FormsProperty to work.
+                    continue;
+                }
+
+                string variableName = instance != null
+                    ? instance.Name + "." + formsProperty.Name
+                    : formsProperty.Name;
+
+                // If a member with this name already exists in another category — typically
+                // because the standard properties pass picked up a value the user authored
+                // on the component's default state — relocate it. The behavior owns the
+                // categorization for FormsProperties; preserving the existing member also
+                // keeps any DetailText, displayer hints, and converter wiring it accumulated.
+                InstanceMember? existing = null;
+                MemberCategory? sourceCategory = null;
+                foreach (var candidate in categories)
+                {
+                    var match = candidate.Members.FirstOrDefault(m => m.Name == variableName);
+                    if (match != null)
+                    {
+                        existing = match;
+                        sourceCategory = candidate;
+                        break;
+                    }
+                }
+
+                if (behaviorCategory == null)
+                {
+                    behaviorCategory = categories.FirstOrDefault(c => c.Name == categoryName);
+                    if (behaviorCategory == null)
+                    {
+                        behaviorCategory = new MemberCategory(categoryName);
+                        categories.Add(behaviorCategory);
+                    }
+                }
+
+                if (existing != null)
+                {
+                    if (sourceCategory == behaviorCategory)
+                    {
+                        continue;
+                    }
+                    sourceCategory!.Members.Remove(existing);
+                    behaviorCategory.Members.Add(existing);
+                    continue;
+                }
+
+                Type? type = _typeManager.GetTypeFromString(formsProperty.Type);
+
+                var srim = new StateReferencingInstanceMember(
+                    attributes: null,
+                    converter: null,
+                    componentType: type,
+                    isReadOnly: false,
+                    isAssignedByReference: false,
+                    isVariable: true,
+                    stateSave,
+                    stateSaveCategory,
+                    variableName,
+                    instance,
+                    instanceOwner,
+                    _undoManager,
+                    _editVariableService,
+                    _exposeVariableService,
+                    _hotkeyManager,
+                    _deleteVariableService,
+                    _selectedState,
+                    _guiCommands,
+                    _fileCommands,
+                    _setVariableLogic,
+                    _wireframeObjectManager);
+
+                behaviorCategory.Members.Add(srim);
+            }
+        }
+    }
 
     private StateReferencingInstanceMember CreateSrimFromPropertyData(ElementSave instanceOwner, InstanceSave instance,
         StateSave stateSave, StateSaveCategory stateSaveCategory, PropertyData propertyData)
