@@ -22,6 +22,16 @@ namespace Gum.DataTypes.Behaviors
 
         public StateSave RequiredVariables { get; set; } = new StateSave();
 
+        /// <summary>
+        /// Forms properties this behavior promotes to its implementing components. Each entry's
+        /// <see cref="VariableSave.Name"/> must match a property on the corresponding
+        /// <c>FrameworkElement</c> subclass (e.g. <c>ToolTip</c>, <c>IsEnabled</c>); the value
+        /// is the design-time default. Surfaced in the Gum tool's variable grid and reflected
+        /// onto the wrapped Forms control at runtime.
+        /// </summary>
+        [XmlElement("FormsProperty")]
+        public List<VariableSave> FormsProperties { get; set; } = new List<VariableSave>();
+
         IList<StateSaveCategory> IStateContainer.Categories => Categories;
         [XmlElement("Category")]
         public List<StateSaveCategory> Categories { get; set; } = new List<StateSaveCategory>();

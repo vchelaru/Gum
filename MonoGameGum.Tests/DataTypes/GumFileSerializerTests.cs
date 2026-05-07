@@ -47,6 +47,51 @@ public class GumFileSerializerTests
     }
 
     [Fact]
+    public void DeserializeBehaviorSave_LegacyFormat_LoadsFormsProperties()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "string", Name = "ToolTip", Value = "Click me" });
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.FormsProperties.Count.ShouldBe(1);
+        result.FormsProperties[0].Type.ShouldBe("string");
+        result.FormsProperties[0].Name.ShouldBe("ToolTip");
+        result.FormsProperties[0].Value.ShouldBe("Click me");
+    }
+
+    [Fact]
+    public void SerializeBehaviorSave_EmptyFormsProperties_OmittedFromXml()
+    {
+        BehaviorSave original = new BehaviorSave();
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        xml.ShouldNotContain("<FormsProperty");
+    }
+
+    [Fact]
+    public void DeserializeBehaviorSave_CompactFormat_LoadsFormsProperties()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "string", Name = "ToolTip", Value = "Click me" });
+
+        XmlSerializer compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
+        string xml = SerializeToString(compactSerializer, original);
+
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.FormsProperties.Count.ShouldBe(1);
+        result.FormsProperties[0].Type.ShouldBe("string");
+        result.FormsProperties[0].Name.ShouldBe("ToolTip");
+        result.FormsProperties[0].Value.ShouldBe("Click me");
+    }
+
+    [Fact]
     public void DeserializeElementSave_CompactFormat_LoadsVariables()
     {
         ScreenSave original = new ScreenSave();

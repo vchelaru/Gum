@@ -130,7 +130,8 @@ public static class GumFileSerializer
     private static bool IsElementContentCompact(string content) =>
         content.Contains("<Variable ")
         || content.Contains("<Instance ")
-        || content.Contains("<InstanceSave ");
+        || content.Contains("<InstanceSave ")
+        || content.Contains("<FormsProperty ");
 
     /// <summary>
     /// Reads a file and detects whether it is in compact (v2) format or legacy (v1) format.
