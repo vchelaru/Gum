@@ -467,6 +467,10 @@ public class ElementSaveDisplayer
 
         }
 
+        AddBehaviorFormsPropertyMembers(
+            instanceElementSave ?? instanceOwner,
+            instanceOwner, instance, stateSave, stateSaveCategory, categories);
+
         // do variable lists last:
         for (int i = 0; i < defaultState.VariableLists.Count; i++)
         {
@@ -563,6 +567,88 @@ public class ElementSaveDisplayer
     }
 
 
+
+    private void AddBehaviorFormsPropertyMembers(
+        ElementSave? elementWithBehaviors,
+        ElementSave instanceOwner,
+        InstanceSave? instance,
+        StateSave stateSave,
+        StateSaveCategory? stateSaveCategory,
+        List<MemberCategory> categories)
+    {
+        if (elementWithBehaviors?.Behaviors == null || elementWithBehaviors.Behaviors.Count == 0)
+        {
+            return;
+        }
+
+        var allBehaviors = ObjectFinder.Self.GumProjectSave?.Behaviors;
+        if (allBehaviors == null)
+        {
+            return;
+        }
+
+        const string categoryName = "Behavior";
+        MemberCategory? behaviorCategory = null;
+
+        foreach (var behaviorRef in elementWithBehaviors.Behaviors)
+        {
+            var behavior = allBehaviors.FirstOrDefault(b => b.Name == behaviorRef.BehaviorName);
+            if (behavior == null)
+            {
+                continue;
+            }
+
+            foreach (var formsProperty in behavior.FormsProperties)
+            {
+                string variableName = instance != null
+                    ? instance.Name + "." + formsProperty.Name
+                    : formsProperty.Name;
+
+                bool alreadyAdded = categories.Any(c => c.Members.Any(m => m.Name == variableName));
+                if (alreadyAdded)
+                {
+                    continue;
+                }
+
+                Type? type = _typeManager.GetTypeFromString(formsProperty.Type);
+
+                var srim = new StateReferencingInstanceMember(
+                    attributes: null,
+                    converter: null,
+                    componentType: type,
+                    isReadOnly: false,
+                    isAssignedByReference: false,
+                    isVariable: true,
+                    stateSave,
+                    stateSaveCategory,
+                    variableName,
+                    instance,
+                    instanceOwner,
+                    _undoManager,
+                    _editVariableService,
+                    _exposeVariableService,
+                    _hotkeyManager,
+                    _deleteVariableService,
+                    _selectedState,
+                    _guiCommands,
+                    _fileCommands,
+                    _setVariableLogic,
+                    _wireframeObjectManager);
+
+                if (behaviorCategory == null)
+                {
+                    behaviorCategory = categories.FirstOrDefault(c => c.Name == categoryName);
+                    if (behaviorCategory == null)
+                    {
+                        behaviorCategory = new MemberCategory(categoryName);
+                        categories.Add(behaviorCategory);
+                    }
+                }
+
+                behaviorCategory.Members.Add(srim);
+            }
+        }
+    }
 
     private StateReferencingInstanceMember CreateSrimFromPropertyData(ElementSave instanceOwner, InstanceSave instance,
         StateSave stateSave, StateSaveCategory stateSaveCategory, PropertyData propertyData)

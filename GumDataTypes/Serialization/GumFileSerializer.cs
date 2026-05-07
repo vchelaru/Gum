@@ -180,9 +180,12 @@ public static class GumFileSerializer
         {
             if (IsElementContentCompact(content))
             {
-                var compactSerializer = GetCompactSerializer(typeof(BehaviorSave));
+                bool hasLegacyInstances = content.Contains("<InstanceSave>");
+                var serializer = hasLegacyInstances
+                    ? GetLegacyInstancesCompactSerializer(typeof(BehaviorSave))
+                    : GetCompactSerializer(typeof(BehaviorSave));
                 using var reader = new StringReader(content);
-                return (BehaviorSave)compactSerializer.Deserialize(reader);
+                return (BehaviorSave)serializer.Deserialize(reader);
             }
         }
 

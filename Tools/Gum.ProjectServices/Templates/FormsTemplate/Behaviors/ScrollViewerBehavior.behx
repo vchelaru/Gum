@@ -2,6 +2,7 @@
 <BehaviorSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>ScrollViewerBehavior</Name>
   <RequiredVariables />
+  <FormsProperty Type="string" Name="ToolTip" />
   <Category>
     <Name>ScrollBarVisibility</Name>
     <State>

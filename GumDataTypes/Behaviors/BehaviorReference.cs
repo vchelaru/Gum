@@ -39,18 +39,8 @@ namespace Gum.DataTypes.Behaviors
         {
             if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
             {
-                var (content, isCompact) = GumFileSerializer.ReadAndDetectFormat(filePath);
-                if (isCompact)
-                {
-                    var compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
-                    using var reader = new StringReader(content);
-                    return (BehaviorSave)compactSerializer.Deserialize(reader);
-                }
-                else
-                {
-                    return FileManager.XmlDeserializeFromStream<BehaviorSave>(
-                        new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(content)));
-                }
+                string content = FileManager.FromFileText(filePath);
+                return GumFileSerializer.DeserializeBehaviorSave(content, projectVersion);
             }
             return FileManager.XmlDeserialize<BehaviorSave>(filePath);
         }
