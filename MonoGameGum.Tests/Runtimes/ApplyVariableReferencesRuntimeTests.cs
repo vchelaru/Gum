@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Expressions;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
@@ -204,6 +205,33 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
 
         parent.X.ShouldBe(10f);
         parent.Y.ShouldBe(20f);
+    }
+
+    #endregion
+
+    #region Ternary
+
+    [Fact]
+    public void ApplyVariableReferences_TernaryConditional_AppliesSelectedBranchValue()
+    {
+        // Locks in that top-level ternary RHS expressions survive the runtime path end-to-end.
+        // Regression guard for the SyntaxFactory.ParseExpression switch in
+        // GumExpressionService.EvaluateExpression — without it, "Foo ? a : b" parsed as a
+        // NullableType + variable declaration and produced no value.
+        GumExpressionService.Initialize();
+
+        ContainerRuntime parent = new ContainerRuntime();
+        parent.Width = 0;
+
+        StateSave state = BuildStateWithVariableReference(
+            "Width = SourceInstance.IsTall ? 200 : 50",
+            null,
+            ("Width", 0f, "float"),
+            ("SourceInstance.IsTall", true, "bool"));
+
+        parent.ApplyVariableReferences(state);
+
+        parent.Width.ShouldBe(200f);
     }
 
     #endregion

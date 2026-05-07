@@ -24,6 +24,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\MonoGameGum\MonoGameGum.csproj" />
+		<ProjectReference Include="..\Runtimes\GumExpressions\GumExpressions.csproj" />
 		<ProjectReference Include="..\Tests\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj" />
 	</ItemGroup>
 
