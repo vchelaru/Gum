@@ -106,6 +106,45 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
     }
 
     [Fact]
+    public void AddBehaviorFormsPropertyMembers_FormsPropertyWithNullName_SilentlySkippedNoCrash()
+    {
+        // Reproduces the v1 (legacy) gumx scenario where the standard XmlSerializer
+        // deserializes a compact-form <FormsProperty Type=".." Name=".." /> into a
+        // VariableSave whose Type and Name are both null.
+        BehaviorSave bogusBehavior = new BehaviorSave { Name = "BogusBehavior" };
+        bogusBehavior.FormsProperties.Add(new VariableSave
+        {
+            Type = null,
+            Name = null
+        });
+
+        ComponentSave bogusComponent = new ComponentSave { Name = "Controls/BogusComponent", BaseType = "Container" };
+        bogusComponent.States.Add(new StateSave { Name = "Default", ParentContainer = bogusComponent });
+        bogusComponent.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "BogusBehavior" });
+        _project.Components.Add(bogusComponent);
+        _project.Behaviors.Add(bogusBehavior);
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        Should.NotThrow(() =>
+            _displayer.AddBehaviorFormsPropertyMembers(
+                elementWithBehaviors: bogusComponent,
+                instanceOwner: bogusComponent,
+                instance: null,
+                stateSave: bogusComponent.DefaultState,
+                stateSaveCategory: null,
+                categories: categories));
+
+        // No member added for the malformed entry; the well-formed ToolTip from
+        // ButtonBehavior on the other component is still on a separate path.
+        var behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        if (behaviorCategory != null)
+        {
+            behaviorCategory.Members.Count.ShouldBe(0);
+        }
+    }
+
+    [Fact]
     public void AddBehaviorFormsPropertyMembers_VariableAlreadyInGeneralCategory_MovesToBehaviorCategory()
     {
         // Simulates the case where the component has set a default value for the
