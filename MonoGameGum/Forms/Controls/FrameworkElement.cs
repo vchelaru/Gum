@@ -560,6 +560,11 @@ public class FrameworkElement : INotifyPropertyChanged
                 }
 
                 ReactToVisualChanged();
+
+                if (visual != null)
+                {
+                    BehaviorFormsPropertyApplier.Apply(this, visual);
+                }
             }
 
         }
