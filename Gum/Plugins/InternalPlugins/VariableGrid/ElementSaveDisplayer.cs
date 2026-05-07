@@ -568,7 +568,7 @@ public class ElementSaveDisplayer
 
 
 
-    private void AddBehaviorFormsPropertyMembers(
+    internal void AddBehaviorFormsPropertyMembers(
         ElementSave? elementWithBehaviors,
         ElementSave instanceOwner,
         InstanceSave? instance,
