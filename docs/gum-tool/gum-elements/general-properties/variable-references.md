@@ -130,8 +130,7 @@ Visible = true
 Math operations can be used in variable assignments. This includes add, subtract, multiply, divide, and parenthesis to control order of operations:
 
 ```csharp
-// This evaluates to 17
-Y = (1 + 2) * 7 - 4
+Y = (TitleText.Y + 2) * 7 - 4
 ```
 
 Math operations can reference both constant values (1, 2, 3) or other variables:
@@ -139,6 +138,67 @@ Math operations can reference both constant values (1, 2, 3) or other variables:
 ```csharp
 Width = (OtherInstance.Height * 3) + 10
 ```
+
+## Conditional and Logical Expressions
+
+Variable references support conditional (ternary) expressions, comparison operators, and logical operators. These can be combined to drive variable values from boolean conditions or to switch between values based on other variables.
+
+### Conditional (Ternary) Expressions
+
+A conditional expression uses the C# `cond ? a : b` syntax. If `cond` evaluates to `true`, the result is `a`; otherwise the result is `b`. The condition can be a boolean variable or a comparison:
+
+```csharp
+Width = TitleText.Visible ? 200 : 100
+X = Background.Width > 500 ? Background.X : 0
+```
+
+Just like simple variable references, the right side can be fully qualified to point at another element:
+
+```csharp
+Width = Components/AppState.IsExpanded ? 400 : 200
+```
+
+Ternary expressions can be nested. Use parenthesis to make the order of evaluation clear:
+
+```csharp
+Width = Container.Width > 500 ? 300 : (Container.Width > 250 ? 200 : 100)
+```
+
+### Comparison Operators
+
+The operators `==`, `!=`, `<`, `>`, `<=`, and `>=` can be used to compare values. The result is a `bool`, so comparisons are most often used as the condition of a ternary or as the right side of a `bool` assignment:
+
+```csharp
+Visible = Background.Width > 100
+Width = ScoreText.Y >= TitleText.Y ? 300 : 100
+```
+
+### Logical Operators
+
+The logical operators `&&` (and) and `||` (or) combine two `bool` values into a single `bool`. Both operands must be `bool`:
+
+```csharp
+Visible = ToggleButton.Visible && ContentArea.Visible
+Visible = ErrorIcon.Visible || WarningIcon.Visible
+```
+
+### Boolean Negation
+
+The `!` operator inverts a `bool` value:
+
+```csharp
+Visible = !LoadingSpinner.Visible
+```
+
+### Category-State Assignment
+
+Variable references can drive a component's categorical state by assigning to `<CategoryName>State`. The right side must resolve to a `string` matching one of the state names defined in that category. This is useful for switching visual states from another instance's variable. For example, on a button-derived component with a `ButtonCategory` containing `Enabled` and `Disabled` states:
+
+```csharp
+ButtonCategoryState = Background.Visible ? "Enabled" : "Disabled"
+```
+
+If the right side is a literal string, Gum validates it against the category's state names and comments out the line if there is no match.
 
 {% hint style="warning" %}
 Gum treats the prefixes `Components/`, `Screens/`, and `Standards/` as special prefixes and does not consider this to be a division operator. Therefore, you should not name variables Components, Screens, or Standards as these are reserved words. Other variable references can freely use the forward slash character to create division.

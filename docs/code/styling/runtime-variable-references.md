@@ -169,6 +169,8 @@ GumExpressionService.Initialize();
 The `Gum.Expressions` package uses Microsoft Roslyn for expression parsing, which adds approximately 10 MB to your build output. If your variable references only use simple assignments (no arithmetic), you do not need this package.
 {% endhint %}
 
+The same `Gum.Expressions` package also enables runtime evaluation of conditional (ternary), comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`), and logical (`&&`, `||`, `!`) operators in variable references. See the [Variable References](../../gum-tool/gum-elements/general-properties/variable-references.md) page for the full list of supported syntax.
+
 If you are linking to Gum source instead of NuGet, see the setup page for your platform for instructions on adding GumExpressions as a project reference:
 
 * [MonoGame/KNI/FNA Setup](../getting-started/setup/adding-initializing-gum/monogame-kni-fna/README.md)

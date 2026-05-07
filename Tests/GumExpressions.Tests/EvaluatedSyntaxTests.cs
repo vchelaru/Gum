@@ -645,6 +645,37 @@ public class EvaluatedSyntaxTests : BaseTestClass
     }
 
     [Fact]
+    public void FromSyntaxNode_TernaryMixedTypeBranches_FalseCondition_ReturnsNumericBranch()
+    {
+        // Defensive pin: when ternary branches have mismatched types, the result reflects
+        // whichever branch the condition picks. EvaluatedType is derived from the runtime
+        // value type (FromSyntaxAndValue -> GetSimpleTypeNameForValue), so a numeric branch
+        // taken on a false condition yields the int value with EvaluatedType "int".
+        StateSave state = BuildState(("Instance.IsActive", false, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsActive ? \"hello\" : 42", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(42);
+        result.EvaluatedType.ShouldBe("int");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_TernaryMixedTypeBranches_TrueCondition_ReturnsStringBranch()
+    {
+        // Defensive pin: see FromSyntaxNode_TernaryMixedTypeBranches_FalseCondition_*. With a
+        // true condition, the string branch is taken and EvaluatedType reflects the string
+        // value, not the unselected numeric branch.
+        StateSave state = BuildState(("Instance.IsActive", true, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsActive ? \"hello\" : 42", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe("hello");
+        result.EvaluatedType.ShouldBe("string");
+    }
+
+    [Fact]
     public void FromSyntaxNode_TernaryNonBoolCondition_ReturnsNullValue()
     {
         // Defensive: a non-bool condition (e.g., int) should not crash; it should yield null.
