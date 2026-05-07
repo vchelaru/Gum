@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
 using Microsoft.Xna.Framework.Media;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.Wireframe;

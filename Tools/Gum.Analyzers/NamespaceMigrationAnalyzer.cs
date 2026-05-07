@@ -18,12 +18,12 @@ public sealed class NamespaceMigrationAnalyzer : DiagnosticAnalyzer
     /// </summary>
     public static readonly DiagnosticDescriptor MovedTypeRule = new DiagnosticDescriptor(
         id: "GUM001",
-        title: "Type moved to new namespace",
-        messageFormat: "'{0}' has moved from '{1}' to '{2}'. Update your using directive.",
+        title: "Namespace has migrated to a new location",
+        messageFormat: "Types from '{0}' have moved to '{1}'. Update your using directive.",
         category: "Migration",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "This type has been moved to a new namespace as part of the Gum namespace unification. Use the code fix to update automatically.");
+        description: "Types from this namespace have been moved to a new namespace as part of the Gum namespace unification. Use the code fix to update automatically.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(MovedTypeRule);
@@ -63,21 +63,16 @@ public sealed class NamespaceMigrationAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // Check if any of the migrated types from this namespace are actually used in the file
-        var root = context.Node.SyntaxTree.GetRoot(context.CancellationToken);
-        var semanticModel = context.SemanticModel;
+        // Report a single diagnostic per using directive that points at a migrated namespace.
+        // All migrations from the same old namespace currently share one new namespace, so the
+        // user-facing message only needs the namespace pair (not every type name).
+        var firstMigration = migrations[0];
+        var diagnostic = Diagnostic.Create(
+            MovedTypeRule,
+            usingDirective.GetLocation(),
+            firstMigration.OldNamespace,
+            firstMigration.NewNamespace);
 
-        foreach (var migration in migrations)
-        {
-            // Report one diagnostic per migrated type found in this using's namespace
-            var diagnostic = Diagnostic.Create(
-                MovedTypeRule,
-                usingDirective.GetLocation(),
-                migration.TypeName,
-                migration.OldNamespace,
-                migration.NewNamespace);
-
-            context.ReportDiagnostic(diagnostic);
-        }
+        context.ReportDiagnostic(diagnostic);
     }
 }

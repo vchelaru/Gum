@@ -28,7 +28,7 @@ using Gum.Converters;
 using Gum.Wireframe;
 
 #if !FRB && !RAYLIB
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 #endif
 
 
@@ -492,7 +492,7 @@ public class CustomSetPropertyOnRenderable
         // FRB doesn't yet have a TextRuntime, so we have to do this:
         var textRuntime = graphicalUiElement;
 #else
-        var textRuntime = graphicalUiElement as MonoGameGum.GueDeriving.TextRuntime;
+        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
 #endif
 
         void ReactToFontValueChange()
@@ -593,7 +593,7 @@ public class CustomSetPropertyOnRenderable
 
         }
 #if USE_GUMCOMMON
-        else if(propertyName == nameof(MonoGameGum.GueDeriving.TextRuntime.BitmapFont))
+        else if(propertyName == nameof(Gum.GueDeriving.TextRuntime.BitmapFont))
         {
             if(textRuntime != null)
             {
@@ -810,7 +810,7 @@ public class CustomSetPropertyOnRenderable
 #if FRB
         var textRuntime = graphicalUiElement;
 #else
-        var textRuntime = graphicalUiElement as MonoGameGum.GueDeriving.TextRuntime;
+        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
 #endif
 
         if(textRuntime != null)
@@ -1287,7 +1287,7 @@ public class CustomSetPropertyOnRenderable
         // FRB doesn't yet have a TextRuntime, so we have to do this:
         var textRuntime = graphicalUiElement;
 #else
-        var textRuntime = graphicalUiElement as MonoGameGum.GueDeriving.TextRuntime;
+        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
 
 #endif
         if (text == null || textRuntime == null)
@@ -2039,7 +2039,7 @@ public class CustomSetPropertyOnRenderable
         // FRB doesn't yet have a TextRuntime, so we have to do this:
         var textRuntime = graphicalUiElement;
 #else
-            var textRuntime = graphicalUiElement as MonoGameGum.GueDeriving.TextRuntime;
+            var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
 
 #endif
 

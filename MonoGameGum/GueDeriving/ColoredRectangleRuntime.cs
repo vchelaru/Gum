@@ -11,22 +11,24 @@ using System;
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
 using ContainedRectangleType = Gum.Renderables.SolidRectangle;
-namespace Gum.GueDeriving;
 #elif SOKOL
 using Gum.Renderables;
 using Color = SokolGum.Color;
 using ContainedRectangleType = Gum.Renderables.SolidRectangle;
-namespace Gum.GueDeriving;
 #elif SKIA
 using SkiaGum.Renderables;
 using Color = SkiaSharp.SKColor;
 using ContainedRectangleType = SkiaGum.Renderables.RoundedRectangle;
-namespace SkiaGum.GueDeriving;
 #else
 using Gum.RenderingLibrary;
 using Color = Microsoft.Xna.Framework.Color;
-using ContainedRectangleType = RenderingLibrary.Graphics.SolidRectangle;
+using ContainedRectangleType = global::RenderingLibrary.Graphics.SolidRectangle;
+#endif
+
+#if FRB
 namespace MonoGameGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
 #endif
 
 
@@ -131,10 +133,10 @@ public class ColoredRectangleRuntime : GraphicalUiElement
     public Color Color
     {
 #if XNALIKE
-        get => RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedColoredRectangle.Color);
+        get => global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedColoredRectangle.Color);
         set
         {
-            ContainedColoredRectangle.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            ContainedColoredRectangle.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
             NotifyPropertyChanged();
         }
 #else

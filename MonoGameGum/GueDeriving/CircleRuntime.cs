@@ -1,13 +1,17 @@
 ﻿using Gum.Wireframe;
 using RenderingLibrary;
-using RenderingLibrary.Math.Geometry;
+using global::RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
 namespace MonoGameGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 public class CircleRuntime : GraphicalUiElement
 {
@@ -102,11 +106,11 @@ public class CircleRuntime : GraphicalUiElement
     {
         get
         {
-            return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedLineCircle.Color);
+            return global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedLineCircle.Color);
         }
         set
         {
-            ContainedLineCircle.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            ContainedLineCircle.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
             NotifyPropertyChanged();
         }
     }
@@ -119,7 +123,7 @@ public class CircleRuntime : GraphicalUiElement
     {
         if (fullInstantiation)
         {
-            var circle = new RenderingLibrary.Math.Geometry.LineCircle();
+            var circle = new global::RenderingLibrary.Math.Geometry.LineCircle();
             circle.CircleOrigin = CircleOrigin.TopLeft;
             SetContainedObject(circle);
             containedLineCircle = circle;

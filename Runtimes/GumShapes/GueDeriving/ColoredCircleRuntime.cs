@@ -8,7 +8,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
 namespace MonoGameGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 /// <summary>
 /// Runtime that draws a circle (or ellipse) sized by its Width and Height. Adds no properties beyond

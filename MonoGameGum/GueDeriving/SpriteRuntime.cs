@@ -19,21 +19,24 @@ using Color = Raylib_cs.Color;
 using Rectangle = Raylib_cs.Rectangle;
 using Texture2D = Raylib_cs.Texture2D;
 using ContainedSpriteType = Gum.Renderables.Sprite;
-namespace Gum.GueDeriving;
 #elif SKIA
 using SkiaGum.Renderables;
 using Color = SkiaSharp.SKColor;
 using Rectangle = SkiaSharp.SKRect;
 using Texture2D = SkiaSharp.SKBitmap;
 using ContainedSpriteType = SkiaGum.Renderables.Sprite;
-namespace SkiaGum.GueDeriving;
 #else
 using RenderingLibrary.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
-using ContainedSpriteType = RenderingLibrary.Graphics.Sprite;
+using ContainedSpriteType = global::RenderingLibrary.Graphics.Sprite;
+#endif
+
+#if FRB
 namespace MonoGameGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
 #endif
 
 /// <summary>
@@ -125,7 +128,7 @@ public class SpriteRuntime : GraphicalUiElement
 #if RAYLIB || SKIA
             return ContainedSprite.Color;
 #else
-            return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedSprite.Color);
+            return global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedSprite.Color);
 #endif
         }
         set
@@ -133,7 +136,7 @@ public class SpriteRuntime : GraphicalUiElement
 #if RAYLIB || SKIA
             ContainedSprite.Color = value;
 #else
-            ContainedSprite.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            ContainedSprite.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
 #endif
             NotifyPropertyChanged();
         }
@@ -509,7 +512,7 @@ public class SpriteRuntime : GraphicalUiElement
 #if RAYLIB || SKIA
             mContainedSprite = new ContainedSpriteType();
 #else
-            mContainedSprite = new RenderingLibrary.Graphics.Sprite(null);
+            mContainedSprite = new global::RenderingLibrary.Graphics.Sprite(null);
 #endif
             SetContainedObject(mContainedSprite);
             Width = 100;

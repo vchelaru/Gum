@@ -2,7 +2,7 @@
 using Microsoft.Maui;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using SkiaGum.GueDeriving;
+using Gum.GueDeriving;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using System;

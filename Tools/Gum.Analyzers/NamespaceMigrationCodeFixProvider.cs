@@ -35,7 +35,8 @@ public sealed class NamespaceMigrationCodeFixProvider : CodeFixProvider
         foreach (var diagnostic in context.Diagnostics)
         {
             var node = root.FindNode(diagnostic.Location.SourceSpan);
-            if (node is not UsingDirectiveSyntax usingDirective)
+            UsingDirectiveSyntax? usingDirective = node as UsingDirectiveSyntax;
+            if (usingDirective == null)
             {
                 // Walk up if needed — the diagnostic location might be on the name, not the using
                 usingDirective = node.FirstAncestorOrSelf<UsingDirectiveSyntax>();

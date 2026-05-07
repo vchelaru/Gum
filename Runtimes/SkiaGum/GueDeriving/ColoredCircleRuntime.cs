@@ -5,11 +5,15 @@ using RenderingLibrary.Graphics;
 using SkiaGum.Renderables;
 using SkiaSharp;
 
+#if FRB
 namespace SkiaGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 public class ColoredCircleRuntime : SkiaShapeRuntime
 {
-    protected override Renderables.RenderableShapeBase ContainedRenderable => ContainedCircle;
+    protected override RenderableShapeBase ContainedRenderable => ContainedCircle;
 
     SkiaGum.Renderables.Circle mContainedCircle;
     SkiaGum.Renderables.Circle ContainedCircle

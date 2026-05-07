@@ -6,7 +6,7 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using SkiaGum;
 using SkiaGum.Content;
-using SkiaGum.GueDeriving;
+using Gum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaPlugin.Managers;
 using System;

@@ -5,6 +5,7 @@ using Gum.DataTypes;
 #if RAYLIB
 using Gum.Renderables;
 #elif SKIA
+using SkiaGum;
 using SkiaSharp;
 #else
 using Gum.Graphics;
@@ -21,13 +22,16 @@ using System.Threading.Tasks;
 
 #if RAYLIB
 using Raylib_cs;
-namespace Gum.GueDeriving;
 #elif SKIA
 using Color = SkiaSharp.SKColor;
-namespace SkiaGum.GueDeriving;
 #else
 using Color = Microsoft.Xna.Framework.Color;
+#endif
+
+#if FRB
 namespace MonoGameGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
 #endif
 
 /// <summary>
@@ -123,10 +127,10 @@ public class TextRuntime : InteractiveGue
     public Color Color
     {
 #if XNALIKE
-        get => RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedText.Color);
+        get => global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedText.Color);
         set
         {
-            ContainedText.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            ContainedText.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
             NotifyPropertyChanged();
         }
 #else

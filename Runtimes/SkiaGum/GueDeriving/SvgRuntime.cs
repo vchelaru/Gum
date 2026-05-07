@@ -1,9 +1,14 @@
 ﻿using Gum.DataTypes;
 using Gum.Wireframe;
+using SkiaGum;
 using SkiaSharp;
 using Svg.Skia;
 
+#if FRB
 namespace SkiaGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 public class SvgRuntime : InteractiveGue
 {

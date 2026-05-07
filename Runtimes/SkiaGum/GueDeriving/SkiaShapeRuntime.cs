@@ -5,11 +5,15 @@ using RenderingLibrary.Graphics;
 using SkiaGum.Renderables;
 using SkiaSharp;
 
+#if FRB
 namespace SkiaGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 public abstract class SkiaShapeRuntime : InteractiveGue
 {
-    protected abstract Renderables.RenderableShapeBase ContainedRenderable { get; }
+    protected abstract RenderableShapeBase ContainedRenderable { get; }
 
     #region Solid colors
 

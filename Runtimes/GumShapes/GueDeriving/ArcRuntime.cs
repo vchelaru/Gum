@@ -6,7 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
 namespace MonoGameGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 /// <summary>
 /// Runtime that draws a circular arc inscribed in its Width x Height bounds.

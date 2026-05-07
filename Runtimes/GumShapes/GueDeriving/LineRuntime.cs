@@ -1,6 +1,10 @@
 using MonoGameAndGum.Renderables;
 
+#if FRB
 namespace MonoGameGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 /// <summary>
 /// Runtime for a line shape that draws from the top-left to the bottom-right of its bounding rectangle.

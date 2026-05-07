@@ -18,7 +18,11 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 #if USE_GUMCOMMON
+#if FRB
 using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 using Gum.Managers;
 using GumRuntime;
 

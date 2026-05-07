@@ -18,7 +18,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.DefaultVisuals;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using MonoGameGum.Input;
 #else
 using Gum.GueDeriving;

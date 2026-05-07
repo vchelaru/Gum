@@ -5,11 +5,15 @@ using RenderingLibrary.Graphics;
 using SkiaGum.Renderables;
 using SkiaSharp;
 
+#if FRB
 namespace SkiaGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 public class ArcRuntime : SkiaShapeRuntime
 {
-    protected override Renderables.RenderableShapeBase ContainedRenderable => ContainedArc;
+    protected override RenderableShapeBase ContainedRenderable => ContainedArc;
 
     Arc mContainedArc;
     Arc ContainedArc

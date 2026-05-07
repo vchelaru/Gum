@@ -17,7 +17,7 @@ To create this class:
 ```csharp
 using Gum.Forms;
 using Gum.Forms.Controls;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using Gum.Forms.DefaultVisuals;
 
 namespace MonoGameAndGum.Components;

@@ -53,7 +53,7 @@ Runtimes/SokolGum/
 │                       # are file-linked from MonoGameGum/GueDeriving/
 │                       # via #if SOKOL branches; NineSliceRuntime
 │                       # is file-linked from RaylibGum/GueDeriving/.
-│                       # See .claude/designs/runtime-refactoring.md.
+│                       # See .claude/designs/runtime-unification/runtime-refactoring.md.
 ├── Renderables/        # Sprite, NineSlice, SolidRectangle, Text,
 │                       # Line, LineRectangle, LineCircle, LinePolygon,
 │                       # LineGrid

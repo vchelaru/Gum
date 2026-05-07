@@ -1,5 +1,5 @@
 ﻿#if SKIA
-using SkiaGum.GueDeriving;
+using Gum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
 #endif

@@ -1,7 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using Gum.Localization;
 using Moq;
 using RenderingLibrary.Graphics;

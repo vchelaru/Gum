@@ -15,14 +15,14 @@ using System.Threading.Tasks;
 #if SKIA
 using HarfBuzzSharp;
 using SkiaGum.Content;
-using SkiaGum.GueDeriving;
+using Gum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using RenderableShapeBase = SkiaGum.Renderables.RenderableShapeBase;
 namespace SkiaGum;
 #else
 using MonoGameAndGum.Renderables;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 namespace MonoGameGumShapes;
 
 #endif

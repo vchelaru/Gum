@@ -14,7 +14,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
 namespace MonoGameGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 
 /// <summary>
 /// Base class for all shapes, providng common properties like color, gradient, and dropshadow.

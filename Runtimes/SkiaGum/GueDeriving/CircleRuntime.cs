@@ -7,7 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
 namespace SkiaGum.GueDeriving;
+#else
+namespace Gum.GueDeriving;
+#endif
 public class CircleRuntime : SkiaShapeRuntime
 {
     protected override RenderableShapeBase ContainedRenderable => ContainedCircle;
