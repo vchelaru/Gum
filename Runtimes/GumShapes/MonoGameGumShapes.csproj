@@ -42,6 +42,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+		<ProjectReference Include="..\..\Tools\Gum.Analyzers\Gum.Analyzers.csproj"
+						  Condition="'$(IncludeAnalyzers)' != 'false'"
+						  OutputItemType="Analyzer"
+						  ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 	<ItemGroup>
