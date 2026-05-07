@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Gum.Localization;
@@ -29,11 +30,24 @@ public class LocalizationService : ILocalizationService
         private set;
     }
 
+    private int _currentLanguage;
+
     public int CurrentLanguage
     {
-        get;
-        set;
+        get => _currentLanguage;
+        set
+        {
+            if (_currentLanguage == value)
+            {
+                return;
+            }
+            _currentLanguage = value;
+            CurrentLanguageChanged?.Invoke();
+        }
     }
+
+    /// <inheritdoc/>
+    public event Action? CurrentLanguageChanged;
 
     public LocalizationService()
     {

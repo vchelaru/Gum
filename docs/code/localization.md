@@ -343,6 +343,47 @@ It does **not** work on bundled-content platforms — iOS, Android, consoles, an
 A stream-based auto-load path for bundled content is on the roadmap. If this is blocking you, let us know on Discord or file an issue on [GitHub](https://github.com/vchelaru/Gum/issues) — real usage reports help us prioritize.
 {% endhint %}
 
+## Switching Language at Runtime
+
+Gum re-translates already-instantiated visuals when you change `CurrentLanguage`. You do not need to recreate screens or rebuild controls — assigning a new value triggers the refresh automatically.
+
+```csharp
+// switch to Spanish — all visible text re-translates in place
+GumUI.LocalizationService.CurrentLanguage = 2;
+```
+
+{% hint style="info" %}
+Automatic runtime language switching requires the May 2026 Gum release or newer. On earlier versions, changing `CurrentLanguage` only affected text assigned _after_ the change — already-displayed text kept its old translation, and the only way to refresh was to recreate the screen.
+{% endhint %}
+
+The refresh walks `Root`, `PopupRoot`, and `ModalRoot` and re-applies the original string ID assigned to each control's `Text`, `Header`, or `Placeholder`. State-driven text (e.g. a `Highlighted` state that sets `Text` to a different string ID) refreshes correctly because the most recently assigned string ID is what gets re-translated.
+
+If you need to refresh manually — for example, after building visuals that aren't attached to one of the standard roots — call `RefreshLocalization` directly:
+
+```csharp
+GumUI.RefreshLocalization();
+```
+
+### Behavior of Untranslated Text on Refresh
+
+Text assigned via `SetTextNoTranslate` (or `SetHeaderNoTranslate` / `SetPlaceholderNoTranslate`) is _not_ touched by refresh. This is what makes user input in a `TextBox` survive language switches — TextBox routes typing, pasting, and deleting through the no-translate path internally.
+
+Programmatic dynamic strings should also use the no-translate API. For example:
+
+```csharp
+// dynamic value — bypasses translation, survives language switches as-is
+scoreLabel.SetTextNoTranslate($"Score: {score}");
+
+// localizable value — picks up the new language on switch
+greetingLabel.Text = "T_Greeting";
+```
+
+If you assign a dynamic string through the localized `Text` property while a `LocalizationService` is active, Gum will treat it as a string ID. On the first assignment it gets the `(loc)` missing-key suffix; on every subsequent language switch it will be re-translated and pick up the suffix again.
+
+### Data Bindings
+
+If a control's `Text` is data-bound, refreshing the language will overwrite the bound value with a re-translated string ID. Refresh while bindings are active is not supported — prefer `SetTextNoTranslate` for bound text, or unbind before switching.
+
 ## Forms Control Localization
 
 Forms controls localize text automatically when a `LocalizationService` is active. When you assign a string ID to a control's `Text` property (or `Header` for MenuItem, `Placeholder` for TextBox), Gum translates it at assignment time. Each control that supports localization also provides a no-translate method for setting literal text that should not be translated.

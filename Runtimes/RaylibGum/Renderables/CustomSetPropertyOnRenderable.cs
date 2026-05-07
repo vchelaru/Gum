@@ -51,7 +51,45 @@ namespace Gum.Wireframe;
 
 public class CustomSetPropertyOnRenderable
 {
-    public static ILocalizationService LocalizationService { get; set; }
+    private static ILocalizationService _localizationService;
+
+    /// <summary>
+    /// The active localization service used by the runtime. Assigning a new
+    /// instance fires <see cref="LocalizationServiceChanged"/> so consumers
+    /// (e.g. <c>GumService</c>) can re-wire <see cref="ILocalizationService.CurrentLanguageChanged"/>
+    /// subscriptions for runtime language switching.
+    /// </summary>
+    public static ILocalizationService LocalizationService
+    {
+        get => _localizationService;
+        set
+        {
+            if (ReferenceEquals(_localizationService, value))
+            {
+                return;
+            }
+            ILocalizationService previous = _localizationService;
+            _localizationService = value;
+            LocalizationServiceChanged?.Invoke(previous, value);
+        }
+    }
+
+    /// <summary>
+    /// Raised when <see cref="LocalizationService"/> is replaced. Arguments are
+    /// (previousService, newService) — either may be null.
+    /// </summary>
+    public static event Action<ILocalizationService, ILocalizationService> LocalizationServiceChanged;
+
+    private static readonly ConditionalWeakTable<GraphicalUiElement, string> _localizationKeys = new();
+
+    /// <summary>
+    /// Returns the original (pre-translation) string assigned via the localization
+    /// path on the given element, or null if no localizable text has been assigned.
+    /// </summary>
+    public static string TryGetLocalizationKey(GraphicalUiElement element)
+    {
+        return _localizationKeys.TryGetValue(element, out string key) ? key : null;
+    }
 
 #if !FRB
     /// <summary>
@@ -367,6 +405,21 @@ public class CustomSetPropertyOnRenderable
             }
 
             var valueAsString = value as string;
+
+            // Track the original (untranslated) value so RefreshLocalization can
+            // re-translate this element if CurrentLanguage changes later.
+            if (propertyName == "TextNoTranslate")
+            {
+                _localizationKeys.Remove(graphicalUiElement);
+            }
+            else if (LocalizationService != null && valueAsString != null)
+            {
+                _localizationKeys.AddOrUpdate(graphicalUiElement, valueAsString);
+            }
+            else
+            {
+                _localizationKeys.Remove(graphicalUiElement);
+            }
 
             var rawText = valueAsString;
 

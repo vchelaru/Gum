@@ -131,6 +131,42 @@ public class GumService
     }
 
     /// <summary>
+    /// Re-translates all live text on Root, PopupRoot, and ModalRoot using the
+    /// current language on <see cref="LocalizationService"/>. Call this after
+    /// changing <see cref="ILocalizationService.CurrentLanguage"/> if you have
+    /// disabled the automatic refresh by replacing the service. Otherwise this
+    /// is invoked automatically on language change.
+    /// </summary>
+    /// <remarks>
+    /// Text assigned via <c>SetTextNoTranslate</c> (such as user input in a
+    /// <c>TextBox</c>) is skipped. Programmatic strings assigned via the
+    /// localized <c>Text</c> property are re-translated, so dynamic values
+    /// (e.g. <c>"Score: " + score</c>) will receive the "(loc)" missing-key
+    /// suffix on language change unless they are assigned via the no-translate API.
+    /// </remarks>
+    public void RefreshLocalization()
+    {
+        Root?.RefreshLocalization();
+        PopupRoot?.RefreshLocalization();
+        ModalRoot?.RefreshLocalization();
+    }
+
+    private ILocalizationService? _subscribedLocalizationService;
+
+    private void HandleLocalizationServiceChanged(ILocalizationService? previous, ILocalizationService? current)
+    {
+        if (_subscribedLocalizationService != null)
+        {
+            _subscribedLocalizationService.CurrentLanguageChanged -= RefreshLocalization;
+        }
+        _subscribedLocalizationService = current;
+        if (current != null)
+        {
+            current.CurrentLanguageChanged += RefreshLocalization;
+        }
+    }
+
+    /// <summary>
     /// Re-applies all styles on the specified element and its children. Call after
     /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/>
     /// to push variable reference changes to live visuals in a specific subtree.
@@ -244,6 +280,19 @@ public class GumService
         Root.HasEvents = false;
 
         Root.Children.CollectionChanged += (o, e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
+
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged += HandleLocalizationServiceChanged;
+        // Pick up any LocalizationService that was assigned before this GumService was constructed.
+        HandleLocalizationServiceChanged(null, CustomSetPropertyOnRenderable.LocalizationService);
+
+        GraphicalUiElement.RefreshLocalizationOnElementAction = element =>
+        {
+            string? key = CustomSetPropertyOnRenderable.TryGetLocalizationKey(element);
+            if (key != null)
+            {
+                element.SetProperty("Text", key);
+            }
+        };
 
         DeferredQueue = new DeferredActionQueue();
 
