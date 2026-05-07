@@ -156,7 +156,18 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 $"The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?");
         }
 
-        if (response.Succeeded && !evaluatedSyntax.CastTo(leftSideVariable.Type))
+        if (response.Succeeded && IsCategoryStateLeftSide(leftSideVariable, parentElement, leftSideInstance, out _))
+        {
+            // Category-state LHS: cast to string so any string-producing RHS (literal,
+            // ternary, expression) is accepted; CheckIfVariableTypesMatch enforces the
+            // string-only rule and (for literals) the state-name existence check.
+            if (!evaluatedSyntax.CastTo("string"))
+            {
+                response = GeneralResponse.UnsuccessfulWith(
+                    $"Could not cast {evaluatedSyntax.EvaluatedType} to string for category-state assignment");
+            }
+        }
+        else if (response.Succeeded && !evaluatedSyntax.CastTo(leftSideVariable.Type))
         {
             response = GeneralResponse.UnsuccessfulWith(
                 $"Could not cast {evaluatedSyntax.EvaluatedType} to {leftSideVariable.Type}");
@@ -229,6 +240,35 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         var ownerOfRightSideVariable = parentElement.DefaultState;
 
         rightSideType = assignment.EvaluatedType;
+
+        // Category-state synthetic LHS: leftSideType is the category name (e.g. "ButtonCategory")
+        // and we expect a string RHS naming a state in that category. If the RHS is a string
+        // literal we additionally verify it names an existing state; if it is a non-literal
+        // (ternary, expression) we accept and rely on runtime tolerance (ApplyState no-ops on
+        // unknown state names).
+        if (IsCategoryStateLeftSide(leftSideVariable, parentElement, leftSideInstance, out var category))
+        {
+            if (rightSideType != "string")
+            {
+                return GeneralResponse.UnsuccessfulWith(
+                    $"Left side is a state of category [{category!.Name}] but right side is of type [{rightSideType}]");
+            }
+
+            var isStringLiteral = assignment.SyntaxNode is LiteralExpressionSyntax literal
+                && literal.IsKind(SyntaxKind.StringLiteralExpression);
+
+            if (isStringLiteral && assignment.Value is string stateName)
+            {
+                bool stateExists = category.States.Any(s => s.Name == stateName);
+                if (!stateExists)
+                {
+                    return GeneralResponse.UnsuccessfulWith(
+                        $"Category [{category.Name}] has no state named [{stateName}]");
+                }
+            }
+
+            return GeneralResponse.SuccessfulResponse;
+        }
 
         var areEqual = rightSideType == leftSideType;
 
@@ -303,6 +343,26 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         var rootVar = ObjectFinder.Self.GetRootVariable(leftSide, element);
 
+        if (rootVar == null && element != null)
+        {
+            // Synthetic category-state LHS: "<CategoryName>State" assigns a state from the
+            // matching StateSaveCategory. The variable does not exist on DefaultState but the
+            // runtime routes the assignment through GraphicalUiElement.SetProperty.
+            var category = FindCategoryForStateLeftSide(element, leftSide);
+            if (category != null)
+            {
+                var syntheticVariable = new VariableSave
+                {
+                    Name = leftSide,
+                    Type = category.Name,
+                    SetsValue = true
+                };
+                var success = GeneralResponse<VariableSave>.SuccessfulResponse;
+                success.Data = syntheticVariable;
+                return success;
+            }
+        }
+
         if(rootVar == null)
         {
             return GeneralResponse<VariableSave>.UnsuccessfulWith($"Could not find variable [{leftSide}]");
@@ -311,6 +371,67 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         var toReturn = GeneralResponse<VariableSave>.SuccessfulResponse;
         toReturn.Data = rootVar;
         return toReturn;
+    }
+
+    /// <summary>
+    /// Looks for a StateSaveCategory on <paramref name="element"/> (or its base-element
+    /// chain) whose name + "State" matches the <paramref name="leftSide"/> token. Returns
+    /// null when no match is found.
+    /// </summary>
+    private static StateSaveCategory? FindCategoryForStateLeftSide(ElementSave element, string leftSide)
+    {
+        if (string.IsNullOrEmpty(leftSide) || !leftSide.EndsWith("State"))
+        {
+            return null;
+        }
+
+        var categoryName = leftSide.Substring(0, leftSide.Length - "State".Length);
+        if (categoryName.Length == 0)
+        {
+            return null;
+        }
+
+        // Walk this element + its inheritance chain looking for a matching category.
+        var match = element.Categories?.FirstOrDefault(c => c.Name == categoryName);
+        if (match != null)
+        {
+            return match;
+        }
+
+        var baseElements = ObjectFinder.Self.GetBaseElements(element);
+        foreach (var baseElement in baseElements)
+        {
+            match = baseElement.Categories?.FirstOrDefault(c => c.Name == categoryName);
+            if (match != null)
+            {
+                return match;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="leftSideVariable"/> is the synthetic placeholder
+    /// produced by <see cref="CheckLeftSideVariableExistence"/> for a "&lt;CategoryName&gt;State"
+    /// assignment, and outputs the resolved category.
+    /// </summary>
+    private static bool IsCategoryStateLeftSide(VariableSave leftSideVariable, ElementSave parentElement, InstanceSave? leftSideInstance, out StateSaveCategory? category)
+    {
+        category = null;
+        if (leftSideVariable?.Name == null || !leftSideVariable.Name.EndsWith("State"))
+        {
+            return false;
+        }
+
+        var element = leftSideInstance != null ? ObjectFinder.Self.GetElementSave(leftSideInstance) : parentElement;
+        if (element == null)
+        {
+            return false;
+        }
+
+        category = FindCategoryForStateLeftSide(element, leftSideVariable.Name);
+        return category != null;
     }
 
     #endregion

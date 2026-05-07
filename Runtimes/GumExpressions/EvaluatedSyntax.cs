@@ -122,6 +122,20 @@ public class EvaluatedSyntax
             }
 
         }
+        else if (syntaxNode is ConditionalExpressionSyntax conditional)
+        {
+            var conditionEvaluated = Evaluate(conditional.Condition, stateForUnqualifiedRightSide);
+            if (conditionEvaluated?.Value is bool conditionValue)
+            {
+                var branch = conditionValue ? conditional.WhenTrue : conditional.WhenFalse;
+                var branchEvaluated = Evaluate(branch, stateForUnqualifiedRightSide);
+                if (branchEvaluated != null)
+                {
+                    return FromSyntaxAndValue(syntaxNode, branchEvaluated.Value);
+                }
+            }
+            return null;
+        }
         else if (syntaxNode is PrefixUnaryExpressionSyntax prefixUnary)
         {
             if (prefixUnary.OperatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ExclamationToken))
@@ -188,6 +202,37 @@ public class EvaluatedSyntax
             return null;
         }
 
+        // Equality / inequality work on any pair of comparable types (numbers,
+        // strings, bools), so handle them before falling through to the numeric/string
+        // dynamic-coercion path below.
+        if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.EqualsEqualsToken))
+        {
+            return object.Equals(leftEvaluated.Value, rightEvaluated.Value);
+        }
+        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ExclamationEqualsToken))
+        {
+            return !object.Equals(leftEvaluated.Value, rightEvaluated.Value);
+        }
+
+        // Logical operators require both operands to be bool. We evaluate eagerly
+        // (no short-circuit) because variable lookups have no side effects.
+        if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.AmpersandAmpersandToken))
+        {
+            if (leftEvaluated.Value is bool leftBoolAnd && rightEvaluated.Value is bool rightBoolAnd)
+            {
+                return leftBoolAnd && rightBoolAnd;
+            }
+            return null;
+        }
+        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.BarBarToken))
+        {
+            if (leftEvaluated.Value is bool leftBoolOr && rightEvaluated.Value is bool rightBoolOr)
+            {
+                return leftBoolOr || rightBoolOr;
+            }
+            return null;
+        }
+
         dynamic dynamicValue1, dynamicValue2;
         GetDynamicValues(leftEvaluated.Value, rightEvaluated.Value, out dynamicValue1, out dynamicValue2);
 
@@ -219,9 +264,21 @@ public class EvaluatedSyntax
                 }
                 return result;
             }
-            else
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.LessThanToken))
             {
-                System.Diagnostics.Debugger.Break();
+                return dynamicValue1 < dynamicValue2;
+            }
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.GreaterThanToken))
+            {
+                return dynamicValue1 > dynamicValue2;
+            }
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.LessThanEqualsToken))
+            {
+                return dynamicValue1 <= dynamicValue2;
+            }
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.GreaterThanEqualsToken))
+            {
+                return dynamicValue1 >= dynamicValue2;
             }
         }
         catch(RuntimeBinderException)

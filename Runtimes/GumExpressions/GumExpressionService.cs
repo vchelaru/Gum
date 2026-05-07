@@ -24,7 +24,10 @@ public static class GumExpressionService
     {
         expression = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
 
-        var syntax = CSharpSyntaxTree.ParseText(expression).GetCompilationUnitRoot();
+        // Parse as an expression rather than a compilation unit so top-level constructs
+        // like ternaries (`a ? b : c`) are not mis-parsed as nullable variable declarations
+        // (Roslyn treats `Foo? bar` at statement scope as a NullableTypeSyntax + declarator).
+        var syntax = SyntaxFactory.ParseExpression(expression);
 
         if (syntax != null)
         {
