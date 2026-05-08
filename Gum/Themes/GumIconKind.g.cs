@@ -10,11 +10,29 @@ namespace Gum.Themes;
 public enum GumIconKind
 {
     None = 0,
+    AnchorBottomCenter, // AnchorBottomCenter
+    AnchorBottomLeft, // AnchorBottomLeft
+    AnchorBottomRight, // AnchorBottomRight
+    AnchorCenter, // AnchorCenter
+    AnchorCenterHorizontal, // AnchorCenterHorizontal
+    AnchorCenterLeft, // AnchorCenterLeft
+    AnchorCenterRight, // AnchorCenterRight
+    AnchorCenterVertical, // AnchorCenterVertical
+    AnchorTopCenter, // AnchorTopCenter
+    AnchorTopLeft, // AnchorTopLeft
+    AnchorTopRight, // AnchorTopRight
     ChildrenLayoutAutoGridHorizontal, // ChildrenLayoutAutoGridHorizontal
     ChildrenLayoutAutoGridVertical, // ChildrenLayoutAutoGridVertical
     ChildrenLayoutLeftToRightStack, // ChildrenLayoutLeftToRightStack
     ChildrenLayoutRegular, // ChildrenLayoutRegular
     ChildrenLayoutTopToBottomStack, // ChildrenLayoutTopToBottomStack
+    DockBottom, // DockBottom
+    DockFill, // DockFill
+    DockLeft, // DockLeft
+    DockLeftRight, // DockLeftRight
+    DockRight, // DockRight
+    DockTop, // DockTop
+    DockTopBottom, // DockTopBottom
     HeightRelativeToMaxChildrenOrParent, // HeightRelativeToMaxChildrenOrParent
     HeightUnitsAbsolute, // HeightUnitsAbsolute
     HeightUnitsAbsoluteMultipliedByFontScale, // HeightUnitsAbsoluteMultipliedByFontScale
@@ -61,11 +79,29 @@ public static class GumIconKindMap
 {
     private static readonly string[] _keys = new string[] {
         null, // None
+        "AnchorBottomCenter",
+        "AnchorBottomLeft",
+        "AnchorBottomRight",
+        "AnchorCenter",
+        "AnchorCenterHorizontal",
+        "AnchorCenterLeft",
+        "AnchorCenterRight",
+        "AnchorCenterVertical",
+        "AnchorTopCenter",
+        "AnchorTopLeft",
+        "AnchorTopRight",
         "ChildrenLayoutAutoGridHorizontal",
         "ChildrenLayoutAutoGridVertical",
         "ChildrenLayoutLeftToRightStack",
         "ChildrenLayoutRegular",
         "ChildrenLayoutTopToBottomStack",
+        "DockBottom",
+        "DockFill",
+        "DockLeft",
+        "DockLeftRight",
+        "DockRight",
+        "DockTop",
+        "DockTopBottom",
         "HeightRelativeToMaxChildrenOrParent",
         "HeightUnitsAbsolute",
         "HeightUnitsAbsoluteMultipliedByFontScale",

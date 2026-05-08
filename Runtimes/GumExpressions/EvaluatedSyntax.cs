@@ -39,20 +39,25 @@ public class EvaluatedSyntax
 
     #region Parse
 
-    public static EvaluatedSyntax FromSyntaxNode(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide)
+    /// <param name="fallback">Optional resolver consulted when a bare identifier
+    /// or member-access lookup against <paramref name="stateForUnqualifiedRightSide"/>
+    /// returns null. The Forms-property-promotion apply pipeline uses this to fall
+    /// back to a linked behavior's <c>FormsProperty.Value</c> declarations when no
+    /// state authors a value (mirrors WPF DependencyProperty default values).</param>
+    public static EvaluatedSyntax FromSyntaxNode(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null)
     {
-        return Evaluate(syntaxNode, stateForUnqualifiedRightSide);
+        return Evaluate(syntaxNode, stateForUnqualifiedRightSide, fallback);
     }
 
-    private static EvaluatedSyntax Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide)
+    private static EvaluatedSyntax Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null)
     {
         if (syntaxNode is BinaryExpressionSyntax binaryExpressionSytax)
         {
             var leftSyntax = binaryExpressionSytax.Left;
             var rightSyntax = binaryExpressionSytax.Right;
 
-            var leftEvaluated = Evaluate(leftSyntax, stateForUnqualifiedRightSide);
-            var rightEvaluated = Evaluate(rightSyntax, stateForUnqualifiedRightSide);
+            var leftEvaluated = Evaluate(leftSyntax, stateForUnqualifiedRightSide, fallback);
+            var rightEvaluated = Evaluate(rightSyntax, stateForUnqualifiedRightSide, fallback);
 
             var value = Combine(leftEvaluated, rightEvaluated, binaryExpressionSytax.OperatorToken);
 
@@ -69,7 +74,7 @@ public class EvaluatedSyntax
 
             foreach (var item in childNodes)
             {
-                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide);
+                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback);
                 if (evaluatedSyntax != null)
                 {
                     return evaluatedSyntax;
@@ -79,7 +84,7 @@ public class EvaluatedSyntax
         }
         else if (syntaxNode is IdentifierNameSyntax or VariableDeclarationSyntax)
         {
-            var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide);
+            var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide) { Fallback = fallback };
 
             var value = rfv.GetValue(syntaxNode.ToString());
 
@@ -114,7 +119,7 @@ public class EvaluatedSyntax
             }
             else
             {
-                rfv = new RecursiveVariableFinder(stateForRfv);
+                rfv = new RecursiveVariableFinder(stateForRfv) { Fallback = fallback };
 
                 var value = rfv.GetValue(rightSideToEvaluate);
 
@@ -124,11 +129,11 @@ public class EvaluatedSyntax
         }
         else if (syntaxNode is ConditionalExpressionSyntax conditional)
         {
-            var conditionEvaluated = Evaluate(conditional.Condition, stateForUnqualifiedRightSide);
+            var conditionEvaluated = Evaluate(conditional.Condition, stateForUnqualifiedRightSide, fallback);
             if (conditionEvaluated?.Value is bool conditionValue)
             {
                 var branch = conditionValue ? conditional.WhenTrue : conditional.WhenFalse;
-                var branchEvaluated = Evaluate(branch, stateForUnqualifiedRightSide);
+                var branchEvaluated = Evaluate(branch, stateForUnqualifiedRightSide, fallback);
                 if (branchEvaluated != null)
                 {
                     return FromSyntaxAndValue(syntaxNode, branchEvaluated.Value);
@@ -140,7 +145,7 @@ public class EvaluatedSyntax
         {
             if (prefixUnary.OperatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ExclamationToken))
             {
-                var operand = Evaluate(prefixUnary.Operand, stateForUnqualifiedRightSide);
+                var operand = Evaluate(prefixUnary.Operand, stateForUnqualifiedRightSide, fallback);
                 if (operand?.Value is bool b)
                 {
                     return FromSyntaxAndValue(syntaxNode, !b);
@@ -167,7 +172,7 @@ public class EvaluatedSyntax
 
             foreach (var item in childNodes)
             {
-                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide);
+                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback);
                 if (evaluatedSyntax != null)
                 {
                     return evaluatedSyntax;
@@ -185,7 +190,7 @@ public class EvaluatedSyntax
 
             foreach (var item in childNodes)
             {
-                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide);
+                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback);
                 if (evaluatedSyntax != null)
                 {
                     return evaluatedSyntax;
@@ -193,6 +198,23 @@ public class EvaluatedSyntax
             }
         }
         return null;
+    }
+
+    // FixEnumerationsWithReflection promotes int-on-disk enum values to boxed enums in
+    // memory, so the eval sees a boxed enum on one side. Reference RHS literals stay as
+    // strings (e.g. "Hidden" in `Foo == "Hidden"`). Bridge the two by comparing the enum's
+    // name when the other operand is a string; otherwise defer to object.Equals.
+    private static bool AreEqual(object left, object right)
+    {
+        if (left is Enum leftEnum && right is string rightString)
+        {
+            return string.Equals(leftEnum.ToString(), rightString, StringComparison.Ordinal);
+        }
+        if (left is string leftString && right is Enum rightEnum)
+        {
+            return string.Equals(leftString, rightEnum.ToString(), StringComparison.Ordinal);
+        }
+        return object.Equals(left, right);
     }
 
     private static object Combine(EvaluatedSyntax leftEvaluated, EvaluatedSyntax rightEvaluated, SyntaxToken operatorToken)
@@ -207,11 +229,11 @@ public class EvaluatedSyntax
         // dynamic-coercion path below.
         if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.EqualsEqualsToken))
         {
-            return object.Equals(leftEvaluated.Value, rightEvaluated.Value);
+            return AreEqual(leftEvaluated.Value, rightEvaluated.Value);
         }
         else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ExclamationEqualsToken))
         {
-            return !object.Equals(leftEvaluated.Value, rightEvaluated.Value);
+            return !AreEqual(leftEvaluated.Value, rightEvaluated.Value);
         }
 
         // Logical operators require both operands to be bool. We evaluate eagerly

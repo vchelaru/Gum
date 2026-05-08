@@ -17,6 +17,8 @@ The element tree view is the left-hand panel listing Screens, Components, Standa
 
 ## Icon system
 
+> Tree-view icons are one of three icon pipelines in Gum (PNG `ImageList` here; `GumIcon`/`PathGeometry` for other WPF chrome; sprite sheet for Forms runtime). For the umbrella overview and routing, see [gum-icons](../gum-icons/SKILL.md).
+
 ### How icons end up in the ImageList
 
 The `ImageList` is **not** populated at construction. The flow:

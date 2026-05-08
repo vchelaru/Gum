@@ -41,7 +41,11 @@ internal static class BehaviorFormsPropertyApplier
                 continue;
             }
 
-            object? value = ReadEffectiveValue(visual!, declaration.Name);
+            // Tier order: parent-instance override → own default → behavior FormsProperty
+            // default. The third tier lets a behavior's declared default carry through when
+            // neither component nor parent state authors a value (mirrors WPF
+            // DependencyProperty.PropertyMetadata.DefaultValue).
+            object? value = ReadEffectiveValue(visual!, declaration.Name) ?? declaration.Value;
             if (value == null)
             {
                 continue;
@@ -55,9 +59,16 @@ internal static class BehaviorFormsPropertyApplier
 
             try
             {
+                Type target = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                // IsAssignableFrom preserves the boxed-enum path for state-authored values
+                // from the variable grid. The IsEnum branch handles raw strings — e.g. a
+                // behavior default <Value xsi:type="xsd:string">Auto</Value> from a .behx,
+                // which Convert.ChangeType cannot coerce onto an enum target.
                 object coerced = prop.PropertyType.IsAssignableFrom(value.GetType())
                     ? value
-                    : Convert.ChangeType(value, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+                    : target.IsEnum
+                        ? Enum.Parse(target, value.ToString()!, ignoreCase: true)
+                        : Convert.ChangeType(value, target);
                 prop.SetValue(formsControl, coerced);
             }
             catch (Exception)

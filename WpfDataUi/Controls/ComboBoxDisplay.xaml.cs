@@ -217,48 +217,17 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         Grid.SetColumn(ComboBox, 1);
         Grid.Children.Add(ComboBox);
 
-        var isUsingBinding = false;
-
         HintTextBlock = new TextBlock
         {
             Name="DetailTextBlock",
             VerticalAlignment = VerticalAlignment.Center,
             TextWrapping = TextWrapping.Wrap,
-            HorizontalAlignment = HorizontalAlignment.Left,
             Padding = new Thickness(8, 1, 0, 4),
             Margin = new Thickness(0, 0, -4, 0),
             FontSize = 10
         };
 
-        if(!isUsingBinding)
-        {
-            HintTextBlock.MaxWidth = 250;
-        }
-        else
-        {
-            // This is an attempt to make the hint text block only take as much space as the top
-            // grid. I can't get it to work, even though it works with the TextBoxDisplay. Therefore, we'll just give the 
-            // a reasonable max width.
-            var binding = new Binding()
-            {
-                ElementName = "TopRowGrid",
-                Path = new PropertyPath("ActualWidth"),
-                Mode = BindingMode.OneWay
-            };
-
-
-            HintTextBlock.SetBinding(TextBlock.WidthProperty, binding);
-            // More info here: https://github.com/vchelaru/FlatRedBall/issues/1618
-        }
-
-
         stackPanel.Children.Add(HintTextBlock);
-
-        //var binding = 
-
-        //Grid.SetColumnSpan(HintTextBlock, 2);
-        //Grid.SetRow(HintTextBlock, 1);
-        //Grid.Children.Add(HintTextBlock);
 
         this.Content = stackPanel;
     }

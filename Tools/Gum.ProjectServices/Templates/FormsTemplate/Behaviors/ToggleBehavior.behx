@@ -3,6 +3,13 @@
   <Name>ToggleBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <FormsProperty Type="bool" Name="IsChecked">
+    <Value xsi:type="xsd:boolean">false</Value>
+  </FormsProperty>
+  <ToolOnlyVariableReference>ToggleCategoryState = IsEnabled ? (IsChecked ? "EnabledOn" : "EnabledOff") : (IsChecked ? "DisabledOn" : "DisabledOff")</ToolOnlyVariableReference>
   <Category>
     <Name>ToggleCategory</Name>
     <State>

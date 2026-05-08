@@ -15,6 +15,8 @@ Default visuals are `InteractiveGue` subclasses that procedurally build a comple
 
 **V2+ (`*Visual`)** — Nine-slice textured backgrounds via `Styling.ActiveStyle`. Uses a shared sprite sheet for backgrounds, icons, and focus indicators. V3 variants exist under `DefaultVisuals/V3/`.
 
+> The Forms sprite-sheet icons are one of three icon pipelines in Gum (this one for the runtime; `GumIcon`/`PathGeometry` for tool WPF chrome; PNG `ImageList` for the tool tree view). For the umbrella overview and routing, see [gum-icons](../gum-icons/SKILL.md).
+
 Both generations follow the same wiring pattern; they differ only in visual fidelity.
 
 ## Construction Pattern (V2+)

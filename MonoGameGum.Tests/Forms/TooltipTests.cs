@@ -143,6 +143,29 @@ public class TooltipTests : BaseTestClass
     }
 
     [Fact]
+    public void Positioning_WhenCanvasSmallerThanCameraClient_ClampsToCanvas()
+    {
+        // Repro for issue #2661: in raylib (and any setup where the camera client
+        // area is larger than the logical canvas), tooltips were clamping against
+        // camera client size instead of the canvas/PopupRoot they live in, so they
+        // could render past the canvas edge.
+        // BaseTestClass leaves Camera.ClientWidth/Height at 800x600. Shrinking the
+        // canvas to 400x300 gives us divergence without mutating shared camera state.
+        GraphicalUiElement.CanvasWidth = 400;
+        GraphicalUiElement.CanvasHeight = 300;
+
+        Tooltip tooltip = new Tooltip();
+        tooltip.Content = "The quick brown fox jumps over the lazy dog";
+
+        tooltip.Show(cursorX: 390, cursorY: 290);
+
+        var width = tooltip.Visual.GetAbsoluteWidth();
+        var height = tooltip.Visual.GetAbsoluteHeight();
+        tooltip.Visual.X.ShouldBeLessThanOrEqualTo(400 - width);
+        tooltip.Visual.Y.ShouldBeLessThanOrEqualTo(300 - height);
+    }
+
+    [Fact]
     public void Show_Hide_Programmatic_RaisesOpenedClosedEvents()
     {
         Tooltip tooltip = new Tooltip();

@@ -78,6 +78,17 @@ The docs have two top-level sections — **Gum Tool** (`docs/gum-tool/`) and **C
 
 When writing a tool doc page (e.g., a property page under `gum-elements/`), focus entirely on the tool experience: what the property does visually, where it appears in the UI, and screenshots showing the effect. Do not add code examples showing how to set the property in C#. Conversely, code doc pages should not walk through the tool's UI.
 
+## Cross-Cutting Topics (Binding, Localization, Theming)
+
+Some features cut across many controls — binding, localization, theming, code generation — and individual controls have control-specific behaviors that intersect with them. For example, `TextBox.Text` can be bound to a numeric ViewModel property and the binding implicitly converts string ↔ number; `ListBox` interacts with `BindingContext` differently than other controls; localized labels behave differently in `PasswordBox`.
+
+The convention for these:
+
+- **Document the system-level behavior in the feature's own section.** Someone hitting the feature for the first time will look there. Binding rules go in `docs/code/binding-viewmodels/`, localization rules in the localization section, etc. This is the single source of truth.
+- **Add a brief note on the control's page** with a short example and any control-specific gotchas, then **link back to the feature page** for the general rule (e.g. `[Implicit Type Conversion](../binding-viewmodels/advanced-binding-options.md#implicit-type-conversion)`). Do not duplicate the system-level explanation — trust the reader to follow the link.
+
+The control-page note exists so that a reader troubleshooting "why doesn't my int binding take" while reading the TextBox page finds what they need without bouncing around. The feature-page section exists so that a reader learning the binding system isn't surprised later. Both audiences are real; the split avoids both blind spots without duplicating content.
+
 ## Tone and Style
 
 - Second person ("you"), present tense, instructional tone.

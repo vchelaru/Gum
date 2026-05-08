@@ -79,6 +79,7 @@
       <TextBlock
         x:Name="HintTextBlock"
         Grid.Row="4"
+        Grid.ColumnSpan="3"
         Margin="0,0,4,0"
         HorizontalAlignment="Left"
         VerticalAlignment="Top"

@@ -137,8 +137,17 @@ public class RecursiveVariableFinder : IVariableFinder
         ElementStack.Add(new ElementWithState(stateSave.ParentContainer) { StateName = stateSave.Name });
     }
 
+    /// <summary>
+    /// Optional resolver consulted when the primary state lookup returns null.
+    /// Used by the Forms-property-promotion apply pipeline to fall back to a
+    /// linked behavior's <c>FormsProperty.Value</c> declarations when an
+    /// identifier is referenced but no value is authored on any state.
+    /// </summary>
+    public Func<string, object?>? Fallback { get; set; }
+
     public object GetValue(string variableName)
     {
+        object? toReturn;
         switch (ContainerType)
         {
             case VariableContainerType.InstanceSave:
@@ -154,23 +163,21 @@ public class RecursiveVariableFinder : IVariableFinder
 #endif
 
                 VariableSave variable = GetVariable(variableName);
-                if (variable != null)
-                {
-                    return variable.Value;
-                }
-                else
-                {
-                    return null;
-                }
-
-            //return mInstanceSave.GetValueFromThisOrBase(mElementStack, variableName);
-            //break;
+                toReturn = variable?.Value;
+                break;
             case VariableContainerType.StateSave:
-                return mStateSave.GetValueRecursive(variableName);
-            //break;
+                toReturn = mStateSave.GetValueRecursive(variableName);
+                break;
+            default:
+                throw new NotImplementedException();
         }
 
-        throw new NotImplementedException();
+        if (toReturn == null && Fallback != null)
+        {
+            toReturn = Fallback(variableName);
+        }
+
+        return toReturn;
     }
 
     public T GetValue<T>(string variableName)

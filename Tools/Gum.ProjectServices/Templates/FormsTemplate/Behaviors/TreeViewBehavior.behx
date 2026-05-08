@@ -3,6 +3,10 @@
   <Name>TreeViewBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <ToolOnlyVariableReference>TreeViewCategoryState = IsEnabled ? "Enabled" : "Disabled"</ToolOnlyVariableReference>
   <Category>
     <Name>TreeViewCategory</Name>
     <State>

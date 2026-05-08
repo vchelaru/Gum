@@ -114,7 +114,6 @@
 		<Compile Include="..\..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\Controls\GraphicalUiElementFormsExtensions.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\TextWrapping.cs" Link="Forms\TextWrapping.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Window.cs" Link="Forms\Window.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\ColoredRectangleRuntime.cs" Link="GueDeriving\ColoredRectangleRuntime.cs" />
@@ -144,6 +143,12 @@
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Menu.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\MenuItem.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\PasswordBox.cs" />
+	  <!--
+	    Forms enums are owned by GumCommon (referenced via ProjectReference). Exclude them
+	    from the Forms\Controls\**\*.cs glob so the types aren't compiled twice.
+	  -->
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ScrollBarVisibility.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Orientation.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

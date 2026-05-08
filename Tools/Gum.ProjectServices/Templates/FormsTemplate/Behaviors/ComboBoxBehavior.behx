@@ -3,6 +3,10 @@
   <Name>ComboBoxBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <ToolOnlyVariableReference>ComboBoxCategoryState = IsEnabled ? "Enabled" : "Disabled"</ToolOnlyVariableReference>
   <Category>
     <Name>ComboBoxCategory</Name>
     <State>

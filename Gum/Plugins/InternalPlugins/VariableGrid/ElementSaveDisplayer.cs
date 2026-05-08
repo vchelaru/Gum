@@ -678,6 +678,22 @@ public class ElementSaveDisplayer
                     _setVariableLogic,
                     _wireframeObjectManager);
 
+                // Surface the behavior's declared default (FormsProperty.Value) so the grid
+                // reflects e.g. IsEnabled = true even before the user authors anything. The
+                // closure captures the FormsProperty so a future .behx edit (after reload)
+                // is picked up; the captured reference doesn't go stale because the SRIM
+                // is rebuilt whenever the variable grid recomputes.
+                VariableSave declaration = formsProperty;
+                srim.DefaultValueFallback = () => declaration.Value;
+
+                // Seed the row's display text from the FormsProperty's authored Description
+                // (persisted in the .behx). Later state-dependent hints set elsewhere via
+                // srim.DetailText can still overwrite or append to this seed.
+                if (!string.IsNullOrEmpty(formsProperty.Description))
+                {
+                    srim.DetailText = formsProperty.Description;
+                }
+
                 behaviorCategory.Members.Add(srim);
             }
         }

@@ -51,6 +51,14 @@ public class StateReferencingInstanceMember : InstanceMember
 
     public object LastOldFullCommitValue { get; private set; }
 
+    /// <summary>
+    /// Optional fallback consulted by the value getter when neither the selected
+    /// state nor any inherited state has a value for this variable. Used by the
+    /// behavior-FormsProperty surfacing path so a declared default (e.g.
+    /// <c>IsEnabled = true</c>) appears in the grid without writing into state.
+    /// </summary>
+    public Func<object?>? DefaultValueFallback { get; set; }
+
     Attribute[] _attributes;
     TypeConverter? _converter;
     Type? _componentType;
@@ -121,7 +129,7 @@ public class StateReferencingInstanceMember : InstanceMember
         }
     }
 
-    private object GetValueStrictlyOnSelectedState(object component)
+    private object? GetValueStrictlyOnSelectedState(object component)
     {
         if (mStateSave != null)
         {
@@ -715,7 +723,15 @@ public class StateReferencingInstanceMember : InstanceMember
                 }
             }
 
-            // we want to do this by value:
+            // Final tier: behavior-promoted FormsProperty defaults. When neither the
+            // selected state nor any inherited state authors a value, fall back to the
+            // declared FormsProperty.Value so the grid reflects the implicit default
+            // (e.g. IsEnabled = true) without polluting state. IsDefault remains true
+            // because nothing is explicitly authored.
+            if (toReturn == null)
+            {
+                toReturn = DefaultValueFallback?.Invoke();
+            }
 
             return toReturn;
         }

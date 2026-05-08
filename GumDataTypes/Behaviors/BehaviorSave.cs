@@ -32,6 +32,16 @@ namespace Gum.DataTypes.Behaviors
         [XmlElement("FormsProperty")]
         public List<VariableSave> FormsProperties { get; set; } = new List<VariableSave>();
 
+        /// <summary>
+        /// Variable reference assignments (e.g. <c>ButtonCategoryState = IsEnabled ? "Enabled" : "Disabled"</c>)
+        /// that the Gum tool evaluates at design time to drive wireframe preview from <see cref="FormsProperties"/>.
+        /// Unlike state-level <c>VariableReferences</c>, these are NEVER traversed by the runtime apply pass —
+        /// at runtime the Forms control's own setter (e.g. <c>FrameworkElement.IsEnabled</c>) owns the visual
+        /// state, so applying them again would double-write. Structural separation by name is the contract.
+        /// </summary>
+        [XmlElement("ToolOnlyVariableReference")]
+        public List<string> ToolOnlyVariableReferences { get; set; } = new List<string>();
+
         IList<StateSaveCategory> IStateContainer.Categories => Categories;
         [XmlElement("Category")]
         public List<StateSaveCategory> Categories { get; set; } = new List<StateSaveCategory>();

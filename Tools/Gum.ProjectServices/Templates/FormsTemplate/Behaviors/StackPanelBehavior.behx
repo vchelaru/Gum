@@ -3,6 +3,17 @@
   <Name>StackPanelBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <FormsProperty Type="Orientation" Name="Orientation">
+    <Value xsi:type="xsd:string">Vertical</Value>
+    <Description>Vertical stacks children top-to-bottom; Horizontal stacks left-to-right.</Description>
+  </FormsProperty>
+  <FormsProperty Type="float" Name="Spacing">
+    <Value xsi:type="xsd:float">0</Value>
+    <Description>Pixels of space between adjacent children along the stack axis.</Description>
+  </FormsProperty>
   <RequiredInstances />
   <RequiredAnimations />
 </BehaviorSave>

@@ -3,6 +3,21 @@
   <Name>ItemsControlBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <FormsProperty Type="ScrollBarVisibility" Name="VerticalScrollBarVisibility">
+    <Value xsi:type="xsd:string">Auto</Value>
+    <Description>Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.</Description>
+  </FormsProperty>
+  <FormsProperty Type="ScrollBarVisibility" Name="HorizontalScrollBarVisibility">
+    <Value xsi:type="xsd:string">Auto</Value>
+    <Description>Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.</Description>
+  </FormsProperty>
+  <FormsProperty Type="Orientation?" Name="Orientation">
+    <Value xsi:type="xsd:string">Vertical</Value>
+    <Description>Vertical stacks items top-to-bottom; Horizontal stacks left-to-right. Empty leaves the inner panel's authored ChildrenLayout untouched.</Description>
+  </FormsProperty>
   <RequiredInstances />
   <RequiredAnimations />
 </BehaviorSave>

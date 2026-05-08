@@ -106,6 +106,43 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
     }
 
     [Fact]
+    public void AddBehaviorFormsPropertyMembers_StateMissingValue_MemberValueFallsBackToBehaviorFormsPropertyDefault()
+    {
+        // Behavior declares IsEnabled with default true; component's default state authors nothing.
+        BehaviorSave behaviorWithDefault = new BehaviorSave { Name = "WithDefault" };
+        behaviorWithDefault.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsEnabled",
+            Value = true
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/PlainButton", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "WithDefault" });
+
+        _project.Behaviors.Add(behaviorWithDefault);
+        _project.Components.Add(component);
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.AddBehaviorFormsPropertyMembers(
+            elementWithBehaviors: component,
+            instanceOwner: component,
+            instance: null,
+            stateSave: component.DefaultState,
+            stateSaveCategory: null,
+            categories: categories);
+
+        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        behaviorCategory.ShouldNotBeNull();
+        InstanceMember? isEnabledMember = behaviorCategory.Members.FirstOrDefault(m => m.Name == "IsEnabled");
+        isEnabledMember.ShouldNotBeNull();
+        isEnabledMember.Value.ShouldBe(true,
+            "with no value authored on state, the variable grid should display the behavior's declared FormsProperty default");
+    }
+
+    [Fact]
     public void AddBehaviorFormsPropertyMembers_FormsPropertyWithNullName_SilentlySkippedNoCrash()
     {
         // Reproduces the v1 (legacy) gumx scenario where the standard XmlSerializer
@@ -145,6 +182,41 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
     }
 
     [Fact]
+    public void AddBehaviorFormsPropertyMembers_FormsPropertyWithDescription_SeedsSrimDetailText()
+    {
+        BehaviorSave describedBehavior = new BehaviorSave { Name = "DescribedBehavior" };
+        describedBehavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "AcceptsReturn",
+            Value = false,
+            Description = "If true, pressing Enter inserts a newline."
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/Described", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "DescribedBehavior" });
+        _project.Behaviors.Add(describedBehavior);
+        _project.Components.Add(component);
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.AddBehaviorFormsPropertyMembers(
+            elementWithBehaviors: component,
+            instanceOwner: component,
+            instance: null,
+            stateSave: component.DefaultState,
+            stateSaveCategory: null,
+            categories: categories);
+
+        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        behaviorCategory.ShouldNotBeNull();
+        InstanceMember? acceptsReturnMember = behaviorCategory.Members.FirstOrDefault(m => m.Name == "AcceptsReturn");
+        acceptsReturnMember.ShouldNotBeNull();
+        acceptsReturnMember.DetailText.ShouldBe("If true, pressing Enter inserts a newline.");
+    }
+
+    [Fact]
     public void AddBehaviorFormsPropertyMembers_VariableAlreadyInGeneralCategory_MovesToBehaviorCategory()
     {
         // Simulates the case where the component has set a default value for the
@@ -173,5 +245,48 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         behaviorCategory.ShouldNotBeNull();
         behaviorCategory.Members.ShouldContain(existingMember,
             "the existing entry should be reused (preserves its DetailText, displayer hints, etc.) rather than rebuilt");
+    }
+
+    [Fact]
+    public void AddBehaviorFormsPropertyMembers_EnumTypedFormsProperty_ResolvesEnumComponentType()
+    {
+        // The variable grid renders an enum picker only when the SRIM's PropertyType
+        // (sourced from TypeManager.GetTypeFromString on the FormsProperty's Type
+        // string) is the actual enum. Regression for the v4 enum-typed FormsProperty
+        // path: TypeManager must find Gum.Forms.Controls.ScrollBarVisibility (now
+        // owned by GumCommon, where TypeManager scans).
+        BehaviorSave scrollViewerBehavior = new BehaviorSave { Name = "ScrollViewerBehavior" };
+        scrollViewerBehavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "ScrollBarVisibility",
+            Name = "VerticalScrollBarVisibility",
+            Value = "Auto"
+        });
+
+        ComponentSave scrollViewerComponent = new ComponentSave
+        {
+            Name = "Controls/ScrollViewer",
+            BaseType = "Container"
+        };
+        scrollViewerComponent.States.Add(new StateSave { Name = "Default", ParentContainer = scrollViewerComponent });
+        scrollViewerComponent.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ScrollViewerBehavior" });
+        _project.Behaviors.Add(scrollViewerBehavior);
+        _project.Components.Add(scrollViewerComponent);
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.AddBehaviorFormsPropertyMembers(
+            elementWithBehaviors: scrollViewerComponent,
+            instanceOwner: scrollViewerComponent,
+            instance: null,
+            stateSave: scrollViewerComponent.DefaultState,
+            stateSaveCategory: null,
+            categories: categories);
+
+        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        behaviorCategory.ShouldNotBeNull();
+        InstanceMember? member = behaviorCategory.Members.FirstOrDefault(m => m.Name == "VerticalScrollBarVisibility");
+        member.ShouldNotBeNull();
+        member.PropertyType.ShouldBe(typeof(Gum.Forms.Controls.ScrollBarVisibility));
     }
 }

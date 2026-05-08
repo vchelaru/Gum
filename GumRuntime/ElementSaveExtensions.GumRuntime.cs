@@ -665,14 +665,23 @@ namespace GumRuntime
             }
         }
 
-        struct VariableReferenceAssignmentResult
+        public struct VariableReferenceAssignmentResult
         {
             public string VariableName;
             public object OldValue;
             public object NewValue;
         }
 
-        private static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave instanceLeft, string referenceString, StateSave stateSave)
+        /// <summary>
+        /// Evaluates a single reference line (e.g. <c>X = SomeOther.X</c>) against
+        /// <paramref name="stateSave"/>, qualifying the left side with
+        /// <paramref name="instanceLeft"/>'s name when present, and writes the result
+        /// back into the state. Used by both state-level <c>VariableReferences</c>
+        /// application and (tool-only) behavior <c>ToolOnlyVariableReferences</c>
+        /// application. Returns the resulting variable name + old/new values so callers
+        /// can fire change notifications.
+        /// </summary>
+        public static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave instanceLeft, string referenceString, StateSave stateSave)
         {
 
             //////////////////////////////Early Out/////////////////////////////////

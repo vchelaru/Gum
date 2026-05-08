@@ -204,3 +204,46 @@ Binding binding = new("CurrentPlayer.Name")
 };
 label.SetBinding(nameof(Label.Text), binding);
 ```
+
+## Implicit Type Conversion
+
+When the source and target of a binding have different types, Gum automatically attempts to convert values using `System.Convert.ChangeType` in both directions. This means a string-typed control property like `TextBox.Text` can be bound to a numeric ViewModel property without writing a converter.
+
+The following ViewModel exposes an `int` property:
+
+```csharp
+// Class scope
+class MyViewModel : ViewModel
+{
+    public int Score
+    {
+        get => Get<int>();
+        set => Set(value);
+    }
+}
+```
+
+The TextBox can be bound directly to `Score`:
+
+```csharp
+// Initialize
+MyViewModel vm = new() { Score = 8 };
+TextBox textBox = new() { BindingContext = vm };
+textBox.SetBinding(nameof(TextBox.Text), nameof(MyViewModel.Score));
+```
+
+In the example above, setting `vm.Score = 12` updates `textBox.Text` to `"12"`, and typing `"42"` into the textbox updates `vm.Score` to `42`. The standard numeric types are supported: `byte`, `int`, `float`, `double`, and `decimal`.
+
+### Conversion Failures
+
+If `Convert.ChangeType` cannot convert a value — for example, the user types `"hello"` into a TextBox bound to `int` — the binding silently leaves the destination unchanged. No exception is thrown.
+
+This applies in both directions and to edge cases such as empty strings. Clearing the text in a TextBox bound to `int` does **not** reset the source to `0` — it leaves the source at its previous value.
+
+{% hint style="info" %}
+The same rule applies to `Nullable<T>` source properties. An empty string does not convert to `null`, so the source is left unchanged. To support clearing a numeric field to `null`, supply a `Converter` with explicit `ConvertBack` logic.
+{% endhint %}
+
+### Culture Sensitivity
+
+Implicit conversion uses the current culture. On a system where the decimal separator is `,`, the string `"3.14"` will not parse as a decimal number; `"3,14"` will. If your application needs culture-invariant parsing regardless of system settings, supply a `Converter` rather than relying on implicit conversion.
