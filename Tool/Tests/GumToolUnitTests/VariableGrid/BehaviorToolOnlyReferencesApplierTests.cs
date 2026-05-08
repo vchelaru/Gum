@@ -315,6 +315,80 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
         defaultState.GetValue("CheckBoxCategoryState").ShouldBe("EnabledOff");
     }
 
+    [Fact(Timeout = 5000)]
+    public void Apply_SelfReferentialReferenceWritingItsOwnRhs_TerminatesInOnePass()
+    {
+        // A reference whose LHS is the same variable read on the RHS would be a recursion
+        // hazard if Apply re-fired itself when intermediate writes hit the state. It does
+        // not — Apply walks references once per call. This test pins that contract by
+        // running Apply with a tight self-loop and asserting it terminates (Timeout will
+        // trip if it ever regresses to a re-entrant design).
+        BehaviorSave behavior = new BehaviorSave { Name = "SelfLoopBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "string",
+            Name = "Toggle",
+            Value = "off"
+        });
+        // RHS reads Toggle, LHS writes Toggle.
+        behavior.ToolOnlyVariableReferences.Add(
+            "Toggle = Toggle == \"off\" ? \"on\" : \"off\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/SelfLoop", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "string",
+            Name = "Toggle",
+            Value = "off",
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SelfLoopBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        Should.NotThrow(() => BehaviorToolOnlyReferencesApplier.Apply(component, defaultState));
+        // One pass: off -> on. If Apply re-fired on its own write, the value would either
+        // oscillate or run away.
+        defaultState.GetValue("Toggle").ShouldBe("on");
+    }
+
+    [Fact(Timeout = 5000)]
+    public void Apply_TwoMutuallyReferentialReferences_TerminatesInOnePass()
+    {
+        // Two ToolOnly references where each LHS appears on the other's RHS. Apply walks
+        // them in source order, in a single pass — A is evaluated and written first, then
+        // B is evaluated against the *already-updated* A. Outcome is deterministic and
+        // bounded; no recursion.
+        BehaviorSave behavior = new BehaviorSave { Name = "MutualBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "string", Name = "A", Value = "a0" });
+        behavior.FormsProperties.Add(new VariableSave { Type = "string", Name = "B", Value = "b0" });
+        behavior.ToolOnlyVariableReferences.Add("A = B + \"->A\"");
+        behavior.ToolOnlyVariableReferences.Add("B = A + \"->B\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/Mutual", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave { Type = "string", Name = "A", Value = "a0", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Type = "string", Name = "B", Value = "b0", SetsValue = true });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "MutualBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        Should.NotThrow(() => BehaviorToolOnlyReferencesApplier.Apply(component, defaultState));
+        // Pass order: A = B + "->A" -> "b0->A"; B = A + "->B" -> "b0->A->B".
+        // Pinning these confirms single-pass evaluation in source order.
+        defaultState.GetValue("A").ShouldBe("b0->A");
+        defaultState.GetValue("B").ShouldBe("b0->A->B");
+    }
+
     [Fact]
     public void Apply_BehaviorWithoutToolOnlyReferences_DoesNothing()
     {
