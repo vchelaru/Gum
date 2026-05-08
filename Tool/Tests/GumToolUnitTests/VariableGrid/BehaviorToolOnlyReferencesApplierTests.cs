@@ -131,6 +131,69 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_StateMissingIdentifier_FallsBackToBehaviorFormsPropertyDefault()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsEnabled",
+            Value = false  // declared default, drives the wireframe to "Disabled" with no instance authoring
+        });
+        behavior.ToolOnlyVariableReferences.Add(
+            "ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/ButtonStandard", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("ButtonCategoryState").ShouldBe("Disabled");
+    }
+
+    [Fact]
+    public void Apply_StateAuthoredValue_OverridesBehaviorFormsPropertyDefault()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsEnabled",
+            Value = true
+        });
+        behavior.ToolOnlyVariableReferences.Add(
+            "ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/ButtonStandard", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsEnabled",
+            Value = false,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("ButtonCategoryState").ShouldBe("Disabled");
+    }
+
+    [Fact]
     public void Apply_BehaviorWithoutToolOnlyReferences_DoesNothing()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };

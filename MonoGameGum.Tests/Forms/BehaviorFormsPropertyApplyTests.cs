@@ -56,6 +56,35 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_NeitherComponentNorParentDefinesValue_FallsBackToBehaviorFormsPropertyValue()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "string",
+            Name = "ToolTip",
+            Value = "behavior default tooltip"
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/ButtonStandard", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        InteractiveGue visual = new InteractiveGue();
+        visual.ElementSave = component;
+
+        Button button = new Button(visual);
+        BehaviorFormsPropertyApplier.Apply(button, visual);
+
+        button.ToolTip.ShouldBe("behavior default tooltip");
+    }
+
+    [Fact]
     public void Apply_ParentScreenInstanceOverride_OverridesComponentDefault()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };

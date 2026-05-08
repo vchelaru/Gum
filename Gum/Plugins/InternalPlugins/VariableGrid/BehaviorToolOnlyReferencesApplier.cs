@@ -6,6 +6,7 @@ using Gum.Managers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Linq;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
@@ -26,26 +27,23 @@ public static class BehaviorToolOnlyReferencesApplier
 {
     public static void Apply(ElementSave element, StateSave stateSave)
     {
-        ApplyBehaviorsOf(element, instance: null, stateSave);
+        if (element is ComponentSave component)
+        {
+            ApplyBehaviorsOf(component, instance: null, stateSave);
+        }
 
         foreach (InstanceSave instance in element.Instances)
         {
-            ElementSave? instanceElement = ObjectFinder.Self.GetElementSave(instance.BaseType);
-            if (instanceElement == null)
+            if (ObjectFinder.Self.GetElementSave(instance.BaseType) is ComponentSave instanceComponent)
             {
-                continue;
+                ApplyBehaviorsOf(instanceComponent, instance, stateSave);
             }
-
-            ApplyBehaviorsOf(instanceElement, instance, stateSave);
         }
     }
 
-    private static void ApplyBehaviorsOf(ElementSave element, InstanceSave? instance, StateSave stateSave)
+    private static void ApplyBehaviorsOf(ComponentSave component, InstanceSave? instance, StateSave stateSave)
     {
-        if (element is not ComponentSave component)
-        {
-            return;
-        }
+        Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance);
 
         foreach (ElementBehaviorReference reference in component.Behaviors)
         {
@@ -57,12 +55,12 @@ public static class BehaviorToolOnlyReferencesApplier
 
             foreach (string referenceLine in behavior.ToolOnlyVariableReferences)
             {
-                ApplyLine(referenceLine, instance, stateSave);
+                ApplyLine(referenceLine, instance, stateSave, fallback);
             }
         }
     }
 
-    private static void ApplyLine(string referenceLine, InstanceSave? instance, StateSave stateSave)
+    private static void ApplyLine(string referenceLine, InstanceSave? instance, StateSave stateSave, Func<string, object?> fallback)
     {
         if (string.IsNullOrWhiteSpace(referenceLine) || referenceLine.TrimStart().StartsWith("//"))
         {
@@ -85,7 +83,7 @@ public static class BehaviorToolOnlyReferencesApplier
 
         string rightAsCSharp = EvaluatedSyntax.ConvertToCSharpSyntax(right);
         ExpressionSyntax rightSyntax = SyntaxFactory.ParseExpression(rightAsCSharp);
-        EvaluatedSyntax? evaluated = EvaluatedSyntax.FromSyntaxNode(rightSyntax, stateSave);
+        EvaluatedSyntax? evaluated = EvaluatedSyntax.FromSyntaxNode(rightSyntax, stateSave, fallback);
         if (evaluated?.Value == null)
         {
             return;
@@ -93,6 +91,44 @@ public static class BehaviorToolOnlyReferencesApplier
 
         string effectiveLeft = instance == null ? left : $"{instance.Name}.{left}";
         stateSave.SetValue(effectiveLeft, evaluated.Value, instance);
+    }
+
+    /// <summary>
+    /// Builds a name-resolver that looks up bare or instance-qualified identifiers
+    /// against every linked behavior's <c>FormsProperty</c> declarations on
+    /// <paramref name="component"/>, returning the declared <c>Value</c>. Used by
+    /// <see cref="EvaluatedSyntax.FromSyntaxNode"/> as a fallback when the state
+    /// has no authored value — so a behavior-declared default (e.g. IsEnabled = true)
+    /// flows through to the wireframe preview without polluting the saved state.
+    /// </summary>
+    private static Func<string, object?> BuildFormsPropertyDefaultsFallback(ComponentSave component, InstanceSave? instance)
+    {
+        string? instancePrefix = instance != null ? instance.Name + "." : null;
+        return name =>
+        {
+            string lookupName = instancePrefix != null && name.StartsWith(instancePrefix)
+                ? name.Substring(instancePrefix.Length)
+                : name;
+
+            foreach (ElementBehaviorReference reference in component.Behaviors)
+            {
+                BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
+                if (behavior == null)
+                {
+                    continue;
+                }
+
+                foreach (VariableSave declaration in behavior.FormsProperties)
+                {
+                    if (declaration.Name == lookupName)
+                    {
+                        return declaration.Value;
+                    }
+                }
+            }
+
+            return null;
+        };
     }
 
     /// <summary>

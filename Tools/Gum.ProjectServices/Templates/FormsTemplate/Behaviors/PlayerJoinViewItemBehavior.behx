@@ -3,7 +3,9 @@
   <Name>PlayerJoinViewItemBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
-  <FormsProperty Type="bool" Name="IsEnabled" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
   <Category>
     <Name>PlayerJoinCategory</Name>
     <State>

@@ -3,7 +3,9 @@
   <Name>SplitterBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
-  <FormsProperty Type="bool" Name="IsEnabled" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
   <RequiredInstances />
   <RequiredAnimations />
   <DefaultImplementation>Controls/SplitterStandard</DefaultImplementation>

@@ -74,6 +74,39 @@ public class GumFileSerializerTests
     }
 
     [Fact]
+    public void DeserializeBehaviorSave_LegacyFormat_LoadsFormsPropertyDefaultBoolValue()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.FormsProperties.Count.ShouldBe(1);
+        result.FormsProperties[0].Type.ShouldBe("bool");
+        result.FormsProperties[0].Name.ShouldBe("IsEnabled");
+        result.FormsProperties[0].Value.ShouldBe(true);
+    }
+
+    [Fact]
+    public void DeserializeBehaviorSave_CompactFormat_LoadsFormsPropertyDefaultBoolValue()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+
+        XmlSerializer compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
+        string xml = SerializeToString(compactSerializer, original);
+
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.FormsProperties.Count.ShouldBe(1);
+        result.FormsProperties[0].Value.ShouldBe(true);
+    }
+
+    [Fact]
     public void DeserializeBehaviorSave_LegacyFormat_LoadsToolOnlyVariableReferences()
     {
         BehaviorSave original = new BehaviorSave();
