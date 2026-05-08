@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 
@@ -24,6 +25,12 @@ public class AlignmentViewModel : ViewModel
         get => Get<float>();
         set => Set(value);
     }
+
+    [DependsOn(nameof(DockMargin))]
+    public string MarginText => $"Applies {DockMargin}px margin";
+
+    [DependsOn(nameof(DockMargin))]
+    public Visibility MarginTextVisibility => DockMargin != 0 ? Visibility.Visible : Visibility.Collapsed;
 
     public AlignmentViewModel(CommonControlLogic commonControlLogic)
     {
