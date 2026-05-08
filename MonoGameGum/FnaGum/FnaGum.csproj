@@ -101,9 +101,11 @@
 			Forms enums are owned by GumCommon (referenced via ProjectReference). Exclude
 			them from the ..\**\*.cs sweep so the types aren't compiled twice.
 		-->
+		<Compile Remove="..\Forms\ResizeMode.cs" />
 		<Compile Remove="..\Forms\TextWrapping.cs" />
-		<Compile Remove="..\Forms\Controls\ScrollBarVisibility.cs" />
 		<Compile Remove="..\Forms\Controls\Orientation.cs" />
+		<Compile Remove="..\Forms\Controls\ResizeBehavior.cs" />
+		<Compile Remove="..\Forms\Controls\ScrollBarVisibility.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

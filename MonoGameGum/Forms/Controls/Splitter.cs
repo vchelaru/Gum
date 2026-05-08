@@ -17,12 +17,6 @@ namespace Gum.Forms.Controls;
 
 #endif
 
-public enum ResizeBehavior
-{
-    Rows,
-    Columns
-}
-
 /// <summary>
 /// Control which allows the user to resize two adjacent siblings.
 /// </summary>

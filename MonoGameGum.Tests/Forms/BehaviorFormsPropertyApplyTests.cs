@@ -435,6 +435,62 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_SplitterResizeBehaviorFromBehaviorDefaultString_CoercesToNullableEnum()
+    {
+        // Splitter.ResizeBehavior is ResizeBehavior?, so this exercises the
+        // Nullable.GetUnderlyingType -> IsEnum path on a different enum than Orientation.
+        BehaviorSave behavior = new BehaviorSave { Name = "SplitterBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "ResizeBehavior?",
+            Name = "ResizeBehavior",
+            Value = "Columns"
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/Splitter", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SplitterBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        Splitter splitter = new Splitter();
+        splitter.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(splitter, splitter.Visual);
+
+        splitter.ResizeBehavior.ShouldBe(Gum.Forms.Controls.ResizeBehavior.Columns);
+    }
+
+    [Fact]
+    public void Apply_WindowResizeModeFromBehaviorDefaultString_CoercesToEnum()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "WindowBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "ResizeMode",
+            Name = "ResizeMode",
+            Value = "NoResize"
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/Window", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "WindowBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        Window window = new Window();
+        window.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(window, window.Visual);
+
+        window.ResizeMode.ShouldBe(ResizeMode.NoResize);
+    }
+
+    [Fact]
     public void Apply_ScrollViewerVisibilityFromStateBoxedEnum_PreservesIsAssignableFromBranch()
     {
         // When the variable grid authors a state value, it stores the boxed enum (not a

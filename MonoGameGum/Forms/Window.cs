@@ -23,25 +23,6 @@ namespace Gum.Forms;
 
 #endif
 
-#region ResizeMode Enum
-
-/// <summary>
-/// Values for an element's resize behavior.
-/// </summary>
-public enum ResizeMode
-{
-    /// <summary>
-    /// Resizing using the cursor is not enabled
-    /// </summary>
-    NoResize,
-    /// <summary>
-    /// Resizing is enabled according to the enabled border instances.
-    /// </summary>
-    CanResize
-}
-
-#endregion
-
 /// <summary>
 /// A resizable, movable FrameworkElement
 /// </summary>

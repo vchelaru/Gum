@@ -104,6 +104,23 @@ public class TypeManager : ITypeManager
                     return type;
                 }
             }
+
+            // Custom enum nullables: "Foo?" -> typeof(Nullable<Foo>). Primitive nullables
+            // are matched explicitly above; this is the catch-all so FormsProperty entries
+            // like Type="Orientation?" or Type="ResizeBehavior?" resolve to a typed
+            // PropertyType in the variable grid (giving an enum picker with a None entry)
+            // instead of falling back to a string textbox.
+            if (typeAsString.Length > 1 && typeAsString[typeAsString.Length - 1] == '?')
+            {
+                string underlyingName = typeAsString.Substring(0, typeAsString.Length - 1);
+                foreach (Type type in mTypes)
+                {
+                    if (type.IsEnum && type.Name == underlyingName)
+                    {
+                        return typeof(Nullable<>).MakeGenericType(type);
+                    }
+                }
+            }
         }
 
         return null;
