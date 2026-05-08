@@ -5,8 +5,10 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
+using Gum.Wireframe;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
@@ -313,6 +315,57 @@ public class DragDropManagerTests : BaseTestClass
 
         // Assert
         result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void OnNodeObjectDroppedInWireframe_ShouldHoldUndoLockWhenAddingInstance()
+    {
+        // Issue #2658: dropping a component into the wireframe must bundle the
+        // instance creation and the cursor-driven X/Y assignment into one undo
+        // entry. The DragDropManager must request the undo lock BEFORE calling
+        // AddInstance so that AddInstance's plugin-fired RecordUndo is suppressed,
+        // and the lock must remain held through the subsequent X/Y SetValue calls.
+        // Arrange
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "TargetScreen";
+        screen.States.Add(new Gum.DataTypes.Variables.StateSave { Name = "Default" });
+
+        ComponentSave dragged = new ComponentSave();
+        dragged.Name = "DraggedComponent";
+        dragged.States.Add(new Gum.DataTypes.Variables.StateSave { Name = "Default" });
+
+        _mocker.GetMock<IWireframeObjectManager>()
+            .Setup(x => x.ElementShowing).Returns(screen);
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        bool lockRequested = false;
+        bool lockHeldDuringAddInstance = false;
+
+        _mocker.GetMock<IUndoManager>()
+            .Setup(x => x.RequestLock())
+            .Callback(() => lockRequested = true)
+            .Returns((UndoLock)null!);
+
+        InstanceSave? nullInstance = null;
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.AddInstance(
+                It.IsAny<ElementSave>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<int?>()))
+            .Callback(() => lockHeldDuringAddInstance = lockRequested)
+            .Returns(() => nullInstance!);
+
+        // Act
+        _dragDropManager.OnNodeObjectDroppedInWireframe(dragged);
+
+        // Assert
+        lockHeldDuringAddInstance.ShouldBeTrue(
+            "RequestLock must be called before AddInstance so the drop is recorded as a single undo entry (issue #2658)");
     }
 
     [Fact]

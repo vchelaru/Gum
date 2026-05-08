@@ -943,6 +943,12 @@ public class DragDropManager : IDragDropManager
         // an element, so let's protect against that with this null check.
         if (draggedAsElementSave != null && target is not null)
         {
+            // Bundle the instance creation and the cursor-driven X/Y assignment into a
+            // single undo entry. Without this lock, AddInstance records its own undo via
+            // the InstanceAdd plugin event, and the subsequent X/Y SetValue calls leak
+            // into whatever edit comes next. (issue #2658)
+            using var undoLock = _undoManager.RequestLock();
+
             var index = target.Instances.Count;
             var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, index);
 
