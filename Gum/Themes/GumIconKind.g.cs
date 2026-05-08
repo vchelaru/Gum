@@ -30,7 +30,6 @@ public enum GumIconKind
     DockFill, // DockFill
     DockLeft, // DockLeft
     DockLeftRight, // DockLeftRight
-    DockNone, // DockNone
     DockRight, // DockRight
     DockTop, // DockTop
     DockTopBottom, // DockTopBottom
@@ -100,7 +99,6 @@ public static class GumIconKindMap
         "DockFill",
         "DockLeft",
         "DockLeftRight",
-        "DockNone",
         "DockRight",
         "DockTop",
         "DockTopBottom",
