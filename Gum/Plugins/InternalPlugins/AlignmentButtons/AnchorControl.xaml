@@ -2,17 +2,15 @@
   x:Class="Gum.Plugins.AlignmentButtons.AnchorControl"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:controls="clr-namespace:Gum.Controls"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:Gum.Plugins.AlignmentButtons"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
   HorizontalContentAlignment="Center"
   mc:Ignorable="d">
   <UserControl.Resources>
-    <Style BasedOn="{StaticResource IconButton}" TargetType="{x:Type Button}" />
+    <Style BasedOn="{StaticResource AlignmentIconButton}" TargetType="{x:Type Button}" />
   </UserControl.Resources>
-
-
 
   <Grid>
 
@@ -21,12 +19,7 @@
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
 
-    <Border
-      Margin="0,0,8,0"
-      BorderBrush="{DynamicResource Frb.Brushes.Contrast01}"
-      BorderThickness="1"
-      CornerRadius="4">
-      <Grid>
+    <Grid Margin="0,0,8,0">
         <Grid.RowDefinitions>
           <RowDefinition />
           <RowDefinition />
@@ -40,88 +33,85 @@
 
         <Button
           Click="TopLeftButton_Click"
-          Content="{wpf:FluentIcon Icon=ArrowUpLeft}"
-          ToolTip="Anchor Top Left" />
+          ToolTip="Anchor Top Left">
+          <controls:GumIcon Icon="AnchorTopLeft" />
+        </Button>
 
         <Button
           Grid.Column="1"
           Click="TopButton_Click"
-          Content="{wpf:FluentIcon Icon=ArrowUp}"
-          ToolTip="Anchor Top" />
+          ToolTip="Anchor Top">
+          <controls:GumIcon Icon="AnchorTopCenter" />
+        </Button>
         <Button
           Grid.Column="2"
           Click="TopRightButton_Click"
-          Content="{wpf:FluentIcon Icon=ArrowUpRight}"
-          ToolTip="Anchor Top Right" />
+          ToolTip="Anchor Top Right">
+          <controls:GumIcon Icon="AnchorTopRight" />
+        </Button>
         <Button
           Grid.Row="1"
           Grid.Column="0"
           Click="MiddleLeftButton_Click"
-          Content="{wpf:FluentIcon Icon=ArrowLeft}"
-          ToolTip="Anchor Left" />
+          ToolTip="Anchor Left">
+          <controls:GumIcon Icon="AnchorCenterLeft" />
+        </Button>
         <Button
           Grid.Row="1"
           Grid.Column="1"
           Click="MiddleMiddleButton_Click"
-          Content="{wpf:FluentIcon Icon=Stop}"
-          ToolTip="Anchor Center" />
+          ToolTip="Anchor Center">
+          <controls:GumIcon Icon="AnchorCenter" />
+        </Button>
         <Button
           Grid.Row="1"
           Grid.Column="2"
           Click="MiddleRightButton_Click"
-          Content="{wpf:FluentIcon Icon=ArrowRight}"
-          ToolTip="Anchor Right" />
+          ToolTip="Anchor Right">
+          <controls:GumIcon Icon="AnchorCenterRight" />
+        </Button>
         <Button
           Grid.Row="2"
           Grid.Column="0"
           Click="BottomLeftButton_Click"
-          Content="{wpf:FluentIcon Icon=ArrowDownLeft}"
-          ToolTip="Anchor Bottom Left" />
+          ToolTip="Anchor Bottom Left">
+          <controls:GumIcon Icon="AnchorBottomLeft" />
+        </Button>
         <Button
           Grid.Row="2"
           Grid.Column="1"
           Click="BottomMiddleButton_Click"
-          Content="{wpf:FluentIcon Icon=ArrowDown}"
-          ToolTip="Anchor Bottom" />
+          ToolTip="Anchor Bottom">
+          <controls:GumIcon Icon="AnchorBottomCenter" />
+        </Button>
         <Button
           Grid.Row="2"
           Grid.Column="2"
           Click="BottomRightButton_Click"
-          Content="{wpf:FluentIcon Icon=ArrowDownRight}"
-          ToolTip="Anchor Bottom Right" />
+          ToolTip="Anchor Bottom Right">
+          <controls:GumIcon Icon="AnchorBottomRight" />
+        </Button>
 
-      </Grid>
-
-    </Border>
+    </Grid>
 
 
     <StackPanel Grid.Column="1">
-      <Button
-        x:Name="AnchorCenterHorizontally"
-        Grid.Row="0"
-        Grid.Column="3"
-        Click="AnchorCenterHorizontally_Click">
-        <Button.Content>
-          <wpf:FluentIcon Icon="ArrowMinimizeVertical">
-            <wpf:FluentIcon.LayoutTransform>
-              <RotateTransform Angle="90" />
-            </wpf:FluentIcon.LayoutTransform>
-          </wpf:FluentIcon>
-        </Button.Content>
-        <Button.ToolTip>
-          Anchor Center Horizontally
-        </Button.ToolTip>
-      </Button>
-      <Button
-        x:Name="AnchorCenterVertically"
-        Grid.Row="1"
-        Grid.Column="3"
-        Click="AnchorCenterVertically_Click"
-        Content="{wpf:FluentIcon Icon=ArrowMinimizeVertical}">
-        <Button.ToolTip>
-          Anchor Center Vertically
-        </Button.ToolTip>
-      </Button>
+        <Button
+          x:Name="AnchorCenterHorizontally"
+          Click="AnchorCenterHorizontally_Click">
+          <controls:GumIcon Icon="AnchorCenterHorizontal" />
+          <Button.ToolTip>
+            Anchor Center Horizontally
+          </Button.ToolTip>
+        </Button>
+        <Button
+          x:Name="AnchorCenterVertically"
+          Click="AnchorCenterVertically_Click">
+          <controls:GumIcon Icon="AnchorCenterVertical" />
+          <Button.ToolTip>
+            Anchor Center Vertically
+          </Button.ToolTip>
+        </Button>
     </StackPanel>
 
   </Grid>

@@ -96,4 +96,19 @@
         </Style.Resources>
     </Style>
 
+    <Style
+        x:Key="AlignmentIconButton"
+        BasedOn="{StaticResource IconButton}"
+        TargetType="{x:Type ButtonBase}">
+        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast.Subtle}" />
+        <Setter Property="Margin" Value="2" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="themes:FrbButton.BorderCornerRadius" Value="4" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
 </ResourceDictionary>
