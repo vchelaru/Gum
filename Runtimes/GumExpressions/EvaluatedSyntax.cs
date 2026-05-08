@@ -200,6 +200,23 @@ public class EvaluatedSyntax
         return null;
     }
 
+    // FixEnumerationsWithReflection promotes int-on-disk enum values to boxed enums in
+    // memory, so the eval sees a boxed enum on one side. Reference RHS literals stay as
+    // strings (e.g. "Hidden" in `Foo == "Hidden"`). Bridge the two by comparing the enum's
+    // name when the other operand is a string; otherwise defer to object.Equals.
+    private static bool AreEqual(object left, object right)
+    {
+        if (left is Enum leftEnum && right is string rightString)
+        {
+            return string.Equals(leftEnum.ToString(), rightString, StringComparison.Ordinal);
+        }
+        if (left is string leftString && right is Enum rightEnum)
+        {
+            return string.Equals(leftString, rightEnum.ToString(), StringComparison.Ordinal);
+        }
+        return object.Equals(left, right);
+    }
+
     private static object Combine(EvaluatedSyntax leftEvaluated, EvaluatedSyntax rightEvaluated, SyntaxToken operatorToken)
     {
         if (leftEvaluated?.Value == null || rightEvaluated?.Value == null)
@@ -212,11 +229,11 @@ public class EvaluatedSyntax
         // dynamic-coercion path below.
         if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.EqualsEqualsToken))
         {
-            return object.Equals(leftEvaluated.Value, rightEvaluated.Value);
+            return AreEqual(leftEvaluated.Value, rightEvaluated.Value);
         }
         else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ExclamationEqualsToken))
         {
-            return !object.Equals(leftEvaluated.Value, rightEvaluated.Value);
+            return !AreEqual(leftEvaluated.Value, rightEvaluated.Value);
         }
 
         // Logical operators require both operands to be bool. We evaluate eagerly
