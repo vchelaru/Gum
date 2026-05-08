@@ -6,14 +6,6 @@
   <FormsProperty Type="bool" Name="IsEnabled">
     <Value xsi:type="xsd:boolean">true</Value>
   </FormsProperty>
-  <FormsProperty Type="double" Name="SmallChange">
-    <Value xsi:type="xsd:double">1</Value>
-    <Description>Step size for arrow buttons / mouse wheel.</Description>
-  </FormsProperty>
-  <FormsProperty Type="double" Name="LargeChange">
-    <Value xsi:type="xsd:double">10</Value>
-    <Description>Step size for clicks on the scroll bar track.</Description>
-  </FormsProperty>
   <FormsProperty Type="ScrollBarVisibility" Name="VerticalScrollBarVisibility">
     <Value xsi:type="xsd:string">Auto</Value>
     <Description>Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.</Description>
