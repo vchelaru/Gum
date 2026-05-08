@@ -85,6 +85,74 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_CheckBoxIsCheckedTrueFromState_CoercesBoolToNullableBoolOnCheckBox()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "CheckBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsChecked",
+            Value = false
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsChecked",
+            Value = true,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "CheckBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        InteractiveGue visual = new InteractiveGue();
+        visual.ElementSave = component;
+
+        CheckBox checkBox = new CheckBox(visual);
+        BehaviorFormsPropertyApplier.Apply(checkBox, visual);
+
+        checkBox.IsChecked.ShouldBe(true);
+    }
+
+    [Fact]
+    public void Apply_CheckBoxIsCheckedUnauthored_FallsBackToBehaviorDefaultFalse()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "CheckBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsChecked",
+            Value = false
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "CheckBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        InteractiveGue visual = new InteractiveGue();
+        visual.ElementSave = component;
+
+        CheckBox checkBox = new CheckBox(visual);
+        // Force a non-default starting value to verify Apply writes the declared default.
+        checkBox.IsChecked = true;
+        BehaviorFormsPropertyApplier.Apply(checkBox, visual);
+
+        checkBox.IsChecked.ShouldBe(false);
+    }
+
+    [Fact]
     public void Apply_ParentScreenInstanceOverride_OverridesComponentDefault()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };

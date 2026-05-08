@@ -6,7 +6,10 @@
   <FormsProperty Type="bool" Name="IsEnabled">
     <Value xsi:type="xsd:boolean">true</Value>
   </FormsProperty>
-  <ToolOnlyVariableReference>CheckBoxCategoryState = IsEnabled ? "EnabledOff" : "DisabledOff"</ToolOnlyVariableReference>
+  <FormsProperty Type="bool" Name="IsChecked">
+    <Value xsi:type="xsd:boolean">false</Value>
+  </FormsProperty>
+  <ToolOnlyVariableReference>CheckBoxCategoryState = IsEnabled ? (IsChecked ? "EnabledOn" : "EnabledOff") : (IsChecked ? "DisabledOn" : "DisabledOff")</ToolOnlyVariableReference>
   <Category>
     <Name>CheckBoxCategory</Name>
     <State>
