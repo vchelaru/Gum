@@ -17,13 +17,7 @@
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <Border
-            Margin="0,0,8,0"
-            Padding="2"
-            BorderBrush="{DynamicResource Frb.Brushes.Border.Secondary}"
-            BorderThickness="1"
-            CornerRadius="4">
-            <Grid x:Name="DockGrid">
+        <Grid x:Name="DockGrid" Margin="0,0,8,0">
                 <!--  Cross arrangement: 5 buttons in a + shape; corners intentionally empty.  -->
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -76,17 +70,10 @@
                     <controls:GumIcon Icon="DockFill" />
                     <Button.ToolTip>Fill</Button.ToolTip>
                 </Button>
-            </Grid>
-        </Border>
+        </Grid>
 
 
-        <Border
-            Grid.Column="1"
-            Padding="2"
-            BorderBrush="{DynamicResource Frb.Brushes.Border.Secondary}"
-            BorderThickness="1"
-            CornerRadius="4">
-            <StackPanel>
+        <StackPanel Grid.Column="1">
                 <Button
                     x:Name="FillHorizontallyButton"
                     Click="FillHorizontallyButton_Click">
@@ -112,8 +99,7 @@
                         Size to Children
                     </Button.ToolTip>
                 </Button>
-            </StackPanel>
-        </Border>
+        </StackPanel>
 
     </Grid>
 </UserControl>

@@ -19,13 +19,7 @@
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
 
-    <Border
-      Margin="0,0,8,0"
-      Padding="2"
-      BorderBrush="{DynamicResource Frb.Brushes.Border.Secondary}"
-      BorderThickness="1"
-      CornerRadius="4">
-      <Grid>
+    <Grid Margin="0,0,8,0">
         <Grid.RowDefinitions>
           <RowDefinition />
           <RowDefinition />
@@ -98,18 +92,10 @@
           <controls:GumIcon Icon="AnchorBottomRight" />
         </Button>
 
-      </Grid>
-
-    </Border>
+    </Grid>
 
 
-    <Border
-      Grid.Column="1"
-      Padding="2"
-      BorderBrush="{DynamicResource Frb.Brushes.Border.Secondary}"
-      BorderThickness="1"
-      CornerRadius="4">
-      <StackPanel>
+    <StackPanel Grid.Column="1">
         <Button
           x:Name="AnchorCenterHorizontally"
           Click="AnchorCenterHorizontally_Click">
@@ -126,8 +112,7 @@
             Anchor Center Vertically
           </Button.ToolTip>
         </Button>
-      </StackPanel>
-    </Border>
+    </StackPanel>
 
   </Grid>
 
