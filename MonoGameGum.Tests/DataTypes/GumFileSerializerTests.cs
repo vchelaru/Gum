@@ -139,6 +139,40 @@ public class GumFileSerializerTests
     }
 
     [Fact]
+    public void RoundTripBehaviorSave_FormsPropertyWithDescription_PreservesDescription()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "AcceptsReturn",
+            Value = false,
+            Description = "If true, pressing Enter inserts a newline."
+        });
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        xml.ShouldContain("<Description>If true, pressing Enter inserts a newline.</Description>");
+
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.FormsProperties.Count.ShouldBe(1);
+        result.FormsProperties[0].Description.ShouldBe("If true, pressing Enter inserts a newline.");
+    }
+
+    [Fact]
+    public void SerializeBehaviorSave_FormsPropertyWithoutDescription_OmitsDescriptionElement()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "string", Name = "ToolTip" });
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        xml.ShouldNotContain("<Description");
+    }
+
+    [Fact]
     public void SerializeBehaviorSave_EmptyToolOnlyVariableReferences_OmittedFromXml()
     {
         BehaviorSave original = new BehaviorSave();
