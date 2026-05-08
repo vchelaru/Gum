@@ -289,4 +289,46 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         member.ShouldNotBeNull();
         member.PropertyType.ShouldBe(typeof(Gum.Forms.Controls.ScrollBarVisibility));
     }
+
+    [Fact]
+    public void AddBehaviorFormsPropertyMembers_NullableEnumTypedFormsProperty_ResolvesNullableEnumComponentType()
+    {
+        // FormsProperty Type="Foo?" must resolve to typeof(Foo?) so the variable grid
+        // renders an enum picker (with a "None" option) instead of falling back to a
+        // string textbox. Without nullable-enum support in TypeManager.GetTypeFromString,
+        // the SRIM's PropertyType is null and the grid uses a generic editor — that's
+        // the bug for Splitter.ResizeBehavior? and ItemsControl/ListBox.Orientation?.
+        BehaviorSave splitterBehavior = new BehaviorSave { Name = "SplitterBehavior" };
+        splitterBehavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "ResizeBehavior?",
+            Name = "ResizeBehavior"
+        });
+
+        ComponentSave splitterComponent = new ComponentSave
+        {
+            Name = "Controls/Splitter",
+            BaseType = "Container"
+        };
+        splitterComponent.States.Add(new StateSave { Name = "Default", ParentContainer = splitterComponent });
+        splitterComponent.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SplitterBehavior" });
+        _project.Behaviors.Add(splitterBehavior);
+        _project.Components.Add(splitterComponent);
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.AddBehaviorFormsPropertyMembers(
+            elementWithBehaviors: splitterComponent,
+            instanceOwner: splitterComponent,
+            instance: null,
+            stateSave: splitterComponent.DefaultState,
+            stateSaveCategory: null,
+            categories: categories);
+
+        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        behaviorCategory.ShouldNotBeNull();
+        InstanceMember? member = behaviorCategory.Members.FirstOrDefault(m => m.Name == "ResizeBehavior");
+        member.ShouldNotBeNull();
+        member.PropertyType.ShouldBe(typeof(Gum.Forms.Controls.ResizeBehavior?));
+    }
 }

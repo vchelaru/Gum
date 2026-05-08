@@ -6,6 +6,9 @@
   <FormsProperty Type="bool" Name="IsEnabled">
     <Value xsi:type="xsd:boolean">true</Value>
   </FormsProperty>
+  <FormsProperty Type="ResizeBehavior?" Name="ResizeBehavior">
+    <Description>Rows resizes the row above/below the splitter; Columns resizes the columns to either side. Empty leaves the choice to layout (StackPanel orientation determines the axis).</Description>
+  </FormsProperty>
   <RequiredInstances />
   <RequiredAnimations />
   <DefaultImplementation>Controls/SplitterStandard</DefaultImplementation>
