@@ -130,6 +130,13 @@
 		<Compile Remove="..\obj\Release\net6.0\MonoGameGum.AssemblyInfo.cs" />
 		<Compile Remove="..\obj\Release\net6.0\MonoGameGum.GlobalUsings.g.cs" />
 		<Compile Remove="..\FnaGum\**" />
+		<!--
+			Forms enums are owned by GumCommon (referenced via ProjectReference). Exclude
+			them from the ..\**\*.cs sweep so the types aren't compiled twice.
+		-->
+		<Compile Remove="..\Forms\TextWrapping.cs" />
+		<Compile Remove="..\Forms\Controls\ScrollBarVisibility.cs" />
+		<Compile Remove="..\Forms\Controls\Orientation.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

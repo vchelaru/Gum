@@ -14,6 +14,14 @@
     <Value xsi:type="xsd:double">10</Value>
     <Description>Step size for clicks on the scroll bar track.</Description>
   </FormsProperty>
+  <FormsProperty Type="ScrollBarVisibility" Name="VerticalScrollBarVisibility">
+    <Value xsi:type="xsd:string">Auto</Value>
+    <Description>Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.</Description>
+  </FormsProperty>
+  <FormsProperty Type="ScrollBarVisibility" Name="HorizontalScrollBarVisibility">
+    <Value xsi:type="xsd:string">Auto</Value>
+    <Description>Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.</Description>
+  </FormsProperty>
   <Category>
     <Name>ScrollBarVisibility</Name>
     <State>

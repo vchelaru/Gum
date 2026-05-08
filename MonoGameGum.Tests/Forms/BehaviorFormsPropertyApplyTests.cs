@@ -346,4 +346,99 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
 
         button.ToolTip.ShouldBe("Overridden");
     }
+
+    [Fact]
+    public void Apply_TextBoxTextWrappingFromBehaviorDefaultString_CoercesToEnum()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "TextBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "TextWrapping",
+            Name = "TextWrapping",
+            Value = "Wrap"
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        TextBox textBox = new TextBox();
+        textBox.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(textBox, textBox.Visual);
+
+        textBox.TextWrapping.ShouldBe(TextWrapping.Wrap);
+    }
+
+    [Fact]
+    public void Apply_ScrollViewerVisibilityFromBehaviorDefaultString_CoercesToEnum()
+    {
+        // Behavior declares the FormsProperty with a string default — this is what comes
+        // out of the .behx serializer (<Value xsi:type="xsd:string">Visible</Value>). The
+        // applier must Enum.Parse the string onto the FrameworkElement's enum property
+        // rather than crashing in Convert.ChangeType.
+        BehaviorSave behavior = new BehaviorSave { Name = "ScrollViewerBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "ScrollBarVisibility",
+            Name = "VerticalScrollBarVisibility",
+            Value = "Visible"
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/ScrollViewer", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ScrollViewerBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScrollViewer scrollViewer = new ScrollViewer();
+        scrollViewer.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(scrollViewer, scrollViewer.Visual);
+
+        scrollViewer.VerticalScrollBarVisibility.ShouldBe(ScrollBarVisibility.Visible);
+    }
+
+    [Fact]
+    public void Apply_ScrollViewerVisibilityFromStateBoxedEnum_PreservesIsAssignableFromBranch()
+    {
+        // When the variable grid authors a state value, it stores the boxed enum (not a
+        // string). The IsAssignableFrom branch must still win so we don't double-Parse.
+        BehaviorSave behavior = new BehaviorSave { Name = "ScrollViewerBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "ScrollBarVisibility",
+            Name = "VerticalScrollBarVisibility",
+            Value = "Auto"
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/ScrollViewer", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "ScrollBarVisibility",
+            Name = "VerticalScrollBarVisibility",
+            Value = ScrollBarVisibility.Hidden,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ScrollViewerBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScrollViewer scrollViewer = new ScrollViewer();
+        scrollViewer.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(scrollViewer, scrollViewer.Visual);
+
+        scrollViewer.VerticalScrollBarVisibility.ShouldBe(ScrollBarVisibility.Hidden);
+    }
 }
