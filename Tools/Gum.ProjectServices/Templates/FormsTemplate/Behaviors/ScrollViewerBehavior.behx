@@ -3,6 +3,7 @@
   <Name>ScrollViewerBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
   <Category>
     <Name>ScrollBarVisibility</Name>
     <State>

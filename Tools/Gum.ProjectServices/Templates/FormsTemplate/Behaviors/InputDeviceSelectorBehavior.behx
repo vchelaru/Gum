@@ -3,6 +3,7 @@
   <Name>InputDeviceSelectorBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
   <RequiredInstances>
     <InstanceSave>
       <Name>InputDeviceContainerInstance</Name>

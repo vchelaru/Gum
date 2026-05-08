@@ -3,6 +3,8 @@
   <Name>RadioButtonBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
+  <ToolOnlyVariableReference>RadioButtonCategoryState = IsEnabled ? "EnabledOff" : "DisabledOff"</ToolOnlyVariableReference>
   <Category>
     <Name>RadioButtonCategory</Name>
     <State>

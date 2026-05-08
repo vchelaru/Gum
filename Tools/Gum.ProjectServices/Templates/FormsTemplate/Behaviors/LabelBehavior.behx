@@ -3,6 +3,7 @@
   <Name>LabelBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
   <RequiredInstances />
   <RequiredAnimations />
   <DefaultImplementation>Elements/Label</DefaultImplementation>

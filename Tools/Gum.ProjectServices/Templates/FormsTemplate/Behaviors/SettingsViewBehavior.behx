@@ -3,6 +3,7 @@
   <Name>SettingsViewBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
   <RequiredInstances />
   <RequiredAnimations />
   <DefaultImplementation>Controls/SettingsView</DefaultImplementation>

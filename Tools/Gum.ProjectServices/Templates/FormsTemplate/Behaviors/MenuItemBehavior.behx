@@ -3,6 +3,8 @@
   <Name>MenuItemBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
+  <ToolOnlyVariableReference>MenuItemCategoryState = IsEnabled ? "Enabled" : "Disabled"</ToolOnlyVariableReference>
   <Category>
     <Name>MenuItemCategory</Name>
     <State>

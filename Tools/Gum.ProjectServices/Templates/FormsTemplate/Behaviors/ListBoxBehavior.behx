@@ -3,6 +3,8 @@
   <Name>ListBoxBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
+  <ToolOnlyVariableReference>ListBoxCategoryState = IsEnabled ? "Enabled" : "Disabled"</ToolOnlyVariableReference>
   <Category>
     <Name>ListBoxCategory</Name>
     <State>

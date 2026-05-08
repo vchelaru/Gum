@@ -3,6 +3,7 @@
   <Name>ListBoxItemBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
   <Category>
     <Name>ListBoxItemCategory</Name>
     <State>

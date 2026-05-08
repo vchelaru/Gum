@@ -3,6 +3,7 @@
   <Name>SliderBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
   <Category>
     <Name>SliderCategory</Name>
     <State>

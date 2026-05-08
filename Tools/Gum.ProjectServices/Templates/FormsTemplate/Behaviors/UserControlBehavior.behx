@@ -3,6 +3,7 @@
   <Name>UserControlBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
   <RequiredInstances />
   <RequiredAnimations />
   <DefaultImplementation>Controls/UserControl</DefaultImplementation>

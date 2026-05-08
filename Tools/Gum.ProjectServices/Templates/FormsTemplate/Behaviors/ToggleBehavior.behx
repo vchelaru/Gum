@@ -3,6 +3,8 @@
   <Name>ToggleBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled" />
+  <ToolOnlyVariableReference>ToggleCategoryState = IsEnabled ? "EnabledOff" : "DisabledOff"</ToolOnlyVariableReference>
   <Category>
     <Name>ToggleCategory</Name>
     <State>
