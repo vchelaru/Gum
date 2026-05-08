@@ -762,7 +762,7 @@ public partial class PropertyGridManager
     {
         // Hack! I would like to have this set by variables, but that's going to require a ton
         // of refatoring. We need to move off of the intermediate PropertyDescriptor class.
-        AdjustTextPreferredDisplayer(categories, stateSave, instance);
+        AdjustStringPreferredDisplayer(categories, stateSave, instance);
 
         _colorPickerLogic.UpdateColorCategory(categories, element, instance);
 
@@ -876,62 +876,73 @@ public partial class PropertyGridManager
         fontCategory.Members.Insert(fontIndex, toggleMember);
     }
 
-    private void AdjustTextPreferredDisplayer(List<MemberCategory> categories, StateSave stateSave, InstanceSave instanceSave)
+    private void AdjustStringPreferredDisplayer(List<MemberCategory> categories, StateSave stateSave, InstanceSave instanceSave)
     {
-        // This used to only make Text objects multiline, but...maybe we should make all string values multiline?
-        foreach(var category in categories)
+        foreach (var category in categories)
         {
-            foreach(var member in category.Members)
+            foreach (var member in category.Members)
             {
                 var isStringMember = member.PreferredDisplayer == null &&
-                    member.PropertyType == typeof(string);
+                    member.PropertyType == typeof(string) &&
+                    (member.CustomOptions?.Count > 0) == false;
 
-                if (isStringMember)
+                if (!isStringMember)
                 {
-                    var baseVariable = ObjectFinder.Self.GetRootVariable(member.Name, stateSave.ParentContainer);
+                    continue;
+                }
 
-                    var shouldShowLocalizationUi = (member.CustomOptions?.Count > 0) == false &&
-                        baseVariable?.Name == "Text" &&
-                        _localizationService.HasDatabase;
+                // Standard variables resolve through ObjectFinder. Behavior FormsProperties
+                // (e.g. ToolTip) aren't a project-defined variable, so the lookup returns
+                // null — fall back to the trailing identifier of the member's qualified name.
+                var baseVariable = ObjectFinder.Self.GetRootVariable(member.Name, stateSave.ParentContainer);
+                var rootName = baseVariable?.Name ?? GetTrailingName(member.Name);
 
-                    // See StandardElementsManager for Text on explanation why this is commented out.
-                    //if(shouldShowLocalizationUi)
-                    //{
-                    //    var prefix = instanceSave == null ? "" : instanceSave.Name + ".";
-                    //    var valueAsObject = stateSave.GetValueRecursive(prefix + "Apply Localization");
-                    //    if(valueAsObject is bool asBool)
-                    //    {
-                    //        shouldShowLocalizationUi = asBool;
-                    //    }
-                    //}
-
-
-                    if (shouldShowLocalizationUi)
-                    {
-                        // give it options!
-                        member.PreferredDisplayer = typeof(WpfDataUi.Controls.ComboBoxDisplay);
-                        member.PropertiesToSetOnDisplayer[nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable)] = true;
-                        member.CustomOptions = _localizationService.Keys.OrderBy(item => item).ToArray();
-                    }
-                    else if(baseVariable?.Name == "Text")
-                    {
-                        //member.PreferredDisplayer = typeof(ToggleButtonOptionDisplay);
-                        member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
-                        //ToggleButtonOptionDisplay
-                    }
+                if (IsEligibleStringDisplayerRootName(rootName))
+                {
+                    ApplyLocalizedOrMultilineStringDisplayer(
+                        member,
+                        _localizationService.HasDatabase,
+                        _localizationService.Keys.OrderBy(item => item).ToArray());
                 }
             }
         }
-        //var category = categories.FirstOrDefault(item => item.Name == "Text");
+    }
 
-        //if(category != null)
-        //{
-        //    var member = category.Members.FirstOrDefault(item => item.DisplayName == "Text");
-        //    if(member != null)
-        //    {
-        //        member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
-        //    }
-        //}
+    private static string? GetTrailingName(string? qualifiedName)
+    {
+        if (string.IsNullOrEmpty(qualifiedName))
+        {
+            return qualifiedName;
+        }
+        int lastDot = qualifiedName.LastIndexOf('.');
+        return lastDot < 0 ? qualifiedName : qualifiedName.Substring(lastDot + 1);
+    }
+
+    // Variables eligible for the localization-key dropdown / multi-line editor pair.
+    // Both code paths share the same UX: a project with a localization database surfaces
+    // a sorted, editable combo of keys; without one, authors get a multi-line text box.
+    internal static bool IsEligibleStringDisplayerRootName(string? rootName)
+    {
+        return rootName == "Text" || rootName == "ToolTip";
+    }
+
+    internal static void ApplyLocalizedOrMultilineStringDisplayer(
+        InstanceMember member,
+        bool hasLocalizationDatabase,
+        IEnumerable<string> sortedKeys)
+    {
+        if (hasLocalizationDatabase)
+        {
+            member.PreferredDisplayer = typeof(WpfDataUi.Controls.ComboBoxDisplay);
+            member.PropertiesToSetOnDisplayer[nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable)] = true;
+            // string[] -> IList<object> via array covariance (matches the prior
+            // _localizationService.Keys.OrderBy(...).ToArray() assignment).
+            member.CustomOptions = sortedKeys.ToArray();
+        }
+        else
+        {
+            member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
+        }
     }
 
 
