@@ -121,9 +121,10 @@ public partial class ElementTreeViewManager
         {
             return;
         }
+        string fullPath = element.GetFullPathXmlFile().FullPath;
         try
         {
-            System.Windows.Clipboard.SetText(element.Name);
+            System.Windows.Clipboard.SetText(fullPath);
         }
         catch
         {
