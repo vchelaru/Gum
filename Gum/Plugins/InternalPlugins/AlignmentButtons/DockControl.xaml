@@ -2,6 +2,7 @@
     x:Class="Gum.Plugins.AlignmentButtons.DockControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Gum.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
@@ -40,40 +41,40 @@
                     x:Name="LeftButton"
                     Grid.Row="1"
                     Grid.Column="0"
-                    Click="LeftButton_Click"
-                    Content="{wpf:FluentIcon Icon=AlignStartHorizontal}">
+                    Click="LeftButton_Click">
+                    <controls:GumIcon Icon="DockLeft" />
                     <Button.ToolTip>Dock Left</Button.ToolTip>
                 </Button>
                 <Button
                     x:Name="TopButton"
                     Grid.Row="0"
                     Grid.Column="1"
-                    Click="TopButton_Click"
-                    Content="{wpf:FluentIcon Icon=AlignStartVertical}">
+                    Click="TopButton_Click">
+                    <controls:GumIcon Icon="DockTop" />
                     <Button.ToolTip>Dock Top</Button.ToolTip>
                 </Button>
                 <Button
                     x:Name="RightButton"
                     Grid.Row="1"
                     Grid.Column="2"
-                    Click="RightButton_Click"
-                    Content="{wpf:FluentIcon Icon=AlignEndHorizontal}">
+                    Click="RightButton_Click">
+                    <controls:GumIcon Icon="DockRight" />
                     <Button.ToolTip>Dock Right</Button.ToolTip>
                 </Button>
                 <Button
                     x:Name="BottomButton"
                     Grid.Row="2"
                     Grid.Column="1"
-                    Click="BottomButton_Click"
-                    Content="{wpf:FluentIcon Icon=AlignEndVertical}">
+                    Click="BottomButton_Click">
+                    <controls:GumIcon Icon="DockBottom" />
                     <Button.ToolTip>Dock Bottom</Button.ToolTip>
                 </Button>
                 <Button
                     x:Name="FillButton"
                     Grid.Row="1"
                     Grid.Column="1"
-                    Click="FillButton_Click"
-                    Content="{wpf:FluentIcon Icon=ArrowMove}">
+                    Click="FillButton_Click">
+                    <controls:GumIcon Icon="DockFill" />
                     <Button.ToolTip>Fill</Button.ToolTip>
                 </Button>
 
@@ -286,8 +287,8 @@
                 x:Name="FillHorizontallyButton"
                 Grid.Row="0"
                 Grid.Column="3"
-                Click="FillHorizontallyButton_Click"
-                Content="{wpf:FluentIcon Icon=AlignStretchHorizontal}">
+                Click="FillHorizontallyButton_Click">
+                <controls:GumIcon Icon="DockLeftRight" />
                 <Button.ToolTip>
                     Fill Horizontally
                 </Button.ToolTip>
@@ -296,8 +297,8 @@
                 x:Name="FillVerticallyButton"
                 Grid.Row="1"
                 Grid.Column="3"
-                Click="FillVerticallyButton_Click"
-                Content="{wpf:FluentIcon Icon=AlignStretchVertical}">
+                Click="FillVerticallyButton_Click">
+                <controls:GumIcon Icon="DockTopBottom" />
                 <Button.ToolTip>
                     Fill Vertically
                 </Button.ToolTip>
@@ -315,7 +316,6 @@
             </Button>
 
         </StackPanel>
-
 
 
 

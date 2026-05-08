@@ -9,6 +9,8 @@ description: Gum Variables tab and DataUiGrid. Triggers: Variables tab, DataUiGr
 
 The **Variables tab** displays and edits properties of the selected element, instance, state, or behavior. Built on `DataUiGrid` (a WPF `ItemsControl` subclass) from the `WpfDataUi` library. Categories render as collapsible `Expander` sections.
 
+> Icons rendered inside the Variables grid (unit selectors, alignment, dock/anchor, origin/sizing toggle-button option displays) come from the `GumIcon`/`PathGeometry` pipeline. For authoring or replacing them see [gum-icons](../gum-icons/SKILL.md).
+
 ---
 
 ## Architecture Layers
