@@ -348,6 +348,33 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_TextBoxTextWrappingFromBehaviorDefaultString_CoercesToEnum()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "TextBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "TextWrapping",
+            Name = "TextWrapping",
+            Value = "Wrap"
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        TextBox textBox = new TextBox();
+        textBox.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(textBox, textBox.Visual);
+
+        textBox.TextWrapping.ShouldBe(TextWrapping.Wrap);
+    }
+
+    [Fact]
     public void Apply_ScrollViewerVisibilityFromBehaviorDefaultString_CoercesToEnum()
     {
         // Behavior declares the FormsProperty with a string default — this is what comes

@@ -27,6 +27,10 @@
   <FormsProperty Type="int?" Name="MaxNumberOfLines">
     <Description>Caps how many lines are rendered.</Description>
   </FormsProperty>
+  <FormsProperty Type="TextWrapping" Name="TextWrapping">
+    <Value xsi:type="xsd:string">NoWrap</Value>
+    <Description>NoWrap (default) keeps text on one line; Wrap breaks long lines at the container's width.</Description>
+  </FormsProperty>
   <ToolOnlyVariableReference>TextBoxCategoryState = IsEnabled ? "Enabled" : "Disabled"</ToolOnlyVariableReference>
   <Category>
     <Name>TextBoxCategory</Name>
