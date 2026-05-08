@@ -6,6 +6,14 @@
   <FormsProperty Type="bool" Name="IsEnabled">
     <Value xsi:type="xsd:boolean">true</Value>
   </FormsProperty>
+  <FormsProperty Type="double" Name="SmallChange">
+    <Value xsi:type="xsd:double">1</Value>
+    <Description>Step size for arrow buttons / mouse wheel.</Description>
+  </FormsProperty>
+  <FormsProperty Type="double" Name="LargeChange">
+    <Value xsi:type="xsd:double">10</Value>
+    <Description>Step size for clicks on the scroll bar track.</Description>
+  </FormsProperty>
   <Category>
     <Name>ScrollBarVisibility</Name>
     <State>

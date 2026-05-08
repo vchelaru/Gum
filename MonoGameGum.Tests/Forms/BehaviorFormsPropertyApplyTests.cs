@@ -260,6 +260,41 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_SliderMaximumFromState_AppliesToFormsControl()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "SliderBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "double",
+            Name = "Maximum",
+            Value = 100.0
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/Slider", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "double",
+            Name = "Maximum",
+            Value = 250.0,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SliderBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        Slider slider = new Slider();
+        slider.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(slider, slider.Visual);
+
+        slider.Maximum.ShouldBe(250.0);
+    }
+
+    [Fact]
     public void Apply_ParentScreenInstanceOverride_OverridesComponentDefault()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
