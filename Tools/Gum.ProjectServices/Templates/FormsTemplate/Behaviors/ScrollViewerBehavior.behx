@@ -22,7 +22,7 @@
     <Value xsi:type="xsd:string">Auto</Value>
     <Description>Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.</Description>
   </FormsProperty>
-  <ToolOnlyVariableReference>ScrollBarVisibilityState = VerticalScrollBarVisibility == "Hidden" ? "NoScrollBar" : "VerticalScrollVisible"</ToolOnlyVariableReference>
+  <ToolOnlyVariableReference>ScrollBarVisibilityState = VerticalScrollBarVisibility == "Hidden" ? (HorizontalScrollBarVisibility == "Hidden" ? "NoScrollBar" : "HorizontalScrollVisible") : (HorizontalScrollBarVisibility == "Hidden" ? "VerticalScrollVisible" : "BothScrollVisible")</ToolOnlyVariableReference>
   <Category>
     <Name>ScrollBarVisibility</Name>
     <State>
