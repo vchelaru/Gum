@@ -84,6 +84,9 @@
     <Variable Type="DimensionUnitType" Name="InnerCheck.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="bool" Name="IsChecked" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
