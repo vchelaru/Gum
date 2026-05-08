@@ -18,13 +18,13 @@
     <Description>If true, Tab inserts a tab; otherwise it moves focus.</Description>
   </FormsProperty>
   <FormsProperty Type="string" Name="Placeholder" />
-  <FormsProperty Type="int" Name="MaxLength">
+  <FormsProperty Type="int?" Name="MaxLength">
     <Description>Caps how many characters can be entered. Empty = no limit.</Description>
   </FormsProperty>
-  <FormsProperty Type="int" Name="MaxLettersToShow">
+  <FormsProperty Type="int?" Name="MaxLettersToShow">
     <Description>Caps how many letters are rendered. Use MaxLength to cap input itself.</Description>
   </FormsProperty>
-  <FormsProperty Type="int" Name="MaxNumberOfLines">
+  <FormsProperty Type="int?" Name="MaxNumberOfLines">
     <Description>Caps how many lines are rendered.</Description>
   </FormsProperty>
   <ToolOnlyVariableReference>TextBoxCategoryState = IsEnabled ? "Enabled" : "Disabled"</ToolOnlyVariableReference>
