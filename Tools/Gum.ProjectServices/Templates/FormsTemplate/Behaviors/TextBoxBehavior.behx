@@ -6,6 +6,9 @@
   <FormsProperty Type="bool" Name="IsEnabled">
     <Value xsi:type="xsd:boolean">true</Value>
   </FormsProperty>
+  <FormsProperty Type="bool" Name="AcceptsReturn">
+    <Value xsi:type="xsd:boolean">false</Value>
+  </FormsProperty>
   <ToolOnlyVariableReference>TextBoxCategoryState = IsEnabled ? "Enabled" : "Disabled"</ToolOnlyVariableReference>
   <Category>
     <Name>TextBoxCategory</Name>

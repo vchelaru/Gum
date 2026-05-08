@@ -153,6 +153,44 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_TextBoxAcceptsReturnTrue_AppliesToFormsControl()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "TextBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "AcceptsReturn",
+            Value = false
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "AcceptsReturn",
+            Value = true,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        // TextBox's parameterless ctor builds a default visual tree (TextInstance/CaretInstance
+        // children) which TextBoxBase.ReactToVisualChanged requires. Attach the project component
+        // to that visual so the applier can resolve the FormsProperty against state.
+        TextBox textBox = new TextBox();
+        textBox.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(textBox, textBox.Visual);
+
+        textBox.AcceptsReturn.ShouldBe(true);
+    }
+
+    [Fact]
     public void Apply_ParentScreenInstanceOverride_OverridesComponentDefault()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
