@@ -106,6 +106,43 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
     }
 
     [Fact]
+    public void AddBehaviorFormsPropertyMembers_StateMissingValue_MemberValueFallsBackToBehaviorFormsPropertyDefault()
+    {
+        // Behavior declares IsEnabled with default true; component's default state authors nothing.
+        BehaviorSave behaviorWithDefault = new BehaviorSave { Name = "WithDefault" };
+        behaviorWithDefault.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsEnabled",
+            Value = true
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/PlainButton", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "WithDefault" });
+
+        _project.Behaviors.Add(behaviorWithDefault);
+        _project.Components.Add(component);
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.AddBehaviorFormsPropertyMembers(
+            elementWithBehaviors: component,
+            instanceOwner: component,
+            instance: null,
+            stateSave: component.DefaultState,
+            stateSaveCategory: null,
+            categories: categories);
+
+        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        behaviorCategory.ShouldNotBeNull();
+        InstanceMember? isEnabledMember = behaviorCategory.Members.FirstOrDefault(m => m.Name == "IsEnabled");
+        isEnabledMember.ShouldNotBeNull();
+        isEnabledMember.Value.ShouldBe(true,
+            "with no value authored on state, the variable grid should display the behavior's declared FormsProperty default");
+    }
+
+    [Fact]
     public void AddBehaviorFormsPropertyMembers_FormsPropertyWithNullName_SilentlySkippedNoCrash()
     {
         // Reproduces the v1 (legacy) gumx scenario where the standard XmlSerializer

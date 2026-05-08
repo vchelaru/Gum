@@ -74,6 +74,81 @@ public class GumFileSerializerTests
     }
 
     [Fact]
+    public void DeserializeBehaviorSave_LegacyFormat_LoadsFormsPropertyDefaultBoolValue()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.FormsProperties.Count.ShouldBe(1);
+        result.FormsProperties[0].Type.ShouldBe("bool");
+        result.FormsProperties[0].Name.ShouldBe("IsEnabled");
+        result.FormsProperties[0].Value.ShouldBe(true);
+    }
+
+    [Fact]
+    public void DeserializeBehaviorSave_CompactFormat_LoadsFormsPropertyDefaultBoolValue()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+
+        XmlSerializer compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
+        string xml = SerializeToString(compactSerializer, original);
+
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.FormsProperties.Count.ShouldBe(1);
+        result.FormsProperties[0].Value.ShouldBe(true);
+    }
+
+    [Fact]
+    public void DeserializeBehaviorSave_LegacyFormat_LoadsToolOnlyVariableReferences()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.ToolOnlyVariableReferences.Add("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.ToolOnlyVariableReferences.Count.ShouldBe(1);
+        result.ToolOnlyVariableReferences[0].ShouldBe("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+    }
+
+    [Fact]
+    public void DeserializeBehaviorSave_CompactFormat_LoadsToolOnlyVariableReferences()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+        original.ToolOnlyVariableReferences.Add("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+
+        XmlSerializer compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
+        string xml = SerializeToString(compactSerializer, original);
+
+        BehaviorSave? result = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+
+        result.ShouldNotBeNull();
+        result.ToolOnlyVariableReferences.Count.ShouldBe(1);
+        result.ToolOnlyVariableReferences[0].ShouldBe("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+    }
+
+    [Fact]
+    public void SerializeBehaviorSave_EmptyToolOnlyVariableReferences_OmittedFromXml()
+    {
+        BehaviorSave original = new BehaviorSave();
+
+        FileManager.XmlSerialize(original, out string xml);
+
+        xml.ShouldNotContain("<ToolOnlyVariableReference");
+    }
+
+    [Fact]
     public void DeserializeBehaviorSave_CompactFormat_LoadsFormsProperties()
     {
         BehaviorSave original = new BehaviorSave();

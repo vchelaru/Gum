@@ -39,20 +39,25 @@ public class EvaluatedSyntax
 
     #region Parse
 
-    public static EvaluatedSyntax FromSyntaxNode(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide)
+    /// <param name="fallback">Optional resolver consulted when a bare identifier
+    /// or member-access lookup against <paramref name="stateForUnqualifiedRightSide"/>
+    /// returns null. The Forms-property-promotion apply pipeline uses this to fall
+    /// back to a linked behavior's <c>FormsProperty.Value</c> declarations when no
+    /// state authors a value (mirrors WPF DependencyProperty default values).</param>
+    public static EvaluatedSyntax FromSyntaxNode(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null)
     {
-        return Evaluate(syntaxNode, stateForUnqualifiedRightSide);
+        return Evaluate(syntaxNode, stateForUnqualifiedRightSide, fallback);
     }
 
-    private static EvaluatedSyntax Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide)
+    private static EvaluatedSyntax Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null)
     {
         if (syntaxNode is BinaryExpressionSyntax binaryExpressionSytax)
         {
             var leftSyntax = binaryExpressionSytax.Left;
             var rightSyntax = binaryExpressionSytax.Right;
 
-            var leftEvaluated = Evaluate(leftSyntax, stateForUnqualifiedRightSide);
-            var rightEvaluated = Evaluate(rightSyntax, stateForUnqualifiedRightSide);
+            var leftEvaluated = Evaluate(leftSyntax, stateForUnqualifiedRightSide, fallback);
+            var rightEvaluated = Evaluate(rightSyntax, stateForUnqualifiedRightSide, fallback);
 
             var value = Combine(leftEvaluated, rightEvaluated, binaryExpressionSytax.OperatorToken);
 
@@ -69,7 +74,7 @@ public class EvaluatedSyntax
 
             foreach (var item in childNodes)
             {
-                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide);
+                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback);
                 if (evaluatedSyntax != null)
                 {
                     return evaluatedSyntax;
@@ -79,7 +84,7 @@ public class EvaluatedSyntax
         }
         else if (syntaxNode is IdentifierNameSyntax or VariableDeclarationSyntax)
         {
-            var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide);
+            var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide) { Fallback = fallback };
 
             var value = rfv.GetValue(syntaxNode.ToString());
 
@@ -114,7 +119,7 @@ public class EvaluatedSyntax
             }
             else
             {
-                rfv = new RecursiveVariableFinder(stateForRfv);
+                rfv = new RecursiveVariableFinder(stateForRfv) { Fallback = fallback };
 
                 var value = rfv.GetValue(rightSideToEvaluate);
 
@@ -124,11 +129,11 @@ public class EvaluatedSyntax
         }
         else if (syntaxNode is ConditionalExpressionSyntax conditional)
         {
-            var conditionEvaluated = Evaluate(conditional.Condition, stateForUnqualifiedRightSide);
+            var conditionEvaluated = Evaluate(conditional.Condition, stateForUnqualifiedRightSide, fallback);
             if (conditionEvaluated?.Value is bool conditionValue)
             {
                 var branch = conditionValue ? conditional.WhenTrue : conditional.WhenFalse;
-                var branchEvaluated = Evaluate(branch, stateForUnqualifiedRightSide);
+                var branchEvaluated = Evaluate(branch, stateForUnqualifiedRightSide, fallback);
                 if (branchEvaluated != null)
                 {
                     return FromSyntaxAndValue(syntaxNode, branchEvaluated.Value);
@@ -140,7 +145,7 @@ public class EvaluatedSyntax
         {
             if (prefixUnary.OperatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ExclamationToken))
             {
-                var operand = Evaluate(prefixUnary.Operand, stateForUnqualifiedRightSide);
+                var operand = Evaluate(prefixUnary.Operand, stateForUnqualifiedRightSide, fallback);
                 if (operand?.Value is bool b)
                 {
                     return FromSyntaxAndValue(syntaxNode, !b);
@@ -167,7 +172,7 @@ public class EvaluatedSyntax
 
             foreach (var item in childNodes)
             {
-                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide);
+                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback);
                 if (evaluatedSyntax != null)
                 {
                     return evaluatedSyntax;
@@ -185,7 +190,7 @@ public class EvaluatedSyntax
 
             foreach (var item in childNodes)
             {
-                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide);
+                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback);
                 if (evaluatedSyntax != null)
                 {
                     return evaluatedSyntax;

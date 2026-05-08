@@ -3,6 +3,9 @@
   <Name>ItemsControlBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
   <RequiredInstances />
   <RequiredAnimations />
 </BehaviorSave>

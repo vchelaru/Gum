@@ -3,6 +3,10 @@
   <Name>CheckBoxBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <ToolOnlyVariableReference>CheckBoxCategoryState = IsEnabled ? "EnabledOff" : "DisabledOff"</ToolOnlyVariableReference>
   <Category>
     <Name>CheckBoxCategory</Name>
     <State>

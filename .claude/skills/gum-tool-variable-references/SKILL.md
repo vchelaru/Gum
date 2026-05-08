@@ -94,6 +94,12 @@ When a variable changes, `DoVariableReferenceReaction` finds all elements that r
 
 Invalid lines are auto-commented with `//` prefix and a message is shown to the user.
 
+## Behavior-Sourced Tool-Only References
+
+A separate variable-reference flavor lives on `BehaviorSave.ToolOnlyVariableReferences` (a `List<string>`, not a `VariableListSave`). Used by Forms property promotion (#2637 v2): a behavior declares e.g. `ButtonCategoryState = IsEnabled ? "Enabled" : "Disabled"` so the design-time wireframe reflects authored `FormsProperty` values. **Strictly tool-only** — applied by `BehaviorToolOnlyReferencesApplier` invoked from `VariableReferenceLogic.DoVariableReferenceReaction` immediately after the state-level apply. The runtime never traverses this list; the wrapped Forms control's setter (e.g. `FrameworkElement.IsEnabled` → `UpdateState()`) owns the visual at runtime, so applying the reference there would double-write. See `gum-forms-behaviors` for the property-promotion pipeline.
+
+The applier passes a `fallback` resolver into `EvaluatedSyntax.FromSyntaxNode` so identifiers not authored on state fall back to the behavior's `FormsProperty.Value` declarations (mirrors WPF DependencyProperty default values). Plumbed through `RecursiveVariableFinder.Fallback` — any caller that needs the same "default-when-state-empty" shape can use it.
+
 ## Known Gaps
 
 - **Font generation:** `CollectRequiredFonts` (in `HeadlessFontGenerationService`) and `RecursiveVariableFinder` do not resolve variable references. If a font property (Font, FontSize, etc.) is set via a variable reference, the font file may not be generated for that value. The tool-time path works because `VariableChangedThroughReference` fires `PluginManager.VariableSet`, but headless/CLI font generation could miss these. (See issue #2414)

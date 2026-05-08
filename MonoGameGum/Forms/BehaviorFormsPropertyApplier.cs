@@ -41,7 +41,11 @@ internal static class BehaviorFormsPropertyApplier
                 continue;
             }
 
-            object? value = ReadEffectiveValue(visual!, declaration.Name);
+            // Tier order: parent-instance override → own default → behavior FormsProperty
+            // default. The third tier lets a behavior's declared default carry through when
+            // neither component nor parent state authors a value (mirrors WPF
+            // DependencyProperty.PropertyMetadata.DefaultValue).
+            object? value = ReadEffectiveValue(visual!, declaration.Name) ?? declaration.Value;
             if (value == null)
             {
                 continue;
