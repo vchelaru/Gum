@@ -1,5 +1,4 @@
 using Gum.Wireframe;
-using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 
@@ -130,7 +129,7 @@ public class Tooltip : FrameworkElement
             FrameworkElement.PopupRoot.Children.Add(Visual);
         }
 
-        ClampToScreen();
+        RepositionToKeepInScreen();
 #endif
 
         IsOpen = true;
@@ -168,38 +167,4 @@ public class Tooltip : FrameworkElement
         Closed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void ClampToScreen()
-    {
-        if (Visual == null)
-        {
-            return;
-        }
-
-        var camera = Renderer.Self.Camera;
-        var cameraRight = camera.ClientWidth / camera.Zoom;
-        var cameraBottom = camera.ClientHeight / camera.Zoom;
-
-        var width = Visual.GetAbsoluteWidth();
-        var height = Visual.GetAbsoluteHeight();
-
-        var right = Visual.X + width;
-        if (right > cameraRight)
-        {
-            Visual.X -= (right - cameraRight);
-        }
-        if (Visual.X < 0)
-        {
-            Visual.X = 0;
-        }
-
-        var bottom = Visual.Y + height;
-        if (bottom > cameraBottom)
-        {
-            Visual.Y -= (bottom - cameraBottom);
-        }
-        if (Visual.Y < 0)
-        {
-            Visual.Y = 0;
-        }
-    }
 }

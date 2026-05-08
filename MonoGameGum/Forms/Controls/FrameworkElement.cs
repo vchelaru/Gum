@@ -930,28 +930,47 @@ public class FrameworkElement : INotifyPropertyChanged
     }
 #endif
 
+    /// <summary>
+    /// Repositions this element so it stays inside the logical Gum canvas
+    /// (<see cref="GraphicalUiElement.CanvasWidth"/> / <see cref="GraphicalUiElement.CanvasHeight"/>),
+    /// which is the space PopupRoot/ModalRoot are sized to. Clamps all four edges.
+    /// Used by popups (ListBox dropdown, Tooltip, MenuItem submenu) so they don't
+    /// render past the canvas edge regardless of how the camera/screen is sized.
+    /// </summary>
     public void RepositionToKeepInScreen()
     {
-#if FULL_DIAGNOSTICS
         if (Visual == null)
         {
-            throw new InvalidOperationException("Visual hasn't yet been set");
+            return;
         }
-        if (Visual.Parent != null)
-        {
-            throw new InvalidOperationException("This cannot be moved to keep in screen because it depends on its parent's position");
-        }
-#endif
-        //var cameraTop = 0;
-        var cameraBottom = Renderer.Self.Camera.ClientHeight / Renderer.Self.Camera.Zoom;
-        //var cameraLeft = 0;
-        var cameraRight = Renderer.Self.Camera.ClientWidth / Renderer.Self.Camera.Zoom;
 
-        var thisBottom = this.Visual.AbsoluteY + this.Visual.GetAbsoluteHeight();
-        if (thisBottom > cameraBottom)
+        var canvasWidth = GraphicalUiElement.CanvasWidth;
+        var canvasHeight = GraphicalUiElement.CanvasHeight;
+
+        var width = Visual.GetAbsoluteWidth();
+        var height = Visual.GetAbsoluteHeight();
+
+        // Use Absolute coords for the bounds check so this works even when Visual has
+        // a non-zero-positioned parent. Mutate local X/Y by the same delta — the parent
+        // doesn't move, so a delta in absolute space equals a delta in local space.
+        var right = Visual.AbsoluteX + width;
+        if (right > canvasWidth)
         {
-            // assume absolute positioning (for now?)
-            this.Y -= (thisBottom - cameraBottom);
+            this.X -= (right - canvasWidth);
+        }
+        if (Visual.AbsoluteX < 0)
+        {
+            this.X -= Visual.AbsoluteX;
+        }
+
+        var bottom = Visual.AbsoluteY + height;
+        if (bottom > canvasHeight)
+        {
+            this.Y -= (bottom - canvasHeight);
+        }
+        if (Visual.AbsoluteY < 0)
+        {
+            this.Y -= Visual.AbsoluteY;
         }
     }
 
