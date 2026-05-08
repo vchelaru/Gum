@@ -114,6 +114,23 @@ public partial class ElementTreeViewManager
         _fileCommands.ForceSaveElement(_selectedState.SelectedElement);
     }
 
+    void HandleCopyFullPath()
+    {
+        ElementSave? element = _selectedState.SelectedElement;
+        if (element == null)
+        {
+            return;
+        }
+        try
+        {
+            System.Windows.Clipboard.SetText(element.Name);
+        }
+        catch
+        {
+            // Clipboard access can throw if another process holds it; ignore.
+        }
+    }
+
     void HandleAddFolder()
     {
         if (SelectedNode != null)
@@ -284,6 +301,8 @@ public partial class ElementTreeViewManager
                 AddMenuItem("View in explorer", HandleViewInExplorer);
 
                 AddMenuItem("View References", HandleViewReferences);
+
+                AddMenuItem("Copy Full Path", HandleCopyFullPath);
 
                 AddSeparator();
 
