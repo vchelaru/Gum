@@ -7,6 +7,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if RAYLIB
+using Gum.Renderables;
+using Color = Raylib_cs.Color;
+#elif SOKOL
+using Gum.Renderables;
+using Color = SokolGum.Color;
+#elif SKIA
+using SkiaGum.Renderables;
+using Color = SkiaSharp.SKColor;
+#else
+using Gum.RenderingLibrary;
+using Color = Microsoft.Xna.Framework.Color;
+#endif
+
 #if FRB
 namespace MonoGameGum.GueDeriving;
 #else
@@ -21,7 +35,7 @@ public class CircleRuntime : GraphicalUiElement
     {
         get
         {
-            if(containedLineCircle == null)
+            if (containedLineCircle == null)
             {
                 containedLineCircle = this.RenderableComponent as LineCircle;
             }
@@ -102,9 +116,10 @@ public class CircleRuntime : GraphicalUiElement
     }
 
 
-    public Microsoft.Xna.Framework.Color Color
+    public Color Color
     {
-        get
+#if XNALIKE
+         get
         {
             return global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedLineCircle.Color);
         }
@@ -113,6 +128,15 @@ public class CircleRuntime : GraphicalUiElement
             ContainedLineCircle.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
             NotifyPropertyChanged();
         }
+#else
+        get => ContainedColoredRectangle.Color;
+        set
+        {
+            ContainedColoredRectangle.Color = value;
+            NotifyPropertyChanged();
+        }
+#endif
+
     }
 
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
@@ -128,7 +152,16 @@ public class CircleRuntime : GraphicalUiElement
             SetContainedObject(circle);
             containedLineCircle = circle;
 
+#if SKIA
+            circle.CornerRadius = 0;
+            circle.Color = SkiaSharp.SKColors.White;
+#elif RAYLIB
+            circle.Color = Raylib_cs.Color.White;
+#elif SOKOL
+            circle.Color = SokolGum.Color.White;
+#else
             circle.Color = System.Drawing.Color.White;
+#endif
             Width = 32;
             Height = 32;
             circle.Radius = 16;
