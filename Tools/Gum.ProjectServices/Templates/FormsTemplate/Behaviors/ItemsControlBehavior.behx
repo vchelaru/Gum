@@ -6,6 +6,10 @@
   <FormsProperty Type="bool" Name="IsEnabled">
     <Value xsi:type="xsd:boolean">true</Value>
   </FormsProperty>
+  <FormsProperty Type="Orientation?" Name="Orientation">
+    <Value xsi:type="xsd:string">Vertical</Value>
+    <Description>Vertical stacks items top-to-bottom; Horizontal stacks left-to-right. Empty leaves the inner panel's authored ChildrenLayout untouched.</Description>
+  </FormsProperty>
   <RequiredInstances />
   <RequiredAnimations />
 </BehaviorSave>
