@@ -1,12 +1,17 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.PropertyGridHelpers;
+using Gum.Services;
 using Gum.ToolStates;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
+using System.Reflection;
 using WpfDataUi.DataTypes;
 
 namespace GumToolUnitTests.PropertyGridHelpers;
@@ -21,6 +26,8 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
     private readonly ScreenSave _screen;
     private readonly InstanceSave _buttonInstance;
     private readonly StateSave _screenDefaultState;
+    private readonly IServiceProvider _testServiceProvider;
+    private readonly Mock<IProjectManager> _projectManagerMock;
 
     public ElementSaveDisplayerFormsPropertiesTests()
     {
@@ -56,6 +63,13 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         _project.Behaviors.Add(_buttonBehavior);
         ObjectFinder.Self.GumProjectSave = _project;
 
+        _projectManagerMock = new Mock<IProjectManager>();
+        _projectManagerMock.SetupGet(x => x.GumProjectSave).Returns(_project);
+        var services = new ServiceCollection();
+        services.AddSingleton(_projectManagerMock.Object);
+        _testServiceProvider = services.BuildServiceProvider();
+        Locator.Register(_testServiceProvider);
+
         _mocker.GetMock<ISelectedState>()
             .Setup(x => x.SelectedStateSave)
             .Returns(_screenDefaultState);
@@ -65,7 +79,25 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
 
         _mocker.Use(Gum.Reflection.TypeManager.Self);
 
+        _mocker.GetMock<IVariableSaveLogic>()
+            .Setup(x => x.GetIfVariableIsActive(It.IsAny<VariableSave>(), It.IsAny<ElementSave>(), It.IsAny<InstanceSave>()))
+            .Returns(true);
+
+        _mocker.GetMock<IPluginManager>()
+            .Setup(x => x.GetAttributesFor(It.IsAny<VariableSave>()))
+            .Returns(new List<Attribute>());
+
         _displayer = _mocker.CreateInstance<ElementSaveDisplayer>();
+    }
+
+    public override void Dispose()
+    {
+        var prop = typeof(Locator).GetProperty(
+            "ServiceProviders", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var providers = (List<IServiceProvider>)prop.GetValue(null)!;
+        providers.Remove(_testServiceProvider);
+
+        base.Dispose();
     }
 
     [Fact]
@@ -288,6 +320,33 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         InstanceMember? member = behaviorCategory.Members.FirstOrDefault(m => m.Name == "VerticalScrollBarVisibility");
         member.ShouldNotBeNull();
         member.PropertyType.ShouldBe(typeof(Gum.Forms.Controls.ScrollBarVisibility));
+    }
+
+    [Fact]
+    public void GetCategories_InstanceOfComponentWithDefaultChildContainer_DoesNotLeakDefaultChildContainerVariable()
+    {
+        // Repros issue #2672: DefaultChildContainer ("Default Slot") on a component
+        // bled through to instances of that component because the variable grid
+        // displayer removed it from addedNames instead of guarding against re-add.
+        _buttonComponent.DefaultState.Variables.Add(new VariableSave
+        {
+            Type = "string",
+            Name = "DefaultChildContainer",
+            Value = "InnerContainer"
+        });
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.GetCategories(
+            instanceOwner: _screen,
+            instance: _buttonInstance,
+            categories: categories,
+            stateSave: _screenDefaultState,
+            stateSaveCategory: null);
+
+        categories.SelectMany(c => c.Members)
+            .ShouldNotContain(m => m.Name.EndsWith("DefaultChildContainer"),
+                "DefaultChildContainer should only appear on the component itself, not on instances of it");
     }
 
     [Fact]

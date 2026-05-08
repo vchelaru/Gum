@@ -232,12 +232,14 @@ public class ElementSaveDisplayer
         }
 
 
-        // now that variables have been added we can remove the default child container:
+        // DefaultChildContainer (a.k.a. "Default Slot") should only appear on the component
+        // itself, never on instances or screens. Add it to addedNames so the per-variable
+        // loop below dedups it instead of re-adding it from the component's default state.
         if(!shouldShowChildContainer)
         {
             string variableName = "DefaultChildContainer";
             propertyList.RemoveAll(item => item.OriginalName == variableName);
-            addedNames.Remove(variableName);
+            addedNames.Add(variableName);
         }
 
         #region Loop through all variables
