@@ -49,6 +49,36 @@ public class TestViewModel : ViewModel
         set => Set(value);
     }
 
+    public int IntValue
+    {
+        get => Get<int>();
+        set => Set(value);
+    }
+
+    public int? NullableIntValue
+    {
+        get => Get<int?>();
+        set => Set(value);
+    }
+
+    public double DoubleValue
+    {
+        get => Get<double>();
+        set => Set(value);
+    }
+
+    public decimal DecimalValue
+    {
+        get => Get<decimal>();
+        set => Set(value);
+    }
+
+    public byte ByteValue
+    {
+        get => Get<byte>();
+        set => Set(value);
+    }
+
     public override string ToString() => Text ?? string.Empty;
 }
 

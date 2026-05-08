@@ -461,6 +461,190 @@ public class FrameworkElementBindingTests : BaseTestClass
         element.TicksFrequency.ShouldBe(0);
     }
 
+    // ---- Issue #609: TextBox bound to numeric source — round-trip conversions
+    //
+    // These tests pin down the conversion behavior of NpcBindingExpression for
+    // every numeric type called out in #609 (byte, int, float, double, decimal),
+    // in both directions. The conversion goes through System.Convert.ChangeType
+    // wrapped in a try/catch (NpcBindingExpression.TryConvert).
+
+    [Theory]
+    [InlineData("0", (byte)0)]
+    [InlineData("8", (byte)8)]
+    [InlineData("255", (byte)255)]
+    public void Binding_TextBox_TargetToSource_StringToByte_Converts(string input, byte expected)
+    {
+        TestViewModel vm = new();
+        TextBox element = new() { BindingContext = vm };
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.ByteValue));
+
+        element.Text = input;
+
+        vm.ByteValue.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("-1", -1)]
+    [InlineData("0", 0)]
+    [InlineData("8", 8)]
+    [InlineData("2147483647", int.MaxValue)]
+    public void Binding_TextBox_TargetToSource_StringToInt_Converts(string input, int expected)
+    {
+        TestViewModel vm = new();
+        TextBox element = new() { BindingContext = vm };
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.IntValue));
+
+        element.Text = input;
+
+        vm.IntValue.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("0", 0f)]
+    [InlineData("12.5", 12.5f)]
+    [InlineData("-3.14", -3.14f)]
+    public void Binding_TextBox_TargetToSource_StringToFloat_Converts(string input, float expected)
+    {
+        TestViewModel vm = new();
+        TextBox element = new() { BindingContext = vm };
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.FloatValue));
+
+        element.Text = input;
+
+        vm.FloatValue.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("0", 0.0)]
+    [InlineData("12.5", 12.5)]
+    [InlineData("-3.14159", -3.14159)]
+    public void Binding_TextBox_TargetToSource_StringToDouble_Converts(string input, double expected)
+    {
+        TestViewModel vm = new();
+        TextBox element = new() { BindingContext = vm };
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.DoubleValue));
+
+        element.Text = input;
+
+        vm.DoubleValue.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("0", "0")]
+    [InlineData("12.5", "12.5")]
+    [InlineData("-3.14", "-3.14")]
+    public void Binding_TextBox_TargetToSource_StringToDecimal_Converts(string input, string expectedAsString)
+    {
+        // [InlineData] cannot carry decimal literals, so the expected value
+        // is written as a string and parsed inside the test.
+        TestViewModel vm = new();
+        TextBox element = new() { BindingContext = vm };
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.DecimalValue));
+
+        element.Text = input;
+
+        vm.DecimalValue.ShouldBe(decimal.Parse(expectedAsString, System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    [Theory]
+    [InlineData((byte)0, "0")]
+    [InlineData((byte)8, "8")]
+    [InlineData((byte)255, "255")]
+    public void Binding_TextBox_SourceToTarget_ByteToString_Converts(byte sourceValue, string expectedText)
+    {
+        TestViewModel vm = new() { ByteValue = sourceValue };
+        TextBox element = new() { BindingContext = vm };
+
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.ByteValue));
+
+        element.Text.ShouldBe(expectedText);
+    }
+
+    [Theory]
+    [InlineData(-1, "-1")]
+    [InlineData(0, "0")]
+    [InlineData(8, "8")]
+    public void Binding_TextBox_SourceToTarget_IntToString_Converts(int sourceValue, string expectedText)
+    {
+        TestViewModel vm = new() { IntValue = sourceValue };
+        TextBox element = new() { BindingContext = vm };
+
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.IntValue));
+
+        element.Text.ShouldBe(expectedText);
+    }
+
+    [Theory]
+    [InlineData(0f, "0")]
+    [InlineData(12.5f, "12.5")]
+    [InlineData(-3.14f, "-3.14")]
+    public void Binding_TextBox_SourceToTarget_FloatToString_Converts(float sourceValue, string expectedText)
+    {
+        TestViewModel vm = new() { FloatValue = sourceValue };
+        TextBox element = new() { BindingContext = vm };
+
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.FloatValue));
+
+        element.Text.ShouldBe(expectedText);
+    }
+
+    [Theory]
+    [InlineData(0.0, "0")]
+    [InlineData(12.5, "12.5")]
+    public void Binding_TextBox_SourceToTarget_DoubleToString_Converts(double sourceValue, string expectedText)
+    {
+        TestViewModel vm = new() { DoubleValue = sourceValue };
+        TextBox element = new() { BindingContext = vm };
+
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.DoubleValue));
+
+        element.Text.ShouldBe(expectedText);
+    }
+
+    [Theory]
+    [InlineData("0", "0")]
+    [InlineData("12.5", "12.5")]
+    [InlineData("-3.14", "-3.14")]
+    public void Binding_TextBox_SourceToTarget_DecimalToString_Converts(string sourceValueAsString, string expectedText)
+    {
+        decimal sourceValue = decimal.Parse(sourceValueAsString, System.Globalization.CultureInfo.InvariantCulture);
+        TestViewModel vm = new() { DecimalValue = sourceValue };
+        TextBox element = new() { BindingContext = vm };
+
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.DecimalValue));
+
+        element.Text.ShouldBe(expectedText);
+    }
+
+    [Fact]
+    public void Binding_TextBox_TargetToSource_EmptyString_LeavesIntSourceUnchanged()
+    {
+        // System.Convert.ChangeType("", typeof(int)) throws FormatException,
+        // which TryConvert swallows; the source must therefore be left alone.
+        TestViewModel vm = new() { IntValue = 42 };
+        TextBox element = new() { BindingContext = vm };
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.IntValue));
+
+        element.Text = string.Empty;
+
+        vm.IntValue.ShouldBe(42);
+    }
+
+    [Fact]
+    public void Binding_TextBox_TargetToSource_EmptyString_LeavesNullableIntSourceUnchanged()
+    {
+        // System.Convert.ChangeType("", typeof(int?)) throws like the non-
+        // nullable case — Nullable<T> targets do not get a free null pass for
+        // empty strings. Pin this so callers don't assume "" -> null.
+        TestViewModel vm = new() { NullableIntValue = 42 };
+        TextBox element = new() { BindingContext = vm };
+        element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.NullableIntValue));
+
+        element.Text = string.Empty;
+
+        vm.NullableIntValue.ShouldBe(42);
+    }
+
     [Fact]
     public void ComplexPath_Mode_OneWay_OnlyUpdatesTarget()
     {
