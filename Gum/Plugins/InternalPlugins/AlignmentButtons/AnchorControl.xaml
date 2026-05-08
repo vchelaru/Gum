@@ -9,10 +9,8 @@
   HorizontalContentAlignment="Center"
   mc:Ignorable="d">
   <UserControl.Resources>
-    <Style BasedOn="{StaticResource IconButton}" TargetType="{x:Type Button}" />
+    <Style BasedOn="{StaticResource AlignmentIconButton}" TargetType="{x:Type Button}" />
   </UserControl.Resources>
-
-
 
   <Grid>
 
@@ -23,7 +21,8 @@
 
     <Border
       Margin="0,0,8,0"
-      BorderBrush="{DynamicResource Frb.Brushes.Contrast01}"
+      Padding="2"
+      BorderBrush="{DynamicResource Frb.Brushes.Border.Secondary}"
       BorderThickness="1"
       CornerRadius="4">
       <Grid>
@@ -104,28 +103,31 @@
     </Border>
 
 
-    <StackPanel Grid.Column="1">
-      <Button
-        x:Name="AnchorCenterHorizontally"
-        Grid.Row="0"
-        Grid.Column="3"
-        Click="AnchorCenterHorizontally_Click">
-        <controls:GumIcon Icon="AnchorCenterHorizontal" />
-        <Button.ToolTip>
-          Anchor Center Horizontally
-        </Button.ToolTip>
-      </Button>
-      <Button
-        x:Name="AnchorCenterVertically"
-        Grid.Row="1"
-        Grid.Column="3"
-        Click="AnchorCenterVertically_Click">
-        <controls:GumIcon Icon="AnchorCenterVertical" />
-        <Button.ToolTip>
-          Anchor Center Vertically
-        </Button.ToolTip>
-      </Button>
-    </StackPanel>
+    <Border
+      Grid.Column="1"
+      Padding="2"
+      BorderBrush="{DynamicResource Frb.Brushes.Border.Secondary}"
+      BorderThickness="1"
+      CornerRadius="4">
+      <StackPanel>
+        <Button
+          x:Name="AnchorCenterHorizontally"
+          Click="AnchorCenterHorizontally_Click">
+          <controls:GumIcon Icon="AnchorCenterHorizontal" />
+          <Button.ToolTip>
+            Anchor Center Horizontally
+          </Button.ToolTip>
+        </Button>
+        <Button
+          x:Name="AnchorCenterVertically"
+          Click="AnchorCenterVertically_Click">
+          <controls:GumIcon Icon="AnchorCenterVertical" />
+          <Button.ToolTip>
+            Anchor Center Vertically
+          </Button.ToolTip>
+        </Button>
+      </StackPanel>
+    </Border>
 
   </Grid>
 
