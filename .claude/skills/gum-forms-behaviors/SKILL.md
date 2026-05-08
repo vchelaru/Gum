@@ -98,22 +98,22 @@ Authored documentation persisted alongside the FormsProperty declaration in the 
 State-mapped (FormsProperty + ToolOnlyVariableReference, three-tier default resolution):
 - `IsEnabled` — every standard Forms behavior. Behaviors with no Disabled visual still get the `FormsProperty` (runtime reflection works) but no reference (no visual state to drive).
 - `IsChecked` — CheckBox, RadioButton, Toggle, with nested-ternary references combining IsEnabled and IsChecked into the appropriate `<X>CategoryState` slot.
+- `VerticalScrollBarVisibility` — ScrollViewer, mapped to the existing `ScrollBarVisibility` category via `ScrollBarVisibilityState = VerticalScrollBarVisibility == "Hidden" ? "NoScrollBar" : "VerticalScrollVisible"`. The `==` comparison relies on the enum↔string bridge in `EvaluatedSyntax.AreEqual` — see the `gum-tool-save-classes` skill for the int-on-disk vs boxed-enum-in-memory roundtrip. Project-side state authoring decides what each state actually changes visually.
 
 Logical-only (FormsProperty only — runtime reflects directly):
 - `ToolTip` — every standard Forms behavior.
-- TextBox/PasswordBox: `AcceptsReturn`, `AcceptsTab`, `IsReadOnly`, `Placeholder`, `MaxLength` (`int?`).
+- TextBox/PasswordBox: `AcceptsReturn`, `AcceptsTab`, `IsReadOnly`, `Placeholder`, `MaxLength` (`int?`), `TextWrapping`.
 - TextBox-only: `MaxLettersToShow` (`int?`), `MaxNumberOfLines` (`int?`).
 - Slider/ScrollBar (RangeBase): `Minimum`, `Maximum`, `Value`, `SmallChange`, `LargeChange`.
 - Slider-only: `TicksFrequency`, `IsSnapToTickEnabled`.
-- ScrollViewer: `SmallChange`, `LargeChange` (fanned to inner scroll bars by ScrollViewer's setters).
+- ScrollViewer: `SmallChange`, `LargeChange` (fanned to inner scroll bars by ScrollViewer's setters), `HorizontalScrollBarVisibility`.
+- ItemsControl/ListBox: `Orientation` (`Orientation?`).
 
-**Nullable type declarations.** When a Forms control's property is `int?` and `null` is meaningful (e.g. `MaxLength = null` means no limit), declare `Type="int?"` not `Type="int"` so the variable grid renders the nullable editor and authors can clear back to null. The runtime applier reflects on `prop.PropertyType` regardless, so coercion works either way.
+**Nullable type declarations.** When a Forms control's property is `int?` (or `Orientation?`) and `null` is meaningful, declare the `?` in `FormsProperty.Type` (e.g. `Type="int?"`, `Type="Orientation?"`) so the variable grid renders the nullable editor and authors can clear back to null. The runtime applier reflects on `prop.PropertyType` regardless, so coercion works either way.
+
+**Enum-typed FormsProperty declarations.** Author the default `Value` as a string (`<Value xsi:type="xsd:string">Auto</Value>`) — the applier's `IsEnum` branch parses it via `Enum.Parse`. The variable grid resolves the enum's name string (e.g. `Type="ScrollBarVisibility"`) via `TypeManager.GetTypeFromString`, so the type must live in or be linked into a TypeManager-scanned assembly (Gum.exe, GumCommon, or GumDataTypes). `TextWrapping`, `ScrollBarVisibility`, and `Orientation` are physically in `MonoGameGum/Forms/` but `<Compile Include>`-linked into GumCommon.
 
 Reflection apply is generic, so any new logical-only `FormsProperty` declaration flows through without runtime changes. State-mapped properties beyond what's listed follow the same shape: declare the `FormsProperty`(/ies) plus a `ToolOnlyVariableReference` driving the appropriate `<X>CategoryState`.
-
-### Not yet covered — enum-typed properties
-
-`TextWrapping`, `ScrollBarVisibility`, `Orientation` need string→enum coercion in `BehaviorFormsPropertyApplier.Apply` (currently uses `Convert.ChangeType`, which doesn't handle enums) and `EvaluatedSyntax.CastTo` for engine-side support if any reference puts an enum on a ternary RHS. Tracked as a separate PR.
 
 ## Key Files
 
