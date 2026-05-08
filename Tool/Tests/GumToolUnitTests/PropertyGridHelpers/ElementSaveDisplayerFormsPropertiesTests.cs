@@ -246,4 +246,47 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         behaviorCategory.Members.ShouldContain(existingMember,
             "the existing entry should be reused (preserves its DetailText, displayer hints, etc.) rather than rebuilt");
     }
+
+    [Fact]
+    public void AddBehaviorFormsPropertyMembers_EnumTypedFormsProperty_ResolvesEnumComponentType()
+    {
+        // The variable grid renders an enum picker only when the SRIM's PropertyType
+        // (sourced from TypeManager.GetTypeFromString on the FormsProperty's Type
+        // string) is the actual enum. Regression for the v4 enum-typed FormsProperty
+        // path: TypeManager must find Gum.Forms.Controls.ScrollBarVisibility (now
+        // owned by GumCommon, where TypeManager scans).
+        BehaviorSave scrollViewerBehavior = new BehaviorSave { Name = "ScrollViewerBehavior" };
+        scrollViewerBehavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "ScrollBarVisibility",
+            Name = "VerticalScrollBarVisibility",
+            Value = "Auto"
+        });
+
+        ComponentSave scrollViewerComponent = new ComponentSave
+        {
+            Name = "Controls/ScrollViewer",
+            BaseType = "Container"
+        };
+        scrollViewerComponent.States.Add(new StateSave { Name = "Default", ParentContainer = scrollViewerComponent });
+        scrollViewerComponent.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ScrollViewerBehavior" });
+        _project.Behaviors.Add(scrollViewerBehavior);
+        _project.Components.Add(scrollViewerComponent);
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.AddBehaviorFormsPropertyMembers(
+            elementWithBehaviors: scrollViewerComponent,
+            instanceOwner: scrollViewerComponent,
+            instance: null,
+            stateSave: scrollViewerComponent.DefaultState,
+            stateSaveCategory: null,
+            categories: categories);
+
+        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        behaviorCategory.ShouldNotBeNull();
+        InstanceMember? member = behaviorCategory.Members.FirstOrDefault(m => m.Name == "VerticalScrollBarVisibility");
+        member.ShouldNotBeNull();
+        member.PropertyType.ShouldBe(typeof(Gum.Forms.Controls.ScrollBarVisibility));
+    }
 }

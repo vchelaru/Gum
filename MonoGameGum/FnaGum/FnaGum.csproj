@@ -97,6 +97,13 @@
 	<ItemGroup>
 		<Compile Remove="..\obj\**" />
 		<Compile Remove="..\KniGum\**" />
+		<!--
+			Forms enums are owned by GumCommon (referenced via ProjectReference). Exclude
+			them from the ..\**\*.cs sweep so the types aren't compiled twice.
+		-->
+		<Compile Remove="..\Forms\TextWrapping.cs" />
+		<Compile Remove="..\Forms\Controls\ScrollBarVisibility.cs" />
+		<Compile Remove="..\Forms\Controls\Orientation.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

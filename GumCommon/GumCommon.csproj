@@ -215,6 +215,18 @@
 		<Compile Include="..\RenderingLibrary\Graphics\HorizontalAlignment.cs">
 			<Link>Graphics\HorizontalAlignment.cs</Link>
 		</Compile>
+
+		<!--
+			Forms enums physically live under MonoGameGum/ but are linked here so the Gum
+			tool's TypeManager (which discovers types via Assembly.GetAssembly(typeof(...))
+			against types compiled into GumCommon) can resolve them by name when the
+			variable grid renders FormsProperty editors. MonoGameGum/KniGum/FnaGum/RaylibGum
+			compile-Remove these entries so they pick the types up via the GumCommon
+			reference instead of duplicating them.
+		-->
+		<Compile Include="..\MonoGameGum\Forms\TextWrapping.cs" Link="Forms\TextWrapping.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\ScrollBarVisibility.cs" Link="Forms\Controls\ScrollBarVisibility.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\Orientation.cs" Link="Forms\Controls\Orientation.cs" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="BrotliSharpLib" Version="0.3.3" />
