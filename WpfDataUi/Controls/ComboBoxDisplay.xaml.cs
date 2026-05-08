@@ -14,6 +14,14 @@ namespace WpfDataUi.Controls;
 
 public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
 {
+    /// <summary>
+    /// Sentinel string used as the "no value" entry for nullable-enum combo boxes.
+    /// Matches the pre-existing convention recognised by
+    /// StateReferencingInstanceMember.HandleCustomSet, which translates this string
+    /// back to null when committing to the underlying variable.
+    /// </summary>
+    public const string NullSentinel = "<None>";
+
     #region Fields
 
 
@@ -335,8 +343,23 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
     public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
     {
         this.SuppressSettingProperty = true;
-        this.ComboBox.SelectedItem = valueOnInstance;
-        this.ComboBox.Text = valueOnInstance?.ToString();
+        // For nullable-enum pickers a stored null maps to the "<None>" sentinel
+        // entry — selecting it visually round-trips through HandleCustomSet which
+        // turns "<None>" back into null on write. Without this mapping a null
+        // value would deselect the combo entirely (WPF's default for SelectedItem
+        // = null), losing the cue that the variable currently has no value.
+        bool isNullableEnum = mInstancePropertyType != null
+            && Nullable.GetUnderlyingType(mInstancePropertyType)?.IsEnum == true;
+        if (valueOnInstance == null && isNullableEnum)
+        {
+            this.ComboBox.SelectedItem = NullSentinel;
+            this.ComboBox.Text = NullSentinel;
+        }
+        else
+        {
+            this.ComboBox.SelectedItem = valueOnInstance;
+            this.ComboBox.Text = valueOnInstance?.ToString();
+        }
         this.SuppressSettingProperty = false;
 
         SyncForegroundWithState();
@@ -350,7 +373,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         {
             // We want to check the CustomOptions first
             // because we may have an enum that has been
-            // reduced by the converter.  In that case we 
+            // reduced by the converter.  In that case we
             // want to show the reduced set instead of the
             // entire enum
             if (InstanceMember?.CustomOptions != null)
@@ -365,6 +388,25 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
             {
                 var values = Enum.GetValues(mInstancePropertyType);
                 foreach(var item in values)
+                {
+                    yield return item;
+                }
+            }
+            else if (mInstancePropertyType != null
+                && Nullable.GetUnderlyingType(mInstancePropertyType) is Type underlyingEnumType
+                && underlyingEnumType.IsEnum)
+            {
+                // Nullable enum (e.g., ResizeBehavior?): yield the "<None>" string
+                // sentinel first to represent the no-value option, then the underlying
+                // enum's values. The sentinel matches a pre-existing convention that
+                // StateReferencingInstanceMember.HandleCustomSet already recognises —
+                // it converts "<None>" back to null on write, so the variable round-
+                // trips cleanly. WPF ComboBox does not handle a literal null
+                // SelectedItem cleanly (selecting it deselects rather than picking the
+                // null item), which is why a string sentinel is used.
+                yield return NullSentinel;
+                var values = Enum.GetValues(underlyingEnumType);
+                foreach (var item in values)
                 {
                     yield return item;
                 }

@@ -76,6 +76,15 @@ namespace WpfDataUi
                 typeof(ComboBoxDisplay))
                 );
 
+            // Nullable enums (e.g., FormsProperty Type="ResizeBehavior?") render as a
+            // dropdown picker, same as their non-nullable counterpart. The combo box
+            // populates a null entry alongside the underlying enum's values so the
+            // user can clear the value back to null.
+            mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
+                (item) => item != null && Nullable.GetUnderlyingType(item)?.IsEnum == true,
+                typeof(ComboBoxDisplay))
+                );
+
             mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
                 (item) => item != null && typeof(IEnumerable).IsAssignableFrom(item) && item != typeof(string),
                 typeof(ListBoxDisplay))
