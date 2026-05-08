@@ -10,6 +10,9 @@
     <Value xsi:type="xsd:boolean">false</Value>
     <Description>If true, Enter inserts a newline; otherwise it fires the default action.</Description>
   </FormsProperty>
+  <FormsProperty Type="bool" Name="IsReadOnly">
+    <Value xsi:type="xsd:boolean">false</Value>
+  </FormsProperty>
   <ToolOnlyVariableReference>TextBoxCategoryState = IsEnabled ? "Enabled" : "Disabled"</ToolOnlyVariableReference>
   <Category>
     <Name>TextBoxCategory</Name>

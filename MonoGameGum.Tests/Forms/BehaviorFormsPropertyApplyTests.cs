@@ -191,6 +191,41 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_TextBoxIsReadOnlyTrue_AppliesToFormsControl()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "TextBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsReadOnly",
+            Value = false
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsReadOnly",
+            Value = true,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        TextBox textBox = new TextBox();
+        textBox.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(textBox, textBox.Visual);
+
+        textBox.IsReadOnly.ShouldBe(true);
+    }
+
+    [Fact]
     public void Apply_ParentScreenInstanceOverride_OverridesComponentDefault()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
