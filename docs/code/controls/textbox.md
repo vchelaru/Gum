@@ -316,6 +316,41 @@ mainPanel.AddChild(textBox);
 
 <figure><img src="../../.gitbook/assets/24_07 50 58.gif" alt=""><figcaption><p>Pressing enter applies binding</p></figcaption></figure>
 
+## Binding to Numeric Properties
+
+`TextBox.Text` can be bound to any standard numeric ViewModel property — `byte`, `int`, `float`, `double`, or `decimal`. The binding automatically converts between strings and numbers, so no `Converter` is required for these types.
+
+The following ViewModel exposes an `int`:
+
+```csharp
+// Class scope
+class PlayerViewModel : ViewModel
+{
+    public int Score
+    {
+        get => Get<int>();
+        set => Set(value);
+    }
+}
+```
+
+The TextBox can be bound directly to `Score`:
+
+```csharp
+// Initialize
+PlayerViewModel vm = new() { Score = 8 };
+TextBox textBox = new() { BindingContext = vm };
+textBox.SetBinding(nameof(TextBox.Text), nameof(PlayerViewModel.Score));
+```
+
+When the user types valid numeric input, the bound property is updated. When the input cannot be parsed — for example, letters in a field bound to `int` — the binding silently leaves the source unchanged. No exception is thrown.
+
+{% hint style="warning" %}
+Clearing the textbox to an empty string does **not** reset a numeric source to `0` or `null`. The source keeps its previous value, because `Convert.ChangeType("", numericType)` fails and failures are silently skipped. If your application needs clearing-to-null behavior, supply a `Converter` to the binding.
+{% endhint %}
+
+For the system-level rule that drives this behavior, including how it works for any binding (not just TextBox), see [Implicit Type Conversion](../binding-viewmodels/advanced-binding-options.md#implicit-type-conversion).
+
 ## Tab Key Behavior
 
 The tab key behavior is controlled by the `AcceptsTab` property. This value is false by default.
