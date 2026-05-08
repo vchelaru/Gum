@@ -129,7 +129,7 @@ public class StateReferencingInstanceMember : InstanceMember
         }
     }
 
-    private object GetValueStrictlyOnSelectedState(object component)
+    private object? GetValueStrictlyOnSelectedState(object component)
     {
         if (mStateSave != null)
         {
