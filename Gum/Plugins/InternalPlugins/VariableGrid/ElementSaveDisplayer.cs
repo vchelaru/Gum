@@ -686,6 +686,14 @@ public class ElementSaveDisplayer
                 VariableSave declaration = formsProperty;
                 srim.DefaultValueFallback = () => declaration.Value;
 
+                // Seed the row's display text from the FormsProperty's authored Description
+                // (persisted in the .behx). Later state-dependent hints set elsewhere via
+                // srim.DetailText can still overwrite or append to this seed.
+                if (!string.IsNullOrEmpty(formsProperty.Description))
+                {
+                    srim.DetailText = formsProperty.Description;
+                }
+
                 behaviorCategory.Members.Add(srim);
             }
         }

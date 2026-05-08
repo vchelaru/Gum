@@ -89,11 +89,31 @@ Tier 3 is **virtual** — never written to state, never appears in `.gusx`. Stat
 - `BehaviorFormsPropertyApplier.Apply` adds the third tier inline: `ReadEffectiveValue(...) ?? declaration.Value`.
 - `StateReferencingInstanceMember.DefaultValueFallback` lets the variable grid show the declared default in the checkbox/text without writing into state. `IsDefault` still returns true (state empty), preserving the grid's italic/grey styling.
 
+### `VariableSave.Description` (v3)
+
+Authored documentation persisted alongside the FormsProperty declaration in the `.behx`. `ElementSaveDisplayer.AddBehaviorFormsPropertyMembers` seeds each row's `srim.DetailText` from the declaration's `Description` when surfacing behavior-promoted variables, so the variable grid shows authored docs by default. Distinct from the `[XmlIgnore]` `DetailText` field, which holds transient state-dependent hints set by tool/plugin code at runtime; see the cross-referencing XML docs on both fields. Use `Description` only when a property's name is ambiguous, has overlapping siblings (e.g. `MaxLength` vs `MaxLettersToShow`), or assumes prior framework knowledge.
+
 ### Covered today
 
-`ToolTip` (logical-only) and `IsEnabled` (state-mapped, with `<X>CategoryState` reference) on every standard Forms behavior. Behaviors with no Disabled visual still get the `IsEnabled` `FormsProperty` (runtime reflection works), but no `ToolOnlyVariableReference` since there's no visual state to drive.
+State-mapped (FormsProperty + ToolOnlyVariableReference, three-tier default resolution):
+- `IsEnabled` — every standard Forms behavior. Behaviors with no Disabled visual still get the `FormsProperty` (runtime reflection works) but no reference (no visual state to drive).
+- `IsChecked` — CheckBox, RadioButton, Toggle, with nested-ternary references combining IsEnabled and IsChecked into the appropriate `<X>CategoryState` slot.
 
-Reflection apply is generic, so any new logical-only `FormsProperty` declaration (e.g. `MaxCharacters`, `Slider.Minimum/Maximum/Value`) flows through without runtime changes. State-mapped properties beyond `IsEnabled` (e.g. `IsChecked`) follow the same v2 shape: declare the `FormsProperty` plus a `ToolOnlyVariableReference` driving the appropriate `<X>CategoryState`.
+Logical-only (FormsProperty only — runtime reflects directly):
+- `ToolTip` — every standard Forms behavior.
+- TextBox/PasswordBox: `AcceptsReturn`, `AcceptsTab`, `IsReadOnly`, `Placeholder`, `MaxLength` (`int?`).
+- TextBox-only: `MaxLettersToShow` (`int?`), `MaxNumberOfLines` (`int?`).
+- Slider/ScrollBar (RangeBase): `Minimum`, `Maximum`, `Value`, `SmallChange`, `LargeChange`.
+- Slider-only: `TicksFrequency`, `IsSnapToTickEnabled`.
+- ScrollViewer: `SmallChange`, `LargeChange` (fanned to inner scroll bars by ScrollViewer's setters).
+
+**Nullable type declarations.** When a Forms control's property is `int?` and `null` is meaningful (e.g. `MaxLength = null` means no limit), declare `Type="int?"` not `Type="int"` so the variable grid renders the nullable editor and authors can clear back to null. The runtime applier reflects on `prop.PropertyType` regardless, so coercion works either way.
+
+Reflection apply is generic, so any new logical-only `FormsProperty` declaration flows through without runtime changes. State-mapped properties beyond what's listed follow the same shape: declare the `FormsProperty`(/ies) plus a `ToolOnlyVariableReference` driving the appropriate `<X>CategoryState`.
+
+### Not yet covered — enum-typed properties
+
+`TextWrapping`, `ScrollBarVisibility`, `Orientation` need string→enum coercion in `BehaviorFormsPropertyApplier.Apply` (currently uses `Convert.ChangeType`, which doesn't handle enums) and `EvaluatedSyntax.CastTo` for engine-side support if any reference puts an enum on a ternary RHS. Tracked as a separate PR.
 
 ## Key Files
 
@@ -107,7 +127,8 @@ Reflection apply is generic, so any new logical-only `FormsProperty` declaration
 | `MonoGameGum/Forms/DefaultFromFileVisuals/` | `DefaultFromFileXxxRuntime` classes — `AfterFullCreation()` creates Forms objects |
 | `MonoGameGum/Forms/BehaviorFormsPropertyApplier.cs` | Reflects `BehaviorSave.FormsProperties` values onto the wrapped `FrameworkElement` (with three-tier default resolution) |
 | `Gum/Plugins/InternalPlugins/VariableGrid/BehaviorToolOnlyReferencesApplier.cs` | Tool-only design-time apply pass for `ToolOnlyVariableReferences`. Strictly tool-only — never invoked from runtime / generated code. |
-| `Gum/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs` | `AddBehaviorFormsPropertyMembers` — surfaces FormsProperties in the variable grid; sets `DefaultValueFallback` on each SRIM so the grid shows the declared default. |
+| `Gum/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs` | `AddBehaviorFormsPropertyMembers` — surfaces FormsProperties in the variable grid; sets `DefaultValueFallback` on each SRIM so the grid shows the declared default; seeds `srim.DetailText` from the FormsProperty's `Description`. |
+| `GumDataTypes/Variables/VariableSave.cs` | `Description` (persisted, XML-serialized) and `DetailText` (`[XmlIgnore]`, transient) fields with cross-referencing XML docs. |
 | `Gum/Plugins/InternalPlugins/VariableGrid/StateReferencingInstanceMember.cs` | `DefaultValueFallback` final tier in the value getter for grid display. |
 | `Runtimes/GumExpressions/EvaluatedSyntax.cs` | Optional `fallback` parameter on `FromSyntaxNode` threaded through evaluation. |
 | `Gum/DataTypes/RecursiveVariableFinder.cs` | `Fallback` property consulted when state lookup returns null. |

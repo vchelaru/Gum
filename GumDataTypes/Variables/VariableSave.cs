@@ -193,6 +193,36 @@ public class VariableSave
     public Type PreferredDisplayer { get; set; }
     // If adding stuff here, make sure to add to the Clone method!
 
+    /// <summary>
+    /// Authored documentation for this variable, persisted alongside the declaration in the
+    /// containing save file (typically a <c>FormsProperty</c> entry inside a <c>.behx</c>, or
+    /// a standard variable declaration). This describes <i>what the variable is</i> and does
+    /// not change at runtime.
+    /// </summary>
+    /// <remarks>
+    /// Distinct from <see cref="DetailText"/>: <see cref="Description"/> is invariant authoring
+    /// data that ships with the project file, whereas <see cref="DetailText"/> is a transient,
+    /// state-dependent hint set by tool/plugin code at runtime. The variable grid surfaces
+    /// <see cref="Description"/> by seeding the row's display text from it; later runtime
+    /// hints can still overwrite or append to that display text via <see cref="DetailText"/>.
+    /// </remarks>
+    public string? Description { get; set; }
+
+    public bool ShouldSerializeDescription() => !string.IsNullOrEmpty(Description);
+
+    /// <summary>
+    /// Transient, runtime-only display hint shown in the variable grid for this variable's
+    /// row. Populated by tool/plugin code based on the current project state — e.g.
+    /// <c>"bmfont cannot generate from .ttf files. Switch to KernSmith in Project Properties."</c>
+    /// shown when the active font configuration is incompatible. Not serialized.
+    /// </summary>
+    /// <remarks>
+    /// Distinct from <see cref="Description"/>: <see cref="DetailText"/> describes
+    /// <i>what's currently true given the project state</i>, while <see cref="Description"/>
+    /// describes <i>what the variable is</i> and is persisted. The variable grid seeds this
+    /// field from <see cref="Description"/> when surfacing FormsProperty declarations, so a
+    /// row with no transient hints still shows the authored documentation.
+    /// </remarks>
     [XmlIgnore]
     public string DetailText { get; set; } = string.Empty;
 

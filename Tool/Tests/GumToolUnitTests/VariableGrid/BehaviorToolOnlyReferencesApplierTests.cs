@@ -194,6 +194,128 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_CheckBoxIsCheckedTrueAndIsEnabledTrue_WritesEnabledOnCategoryState()
+    {
+        BehaviorSave behavior = BuildCheckBoxBehavior();
+
+        ComponentSave component = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsEnabled",
+            Value = true,
+            SetsValue = true
+        });
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsChecked",
+            Value = true,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "CheckBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("CheckBoxCategoryState").ShouldBe("EnabledOn");
+    }
+
+    [Fact]
+    public void Apply_CheckBoxIsCheckedFalseAndIsEnabledFalse_WritesDisabledOffCategoryState()
+    {
+        BehaviorSave behavior = BuildCheckBoxBehavior();
+
+        ComponentSave component = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsEnabled",
+            Value = false,
+            SetsValue = true
+        });
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsChecked",
+            Value = false,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "CheckBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("CheckBoxCategoryState").ShouldBe("DisabledOff");
+    }
+
+    [Fact]
+    public void Apply_CheckBoxIsCheckedTrueAndIsEnabledFalse_WritesDisabledOnCategoryState()
+    {
+        BehaviorSave behavior = BuildCheckBoxBehavior();
+
+        ComponentSave component = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsEnabled",
+            Value = false,
+            SetsValue = true
+        });
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsChecked",
+            Value = true,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "CheckBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("CheckBoxCategoryState").ShouldBe("DisabledOn");
+    }
+
+    [Fact]
+    public void Apply_CheckBoxStateEmpty_FallsBackToBehaviorIsCheckedFalseAndIsEnabledTrue()
+    {
+        BehaviorSave behavior = BuildCheckBoxBehavior();
+
+        ComponentSave component = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "CheckBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("CheckBoxCategoryState").ShouldBe("EnabledOff");
+    }
+
+    [Fact]
     public void Apply_BehaviorWithoutToolOnlyReferences_DoesNothing()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
@@ -211,5 +333,25 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
 
         Should.NotThrow(() => BehaviorToolOnlyReferencesApplier.Apply(component, defaultState));
         defaultState.Variables.ShouldBeEmpty();
+    }
+
+    private static BehaviorSave BuildCheckBoxBehavior()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "CheckBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsEnabled",
+            Value = true
+        });
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsChecked",
+            Value = false
+        });
+        behavior.ToolOnlyVariableReferences.Add(
+            "CheckBoxCategoryState = IsEnabled ? (IsChecked ? \"EnabledOn\" : \"EnabledOff\") : (IsChecked ? \"DisabledOn\" : \"DisabledOff\")");
+        return behavior;
     }
 }

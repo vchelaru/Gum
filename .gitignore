@@ -51,3 +51,4 @@ Runtimes/GumShapes/XnbTest/
 # Temp folder for draft/scratch files (e.g. release notes drafts)
 /temp/*
 !/temp/.gitkeep
+/.claude/worktrees

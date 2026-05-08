@@ -182,6 +182,41 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
     }
 
     [Fact]
+    public void AddBehaviorFormsPropertyMembers_FormsPropertyWithDescription_SeedsSrimDetailText()
+    {
+        BehaviorSave describedBehavior = new BehaviorSave { Name = "DescribedBehavior" };
+        describedBehavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "AcceptsReturn",
+            Value = false,
+            Description = "If true, pressing Enter inserts a newline."
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/Described", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "DescribedBehavior" });
+        _project.Behaviors.Add(describedBehavior);
+        _project.Components.Add(component);
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.AddBehaviorFormsPropertyMembers(
+            elementWithBehaviors: component,
+            instanceOwner: component,
+            instance: null,
+            stateSave: component.DefaultState,
+            stateSaveCategory: null,
+            categories: categories);
+
+        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        behaviorCategory.ShouldNotBeNull();
+        InstanceMember? acceptsReturnMember = behaviorCategory.Members.FirstOrDefault(m => m.Name == "AcceptsReturn");
+        acceptsReturnMember.ShouldNotBeNull();
+        acceptsReturnMember.DetailText.ShouldBe("If true, pressing Enter inserts a newline.");
+    }
+
+    [Fact]
     public void AddBehaviorFormsPropertyMembers_VariableAlreadyInGeneralCategory_MovesToBehaviorCategory()
     {
         // Simulates the case where the component has set a default value for the

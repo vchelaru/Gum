@@ -85,6 +85,216 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_CheckBoxIsCheckedTrueFromState_CoercesBoolToNullableBoolOnCheckBox()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "CheckBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsChecked",
+            Value = false
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsChecked",
+            Value = true,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "CheckBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        InteractiveGue visual = new InteractiveGue();
+        visual.ElementSave = component;
+
+        CheckBox checkBox = new CheckBox(visual);
+        BehaviorFormsPropertyApplier.Apply(checkBox, visual);
+
+        checkBox.IsChecked.ShouldBe(true);
+    }
+
+    [Fact]
+    public void Apply_CheckBoxIsCheckedUnauthored_FallsBackToBehaviorDefaultFalse()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "CheckBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsChecked",
+            Value = false
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "CheckBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        InteractiveGue visual = new InteractiveGue();
+        visual.ElementSave = component;
+
+        CheckBox checkBox = new CheckBox(visual);
+        // Force a non-default starting value to verify Apply writes the declared default.
+        checkBox.IsChecked = true;
+        BehaviorFormsPropertyApplier.Apply(checkBox, visual);
+
+        checkBox.IsChecked.ShouldBe(false);
+    }
+
+    [Fact]
+    public void Apply_TextBoxAcceptsReturnTrue_AppliesToFormsControl()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "TextBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "AcceptsReturn",
+            Value = false
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "AcceptsReturn",
+            Value = true,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        // TextBox's parameterless ctor builds a default visual tree (TextInstance/CaretInstance
+        // children) which TextBoxBase.ReactToVisualChanged requires. Attach the project component
+        // to that visual so the applier can resolve the FormsProperty against state.
+        TextBox textBox = new TextBox();
+        textBox.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(textBox, textBox.Visual);
+
+        textBox.AcceptsReturn.ShouldBe(true);
+    }
+
+    [Fact]
+    public void Apply_TextBoxIsReadOnlyTrue_AppliesToFormsControl()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "TextBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsReadOnly",
+            Value = false
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "IsReadOnly",
+            Value = true,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        TextBox textBox = new TextBox();
+        textBox.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(textBox, textBox.Visual);
+
+        textBox.IsReadOnly.ShouldBe(true);
+    }
+
+    [Fact]
+    public void Apply_TextBoxMaxLengthFromState_CoercesIntToNullableIntOnTextBox()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "TextBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "int",
+            Name = "MaxLength"
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "int",
+            Name = "MaxLength",
+            Value = 50,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        TextBox textBox = new TextBox();
+        textBox.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(textBox, textBox.Visual);
+
+        textBox.MaxLength.ShouldBe(50);
+    }
+
+    [Fact]
+    public void Apply_SliderMaximumFromState_AppliesToFormsControl()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "SliderBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "double",
+            Name = "Maximum",
+            Value = 100.0
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/Slider", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "double",
+            Name = "Maximum",
+            Value = 250.0,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SliderBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        Slider slider = new Slider();
+        slider.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(slider, slider.Visual);
+
+        slider.Maximum.ShouldBe(250.0);
+    }
+
+    [Fact]
     public void Apply_ParentScreenInstanceOverride_OverridesComponentDefault()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
