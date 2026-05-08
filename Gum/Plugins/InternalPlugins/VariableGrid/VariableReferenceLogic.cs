@@ -462,6 +462,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // apply references on this element first, then apply the values to the other references:
         ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave);
 
+        // Then evaluate any behavior-level ToolOnlyVariableReferences so design-time
+        // wireframe preview reflects FormsProperty values (e.g. IsEnabled = false →
+        // ButtonCategoryState = "Disabled"). Tool-only by design — never invoked at
+        // runtime, since the Forms control's own setter owns the visual at runtime.
+        BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
+
         if (unqualifiedMember == "VariableReferences")
         {
             _guiCommands.RefreshVariableValues();
