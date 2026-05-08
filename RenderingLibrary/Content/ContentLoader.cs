@@ -311,19 +311,56 @@ public class ContentLoader : IContentLoader
 
         Texture2D LoadFromContentManager(string fileName, string fileNameStandardized)
         {
-            Texture2D toReturn;
-
             // the file name should be absolute at this point, but we want to make
             // it relative to the XNA content manager since that's what's doing the loading.
-            var exeFolder = FileManager.ExeLocation;
-            var pathToMakeRelativeTo =  exeFolder + XnaContentManager.RootDirectory;
-
-            var relativeFileName = FileManager.MakeRelative(fileNameStandardized, pathToMakeRelativeTo, preserveCase: true);
+            var relativeFileName = ResolveContentManagerAssetName(
+                XnaContentManager.RootDirectory,
+                fileNameStandardized);
             Texture2D texture = XnaContentManager.Load<Texture2D>(relativeFileName);
             texture.Name = fileNameStandardized;
-            toReturn = texture;
-            return toReturn;
+            return texture;
         }
 #endif
-    }        
+    }
+
+#if XNALIKE && !FRB
+    /// <summary>
+    /// Computes the asset name to pass to <see cref="Microsoft.Xna.Framework.Content.ContentManager.Load{T}(string)"/>
+    /// given the standardized file path and the content manager's configured root.
+    /// </summary>
+    /// <remarks>
+    /// On desktop, <paramref name="fileNameStandardized"/> is typically an absolute path that contains the
+    /// content root segment (e.g. "C:/app/bin/Debug/Content/images/atlas"). On mobile platforms such as
+    /// Android, <see cref="FileManager.ExeLocation"/> is empty or "/", so a previous implementation
+    /// that pivoted MakeRelative on ExeLocation + content root produced asset names like
+    /// "./Content/images/atlas". The XNA content manager would then prepend its RootDirectory a second
+    /// time, producing paths like "Content/./Content/images/atlas.xnb" that fail to load. This helper
+    /// strips the content root segment directly, regardless of whether the input is absolute or relative.
+    /// </remarks>
+    internal static string ResolveContentManagerAssetName(
+        string contentRootDirectory,
+        string fileNameStandardized)
+    {
+        // Normalize separators to forward slashes so we can match content root regardless of platform.
+        string normalizedAsset = (fileNameStandardized ?? string.Empty).Replace('\\', '/');
+        string normalizedRoot = (contentRootDirectory ?? string.Empty).Replace('\\', '/').Trim('/');
+
+        if (!string.IsNullOrEmpty(normalizedRoot))
+        {
+            string rootWithSlash = normalizedRoot + "/";
+            int rootIndex = normalizedAsset.IndexOf(rootWithSlash, StringComparison.OrdinalIgnoreCase);
+            if (rootIndex >= 0)
+            {
+                return normalizedAsset.Substring(rootIndex + rootWithSlash.Length);
+            }
+        }
+
+        // Fallback: strip a leading "./" (left over from MakeRelative on platforms without an exe path).
+        if (normalizedAsset.StartsWith("./", StringComparison.Ordinal))
+        {
+            normalizedAsset = normalizedAsset.Substring(2);
+        }
+        return normalizedAsset;
+    }
+#endif
 }
