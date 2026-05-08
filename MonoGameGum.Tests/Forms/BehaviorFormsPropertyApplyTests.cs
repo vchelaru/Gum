@@ -348,6 +348,35 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_ItemsControlOrientationFromBehaviorDefaultString_CoercesToNullableEnum()
+    {
+        // ItemsControl.Orientation is Orientation?, so this also exercises the
+        // Nullable.GetUnderlyingType -> IsEnum path in the applier.
+        BehaviorSave behavior = new BehaviorSave { Name = "ItemsControlBehavior" };
+        behavior.FormsProperties.Add(new VariableSave
+        {
+            Type = "Orientation?",
+            Name = "Orientation",
+            Value = "Horizontal"
+        });
+
+        ComponentSave component = new ComponentSave { Name = "Controls/ItemsControl", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ItemsControlBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ItemsControl itemsControl = new ItemsControl();
+        itemsControl.Visual.ElementSave = component;
+        BehaviorFormsPropertyApplier.Apply(itemsControl, itemsControl.Visual);
+
+        itemsControl.Orientation.ShouldBe(Orientation.Horizontal);
+    }
+
+    [Fact]
     public void Apply_TextBoxTextWrappingFromBehaviorDefaultString_CoercesToEnum()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "TextBoxBehavior" };

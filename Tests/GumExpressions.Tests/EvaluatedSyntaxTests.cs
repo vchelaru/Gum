@@ -733,4 +733,53 @@ public class EvaluatedSyntaxTests : BaseTestClass
     }
 
     #endregion
+
+    #region EnumStringEquality
+
+    // Variable references like "ScrollBarVisibilityState = VerticalScrollBarVisibility == \"Hidden\" ? ..."
+    // are authored as ternaries comparing an enum-typed variable to a string literal. The
+    // tool's load pipeline (FixEnumerationsWithReflection) promotes int-on-disk values to
+    // boxed enums in memory before evaluation, so the eval sees a boxed enum on one side
+    // and a string literal on the other. Without bridging, object.Equals always returns
+    // false and the ternary collapses to the wrong branch.
+    [Fact]
+    public void FromSyntaxNode_EnumEqualsMatchingStringLiteral_ReturnsTrue()
+    {
+        StateSave state = BuildState(
+            ("Instance.VerticalScrollBarVisibility", Gum.Forms.Controls.ScrollBarVisibility.Hidden,
+             "Gum.Forms.Controls.ScrollBarVisibility"));
+
+        EvaluatedSyntax result = Evaluate("Instance.VerticalScrollBarVisibility == \"Hidden\"", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(true);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_EnumEqualsNonMatchingStringLiteral_ReturnsFalse()
+    {
+        StateSave state = BuildState(
+            ("Instance.VerticalScrollBarVisibility", Gum.Forms.Controls.ScrollBarVisibility.Auto,
+             "Gum.Forms.Controls.ScrollBarVisibility"));
+
+        EvaluatedSyntax result = Evaluate("Instance.VerticalScrollBarVisibility == \"Hidden\"", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(false);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_EnumNotEqualsMatchingStringLiteral_ReturnsFalse()
+    {
+        StateSave state = BuildState(
+            ("Instance.VerticalScrollBarVisibility", Gum.Forms.Controls.ScrollBarVisibility.Hidden,
+             "Gum.Forms.Controls.ScrollBarVisibility"));
+
+        EvaluatedSyntax result = Evaluate("Instance.VerticalScrollBarVisibility != \"Hidden\"", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(false);
+    }
+
+    #endregion
 }
