@@ -9,7 +9,7 @@ public enum CircleOrigin
 {
     /// <summary>(X, Y) is the centre point.</summary>
     Center,
-    /// <summary>(X, Y) is the top-left of the circle's bounding box — centre is (X + Radius, Y + Radius).</summary>
+    /// <summary>(X, Y) is the top-left of the bounding box — centre is derived from Width and Height.</summary>
     TopLeft,
 }
 
@@ -80,12 +80,17 @@ public class LineCircle : InvisibleRenderable
             return;
         }
 
-        float cx = this.GetAbsoluteLeft();
-        float cy = this.GetAbsoluteTop();
+        float cx;
+        float cy;
         if (CircleOrigin == CircleOrigin.TopLeft)
         {
-            cx += Radius;
-            cy += Radius;
+            cx = this.GetAbsoluteLeft() + this.Width * 0.5f;
+            cy = this.GetAbsoluteTop() + this.Height * 0.5f;
+        }
+        else
+        {
+            cx = this.GetAbsoluteLeft();
+            cy = this.GetAbsoluteTop();
         }
 
         DrawCircleLines((int)cx, (int)cy, Radius, Color);
