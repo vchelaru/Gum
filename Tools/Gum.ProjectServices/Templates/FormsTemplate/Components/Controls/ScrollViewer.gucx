@@ -288,5 +288,6 @@
   <VariablesHiddenFromInstances>
     <string>ContainedType</string>
     <string>ChildrenLayout</string>
+    <string>ExposeChildrenEvents</string>
   </VariablesHiddenFromInstances>
 </ComponentSave>

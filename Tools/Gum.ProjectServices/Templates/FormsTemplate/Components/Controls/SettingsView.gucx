@@ -70,4 +70,7 @@
       <BehaviorName>SettingsViewBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>
