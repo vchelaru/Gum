@@ -2,11 +2,17 @@
 
 ## Introduction
 
-Once you have a reference to a Forms control — or, less commonly, to a visual — you often need to find something else in the same UI: a child control, a containing window, or one of the runtime visuals that make up a control's appearance. Gum provides extension methods on both `FrameworkElement` (the Forms layer) and `GraphicalUiElement` (the visual layer) for this.
+Once you have a reference to a Forms control or a visual, three patterns of "find something else" come up constantly:
+
+* **Reach into a control's visuals** — `myButton.FindVisual<TextRuntime>()` to grab the runtime visuals that make up a Forms control's appearance.
+* **Find another control** — `dialog.Find<Button>("CancelButton")` to locate a descendant Forms control by type and/or name.
+* **Walk up to a container** — `nested.Ancestors().OfType<Window>().FirstOrDefault()` to find the containing window from somewhere deep inside it.
+
+These extension methods live in `Gum.Forms` (for `FrameworkElement`) and `Gum.Wireframe` (for `GraphicalUiElement`). All `Find*` methods return `null` if nothing matches — they don't throw. The examples below use `!` only because the result is known to exist for that example.
 
 ## Working With Forms Controls
 
-Most game UIs are built from Forms controls (`Button`, `TextBox`, `ListBox`, `Window`, etc.), so most of these queries start from a `FrameworkElement`. The extensions group into three patterns: finding other controls, walking up to a container, and dropping down into a control's underlying visual.
+Most game UIs are built from Forms controls (`Button`, `TextBox`, `ListBox`, `Window`, etc.), so most queries start from a `FrameworkElement`. The extensions group into three patterns: finding other controls, walking up to a container, and dropping down into a control's underlying visual.
 
 ### Finding Another Control
 
@@ -14,7 +20,12 @@ When a control contains other controls — for example a `Window` containing sev
 
 ```csharp
 // Initialize
-Button cancelButton = dialog.Find<Button>("CancelButton")!;
+Window dialog = new();
+Button cancel = new();
+cancel.Visual.Name = "CancelButton";
+dialog.AddChild(cancel);
+
+Button found = dialog.Find<Button>("CancelButton")!;
 ```
 
 `FindByName(name)` matches on the underlying `Visual.Name` without a type filter. `Find<T>()` (no name) returns the first descendant of type `T`.
@@ -26,7 +37,7 @@ When you need every match instead of the first, use `Descendants()` and compose 
 List<Button> buttons = dialog.Descendants().OfType<Button>().ToList();
 ```
 
-`Descendants()` returns `IEnumerable<FrameworkElement>` lazily, so the LINQ pipeline can short-circuit (e.g. `.FirstOrDefault(...)`, `.Take(3)`) without walking the whole tree.
+`Descendants()` returns `IEnumerable<FrameworkElement>` lazily, so the LINQ pipeline can short-circuit without walking the whole tree — `Find*` and `.FirstOrDefault(...)` stop as soon as they hit a match, which keeps lookups cheap even on populated trees like a `ListBox`'s item panel.
 
 ### Walking Up to a Containing Control
 
@@ -65,12 +76,9 @@ Window? containingWindow = someInnerVisual.Ancestors().OfType<Window>().FirstOrD
 
 The full set on `GraphicalUiElement`: `Find<T>`, `Find<T>(name)`, `FindByName(name)`, `Descendants`, `DescendantsAndSelf`, `Ancestors`, `AncestorsAndSelf`. The Forms-layer methods are thin projections built on top of these.
 
-## Ordering and Performance
+## Ordering
 
-`Descendants()` and the `Find*` methods enumerate **shallowest-first**. Two consequences:
-
-* When several descendants match, the one closest to the search root wins. A `ListBox` has a `FocusedIndicator` near its root and another inside each `ListBoxItem`; shallowest-first returns the outer one, which is what you want.
-* `Find*` short-circuits as soon as it finds a match, so common lookups don't descend into deep subtrees like a populated `ListBox`'s item panel.
+`Descendants()` and the `Find*` methods enumerate **shallowest-first**, so the closest match wins. A `ListBox` has a `FocusedIndicator` near its root and another inside each `ListBoxItem`; shallowest-first returns the outer one, which is what you want.
 
 `Ancestors()` enumerates nearest-first.
 
