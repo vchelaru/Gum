@@ -17,15 +17,61 @@ public enum CircleOrigin
 public class LineCircle : InvisibleRenderable
 {
     public CircleOrigin CircleOrigin { get; set; }
-    public Color Color { get; set; }
     public float Radius { get; set; }
+
+    public Color Color { get; set; } = Color.White;
+
+    public int Alpha
+    {
+        get => Color.A;
+        set
+        {
+            if (value != Color.A)
+            {
+                Color = new Color(Color.R, Color.G, Color.B, (byte)value);
+            }
+        }
+    }
+
+    public int Red
+    {
+        get => Color.R;
+        set
+        {
+            if (value != Color.R)
+            {
+                Color = new Color((byte)value, Color.G, Color.B, Color.A);
+            }
+        }
+    }
+
+    public int Green
+    {
+        get => Color.G;
+        set
+        {
+            if (value != Color.G)
+            {
+                Color = new Color(Color.R, (byte)value, Color.B, Color.A);
+            }
+        }
+    }
+
+    public int Blue
+    {
+        get => Color.B;
+        set
+        {
+            if (value != Color.B)
+            {
+                Color = new Color(Color.R, Color.G, (byte)value, Color.A);
+            }
+        }
+    }
 
     public LineCircle() : this(null) { }
 
-    public LineCircle(SystemManagers? _)
-    {
-        Color = Color.White;
-    }
+    public LineCircle(SystemManagers? _) { }
 
     public override void Render(ISystemManagers managers)
     {

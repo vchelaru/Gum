@@ -1,23 +1,26 @@
-﻿using Gum.Wireframe;
+#if MONOGAME || FNA || KNI
+#define XNALIKE
+#endif
+
+using Gum.Wireframe;
 using RenderingLibrary;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 #if RAYLIB
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
+using ContainedCircleType = Gum.Renderables.LineCircle;
 #elif SOKOL
 using Gum.Renderables;
 using Color = SokolGum.Color;
+using ContainedCircleType = Gum.Renderables.LineCircle;
 #elif SKIA
 using SkiaGum.Renderables;
 using Color = SkiaSharp.SKColor;
+using ContainedCircleType = SkiaGum.Renderables.LineCircle;
 #else
-using Gum.RenderingLibrary;
 using Color = Microsoft.Xna.Framework.Color;
+using ContainedCircleType = global::RenderingLibrary.Math.Geometry.LineCircle;
 using global::RenderingLibrary.Math.Geometry;
 #endif
 
@@ -29,15 +32,15 @@ namespace Gum.GueDeriving;
 
 public class CircleRuntime : GraphicalUiElement
 {
-    LineCircle containedLineCircle;
+    ContainedCircleType containedLineCircle;
 
-    LineCircle ContainedLineCircle
+    ContainedCircleType ContainedLineCircle
     {
         get
         {
             if (containedLineCircle == null)
             {
-                containedLineCircle = this.RenderableComponent as LineCircle;
+                containedLineCircle = this.RenderableComponent as ContainedCircleType;
             }
             return containedLineCircle;
         }
@@ -45,10 +48,7 @@ public class CircleRuntime : GraphicalUiElement
 
     public int Alpha
     {
-        get
-        {
-            return ContainedLineCircle.Color.A;
-        }
+        get => ContainedLineCircle.Color.A;
         set
         {
 #if RAYLIB
@@ -56,60 +56,19 @@ public class CircleRuntime : GraphicalUiElement
             color.A = (byte)value;
             ContainedLineCircle.Color = color;
 #else
+            // ColorExtensions.WithAlpha is defined for System.Drawing.Color (the XNA-side LineCircle's Color type).
             // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
             // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
             var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithAlpha(ContainedLineCircle.Color, (byte)value);
             ContainedLineCircle.Color = color;
 #endif
-        }
-    }
-    public int Blue
-    {
-        get
-        {
-            return ContainedLineCircle.Color.B;
-        }
-        set
-        {
-#if RAYLIB
-            var color = ContainedLineCircle.Color;
-            color.B = (byte)value;
-            ContainedLineCircle.Color = color;
-#else
-            // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
-            // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithBlue(ContainedLineCircle.Color, (byte)value);
-            ContainedLineCircle.Color = color;
-#endif
-        }
-    }
-    public int Green
-    {
-        get
-        {
-            return ContainedLineCircle.Color.G;
-        }
-        set
-        {
-#if RAYLIB
-            var color = ContainedLineCircle.Color;
-            color.G = (byte)value;
-            ContainedLineCircle.Color = color;
-#else
-            // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
-            // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithGreen(ContainedLineCircle.Color, (byte)value);
-            ContainedLineCircle.Color = color;
-#endif
+            NotifyPropertyChanged();
         }
     }
 
     public int Red
     {
-        get
-        {
-            return ContainedLineCircle.Color.R;
-        }
+        get => ContainedLineCircle.Color.R;
         set
         {
 #if RAYLIB
@@ -117,20 +76,50 @@ public class CircleRuntime : GraphicalUiElement
             color.R = (byte)value;
             ContainedLineCircle.Color = color;
 #else
-            // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
-            // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
             var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithRed(ContainedLineCircle.Color, (byte)value);
             ContainedLineCircle.Color = color;
 #endif
+            NotifyPropertyChanged();
+        }
+    }
+
+    public int Green
+    {
+        get => ContainedLineCircle.Color.G;
+        set
+        {
+#if RAYLIB
+            var color = ContainedLineCircle.Color;
+            color.G = (byte)value;
+            ContainedLineCircle.Color = color;
+#else
+            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithGreen(ContainedLineCircle.Color, (byte)value);
+            ContainedLineCircle.Color = color;
+#endif
+            NotifyPropertyChanged();
+        }
+    }
+
+    public int Blue
+    {
+        get => ContainedLineCircle.Color.B;
+        set
+        {
+#if RAYLIB
+            var color = ContainedLineCircle.Color;
+            color.B = (byte)value;
+            ContainedLineCircle.Color = color;
+#else
+            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithBlue(ContainedLineCircle.Color, (byte)value);
+            ContainedLineCircle.Color = color;
+#endif
+            NotifyPropertyChanged();
         }
     }
 
     public float Radius
     {
-        get
-        {
-            return ContainedLineCircle.Radius;
-        }
+        get => ContainedLineCircle.Radius;
         set
         {
             mWidth = value * 2;
@@ -139,14 +128,10 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 
-
     public Color Color
     {
 #if XNALIKE
-         get
-        {
-            return global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedLineCircle.Color);
-        }
+        get => global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedLineCircle.Color);
         set
         {
             ContainedLineCircle.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
@@ -160,7 +145,6 @@ public class CircleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
 #endif
-
     }
 
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
@@ -171,7 +155,7 @@ public class CircleRuntime : GraphicalUiElement
     {
         if (fullInstantiation)
         {
-            var circle = new LineCircle();
+            var circle = new ContainedCircleType();
             circle.CircleOrigin = CircleOrigin.TopLeft;
             SetContainedObject(circle);
             containedLineCircle = circle;
