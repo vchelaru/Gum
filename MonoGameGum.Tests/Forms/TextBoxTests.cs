@@ -213,6 +213,28 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Width_ShouldNotShiftTextX_AfterTransientNegativeWidth()
+    {
+        // Repro for issue #2680: when a TextBox's absolute width transitions
+        // from a transient bad value (e.g. -346, which arises during init when
+        // Width and WidthUnits are applied in sequence and the relative-to-parent
+        // math hasn't settled) to a valid positive value, the text instance's
+        // X-offset should reset to 0. Previously KeepCaretEdgeInsideParent was
+        // asymmetric: it shifted the text right when the caret fell to the left
+        // of the (then-tiny) parent, and never snapped back once the parent's
+        // width became reasonable, leaving a permanent ~5px gap on the left.
+        TextBox textBox = new();
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        float restingTextX = visual.TextInstance.X;
+
+        textBox.Visual.Width = -346;
+        textBox.Visual.Width = 294;
+
+        visual.TextInstance.X.ShouldBe(restingTextX,
+            "because once the parent has a valid width and the caret is comfortably inside it, the text X should match its at-rest value; transient bad widths must not leave a sticky horizontal offset");
+    }
+
+    [Fact]
     public void Children_Containers_ShouldNotHaveEvents()
     {
         TextBox textBox = new();
