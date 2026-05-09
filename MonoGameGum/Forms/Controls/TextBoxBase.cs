@@ -84,6 +84,12 @@ public abstract class TextBoxBase :
     protected GraphicalUiElement selectionInstance;
     float _selectionInstanceYOffset;
 
+    // Resting X of the text instance as set by the visual template. KeepCaretEdgeInsideParent
+    // clamps textComponent.X to never exceed this value, so a horizontal scroll-left
+    // (negative offset) applied during typing/overflow snaps back here when the content
+    // shrinks again. See issue #2683.
+    float _textRestingX;
+
     List<GraphicalUiElement> _selectionInstances = new List<GraphicalUiElement>();
 
     GraphicalUiElement selectionTemplate;
@@ -511,6 +517,7 @@ public abstract class TextBoxBase :
         if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
 #endif
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        _textRestingX = this.textComponent.X;
         caretComponent.X = 0;
     }
 
@@ -1885,6 +1892,19 @@ public abstract class TextBoxBase :
             {
                 this.textComponent.X += shiftAmount;
                 this.caretComponent.X += shiftAmount;
+            }
+
+            // Snap-back: never let the text drift right past its resting position
+            // (set by the visual template). Without this the asymmetric overflow
+            // shifts above accumulate — e.g. typing past the right edge scrolls
+            // text left, then deleting back to a short string leaves a sticky
+            // negative-then-overcorrected X. The clamp pulls caret/text together
+            // so the caret stays the same number of pixels into the text. See #2683.
+            if (this.textComponent.X > _textRestingX)
+            {
+                float clampShift = _textRestingX - this.textComponent.X;
+                this.textComponent.X += clampShift;
+                this.caretComponent.X += clampShift;
             }
         }
         else
