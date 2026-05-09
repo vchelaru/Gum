@@ -511,8 +511,8 @@ public class CustomSetPropertyOnRenderable
                 }
                 else if(value is string asString)
                 {
-                    runtime.RenderTargetTextureSource = 
-                        (graphicalUiElement.GetTopParent() as GraphicalUiElement)?.GetChildByNameRecursively(asString);
+                    runtime.RenderTargetTextureSource =
+                        (graphicalUiElement.GetTopParent() as GraphicalUiElement)?.FindByName(asString);
                 }
                 handled = true;
             }

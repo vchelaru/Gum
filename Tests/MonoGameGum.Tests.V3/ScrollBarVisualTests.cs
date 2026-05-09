@@ -19,8 +19,7 @@ public class ScrollBarVisualTests
         ScrollBar scrollBar = new();
         InteractiveGue visual = scrollBar.Visual;
 
-        List<ContainerRuntime> children = new();
-        visual.FillListWithChildrenByTypeRecursively<ContainerRuntime>(children);
+        List<ContainerRuntime> children = visual.Descendants().OfType<ContainerRuntime>().ToList();
 
         foreach (var child in children)
         {
