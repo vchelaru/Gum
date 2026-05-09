@@ -6,20 +6,7 @@ Once you have a reference to a Forms control or a visual, you often need to grab
 
 ## Working With Forms Controls
 
-Most game UIs are built from Forms controls (`Button`, `TextBox`, `ListBox`, `Window`, etc.). The Forms-side extensions on `FrameworkElement` come in two flavors: **`Find*`** to find other controls, and **`FindVisual*`** to drop down into the underlying visual.
-
-### Finding a Visual Inside a Control
-
-A Forms `Button` is composed of visuals — a `TextRuntime` for its label, a background, and so on. To set a property that the Forms control itself doesn't expose, use `FindVisual<T>`:
-
-```csharp
-// Initialize
-Button okButton = new();
-TextRuntime label = okButton.FindVisual<TextRuntime>()!;
-label.Color = Microsoft.Xna.Framework.Color.LightGreen;
-```
-
-`FindVisual<T>(name)` adds a name filter, and `FindVisualByName(name)` looks up by name only. All three are sugar over the equivalent calls on `okButton.Visual`.
+Most game UIs are built from Forms controls (`Button`, `TextBox`, `ListBox`, `Window`, etc.). The Forms-side extensions on `FrameworkElement` give you two things: **`Find*`** to navigate the control tree, and **`FindVisual*`** for the cases where you need to drop down into the underlying visual.
 
 ### Finding Another Control
 
@@ -37,7 +24,7 @@ Button found = dialog.Find<Button>("CancelButton")!;
 
 `Find<T>` matches subclasses (any `T` or anything derived from `T`). `FindByName(name)` matches on the underlying `Visual.Name`.
 
-### Walking Up
+### Walking Up to a Containing Control
 
 `Ancestors()` returns the containing controls, nearest-first. Useful for asking "which window am I in?" from a deeply-nested control:
 
@@ -47,6 +34,19 @@ Window? owningWindow = nestedButton.Ancestors().OfType<Window>().FirstOrDefault(
 ```
 
 `Descendants()`, `DescendantsAndSelf()`, and `AncestorsAndSelf()` are also available for LINQ-composable traversal — for example `dialog.Descendants().OfType<Button>().ToList()` to gather every button.
+
+### Reaching Into a Control's Visual
+
+A Forms `Button` is composed of visuals — a `TextRuntime` for its label, a background, and so on. To set a property that the Forms control itself doesn't expose, drop down to the visual with `FindVisual<T>`:
+
+```csharp
+// Initialize
+Button okButton = new();
+TextRuntime label = okButton.FindVisual<TextRuntime>()!;
+label.Color = Microsoft.Xna.Framework.Color.LightGreen;
+```
+
+`FindVisual<T>(name)` adds a name filter, and `FindVisualByName(name)` looks up by name only. All three are sugar over the equivalent calls on `okButton.Visual`.
 
 ## Working With Visuals Directly
 
