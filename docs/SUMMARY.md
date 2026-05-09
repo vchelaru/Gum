@@ -304,6 +304,9 @@
     * [Text Wrapping](code/standard-visuals/textruntime/text-wrapping.md)
     * [VerticalAlignment](code/standard-visuals/textruntime/verticalalignment.md)
 
+* [Visual Tree](code/visual-tree/README.md)
+  * [Finding Elements](code/visual-tree/finding-elements.md)
+
 * [Rendering](code/rendering/README.md)
   * [GumBatch](code/rendering/gumbatch.md)
   * [Rendering Custom Graphics](code/rendering/rendering-custom-graphics.md)
