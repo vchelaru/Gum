@@ -1,51 +1,47 @@
-﻿using Gum;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
 
+/// <summary>Where the (X, Y) coordinate refers to on a <see cref="LineCircle"/>.</summary>
 public enum CircleOrigin
 {
+    /// <summary>(X, Y) is the centre point.</summary>
     Center,
-    TopLeft
+    /// <summary>(X, Y) is the top-left of the circle's bounding box — centre is (X + Radius, Y + Radius).</summary>
+    TopLeft,
 }
 
-
-internal class LineCircle : IRenderable
+/// <summary>Stroked circle outline rendered using Raylib's DrawCircleLines.</summary>
+public class LineCircle : InvisibleRenderable
 {
-    public BlendState BlendState => throw new NotImplementedException();
+    public CircleOrigin CircleOrigin { get; set; }
+    public Color Color { get; set; }
+    public float Radius { get; set; }
 
-    public bool Wrap => throw new NotImplementedException();
+    public LineCircle() : this(null) { }
 
-
-    public CircleOrigin CircleOrigin
+    public LineCircle(SystemManagers? _)
     {
-        get; set;
+        Color = Color.White;
     }
 
-    public LineCircle()
-        : this(null)
+    public override void Render(ISystemManagers managers)
     {
-    }
+        if (!Visible)
+        {
+            return;
+        }
 
-    public LineCircle(SystemManagers managers)
-    {
-        throw new NotImplementedException("This exists to satisfy the syntax matching MonoGame Gum. If you run into this, please report on discord " +
-            "or consider submtiting a PR");
-    }
+        float cx = this.GetAbsoluteLeft();
+        float cy = this.GetAbsoluteTop();
+        if (CircleOrigin == CircleOrigin.TopLeft)
+        {
+            cx += Radius;
+            cy += Radius;
+        }
 
-    public void PreRender()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Render(ISystemManagers managers)
-    {
-        throw new NotImplementedException();
+        DrawCircleLines((int)cx, (int)cy, Radius, Color);
     }
 }

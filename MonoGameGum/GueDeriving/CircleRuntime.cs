@@ -1,6 +1,5 @@
 ﻿using Gum.Wireframe;
 using RenderingLibrary;
-using global::RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +18,7 @@ using Color = SkiaSharp.SKColor;
 #else
 using Gum.RenderingLibrary;
 using Color = Microsoft.Xna.Framework.Color;
+using global::RenderingLibrary.Math.Geometry;
 #endif
 
 #if FRB
@@ -51,10 +51,16 @@ public class CircleRuntime : GraphicalUiElement
         }
         set
         {
+#if RAYLIB
+            var color = ContainedLineCircle.Color;
+            color.A = (byte)value;
+            ContainedLineCircle.Color = color;
+#else
             // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
             // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
             var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithAlpha(ContainedLineCircle.Color, (byte)value);
             ContainedLineCircle.Color = color;
+#endif
         }
     }
     public int Blue
@@ -65,10 +71,16 @@ public class CircleRuntime : GraphicalUiElement
         }
         set
         {
+#if RAYLIB
+            var color = ContainedLineCircle.Color;
+            color.B = (byte)value;
+            ContainedLineCircle.Color = color;
+#else
             // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
             // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
             var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithBlue(ContainedLineCircle.Color, (byte)value);
             ContainedLineCircle.Color = color;
+#endif
         }
     }
     public int Green
@@ -79,10 +91,16 @@ public class CircleRuntime : GraphicalUiElement
         }
         set
         {
+#if RAYLIB
+            var color = ContainedLineCircle.Color;
+            color.G = (byte)value;
+            ContainedLineCircle.Color = color;
+#else
             // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
             // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
             var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithGreen(ContainedLineCircle.Color, (byte)value);
             ContainedLineCircle.Color = color;
+#endif
         }
     }
 
@@ -94,10 +112,16 @@ public class CircleRuntime : GraphicalUiElement
         }
         set
         {
+#if RAYLIB
+            var color = ContainedLineCircle.Color;
+            color.R = (byte)value;
+            ContainedLineCircle.Color = color;
+#else
             // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
             // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
             var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithRed(ContainedLineCircle.Color, (byte)value);
             ContainedLineCircle.Color = color;
+#endif
         }
     }
 
@@ -129,10 +153,10 @@ public class CircleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
 #else
-        get => ContainedColoredRectangle.Color;
+        get => ContainedLineCircle.Color;
         set
         {
-            ContainedColoredRectangle.Color = value;
+            ContainedLineCircle.Color = value;
             NotifyPropertyChanged();
         }
 #endif
@@ -147,7 +171,7 @@ public class CircleRuntime : GraphicalUiElement
     {
         if (fullInstantiation)
         {
-            var circle = new global::RenderingLibrary.Math.Geometry.LineCircle();
+            var circle = new LineCircle();
             circle.CircleOrigin = CircleOrigin.TopLeft;
             SetContainedObject(circle);
             containedLineCircle = circle;
