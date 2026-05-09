@@ -1,6 +1,5 @@
 using Gum.Wireframe;
 using System.Collections.Generic;
-using System.Linq;
 
 #if FRB
 using FlatRedBall.Forms.Controls;
@@ -18,6 +17,13 @@ namespace Gum.Forms;
 /// the visual tree that contains <see cref="FrameworkElement"/> back-references) and
 /// for reaching into a control's underlying visuals via the <c>FindVisual*</c> sugar.
 /// </summary>
+// The Find* methods below are intentionally hand-rolled rather than expressed as
+// Descendants().OfType<T>().FirstOrDefault(predicate). Algorithmically the two are
+// equivalent (BFS, lazy, short-circuit on first match), but the LINQ form allocates
+// a closure and a delegate per call when the predicate captures `name`. These
+// methods are general-purpose and may end up on hot paths (e.g. inside per-frame
+// update or input handling), so the hand-rolled form avoids that overhead. Do not
+// "simplify" them back to LINQ without a perf review of the call sites.
 public static class FrameworkElementTreeExtensions
 {
     #region FE-returning traversal (Forms-first)
@@ -68,14 +74,32 @@ public static class FrameworkElementTreeExtensions
     /// <typeparamref name="T"/>, or null if none. Search is shallowest-first; subclasses match.
     /// </summary>
     public static T? Find<T>(this FrameworkElement element) where T : FrameworkElement
-        => element.Descendants().OfType<T>().FirstOrDefault();
+    {
+        foreach (FrameworkElement descendant in element.Descendants())
+        {
+            if (descendant is T match)
+            {
+                return match;
+            }
+        }
+        return null;
+    }
 
     /// <summary>
     /// Returns the first descendant <see cref="FrameworkElement"/> whose underlying
     /// <c>Visual.Name</c> equals <paramref name="name"/>, or null if none.
     /// </summary>
     public static FrameworkElement? FindByName(this FrameworkElement element, string name)
-        => element.Descendants().FirstOrDefault(d => d.Visual?.Name == name);
+    {
+        foreach (FrameworkElement descendant in element.Descendants())
+        {
+            if (descendant.Visual?.Name == name)
+            {
+                return descendant;
+            }
+        }
+        return null;
+    }
 
     /// <summary>
     /// Returns the first descendant <see cref="FrameworkElement"/> assignable to
@@ -83,7 +107,16 @@ public static class FrameworkElementTreeExtensions
     /// <paramref name="name"/>, or null if none.
     /// </summary>
     public static T? Find<T>(this FrameworkElement element, string name) where T : FrameworkElement
-        => element.Descendants().OfType<T>().FirstOrDefault(t => t.Visual?.Name == name);
+    {
+        foreach (FrameworkElement descendant in element.Descendants())
+        {
+            if (descendant is T match && match.Visual?.Name == name)
+            {
+                return match;
+            }
+        }
+        return null;
+    }
 
     private static IEnumerable<FrameworkElement> ProjectToFrameworkElements(IEnumerable<GraphicalUiElement> visuals)
     {

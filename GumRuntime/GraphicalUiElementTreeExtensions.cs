@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Gum.Wireframe;
 
@@ -9,6 +8,13 @@ namespace Gum.Wireframe;
 /// for any case the <see cref="Find{T}(GraphicalUiElement)"/> / <see cref="FindByName(GraphicalUiElement, string)"/>
 /// sugar doesn't cover.
 /// </summary>
+// The Find* methods below are intentionally hand-rolled rather than expressed as
+// Descendants().OfType<T>().FirstOrDefault(predicate). Algorithmically the two are
+// equivalent (BFS, lazy, short-circuit on first match), but the LINQ form allocates
+// a closure and a delegate per call when the predicate captures `name`. These
+// methods are general-purpose and may end up on hot paths (e.g. inside per-frame
+// update or input handling), so the hand-rolled form avoids that overhead. Do not
+// "simplify" them back to LINQ without a perf review of the call sites.
 public static class GraphicalUiElementTreeExtensions
 {
     /// <summary>
@@ -79,14 +85,32 @@ public static class GraphicalUiElementTreeExtensions
     /// Search is shallowest-first; subclasses match (<c>is T</c> semantics).
     /// </summary>
     public static T? Find<T>(this GraphicalUiElement element) where T : GraphicalUiElement
-        => element.Descendants().OfType<T>().FirstOrDefault();
+    {
+        foreach (GraphicalUiElement descendant in element.Descendants())
+        {
+            if (descendant is T match)
+            {
+                return match;
+            }
+        }
+        return null;
+    }
 
     /// <summary>
     /// Returns the first descendant whose <see cref="GraphicalUiElement.Name"/>
     /// equals <paramref name="name"/>, or null if none. Search is shallowest-first.
     /// </summary>
     public static GraphicalUiElement? FindByName(this GraphicalUiElement element, string name)
-        => element.Descendants().FirstOrDefault(d => d.Name == name);
+    {
+        foreach (GraphicalUiElement descendant in element.Descendants())
+        {
+            if (descendant.Name == name)
+            {
+                return descendant;
+            }
+        }
+        return null;
+    }
 
     /// <summary>
     /// Returns the first descendant assignable to <typeparamref name="T"/>
@@ -94,5 +118,14 @@ public static class GraphicalUiElementTreeExtensions
     /// or null if none. Search is shallowest-first.
     /// </summary>
     public static T? Find<T>(this GraphicalUiElement element, string name) where T : GraphicalUiElement
-        => element.Descendants().OfType<T>().FirstOrDefault(t => t.Name == name);
+    {
+        foreach (GraphicalUiElement descendant in element.Descendants())
+        {
+            if (descendant is T match && match.Name == name)
+            {
+                return match;
+            }
+        }
+        return null;
+    }
 }
