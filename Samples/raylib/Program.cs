@@ -152,82 +152,81 @@ public class BasicShapes
     {
         var screen = CreateScreenContainer();
 
-        var page = new ContainerRuntime();
+        var page = NewSection(Gum.Managers.ChildrenLayout.TopToBottomStack, spacing: 16);
         page.X = 16;
         page.Y = 16;
-        page.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        page.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        page.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        page.StackSpacing = 16;
         screen.AddChild(page);
 
-        // Sprites section
-        var spritesSection = new ContainerRuntime();
-        spritesSection.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        spritesSection.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        spritesSection.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        spritesSection.StackSpacing = 4;
-        page.AddChild(spritesSection);
+        BuildSpritesRow(page);
+        BuildShapesRow(page);
 
-        AddSectionLabel(spritesSection, "Sprites:");
+        AddSwitchHint(screen);
 
-        var spriteRow = new ContainerRuntime();
-        spriteRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        spriteRow.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        spriteRow.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
-        spriteRow.StackSpacing = 8;
-        spritesSection.AddChild(spriteRow);
+        return screen;
+    }
 
-        var spriteRuntime = new SpriteRuntime();
-        spriteRow.AddChild(spriteRuntime);
-        spriteRuntime.SourceFileName = "resources\\gum-logo-normal-64.png";
+    private static ContainerRuntime NewSection(Gum.Managers.ChildrenLayout layout, int spacing)
+    {
+        var section = new ContainerRuntime();
+        section.Width = 0;
+        section.Height = 0;
+        section.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        section.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        section.ChildrenLayout = layout;
+        section.StackSpacing = spacing;
+        return section;
+    }
 
-        var flippedSprite = new SpriteRuntime();
-        spriteRow.AddChild(flippedSprite);
-        flippedSprite.FlipHorizontal = true;
-        flippedSprite.SourceFileName = "resources\\gum-logo-normal-64.png";
+    private static void BuildSpritesRow(ContainerRuntime page)
+    {
+        var section = NewSection(Gum.Managers.ChildrenLayout.TopToBottomStack, spacing: 4);
+        page.AddChild(section);
 
-        var flippedVerticalSprite = new SpriteRuntime();
-        spriteRow.AddChild(flippedVerticalSprite);
-        flippedVerticalSprite.FlipVertical = true;
-        flippedVerticalSprite.SourceFileName = "resources\\gum-logo-normal-64.png";
+        AddSectionLabel(section, "Sprites:");
 
-        // Shapes section
-        var shapesSection = new ContainerRuntime();
-        shapesSection.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        shapesSection.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        shapesSection.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        shapesSection.StackSpacing = 4;
-        page.AddChild(shapesSection);
+        var row = NewSection(Gum.Managers.ChildrenLayout.LeftToRightStack, spacing: 8);
+        section.AddChild(row);
 
-        AddSectionLabel(shapesSection, "Shapes:");
+        var sprite = new SpriteRuntime();
+        row.AddChild(sprite);
+        sprite.SourceFileName = "resources\\gum-logo-normal-64.png";
 
-        var shapeRow = new ContainerRuntime();
-        shapeRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        shapeRow.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        shapeRow.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
-        shapeRow.StackSpacing = 16;
-        shapesSection.AddChild(shapeRow);
+        var flippedH = new SpriteRuntime();
+        row.AddChild(flippedH);
+        flippedH.FlipHorizontal = true;
+        flippedH.SourceFileName = "resources\\gum-logo-normal-64.png";
+
+        var flippedV = new SpriteRuntime();
+        row.AddChild(flippedV);
+        flippedV.FlipVertical = true;
+        flippedV.SourceFileName = "resources\\gum-logo-normal-64.png";
+    }
+
+    private static void BuildShapesRow(ContainerRuntime page)
+    {
+        var section = NewSection(Gum.Managers.ChildrenLayout.TopToBottomStack, spacing: 4);
+        page.AddChild(section);
+
+        AddSectionLabel(section, "Shapes:");
+
+        var row = NewSection(Gum.Managers.ChildrenLayout.LeftToRightStack, spacing: 16);
+        section.AddChild(row);
 
         var rectangle = new ColoredRectangleRuntime();
         rectangle.Width = 80;
         rectangle.Height = 80;
         rectangle.Color = new Color(80, 160, 220, 255);
-        shapeRow.AddChild(rectangle);
+        row.AddChild(rectangle);
 
         var circle = new CircleRuntime();
         circle.Radius = 40;
         circle.Color = new Color(255, 100, 50, 255);
-        shapeRow.AddChild(circle);
+        row.AddChild(circle);
 
         var bigCircle = new CircleRuntime();
         bigCircle.Radius = 60;
         bigCircle.Color = new Color(50, 180, 80, 255);
-        shapeRow.AddChild(bigCircle);
-
-        AddSwitchHint(screen);
-
-        return screen;
+        row.AddChild(bigCircle);
     }
 
     private static ContainerRuntime BuildFormsControlsScreen()
