@@ -2,27 +2,31 @@
 
 ## Introduction
 
-Once you have a reference to a Forms control or a visual, you often need to grab something underneath it: a child control, a specific runtime visual, or an ancestor window. Gum provides extension methods on both `FrameworkElement` (the Forms layer) and `GraphicalUiElement` (the visual layer) for this. They live in the `Gum.Forms` and `Gum.Wireframe` namespaces respectively.
+Once you have a reference to a Forms control — or, less commonly, to a visual — you often need to find something else in the same UI: a child control, a containing window, or one of the runtime visuals that make up a control's appearance. Gum provides extension methods on both `FrameworkElement` (the Forms layer) and `GraphicalUiElement` (the visual layer) for this.
 
 ## Working With Forms Controls
 
-Most game UIs are built from Forms controls (`Button`, `TextBox`, `ListBox`, `Window`, etc.). The Forms-side extensions on `FrameworkElement` give you two things: **`Find*`** to navigate the control tree, and **`FindVisual*`** for the cases where you need to drop down into the underlying visual.
+Most game UIs are built from Forms controls (`Button`, `TextBox`, `ListBox`, `Window`, etc.), so most of these queries start from a `FrameworkElement`. The extensions group into three patterns: finding other controls, walking up to a container, and dropping down into a control's underlying visual.
 
 ### Finding Another Control
 
-When a control contains other controls — for example a `Window` containing several `Button`s — `Find<T>` walks the descendant Forms controls and returns the first match:
+When a control contains other controls — for example a `Window` containing several `Button`s — `Find<T>` walks the descendants and returns the first match:
 
 ```csharp
 // Initialize
-Window dialog = new();
-Button cancelButton = new();
-cancelButton.Visual.Name = "CancelButton";
-dialog.AddChild(cancelButton);
-
-Button found = dialog.Find<Button>("CancelButton")!;
+Button cancelButton = dialog.Find<Button>("CancelButton")!;
 ```
 
-`Find<T>` matches subclasses (any `T` or anything derived from `T`). `FindByName(name)` matches on the underlying `Visual.Name`.
+`FindByName(name)` matches on the underlying `Visual.Name` without a type filter. `Find<T>()` (no name) returns the first descendant of type `T`.
+
+When you need every match instead of the first, use `Descendants()` and compose with LINQ:
+
+```csharp
+// Initialize
+List<Button> buttons = dialog.Descendants().OfType<Button>().ToList();
+```
+
+`Descendants()` returns `IEnumerable<FrameworkElement>` lazily, so the LINQ pipeline can short-circuit (e.g. `.FirstOrDefault(...)`, `.Take(3)`) without walking the whole tree.
 
 ### Walking Up to a Containing Control
 
@@ -33,7 +37,7 @@ Button found = dialog.Find<Button>("CancelButton")!;
 Window? owningWindow = nestedButton.Ancestors().OfType<Window>().FirstOrDefault();
 ```
 
-`Descendants()`, `DescendantsAndSelf()`, and `AncestorsAndSelf()` are also available for LINQ-composable traversal — for example `dialog.Descendants().OfType<Button>().ToList()` to gather every button.
+`AncestorsAndSelf()` and `DescendantsAndSelf()` are available too, for cases where the search should include the starting element.
 
 ### Reaching Into a Control's Visual
 
@@ -46,28 +50,26 @@ TextRuntime label = okButton.FindVisual<TextRuntime>()!;
 label.Color = Microsoft.Xna.Framework.Color.LightGreen;
 ```
 
-`FindVisual<T>(name)` adds a name filter, and `FindVisualByName(name)` looks up by name only. All three are sugar over the equivalent calls on `okButton.Visual`.
+`FindVisual<T>(name)` adds a name filter, and `FindVisualByName(name)` looks up by name only. Each is shorthand for the equivalent call on `okButton.Visual` — the next section covers what's available there.
 
 ## Working With Visuals Directly
 
-If you're operating on `GraphicalUiElement` instances directly — building a screen in code, or working below the Forms layer — the same primitives exist on GUE. Use them via a `using Gum.Wireframe;` directive:
+If you're operating on `GraphicalUiElement` instances directly — building a screen in code, or working below the Forms layer — the same method names exist on `GraphicalUiElement` itself. Add `using Gum.Wireframe;` (and `using System.Linq;` if you compose with LINQ) to bring them into scope:
 
 ```csharp
 // Initialize
-ContainerRuntime root = new();
-// ... populate root ...
-
 TextRuntime? title = root.Find<TextRuntime>("TitleInstance");
 List<SpriteRuntime> icons = root.Descendants().OfType<SpriteRuntime>().ToList();
+Window? containingWindow = someInnerVisual.Ancestors().OfType<Window>().FirstOrDefault();
 ```
 
-The full set: `Find<T>`, `Find<T>(name)`, `FindByName(name)`, `Descendants`, `DescendantsAndSelf`, `Ancestors`, `AncestorsAndSelf`. Same shape, same semantics.
+The full set on `GraphicalUiElement`: `Find<T>`, `Find<T>(name)`, `FindByName(name)`, `Descendants`, `DescendantsAndSelf`, `Ancestors`, `AncestorsAndSelf`. The Forms-layer methods are thin projections built on top of these.
 
 ## Ordering and Performance
 
 `Descendants()` and the `Find*` methods enumerate **shallowest-first**. Two consequences:
 
-* When several descendants match, the one closest to the search root wins. A `ListBox` has a `FocusedIndicator` near its root and one inside each `ListBoxItem`; shallowest-first returns the outer one, which is what you want.
+* When several descendants match, the one closest to the search root wins. A `ListBox` has a `FocusedIndicator` near its root and another inside each `ListBoxItem`; shallowest-first returns the outer one, which is what you want.
 * `Find*` short-circuits as soon as it finds a match, so common lookups don't descend into deep subtrees like a populated `ListBox`'s item panel.
 
 `Ancestors()` enumerates nearest-first.
