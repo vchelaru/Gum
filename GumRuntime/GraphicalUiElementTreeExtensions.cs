@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Gum.Wireframe;
 
@@ -78,32 +79,14 @@ public static class GraphicalUiElementTreeExtensions
     /// Search is shallowest-first; subclasses match (<c>is T</c> semantics).
     /// </summary>
     public static T? Find<T>(this GraphicalUiElement element) where T : GraphicalUiElement
-    {
-        foreach (GraphicalUiElement descendant in element.Descendants())
-        {
-            if (descendant is T match)
-            {
-                return match;
-            }
-        }
-        return null;
-    }
+        => element.Descendants().OfType<T>().FirstOrDefault();
 
     /// <summary>
     /// Returns the first descendant whose <see cref="GraphicalUiElement.Name"/>
     /// equals <paramref name="name"/>, or null if none. Search is shallowest-first.
     /// </summary>
     public static GraphicalUiElement? FindByName(this GraphicalUiElement element, string name)
-    {
-        foreach (GraphicalUiElement descendant in element.Descendants())
-        {
-            if (descendant.Name == name)
-            {
-                return descendant;
-            }
-        }
-        return null;
-    }
+        => element.Descendants().FirstOrDefault(d => d.Name == name);
 
     /// <summary>
     /// Returns the first descendant assignable to <typeparamref name="T"/>
@@ -111,14 +94,5 @@ public static class GraphicalUiElementTreeExtensions
     /// or null if none. Search is shallowest-first.
     /// </summary>
     public static T? Find<T>(this GraphicalUiElement element, string name) where T : GraphicalUiElement
-    {
-        foreach (GraphicalUiElement descendant in element.Descendants())
-        {
-            if (descendant is T match && match.Name == name)
-            {
-                return match;
-            }
-        }
-        return null;
-    }
+        => element.Descendants().OfType<T>().FirstOrDefault(t => t.Name == name);
 }

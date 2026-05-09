@@ -1,5 +1,6 @@
 using Gum.Wireframe;
 using System.Collections.Generic;
+using System.Linq;
 
 #if FRB
 using FlatRedBall.Forms.Controls;
@@ -26,15 +27,7 @@ public static class FrameworkElementTreeExtensions
     /// shallowest-first. Skips visual-only nodes that have no Forms control attached.
     /// </summary>
     public static IEnumerable<FrameworkElement> Descendants(this FrameworkElement element)
-    {
-        foreach (GraphicalUiElement descendant in element.Visual.Descendants())
-        {
-            if (descendant is InteractiveGue interactive && interactive.FormsControlAsObject is FrameworkElement fe)
-            {
-                yield return fe;
-            }
-        }
-    }
+        => ProjectToFrameworkElements(element.Visual.Descendants());
 
     /// <summary>
     /// Enumerates <paramref name="element"/> followed by every descendant
@@ -55,15 +48,7 @@ public static class FrameworkElementTreeExtensions
     /// where one exists. Nearest-first.
     /// </summary>
     public static IEnumerable<FrameworkElement> Ancestors(this FrameworkElement element)
-    {
-        foreach (GraphicalUiElement ancestor in element.Visual.Ancestors())
-        {
-            if (ancestor is InteractiveGue interactive && interactive.FormsControlAsObject is FrameworkElement fe)
-            {
-                yield return fe;
-            }
-        }
-    }
+        => ProjectToFrameworkElements(element.Visual.Ancestors());
 
     /// <summary>
     /// Enumerates <paramref name="element"/> followed by every ancestor
@@ -83,32 +68,14 @@ public static class FrameworkElementTreeExtensions
     /// <typeparamref name="T"/>, or null if none. Search is shallowest-first; subclasses match.
     /// </summary>
     public static T? Find<T>(this FrameworkElement element) where T : FrameworkElement
-    {
-        foreach (FrameworkElement descendant in element.Descendants())
-        {
-            if (descendant is T match)
-            {
-                return match;
-            }
-        }
-        return null;
-    }
+        => element.Descendants().OfType<T>().FirstOrDefault();
 
     /// <summary>
     /// Returns the first descendant <see cref="FrameworkElement"/> whose underlying
     /// <c>Visual.Name</c> equals <paramref name="name"/>, or null if none.
     /// </summary>
     public static FrameworkElement? FindByName(this FrameworkElement element, string name)
-    {
-        foreach (FrameworkElement descendant in element.Descendants())
-        {
-            if (descendant.Visual?.Name == name)
-            {
-                return descendant;
-            }
-        }
-        return null;
-    }
+        => element.Descendants().FirstOrDefault(d => d.Visual?.Name == name);
 
     /// <summary>
     /// Returns the first descendant <see cref="FrameworkElement"/> assignable to
@@ -116,15 +83,17 @@ public static class FrameworkElementTreeExtensions
     /// <paramref name="name"/>, or null if none.
     /// </summary>
     public static T? Find<T>(this FrameworkElement element, string name) where T : FrameworkElement
+        => element.Descendants().OfType<T>().FirstOrDefault(t => t.Visual?.Name == name);
+
+    private static IEnumerable<FrameworkElement> ProjectToFrameworkElements(IEnumerable<GraphicalUiElement> visuals)
     {
-        foreach (FrameworkElement descendant in element.Descendants())
+        foreach (GraphicalUiElement visual in visuals)
         {
-            if (descendant is T match && match.Visual?.Name == name)
+            if (visual is InteractiveGue interactive && interactive.FormsControlAsObject is FrameworkElement fe)
             {
-                return match;
+                yield return fe;
             }
         }
-        return null;
     }
 
     #endregion
@@ -137,9 +106,7 @@ public static class FrameworkElementTreeExtensions
     /// <c>element.Visual.Find&lt;T&gt;()</c>.
     /// </summary>
     public static T? FindVisual<T>(this FrameworkElement element) where T : GraphicalUiElement
-    {
-        return element.Visual.Find<T>();
-    }
+        => element.Visual.Find<T>();
 
     /// <summary>
     /// Returns the first visual descendant whose <c>Name</c> equals
@@ -147,9 +114,7 @@ public static class FrameworkElementTreeExtensions
     /// <c>element.Visual.FindByName(name)</c>.
     /// </summary>
     public static GraphicalUiElement? FindVisualByName(this FrameworkElement element, string name)
-    {
-        return element.Visual.FindByName(name);
-    }
+        => element.Visual.FindByName(name);
 
     /// <summary>
     /// Returns the first visual descendant assignable to <typeparamref name="T"/>
@@ -157,9 +122,7 @@ public static class FrameworkElementTreeExtensions
     /// Sugar over <c>element.Visual.Find&lt;T&gt;(name)</c>.
     /// </summary>
     public static T? FindVisual<T>(this FrameworkElement element, string name) where T : GraphicalUiElement
-    {
-        return element.Visual.Find<T>(name);
-    }
+        => element.Visual.Find<T>(name);
 
     #endregion
 }
