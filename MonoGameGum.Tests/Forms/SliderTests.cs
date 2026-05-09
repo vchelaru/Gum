@@ -20,8 +20,7 @@ public class SliderTests : BaseTestClass
         Slider slider = new();
         InteractiveGue visual = slider.Visual;
 
-        List<ContainerRuntime> children = new();
-        visual.FillListWithChildrenByTypeRecursively<ContainerRuntime>(children);
+        List<ContainerRuntime> children = visual.Descendants().OfType<ContainerRuntime>().ToList();
 
         foreach (var child in children)
         {

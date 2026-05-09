@@ -6619,7 +6619,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (this.Children?.Count > 0 && mWhatThisContains.Count == 0)
             {
                 // This is a regular item that hasn't had its mWhatThisContains populated
-                return this.GetChildByNameRecursively(name);
+                return this.FindByName(name);
             }
             else
             {
@@ -6705,6 +6705,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
+    [Obsolete("Use FindByName(name) instead. The new extension method is shallowest-first like this method, returns the same type, and composes with LINQ via Descendants().")]
     public GraphicalUiElement? GetChildByNameRecursively(string name)
     {
         return GetChildByName(Children, name);
@@ -6735,6 +6736,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
+    [Obsolete("Use Find<T>() instead, or Descendants().OfType<T>().FirstOrDefault() for non-generic cases. Note: Find<T>() matches subclasses (is-T semantics); this method matches exact type only.")]
     public GraphicalUiElement? GetChildByTypeRecursively(Type type)
     {
         return GetChildByType(Children, type);
@@ -6765,6 +6767,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
+    [Obsolete("Use Ancestors().FirstOrDefault(a => a.Name == name) instead.")]
     public GraphicalUiElement? GetParentByNameRecursively(string name)
     {
         return GetParentByName(this, name);
@@ -6789,6 +6792,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    [Obsolete("Use Ancestors().OfType<T>().FirstOrDefault() instead. Note: OfType<T>() matches subclasses (is-T semantics); this method matches exact type only.")]
     public GraphicalUiElement? GetParentByTypeRecursively(Type type)
     {
         return GetParentByType(this, type);
@@ -6818,6 +6822,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     /// <param name="listToFill">List to populate. The type to search for is inferred from the element type and must be an <see cref="IRenderableIpso"/>.
     /// The user has the responsability of instantiating and clearing this list.</param>
+    [Obsolete("Use listToFill.AddRange(this.Descendants().OfType<T>()) instead. Note: Descendants().OfType<T>() matches subclasses (is-T semantics); this method matches exact type only.")]
     public void FillListWithChildrenByTypeRecursively<T>(List<T> listToFill) where T : GraphicalUiElement
     {
         FillListWithChildrenByType(Children, listToFill);
@@ -6828,10 +6833,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     /// <typeparam name="T">Type to search for. Must be an <see cref="GraphicalUiElement"/>.</typeparam>
     /// <returns></returns>
+    [Obsolete("Use this.Descendants().OfType<T>().ToList() instead. Note: OfType<T>() matches subclasses (is-T semantics); this method matches exact type only.")]
     public List<T> FillListWithChildrenByTypeRecursively<T>() where T : GraphicalUiElement
     {
         var list = new List<T>();
+#pragma warning disable CS0618
         FillListWithChildrenByTypeRecursively(list);
+#pragma warning restore CS0618
         return list;
     }
 

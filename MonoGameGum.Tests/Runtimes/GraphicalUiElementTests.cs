@@ -722,6 +722,7 @@ public class GraphicalUiElementTests : BaseTestClass
     #endregion
 
     #region FillListWithChildrenByType
+#pragma warning disable CS0618 // Test exists to cover the obsolete API; remove when the API is removed.
     [Fact]
     public void FillListWithChildrenByType_ShouldFillRecursively()
     {
@@ -739,6 +740,7 @@ public class GraphicalUiElementTests : BaseTestClass
         list[0].ShouldBeOfType<SpriteRuntime>();
         list[1].ShouldBeOfType<SpriteRuntime>();
     }
+#pragma warning restore CS0618
 
     #endregion
 
@@ -1766,6 +1768,7 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     #region GetParentByTypeRecursively Tests
+#pragma warning disable CS0618 // Tests exist to cover the obsolete API; remove when the API is removed.
 
     // Subclass used to distinguish type from ContainerRuntime in parent-search tests
     private class SpecialContainer : ContainerRuntime { }
@@ -1858,6 +1861,7 @@ public class GraphicalUiElementTests : BaseTestClass
         result.ShouldBe(root);
     }
 
+#pragma warning restore CS0618
     #endregion
 
     #region IRenderableIpso.Children frozen empty collection

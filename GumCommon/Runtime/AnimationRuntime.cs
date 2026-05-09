@@ -84,7 +84,7 @@ public class AnimationRuntime
 
                 string instanceName = name.Substring(0, indexOfDot);
 
-                instance = element.GetChildByNameRecursively(instanceName) as GraphicalUiElement;
+                instance = element.FindByName(instanceName);
             }
             if (instance == null)
             {
@@ -362,7 +362,7 @@ public class AnimationRuntime
                 {
                     instanceName = keyframe.AnimationName.Substring(0, keyframe.AnimationName.IndexOf('.'));
 
-                    var instance = graphicalUiElement.GetChildByNameRecursively(instanceName) as GraphicalUiElement;
+                    var instance = graphicalUiElement.FindByName(instanceName);
 
                     if (instance != null)
                     {

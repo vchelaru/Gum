@@ -26,8 +26,7 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         InteractiveGue visual = listBox.Visual;
 
-        List<ContainerRuntime> children = new ();
-        visual.FillListWithChildrenByTypeRecursively<ContainerRuntime>(children);
+        List<ContainerRuntime> children = visual.Descendants().OfType<ContainerRuntime>().ToList();
 
         foreach(var child in children)
         {
@@ -295,7 +294,7 @@ public class ListBoxTests : BaseTestClass
         listBox.ListBoxItems[0]!.BindingContext.ShouldBe("Item 1");
         listBox.ListBoxItems[1]!.BindingContext.ShouldBe("Item 0");
 
-        var innerPanel = listBox.Visual.GetChildByNameRecursively("InnerPanelInstance")!;
+        var innerPanel = listBox.Visual.FindByName("InnerPanelInstance")!;
         innerPanel.Children.Count.ShouldBe(10);
         for(int i = 0; i < 10; i++)
         {

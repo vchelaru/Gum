@@ -54,6 +54,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\BbCodeParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\ElementSaveExtensions.GumRuntime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElementTreeExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\BehaviorSaveExtensionMethods.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\ElementSaveExtensionMethods.cs" />

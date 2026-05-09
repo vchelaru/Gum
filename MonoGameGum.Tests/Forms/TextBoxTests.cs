@@ -35,7 +35,7 @@ public class TextBoxTests : BaseTestClass
 
 
         var textInstance =
-            (TextRuntime)textBox.Visual.GetChildByNameRecursively("TextInstance")!;
+            textBox.Visual.Find<TextRuntime>("TextInstance")!;
 
         var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
 
@@ -133,7 +133,7 @@ public class TextBoxTests : BaseTestClass
         textBox.Text = "Hello";
 
         GraphicalUiElement caret = 
-            (GraphicalUiElement)textBox.Visual.GetChildByNameRecursively("CaretInstance")!;
+            textBox.Visual.FindByName("CaretInstance")!;
 
         textBox.CaretIndex = 0;
         float absolutePosition = caret.AbsoluteLeft;
@@ -169,7 +169,7 @@ public class TextBoxTests : BaseTestClass
         textBox.IsFocused = true;
 
         GraphicalUiElement caret =
-            (GraphicalUiElement)textBox.Visual.GetChildByNameRecursively("CaretInstance")!;
+            textBox.Visual.FindByName("CaretInstance")!;
 
         textBox.CaretIndex = 0;
         float absolutePosition = caret.AbsoluteTop;
@@ -218,8 +218,7 @@ public class TextBoxTests : BaseTestClass
         TextBox textBox = new();
         InteractiveGue visual = textBox.Visual;
 
-        List<ContainerRuntime> children = new();
-        visual.FillListWithChildrenByTypeRecursively<ContainerRuntime>(children);
+        List<ContainerRuntime> children = visual.Descendants().OfType<ContainerRuntime>().ToList();
 
         foreach (var child in children)
         {
@@ -328,7 +327,7 @@ public class TextBoxTests : BaseTestClass
             textBox.HandleCharEntered(' ');
         }
 
-        var textInstance = (TextRuntime)textBox.Visual.GetChildByNameRecursively("TextInstance")!;
+        var textInstance = textBox.Visual.Find<TextRuntime>("TextInstance")!;
         var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
         innerTextObject.WrappedText.Count.ShouldBeGreaterThan(1);
     }
@@ -408,8 +407,7 @@ public class TextBoxTests : BaseTestClass
     public void TextBox_ShouldHaveSelectionInstance()
     {
         var textBox = new TextBox();
-        var selection = (ColoredRectangleRuntime)textBox
-            .Visual.GetChildByNameRecursively("SelectionInstance")!;
+        var selection = textBox.Visual.Find<ColoredRectangleRuntime>("SelectionInstance")!;
 
         selection.Color = Microsoft.Xna.Framework.Color.Blue;
 
@@ -423,8 +421,7 @@ public class TextBoxTests : BaseTestClass
         textBox.MaxNumberOfLines = 3;
         textBox.Text = "line1\nline2\nline3\nline4\nline5";
         
-        var textInstance = (TextRuntime)textBox
-            .Visual.GetChildByNameRecursively("TextInstance")!;
+        var textInstance = textBox.Visual.Find<TextRuntime>("TextInstance")!;
 
         var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
 
@@ -441,8 +438,7 @@ public class TextBoxTests : BaseTestClass
         textBox.Text = "line1\nline2\nline3\nline4\nline5";
         textBox.MaxNumberOfLines = 3;
 
-        var textInstance = (TextRuntime)textBox
-            .Visual.GetChildByNameRecursively("TextInstance")!;
+        var textInstance = textBox.Visual.Find<TextRuntime>("TextInstance")!;
 
         var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
 
@@ -459,8 +455,7 @@ public class TextBoxTests : BaseTestClass
         textBox.Text = "line1\nline2\nline3\nline4\nline5";
         textBox.MaxNumberOfLines = null;
 
-        var textInstance = (TextRuntime)textBox
-            .Visual.GetChildByNameRecursively("TextInstance")!;
+        var textInstance = textBox.Visual.Find<TextRuntime>("TextInstance")!;
 
         var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
 
@@ -483,8 +478,7 @@ public class TextBoxTests : BaseTestClass
         //textBox.Text = "abcdefghijklmnopqrstuvwxyz";
         textBox.MaxLettersToShow = 3;
 
-        var textInstance = (TextRuntime)textBox
-            .Visual.GetChildByNameRecursively("TextInstance")!;
+        var textInstance = textBox.Visual.Find<TextRuntime>("TextInstance")!;
 
         textInstance.MaxLettersToShow.ShouldBe(3);
 
