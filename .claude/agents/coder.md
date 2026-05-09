@@ -24,6 +24,14 @@ Workflow when adding new `.cs` files to `GumCommon/` or `MonoGameGum/`:
 
 This applies to ALL files in `GumCommon/` and `MonoGameGum/` by default. If a particular file genuinely should not be shared with FRB1 (rare), call it out in your final notes so the user can confirm the exclusion.
 
+## Forms files — keep FRB1's FlatRedBall.Forms.Shared.projitems in sync
+
+Files under `MonoGameGum/Forms/` (especially `MonoGameGum/Forms/Controls/`) are NOT consumed via `GumCoreShared.projitems`. FRB1 picks them up through a separate shared project that lives in the FRB1 repo: `Engines/Forms/FlatRedBall.Forms/FlatRedBall.Forms.Shared/FlatRedBall.Forms.Shared.projitems`. Each file is referenced individually with a `<Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\..\Gum\MonoGameGum\Forms\Controls\<File>.cs">` line and a `<Link>Controls\%(Filename)%(Extension)</Link>` mapping.
+
+If you add, rename, move, split, or delete any `.cs` file under `MonoGameGum/Forms/`, you MUST update that projitems in the FRB1 repo in the same change — otherwise FRB1 builds break with `CS0246` for whatever type lived in the new/renamed file. Common gotcha: extracting an enum or helper class into a sibling file (e.g. `ScrollBarVisibility.cs` out of `ScrollViewer.cs`) — the original entry still resolves, but the extracted file is invisible to FRB1 until added.
+
+The FRB1 repo is typically checked out at `C:\Users\vchel\Documents\GitHub\FlatRedBall\` on this machine. Edit the projitems there directly and call out the FRB1-side change in your final notes.
+
 ## NuGet packages — keep FRB1-side csproj files in sync
 
 `GumCommon.csproj` and `MonoGameGum.csproj` declare their own `<PackageReference>` items, but the FRB1-side projects under `GumCore/GumCoreXnaPc/` consume the source files via `GumCoreShared.projitems` (and `MonoGameGum`'s shared projitems) and do **not** inherit those package references. If a shared `.cs` file gains a new `using` that resolves through a NuGet package, you MUST also add the matching `<PackageReference>` to every csproj that imports the relevant `.projitems`. Otherwise those builds break with `CS0246`.
