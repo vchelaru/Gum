@@ -16,6 +16,12 @@ In either case, your job is to produce a focused code change that implements the
 
 FRB1 (FlatRedBall) consumes Gum sources via `GumCoreShared.shproj`, which imports `GumCoreShared.projitems`. If you add, rename, move, or delete any `.cs` file under `GumCommon/` or `MonoGameGum/`, you MUST update `GumCoreShared.projitems` in the same change. Otherwise FRB1 builds will break.
 
+## Exception: GueDeriving runtimes are NOT shared with FRB1
+
+Files under `MonoGameGum/GueDeriving/` (`SpriteRuntime`, `TextRuntime`, `ContainerRuntime`, `NineSliceRuntime`, `CircleRuntime`, etc.) are **deliberately excluded** from `GumCoreShared.projitems` and must stay that way. FRB1 generates its own runtime classes per project from the user's Gum content — it does not use, and will never use, the standard MonoGameGum runtime classes. Adding a `GueDeriving/*Runtime.cs` entry to `GumCoreShared.projitems` would collide with FRB1's generated types.
+
+When you add a new runtime under `MonoGameGum/GueDeriving/` (or unify an existing one across backends), do NOT add it to the projitems. The cross-backend file-linking pattern (`<Compile Include="..\..\MonoGameGum\GueDeriving\FooRuntime.cs" Link="..." />` in `RaylibGum.csproj` / `SokolGum.csproj`) is the entire sharing story for these files.
+
 Workflow when adding new `.cs` files to `GumCommon/` or `MonoGameGum/`:
 
 1. Add the file as normal under the project directory.

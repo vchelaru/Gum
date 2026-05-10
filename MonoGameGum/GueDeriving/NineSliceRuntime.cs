@@ -33,6 +33,13 @@ namespace MonoGameGum.GueDeriving;
 namespace Gum.GueDeriving;
 #endif
 
+// NineSliceRuntime intentionally inherits InteractiveGue (not GraphicalUiElement),
+// even though a nine-slice is conceptually decorative. In practice users commonly
+// build forms by stacking controls inside a NineSliceRuntime that acts as the
+// container/window chrome. We slightly discourage that pattern, but it is common
+// enough that demoting the base class would break existing projects — so we will
+// not demote it. Click-through is not broken in practice because HasEvents
+// defaults to false; events are only absorbed when the user opts in.
 public class NineSliceRuntime : InteractiveGue
 {
 #if XNALIKE
