@@ -28,6 +28,16 @@ public static class LocalizationServiceExtensions
         {
             var stringId = csv.GetField(0);
 
+            // Skip rows with a blank/whitespace ID. Translators commonly leave
+            // the ID column empty on dialog continuation rows; storing those
+            // would alias every blank-ID row to the same key (last-write-wins)
+            // and cause empty Text values to translate to leaked content.
+            // See issue #2685.
+            if (string.IsNullOrWhiteSpace(stringId))
+            {
+                continue;
+            }
+
             string[] translatedStrings = new string[columnCount];
 
             translatedStrings[0] = stringId;
