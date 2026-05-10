@@ -159,6 +159,7 @@ public class BasicShapes
 
         BuildSpritesRow(page);
         BuildShapesRow(page);
+        BuildNineSliceRow(page);
         BuildCenteringRow(page);
 
         AddSwitchHint(screen);
@@ -255,6 +256,30 @@ public class BasicShapes
         bigCircle.Radius = 60;
         bigCircle.Color = new Color(50, 180, 80, 255);
         row.AddChild(bigCircle);
+    }
+
+    private static void BuildNineSliceRow(ContainerRuntime page)
+    {
+        var section = NewSection(Gum.Managers.ChildrenLayout.TopToBottomStack, spacing: 4);
+        page.AddChild(section);
+
+        AddSectionLabel(section, "NineSlice:");
+
+        var row = NewSection(Gum.Managers.ChildrenLayout.LeftToRightStack, spacing: 16);
+        section.AddChild(row);
+
+        var nineSlice = new NineSliceRuntime();
+        nineSlice.Width = 160;
+        nineSlice.Height = 80;
+        nineSlice.SourceFileName = "resources\\gum-logo-normal-64.png";
+        row.AddChild(nineSlice);
+
+        var tinted = new NineSliceRuntime();
+        tinted.Width = 120;
+        tinted.Height = 120;
+        tinted.SourceFileName = "resources\\gum-logo-normal-64.png";
+        tinted.Color = new Color(255, 200, 100, 255);
+        row.AddChild(tinted);
     }
 
     private static ContainerRuntime BuildFormsControlsScreen()
