@@ -37,8 +37,8 @@ public class BasicShapes
     {
         // Initialization
         //--------------------------------------------------------------------------------------
-        const int screenWidth = 800;
-        const int screenHeight = 450;
+        const int screenWidth = 1280;
+        const int screenHeight = 720;
 
         // This tells Gum to use the entire screen
         GraphicalUiElement.CanvasWidth = screenWidth;
@@ -160,7 +160,6 @@ public class BasicShapes
         BuildSpritesRow(page);
         BuildShapesRow(page);
         BuildNineSliceRow(page);
-        BuildCenteringRow(page);
 
         AddSwitchHint(screen);
 
@@ -204,33 +203,6 @@ public class BasicShapes
         flippedV.SourceFileName = "resources\\gum-logo-normal-64.png";
     }
 
-    // Demonstrates that LineCircle centres itself in its bounding box rather than
-    // assuming the box is exactly 2 * Radius wide. The circle is sized to fill its
-    // 150x150 parent (RelativeToParent, Width/Height = 0) and given Radius = 30,
-    // so the box and the radius diverge — the circle should still sit centred.
-    private static void BuildCenteringRow(ContainerRuntime page)
-    {
-        var section = NewSection(Gum.Managers.ChildrenLayout.TopToBottomStack, spacing: 4);
-        page.AddChild(section);
-
-        AddSectionLabel(section, "Centering (small circle should sit in middle of box):");
-
-        var box = new ColoredRectangleRuntime();
-        box.Width = 150;
-        box.Height = 150;
-        box.Color = new Color(80, 160, 220, 80);
-        section.AddChild(box);
-
-        var circle = new CircleRuntime();
-        circle.Radius = 30;
-        circle.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        circle.Width = 0;
-        circle.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        circle.Height = 0;
-        circle.Color = new Color(255, 100, 50, 255);
-        box.AddChild(circle);
-    }
-
     private static void BuildShapesRow(ContainerRuntime page)
     {
         var section = NewSection(Gum.Managers.ChildrenLayout.TopToBottomStack, spacing: 4);
@@ -271,13 +243,13 @@ public class BasicShapes
         var nineSlice = new NineSliceRuntime();
         nineSlice.Width = 160;
         nineSlice.Height = 80;
-        nineSlice.SourceFileName = "resources\\gum-logo-normal-64.png";
+        nineSlice.SourceFileName = "resources\\raylib-cs_logo.png";
         row.AddChild(nineSlice);
 
         var tinted = new NineSliceRuntime();
         tinted.Width = 120;
         tinted.Height = 120;
-        tinted.SourceFileName = "resources\\gum-logo-normal-64.png";
+        tinted.SourceFileName = "resources\\raylib-cs_logo.png";
         tinted.Color = new Color(255, 200, 100, 255);
         row.AddChild(tinted);
     }
