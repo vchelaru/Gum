@@ -243,13 +243,13 @@ public class BasicShapes
         var nineSlice = new NineSliceRuntime();
         nineSlice.Width = 160;
         nineSlice.Height = 80;
-        nineSlice.SourceFileName = "resources\\raylib-cs_logo.png";
+        nineSlice.SourceFileName = "resources\\ExampleSpriteFrame.png";
         row.AddChild(nineSlice);
 
         var tinted = new NineSliceRuntime();
         tinted.Width = 120;
         tinted.Height = 120;
-        tinted.SourceFileName = "resources\\raylib-cs_logo.png";
+        tinted.SourceFileName = "resources\\ExampleSpriteFrame.png";
         tinted.Color = new Color(255, 200, 100, 255);
         row.AddChild(tinted);
     }
