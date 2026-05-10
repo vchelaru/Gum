@@ -79,29 +79,4 @@ This ensures changes remain reviewable, TDD stays manageable, and build errors (
 
 Not a general refactoring guide. Not a pattern for unifying non-runtime files. Specifically: the runtime unification pattern (shared source + `#if` + csproj linking) is appropriate because the Raylib and Skia runtime projects are small wrappers around the MonoGame-style API. Do not apply this pattern to tool code, to GumCommon code (which already lives in one place and is shared differently), or to Forms controls (which are linked as a directory glob).
 
-## Runtime Refactor Status
-
-This table tracks the unification progress across platforms. **✅ Unified** means the project links to the shared source in `MonoGameGum\GueDeriving\`.
-
-| Runtime | MonoGame | Raylib | Skia | Sokol |
-| :--- | :---: | :---: | :---: | :---: |
-| **SpriteRuntime** | ✅ Unified | ✅ Unified | ✅ Unified | ❌ Local |
-| **TextRuntime** | ✅ Unified | ✅ Unified | ✅ Unified | ❌ Local |
-| **ContainerRuntime** | ✅ Unified | ✅ Unified | ✅ Unified | ✅ Unified |
-| **ColoredRectangleRuntime** | ✅ Unified | ✅ Unified | ✅ Unified | ✅ Unified |
-| **NineSliceRuntime** | ✅ Unified | ✅ Unified | ⚪ N/A | ✅ Unified |
-| **CircleRuntime** | ✅ Unified | ❌ Local | ❌ Local | ❌ Local |
-| **PolygonRuntime** | ✅ Unified | ❌ Local | ❌ Local | ❌ Local |
-| **RectangleRuntime** | ✅ Unified | ❌ Local | ❌ Local | ❌ Local |
-
-### Apos.Shapes ↔ SkiaGum shape runtime pair
-
-Canonical home is `Runtimes/SkiaGum/GueDeriving/`. ✅ Unified means `MonoGameGumShapes` and `KniGumShapes` both file-link the SkiaGum source.
-
-| Runtime | SkiaGum | MonoGameGumShapes | KniGumShapes |
-| :--- | :---: | :---: | :---: |
-| **RoundedRectangleRuntime** | ✅ Unified | ✅ Unified | ✅ Unified |
-| **ArcRuntime** | ❌ Local | ❌ Local | ❌ Local |
-| **ColoredCircleRuntime** | ❌ Local | ❌ Local | ❌ Local |
-| **LineRuntime** | ❌ Local | ❌ Local | ❌ Local |
-
+This skill is also **not** the source of truth for *which* runtimes are unified. Roadmap and per-runtime status live in the (gitignored) design docs at `.claude/designs/runtime-unification/` — `RuntimeNorthStar.md` for the workstream-level roadmap, `runtime-refactoring.md` for per-runtime details. Update those when a unification lands; do not duplicate status here.
