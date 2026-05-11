@@ -4,16 +4,28 @@
 
 This page covers each font loading strategy in detail with code samples and tradeoffs. To decide which strategy fits your game, start with the decision tree on the [Fonts](fonts.md) hub page.
 
-The four strategies are:
+The strategies are:
 
-* [Dynamic KernSmith Generation](#dynamic-kernsmith-generation) — recommended for most projects.
+* [Dynamic KernSmith Generation](#dynamic-kernsmith-generation) — recommended for MonoGame and KNI.
+* [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum) — SkiaGum rasterizes glyphs itself, separate from KernSmith.
 * [Custom Font File](#custom-font-file) — load a specific `.fnt` file you ship with the game.
 * [Direct BitmapFont Assignment](#direct-bitmapfont-assignment) — fully manual.
 * [Build-Time Font Cache](#build-time-font-cache) — pre-baked atlases from the Gum tool.
 
+### Per-Runtime Availability
+
+| Runtime | Dynamic generation today |
+|---|---|
+| MonoGame | Yes — via KernSmith. |
+| KNI | Yes — via KernSmith. |
+| FNA | Not yet. If you need it, let us know on [Discord](https://discord.gg/PptQUuyB2T) or [open an issue](https://github.com/vchelaru/Gum/issues). |
+| Raylib | Not yet. Use the [Build-Time Font Cache](#build-time-font-cache) for now. |
+| Sokol | Not yet. Use the [Build-Time Font Cache](#build-time-font-cache) for now. |
+| SkiaGum | Yes — uses SkiaSharp's own glyph rasterization. See [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum). |
+
 ## Dynamic KernSmith Generation
 
-The easiest way to use fonts is to install the KernSmith NuGet package, which generates font atlases at runtime so you can freely change font properties without managing files on disk.
+KernSmith is an in-memory font generator for the XNA-family runtimes (MonoGame and KNI today). Install the NuGet package for your runtime and KernSmith generates font atlases at runtime so you can freely change font properties without managing files on disk.
 
 {% tabs %}
 {% tab title="MonoGame" %}
@@ -68,23 +80,18 @@ text.AddToRoot();
 ```
 {% endtab %}
 
-{% tab title="Skia" %}
-SkiaGum supports dynamic font generation out of the box. No additional setup is needed — assign the font properties directly on the `TextRuntime`:
+{% tab title="FNA" %}
+KernSmith is not currently published for FNA. If you need dynamic font generation on FNA, let us know on [Discord](https://discord.gg/PptQUuyB2T) or [open an issue](https://github.com/vchelaru/Gum/issues) — the request helps us prioritize.
 
-```csharp
-// Initialize
-var text = new TextRuntime();
-text.Text = "Hello, World!";
-text.Font = "Times New Roman";
-text.FontSize = 24;
-text.IsBold = true;
-```
-
-The font must be installed on the system to be used.
+In the meantime, use the [Build-Time Font Cache](#build-time-font-cache) strategy.
 {% endtab %}
 
 {% tab title="Raylib" %}
-Dynamic font generation for Raylib is not yet available. For Raylib projects today, use the [Build-Time Font Cache](#build-time-font-cache) strategy.
+Dynamic font generation is not yet available on Raylib. Use the [Build-Time Font Cache](#build-time-font-cache) strategy.
+{% endtab %}
+
+{% tab title="Sokol" %}
+Dynamic font generation is not yet available on Sokol. Use the [Build-Time Font Cache](#build-time-font-cache) strategy.
 {% endtab %}
 {% endtabs %}
 
@@ -152,6 +159,27 @@ Registered fonts take priority over system fonts. If you register a font with th
 * You don't want to check generated `.fnt` files into source control.
 * For CJK or other large charsets, this strategy still works — but you should pair it with [Font Preloading](font-preloading.md) so the per-atlas generation cost happens on a loading screen rather than during gameplay.
 
+## Dynamic Generation on SkiaGum
+
+SkiaGum is its own thing. It does **not** use KernSmith — SkiaSharp rasterizes glyphs directly, so dynamic font generation works out of the box. No NuGet package to install, no `InMemoryFontCreator` to assign.
+
+Assign the font properties directly on the `TextRuntime`:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "Hello, World!";
+text.Font = "Times New Roman";
+text.FontSize = 24;
+text.IsBold = true;
+```
+
+The font must be installed on the system to be used. SkiaGum does not currently support `RegisterFont`-style registration of shipped `.ttf` files.
+
+{% hint style="info" %}
+A dedicated SkiaGum fonts page is planned. For now, this section is the canonical reference. If something is unclear, ask on [Discord](https://discord.gg/PptQUuyB2T) or [open an issue](https://github.com/vchelaru/Gum/issues).
+{% endhint %}
+
 ## Custom Font File
 
 If you have a specific `.fnt` file (created with the Gum tool, Angelcode Bitmap Font Generator, Hiero, or another tool), you can load it directly by setting `UseCustomFont` to `true` and assigning `CustomFontFile`:
@@ -210,7 +238,7 @@ Once a `BitmapFont` is assigned directly, do not set font component properties (
 ## Build-Time Font Cache
 
 {% hint style="info" %}
-This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not available (e.g. Raylib today). For most projects, [Dynamic KernSmith Generation](#dynamic-kernsmith-generation) is the recommended approach.
+This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not yet available for your runtime (Raylib, Sokol, FNA today). For MonoGame and KNI, [Dynamic KernSmith Generation](#dynamic-kernsmith-generation) is the recommended approach; for SkiaGum see [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum).
 {% endhint %}
 
 If `UseCustomFont` is `false` (the default) and no `InMemoryFontCreator` is registered, a `TextRuntime`'s font is determined by its font component values. These values combine to produce a file name, and the corresponding `.fnt` file must already exist in a `FontCache` folder.
@@ -220,7 +248,7 @@ For the naming convention, generation rules, and full details, see [Font Cache](
 ### When to Use This Strategy
 
 * Pixel-perfect determinism: the atlas in source control is the atlas the player sees, every time.
-* KernSmith isn't available for your runtime.
+* Dynamic generation isn't available for your runtime (Raylib, Sokol, FNA today).
 * You want zero runtime CPU cost for font generation (atlases are loaded from disk, not generated).
 
 ## Missing Font Exceptions

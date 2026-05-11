@@ -4,7 +4,7 @@
 
 The **Font Cache** is a folder of pre-generated `.fnt` files (and their corresponding `.png` atlas pages) that Gum loads at runtime when dynamic generation isn't in use. The Gum tool generates these files automatically as you edit your project; you can also create them manually or with third-party tools.
 
-For when to use this strategy vs dynamic generation, see the decision tree on the [Fonts](fonts.md) page.
+For when to use this strategy vs dynamic generation, see the decision tree on the [Fonts](fonts.md) page. The FontCache is also the only available strategy today for runtimes that don't yet have dynamic generation (Raylib, Sokol, FNA).
 
 ## How It Works
 

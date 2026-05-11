@@ -12,11 +12,13 @@ For the API surface (which properties on `TextRuntime` control the font), see th
 
 ### Path A — Small charset (Latin, Cyrillic, Greek, and similar)
 
-**Use dynamic KernSmith generation.** No font files on disk, no cache to manage, no preloading needed. The first time a `(font, size, style)` combination is used, KernSmith generates the atlas in memory — fast enough for most games with small character sets to do during gameplay without a noticeable hitch.
+**Use dynamic font generation.** No font files on disk, no cache to manage, no preloading needed. The first time a `(font, size, style)` combination is used, the atlas is generated in memory — fast enough for most games with small character sets to do during gameplay without a noticeable hitch.
+
+How this works depends on the runtime: MonoGame and KNI use the KernSmith NuGet package. SkiaGum has its own built-in dynamic generation. Raylib, Sokol, and FNA don't have dynamic generation today — for those, follow Path D.
 
 This is the default recommendation for most projects.
 
-→ See [Font Strategies — Dynamic KernSmith](font-strategies.md#dynamic-kernsmith-generation).
+→ See [Font Strategies — Dynamic KernSmith](font-strategies.md#dynamic-kernsmith-generation) (MonoGame/KNI) or [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
 
 ### Path B — Large charset (CJK), single locale per build
 
@@ -35,7 +37,7 @@ This is the default recommendation for most projects.
 **Use the build-time FontCache.** Useful when:
 
 * You want pixel-perfect determinism (atlases are checked into source control and never regenerated).
-* KernSmith is not available for your runtime (e.g. Raylib today).
+* Dynamic generation is not yet available for your runtime (Raylib, Sokol, FNA today).
 * You have hand-tuned `.fnt` files from another tool and want to ship them as-is.
 
 The Gum tool generates these atlases automatically while you edit your project. There is no opt-out yet.
