@@ -201,5 +201,8 @@ public static class DarkProTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(ComboBox)] =
             new VisualTemplate((_, c) => new ComboBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Window)] =
+            new VisualTemplate((_, c) => new WindowVisual(tryCreateFormsObject: c));
     }
 }
