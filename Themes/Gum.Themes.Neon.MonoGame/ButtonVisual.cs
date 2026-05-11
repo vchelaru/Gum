@@ -25,9 +25,9 @@ public class ButtonVisual : BaseButtonVisual
     // NeonPalette — same sRGB-vs-linear compositing reasoning. The opaque
     // hover/push fills block the bloom from showing through the body, so
     // wide blurs no longer wash out the text label.
-    private const float RestGlowBlur = 24f;
-    private const float HoverGlowBlur = 28f;
-    private const float PushedGlowBlur = 32f;
+    private const float RestGlowBlur = 32f;
+    private const float HoverGlowBlur = 40f;
+    private const float PushedGlowBlur = 44f;
 
     /// <summary>White-ring focus indicator. Offset 4 px outside the body so
     /// the gap between body border and ring is unmistakable.</summary>

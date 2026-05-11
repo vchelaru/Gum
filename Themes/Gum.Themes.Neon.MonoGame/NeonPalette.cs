@@ -87,12 +87,12 @@ internal static class NeonPalette
     // for the long-form note. These values were tuned by eye against the
     // mockup at https://github.com/vchelaru/Gum (Gum Styles.html, .nc block).
 
-    /// <summary>Resting glow — bumped from CSS <c>rgba(0,229,255,.5)</c>.</summary>
-    public static readonly Color GlowMedium = new Color(0, 229, 255, 220);
+    /// <summary>Resting glow.</summary>
+    public static readonly Color GlowMedium = new Color(0, 229, 255, 160);
 
-    /// <summary>Hover/focus glow — full-opacity cyan.</summary>
-    public static readonly Color GlowStrong = new Color(0, 229, 255, 255);
+    /// <summary>Hover/focus glow.</summary>
+    public static readonly Color GlowStrong = new Color(0, 229, 255, 200);
 
     /// <summary>Subtle resting glow for chrome controls.</summary>
-    public static readonly Color GlowSubtle = new Color(0, 229, 255, 140);
+    public static readonly Color GlowSubtle = new Color(0, 229, 255, 100);
 }
