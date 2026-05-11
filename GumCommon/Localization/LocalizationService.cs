@@ -97,6 +97,15 @@ public class LocalizationService : ILocalizationService
         {
             return "NULL STRING";
         }
+        // Empty input must short-circuit before the dictionary lookup so a
+        // blank-ID entry (e.g. from a CSV continuation row that slipped past
+        // the loader) cannot leak its translation into legitimately-empty Text.
+        // See issue #2685. Null input is handled above and still returns the
+        // "NULL STRING" sentinel.
+        else if (stringID.Length == 0)
+        {
+            return stringID;
+        }
         else if (mStringDatabase.ContainsKey(stringID))
         {
             return mStringDatabase[stringID][language];

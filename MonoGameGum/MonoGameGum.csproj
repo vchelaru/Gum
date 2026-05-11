@@ -112,9 +112,11 @@
 			Forms enums are owned by GumCommon (linked via <Compile Include> in
 			GumCommon.csproj). Exclude them here so the types aren't compiled twice.
 		-->
+		<Compile Remove="Forms\ResizeMode.cs" />
 		<Compile Remove="Forms\TextWrapping.cs" />
-		<Compile Remove="Forms\Controls\ScrollBarVisibility.cs" />
 		<Compile Remove="Forms\Controls\Orientation.cs" />
+		<Compile Remove="Forms\Controls\ResizeBehavior.cs" />
+		<Compile Remove="Forms\Controls\ScrollBarVisibility.cs" />
 		<EmbeddedResource Remove="FnaGum\**" />
 		<EmbeddedResource Remove="KniGum\**" />
 		<None Remove="FnaGum\**" />

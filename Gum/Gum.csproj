@@ -378,7 +378,7 @@
 			<Version>13.0.1</Version>
 		</PackageReference>
 		<PackageReference Include="PixiEditor.ColorPicker">
-			<Version>3.4.1</Version>
+			<Version>3.4.2.3</Version>
 		</PackageReference>
 		<PackageReference Include="SharpVectors" Version="1.8.5" />
 		<PackageReference Include="SkiaSharp">

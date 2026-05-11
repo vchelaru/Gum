@@ -2,6 +2,8 @@
 using Gum.Wireframe;
 using Gum.GueDeriving;
 using Shouldly;
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace MonoGameGum.Tests.V3;
@@ -14,8 +16,7 @@ public class ScrollViewerVisualTests
         ScrollViewer scrollViewer = new();
         InteractiveGue visual = scrollViewer.Visual;
 
-        List<ContainerRuntime> children = new();
-        visual.FillListWithChildrenByTypeRecursively<ContainerRuntime>(children);
+        List<ContainerRuntime> children = visual.Descendants().OfType<ContainerRuntime>().ToList();
 
         // ThumbContainer is used by ScrollBar for clicking to change value
         foreach (var child in children)

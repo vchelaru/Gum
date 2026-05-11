@@ -180,7 +180,7 @@ public class WindowTests : BaseTestClass
         sut.AddToRoot();
 
         InteractiveGue left =
-            (InteractiveGue)sut.Visual.GetChildByNameRecursively("BorderLeftInstance")!;
+            sut.Visual.Find<InteractiveGue>("BorderLeftInstance")!;
 
         sut.Visual.Width = 20;
         sut.Visual.MinWidth = 20;
@@ -213,7 +213,7 @@ public class WindowTests : BaseTestClass
         sut.AddToRoot();
 
         InteractiveGue right =
-            (InteractiveGue)sut.Visual.GetChildByNameRecursively("BorderRightInstance")!;
+            sut.Visual.Find<InteractiveGue>("BorderRightInstance")!;
 
         sut.Visual.Width = 20;
         sut.Visual.MinWidth = 20;
@@ -249,7 +249,7 @@ public class WindowTests : BaseTestClass
         sut.AddToRoot();
 
         InteractiveGue top =
-            (InteractiveGue)sut.Visual.GetChildByNameRecursively("BorderTopInstance")!;
+            sut.Visual.Find<InteractiveGue>("BorderTopInstance")!;
 
         sut.Visual.Height = 20;
         sut.Visual.MinHeight = 20;
@@ -282,7 +282,7 @@ public class WindowTests : BaseTestClass
         sut.AddToRoot();
 
         InteractiveGue bottom =
-            (InteractiveGue)sut.Visual.GetChildByNameRecursively("BorderBottomInstance")!;
+            sut.Visual.Find<InteractiveGue>("BorderBottomInstance")!;
 
         sut.Visual.Height = 20;
         sut.Visual.MinHeight = 20;

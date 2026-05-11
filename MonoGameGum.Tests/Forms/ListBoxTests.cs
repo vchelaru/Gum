@@ -26,8 +26,7 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         InteractiveGue visual = listBox.Visual;
 
-        List<ContainerRuntime> children = new ();
-        visual.FillListWithChildrenByTypeRecursively<ContainerRuntime>(children);
+        List<ContainerRuntime> children = visual.Descendants().OfType<ContainerRuntime>().ToList();
 
         foreach(var child in children)
         {
@@ -295,7 +294,7 @@ public class ListBoxTests : BaseTestClass
         listBox.ListBoxItems[0]!.BindingContext.ShouldBe("Item 1");
         listBox.ListBoxItems[1]!.BindingContext.ShouldBe("Item 0");
 
-        var innerPanel = listBox.Visual.GetChildByNameRecursively("InnerPanelInstance")!;
+        var innerPanel = listBox.Visual.FindByName("InnerPanelInstance")!;
         innerPanel.Children.Count.ShouldBe(10);
         for(int i = 0; i < 10; i++)
         {
@@ -1402,5 +1401,44 @@ public class ListBoxTests : BaseTestClass
         listBox.OnFocusUpdate();
 
         listBox.DoListItemsHaveFocus.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ItemsAddedWhileInvisible_ShouldHaveFontsResolved()
+    {
+        // Regression: ItemsControl.HandleItemsCollectionChanged gates its
+        // ResumeLayout(recursive: true) call on IsVisible. That ResumeLayout
+        // is what triggers UpdateFontRecursive, which performs the deferred
+        // font load for any TextRuntime whose IsFontDirty flag got set
+        // while IsAllLayoutSuspended was true (the suspension is set during
+        // item creation, so every font assignment on a freshly-created
+        // ListBoxItem visual hits the deferral path).
+        //
+        // Concrete manifestation: a ComboBox's dropdown ListBox is created
+        // with Visible=false in V3.ComboBoxVisual.PositionAndAttachListBox.
+        // Items added to it have IsFontDirty=true on their TextInstance,
+        // and never get resolved — when the dropdown is later opened, the
+        // text renders with whatever fallback the font lookup falls back to
+        // rather than the styling's configured font.
+        //
+        // The fix is to drop the IsVisible gate: realization should happen
+        // regardless of visibility, mirroring the WireframeObjectManager
+        // pattern documented on UpdateFontRecursive.
+
+        ListBox listBox = new();
+        listBox.Visual.Visible = false;
+
+        listBox.Items!.Add("First");
+        listBox.Items!.Add("Second");
+
+        foreach (var item in listBox.ListBoxItems)
+        {
+            GraphicalUiElement textInstance = item.Visual.GetGraphicalUiElementByName("TextInstance");
+            textInstance.ShouldNotBeNull();
+            textInstance.IsFontDirty.ShouldBeFalse(
+                "Item TextInstance was constructed while the parent ListBox was invisible. " +
+                "Expected the deferred font load to have been processed by ResumeLayout(recursive: true), " +
+                "but IsFontDirty is still true.");
+        }
     }
 }

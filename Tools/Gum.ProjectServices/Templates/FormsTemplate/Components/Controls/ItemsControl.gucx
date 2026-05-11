@@ -276,5 +276,6 @@
     <string>ItemsControlCategoryState</string>
     <string>ContainedType</string>
     <string>ChildrenLayout</string>
+    <string>ExposeChildrenEvents</string>
   </VariablesHiddenFromInstances>
 </ComponentSave>

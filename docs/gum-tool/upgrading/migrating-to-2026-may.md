@@ -71,3 +71,48 @@ The `Gum.Analyzers` package ships a one-click code fix for `using` directives �
 The compatibility shims will remain in place until at least the November 2026 release. After that window, they will be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
 
 For full details, including handling of fully-qualified references and a `RenderingLibrary` namespace-shadowing gotcha, see [Syntax Version 1](syntax-version-1.md).
+
+### FrameworkElement tree-traversal extensions
+
+Forms controls (`Button`, `TextBox`, `Window`, etc.) gained extension methods for finding other controls and reaching into their underlying visuals without going through `.Visual` first:
+
+```csharp
+// Drop into the visual layer:
+TextRuntime label = okButton.FindVisual<TextRuntime>()!;
+
+// Find another Forms control:
+Button cancel = dialog.Find<Button>("CancelButton")!;
+
+// Walk ancestors:
+Window? containing = nestedControl.Ancestors().OfType<Window>().FirstOrDefault();
+```
+
+This is purely additive — no existing code changes. See [Finding Elements](../../code/visual-tree/finding-elements.md) for the full set.
+
+### GraphicalUiElement tree-traversal methods replaced
+
+Five recursive lookup methods on `GraphicalUiElement` are now `[Obsolete]` in favor of LINQ-friendly extension methods that compose more cleanly. Existing calls keep working, but they now produce `CS0618` compiler warnings.
+
+The replaced methods:
+
+* `GetChildByNameRecursively(string)` → `FindByName(string)`
+* `GetChildByTypeRecursively(Type)` → `Find<T>()`
+* `GetParentByNameRecursively(string)` → `Ancestors().FirstOrDefault(a => a.Name == name)`
+* `GetParentByTypeRecursively(Type)` → `Ancestors().OfType<T>().FirstOrDefault()`
+* `FillListWithChildrenByTypeRecursively<T>(...)` → `Descendants().OfType<T>().ToList()`
+
+The new generic methods (`Find<T>`, `OfType<T>`) match subclasses (`is T` semantics). The old methods only matched the exact type. If your code relied on the exact-type behavior, add an explicit `GetType() == typeof(T)` filter to the LINQ pipeline.
+
+❌Old:
+
+```csharp
+var textInstance = (TextRuntime)textBox.Visual.GetChildByNameRecursively("TextInstance")!;
+```
+
+✅New:
+
+```csharp
+TextRuntime textInstance = textBox.Visual.Find<TextRuntime>("TextInstance")!;
+```
+
+For the full set of new methods and how they compose with LINQ, see [Finding Elements](../../code/visual-tree/finding-elements.md).

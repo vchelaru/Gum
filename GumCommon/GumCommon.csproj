@@ -135,6 +135,7 @@
 		</Compile>
 		<Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
 		<Compile Include="..\GumRuntime\GraphicalUiElement.Binding.cs" Link="GraphicalUiElement.Binding.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElementTreeExtensions.cs" Link="GraphicalUiElementTreeExtensions.cs" />
 		<Compile Include="..\GumRuntime\IUpdateEveryFrame.cs" Link="IUpdateEveryFrame.cs" />
 		<Compile Include="..\GumRuntime\LayoutExporter.cs" Link="Runtime\LayoutExporter.cs" />
 
@@ -224,9 +225,11 @@
 			compile-Remove these entries so they pick the types up via the GumCommon
 			reference instead of duplicating them.
 		-->
+		<Compile Include="..\MonoGameGum\Forms\ResizeMode.cs" Link="Forms\ResizeMode.cs" />
 		<Compile Include="..\MonoGameGum\Forms\TextWrapping.cs" Link="Forms\TextWrapping.cs" />
-		<Compile Include="..\MonoGameGum\Forms\Controls\ScrollBarVisibility.cs" Link="Forms\Controls\ScrollBarVisibility.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Orientation.cs" Link="Forms\Controls\Orientation.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\ResizeBehavior.cs" Link="Forms\Controls\ResizeBehavior.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\ScrollBarVisibility.cs" Link="Forms\Controls\ScrollBarVisibility.cs" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="BrotliSharpLib" Version="0.3.3" />

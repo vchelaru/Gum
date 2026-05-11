@@ -1,4 +1,4 @@
-﻿using Gum.Converters;
+using Gum.Converters;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
@@ -26,13 +26,19 @@ public class BasicShapes
 
     static GumService GumUI => GumService.Default;
 
+    // Top-level "screens" — each one is a ContainerRuntime holding all of its visuals.
+    // We swap which one is in the root with the SPACE key.
+    static ContainerRuntime? rawVisualsScreen;
+    static ContainerRuntime? formsControlsScreen;
+    static ContainerRuntime? activeScreen;
+
 
     public static void Main()
     {
         // Initialization
         //--------------------------------------------------------------------------------------
-        const int screenWidth = 800;
-        const int screenHeight = 450;
+        const int screenWidth = 1280;
+        const int screenHeight = 720;
 
         // This tells Gum to use the entire screen
         GraphicalUiElement.CanvasWidth = screenWidth;
@@ -58,18 +64,20 @@ public class BasicShapes
 
         InitializeStyling();
 
-        // Uncomment this to see forms controls:
-        //CreateFormsControls();
+        rawVisualsScreen = BuildRawVisualsScreen();
+        formsControlsScreen = BuildFormsControlsScreen();
 
-        // Uncomment this to see normal runtime objects;
-        CreateRuntimes();
+        ShowScreen(rawVisualsScreen);
 
         // Main game loop
         while (!WindowShouldClose())
         {
             // Update
             //----------------------------------------------------------------------------------
-            // TODO: Update your variables here
+            if (IsKeyPressed(KeyboardKey.Space))
+            {
+                ShowScreen(activeScreen == rawVisualsScreen ? formsControlsScreen : rawVisualsScreen);
+            }
             //----------------------------------------------------------------------------------
 
             // Draw
@@ -77,28 +85,9 @@ public class BasicShapes
             BeginDrawing();
             ClearBackground(Color.SkyBlue);
 
-            /* Raylib supports drawing simple 2d shapes with internal functions 
-            so uncomment the following lines to see it in action */
-
-            // DrawLine(18, 42, screenWidth - 18, 42, Color.Black);
-
-            // DrawCircle(screenWidth / 4, 120, 35, Color.DarkBlue);
-            // DrawRectangle(screenWidth / 4 * 2 - 60, 100, 120, 60, Color.Red);
-            // DrawTriangle(
-            //     new Vector2(screenWidth / 4 * 3, 80),
-            //     new Vector2(screenWidth / 4 * 3 - 60, 150),
-            //     new Vector2(screenWidth / 4 * 3 + 60, 150), Color.Violet
-            // );
-
-
             GumUI.Update(GetTime());
 
             GumUI.Draw();
-
-            if(baseRectangle != null)
-            {
-                //baseRectangle.Width += 0.3f;
-            }
 
             EndDrawing();
 
@@ -113,60 +102,164 @@ public class BasicShapes
 
     }
 
-    static ColoredRectangleRuntime baseRectangle;
-    private static void CreateRuntimes()
+    private static void ShowScreen(ContainerRuntime screen)
     {
-        baseRectangle = new ColoredRectangleRuntime();
-        baseRectangle.AddToRoot();
-        baseRectangle.Width = 100;
-        baseRectangle.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        baseRectangle.Height = 0;
-        baseRectangle.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        baseRectangle.Anchor(Anchor.Center);
-        //baseRectangle.ClipsChildren = true;
-
-        var textRuntime = new TextRuntime();
-        baseRectangle.AddChild(textRuntime);
-
-
-        textRuntime.Text = "1";
-        for(int i = 2; i < 16; i++)
+        if (activeScreen != null)
         {
-            textRuntime.Text += "\n" + i.ToString();
+            activeScreen.RemoveFromRoot();
         }
-
-        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        textRuntime.Width = 0;
-        textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        textRuntime.Height = 0;
-
-        textRuntime.HorizontalAlignment = HorizontalAlignment.Left;
-        textRuntime.VerticalAlignment = VerticalAlignment.Top;
-
-        StackPanel leftPanel = new();
-        leftPanel.AddToRoot();
-
-
-        var spriteRuntime = new SpriteRuntime();
-        leftPanel.AddChild(spriteRuntime);
-        spriteRuntime.SourceFileName = "resources\\gum-logo-normal-64.png";
-
-        var flippedSprite = new SpriteRuntime();
-        leftPanel.AddChild(flippedSprite);
-        flippedSprite.FlipHorizontal = true;
-        flippedSprite.SourceFileName = "resources\\gum-logo-normal-64.png";
-
-        var flippedVerticalSprite = new SpriteRuntime();
-        leftPanel.AddChild(flippedVerticalSprite);
-        flippedVerticalSprite.FlipVertical = true;
-        flippedVerticalSprite.SourceFileName = "resources\\gum-logo-normal-64.png";
-
+        activeScreen = screen;
+        activeScreen.AddToRoot();
     }
 
-    private static void CreateFormsControls()
+    private static ContainerRuntime CreateScreenContainer()
     {
+        var screen = new ContainerRuntime();
+        screen.Width = 0;
+        screen.Height = 0;
+        screen.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        screen.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        return screen;
+    }
+
+    private static TextRuntime AddSwitchHint(ContainerRuntime screen)
+    {
+        var hint = new TextRuntime();
+        hint.Text = "Press SPACE to switch screens";
+        hint.XOrigin = HorizontalAlignment.Left;
+        hint.YOrigin = VerticalAlignment.Bottom;
+        hint.XUnits = GeneralUnitType.PixelsFromSmall;
+        hint.YUnits = GeneralUnitType.PixelsFromLarge;
+        hint.X = 8;
+        hint.Y = -8;
+        screen.AddChild(hint);
+        return hint;
+    }
+
+    private static TextRuntime AddSectionLabel(GraphicalUiElement parent, string text)
+    {
+        var label = new TextRuntime();
+        label.Text = text;
+        label.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        label.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        label.Width = 0;
+        label.Height = 0;
+        parent.AddChild(label);
+        return label;
+    }
+
+    private static ContainerRuntime BuildRawVisualsScreen()
+    {
+        var screen = CreateScreenContainer();
+
+        var page = NewSection(Gum.Managers.ChildrenLayout.TopToBottomStack, spacing: 16);
+        page.X = 16;
+        page.Y = 16;
+        screen.AddChild(page);
+
+        BuildSpritesRow(page);
+        BuildShapesRow(page);
+        BuildNineSliceRow(page);
+
+        AddSwitchHint(screen);
+
+        return screen;
+    }
+
+    private static ContainerRuntime NewSection(Gum.Managers.ChildrenLayout layout, int spacing)
+    {
+        var section = new ContainerRuntime();
+        section.Width = 0;
+        section.Height = 0;
+        section.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        section.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        section.ChildrenLayout = layout;
+        section.StackSpacing = spacing;
+        return section;
+    }
+
+    private static void BuildSpritesRow(ContainerRuntime page)
+    {
+        var section = NewSection(Gum.Managers.ChildrenLayout.TopToBottomStack, spacing: 4);
+        page.AddChild(section);
+
+        AddSectionLabel(section, "Sprites:");
+
+        var row = NewSection(Gum.Managers.ChildrenLayout.LeftToRightStack, spacing: 8);
+        section.AddChild(row);
+
+        var sprite = new SpriteRuntime();
+        row.AddChild(sprite);
+        sprite.SourceFileName = "resources\\gum-logo-normal-64.png";
+
+        var flippedH = new SpriteRuntime();
+        row.AddChild(flippedH);
+        flippedH.FlipHorizontal = true;
+        flippedH.SourceFileName = "resources\\gum-logo-normal-64.png";
+
+        var flippedV = new SpriteRuntime();
+        row.AddChild(flippedV);
+        flippedV.FlipVertical = true;
+        flippedV.SourceFileName = "resources\\gum-logo-normal-64.png";
+    }
+
+    private static void BuildShapesRow(ContainerRuntime page)
+    {
+        var section = NewSection(Gum.Managers.ChildrenLayout.TopToBottomStack, spacing: 4);
+        page.AddChild(section);
+
+        AddSectionLabel(section, "Shapes:");
+
+        var row = NewSection(Gum.Managers.ChildrenLayout.LeftToRightStack, spacing: 16);
+        section.AddChild(row);
+
+        var rectangle = new ColoredRectangleRuntime();
+        rectangle.Width = 80;
+        rectangle.Height = 80;
+        rectangle.Color = new Color(80, 160, 220, 255);
+        row.AddChild(rectangle);
+
+        var circle = new CircleRuntime();
+        circle.Radius = 40;
+        circle.Color = new Color(255, 100, 50, 255);
+        row.AddChild(circle);
+
+        var bigCircle = new CircleRuntime();
+        bigCircle.Radius = 60;
+        bigCircle.Color = new Color(50, 180, 80, 255);
+        row.AddChild(bigCircle);
+    }
+
+    private static void BuildNineSliceRow(ContainerRuntime page)
+    {
+        var section = NewSection(Gum.Managers.ChildrenLayout.TopToBottomStack, spacing: 4);
+        page.AddChild(section);
+
+        AddSectionLabel(section, "NineSlice:");
+
+        var row = NewSection(Gum.Managers.ChildrenLayout.LeftToRightStack, spacing: 16);
+        section.AddChild(row);
+
+        var nineSlice = new NineSliceRuntime();
+        nineSlice.Width = 160;
+        nineSlice.Height = 80;
+        nineSlice.SourceFileName = "resources\\ExampleSpriteFrame.png";
+        row.AddChild(nineSlice);
+
+        var tinted = new NineSliceRuntime();
+        tinted.Width = 120;
+        tinted.Height = 120;
+        tinted.SourceFileName = "resources\\ExampleSpriteFrame.png";
+        tinted.Color = new Color(255, 200, 100, 255);
+        row.AddChild(tinted);
+    }
+
+    private static ContainerRuntime BuildFormsControlsScreen()
+    {
+        var screen = CreateScreenContainer();
+
         var container = new GraphicalUiElement(new InvisibleRenderable());
-        container.AddToRoot();
+        screen.AddChild(container);
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         container.WrapsChildren = true;
         container.StackSpacing = 2;
@@ -177,10 +270,6 @@ public class BasicShapes
         container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
         container.ClipsChildren = true;
-
-        //var sprite = new SpriteRuntime();
-        //sprite.Texture = standardTexture.Value;
-        //container.AddChild(sprite);
 
         var button = new Button();
         button.Width = 200;
@@ -273,7 +362,7 @@ public class BasicShapes
         window.Anchor(Gum.Wireframe.Anchor.Center);
         window.Width = 300;
         window.Height = 200;
-        window.AddToRoot();
+        screen.AddChild(window.Visual);
 
         var textInstance = new Label();
         textInstance.Dock(Gum.Wireframe.Dock.Top);
@@ -288,7 +377,7 @@ public class BasicShapes
         window.AddChild(windowButton.Visual);
         windowButton.Click += (_, _) =>
         {
-            window.RemoveFromRoot();
+            window.Visual.Parent = null;
         };
 
 
@@ -314,6 +403,10 @@ public class BasicShapes
         {
             listBox2.Items.Add("List Item " + i);
         }
+
+        AddSwitchHint(screen);
+
+        return screen;
     }
 
     private static void InitializeStyling()

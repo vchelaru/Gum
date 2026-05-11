@@ -123,5 +123,8 @@
   <VariablesHiddenFromInstances>
     <string>ContainedType</string>
     <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
+    <string>ExposeChildrenEvents</string>
   </VariablesHiddenFromInstances>
 </ComponentSave>

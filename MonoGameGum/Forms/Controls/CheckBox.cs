@@ -14,74 +14,11 @@ namespace Gum.Forms.Controls;
 
 public class CheckBox : ToggleButton
 {
-    #region Fields/Properties
-
-    private GraphicalUiElement? textComponent;
-
-    private global::RenderingLibrary.Graphics.IText? coreTextObject;
-
-    /// <summary>
-    /// Gets or sets the checkbox label text. Setting this property applies localization
-    /// if a <see cref="Gum.Localization.LocalizationService"/> is registered.
-    /// To bypass localization, use <see cref="SetTextNoTranslate"/>.
-    /// </summary>
-    public string? Text
-    {
-        get
-        {
-#if FULL_DIAGNOSTICS
-            ReportMissingTextInstance();
-#endif
-            return coreTextObject?.RawText;
-        }
-        set
-        {
-#if FULL_DIAGNOSTICS
-            ReportMissingTextInstance();
-#endif
-            // go through the component instead of the core text object to force a layout refresh if necessary
-            textComponent?.SetProperty("Text", value);
-        }
-    }
-
-    /// <summary>
-    /// Sets the checkbox text without applying localization/translation.
-    /// </summary>
-    /// <remarks>
-    /// This is a method rather than a property because the "no translate" state is not preserved on
-    /// the underlying text renderable — only the final string is stored.
-    /// Use this for text that should not be localized.
-    /// </remarks>
-    public void SetTextNoTranslate(string? value)
-    {
-        textComponent?.SetProperty("TextNoTranslate", value);
-    }
-
-
-    #endregion
-
     #region Initialize Methods
 
     public CheckBox() : base() { }
 
     public CheckBox(InteractiveGue visual) : base(visual) { }
-
-    protected override void ReactToVisualChanged()
-    {
-        RefreshInternalVisualReferences();
-
-        base.ReactToVisualChanged();
-
-        // In case the check is visible - the checkbox starts in a IsChecked = false state:
-        UpdateState();
-    }
-
-    protected override void RefreshInternalVisualReferences()
-    {
-        // text component is optional:
-        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
-        coreTextObject = textComponent?.RenderableComponent as global::RenderingLibrary.Graphics.IText;
-    }
 
     #endregion
 
@@ -100,22 +37,4 @@ public class CheckBox : ToggleButton
     }
 
     #endregion
-
-    #region Utilities
-
-#if FULL_DIAGNOSTICS
-    private void ReportMissingTextInstance()
-    {
-        if (textComponent == null)
-        {
-            throw new Exception(
-                "This button was created with a Gum component that does not have an instance called 'TextInstance'. A 'TextInstance' instance must be added to modify the radio button's Text property.");
-        }
-    }
-#endif
-
-    #endregion
-
-
-
 }

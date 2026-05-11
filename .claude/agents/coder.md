@@ -16,6 +16,12 @@ In either case, your job is to produce a focused code change that implements the
 
 FRB1 (FlatRedBall) consumes Gum sources via `GumCoreShared.shproj`, which imports `GumCoreShared.projitems`. If you add, rename, move, or delete any `.cs` file under `GumCommon/` or `MonoGameGum/`, you MUST update `GumCoreShared.projitems` in the same change. Otherwise FRB1 builds will break.
 
+## Exception: GueDeriving runtimes are NOT shared with FRB1
+
+Files under `MonoGameGum/GueDeriving/` (`SpriteRuntime`, `TextRuntime`, `ContainerRuntime`, `NineSliceRuntime`, `CircleRuntime`, etc.) are **deliberately excluded** from `GumCoreShared.projitems` and must stay that way. FRB1 generates its own runtime classes per project from the user's Gum content — it does not use, and will never use, the standard MonoGameGum runtime classes. Adding a `GueDeriving/*Runtime.cs` entry to `GumCoreShared.projitems` would collide with FRB1's generated types.
+
+When you add a new runtime under `MonoGameGum/GueDeriving/` (or unify an existing one across backends), do NOT add it to the projitems. The cross-backend file-linking pattern (`<Compile Include="..\..\MonoGameGum\GueDeriving\FooRuntime.cs" Link="..." />` in `RaylibGum.csproj` / `SokolGum.csproj`) is the entire sharing story for these files.
+
 Workflow when adding new `.cs` files to `GumCommon/` or `MonoGameGum/`:
 
 1. Add the file as normal under the project directory.
@@ -23,6 +29,14 @@ Workflow when adding new `.cs` files to `GumCommon/` or `MonoGameGum/`:
 3. When deleting or renaming a file, update or remove the corresponding entry.
 
 This applies to ALL files in `GumCommon/` and `MonoGameGum/` by default. If a particular file genuinely should not be shared with FRB1 (rare), call it out in your final notes so the user can confirm the exclusion.
+
+## Forms files — keep FRB1's FlatRedBall.Forms.Shared.projitems in sync
+
+Files under `MonoGameGum/Forms/` (especially `MonoGameGum/Forms/Controls/`) are NOT consumed via `GumCoreShared.projitems`. FRB1 picks them up through a separate shared project that lives in the FRB1 repo: `Engines/Forms/FlatRedBall.Forms/FlatRedBall.Forms.Shared/FlatRedBall.Forms.Shared.projitems`. Each file is referenced individually with a `<Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\..\Gum\MonoGameGum\Forms\Controls\<File>.cs">` line and a `<Link>Controls\%(Filename)%(Extension)</Link>` mapping.
+
+If you add, rename, move, split, or delete any `.cs` file under `MonoGameGum/Forms/`, you MUST update that projitems in the FRB1 repo in the same change — otherwise FRB1 builds break with `CS0246` for whatever type lived in the new/renamed file. Common gotcha: extracting an enum or helper class into a sibling file (e.g. `ScrollBarVisibility.cs` out of `ScrollViewer.cs`) — the original entry still resolves, but the extracted file is invisible to FRB1 until added.
+
+The FRB1 repo is typically checked out at `C:\Users\vchel\Documents\GitHub\FlatRedBall\` on this machine. Edit the projitems there directly and call out the FRB1-side change in your final notes.
 
 ## NuGet packages — keep FRB1-side csproj files in sync
 

@@ -64,6 +64,33 @@ public class SpriteRenderer
     /// </summary>
     public Microsoft.Xna.Framework.Matrix? CurrentTransformMatrix => mSpriteBatch?.CurrentParameters?.TransformMatrix;
 
+    /// <summary>
+    /// The scissor rectangle currently active on the SpriteBatch, or null when scissor
+    /// testing is disabled (e.g. outside any ClipsChildren container). Custom batches read
+    /// this to honor the same clip region — without it, anything drawn outside SpriteBatch
+    /// (e.g. Apos.Shapes shapes) renders unclipped even when a parent has ClipsChildren=true.
+    /// </summary>
+    public System.Drawing.Rectangle? CurrentScissorRectangle
+    {
+        get
+        {
+            var current = mSpriteBatch?.CurrentParameters;
+            if (current?.RasterizerState?.ScissorTestEnable == true)
+            {
+                return current.Value.ScissorRectangle;
+            }
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// The shared scissor-enabled RasterizerState used by Sprite clipping. Exposed so
+    /// custom batches (Apos.Shapes ShapeBatch via RenderableShapeBase.StartBatch) can
+    /// pass the same rasterizer state to their Begin call and produce identical scissor
+    /// behavior. Returns null until <see cref="Initialize(GraphicsDevice)"/> has run.
+    /// </summary>
+    public RasterizerState ScissorTestRasterizerState => scissorTestEnabled;
+
     public IEnumerable<BeginParameters> LastFrameDrawStates
     {
         get

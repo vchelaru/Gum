@@ -84,6 +84,12 @@ public abstract class TextBoxBase :
     protected GraphicalUiElement selectionInstance;
     float _selectionInstanceYOffset;
 
+    // Resting X of the text instance as set by the visual template. KeepCaretEdgeInsideParent
+    // clamps textComponent.X to never exceed this value, so a horizontal scroll-left
+    // (negative offset) applied during typing/overflow snaps back here when the content
+    // shrinks again. See issue #2683.
+    float _textRestingX;
+
     List<GraphicalUiElement> _selectionInstances = new List<GraphicalUiElement>();
 
     GraphicalUiElement selectionTemplate;
@@ -511,6 +517,7 @@ public abstract class TextBoxBase :
         if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
 #endif
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        _textRestingX = this.textComponent.X;
         caretComponent.X = 0;
     }
 
@@ -1852,10 +1859,24 @@ public abstract class TextBoxBase :
             this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
             this.caretComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
+            // Skip the shift entirely when the parent's geometry is invalid
+            // (zero or negative absolute width). This happens transiently
+            // during init when Width and WidthUnits are applied in sequence
+            // and the relative-to-parent math hasn't settled. Shifting based
+            // on a backwards parent (farOfParent < nearOfParent) would push
+            // the text by hundreds of pixels and the asymmetric branches
+            // below would never undo it once the parent reached a sane size.
+            // See issue #2680.
+            float parentWidth = caretComponent.EffectiveParentGue.GetAbsoluteWidth();
+            if (parentWidth <= 0)
+            {
+                return;
+            }
+
             float nearOfCaret = caretComponent.GetAbsoluteLeft();
             float farOfCaret = nearOfCaret + caretComponent.GetAbsoluteWidth();
             float nearOfParent = caretComponent.EffectiveParentGue.GetAbsoluteLeft();
-            float farOfParent = nearOfParent + caretComponent.EffectiveParentGue.GetAbsoluteWidth();
+            float farOfParent = nearOfParent + parentWidth;
 
             float shiftAmount = 0;
             if (farOfCaret > farOfParent)
@@ -1872,6 +1893,19 @@ public abstract class TextBoxBase :
                 this.textComponent.X += shiftAmount;
                 this.caretComponent.X += shiftAmount;
             }
+
+            // Snap-back: never let the text drift right past its resting position
+            // (set by the visual template). Without this the asymmetric overflow
+            // shifts above accumulate — e.g. typing past the right edge scrolls
+            // text left, then deleting back to a short string leaves a sticky
+            // negative-then-overcorrected X. The clamp pulls caret/text together
+            // so the caret stays the same number of pixels into the text. See #2683.
+            if (this.textComponent.X > _textRestingX)
+            {
+                float clampShift = _textRestingX - this.textComponent.X;
+                this.textComponent.X += clampShift;
+                this.caretComponent.X += clampShift;
+            }
         }
         else
         {
@@ -1882,10 +1916,18 @@ public abstract class TextBoxBase :
             // by a delta works correctly in any unit (it's a pixel offset
             // regardless of origin), and reassigning units would change the
             // meaning of the existing Y value.
+
+            // Same invalid-geometry guard as the horizontal branch (see #2680).
+            float parentHeight = caretComponent.EffectiveParentGue.GetAbsoluteHeight();
+            if (parentHeight <= 0)
+            {
+                return;
+            }
+
             float nearOfCaret = caretComponent.GetAbsoluteTop();
             float farOfCaret = nearOfCaret + caretComponent.GetAbsoluteHeight();
             float nearOfParent = caretComponent.EffectiveParentGue.GetAbsoluteTop();
-            float farOfParent = nearOfParent + caretComponent.EffectiveParentGue.GetAbsoluteHeight();
+            float farOfParent = nearOfParent + parentHeight;
 
             float shiftAmount = 0;
             if (farOfCaret > farOfParent)

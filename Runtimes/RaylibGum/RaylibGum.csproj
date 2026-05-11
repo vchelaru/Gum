@@ -120,6 +120,8 @@
 		<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\SpriteRuntime.cs" Link="GueDeriving\SpriteRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\TextRuntime.cs" Link="GueDeriving\TextRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\CircleRuntime.cs" Link="GueDeriving\CircleRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\NineSliceRuntime.cs" Link="GueDeriving\NineSliceRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GumService.cs" Link="GumService.cs" />
 		<Compile Include="..\..\MonoGameGum\Async\SingleThreadSynchronizationContext.cs" Link="Async\SingleThreadSynchronizationContext.cs" />
 		<Compile Include="..\..\MonoGameGum\GumHotReloadManager.cs" Link="GumHotReloadManager.cs" />
@@ -147,8 +149,9 @@
 	    Forms enums are owned by GumCommon (referenced via ProjectReference). Exclude them
 	    from the Forms\Controls\**\*.cs glob so the types aren't compiled twice.
 	  -->
-	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ScrollBarVisibility.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Orientation.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ResizeBehavior.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ScrollBarVisibility.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

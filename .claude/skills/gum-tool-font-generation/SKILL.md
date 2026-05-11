@@ -7,7 +7,7 @@ description: Gum bitmap font generation — tool converts font properties into .
 
 Gum generates BMFont-format bitmap fonts (`.fnt` + `.png` atlas) by shelling out to `bmfont.exe`. The pipeline is: **collect font properties → build BmfcSave → write .bmfc file → invoke bmfont.exe → produce .fnt + .png**.
 
-> **Future direction:** The bmfont.exe dependency is being evaluated for replacement due to platform limitations (Windows-only) and other concerns.
+> **Future direction:** The bmfont.exe dependency is being evaluated for replacement due to platform limitations (Windows-only) and other concerns. A leading candidate is [KernSmith](https://github.com/kaltinril/Kernsmith), a cross-platform .NET BMFont library/CLI that consumes the same `.bmfc` files Gum already produces — making it a near drop-in.
 
 ## Architecture
 

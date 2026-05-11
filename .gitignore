@@ -1,6 +1,7 @@
 .vs/
 .idea/
 .claude/scheduled_tasks.lock
+CLAUDE.local.md
 *.bak
 *.cache
 *.suo

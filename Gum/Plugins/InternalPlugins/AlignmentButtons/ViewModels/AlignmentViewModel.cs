@@ -7,9 +7,11 @@ using Gum.ToolStates;
 using Gum.Undo;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 
@@ -25,11 +27,32 @@ public class AlignmentViewModel : ViewModel
         set => Set(value);
     }
 
+    public string DockMarginText
+    {
+        get => Get<string>();
+        set
+        {
+            if (Set(value))
+            {
+                DockMargin = float.TryParse(value, NumberStyles.Float, CultureInfo.CurrentCulture, out var parsed)
+                    ? parsed
+                    : 0f;
+            }
+        }
+    }
+
+    [DependsOn(nameof(DockMargin))]
+    public string MarginText => $"Applies {DockMargin}px margin";
+
+    [DependsOn(nameof(DockMargin))]
+    public Visibility MarginTextVisibility => DockMargin != 0 ? Visibility.Visible : Visibility.Collapsed;
+
     public AlignmentViewModel(CommonControlLogic commonControlLogic)
     {
         _commonControlLogic = commonControlLogic;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();
+        DockMarginText = "0";
     }
 
     #region Anchor Actions

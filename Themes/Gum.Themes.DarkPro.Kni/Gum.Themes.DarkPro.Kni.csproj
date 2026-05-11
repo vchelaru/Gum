@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+
+    <PackageId>Gum.Themes.DarkPro.Kni</PackageId>
+    <Version>2026.5.11.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>A flat dark theme for Gum UI inspired by modern code editors. Provides styled visuals for Gum Forms controls with KNI and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\Gum.Themes.DarkPro.MonoGame\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Source-share the MonoGame variant's .cs files. Single set of visual + theme
+         code compiled into both assemblies. -->
+    <Compile Include="..\Gum.Themes.DarkPro.MonoGame\**\*.cs" />
+    <Compile Remove="..\Gum.Themes.DarkPro.MonoGame\obj\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder, but
+         map them under this assembly's Content\Fonts via <Link> so the resource
+         name resolves to "Gum.Themes.DarkPro.Kni.Content.Fonts.<file>" — matching
+         what DarkProTheme.RegisterEmbeddedFont derives from assembly name. -->
+    <EmbeddedResource Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DMMono-Regular.ttf">
+      <Link>Content\Fonts\DMMono-Regular.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DMMono-Medium.ttf">
+      <Link>Content\Fonts\DMMono-Medium.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DMMono-Italic.ttf">
+      <Link>Content\Fonts\DMMono-Italic.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DMMono-MediumItalic.ttf">
+      <Link>Content\Fonts\DMMono-MediumItalic.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
+      <Link>Content\Fonts\DejaVuSansMono.ttf</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- KernSmith is a runtime dependency of the theme (DarkProTheme.Apply
+         constructs KernSmithFontCreator and calls RegisterFont). Flows
+         transitively to consumers — no PrivateAssets. -->
+    <PackageReference Include="KernSmith.KniGum" Version="*" />
+    <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\KniGumShapes.csproj" />
+  </ItemGroup>
+</Project>
