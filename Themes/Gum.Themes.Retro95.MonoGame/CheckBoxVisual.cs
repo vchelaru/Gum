@@ -21,7 +21,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private const float DashWidth = 7f;
     private const float DashHeight = 2f;
 
-    private readonly GraphicalUiElement _boxContainer;
+    private readonly ContainerRuntime _boxContainer;
     private readonly Retro95Bevel _bevel;
     private readonly TextRuntime _checkGlyph;
     private readonly ColoredRectangleRuntime _dashIndicator;
@@ -32,11 +32,21 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         CheckBoxBackground.Parent = null;
         FocusedIndicator.Parent = null;
 
+        // V3 default is Height=24 (sized for a 24×24 NineSlice box). Win95 boxes
+        // are 13×13 — we shrink to 16 so vertically-stacked checkboxes / radios
+        // sit at the tight cadence Win95 used, not the airy spacing of V3 default.
+        Height = 16;
+        HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
         TextInstance.X = BoxSize + BoxToLabelGap;
         TextInstance.Width = -(BoxSize + BoxToLabelGap);
 
         _boxContainer = new ContainerRuntime();
         _boxContainer.Name = "Retro95CheckBoxContainer";
+        // ContainerRuntime sets HasEvents = true in its constructor, which would
+        // swallow clicks on the 13×13 box area. Disable so clicks bubble up to
+        // the CheckBox root visual (which is the InteractiveGue that fires Click).
+        _boxContainer.HasEvents = false;
         _boxContainer.X = 0;
         _boxContainer.Y = 0;
         _boxContainer.XUnits = GeneralUnitType.PixelsFromSmall;

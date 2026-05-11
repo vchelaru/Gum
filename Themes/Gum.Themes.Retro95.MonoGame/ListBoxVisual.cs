@@ -29,7 +29,16 @@ public class ListBoxVisual : BaseListBoxVisual
 
         if (VerticalScrollBarInstance != null)
         {
+            // Inset 2 px from every side so the scroll bar sits inside the
+            // ListBox's 2 px beveled chrome instead of overlapping it. Right
+            // inset comes from X = -2; top/bottom come from Y = 2 + a -4 height
+            // adjustment (Win95 also stopped the bar short of the bevel).
             VerticalScrollBarInstance.X = -2f;
+            VerticalScrollBarInstance.Y = 2f;
+            VerticalScrollBarInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            VerticalScrollBarInstance.YOrigin = VerticalAlignment.Top;
+            VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            VerticalScrollBarInstance.Height = -4f;
         }
 
         WireStates();

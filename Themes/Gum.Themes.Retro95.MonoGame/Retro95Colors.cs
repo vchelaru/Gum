@@ -26,6 +26,16 @@ public static class Retro95Colors
     /// <summary>Text-on-selection color (<c>--stx</c>, <c>#FFFFFF</c>).</summary>
     public static readonly Color SelectionText = new Color(255, 255, 255);
 
+    /// <summary>Lighter selection band used inside <see cref="TextBoxVisual"/> /
+    /// <see cref="PasswordBoxVisual"/>. The real Win95 selection is solid navy (<see cref="Selection"/>)
+    /// and the OS inverted the text under it to white. Gum's V3 TextBox renders selection as a
+    /// background <c>NineSlice</c> behind a single <c>TextRuntime</c> (no per-range text color), so
+    /// painting it navy makes the black text underneath unreadable. We use a translucent navy here
+    /// (alpha ~80) so the band still reads as "selection" but the black glyphs remain legible.
+    /// ListBox / Menu / ComboBox-option selection use <see cref="Selection"/> directly because their
+    /// item visuals swap text color to <see cref="SelectionText"/> on the Selected state.</summary>
+    public static readonly Color TextBoxSelection = new Color(0, 0, 128, 80);
+
     /// <summary>Inner highlight, 1 px in from the outer white (<c>--hi2</c>, <c>#DFDFDF</c>).</summary>
     public static readonly Color HighlightInner = new Color(223, 223, 223);
 

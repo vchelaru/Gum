@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
@@ -10,22 +11,22 @@ namespace Gum.Themes.Retro95;
 
 /// <summary>
 /// Retro95-styled Button visual. Battleship-gray fill, 2 px raised bevel (white/light
-/// outer, dark gray inner — flips to sunken when pressed). Focus indicator is a 1 px
-/// dotted-feel inset (approximated with a solid 1 px dark rectangle, since no dotted
-/// stroke exists in the runtime). Matches <c>.rc-btn</c> from the CSS.
+/// outer, dark gray inner — flips to sunken when pressed). Focus indicator is the
+/// canonical Win95 1 px dotted black rectangle, inset 4 px from the body edge.
 /// </summary>
 public class ButtonVisual : BaseButtonVisual
 {
     /// <summary>Inset from the body edge to the dotted focus rectangle. Matches the CSS
     /// <c>outline-offset:-5px</c> (negative = inward).</summary>
     private const float FocusIndicatorInset = 4f;
-    private const float FocusIndicatorThickness = 1f;
+    private const float DotSize = 1f;
+    /// <summary>Pixels between dot centers. 2 = 1 px dot + 1 px gap, the literal Win95 pattern.</summary>
+    private const float DotPitch = 2f;
 
     private readonly Retro95Bevel _bevel;
-    private readonly ColoredRectangleRuntime _focusIndicatorTop;
-    private readonly ColoredRectangleRuntime _focusIndicatorBottom;
-    private readonly ColoredRectangleRuntime _focusIndicatorLeft;
-    private readonly ColoredRectangleRuntime _focusIndicatorRight;
+    private readonly ContainerRuntime _focusDotsContainer;
+    private readonly List<ColoredRectangleRuntime> _focusDots = new List<ColoredRectangleRuntime>();
+    private bool _focusVisible;
 
     public ButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -41,15 +42,22 @@ public class ButtonVisual : BaseButtonVisual
 
         _bevel = Retro95Bevel.AddTo(this, BevelMode.Raised);
 
-        _focusIndicatorTop = CreateFocusStrip(top: true, vertical: false);
-        _focusIndicatorBottom = CreateFocusStrip(top: false, vertical: false);
-        _focusIndicatorLeft = CreateFocusStrip(top: true, vertical: true);
-        _focusIndicatorRight = CreateFocusStrip(top: false, vertical: true);
-        AddChild(_focusIndicatorTop);
-        AddChild(_focusIndicatorBottom);
-        AddChild(_focusIndicatorLeft);
-        AddChild(_focusIndicatorRight);
-        SetFocusIndicatorVisible(false);
+        // Dedicated container for the dotted focus rectangle. ContainerRuntime
+        // defaults HasEvents=true and would swallow clicks — disable so the
+        // dotted overlay is purely visual.
+        _focusDotsContainer = new ContainerRuntime();
+        _focusDotsContainer.Name = "Retro95FocusDots";
+        _focusDotsContainer.HasEvents = false;
+        _focusDotsContainer.X = 0; _focusDotsContainer.Y = 0;
+        _focusDotsContainer.XUnits = GeneralUnitType.PixelsFromMiddle;
+        _focusDotsContainer.YUnits = GeneralUnitType.PixelsFromMiddle;
+        _focusDotsContainer.XOrigin = HorizontalAlignment.Center;
+        _focusDotsContainer.YOrigin = VerticalAlignment.Center;
+        _focusDotsContainer.Width = 0; _focusDotsContainer.Height = 0;
+        _focusDotsContainer.WidthUnits = DimensionUnitType.RelativeToParent;
+        _focusDotsContainer.HeightUnits = DimensionUnitType.RelativeToParent;
+        _focusDotsContainer.Visible = false;
+        AddChild(_focusDotsContainer);
 
         AddChild(TextInstance);
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
@@ -58,48 +66,87 @@ public class ButtonVisual : BaseButtonVisual
         WireStates();
     }
 
-    private ColoredRectangleRuntime CreateFocusStrip(bool top, bool vertical)
+    /// <summary>
+    /// Rebuild the dotted-focus rectangle for the current Width / Height. Called
+    /// from any state callback that turns the focus indicator on, so the dots
+    /// reflect the visual's current dimensions (which the consumer typically
+    /// sets after construction).
+    /// </summary>
+    private void RegenerateFocusDots()
     {
-        ColoredRectangleRuntime r = new ColoredRectangleRuntime();
-        r.Name = "Retro95FocusStrip";
-        r.Color = Retro95Colors.Text;
+        foreach (ColoredRectangleRuntime dot in _focusDots)
+        {
+            dot.Parent = null;
+        }
+        _focusDots.Clear();
+
+        float innerWidth = Width - (FocusIndicatorInset * 2f);
+        float innerHeight = Height - (FocusIndicatorInset * 2f);
+        if (innerWidth <= 0 || innerHeight <= 0) return;
+
+        // Horizontal edges (top + bottom).
+        int horizontalDotCount = (int)(innerWidth / DotPitch);
+        for (int i = 0; i < horizontalDotCount; i++)
+        {
+            float x = -innerWidth / 2f + i * DotPitch;
+            AddDot(x, 0, top: true, vertical: false);
+            AddDot(x, 0, top: false, vertical: false);
+        }
+
+        // Vertical edges (left + right). Start one DotPitch in to avoid stacking
+        // corner dots with the horizontal edges.
+        int verticalDotCount = (int)((innerHeight - DotPitch * 2f) / DotPitch);
+        for (int i = 0; i < verticalDotCount; i++)
+        {
+            float y = -innerHeight / 2f + DotPitch + i * DotPitch;
+            AddDot(0, y, top: true, vertical: true);
+            AddDot(0, y, top: false, vertical: true);
+        }
+    }
+
+    private void AddDot(float xOffset, float yOffset, bool top, bool vertical)
+    {
+        ColoredRectangleRuntime dot = new ColoredRectangleRuntime();
+        dot.Name = "Retro95FocusDot";
+        dot.Color = Retro95Colors.Text;
+        dot.Width = DotSize;
+        dot.Height = DotSize;
+        dot.WidthUnits = DimensionUnitType.Absolute;
+        dot.HeightUnits = DimensionUnitType.Absolute;
+
         if (!vertical)
         {
-            // top / bottom horizontal strip
-            r.X = 0;
-            r.Y = top ? FocusIndicatorInset : -FocusIndicatorInset;
-            r.XUnits = GeneralUnitType.PixelsFromMiddle;
-            r.YUnits = top ? GeneralUnitType.PixelsFromSmall : GeneralUnitType.PixelsFromLarge;
-            r.XOrigin = HorizontalAlignment.Center;
-            r.YOrigin = top ? VerticalAlignment.Top : VerticalAlignment.Bottom;
-            r.Width = -(FocusIndicatorInset * 2f);
-            r.Height = FocusIndicatorThickness;
-            r.WidthUnits = DimensionUnitType.RelativeToParent;
-            r.HeightUnits = DimensionUnitType.Absolute;
+            // top / bottom edge dot — fixed Y, varying X
+            dot.X = xOffset;
+            dot.XUnits = GeneralUnitType.PixelsFromMiddle;
+            dot.XOrigin = HorizontalAlignment.Left;
+            dot.Y = top ? FocusIndicatorInset : -FocusIndicatorInset;
+            dot.YUnits = top ? GeneralUnitType.PixelsFromSmall : GeneralUnitType.PixelsFromLarge;
+            dot.YOrigin = top ? VerticalAlignment.Top : VerticalAlignment.Bottom;
         }
         else
         {
-            // left / right vertical strip
-            r.X = top ? FocusIndicatorInset : -FocusIndicatorInset;
-            r.Y = 0;
-            r.XUnits = top ? GeneralUnitType.PixelsFromSmall : GeneralUnitType.PixelsFromLarge;
-            r.YUnits = GeneralUnitType.PixelsFromMiddle;
-            r.XOrigin = top ? HorizontalAlignment.Left : HorizontalAlignment.Right;
-            r.YOrigin = VerticalAlignment.Center;
-            r.Width = FocusIndicatorThickness;
-            r.Height = -(FocusIndicatorInset * 2f);
-            r.WidthUnits = DimensionUnitType.Absolute;
-            r.HeightUnits = DimensionUnitType.RelativeToParent;
+            // left / right edge dot — fixed X, varying Y
+            dot.X = top ? FocusIndicatorInset : -FocusIndicatorInset;
+            dot.XUnits = top ? GeneralUnitType.PixelsFromSmall : GeneralUnitType.PixelsFromLarge;
+            dot.XOrigin = top ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+            dot.Y = yOffset;
+            dot.YUnits = GeneralUnitType.PixelsFromMiddle;
+            dot.YOrigin = VerticalAlignment.Top;
         }
-        return r;
+
+        _focusDotsContainer.AddChild(dot);
+        _focusDots.Add(dot);
     }
 
     private void SetFocusIndicatorVisible(bool visible)
     {
-        _focusIndicatorTop.Visible = visible;
-        _focusIndicatorBottom.Visible = visible;
-        _focusIndicatorLeft.Visible = visible;
-        _focusIndicatorRight.Visible = visible;
+        if (visible && !_focusVisible)
+        {
+            RegenerateFocusDots();
+        }
+        _focusVisible = visible;
+        _focusDotsContainer.Visible = visible;
     }
 
     private void WireStates()
@@ -138,6 +185,9 @@ public class ButtonVisual : BaseButtonVisual
         _bevel.SetMode(bevelMode);
         _bevel.SetFill(fill);
         TextInstance.Color = text;
+        // Always regenerate when toggling focus on so dots reflect current
+        // Width / Height (consumer typically sets size after construction).
+        if (focus) RegenerateFocusDots();
         SetFocusIndicatorVisible(focus);
     }
 }

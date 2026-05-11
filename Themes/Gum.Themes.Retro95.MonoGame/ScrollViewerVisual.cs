@@ -1,6 +1,7 @@
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using BaseScrollViewerVisual = Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual;
 
@@ -27,7 +28,14 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
 
         AddChild(ScrollAndClipContainer);
 
+        // Inset on all four sides so the scroll bar fits inside the bevel chrome
+        // (see ListBoxVisual for the same pattern + rationale).
         VerticalScrollBarInstance.X = -2f;
+        VerticalScrollBarInstance.Y = 2f;
+        VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromSmall;
+        VerticalScrollBarInstance.YOrigin = VerticalAlignment.Top;
+        VerticalScrollBarInstance.HeightUnits = DimensionUnitType.RelativeToParent;
+        VerticalScrollBarInstance.Height = -4f;
 
         WireStates();
     }

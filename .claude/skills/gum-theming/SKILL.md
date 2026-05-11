@@ -42,6 +42,16 @@ Different controls have different state sets — Button has 7, TextBox has 4 (no
 
 `TextBoxBaseVisual` adds children in order `[Background, ClipContainer, FocusedIndicator]`. If you only detach Background and FocusedIndicator and then `AddChild` your replacements, they end up *in front of* ClipContainer — the text renders behind. Fix: also detach ClipContainer, add your replacements, reattach ClipContainer last.
 
+## ContainerRuntime sub-wrappers eat clicks
+
+`ContainerRuntime`'s constructor sets `HasEvents = true`. If you wrap a control's chrome in a sub-container to constrain a fill primitive to a sub-region of the parent (the 13×13 checkbox box inside a 200×16 CheckBox visual, a dropdown-button-sized area inside a ComboBox, the slider-track inside the SliderVisual root), that wrapper will capture clicks that should bubble up to the InteractiveGue root — the control will look right and refuse to register clicks on the wrapped area.
+
+**Why:** `Bubblegum` and `DarkPro` never hit this because their primitives are single Apos.Shapes rects positioned and sized directly on the visual root (no wrapper needed). A theme that builds its chrome from multiple ColoredRectangleRuntime strips (bevels, dotted focus rings, etc.) typically needs a sized wrapper, and that's where the gotcha bites.
+
+**How to apply:** Any time you write `new ContainerRuntime()` inside a visual subclass, immediately set `HasEvents = false` unless you specifically want that container to absorb clicks (rare — usually only the Forms-control root and explicit drag-handle InteractiveGues should). Same goes for any other `InteractiveGue`-derived wrapper you introduce.
+
+The thumb visuals (SliderThumbVisual, ScrollBarThumbVisual) are the explicit exception — they *do* want `HasEvents = true` so RangeBase's drag pickup works.
+
 ## Hover/press color consistency
 
 A control with a Pushed state (Button) shouldn't switch border color families between hover and press — gray→blue→gray flickers visibly through a hover-press-release motion. Use the accent for hover too. A control without Pushed (TextBox, ComboBox closed) is fine using a softer hover color and reserving the accent for sustained focus.

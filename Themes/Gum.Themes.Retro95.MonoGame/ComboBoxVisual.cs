@@ -18,9 +18,9 @@ public class ComboBoxVisual : BaseComboBoxVisual
     private const float DropdownButtonWidth = 18f;
     private const float TextLeftPadding = 6f;
 
-    private readonly GraphicalUiElement _fieldContainer;
+    private readonly ContainerRuntime _fieldContainer;
     private readonly Retro95Bevel _fieldBevel;
-    private readonly GraphicalUiElement _dropdownButtonContainer;
+    private readonly ContainerRuntime _dropdownButtonContainer;
     private readonly Retro95Bevel _dropdownBevel;
     private readonly TextRuntime _dropdownGlyph;
 
@@ -34,6 +34,9 @@ public class ComboBoxVisual : BaseComboBoxVisual
 
         _fieldContainer = new ContainerRuntime();
         _fieldContainer.Name = "Retro95ComboField";
+        // ContainerRuntime defaults HasEvents=true; disable so clicks reach the
+        // ComboBox root (which V3 wires up to open the dropdown).
+        _fieldContainer.HasEvents = false;
         _fieldContainer.X = 0;
         _fieldContainer.Y = 0;
         _fieldContainer.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -50,6 +53,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
 
         _dropdownButtonContainer = new ContainerRuntime();
         _dropdownButtonContainer.Name = "Retro95ComboDropdownButton";
+        _dropdownButtonContainer.HasEvents = false;
         _dropdownButtonContainer.X = 0;
         _dropdownButtonContainer.Y = 0;
         _dropdownButtonContainer.XUnits = GeneralUnitType.PixelsFromLarge;

@@ -1,6 +1,7 @@
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
+using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 using BaseWindowVisual = Gum.Forms.DefaultVisuals.V3.WindowVisual;
 
@@ -38,6 +39,11 @@ public class WindowVisual : BaseWindowVisual
 
         _bodyBevel = Retro95Bevel.AddTo(this, BevelMode.Raised);
 
+        // Win95 windows have a thin dark outline wrapping the raised bevel — it's
+        // what makes the corners "snap" instead of fading into the desktop
+        // background. Four 1 px strips of pure black on the outermost edge.
+        AddOuterOutline();
+
         // V3 child order from here on so InnerPanel doesn't end up in front of
         // TitleBar (its invisible InteractiveGue would swallow drag input).
         AddChild(InnerPanelInstance.Visual);
@@ -56,6 +62,52 @@ public class WindowVisual : BaseWindowVisual
 
         TitleBarInstance.Visual.Height = TitleBarHeight;
         TitleBarInstance.Visual.HeightUnits = DimensionUnitType.Absolute;
+    }
+
+    private void AddOuterOutline()
+    {
+        // 4 × 1 px black strips at inset 0, attached after the body bevel so
+        // they paint on top of the bevel's outermost white/dark ring. The
+        // visible result reads as: black 1 px edge → light/dark bevel inner →
+        // surface, which is the Win95 window-frame profile.
+        AddChild(NewOutlineEdge(top: true, vertical: false));
+        AddChild(NewOutlineEdge(top: false, vertical: false));
+        AddChild(NewOutlineEdge(top: true, vertical: true));
+        AddChild(NewOutlineEdge(top: false, vertical: true));
+    }
+
+    private static ColoredRectangleRuntime NewOutlineEdge(bool top, bool vertical)
+    {
+        ColoredRectangleRuntime r = new ColoredRectangleRuntime();
+        r.Name = "Retro95WindowOutline";
+        r.Color = Color.Black;
+        if (!vertical)
+        {
+            r.X = 0;
+            r.Y = 0;
+            r.XUnits = GeneralUnitType.PixelsFromMiddle;
+            r.YUnits = top ? GeneralUnitType.PixelsFromSmall : GeneralUnitType.PixelsFromLarge;
+            r.XOrigin = HorizontalAlignment.Center;
+            r.YOrigin = top ? VerticalAlignment.Top : VerticalAlignment.Bottom;
+            r.Width = 0;
+            r.Height = 1f;
+            r.WidthUnits = DimensionUnitType.RelativeToParent;
+            r.HeightUnits = DimensionUnitType.Absolute;
+        }
+        else
+        {
+            r.X = 0;
+            r.Y = 0;
+            r.XUnits = top ? GeneralUnitType.PixelsFromSmall : GeneralUnitType.PixelsFromLarge;
+            r.YUnits = GeneralUnitType.PixelsFromMiddle;
+            r.XOrigin = top ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+            r.YOrigin = VerticalAlignment.Center;
+            r.Width = 1f;
+            r.Height = 0;
+            r.WidthUnits = DimensionUnitType.Absolute;
+            r.HeightUnits = DimensionUnitType.RelativeToParent;
+        }
+        return r;
     }
 
     private static ColoredRectangleRuntime CreateTitleBarFill()

@@ -51,10 +51,13 @@ public class SliderThumbVisual : InteractiveGue
             () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface));
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
             () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover));
+        // Win95 disabled-thumb look uses a single-tone bevel (no inner highlight
+        // band) — StatusPanel mode collapses the inner ring to match the fill,
+        // producing the flat "drained" appearance the OS used.
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.DisabledThumb));
+            () => Apply(mode: BevelMode.StatusPanel, fill: Retro95Colors.DisabledThumb));
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.DisabledThumb));
+            () => Apply(mode: BevelMode.StatusPanel, fill: Retro95Colors.DisabledThumb));
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

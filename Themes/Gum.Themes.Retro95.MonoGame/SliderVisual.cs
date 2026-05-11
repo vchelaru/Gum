@@ -16,7 +16,7 @@ public class SliderVisual : BaseSliderVisual
     private const float ThumbWidth = 12f;
     private const float TrackHeight = 3f;
 
-    private readonly GraphicalUiElement _trackContainer;
+    private readonly ContainerRuntime _trackContainer;
     private readonly Retro95Bevel _trackBevel;
     private readonly SliderThumbVisual _thumb;
 
@@ -30,6 +30,8 @@ public class SliderVisual : BaseSliderVisual
 
         _trackContainer = new ContainerRuntime();
         _trackContainer.Name = "Retro95SliderTrackContainer";
+        // Don't intercept clicks — TrackInstance owns the drag interaction.
+        _trackContainer.HasEvents = false;
         _trackContainer.X = 0;
         _trackContainer.Y = 0;
         _trackContainer.XUnits = GeneralUnitType.PixelsFromMiddle;

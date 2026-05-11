@@ -34,22 +34,22 @@ internal sealed class Retro95TextInputDecoration
         _host.States.Enabled.Apply = () => Apply(
             fill: Retro95Colors.WhiteFill, text: Retro95Colors.Text,
             placeholder: Retro95Colors.DisabledText,
-            caret: Retro95Colors.Text, selection: Retro95Colors.Selection);
+            caret: Retro95Colors.Text, selection: Retro95Colors.TextBoxSelection);
 
         _host.States.Highlighted.Apply = () => Apply(
             fill: Retro95Colors.WhiteHover, text: Retro95Colors.Text,
             placeholder: Retro95Colors.DisabledText,
-            caret: Retro95Colors.Text, selection: Retro95Colors.Selection);
+            caret: Retro95Colors.Text, selection: Retro95Colors.TextBoxSelection);
 
         _host.States.Focused.Apply = () => Apply(
             fill: Retro95Colors.WhiteFill, text: Retro95Colors.Text,
             placeholder: Retro95Colors.DisabledText,
-            caret: Retro95Colors.Text, selection: Retro95Colors.Selection);
+            caret: Retro95Colors.Text, selection: Retro95Colors.TextBoxSelection);
 
         _host.States.Disabled.Apply = () => Apply(
             fill: Retro95Colors.Surface, text: Retro95Colors.DisabledText,
             placeholder: Retro95Colors.DisabledText,
-            caret: Retro95Colors.DisabledText, selection: Retro95Colors.Selection);
+            caret: Retro95Colors.DisabledText, selection: Retro95Colors.TextBoxSelection);
     }
 
     private void Apply(Color fill, Color text, Color placeholder, Color caret, Color selection)
