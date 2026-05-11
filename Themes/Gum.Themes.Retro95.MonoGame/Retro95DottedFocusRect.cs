@@ -22,9 +22,14 @@ namespace Gum.Themes.Retro95;
 /// </summary>
 public sealed class Retro95DottedFocusRect
 {
+    // Apos.Shapes rasterizes dashed strokes with anti-aliasing, so a literal
+    // 1 px dash / 1 px gap reads as ~2 px dashes touching each other once AA
+    // blooms each end. Bumping the gap to 3 px (and keeping a thin 0.5 px
+    // stroke + 1 px dash) gives the airy "true 1 px dotted" appearance the
+    // Win95 focus rect is supposed to have.
     private const float DashLength = 1f;
-    private const float GapLength = 1f;
-    private const float StrokeWidth = 1f;
+    private const float GapLength = 3f;
+    private const float StrokeWidth = 0.5f;
 
     private readonly ContainerRuntime _container;
     private readonly RoundedRectangleRuntime _rect;
