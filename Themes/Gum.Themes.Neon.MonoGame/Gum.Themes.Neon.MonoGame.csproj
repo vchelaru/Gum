@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+
+    <PackageId>Gum.Themes.Neon.MonoGame</PackageId>
+    <Version>2026.5.11.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>A neon / cyberpunk theme for Gum UI. Provides styled visuals for Gum Forms controls with saturated cyan glow, near-square corners, and the Share Tech Mono / Orbitron typefaces, for MonoGame and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\ShareTechMono-LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\Orbitron-LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Share Tech Mono (SIL OFL) is the body typeface from the Neon CSS spec. -->
+    <EmbeddedResource Include="Content\Fonts\ShareTechMono-Regular.ttf" />
+    <!-- Orbitron (SIL OFL) is used for title-bar headings (CSS uses it on
+         .nc-hdr-title and .nc-win-title). Regular / Bold / Black coverage so a
+         consumer can pick the weight; Gum maps IsBold → Bold. -->
+    <EmbeddedResource Include="Content\Fonts\Orbitron-Regular.ttf" />
+    <EmbeddedResource Include="Content\Fonts\Orbitron-Bold.ttf" />
+    <EmbeddedResource Include="Content\Fonts\Orbitron-Black.ttf" />
+    <!-- DejaVu Sans Mono — bundled icon font for glyphs the body typeface
+         doesn't cover (Geometric Shapes ▲ ▼ ◀ ▶, Dingbats ✓ ✕). Registered
+         under the family name "Neon Icons" so visual code addresses it via
+         NeonTheme.IconFontFamily. -->
+    <EmbeddedResource Include="Content\Fonts\DejaVuSansMono.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- KernSmith is a runtime dependency (NeonTheme.Apply constructs
+         KernSmithFontCreator and calls RegisterFont). Flows transitively. -->
+    <PackageReference Include="KernSmith.MonoGameGum" Version="*" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+  </ItemGroup>
+</Project>
