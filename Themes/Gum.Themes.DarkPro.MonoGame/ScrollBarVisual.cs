@@ -25,20 +25,13 @@ namespace Gum.Themes.DarkPro;
 public class ScrollBarVisual : BaseScrollBarVisual
 {
     /// <summary>
-    /// Gap (in pixels, per side) between the thumb's short-axis edge and the bar's
-    /// short-axis edge. Vertical bar: lateral gap; horizontal bar: top/bottom gap.
-    /// Lives on the thumb because RangeBase manages thumb size/position on the long
-    /// axis.
+    /// Gap (in pixels, per side) between the thumb and the bar's edge. The same
+    /// value is used on both axes so the thumb reads as visually symmetric at
+    /// scroll extremes. Short-axis lives on the thumb itself; long-axis lives on
+    /// the ThumbContainer so RangeBase still sizes and positions the thumb freely
+    /// within the shrunken container.
     /// </summary>
-    private const float ThumbShortAxisInset = 2f;
-
-    /// <summary>
-    /// Gap (in pixels, per side) between the thumb's long-axis travel limit and the
-    /// bar's long-axis edge. Vertical bar: top/bottom; horizontal bar: left/right.
-    /// Lives on the ThumbContainer (not the thumb) so RangeBase still gets to size
-    /// and position the thumb freely within the shrunken container.
-    /// </summary>
-    private const float ThumbContainerLongAxisInset = 3f;
+    private const float ThumbInset = 2f;
 
     /// <summary>Corner radius and stroke for the optional surrounding frame (see <see cref="ShowFrame"/>).</summary>
     private const float FrameCornerRadius = 2f;
@@ -182,18 +175,17 @@ public class ScrollBarVisual : BaseScrollBarVisual
 
     private void ApplyInsets()
     {
-        float longInset = ThumbContainerLongAxisInset + (_frameFill.Visible ? FrameBorderThickness : 0f);
-        float shortInset = ThumbShortAxisInset + (_frameFill.Visible ? FrameBorderThickness : 0f);
+        float inset = ThumbInset + (_frameFill.Visible ? FrameBorderThickness : 0f);
 
         if (_isHorizontal)
         {
-            ThumbContainer.Width = -longInset * 2f;
-            _thumb.Height = -shortInset * 2f;
+            ThumbContainer.Width = -inset * 2f;
+            _thumb.Height = -inset * 2f;
         }
         else
         {
-            ThumbContainer.Height = -longInset * 2f;
-            _thumb.Width = -shortInset * 2f;
+            ThumbContainer.Height = -inset * 2f;
+            _thumb.Width = -inset * 2f;
         }
     }
 
