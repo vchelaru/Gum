@@ -24,6 +24,16 @@ public abstract class RenderableShapeBase : RenderableBase
 
     // this is the default in Skia renderables so use that here:
     public Color Color { get; set; } = Color.Red;
+
+    /// <summary>
+    /// When <c>true</c> (the default) the shape's edge is rendered with 1 px of anti-aliasing.
+    /// When <c>false</c> the AA radius is dropped to 0 and the edge rasterizes crisply — useful
+    /// for retro / pixel-art themes (Win95 dotted focus rect, hairlines, marching ants) where
+    /// AA bloom widens a nominal 1 px stroke and erodes 1 px dash/gap patterns. Mirrored on the
+    /// runtime as <c>AposShapeRuntime.IsAntialiased</c>; the runtime pushes its value here in
+    /// PreRender each frame.
+    /// </summary>
+    public bool IsAntialiased { get; set; } = true;
     public int Alpha
     {
         get => Color.A;

@@ -40,7 +40,7 @@ public class Circle : RenderableShapeBase
                 DropshadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, 1, StrokeWidth);
+        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth);
     }
 
     private void RenderInternal(ShapeBatch sb,

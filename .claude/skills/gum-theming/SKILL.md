@@ -42,6 +42,22 @@ Different controls have different state sets — Button has 7, TextBox has 4 (no
 
 `TextBoxBaseVisual` adds children in order `[Background, ClipContainer, FocusedIndicator]`. If you only detach Background and FocusedIndicator and then `AddChild` your replacements, they end up *in front of* ClipContainer — the text renders behind. Fix: also detach ClipContainer, add your replacements, reattach ClipContainer last.
 
+## Dashed strokes are built into Apos.Shapes
+
+Need a dotted / dashed outline (Win95 focus rectangle, marching-ants selection, etc.)? Don't spawn many small `ColoredRectangleRuntime` "dot" instances along the edges. `RoundedRectangleRuntime` (and the other Apos shape runtimes) expose `StrokeDashLength` and `StrokeGapLength`. Set `IsFilled = false`, `StrokeWidth = 1`, both dash properties to your desired pattern, and the shape renders as a properly-rasterized dashed stroke — one node in the render tree, sized via the usual `RelativeToParent` units, with no per-frame dot bookkeeping and no sensitivity to layout timing.
+
+The dotted-rectangle materialization approach (place N tiny rectangles at fixed offsets) looks superficially simpler, but ends up needing `GetAbsoluteWidth()` to compute N — and that returns stale values when the consumer sets `control.Width = X; control.IsFocused = true;` back-to-back: the state callback fires before the next layout pass, so the dot count is computed off the construction-time size. The visible artifact is a half-drawn focus rect that "self-heals" once a hover fires another state change after layout has run.
+
+## ContainerRuntime sub-wrappers eat clicks
+
+`ContainerRuntime`'s constructor sets `HasEvents = true`. If you wrap a control's chrome in a sub-container to constrain a fill primitive to a sub-region of the parent (the 13×13 checkbox box inside a 200×16 CheckBox visual, a dropdown-button-sized area inside a ComboBox, the slider-track inside the SliderVisual root), that wrapper will capture clicks that should bubble up to the InteractiveGue root — the control will look right and refuse to register clicks on the wrapped area.
+
+**Why:** `Bubblegum` and `DarkPro` never hit this because their primitives are single Apos.Shapes rects positioned and sized directly on the visual root (no wrapper needed). A theme that builds its chrome from multiple ColoredRectangleRuntime strips (bevels, dotted focus rings, etc.) typically needs a sized wrapper, and that's where the gotcha bites.
+
+**How to apply:** Any time you write `new ContainerRuntime()` inside a visual subclass, immediately set `HasEvents = false` unless you specifically want that container to absorb clicks (rare — usually only the Forms-control root and explicit drag-handle InteractiveGues should). Same goes for any other `InteractiveGue`-derived wrapper you introduce.
+
+The thumb visuals (SliderThumbVisual, ScrollBarThumbVisual) are the explicit exception — they *do* want `HasEvents = true` so RangeBase's drag pickup works.
+
 ## Hover/press color consistency
 
 A control with a Pushed state (Button) shouldn't switch border color families between hover and press — gray→blue→gray flickers visibly through a hover-press-release motion. Use the accent for hover too. A control without Pushed (TextBox, ComboBox closed) is fine using a softer hover color and reserving the accent for sustained focus.
@@ -126,6 +142,49 @@ Order for any TextBox-/ListBox-/ScrollViewer-shaped visual:
 Caveat: any sub-control that lives inside the clip container and needs to be visually unobscured by the border — most commonly a vertical scroll bar — must be inset from the parent's right edge by at least the border's stroke width. The Bubblegum and Dark Pro ListBox/ScrollViewer subclasses set `VerticalScrollBarInstance.X = -2f` for exactly this reason.
 
 When per-corner radii arrive in Apos.Shapes ([apos-shapes#32](https://github.com/Apostolique/Apos.Shapes/pull/32)), this trick becomes redundant for the title-bar-style "round top corners only" case — but the border-on-top approach remains the right pattern any time rectangular clipping meets a rounded outline.
+
+## Items inside rounded containers should be square-cornered
+
+`ListBoxItem`, `MenuItem`, `ComboBox` dropdown rows, etc. tile flush inside a rounded container. Give them `CornerRadius = 0f` — not the container's radius. Rounded items inside a rounded container produce visible donut gaps at the corners where item edges don't reach the shell's rounded perimeter. The container's border (painted last per the section above) handles the visible rounded outline; the items themselves are just rectangular bands of color.
+
+The corollary: when a row hover/selection fill should extend to the visible edge, let it paint to its rectangular bounds and trust the container's border-on-top to mask the corner overhang.
+
+## Sharing shape stacks via a helper class
+
+When two visuals need identical decoration but inherit from different V3 bases — most commonly `TextBoxVisual` and `PasswordBoxVisual`, both inheriting from `TextBoxBaseVisual` — extract the shape stack into a helper class instead of duplicating it in both subclasses.
+
+Pattern (see Bubblegum's `BubblegumTextInputDecoration` for the worked example):
+
+```csharp
+internal sealed class MyTextInputDecoration
+{
+    private readonly RoundedRectangleRuntime _focusRing;
+    private readonly RoundedRectangleRuntime _fill;
+    private readonly RoundedRectangleRuntime _border;
+
+    public MyTextInputDecoration(TextBoxBaseVisual host)
+    {
+        host.Background.Parent = null;
+        host.ClipContainer.Parent = null;
+        // ... add focus ring, fill, clip container, border ...
+        WireStates(host);
+    }
+    private void WireStates(TextBoxBaseVisual host) { /* host.States.Enabled.Apply = ... */ }
+}
+
+public class TextBoxVisual : V3.TextBoxVisual
+{
+    private readonly MyTextInputDecoration _decoration;
+    public TextBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        : base(fullInstantiation, tryCreateFormsObject)
+    {
+        _decoration = new MyTextInputDecoration(this);
+    }
+}
+// PasswordBoxVisual is identical, swap the base class.
+```
+
+Holding the helper reference in a `private readonly` field (rather than constructing-and-discarding) keeps the shape rects alive for state callbacks — they're owned by the host visual via `AddChild`, but the helper still holds the references it needs to mutate from `WireStates` lambdas.
 
 ## csproj gotcha: PrivateAssets on KernSmith
 

@@ -41,7 +41,7 @@ public class RoundedRectangle : RenderableShapeBase
                 forcedColor: DropshadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, size, 1, StrokeWidth, rotationRadians);
+        RenderInternal(sb, absoluteLeft, absoluteTop, size, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians);
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb,
