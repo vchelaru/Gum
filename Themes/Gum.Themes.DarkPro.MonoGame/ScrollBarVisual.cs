@@ -107,12 +107,10 @@ public class ScrollBarVisual : BaseScrollBarVisual
             Width = 14f;
             WidthUnits = DimensionUnitType.Absolute;
 
-            ThumbContainer.Height = -LongAxisInset * 2f;
             ThumbContainer.HeightUnits = DimensionUnitType.RelativeToParent;
             ThumbContainer.Width = 0f;
             ThumbContainer.WidthUnits = DimensionUnitType.RelativeToParent;
 
-            _thumb.Width = -ShortAxisInset * 2f;
             _thumb.WidthUnits = DimensionUnitType.RelativeToParent;
             _thumb.Height = 0f;
             _thumb.HeightUnits = DimensionUnitType.RelativeToParent;
@@ -122,6 +120,8 @@ public class ScrollBarVisual : BaseScrollBarVisual
             _thumb.Y = 0f;
             _thumb.YUnits = GeneralUnitType.PixelsFromMiddle;
             _thumb.YOrigin = VerticalAlignment.Center;
+
+            ApplyInsets();
         };
 
         States.OrientationStates.Horizontal.Apply = () =>
@@ -132,12 +132,10 @@ public class ScrollBarVisual : BaseScrollBarVisual
             Width = 128f;
             WidthUnits = DimensionUnitType.Absolute;
 
-            ThumbContainer.Width = -LongAxisInset * 2f;
             ThumbContainer.WidthUnits = DimensionUnitType.RelativeToParent;
             ThumbContainer.Height = 0f;
             ThumbContainer.HeightUnits = DimensionUnitType.RelativeToParent;
 
-            _thumb.Height = -ShortAxisInset * 2f;
             _thumb.HeightUnits = DimensionUnitType.RelativeToParent;
             _thumb.Width = 0f;
             _thumb.WidthUnits = DimensionUnitType.RelativeToParent;
@@ -147,6 +145,8 @@ public class ScrollBarVisual : BaseScrollBarVisual
             _thumb.Y = 0f;
             _thumb.YUnits = GeneralUnitType.PixelsFromMiddle;
             _thumb.YOrigin = VerticalAlignment.Center;
+
+            ApplyInsets();
         };
 
         if (tryCreateFormsObject)
@@ -172,24 +172,30 @@ public class ScrollBarVisual : BaseScrollBarVisual
             _frameFill.Visible = value;
             _frameBorder.Visible = value;
 
-            // Re-apply the current orientation so LongAxisInset/ShortAxisInset
-            // pick up the new frame state (frame border eats 1 px per side).
-            if (_isHorizontal)
-            {
-                States.OrientationStates.Horizontal.Apply?.Invoke();
-            }
-            else
-            {
-                States.OrientationStates.Vertical.Apply?.Invoke();
-            }
+            // Frame border eats 1 px per side, so the inset needs to grow.
+            // Touch only the inset-dependent dimensions — do NOT re-run the
+            // full orientation callback, which would clobber consumer-set
+            // Width/Height (e.g. ScrollBar.Width = 16 from the showcase).
+            ApplyInsets();
         }
     }
 
-    private float LongAxisInset =>
-        ThumbContainerLongAxisInset + (_frameFill.Visible ? FrameBorderThickness : 0f);
+    private void ApplyInsets()
+    {
+        float longInset = ThumbContainerLongAxisInset + (_frameFill.Visible ? FrameBorderThickness : 0f);
+        float shortInset = ThumbShortAxisInset + (_frameFill.Visible ? FrameBorderThickness : 0f);
 
-    private float ShortAxisInset =>
-        ThumbShortAxisInset + (_frameFill.Visible ? FrameBorderThickness : 0f);
+        if (_isHorizontal)
+        {
+            ThumbContainer.Width = -longInset * 2f;
+            _thumb.Height = -shortInset * 2f;
+        }
+        else
+        {
+            ThumbContainer.Height = -longInset * 2f;
+            _thumb.Width = -shortInset * 2f;
+        }
+    }
 
     private static RoundedRectangleRuntime CreateFrameFill()
     {
