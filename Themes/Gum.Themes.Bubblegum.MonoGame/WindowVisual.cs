@@ -27,14 +27,15 @@ public class WindowVisual : BaseWindowVisual
     private const float TitleBarSeparatorHeight = 2f;
 
     /// <summary>
-    /// Drop shadow rendered natively by Apos.Shapes — matches the CSS
-    /// <c>box-shadow: 0 8px 28px rgba(180,80,120,.2)</c>. OffsetY=8 pushes the
-    /// shadow well below the window body, BlurX/Y=28 produces a soft, wide
-    /// halo, alpha 51 ≈ 20% (matches CSS .2).
+    /// Native Gaussian drop shadow. CSS spec is
+    /// <c>box-shadow: 0 8px 28px rgba(180,80,120,.2)</c>; per the gum-theming
+    /// skill, sRGB-space compositing + Apos's blur-kernel semantics mean the
+    /// CSS-literal alpha (51) reads too faint. Bumped ~1.6× to alpha 80 to
+    /// give the window a clear "floating" affordance against the page.
     /// </summary>
     private const float ShadowOffsetY = 8f;
     private const float ShadowBlur = 28f;
-    private static readonly Color ShadowColor = new Color(180, 80, 120, 51);
+    private static readonly Color ShadowColor = new Color(180, 80, 120, 80);
 
     private readonly RoundedRectangleRuntime _fill;
     private readonly RoundedRectangleRuntime _border;

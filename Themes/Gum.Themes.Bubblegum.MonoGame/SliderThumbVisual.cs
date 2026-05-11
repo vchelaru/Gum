@@ -23,13 +23,15 @@ public class SliderThumbVisual : InteractiveGue
     private const float FocusRingThickness = 4f;
 
     /// <summary>
-    /// Native Apos.Shapes Gaussian drop shadow — matches the CSS
-    /// <c>box-shadow:0 2px 8px rgba(255,107,157,.4)</c>. Toggled per state via
-    /// <c>_body.HasDropshadow</c>.
+    /// Native Gaussian drop shadow. CSS spec is
+    /// <c>box-shadow:0 2px 8px rgba(255,107,157,.4)</c>; per the gum-theming
+    /// skill, the CSS-literal alpha (102) reads too faint in-engine. Bumped
+    /// ~1.55× to alpha 160 — matches the Button shadow weight so the slider
+    /// thumb reads as part of the same "lifted control" family.
     /// </summary>
     private const float ShadowOffsetY = 2f;
-    private const float ShadowBlur = 8f;
-    private static readonly Color ShadowColor = new Color(255, 107, 157, 102);
+    private const float ShadowBlur = 10f;
+    private static readonly Color ShadowColor = new Color(255, 107, 157, 160);
 
     private readonly ColoredCircleRuntime _focusRing;
     private readonly ColoredCircleRuntime _body;
