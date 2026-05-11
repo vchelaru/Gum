@@ -3,6 +3,7 @@ using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -609,8 +610,24 @@ public abstract class RenderableShapeBase : RenderableBase
         // camera zoom and any matrix passed to GumBatch.Begin. Without this, ShapeBatch
         // always renders in raw screen pixels while sprites/text track the canvas.
         var managers = systemManagers as SystemManagers;
-        var view = managers?.Renderer?.SpriteRenderer?.CurrentTransformMatrix;
-        sb.Begin(view: view);
+        var spriteRenderer = managers?.Renderer?.SpriteRenderer;
+        var view = spriteRenderer?.CurrentTransformMatrix;
+
+        // Match the SpriteBatch's scissor state so shapes honor the same ClipsChildren
+        // region as their sprite/text siblings. Without this, shape bodies of controls
+        // placed inside a clipped container (ScrollViewer's ClipContainer, ListBox, etc.)
+        // bleed past the clip region. Apos.Shapes' ShapeBatch.Begin only honors the
+        // GraphicsDevice's scissor rect when its rasterizerState parameter also has
+        // ScissorTestEnable=true - passing the rect alone is ignored.
+        var scissor = spriteRenderer?.CurrentScissorRectangle;
+        RasterizerState? rasterizerState = null;
+        if (scissor.HasValue && spriteRenderer != null)
+        {
+            sb.GraphicsDevice.ScissorRectangle = scissor.Value.ToXNA();
+            rasterizerState = spriteRenderer.ScissorTestRasterizerState;
+        }
+
+        sb.Begin(view: view, rasterizerState: rasterizerState);
     }
 
     public override void EndBatch(ISystemManagers systemManagers)

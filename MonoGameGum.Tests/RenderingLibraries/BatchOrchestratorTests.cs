@@ -178,6 +178,38 @@ public class BatchOrchestratorTests : BaseTestClass
     }
 
     [Fact]
+    public void ShapeAfterFlush_FiresFreshStartBatch_EvenWhenKeyMatchesPreFlushKey()
+    {
+        // The contract Renderer.AdjustRenderStates relies on when a mid-walk scissor change
+        // happens while an Apos.Shapes batch is open: FlushAndReset ends the open batch and
+        // clears _currentBatchKey, so the next renderable — even one with the same key as
+        // before the flush — fires a fresh StartBatch and picks up the new scissor state.
+        //
+        // Without this contract, a shape sibling of a clip container (e.g. a scrollbar
+        // thumb rendered before the clip) leaves the orchestrator in state
+        // currentBatchKey="Apos.Shapes" + ShapeBatch begun. When AdjustRenderStates changes
+        // the SpriteBatch scissor, the first shape descendant inside the clip has key
+        // "Apos.Shapes" == current → OnRenderable is a no-op → its draw queues into the
+        // stale-scissor ShapeBatch and bleeds past the clip region.
+        var (o, events) = Setup();
+        var outside = new RecordingRenderable("Outside", "Apos.Shapes", events);
+        var inside = new RecordingRenderable("Inside", "Apos.Shapes", events);
+
+        o.OnRenderable(outside, null!);
+        o.FlushAndReset(null!);
+        o.OnRenderable(inside, null!);
+
+        events.ShouldBe(new[]
+        {
+            "Start:Outside(Apos.Shapes)",
+            "End:Outside(Apos.Shapes)",
+            "Start:Inside(Apos.Shapes)",
+        });
+        o.LastBatchOwner.ShouldBe(inside);
+        o.CurrentBatchKey.ShouldBe("Apos.Shapes");
+    }
+
+    [Fact]
     public void SpriteAfterShape_EndsShapeBeforeStartingSprite()
     {
         var (o, events) = Setup();

@@ -775,7 +775,7 @@ public class Renderer : IRenderer
         if (renderable.Visible || ( renderable.IsRenderTarget && isPreRender))
         {
             var oldClip = mRenderStateVariables.ClipRectangle;
-            AdjustRenderStates(mRenderStateVariables, layer, renderable);
+            AdjustRenderStates(mRenderStateVariables, layer, renderable, managers);
             bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
 
             if (renderable.IsRenderTarget && !forceRenderHierarchy)
@@ -830,11 +830,12 @@ public class Renderer : IRenderer
     // backends can share the world->screen scissor math.
 
 
-    private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable)
+    private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
         BlendState renderBlendState = renderable.BlendState;
         bool wrap = renderable.Wrap;
         bool shouldResetStates = false;
+        bool didClipChange = false;
 
         if (renderBlendState == null)
         {
@@ -874,6 +875,7 @@ public class Renderer : IRenderer
 
                 renderState.ClipRectangle = adjustedRectangle;
                 shouldResetStates = true;
+                didClipChange = true;
             }
 
         }
@@ -881,6 +883,22 @@ public class Renderer : IRenderer
 
         if (shouldResetStates)
         {
+            // Mirror the clip-exit flush in Draw: end any in-flight custom batch before
+            // restarting SpriteBatch with the new scissor. Without this, an Apos.Shapes
+            // batch opened earlier in the walk (e.g. a sibling scrollbar thumb) stays
+            // open; the first shape descendant inside the clip has a matching BatchKey
+            // so OnRenderable is a no-op and its draw queues into the stale-scissor
+            // ShapeBatch, bleeding past the clip. Clip-only: blend / color / wrap don't
+            // propagate to ShapeBatch state (each sb.Begin captures its own).
+            //
+            // Contract: BatchOrchestratorTests.ShapeAfterFlush_FiresFreshStartBatch_
+            // EvenWhenKeyMatchesPreFlushKey. Architectural rationale + pitfall checklist:
+            // .claude/skills/gum-monogame-rendering/SKILL.md "Mid-Walk Scissor Change
+            // Must Flush the Open Custom Batch".
+            if (didClipChange)
+            {
+                _batchOrchestrator.FlushAndReset(managers);
+            }
             spriteRenderer.BeginSpriteBatch(renderState, layer, BeginType.Begin, mCamera, renderable);
         }
     }

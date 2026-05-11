@@ -17,10 +17,6 @@ public class RadioButton : ToggleButton
 {
     #region Fields/Properties
 
-    private GraphicalUiElement textComponent;
-
-    private global::RenderingLibrary.Graphics.IText coreTextObject;
-
     //<radio button parent, <group name, radio button list>>
     public static Dictionary<object, Dictionary<string, List<RadioButton>>> RadioButtonDictionary = new Dictionary<object, Dictionary<string, List<RadioButton>>>();
 
@@ -107,46 +103,6 @@ public class RadioButton : ToggleButton
 
 
 
-    /// <summary>
-    /// Gets or sets the radio button label text. Setting this property applies localization
-    /// if a <see cref="Gum.Localization.LocalizationService"/> is registered.
-    /// To bypass localization, use <see cref="SetTextNoTranslate"/>.
-    /// </summary>
-    public string? Text
-    {
-        get
-        {
-#if FULL_DIAGNOSTICS
-            ReportMissingTextInstance();
-#endif
-
-            return coreTextObject.RawText;
-
-        }
-        set
-        {
-#if FULL_DIAGNOSTICS
-            ReportMissingTextInstance();
-#endif
-            // go through the component instead of the core text object to force a layout refresh if necessary
-            textComponent.SetProperty("Text", value);
-        }
-    }
-
-    /// <summary>
-    /// Sets the radio button text without applying localization/translation.
-    /// </summary>
-    /// <remarks>
-    /// This is a method rather than a property because the "no translate" state is not preserved on
-    /// the underlying text renderable — only the final string is stored.
-    /// Use this for text that should not be localized.
-    /// </remarks>
-    public void SetTextNoTranslate(string? value)
-    {
-        textComponent?.SetProperty("TextNoTranslate", value);
-    }
-
-
     #endregion
 
     #region Initialize Methods
@@ -170,8 +126,6 @@ public class RadioButton : ToggleButton
      */
     protected override void ReactToVisualChanged()
     {
-        RefreshInternalVisualReferences();
-
         base.ReactToVisualChanged();
 
         Visual.ParentChanged += HandleParentChanged;
@@ -181,11 +135,7 @@ public class RadioButton : ToggleButton
 
     protected override void RefreshInternalVisualReferences()
     {
-        // text component is optional:
-        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
-
-        if (textComponent != null)
-            coreTextObject = (global::RenderingLibrary.Graphics.IText)textComponent.RenderableComponent;
+        base.RefreshInternalVisualReferences();
 
         if (GroupName == null)
         {
@@ -245,21 +195,6 @@ public class RadioButton : ToggleButton
     {
         SetThisAsOnlyCheckedInGroup();
     }
-
-    #endregion
-
-    #region Utilities
-
-#if FULL_DIAGNOSTICS
-    private void ReportMissingTextInstance()
-    {
-        if (textComponent == null)
-        {
-            throw new Exception(
-                "This button was created with a Gum component that does not have an instance called 'TextInstance'. A 'TextInstance' instance must be added to modify the radio button's Text property.");
-        }
-    }
-#endif
 
     #endregion
 

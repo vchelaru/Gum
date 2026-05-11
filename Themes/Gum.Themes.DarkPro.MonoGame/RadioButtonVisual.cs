@@ -1,0 +1,235 @@
+using Gum.Converters;
+using Gum.DataTypes;
+using Gum.GueDeriving;
+using Gum.Wireframe;
+using Microsoft.Xna.Framework;
+using RenderingLibrary.Graphics;
+using BaseRadioButtonVisual = Gum.Forms.DefaultVisuals.V3.RadioButtonVisual;
+
+namespace Gum.Themes.DarkPro;
+
+/// <summary>
+/// Dark Pro styled RadioButton visual. Replaces the V3 RadioButtonVisual's
+/// NineSlice circular background, sprite-based inner dot, and underline focus
+/// indicator with an Apos.Shapes ColoredCircleRuntime stack: filled outer
+/// circle, 1px stroked outer ring, filled inner dot (visible when selected),
+/// and a 1px focus ring sized one pixel outside the outer ring.
+/// </summary>
+public class RadioButtonVisual : BaseRadioButtonVisual
+{
+    private const float OuterSize = 16f;
+    private const float InnerSize = 8f;
+    private const float BorderThickness = 1f;
+    private const float FocusRingInset = 1f;
+    private const float BoxToLabelGap = 8f;
+
+    private readonly ColoredCircleRuntime _focusRing;
+    private readonly ColoredCircleRuntime _outerFill;
+    private readonly ColoredCircleRuntime _outerBorder;
+    private readonly ColoredCircleRuntime _innerDot;
+
+    public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        : base(fullInstantiation, tryCreateFormsObject)
+    {
+        // Drop the base NineSlice ring (its inner sprite dot is parented to it
+        // and goes with it) and the underline focus indicator.
+        RadioBackground.Parent = null;
+        FocusedIndicator.Parent = null;
+
+        // Spec is 16-px circle + 8-px gap before the label; base assumed 24+4.
+        TextInstance.X = OuterSize + BoxToLabelGap;
+        TextInstance.Width = -(OuterSize + BoxToLabelGap);
+
+        _focusRing = CreateFocusRing();
+        AddChild(_focusRing);
+
+        _outerFill = CreateOuterFill();
+        AddChild(_outerFill);
+
+        _outerBorder = CreateOuterBorder();
+        AddChild(_outerBorder);
+
+        _innerDot = CreateInnerDot();
+        AddChild(_innerDot);
+
+        WireStates();
+    }
+
+    private static ColoredCircleRuntime CreateOuterFill()
+    {
+        ColoredCircleRuntime circle = new ColoredCircleRuntime();
+        circle.Name = "DarkProRadioOuterFill";
+        circle.X = 0;
+        circle.Y = 0;
+        circle.XUnits = GeneralUnitType.PixelsFromSmall;
+        circle.YUnits = GeneralUnitType.PixelsFromMiddle;
+        circle.XOrigin = HorizontalAlignment.Left;
+        circle.YOrigin = VerticalAlignment.Center;
+        circle.Width = OuterSize;
+        circle.Height = OuterSize;
+        circle.WidthUnits = DimensionUnitType.Absolute;
+        circle.HeightUnits = DimensionUnitType.Absolute;
+        circle.IsFilled = true;
+        circle.Color = DarkProColors.Surface1;
+        return circle;
+    }
+
+    private static ColoredCircleRuntime CreateOuterBorder()
+    {
+        ColoredCircleRuntime circle = new ColoredCircleRuntime();
+        circle.Name = "DarkProRadioOuterBorder";
+        circle.X = 0;
+        circle.Y = 0;
+        circle.XUnits = GeneralUnitType.PixelsFromSmall;
+        circle.YUnits = GeneralUnitType.PixelsFromMiddle;
+        circle.XOrigin = HorizontalAlignment.Left;
+        circle.YOrigin = VerticalAlignment.Center;
+        circle.Width = OuterSize;
+        circle.Height = OuterSize;
+        circle.WidthUnits = DimensionUnitType.Absolute;
+        circle.HeightUnits = DimensionUnitType.Absolute;
+        circle.IsFilled = false;
+        circle.StrokeWidth = BorderThickness;
+        circle.StrokeWidthUnits = DimensionUnitType.Absolute;
+        circle.Color = DarkProColors.Border;
+        return circle;
+    }
+
+    private static ColoredCircleRuntime CreateFocusRing()
+    {
+        // 18-px outer (16 + 2 for the 1-px ring overhang on each side).
+        // The outer rings sit on parent.Left; offset the focus ring by -1 so
+        // it's centered horizontally on the outer ring.
+        ColoredCircleRuntime ring = new ColoredCircleRuntime();
+        ring.Name = "DarkProRadioFocusRing";
+        ring.X = -FocusRingInset;
+        ring.Y = 0;
+        ring.XUnits = GeneralUnitType.PixelsFromSmall;
+        ring.YUnits = GeneralUnitType.PixelsFromMiddle;
+        ring.XOrigin = HorizontalAlignment.Left;
+        ring.YOrigin = VerticalAlignment.Center;
+        ring.Width = OuterSize + (FocusRingInset * 2f);
+        ring.Height = OuterSize + (FocusRingInset * 2f);
+        ring.WidthUnits = DimensionUnitType.Absolute;
+        ring.HeightUnits = DimensionUnitType.Absolute;
+        ring.IsFilled = false;
+        ring.StrokeWidth = BorderThickness;
+        ring.StrokeWidthUnits = DimensionUnitType.Absolute;
+        ring.Color = DarkProColors.Accent;
+        ring.Visible = false;
+        return ring;
+    }
+
+    private static ColoredCircleRuntime CreateInnerDot()
+    {
+        // 8-px filled circle centered on the 16-px outer circle. Outer is at
+        // parent.Left (Left origin), so the inner is offset by (Outer-Inner)/2
+        // = 4 from the left.
+        const float inset = (OuterSize - InnerSize) / 2f;
+        ColoredCircleRuntime dot = new ColoredCircleRuntime();
+        dot.Name = "DarkProRadioInnerDot";
+        dot.X = inset;
+        dot.Y = 0;
+        dot.XUnits = GeneralUnitType.PixelsFromSmall;
+        dot.YUnits = GeneralUnitType.PixelsFromMiddle;
+        dot.XOrigin = HorizontalAlignment.Left;
+        dot.YOrigin = VerticalAlignment.Center;
+        dot.Width = InnerSize;
+        dot.Height = InnerSize;
+        dot.WidthUnits = DimensionUnitType.Absolute;
+        dot.HeightUnits = DimensionUnitType.Absolute;
+        dot.IsFilled = true;
+        dot.Color = DarkProColors.Accent;
+        dot.Visible = false;
+        return dot;
+    }
+
+    private void WireStates()
+    {
+        // -------- Unselected (Off) --------
+        States.EnabledOff.Apply = () => Apply(
+            fill: DarkProColors.Surface1, border: DarkProColors.Border,
+            text: DarkProColors.Text, innerVisible: false, ring: false);
+
+        // Border tracks interaction state only — the inner dot alone signals
+        // value. Hover/Highlighted gets BorderHover (matching TextBox's softer
+        // hover→focus progression), focus drives Accent + ring, and the same
+        // pattern is mirrored on On below.
+        States.HighlightedOff.Apply = () => Apply(
+            fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
+            text: DarkProColors.Text, innerVisible: false, ring: false);
+
+        States.FocusedOff.Apply = () => Apply(
+            fill: DarkProColors.Surface1, border: DarkProColors.Accent,
+            text: DarkProColors.Text, innerVisible: false, ring: true);
+
+        States.HighlightedFocusedOff.Apply = () => Apply(
+            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
+            text: DarkProColors.Text, innerVisible: false, ring: true);
+
+        States.PushedOff.Apply = () => Apply(
+            fill: DarkProColors.PressedFill, border: DarkProColors.Accent,
+            text: DarkProColors.Text, innerVisible: false, ring: false);
+
+        States.DisabledOff.Apply = () => Apply(
+            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
+            text: DarkProColors.DisabledText, innerVisible: false, ring: false);
+
+        States.DisabledFocusedOff.Apply = () => Apply(
+            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
+            text: DarkProColors.DisabledText, innerVisible: false, ring: true);
+
+        // -------- Selected (On) --------
+        // Border mirrors the Off variants exactly — the value is communicated solely
+        // by the accent dot inside. Off and On look identical in chrome; the dot is
+        // the only difference.
+        States.EnabledOn.Apply = () => Apply(
+            fill: DarkProColors.Surface1, border: DarkProColors.Border,
+            text: DarkProColors.Text, innerVisible: true, innerColor: DarkProColors.Accent,
+            ring: false);
+
+        States.HighlightedOn.Apply = () => Apply(
+            fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
+            text: DarkProColors.Text, innerVisible: true, innerColor: DarkProColors.Accent,
+            ring: false);
+
+        States.FocusedOn.Apply = () => Apply(
+            fill: DarkProColors.Surface1, border: DarkProColors.Accent,
+            text: DarkProColors.Text, innerVisible: true, innerColor: DarkProColors.Accent,
+            ring: true);
+
+        States.HighlightedFocusedOn.Apply = () => Apply(
+            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
+            text: DarkProColors.Text, innerVisible: true, innerColor: DarkProColors.Accent,
+            ring: true);
+
+        States.PushedOn.Apply = () => Apply(
+            fill: DarkProColors.PressedFill, border: DarkProColors.Accent,
+            text: DarkProColors.Text, innerVisible: true, innerColor: DarkProColors.Accent,
+            ring: false);
+
+        States.DisabledOn.Apply = () => Apply(
+            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
+            text: DarkProColors.DisabledText, innerVisible: true,
+            innerColor: DarkProColors.DisabledText, ring: false);
+
+        States.DisabledFocusedOn.Apply = () => Apply(
+            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
+            text: DarkProColors.DisabledText, innerVisible: true,
+            innerColor: DarkProColors.DisabledText, ring: true);
+    }
+
+    private void Apply(Color fill, Color border, Color text, bool innerVisible, bool ring,
+        Color? innerColor = null)
+    {
+        _outerFill.Color = fill;
+        _outerBorder.Color = border;
+        TextInstance.Color = text;
+        _innerDot.Visible = innerVisible;
+        if (innerColor.HasValue)
+        {
+            _innerDot.Color = innerColor.Value;
+        }
+        _focusRing.Visible = ring;
+    }
+}

@@ -431,8 +431,22 @@ public class ItemsControl : ScrollViewer
                     if (shouldSuppressLayout)
                     {
                         GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
-                        if (!wasSuppressed && IsVisible)
+                        if (!wasSuppressed)
                         {
+                            // Resume regardless of IsVisible. ResumeLayout(recursive: true)
+                            // calls UpdateFontRecursive which is what realizes any
+                            // IsFontDirty=true TextRuntime children. The dirty flag is set
+                            // during item creation because IsAllLayoutSuspended above
+                            // deferred the font load — if we skip the resume when the
+                            // ItemsControl happens to be invisible, those deferred loads
+                            // never get processed and the items render with the renderer's
+                            // fallback font when the control is later shown.
+                            //
+                            // Concrete repro: a ComboBox's dropdown ListBox is created with
+                            // Visible=false. Items added to it before the dropdown is opened
+                            // would have stale font state until first open, with no path
+                            // to realize the font even at open time. See
+                            // ListBoxTests.ItemsAddedWhileInvisible_ShouldHaveFontsResolved.
                             InnerPanel?.ResumeLayout(recursive: true);
                         }
                     }
