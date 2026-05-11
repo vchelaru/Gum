@@ -79,8 +79,8 @@ if (!string.IsNullOrEmpty(renderable.BatchKey) && renderable.BatchKey != current
 Three behaviors worth internalizing:
 
 - **Empty BatchKey is treated as "no transition required."** A renderable with `BatchKey=""` (containers, GUE wrappers) does NOT flush the current batch. This is intentional for plain wrappers but becomes a bug when something with a non-empty BatchKey claims a batch it doesn't actually start.
-- **`SpriteBatchRenderableBase.StartBatch`** calls `spriteRenderer.Begin(false)` — re-uses currentParameters and re-begins SpriteBatch in place. **`EndBatch`** calls `spriteRenderer.End()` — flushes SpriteBatch directly (does NOT pop the SpriteBatchStack).
-- **`RenderableShapeBase.StartBatch/EndBatch`** call `ShapeBatch.Begin/End` — completely independent of SpriteBatch state.
+- **`SpriteBatchRenderableBase.StartBatch`** calls `spriteRenderer.Begin(false)` followed by `spriteRenderer.ForceSetRenderStatesToCurrent()`. **`EndBatch`** calls `spriteRenderer.End()` — flushes SpriteBatch directly (does NOT pop the SpriteBatchStack). The pairing of `Begin(false)` + `ForceSetRenderStatesToCurrent` is what re-applies the active `BeginParameters` (scissor/raster/blend/sampler/transform) to the underlying SpriteBatch — see "SpriteBatchStack: Begin(false) must re-apply currentParameters" below for why both calls are required.
+- **`RenderableShapeBase.StartBatch/EndBatch`** call `ShapeBatch.Begin/End` — separate GPU state stream, but the runtime now plumbs the active scissor rect through so shapes honor `ClipsChildren`. See "Shape Clipping: ShapeBatch Honors Scissor via rasterizerState" below.
 
 ## SpriteBatchStack: Push / Pop / Replace
 
@@ -89,7 +89,7 @@ Three behaviors worth internalizing:
 - `PushRenderStates(...)` ≈ `BeginType.Push`: pushes current params onto stack, then `ReplaceRenderStates`.
 - `ReplaceRenderStates(...)` ≈ `BeginType.Begin`: ends the SpriteBatch if Began, sets new currentParameters, calls `SpriteBatch.Begin`. **Does not change stack depth.**
 - `PopRenderStates()`: pops top of stack. If popped value has params, `ReplaceRenderStates` to it; if null, sets `currentParameters=null` and ends SpriteBatch.
-- `Begin(createNewParameters=false)`: ends SpriteBatch if Began, then begins it again. Used by `SpriteBatchRenderableBase.StartBatch` to re-flush sprites mid-walk while keeping the same params.
+- `Begin(createNewParameters=false)`: ends SpriteBatch if Began, then begins it again, **re-applying the active `currentParameters` to both the GraphicsDevice (ScissorRectangle, RasterizerState) and the underlying `SpriteBatch.Begin` call** (full 7-arg overload). Used by `SpriteBatchRenderableBase.StartBatch` to re-flush sprites mid-walk while keeping the same params. See "SpriteBatchStack: Begin(false) must re-apply currentParameters" below — this contract was silently violated before the fix in #2706 (the parameterless `SpriteBatch.Begin()` was used, which resets to MonoGame defaults including `RasterizerState.CullCounterClockwise` with `ScissorTestEnable=false`, silently dropping clip state).
 - `End()`: just ends SpriteBatch (flushes pending sprites). Does not touch stack.
 
 Invariant: every `BeginType.Push` must be balanced by exactly one `EndSpriteBatch` (which calls Pop). `BeginType.Begin` does not enter the stack and doesn't need a balancing pop.
@@ -104,6 +104,42 @@ Mid-walk `End()` from `SpriteBatchRenderableBase.EndBatch` does NOT pop the stac
 - The Apos.Shapes `ShapeBatch` may still be **Begun with queued shapes** at the start of Card N+1's cycle — `Renderer.End` doesn't end it.
 
 This cross-cycle leakage is the single biggest source of "draw order looks weird across N renderables" bugs. Any fix to flushing must end the custom batch at `Renderer.End` so cycle boundaries are clean.
+
+## SpriteBatchStack: Begin(false) must re-apply currentParameters
+
+`Begin(createNewParameters=false)` runs whenever the BatchOrchestrator transitions back to SpriteBatch from a custom batch (Apos.Shapes, future custom batches). It's reached via `SpriteBatchRenderableBase.StartBatch`, which sequences:
+
+```csharp
+spriteRenderer.Begin(createNewParameters: false);
+spriteRenderer.ForceSetRenderStatesToCurrent();   // calls ReplaceRenderStates with currentParameters' values
+```
+
+The reason **both** calls are needed: `SpriteRenderer.Begin(false)` is a guarded passthrough that only invokes `mSpriteBatch.Begin(false)` if SpriteBatch is currently `Ended`. After ShapeBatch took over, SpriteBatch was indeed ended (by the previous `SpriteBatchRenderableBase.EndBatch`). So `Begin(false)` actually executes — and **must** re-apply currentParameters to both the GraphicsDevice and the underlying `SpriteBatch.Begin(...)` call. `ForceSetRenderStatesToCurrent` then immediately runs `ReplaceRenderStates`, which performs an End+Begin cycle with the same parameters.
+
+The historical bug (latent pre-#2582, surfaced when the BatchOrchestrator made the path run on every batch transition): `Begin(false)` was calling parameterless `SpriteBatch.Begin()` instead of the 7-arg overload with currentParameters. That set MonoGame's default rasterizer (`CullCounterClockwise`, `ScissorTestEnable=false`), silently dropping scissor and clipping any subsequent sprites/text drawn under a `ClipsChildren` ancestor. The follow-up `ReplaceRenderStates` did re-apply the right state in *theory*, but the back-to-back Begin/End/Begin sequence ended up with the GPU in the wrong rasterizer state — visually, text labels bled outside their clip region.
+
+**Rule:** any future change to `SpriteBatchStack.Begin(bool)` must keep `Begin(false)`'s behavior equivalent to "call `SpriteBatch.Begin(p.SortMode, p.BlendState, p.SamplerState, p.DepthStencilState, p.RasterizerState, p.Effect, p.TransformMatrix)` with `p = currentParameters.Value`" and explicitly assign `GraphicsDevice.ScissorRectangle` / `GraphicsDevice.RasterizerState` before the call. The empirical canary is "text labels inside a ScrollViewer or ListBox should clip to the container."
+
+## Shape Clipping: ShapeBatch Honors Scissor via rasterizerState
+
+`ShapeBatch.Begin` (Apos.Shapes 0.6.8+) has this signature:
+
+```csharp
+public void Begin(Matrix? view = null, Matrix? projection = null,
+    BlendState? blendState = null, SamplerState? samplerState = null,
+    DepthStencilState? depthStencilState = null, RasterizerState? rasterizerState = null)
+```
+
+The `rasterizerState` parameter is how shapes opt into scissor testing. Setting `GraphicsDevice.ScissorRectangle` alone is **not enough** — Apos.Shapes' internal default rasterizer has `ScissorTestEnable=false`, which suppresses scissor regardless of the GraphicsDevice's rect. You must also pass a `RasterizerState` with `ScissorTestEnable=true` to `ShapeBatch.Begin`.
+
+`RenderableShapeBase.StartBatch` reads the active SpriteBatch clip via:
+
+- `SpriteRenderer.CurrentScissorRectangle` — `System.Drawing.Rectangle?`, non-null when SpriteBatch's `currentParameters.RasterizerState.ScissorTestEnable` is true. Mirrors `CurrentTransformMatrix` (the same plumbing pattern for view-matrix sync between SpriteBatch and ShapeBatch).
+- `SpriteRenderer.ScissorTestRasterizerState` — the shared `scissorTestEnabled` rasterizer used by Sprite clipping. Same instance is passed to `ShapeBatch.Begin` so both batches see identical scissor behavior.
+
+When a clip is active, `RenderableShapeBase.StartBatch` assigns `ShapeBatch.GraphicsDevice.ScissorRectangle = scissor.ToXNA()` (belt-and-suspenders — the rect may already be set from the prior `SpriteBatch.Begin`, but the explicit assignment makes the contract clear) and passes `ScissorTestRasterizerState` to `ShapeBatch.Begin`. When no clip is active, both pass null and shapes render fullscreen.
+
+**Past wrong turn documented here so it doesn't get re-tried:** an early diagnostic concluded "Apos.Shapes ignores externally-set scissor state" based on a probe that set `GraphicsDevice.ScissorRectangle` + `GraphicsDevice.RasterizerState` before/after `sb.Begin()` and saw no clipping. That was incomplete — the probe never tried `sb.Begin(rasterizerState: scissorEnabled)`. Always check `ShapeBatch.Begin`'s full overload before concluding a clipping-related limitation is upstream.
 
 ## ContainerRuntime's BatchKey Override (Historical Pitfall)
 
@@ -199,3 +235,5 @@ When changing batch logic:
 4. Does mid-walk re-begin of SpriteBatch use `Begin(false)` (preserves params, no stack change) or `BeginType.Push` (changes stack)? Mismatching causes stack underflow at outer EndSpriteBatch.
 5. Are you assuming `currentBatchKey` is `""` at the start of a Renderer.Begin cycle? It's not — it persists from the previous cycle. Reset it explicitly if you need a clean state.
 6. If you touch `basicEffect.World/View` or `ShapeBatch.Begin(view:)`, does `ForcedMatrix` end up applied **exactly once** to sprite vertices and once to shape vertices? Remember that `SpriteBatch`'s own `transformMatrix` is ignored when a custom Effect is bound — only `basicEffect`'s World*View*Projection moves sprite vertices.
+7. If you touch `SpriteBatchStack.Begin(bool)`, does `Begin(false)` still call `SpriteBatch.Begin` with all seven `currentParameters` fields (sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix) AND assign `GraphicsDevice.ScissorRectangle` + `GraphicsDevice.RasterizerState` first? Empirical canary: text labels inside a `ScrollViewer` or `ListBox` clip to the container.
+8. If you touch `RenderableShapeBase.StartBatch` or `ShapeBatch.Begin` plumbing, does the active scissor state still flow to the shape batch? Empirical canary: rounded shape bodies inside a `ScrollViewer` / `ListBox` clip to the container. Setting `GraphicsDevice.ScissorRectangle` is not sufficient — `ShapeBatch.Begin` must also receive a `rasterizerState` with `ScissorTestEnable=true`.
