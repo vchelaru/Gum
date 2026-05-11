@@ -213,6 +213,46 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void LineHeightMultiplier_ShouldScaleCaretLineSpacing_Multiline()
+    {
+        // Issue #2712: LineHeightMultiplier was being ignored by the caret/selection
+        // line-position math in TextBoxBase, so the caret sat at the wrong Y for any
+        // line beyond line 0 whenever the multiplier was not 1. Multiplier is set
+        // BEFORE the caret is positioned to isolate the math from any reactivity.
+
+        static float CaretTopForLine(float multiplier, int caretIndex)
+        {
+            TextBox tb = new();
+            tb.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+            tb.AcceptsReturn = true;
+            tb.Height = 400;
+            tb.IsFocused = true;
+
+            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            visual.TextInstance.LineHeightMultiplier = multiplier;
+
+            tb.HandleCharEntered('\n');
+            tb.HandleCharEntered('\n');
+            tb.HandleCharEntered('\n');
+            tb.CaretIndex = caretIndex;
+
+            return visual.CaretInstance.AbsoluteTop;
+        }
+
+        // Gap between line 0 and line 2 at 1x and at 2x. With a 2x multiplier the
+        // gap should be roughly 2x as large; we assert at least 1.5x to allow for
+        // half-line center/edge adjustments without being brittle to font metrics.
+        float gap1x = CaretTopForLine(1.0f, 2) - CaretTopForLine(1.0f, 0);
+        float gap2x = CaretTopForLine(2.0f, 2) - CaretTopForLine(2.0f, 0);
+
+        gap1x.ShouldBeGreaterThan(0f, "sanity: line 2's caret should be below line 0's");
+        gap2x.ShouldBeGreaterThan(gap1x * 1.5f,
+            "because doubling the line height multiplier should roughly double the " +
+            "line-to-line gap; if the gap is unchanged the multiplier is being ignored " +
+            "by the caret-position math (regression of #2712)");
+    }
+
+    [Fact]
     public void Width_ShouldNotShiftTextX_AfterTransientNegativeWidth()
     {
         // Repro for issue #2680: when a TextBox's absolute width transitions
