@@ -207,5 +207,11 @@ public static class DarkProTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(Splitter)] =
             new VisualTemplate((_, c) => new SplitterVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Menu)] =
+            new VisualTemplate((_, c) => new MenuVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] =
+            new VisualTemplate((_, c) => new MenuItemVisual(tryCreateFormsObject: c));
     }
 }
