@@ -78,6 +78,9 @@ public class WindowVisual : BaseWindowVisual
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
         fill.Color = DarkProColors.Surface1;
+        // Pure chrome — must not swallow input destined for the title bar
+        // (drag) or the resize border zones beneath it.
+        fill.HasEvents = false;
         return fill;
     }
 
@@ -100,6 +103,7 @@ public class WindowVisual : BaseWindowVisual
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
         border.Color = DarkProColors.Border;
+        border.HasEvents = false;
         return border;
     }
 
@@ -118,6 +122,11 @@ public class WindowVisual : BaseWindowVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.Color = DarkProColors.Surface2;
+        // Critical: the title bar Panel itself is the drag handle. A child
+        // with HasEvents=true (the default for GraphicalUiElement) sits on
+        // top and swallows the drag input. Leave the panel's events to do
+        // their job.
+        fill.HasEvents = false;
         return fill;
     }
 }
