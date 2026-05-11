@@ -101,6 +101,13 @@ fill.DropshadowColor   = new Color(r, g, b, (int)(a * 255));
 
 The CSS `spread` argument (the optional fourth length value) has no direct equivalent; usually 0 or omitted in modern designs.
 
+**Visual fidelity vs numerical fidelity.** A 1:1 number translation will not look the same as the CSS source. Two pipeline differences stack:
+
+- **Blur kernel semantics.** CSS treats `blur-radius` roughly as Gaussian standard deviation; Apos.Shapes interprets `DropshadowBlurX/Y` differently. Same value → different falloff width → different perceived softness.
+- **Color space.** Browsers composite alpha in linear RGB (perceptually correct). MonoGame / Apos.Shapes composite in sRGB. Identical alpha math reads markedly darker in a browser; the in-game render comes out fainter.
+
+Treat CSS values as a *starting point* — typically you'll bump alpha by ~1.5–2× and tweak blur by eye until the perceived weight matches the source. The Bubblegum Button shadow ended at alpha 160 / blur 12, up from the spec's 102 / 10.
+
 ## Rounded outline + rectangular clip container: paint the border last
 
 Gum's clip containers are axis-aligned rectangles. They do not clip to rounded paths. If a themed container has a rounded outline (`RoundedRectangleRuntime` border) AND a child clip container that renders content (text, list items, hovered rows with their own pink fills), naively painting the border *behind* the clip container makes content visibly poke past the rounded outline at the corners.
