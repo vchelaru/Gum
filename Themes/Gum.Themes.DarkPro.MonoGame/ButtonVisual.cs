@@ -137,7 +137,7 @@ public class ButtonVisual : BaseButtonVisual
 
         States.Highlighted.Apply = () => ApplyPalette(
             fill: DarkProColors.Surface2,
-            border: DarkProColors.BorderHover,
+            border: DarkProColors.Accent,
             text: DarkProColors.Text,
             showFocusRing: false);
 
