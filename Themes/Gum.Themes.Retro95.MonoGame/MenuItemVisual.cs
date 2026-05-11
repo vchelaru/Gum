@@ -60,9 +60,12 @@ public class MenuItemVisual : BaseMenuItemVisual
         }
     }
 
+    // Use the dedicated menu-popup visual (raised + gray surface) rather than
+    // the regular ScrollViewerVisual (inset + white) — the inset-white look is
+    // right for a content scroll area but wrong for a Win95 drop-down menu.
     private VisualTemplate Retro95SubmenuScrollTemplate => new VisualTemplate(() =>
     {
-        ScrollViewerVisual visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
+        Retro95MenuPopupVisual visual = new Retro95MenuPopupVisual(fullInstantiation: true, tryCreateFormsObject: false);
         visual.HasEvents = true;
         visual.MakeSizedToChildren();
         return visual;
