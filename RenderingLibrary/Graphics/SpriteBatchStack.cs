@@ -176,7 +176,29 @@ namespace RenderingLibrary.Graphics
             }
 
             beginEndState = SpriteBatchBeginEndState.Began;
-            SpriteBatch.Begin();
+
+            // When re-beginning in place (createNewParameters=false), restore the active
+            // BeginParameters - scissor rect, rasterizer, blend, sampler, transform.
+            // SpriteBatch.Begin() with no args uses MonoGame defaults (notably
+            // RasterizerState.CullCounterClockwise which disables scissor), which silently
+            // drops clip state set by the most recent ReplaceRenderStates / PushRenderStates.
+            // This is the path SpriteBatchRenderableBase.StartBatch hits whenever the
+            // BatchOrchestrator transitions back to SpriteBatch after a custom batch -
+            // e.g. text after Apos.Shapes children inside a ClipsChildren container.
+            if (!createNewParameters && currentParameters.HasValue)
+            {
+                var p = currentParameters.Value;
+                SpriteBatch.GraphicsDevice.ScissorRectangle = p.ScissorRectangle.ToXNA();
+                SpriteBatch.GraphicsDevice.RasterizerState =
+                    p.RasterizerState ?? RasterizerState.CullCounterClockwise;
+                SpriteBatch.Begin(p.SortMode,
+                    p.BlendState.ToXNA(),
+                    p.SamplerState, p.DepthStencilState, p.RasterizerState, p.Effect, p.TransformMatrix);
+            }
+            else
+            {
+                SpriteBatch.Begin();
+            }
         }
 
         public void PushRenderStates(SpriteSortMode sortMode,
