@@ -4,6 +4,7 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
+using System.Diagnostics;
 using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 
 namespace Gum.Themes.DarkPro;
@@ -48,6 +49,16 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         // correctly; restores the right font if anything got out of order.
         TextInstance.Font = DarkProTheme.FontFamily;
         TextInstance.FontSize = DarkProTheme.FontSize;
+
+        // Diagnostic: print the resolved text properties at construction so we can
+        // compare the standalone-ListBox path against the ComboBox-dropdown path
+        // and see whether they diverge during construction or only later (state
+        // changes / popup attach / render). Remove once the ComboBox-dropdown
+        // font discrepancy is root-caused.
+        Debug.WriteLine(
+            $"[DarkPro ListBoxItemVisual ctor] Font={TextInstance.Font} " +
+            $"FontSize={TextInstance.FontSize} IsBold={TextInstance.IsBold} " +
+            $"IsItalic={TextInstance.IsItalic} HashCode={GetHashCode()}");
 
         WireStates();
     }
