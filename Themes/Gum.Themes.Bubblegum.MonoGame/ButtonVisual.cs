@@ -31,23 +31,16 @@ public class ButtonVisual : BaseButtonVisual
     private const float FocusRingThickness = 3f;
 
     /// <summary>
-    /// Drop-shadow approximation. The CSS `box-shadow: 0 3px 10px rgba(...,.4)`
-    /// is a soft Gaussian; Apos.Shapes can't render Gaussian blurs directly,
-    /// so we stack three progressively-larger, progressively-fainter rounded
-    /// rects beneath the body. Three layers is the sweet spot — two reads
-    /// flat, four reads excessive at this size.
+    /// Drop shadow rendered natively by Apos.Shapes — matches the CSS
+    /// <c>box-shadow: 0 3px 10px rgba(255,107,157,.4)</c>. OffsetY=3 pushes the
+    /// shadow below the body, BlurX/Y=10 produces the soft Gaussian falloff,
+    /// alpha 102 ≈ 40% (matches the CSS .4). Toggled per state via
+    /// <c>_fill.HasDropshadow</c>.
     /// </summary>
     private const float ShadowOffsetY = 3f;
-    private const float ShadowSpread1 = 0f;
-    private const float ShadowSpread2 = 4f;
-    private const float ShadowSpread3 = 8f;
-    private static readonly Color ShadowColor1 = new Color(255, 107, 157, 70);
-    private static readonly Color ShadowColor2 = new Color(255, 107, 157, 40);
-    private static readonly Color ShadowColor3 = new Color(255, 107, 157, 20);
+    private const float ShadowBlur = 10f;
+    private static readonly Color ShadowColor = new Color(255, 107, 157, 102);
 
-    private readonly RoundedRectangleRuntime _shadow1;
-    private readonly RoundedRectangleRuntime _shadow2;
-    private readonly RoundedRectangleRuntime _shadow3;
     private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;
 
@@ -65,15 +58,6 @@ public class ButtonVisual : BaseButtonVisual
         Height = 36;
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
-
-        // Stack bottom-up: outermost (faintest) shadow first so it renders
-        // behind the smaller, brighter shadows above it.
-        _shadow3 = CreateShadow(ShadowSpread3, ShadowColor3);
-        AddChild(_shadow3);
-        _shadow2 = CreateShadow(ShadowSpread2, ShadowColor2);
-        AddChild(_shadow2);
-        _shadow1 = CreateShadow(ShadowSpread1, ShadowColor1);
-        AddChild(_shadow1);
 
         _focusRing = CreateFocusRing();
         AddChild(_focusRing);
@@ -105,6 +89,14 @@ public class ButtonVisual : BaseButtonVisual
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
         fill.Color = BubblegumColors.Accent;
+        // Native Gaussian drop shadow — replaces the old three-layer stack.
+        // Toggled per state via WireStates (off when pressed/disabled).
+        fill.HasDropshadow = true;
+        fill.DropshadowColor = ShadowColor;
+        fill.DropshadowOffsetX = 0f;
+        fill.DropshadowOffsetY = ShadowOffsetY;
+        fill.DropshadowBlurX = ShadowBlur;
+        fill.DropshadowBlurY = ShadowBlur;
         return fill;
     }
 
@@ -131,26 +123,6 @@ public class ButtonVisual : BaseButtonVisual
         ring.Color = new Color(255, 107, 157, 90); // translucent accent
         ring.Visible = false;
         return ring;
-    }
-
-    private static RoundedRectangleRuntime CreateShadow(float spread, Color color)
-    {
-        RoundedRectangleRuntime shadow = new RoundedRectangleRuntime();
-        shadow.Name = "BubblegumShadow";
-        shadow.X = 0;
-        shadow.Y = ShadowOffsetY;
-        shadow.XUnits = GeneralUnitType.PixelsFromMiddle;
-        shadow.YUnits = GeneralUnitType.PixelsFromMiddle;
-        shadow.XOrigin = HorizontalAlignment.Center;
-        shadow.YOrigin = VerticalAlignment.Center;
-        shadow.Width = spread * 2f;
-        shadow.Height = spread * 2f;
-        shadow.WidthUnits = DimensionUnitType.RelativeToParent;
-        shadow.HeightUnits = DimensionUnitType.RelativeToParent;
-        shadow.CornerRadius = CornerRadius + spread;
-        shadow.IsFilled = true;
-        shadow.Color = color;
-        return shadow;
     }
 
     private void WireStates()
@@ -205,10 +177,8 @@ public class ButtonVisual : BaseButtonVisual
     private void ApplyPalette(Color fill, Color text, bool showShadow, bool showFocusRing)
     {
         _fill.Color = fill;
+        _fill.HasDropshadow = showShadow;
         TextInstance.Color = text;
-        _shadow1.Visible = showShadow;
-        _shadow2.Visible = showShadow;
-        _shadow3.Visible = showShadow;
         _focusRing.Visible = showFocusRing;
     }
 }

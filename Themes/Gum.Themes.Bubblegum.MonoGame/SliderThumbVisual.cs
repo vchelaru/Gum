@@ -21,11 +21,16 @@ public class SliderThumbVisual : InteractiveGue
     private const float BorderThickness = 2f;
     private const float FocusRingInset = 3f;
     private const float FocusRingThickness = 4f;
-    private const float ShadowSpread = 3f;
-    private const float ShadowOffsetY = 2f;
-    private static readonly Color ShadowColor = new Color(255, 107, 157, 60);
 
-    private readonly ColoredCircleRuntime _shadow;
+    /// <summary>
+    /// Native Apos.Shapes Gaussian drop shadow — matches the CSS
+    /// <c>box-shadow:0 2px 8px rgba(255,107,157,.4)</c>. Toggled per state via
+    /// <c>_body.HasDropshadow</c>.
+    /// </summary>
+    private const float ShadowOffsetY = 2f;
+    private const float ShadowBlur = 8f;
+    private static readonly Color ShadowColor = new Color(255, 107, 157, 102);
+
     private readonly ColoredCircleRuntime _focusRing;
     private readonly ColoredCircleRuntime _body;
     private readonly ColoredCircleRuntime _border;
@@ -39,9 +44,6 @@ public class SliderThumbVisual : InteractiveGue
         Height = Size;
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
-
-        _shadow = CreateShadow();
-        AddChild(_shadow);
 
         _focusRing = CreateFocusRing();
         AddChild(_focusRing);
@@ -71,6 +73,14 @@ public class SliderThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.IsFilled = true;
         body.Color = Color.White;
+        // Native Gaussian drop shadow under the thumb — replaces the prior
+        // single-circle approximation. Toggled per state via WireStates.
+        body.HasDropshadow = true;
+        body.DropshadowColor = ShadowColor;
+        body.DropshadowOffsetX = 0f;
+        body.DropshadowOffsetY = ShadowOffsetY;
+        body.DropshadowBlurX = ShadowBlur;
+        body.DropshadowBlurY = ShadowBlur;
         return body;
     }
 
@@ -117,28 +127,6 @@ public class SliderThumbVisual : InteractiveGue
         return ring;
     }
 
-    private static ColoredCircleRuntime CreateShadow()
-    {
-        // Single-layer pink shadow under the thumb. Approximates the CSS
-        // box-shadow:0 2px 8px rgba(255,107,157,.4) — we can't render a Gaussian,
-        // so a slightly larger circle offset downward stands in.
-        ColoredCircleRuntime shadow = new ColoredCircleRuntime();
-        shadow.Name = "BubblegumSliderThumbShadow";
-        shadow.X = 0;
-        shadow.Y = ShadowOffsetY;
-        shadow.XUnits = GeneralUnitType.PixelsFromMiddle;
-        shadow.YUnits = GeneralUnitType.PixelsFromMiddle;
-        shadow.XOrigin = HorizontalAlignment.Center;
-        shadow.YOrigin = VerticalAlignment.Center;
-        shadow.Width = ShadowSpread * 2f;
-        shadow.Height = ShadowSpread * 2f;
-        shadow.WidthUnits = DimensionUnitType.RelativeToParent;
-        shadow.HeightUnits = DimensionUnitType.RelativeToParent;
-        shadow.IsFilled = true;
-        shadow.Color = ShadowColor;
-        return shadow;
-    }
-
     private void WireStates()
     {
         _buttonCategory = new StateSaveCategory();
@@ -177,8 +165,8 @@ public class SliderThumbVisual : InteractiveGue
     private void Apply(Color body, Color border, bool ring, bool showShadow)
     {
         _body.Color = body;
+        _body.HasDropshadow = showShadow;
         _border.Color = border;
         _focusRing.Visible = ring;
-        _shadow.Visible = showShadow;
     }
 }

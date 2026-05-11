@@ -26,17 +26,16 @@ public class WindowVisual : BaseWindowVisual
     private const float BorderThickness = 2f;
     private const float TitleBarSeparatorHeight = 2f;
 
-    private const float ShadowOffsetY = 6f;
-    private const float ShadowSpread1 = 2f;
-    private const float ShadowSpread2 = 6f;
-    private const float ShadowSpread3 = 12f;
-    private static readonly Color ShadowColor1 = new Color(180, 80, 120, 70);
-    private static readonly Color ShadowColor2 = new Color(180, 80, 120, 40);
-    private static readonly Color ShadowColor3 = new Color(180, 80, 120, 20);
+    /// <summary>
+    /// Drop shadow rendered natively by Apos.Shapes — matches the CSS
+    /// <c>box-shadow: 0 8px 28px rgba(180,80,120,.2)</c>. OffsetY=8 pushes the
+    /// shadow well below the window body, BlurX/Y=28 produces a soft, wide
+    /// halo, alpha 51 ≈ 20% (matches CSS .2).
+    /// </summary>
+    private const float ShadowOffsetY = 8f;
+    private const float ShadowBlur = 28f;
+    private static readonly Color ShadowColor = new Color(180, 80, 120, 51);
 
-    private readonly RoundedRectangleRuntime _shadow1;
-    private readonly RoundedRectangleRuntime _shadow2;
-    private readonly RoundedRectangleRuntime _shadow3;
     private readonly RoundedRectangleRuntime _fill;
     private readonly RoundedRectangleRuntime _border;
     private readonly ColoredRectangleRuntime _titleBarFill;
@@ -56,14 +55,6 @@ public class WindowVisual : BaseWindowVisual
         BorderBottomInstance.Visual.Parent = null;
         BorderLeftInstance.Visual.Parent = null;
         BorderRightInstance.Visual.Parent = null;
-
-        // Stack shadow outermost-first (faintest) so it renders behind the brighter layers.
-        _shadow3 = CreateShadow(ShadowSpread3, ShadowColor3);
-        AddChild(_shadow3);
-        _shadow2 = CreateShadow(ShadowSpread2, ShadowColor2);
-        AddChild(_shadow2);
-        _shadow1 = CreateShadow(ShadowSpread1, ShadowColor1);
-        AddChild(_shadow1);
 
         _fill = CreateFill();
         AddChild(_fill);
@@ -107,6 +98,13 @@ public class WindowVisual : BaseWindowVisual
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
         fill.Color = BubblegumColors.Surface1;
+        // Native Gaussian drop shadow — replaces the prior three-layer stack.
+        fill.HasDropshadow = true;
+        fill.DropshadowColor = ShadowColor;
+        fill.DropshadowOffsetX = 0f;
+        fill.DropshadowOffsetY = ShadowOffsetY;
+        fill.DropshadowBlurX = ShadowBlur;
+        fill.DropshadowBlurY = ShadowBlur;
         return fill;
     }
 
@@ -130,26 +128,6 @@ public class WindowVisual : BaseWindowVisual
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
         border.Color = BubblegumColors.Border;
         return border;
-    }
-
-    private static RoundedRectangleRuntime CreateShadow(float spread, Color color)
-    {
-        RoundedRectangleRuntime shadow = new RoundedRectangleRuntime();
-        shadow.Name = "BubblegumWindowShadow";
-        shadow.X = 0;
-        shadow.Y = ShadowOffsetY;
-        shadow.XUnits = GeneralUnitType.PixelsFromMiddle;
-        shadow.YUnits = GeneralUnitType.PixelsFromMiddle;
-        shadow.XOrigin = HorizontalAlignment.Center;
-        shadow.YOrigin = VerticalAlignment.Center;
-        shadow.Width = spread * 2f;
-        shadow.Height = spread * 2f;
-        shadow.WidthUnits = DimensionUnitType.RelativeToParent;
-        shadow.HeightUnits = DimensionUnitType.RelativeToParent;
-        shadow.CornerRadius = CornerRadius + spread;
-        shadow.IsFilled = true;
-        shadow.Color = color;
-        return shadow;
     }
 
     private static ColoredRectangleRuntime CreateTitleBarFill()

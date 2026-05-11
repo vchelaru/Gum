@@ -75,6 +75,32 @@ Size the glyph's `TextRuntime` `Absolute`, **larger** than the box it sits in (~
 
 Building glyphs from Apos.Shapes primitives (`LineRuntime` strokes, rotated `RoundedRectangleRuntime`s) is technically possible but rarely worth it once you have more than one or two glyphs. Stick with DejaVu unless you have a strong reason — the icon font's ~600 KB is the cheapest entry point in the theme.
 
+## Drop shadows: use the native Apos.Shapes API, not stacked rects
+
+Apos.Shapes runtimes (`RoundedRectangleRuntime`, `ColoredCircleRuntime`, `ArcRuntime`) expose a native Gaussian drop shadow via `AposShapeRuntime`. Use it. Do not stack progressively-larger, fainter shapes underneath the body to fake a falloff — that approach is a holdover from a misreading of the Apos.Shapes capabilities and produces visible concentric banding because each layer is a hard-edged shape.
+
+Properties (all forwarded from the runtime to the underlying renderable):
+
+- `HasDropshadow` (`bool`) — master switch. Toggle per state.
+- `DropshadowColor` (`Color`) — RGBA. Match the CSS source alpha directly (`.4 alpha = 102 / 255`).
+- `DropshadowOffsetX`, `DropshadowOffsetY` (`float`) — pixel offset of the shadow from the body.
+- `DropshadowBlurX`, `DropshadowBlurY` (`float`) — blur radius per axis. Match the CSS `box-shadow` blur radius value directly. `0` = sharp.
+
+Set the shadow once at construction (on the same `RoundedRectangleRuntime` that paints the body fill), then flip `HasDropshadow` in state callbacks for press/disabled — exactly the way state code already toggles `Visible`. No separate child shape, no z-order to manage.
+
+CSS-to-Apos translation cheatsheet — `box-shadow: <offsetX> <offsetY> <blur> rgba(<r>,<g>,<b>,<a>)` maps to:
+
+```
+fill.HasDropshadow = true;
+fill.DropshadowOffsetX = <offsetX>;
+fill.DropshadowOffsetY = <offsetY>;
+fill.DropshadowBlurX   = <blur>;
+fill.DropshadowBlurY   = <blur>;
+fill.DropshadowColor   = new Color(r, g, b, (int)(a * 255));
+```
+
+The CSS `spread` argument (the optional fourth length value) has no direct equivalent; usually 0 or omitted in modern designs.
+
 ## Rounded outline + rectangular clip container: paint the border last
 
 Gum's clip containers are axis-aligned rectangles. They do not clip to rounded paths. If a themed container has a rounded outline (`RoundedRectangleRuntime` border) AND a child clip container that renders content (text, list items, hovered rows with their own pink fills), naively painting the border *behind* the clip container makes content visibly poke past the rounded outline at the corners.
