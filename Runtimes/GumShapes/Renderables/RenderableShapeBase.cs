@@ -621,7 +621,7 @@ public abstract class RenderableShapeBase : RenderableBase
         // ScissorTestEnable=true - passing the rect alone is ignored.
         var scissor = spriteRenderer?.CurrentScissorRectangle;
         RasterizerState rasterizerState = null;
-        if (scissor.HasValue)
+        if (scissor.HasValue && spriteRenderer != null)
         {
             sb.GraphicsDevice.ScissorRectangle = scissor.Value.ToXNA();
             rasterizerState = spriteRenderer.ScissorTestRasterizerState;

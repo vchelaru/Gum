@@ -154,9 +154,9 @@ public class ButtonVisual : BaseButtonVisual
             showFocusRing: true);
 
         States.Pushed.Apply = () => ApplyPalette(
-            fill: DarkProColors.AccentDark,
+            fill: DarkProColors.PressedFill,
             border: DarkProColors.Accent,
-            text: DarkProColors.PressedText,
+            text: DarkProColors.Text,
             showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(

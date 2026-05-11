@@ -49,6 +49,19 @@ public static class DarkProColors
     /// <summary>Disabled border (<c>#292929</c> from .dp-btn.dis).</summary>
     public static readonly Color DisabledBorder = new Color(41, 41, 41);
 
-    /// <summary>Text color shown on a pressed accent fill (<c>#9DCFEE</c> from .dp-btn.pre).</summary>
+    /// <summary>
+    /// Pressed-state fill — a step down from <see cref="Surface1"/> so press reads as a transient
+    /// interaction rather than a state change. The source mockup specified <c>--accd</c>
+    /// (full accent blue) for press, but a fully-blue press makes every button look "toggled"
+    /// rather than "you just clicked me." Accent-fill-on-press is preserved for any future
+    /// primary/default Button variant.
+    /// </summary>
+    public static readonly Color PressedFill = new Color(29, 29, 30);
+
+    /// <summary>
+    /// Light-blue text color from the source mockup's accent-fill press state (<c>#9DCFEE</c>).
+    /// Currently unused — the active <see cref="PressedFill"/> uses normal <see cref="Text"/>.
+    /// Retained for a future primary/default Button variant that paints accent on press.
+    /// </summary>
     public static readonly Color PressedText = new Color(157, 207, 238);
 }
