@@ -38,7 +38,7 @@ internal class Line : RenderableShapeBase
                 forcedColor: DropshadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize: 1);
+        RenderInternal(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize: IsAntialiased ? 1 : 0);
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb,
