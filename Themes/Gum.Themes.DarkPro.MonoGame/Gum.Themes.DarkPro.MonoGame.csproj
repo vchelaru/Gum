@@ -6,7 +6,7 @@
     <LangVersion>12</LangVersion>
 
     <PackageId>Gum.Themes.DarkPro.MonoGame</PackageId>
-    <Version>2026.5.10.1</Version>
+    <Version>2026.5.11.1</Version>
     <Authors>Gum Contributors</Authors>
     <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
     <Description>A flat dark theme for Gum UI inspired by modern code editors. Provides styled visuals for Gum Forms controls with MonoGame and Gum.</Description>
