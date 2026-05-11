@@ -49,11 +49,10 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
 
         AddChild(ScrollAndClipContainer);
 
-        // No per-consumer scroll bar positioning needed — Dark Pro's
-        // ScrollBarVisual bakes its own thumb insets, so the bar's bounding
-        // box can sit flush against the border (the bar's track is transparent;
-        // only the thumb is visible, and the thumb has built-in breathing
-        // room on every side).
+        // Dark Pro's ScrollBarVisual bakes its own thumb insets, so the bar
+        // only needs a 1 px nudge off the consumer's outer edge (the side
+        // facing the border) on top of that.
+        VerticalScrollBarInstance.X = -1f;
 
         WireStates();
     }
