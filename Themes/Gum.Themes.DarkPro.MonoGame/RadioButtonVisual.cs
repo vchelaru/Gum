@@ -151,10 +151,10 @@ public class RadioButtonVisual : BaseRadioButtonVisual
             fill: DarkProColors.Surface1, border: DarkProColors.Border,
             text: DarkProColors.Text, innerVisible: false, ring: false);
 
-        // Off-state hover uses BorderHover (gray), matching TextBox's
-        // hover→focus progression. On-state hover keeps Accent because the
-        // inner dot is already Accent — a gray border with an accent dot
-        // inside would read as mismatched.
+        // Border tracks interaction state only — the inner dot alone signals
+        // value. Hover/Highlighted gets BorderHover (matching TextBox's softer
+        // hover→focus progression), focus drives Accent + ring, and the same
+        // pattern is mirrored on On below.
         States.HighlightedOff.Apply = () => Apply(
             fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
             text: DarkProColors.Text, innerVisible: false, ring: false);
@@ -180,17 +180,16 @@ public class RadioButtonVisual : BaseRadioButtonVisual
             text: DarkProColors.DisabledText, innerVisible: false, ring: true);
 
         // -------- Selected (On) --------
-        // Mirrors CheckBox's "outlined with accent indicator inside" approach -
-        // the outer ring stays Surface1 (or hover/press variant), the inner dot
-        // becomes Accent. Outer border switches to Accent so the whole assembly
-        // reads as "this has a value."
+        // Border mirrors the Off variants exactly — the value is communicated solely
+        // by the accent dot inside. Off and On look identical in chrome; the dot is
+        // the only difference.
         States.EnabledOn.Apply = () => Apply(
-            fill: DarkProColors.Surface1, border: DarkProColors.Accent,
+            fill: DarkProColors.Surface1, border: DarkProColors.Border,
             text: DarkProColors.Text, innerVisible: true, innerColor: DarkProColors.Accent,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
+            fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
             text: DarkProColors.Text, innerVisible: true, innerColor: DarkProColors.Accent,
             ring: false);
 

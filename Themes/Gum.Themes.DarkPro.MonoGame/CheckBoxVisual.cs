@@ -196,12 +196,10 @@ public class CheckBoxVisual : BaseCheckBoxVisual
             fill: DarkProColors.Surface1, border: DarkProColors.Border,
             text: DarkProColors.Text, glyph: GlyphKind.None, ring: false);
 
-        // Off-state hover uses BorderHover (gray), matching the TextBox
-        // hover→focus progression: a transient gray hover reads as a state hint
-        // and the sustained blue on Focused/checked states reads as the actual
-        // value change. On/Indeterminate hover states keep Accent because the
-        // indicator inside is already Accent — a gray border with an accent
-        // indicator inside would read as mismatched.
+        // Border tracks interaction state only — the inside glyph alone signals
+        // value. Hover/Highlighted gets BorderHover (matching TextBox's softer
+        // hover→focus progression), focus drives Accent + ring, and the same
+        // pattern is mirrored on On / Indeterminate below.
         States.HighlightedOff.Apply = () => Apply(
             fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
             text: DarkProColors.Text, glyph: GlyphKind.None, ring: false);
@@ -227,17 +225,16 @@ public class CheckBoxVisual : BaseCheckBoxVisual
             text: DarkProColors.DisabledText, glyph: GlyphKind.None, ring: true);
 
         // -------- Checked (On) --------
-        // Outlined-with-glyph look: box stays Surface1 (or hover/press variant), border
-        // and check glyph are Accent. Mirrors the indeterminate style so all three value
-        // states (Off / On / Indeterminate) feel like a coherent set distinguished only
-        // by what appears inside the box.
+        // Border mirrors the Off variants exactly — the value is communicated solely by
+        // the glyph inside. Keeps the three value states (Off / On / Indeterminate)
+        // visually identical in chrome and distinguished only by what appears inside.
         States.EnabledOn.Apply = () => Apply(
-            fill: DarkProColors.Surface1, border: DarkProColors.Accent,
+            fill: DarkProColors.Surface1, border: DarkProColors.Border,
             text: DarkProColors.Text, glyph: GlyphKind.Check, glyphColor: DarkProColors.Accent,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
+            fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
             text: DarkProColors.Text, glyph: GlyphKind.Check, glyphColor: DarkProColors.Accent,
             ring: false);
 
@@ -268,11 +265,11 @@ public class CheckBoxVisual : BaseCheckBoxVisual
 
         // -------- Indeterminate --------
         States.EnabledIndeterminate.Apply = () => Apply(
-            fill: DarkProColors.Surface1, border: DarkProColors.Accent,
+            fill: DarkProColors.Surface1, border: DarkProColors.Border,
             text: DarkProColors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.HighlightedIndeterminate.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
+            fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
             text: DarkProColors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.FocusedIndeterminate.Apply = () => Apply(
