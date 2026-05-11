@@ -184,5 +184,8 @@ public static class DarkProTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(ListBoxItem)] =
             new VisualTemplate((_, c) => new ListBoxItemVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] =
+            new VisualTemplate((_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
     }
 }
