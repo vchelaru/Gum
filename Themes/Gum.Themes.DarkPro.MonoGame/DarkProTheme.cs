@@ -204,5 +204,8 @@ public static class DarkProTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(Window)] =
             new VisualTemplate((_, c) => new WindowVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Splitter)] =
+            new VisualTemplate((_, c) => new SplitterVisual(tryCreateFormsObject: c));
     }
 }
