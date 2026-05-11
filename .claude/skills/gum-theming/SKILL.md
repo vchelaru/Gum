@@ -74,6 +74,24 @@ If your theme calls `KernSmithFontCreator` directly, KernSmith is a runtime depe
 
 `Gum.Themes.Editor.MonoGame` currently has `PrivateAssets=All` on KernSmith — that's a latent bug; consumers would need to install KernSmith manually even though the theme depends on it.
 
+## Visual-side inheritance doesn't match Forms-side inheritance
+
+The Forms control hierarchy is `ScrollViewer ← ItemsControl ← ListBox` (plus `Menu` / `MenuItem : ItemsControl`). The V3 default visual hierarchy is **not** parallel:
+
+- `ScrollViewerVisual : InteractiveGue` ✓
+- `ItemsControlVisual : ScrollViewerVisual` ✓ (thin wrapper; just swaps the Forms control type)
+- `ListBoxVisual : InteractiveGue` ✗ — **parallel reimplementation, not a subclass of `ItemsControlVisual`**
+
+Field names differ between the two paths too (`ListBoxVisual.ClipAndScrollContainer` vs `ScrollViewerVisual.ScrollAndClipContainer`, `ClipContainerParent` vs `ClipContainerContainer`, etc.) so even a textual diff doesn't reveal them as the same concept.
+
+Practical consequences for a theme:
+
+- **ScrollBar styling cascades for free** — `new ScrollBar()` from V3.ScrollViewerVisual and V3.ListBoxVisual both resolve through `DefaultFormsTemplates[typeof(ScrollBar)]`. One ScrollBar template covers everything.
+- **ScrollViewer shell cascades to ItemsControl / Menu / MenuItem for free** — they inherit `ScrollViewerVisual`, so a Dark-Pro-style `ScrollViewerVisual` subclass automatically themes those too.
+- **ListBox shell does NOT cascade.** Even after subclassing `ScrollViewerVisual`, you still need a separate subclass of `ListBoxVisual` to apply the same shell (Background, FocusedIndicator, scrollbar inset, state callbacks). Expect to copy/paste the shell pattern between the two.
+
+Fixing this on the V3 side (making `ListBoxVisual : ItemsControlVisual`) is a dedicated refactor — every existing theme and every consumer reading `ListBoxVisual` field names directly would need updates. Until that happens, treat the duplication as inherent and don't try to be clever about it in a theme.
+
 ## Cross-references
 
 - Apos.Shapes runtime types and the shape-batch scissor plumbing: [gum-monogame-rendering](../gum-monogame-rendering/SKILL.md).
