@@ -6,8 +6,8 @@ This section covers file loading and font setup for Gum projects. The font pages
 
 * [Fonts](fonts.md) — start here. Decision tree: which font strategy fits your game.
 * [Font Strategies](font-strategies.md) — detailed walkthroughs of each strategy with code samples.
-* [Font Performance](font-performance.md) — where the costs live (generation, memory, draw calls, the property-change footgun).
-* [Font Preloading](font-preloading.md) — force-generate every font/size/style your game uses before gameplay starts.
+* [Font Performance](font-performance.md) — where the costs live (generation, memory, draw calls).
+* [Font Preloading](font-preloading.md) — making sure every font/size/style your game uses is ready before gameplay starts.
 * [Fonts on Web](fonts-web.md) — bandwidth vs CPU tradeoffs for web targets.
 * [Font Localization](font-localization.md) — current behavior and the planned per-locale system.
 * [Font Cache](font-cache.md) — the build-time `.fnt` atlas system.

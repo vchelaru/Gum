@@ -47,8 +47,8 @@ The Gum tool generates these atlases automatically while you edit your project. 
 ## Hub Contents
 
 * [Font Strategies](font-strategies.md) — concrete details and code samples for each strategy above.
-* [Font Performance](font-performance.md) — what costs each strategy, where the hitches and footguns are.
-* [Font Preloading](font-preloading.md) — how to force-generate every font/size/style your game uses before gameplay starts.
+* [Font Performance](font-performance.md) — what costs each strategy, where the hitches live.
+* [Font Preloading](font-preloading.md) — making sure every font/size/style your game uses is ready before gameplay starts.
 * [Fonts on Web](fonts-web.md) — bandwidth vs CPU tradeoffs for web targets.
 * [Font Localization](font-localization.md) — current behavior, known limitations, and the per-locale design that's coming.
 * [Font Cache](font-cache.md) — the build-time `.fnt` atlas system, naming convention, and when to use it.
