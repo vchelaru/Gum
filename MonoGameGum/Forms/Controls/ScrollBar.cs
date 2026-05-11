@@ -104,19 +104,16 @@ public class ScrollBar : RangeBase
 
         if(upButton != null)
         {
-            // Push gives mouse "hold to keep scrolling" behavior; Click also wired so
-            // keyboard Enter / gamepad confirm increment by one. Filtered to InputEventArgs
-            // so a mouse click (which fires Push *and* Click) doesn't double-scroll —
-            // ButtonBase.HandleClick uses plain EventArgs for mouse, InputEventArgs for
-            // keyboard / gamepad / input-device confirm presses.
+            // ButtonBase.HandleKeyboardFocusUpdate routes keyboard press → Push
+            // and keyboard release → Click, so this single Push subscription
+            // covers mouse press-and-hold *and* keyboard Enter activation
+            // without doubling on either path.
             upButton.Push += (_, _) => this.Value -= this.SmallChange;
-            upButton.Click += (_, e) => { if (e is InputEventArgs) this.Value -= this.SmallChange; };
         }
 
         if(downButton != null)
         {
             downButton.Push += (_, _) => this.Value += this.SmallChange;
-            downButton.Click += (_, e) => { if (e is InputEventArgs) this.Value += this.SmallChange; };
         }
 
         if(Track != null)
