@@ -213,5 +213,11 @@ public static class DarkProTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] =
             new VisualTemplate((_, c) => new MenuItemVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ToggleButton)] =
+            new VisualTemplate((_, c) => new ToggleButtonVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] =
+            new VisualTemplate((_, c) => new TooltipVisual(tryCreateFormsObject: c));
     }
 }
