@@ -775,7 +775,7 @@ public class Renderer : IRenderer
         if (renderable.Visible || ( renderable.IsRenderTarget && isPreRender))
         {
             var oldClip = mRenderStateVariables.ClipRectangle;
-            AdjustRenderStates(mRenderStateVariables, layer, renderable);
+            AdjustRenderStates(mRenderStateVariables, layer, renderable, managers);
             bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
 
             if (renderable.IsRenderTarget && !forceRenderHierarchy)
@@ -830,11 +830,12 @@ public class Renderer : IRenderer
     // backends can share the world->screen scissor math.
 
 
-    private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable)
+    private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
         BlendState renderBlendState = renderable.BlendState;
         bool wrap = renderable.Wrap;
         bool shouldResetStates = false;
+        bool didClipChange = false;
 
         if (renderBlendState == null)
         {
@@ -874,6 +875,7 @@ public class Renderer : IRenderer
 
                 renderState.ClipRectangle = adjustedRectangle;
                 shouldResetStates = true;
+                didClipChange = true;
             }
 
         }
@@ -881,6 +883,23 @@ public class Renderer : IRenderer
 
         if (shouldResetStates)
         {
+            // Mirror the exit path's flush (see the didClipChange branch in Draw): when the
+            // scissor rect changes mid-walk, end any in-flight custom batch BEFORE we
+            // restart SpriteBatch with the new scissor. Without this, an Apos.Shapes batch
+            // that was opened earlier in the walk (e.g. by a sibling scrollbar thumb)
+            // stays open, and the first shape descendant inside the new clip has a matching
+            // BatchKey so OnRenderable doesn't fire a fresh StartBatch — its draw queues
+            // into the stale-scissor ShapeBatch and bleeds past the clip. The flush forces
+            // the next custom-batch renderable to fire StartBatch and pick up the current
+            // scissor from SpriteRenderer.CurrentScissorRectangle.
+            //
+            // Only required when clip changed — blend / color / wrap don't propagate to
+            // ShapeBatch state (each sb.Begin captures its own), so a non-clip state change
+            // is safe to leave the custom batch alone.
+            if (didClipChange)
+            {
+                _batchOrchestrator.FlushAndReset(managers);
+            }
             spriteRenderer.BeginSpriteBatch(renderState, layer, BeginType.Begin, mCamera, renderable);
         }
     }
