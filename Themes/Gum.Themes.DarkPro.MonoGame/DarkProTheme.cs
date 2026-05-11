@@ -169,5 +169,14 @@ public static class DarkProTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] =
             new VisualTemplate((_, c) => new RadioButtonVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(TextBox)] =
+            new VisualTemplate((_, c) => new TextBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(PasswordBox)] =
+            new VisualTemplate((_, c) => new PasswordBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Slider)] =
+            new VisualTemplate((_, c) => new SliderVisual(tryCreateFormsObject: c));
     }
 }

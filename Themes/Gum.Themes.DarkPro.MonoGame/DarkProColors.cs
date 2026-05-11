@@ -37,6 +37,18 @@ public static class DarkProColors
     /// </summary>
     public static readonly Color AccentPressed = new Color(0, 90, 153);
 
+    /// <summary>
+    /// Brighter accent used for hover on accent-filled elements like the slider
+    /// thumb (<c>#2299E0</c> from .sldr.hov .sldr-thumb).
+    /// </summary>
+    public static readonly Color HoverAccent = new Color(34, 153, 224);
+
+    /// <summary>
+    /// Fill color for disabled accent-filled elements (slider thumb, future
+    /// progress indicators) — <c>#3E3E42</c> from .sldr.dis .sldr-thumb.
+    /// </summary>
+    public static readonly Color DisabledThumb = new Color(62, 62, 66);
+
     /// <summary>Primary text (<c>--txt</c>, <c>#D4D4D4</c>).</summary>
     public static readonly Color Text = new Color(212, 212, 212);
 
