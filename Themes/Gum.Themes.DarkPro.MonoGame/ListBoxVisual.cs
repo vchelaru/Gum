@@ -48,14 +48,14 @@ public class ListBoxVisual : BaseListBoxVisual
         // the new background shapes.
         AddChild(ClipAndScrollContainer);
 
-        // Inset the scroll bar vertically so its thumb doesn't touch (or
-        // visibly bleed through) the 1 px border at top/bottom. Lateral
-        // spacing already comes from the thumb's own inset inside the bar,
-        // so the bar stays flush to the right edge — adding an X inset on
-        // top of that produces a visibly off-balance right-side gap.
+        // Inset the scroll bar so it sits 1 px clear of the 1 px border on
+        // top, right, and bottom (combined with the bar's own thumb inset
+        // this lands the thumb ~2 px clear of the inner border on every
+        // side, which reads balanced against Dark Pro's thin border).
         if (VerticalScrollBarInstance != null)
         {
-            VerticalScrollBarInstance.Height = -4f;
+            VerticalScrollBarInstance.X = -1f;
+            VerticalScrollBarInstance.Height = -6f;
         }
 
         WireStates();
