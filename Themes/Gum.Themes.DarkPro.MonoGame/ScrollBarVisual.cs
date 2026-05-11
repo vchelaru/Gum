@@ -47,6 +47,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
     private readonly ScrollBarThumbVisual _thumb;
     private readonly RoundedRectangleRuntime _frameFill;
     private readonly RoundedRectangleRuntime _frameBorder;
+    private bool _isHorizontal;
 
     public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         // The base ctor creates the V3 ThumbInstance (a plain V3 ButtonVisual)
@@ -95,19 +96,23 @@ public class ScrollBarVisual : BaseScrollBarVisual
         // ThumbContainer on the long axis so the thumb at scroll extremes
         // never touches the bar's edge, and inset the thumb on the short axis
         // so it reads as slim navigation chrome.
+        // When ShowFrame is on, the visible edge moves inward by the 1 px
+        // border stroke, so we grow each inset by FrameBorderThickness to keep
+        // the visible thumb-to-edge gap constant with or without the frame.
         States.OrientationStates.Vertical.Apply = () =>
         {
+            _isHorizontal = false;
             Height = 128f;
             HeightUnits = DimensionUnitType.Absolute;
             Width = 14f;
             WidthUnits = DimensionUnitType.Absolute;
 
-            ThumbContainer.Height = -ThumbContainerLongAxisInset * 2f;
+            ThumbContainer.Height = -LongAxisInset * 2f;
             ThumbContainer.HeightUnits = DimensionUnitType.RelativeToParent;
             ThumbContainer.Width = 0f;
             ThumbContainer.WidthUnits = DimensionUnitType.RelativeToParent;
 
-            _thumb.Width = -ThumbShortAxisInset * 2f;
+            _thumb.Width = -ShortAxisInset * 2f;
             _thumb.WidthUnits = DimensionUnitType.RelativeToParent;
             _thumb.Height = 0f;
             _thumb.HeightUnits = DimensionUnitType.RelativeToParent;
@@ -121,17 +126,18 @@ public class ScrollBarVisual : BaseScrollBarVisual
 
         States.OrientationStates.Horizontal.Apply = () =>
         {
+            _isHorizontal = true;
             Height = 14f;
             HeightUnits = DimensionUnitType.Absolute;
             Width = 128f;
             WidthUnits = DimensionUnitType.Absolute;
 
-            ThumbContainer.Width = -ThumbContainerLongAxisInset * 2f;
+            ThumbContainer.Width = -LongAxisInset * 2f;
             ThumbContainer.WidthUnits = DimensionUnitType.RelativeToParent;
             ThumbContainer.Height = 0f;
             ThumbContainer.HeightUnits = DimensionUnitType.RelativeToParent;
 
-            _thumb.Height = -ThumbShortAxisInset * 2f;
+            _thumb.Height = -ShortAxisInset * 2f;
             _thumb.HeightUnits = DimensionUnitType.RelativeToParent;
             _thumb.Width = 0f;
             _thumb.WidthUnits = DimensionUnitType.RelativeToParent;
@@ -162,10 +168,28 @@ public class ScrollBarVisual : BaseScrollBarVisual
         get => _frameFill.Visible;
         set
         {
+            if (_frameFill.Visible == value) return;
             _frameFill.Visible = value;
             _frameBorder.Visible = value;
+
+            // Re-apply the current orientation so LongAxisInset/ShortAxisInset
+            // pick up the new frame state (frame border eats 1 px per side).
+            if (_isHorizontal)
+            {
+                States.OrientationStates.Horizontal.Apply?.Invoke();
+            }
+            else
+            {
+                States.OrientationStates.Vertical.Apply?.Invoke();
+            }
         }
     }
+
+    private float LongAxisInset =>
+        ThumbContainerLongAxisInset + (_frameFill.Visible ? FrameBorderThickness : 0f);
+
+    private float ShortAxisInset =>
+        ThumbShortAxisInset + (_frameFill.Visible ? FrameBorderThickness : 0f);
 
     private static RoundedRectangleRuntime CreateFrameFill()
     {
