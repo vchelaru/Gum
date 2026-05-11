@@ -314,18 +314,13 @@ public class ButtonBase :
 
                 wasPushedOnCurrentHold = true;
 
-                // Keyboard press fires Push (mirrors mouse-down). Click fires on
-                // release, below. Doing both here would make controls like
-                // ScrollBar (which listens to Push for press-and-hold scrolling)
-                // need a separate Click handler.
-                this.HandlePush(this, new InputEventArgs() { InputDevice = keyboard });
+                this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
 
                 UpdateState();
 
             }
             if(wasReleased)
             {
-                this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
                 UpdateState();
             }
         }

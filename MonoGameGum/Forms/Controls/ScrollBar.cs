@@ -104,16 +104,35 @@ public class ScrollBar : RangeBase
 
         if(upButton != null)
         {
-            // ButtonBase.HandleKeyboardFocusUpdate routes keyboard press → Push
-            // and keyboard release → Click, so this single Push subscription
-            // covers mouse press-and-hold *and* keyboard Enter activation
-            // without doubling on either path.
+            // Push gives mouse "press and hold to keep scrolling" behavior.
+            // Click is also wired specifically for keyboard activation
+            // (Enter / Space when the arrow button is focused). The filter has
+            // to discriminate keyboard from mouse — and the right test is
+            // narrow: "InputEventArgs *and* the input device is a keyboard."
+            // A bare `e is InputEventArgs` check looked correct on paper but
+            // didn't reliably exclude the mouse path, producing a double
+            // scroll per click. Pinning to the keyboard device type leaves
+            // the mouse path untouched.
             upButton.Push += (_, _) => this.Value -= this.SmallChange;
+            upButton.Click += (_, e) =>
+            {
+                if (e is InputEventArgs iea && iea.InputDevice is IInputReceiverKeyboard)
+                {
+                    this.Value -= this.SmallChange;
+                }
+            };
         }
 
         if(downButton != null)
         {
             downButton.Push += (_, _) => this.Value += this.SmallChange;
+            downButton.Click += (_, e) =>
+            {
+                if (e is InputEventArgs iea && iea.InputDevice is IInputReceiverKeyboard)
+                {
+                    this.Value += this.SmallChange;
+                }
+            };
         }
 
         if(Track != null)
