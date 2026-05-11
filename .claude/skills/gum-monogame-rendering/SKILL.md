@@ -151,6 +151,8 @@ The hazard pattern: a shape sibling of a clip container is rendered first (e.g. 
 
 This is clip-specific. Blend / color / wrap state changes don't propagate to ShapeBatch (each `sb.Begin` captures its own), so they don't need the flush. The orchestrator-level contract (`BatchOrchestratorTests.ShapeAfterFlush_FiresFreshStartBatch_EvenWhenKeyMatchesPreFlushKey`) documents the post-flush behavior the fix relies on.
 
+**Test gap:** the orchestrator unit tests cover the "given flush, then next renderable fires Start" contract, but the *integration* — that `Renderer.AdjustRenderStates` actually invokes `FlushAndReset` on a clip change — isn't automated. The empirical canary in checklist item #9 is what catches regressions; a Renderer-level test would need GPU scaffolding similar to `MatrixRoutingTests` (MinimalGame.RunOneFrame) plus a way to observe orchestrator events through a real draw walk. Worth adding if this code path regresses again.
+
 ## ContainerRuntime's BatchKey Override (Historical Pitfall)
 
 `MonoGameGum/GueDeriving/ContainerRuntime.cs` historically had:

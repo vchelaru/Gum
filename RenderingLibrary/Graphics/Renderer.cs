@@ -883,19 +883,18 @@ public class Renderer : IRenderer
 
         if (shouldResetStates)
         {
-            // Mirror the exit path's flush (see the didClipChange branch in Draw): when the
-            // scissor rect changes mid-walk, end any in-flight custom batch BEFORE we
-            // restart SpriteBatch with the new scissor. Without this, an Apos.Shapes batch
-            // that was opened earlier in the walk (e.g. by a sibling scrollbar thumb)
-            // stays open, and the first shape descendant inside the new clip has a matching
-            // BatchKey so OnRenderable doesn't fire a fresh StartBatch — its draw queues
-            // into the stale-scissor ShapeBatch and bleeds past the clip. The flush forces
-            // the next custom-batch renderable to fire StartBatch and pick up the current
-            // scissor from SpriteRenderer.CurrentScissorRectangle.
+            // Mirror the clip-exit flush in Draw: end any in-flight custom batch before
+            // restarting SpriteBatch with the new scissor. Without this, an Apos.Shapes
+            // batch opened earlier in the walk (e.g. a sibling scrollbar thumb) stays
+            // open; the first shape descendant inside the clip has a matching BatchKey
+            // so OnRenderable is a no-op and its draw queues into the stale-scissor
+            // ShapeBatch, bleeding past the clip. Clip-only: blend / color / wrap don't
+            // propagate to ShapeBatch state (each sb.Begin captures its own).
             //
-            // Only required when clip changed — blend / color / wrap don't propagate to
-            // ShapeBatch state (each sb.Begin captures its own), so a non-clip state change
-            // is safe to leave the custom batch alone.
+            // Contract: BatchOrchestratorTests.ShapeAfterFlush_FiresFreshStartBatch_
+            // EvenWhenKeyMatchesPreFlushKey. Architectural rationale + pitfall checklist:
+            // .claude/skills/gum-monogame-rendering/SKILL.md "Mid-Walk Scissor Change
+            // Must Flush the Open Custom Batch".
             if (didClipChange)
             {
                 _batchOrchestrator.FlushAndReset(managers);
