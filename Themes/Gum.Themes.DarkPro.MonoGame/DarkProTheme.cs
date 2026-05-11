@@ -166,5 +166,8 @@ public static class DarkProTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] =
             new VisualTemplate((_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] =
+            new VisualTemplate((_, c) => new RadioButtonVisual(tryCreateFormsObject: c));
     }
 }
