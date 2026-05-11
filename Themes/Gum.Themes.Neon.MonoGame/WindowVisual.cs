@@ -33,8 +33,8 @@ public class WindowVisual : BaseWindowVisual
     /// sRGB-vs-linear note so the window reads as glowing rather than flat.
     /// </summary>
     private const float ShadowOffsetY = 0f;
-    private const float ShadowBlur = 30f;
-    private static readonly Color ShadowColor = new Color(0, 229, 255, 90);
+    private const float ShadowBlur = 42f;
+    private static readonly Color ShadowColor = new Color(0, 229, 255, 180);
 
     private readonly RoundedRectangleRuntime _fill;
     private readonly RoundedRectangleRuntime _border;

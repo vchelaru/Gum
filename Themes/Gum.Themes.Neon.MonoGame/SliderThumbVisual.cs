@@ -28,8 +28,8 @@ public class SliderThumbVisual : InteractiveGue
     /// gum-theming skill's sRGB note so the halo reads as bright in-engine.
     /// </summary>
     private const float ShadowOffsetY = 0f;
-    private const float ShadowBlur = 14f;
-    private static readonly Color ShadowColor = new Color(0, 229, 255, 180);
+    private const float ShadowBlur = 22f;
+    private static readonly Color ShadowColor = new Color(0, 229, 255, 240);
 
     private readonly ColoredCircleRuntime _focusRing;
     private readonly ColoredCircleRuntime _body;

@@ -26,8 +26,8 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
     /// <c>_fill.HasDropshadow</c> (off when disabled).
     /// </summary>
     private const float ShadowOffsetY = 0f;
-    private const float ShadowBlur = 14f;
-    private static readonly Color ShadowColor = NeonPalette.GlowMedium;
+    private const float ShadowBlur = 26f;
+    private static readonly Color ShadowColor = NeonPalette.GlowStrong;
 
     private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;

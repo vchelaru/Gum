@@ -21,9 +21,13 @@ public class ButtonVisual : BaseButtonVisual
     private const float CornerRadius = 1f;
     private const float BorderThickness = 1f;
 
-    private const float RestGlowBlur = 16f;
-    private const float HoverGlowBlur = 10f;
-    private const float PushedGlowBlur = 8f;
+    // Blur is roughly 2.5× the CSS spec, matching the alpha bump in
+    // NeonPalette — same sRGB-vs-linear compositing reasoning. The opaque
+    // hover/push fills block the bloom from showing through the body, so
+    // wide blurs no longer wash out the text label.
+    private const float RestGlowBlur = 24f;
+    private const float HoverGlowBlur = 28f;
+    private const float PushedGlowBlur = 32f;
 
     /// <summary>White-ring focus indicator. Offset 4 px outside the body so
     /// the gap between body border and ring is unmistakable.</summary>
@@ -148,7 +152,7 @@ public class ButtonVisual : BaseButtonVisual
 
         States.Focused.Apply = () => Apply(
             fill: NeonColors.Surface1, text: NeonColors.Accent,
-            glow: NeonPalette.GlowMedium, blur: RestGlowBlur, ring: true);
+            glow: NeonPalette.GlowStrong, blur: HoverGlowBlur, ring: true);
 
         States.HighlightedFocused.Apply = () => Apply(
             fill: NeonPalette.ButtonHoverFill, text: NeonColors.Accent,
@@ -156,7 +160,7 @@ public class ButtonVisual : BaseButtonVisual
 
         States.Pushed.Apply = () => Apply(
             fill: NeonPalette.ButtonPushedFill, text: NeonColors.Accent,
-            glow: NeonPalette.GlowMedium, blur: PushedGlowBlur, ring: false);
+            glow: NeonPalette.GlowStrong, blur: PushedGlowBlur, ring: false);
 
         States.Disabled.Apply = () => Apply(
             fill: NeonColors.Background, text: NeonColors.Muted,

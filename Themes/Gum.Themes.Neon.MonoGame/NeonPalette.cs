@@ -81,21 +81,18 @@ internal static class NeonPalette
     /// </summary>
     public static readonly Color CloseFill = new Color(255, 0, 153, 38);
 
-    /// <summary>
-    /// Glow shadow color at the default alpha used by most stationary
-    /// visuals (matches CSS <c>rgba(0,229,255,.5)</c>).
-    /// </summary>
-    public static readonly Color GlowMedium = new Color(0, 229, 255, 128);
+    // Glow alpha is bumped well above CSS literals because Apos.Shapes
+    // composites in sRGB while browsers composite in linear light — same
+    // alpha math reads markedly fainter in-engine. See `gum-theming` skill
+    // for the long-form note. These values were tuned by eye against the
+    // mockup at https://github.com/vchelaru/Gum (Gum Styles.html, .nc block).
 
-    /// <summary>
-    /// Glow shadow color for hover/focus emphasis (matches CSS
-    /// <c>rgba(0,229,255,.8)</c>).
-    /// </summary>
-    public static readonly Color GlowStrong = new Color(0, 229, 255, 204);
+    /// <summary>Resting glow — bumped from CSS <c>rgba(0,229,255,.5)</c>.</summary>
+    public static readonly Color GlowMedium = new Color(0, 229, 255, 220);
 
-    /// <summary>
-    /// Subdued glow for resting states (matches CSS
-    /// <c>rgba(0,229,255,.2)</c>).
-    /// </summary>
-    public static readonly Color GlowSubtle = new Color(0, 229, 255, 51);
+    /// <summary>Hover/focus glow — full-opacity cyan.</summary>
+    public static readonly Color GlowStrong = new Color(0, 229, 255, 255);
+
+    /// <summary>Subtle resting glow for chrome controls.</summary>
+    public static readonly Color GlowSubtle = new Color(0, 229, 255, 140);
 }
