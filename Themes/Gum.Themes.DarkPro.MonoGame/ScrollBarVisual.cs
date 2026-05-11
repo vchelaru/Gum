@@ -1,5 +1,6 @@
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using BaseScrollBarVisual = Gum.Forms.DefaultVisuals.V3.ScrollBarVisual;
@@ -39,7 +40,13 @@ public class ScrollBarVisual : BaseScrollBarVisual
     /// </summary>
     private const float ThumbContainerLongAxisInset = 3f;
 
+    /// <summary>Corner radius and stroke for the optional surrounding frame (see <see cref="ShowFrame"/>).</summary>
+    private const float FrameCornerRadius = 2f;
+    private const float FrameBorderThickness = 1f;
+
     private readonly ScrollBarThumbVisual _thumb;
+    private readonly RoundedRectangleRuntime _frameFill;
+    private readonly RoundedRectangleRuntime _frameBorder;
 
     public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         // The base ctor creates the V3 ThumbInstance (a plain V3 ButtonVisual)
@@ -68,6 +75,19 @@ public class ScrollBarVisual : BaseScrollBarVisual
         _thumb = new ScrollBarThumbVisual();
         _thumb.Name = "ThumbInstance";
         ThumbContainer.AddChild(_thumb);
+
+        // Optional frame chrome — created up-front and hidden, toggled by
+        // ShowFrame. Inserted before ThumbContainer so it renders behind the
+        // thumb. Used for free-floating scrollbars (not inside a ListBox /
+        // ScrollViewer shell) to give the bar a visible container.
+        ThumbContainer.Parent = null;
+        _frameFill = CreateFrameFill();
+        _frameFill.Visible = false;
+        AddChild(_frameFill);
+        _frameBorder = CreateFrameBorder();
+        _frameBorder.Visible = false;
+        AddChild(_frameBorder);
+        AddChild(ThumbContainer);
 
         // Replace the V3 orientation callbacks. The base ones reserve 48px of
         // the bar for the now-detached arrow buttons and re-layout the V3
@@ -127,5 +147,65 @@ public class ScrollBarVisual : BaseScrollBarVisual
         {
             FormsControlAsObject = new Gum.Forms.Controls.ScrollBar(this);
         }
+    }
+
+    /// <summary>
+    /// When true, paints a Surface1 fill + 1 px Border stroke around the
+    /// scroll bar (CornerRadius=2), matching the rest of the Dark Pro shell
+    /// style. Use for free-floating scroll bars that aren't already nested
+    /// inside a Dark Pro container (ListBox / ScrollViewer already provide
+    /// the surrounding chrome, so leave this off in those cases). Defaults
+    /// to false.
+    /// </summary>
+    public bool ShowFrame
+    {
+        get => _frameFill.Visible;
+        set
+        {
+            _frameFill.Visible = value;
+            _frameBorder.Visible = value;
+        }
+    }
+
+    private static RoundedRectangleRuntime CreateFrameFill()
+    {
+        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        fill.Name = "DarkProScrollBarFrameFill";
+        fill.X = 0;
+        fill.Y = 0;
+        fill.XUnits = GeneralUnitType.PixelsFromMiddle;
+        fill.YUnits = GeneralUnitType.PixelsFromMiddle;
+        fill.XOrigin = HorizontalAlignment.Center;
+        fill.YOrigin = VerticalAlignment.Center;
+        fill.Width = 0;
+        fill.Height = 0;
+        fill.WidthUnits = DimensionUnitType.RelativeToParent;
+        fill.HeightUnits = DimensionUnitType.RelativeToParent;
+        fill.CornerRadius = FrameCornerRadius;
+        fill.IsFilled = true;
+        fill.Color = DarkProColors.Surface1;
+        return fill;
+    }
+
+    private static RoundedRectangleRuntime CreateFrameBorder()
+    {
+        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        border.Name = "DarkProScrollBarFrameBorder";
+        border.X = 0;
+        border.Y = 0;
+        border.XUnits = GeneralUnitType.PixelsFromMiddle;
+        border.YUnits = GeneralUnitType.PixelsFromMiddle;
+        border.XOrigin = HorizontalAlignment.Center;
+        border.YOrigin = VerticalAlignment.Center;
+        border.Width = 0;
+        border.Height = 0;
+        border.WidthUnits = DimensionUnitType.RelativeToParent;
+        border.HeightUnits = DimensionUnitType.RelativeToParent;
+        border.CornerRadius = FrameCornerRadius;
+        border.IsFilled = false;
+        border.StrokeWidth = FrameBorderThickness;
+        border.StrokeWidthUnits = DimensionUnitType.Absolute;
+        border.Color = DarkProColors.Border;
+        return border;
     }
 }
