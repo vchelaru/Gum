@@ -39,10 +39,24 @@ public class ScrollBarVisual : BaseScrollBarVisual
         // fill reads close enough at typical scroll-bar widths.
         TrackInstance.Parent = null;
 
+        // V3 added UpButtonInstance / DownButtonInstance / ThumbContainer as
+        // children in the base ctor; AddChild appends to the end so anything
+        // we add now would paint ON TOP of them. Detach the chrome children,
+        // add the track fill first, then re-attach so the final paint order is
+        // [trackFill (back), buttons, thumb (front)].
+        GraphicalUiElement? upBtn = UpButtonInstance;
+        GraphicalUiElement? downBtn = DownButtonInstance;
+        ContainerRuntime existingThumbContainer = ThumbContainer;
+        if (upBtn != null) upBtn.Parent = null;
+        if (downBtn != null) downBtn.Parent = null;
+        existingThumbContainer.Parent = null;
+
         ColoredRectangleRuntime trackFill = NewStretched("Retro95ScrollBarTrackFill", Retro95Colors.Surface);
-        // Inserted as the first child so all subsequent chrome (arrow buttons,
-        // thumb container) paints on top.
         AddChild(trackFill);
+
+        if (upBtn != null) AddChild(upBtn);
+        if (downBtn != null) AddChild(downBtn);
+        AddChild(existingThumbContainer);
 
         // V3 attaches the up/down arrow icons via SpriteRuntimes that reference
         // the V3 sprite-sheet texture — we don't ship that texture and we want

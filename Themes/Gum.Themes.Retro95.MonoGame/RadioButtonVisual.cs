@@ -24,6 +24,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private readonly ColoredCircleRuntime _outerFill;
     private readonly ColoredCircleRuntime _outerBorder;
     private readonly ColoredCircleRuntime _innerDot;
+    private readonly Retro95DottedFocusRect _focusRect;
 
     public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -49,6 +50,16 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         _innerDot = CreateInnerDot();
         AddChild(_innerDot);
         _innerDot.Visible = false;
+
+        // Dotted focus ring around the label (same Win95 idiom as CheckBox).
+        _focusRect = new Retro95DottedFocusRect(this, inset: 0f);
+        _focusRect.Container.X = OuterSize + BoxToLabelGap - 2f;
+        _focusRect.Container.XUnits = GeneralUnitType.PixelsFromSmall;
+        _focusRect.Container.XOrigin = HorizontalAlignment.Left;
+        _focusRect.Container.Width = -(OuterSize + BoxToLabelGap - 4f);
+        _focusRect.Container.WidthUnits = DimensionUnitType.RelativeToParent;
+        _focusRect.Container.Height = 0f;
+        _focusRect.Container.HeightUnits = DimensionUnitType.RelativeToParent;
 
         WireStates();
     }
@@ -95,28 +106,29 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private void WireStates()
     {
         // -------- Off --------
-        States.EnabledOff.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: false);
-        States.HighlightedOff.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: false);
-        States.FocusedOff.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: false);
-        States.HighlightedFocusedOff.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: false);
-        States.PushedOff.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: false);
-        States.DisabledOff.Apply = () => Apply(white: false, text: Retro95Colors.DisabledText, dotVisible: false);
-        States.DisabledFocusedOff.Apply = () => Apply(white: false, text: Retro95Colors.DisabledText, dotVisible: false);
+        States.EnabledOff.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: false, focus: false);
+        States.HighlightedOff.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: false, focus: false);
+        States.FocusedOff.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: false, focus: true);
+        States.HighlightedFocusedOff.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: false, focus: true);
+        States.PushedOff.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: false, focus: false);
+        States.DisabledOff.Apply = () => Apply(white: false, text: Retro95Colors.DisabledText, dotVisible: false, focus: false);
+        States.DisabledFocusedOff.Apply = () => Apply(white: false, text: Retro95Colors.DisabledText, dotVisible: false, focus: true);
 
         // -------- On --------
-        States.EnabledOn.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: true);
-        States.HighlightedOn.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: true);
-        States.FocusedOn.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: true);
-        States.HighlightedFocusedOn.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: true);
-        States.PushedOn.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: true);
-        States.DisabledOn.Apply = () => Apply(white: false, text: Retro95Colors.DisabledText, dotVisible: false);
-        States.DisabledFocusedOn.Apply = () => Apply(white: false, text: Retro95Colors.DisabledText, dotVisible: false);
+        States.EnabledOn.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: true, focus: false);
+        States.HighlightedOn.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: true, focus: false);
+        States.FocusedOn.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: true, focus: true);
+        States.HighlightedFocusedOn.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: true, focus: true);
+        States.PushedOn.Apply = () => Apply(white: true, text: Retro95Colors.Text, dotVisible: true, focus: false);
+        States.DisabledOn.Apply = () => Apply(white: false, text: Retro95Colors.DisabledText, dotVisible: false, focus: false);
+        States.DisabledFocusedOn.Apply = () => Apply(white: false, text: Retro95Colors.DisabledText, dotVisible: false, focus: true);
     }
 
-    private void Apply(bool white, Color text, bool dotVisible)
+    private void Apply(bool white, Color text, bool dotVisible, bool focus)
     {
         _outerFill.Color = white ? Retro95Colors.WhiteFill : Retro95Colors.Surface;
         TextInstance.Color = text;
         _innerDot.Visible = dotVisible;
+        if (focus) _focusRect.Show(); else _focusRect.Hide();
     }
 }

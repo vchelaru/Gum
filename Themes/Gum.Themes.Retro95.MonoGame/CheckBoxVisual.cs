@@ -25,6 +25,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private readonly Retro95Bevel _bevel;
     private readonly TextRuntime _checkGlyph;
     private readonly ColoredRectangleRuntime _dashIndicator;
+    private readonly Retro95DottedFocusRect _focusRect;
 
     public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -73,6 +74,19 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         _boxContainer.AddChild(_dashIndicator);
         _dashIndicator.Visible = false;
 
+        // Win95 puts the dotted focus ring tightly around the label text, not
+        // the box. We anchor the rect to the left edge of the text area and
+        // size it to the text (RelativeToParent on width; the visual's height
+        // is 16 so we cover the full row height for the rect).
+        _focusRect = new Retro95DottedFocusRect(this, inset: 0f);
+        _focusRect.Container.X = BoxSize + BoxToLabelGap - 2f;
+        _focusRect.Container.XUnits = GeneralUnitType.PixelsFromSmall;
+        _focusRect.Container.XOrigin = HorizontalAlignment.Left;
+        _focusRect.Container.Width = -(BoxSize + BoxToLabelGap - 4f);
+        _focusRect.Container.WidthUnits = DimensionUnitType.RelativeToParent;
+        _focusRect.Container.Height = 0f;
+        _focusRect.Container.HeightUnits = DimensionUnitType.RelativeToParent;
+
         WireStates();
     }
 
@@ -117,36 +131,36 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private void WireStates()
     {
         // -------- Off --------
-        States.EnabledOff.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.None);
-        States.HighlightedOff.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.None);
-        States.FocusedOff.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.None);
-        States.HighlightedFocusedOff.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.None);
-        States.PushedOff.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.None);
-        States.DisabledOff.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.None);
-        States.DisabledFocusedOff.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.None);
+        States.EnabledOff.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.None, focus: false);
+        States.HighlightedOff.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.None, focus: false);
+        States.FocusedOff.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.None, focus: true);
+        States.HighlightedFocusedOff.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.None, focus: true);
+        States.PushedOff.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.None, focus: false);
+        States.DisabledOff.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.None, focus: false);
+        States.DisabledFocusedOff.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.None, focus: true);
 
         // -------- On --------
-        States.EnabledOn.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Check, glyphColor: Retro95Colors.Text);
-        States.HighlightedOn.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Check, glyphColor: Retro95Colors.Text);
-        States.FocusedOn.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Check, glyphColor: Retro95Colors.Text);
-        States.HighlightedFocusedOn.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Check, glyphColor: Retro95Colors.Text);
-        States.PushedOn.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Check, glyphColor: Retro95Colors.Text);
-        States.DisabledOn.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.Check, glyphColor: Retro95Colors.DisabledText);
-        States.DisabledFocusedOn.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.Check, glyphColor: Retro95Colors.DisabledText);
+        States.EnabledOn.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Check, glyphColor: Retro95Colors.Text, focus: false);
+        States.HighlightedOn.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Check, glyphColor: Retro95Colors.Text, focus: false);
+        States.FocusedOn.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Check, glyphColor: Retro95Colors.Text, focus: true);
+        States.HighlightedFocusedOn.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Check, glyphColor: Retro95Colors.Text, focus: true);
+        States.PushedOn.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Check, glyphColor: Retro95Colors.Text, focus: false);
+        States.DisabledOn.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.Check, glyphColor: Retro95Colors.DisabledText, focus: false);
+        States.DisabledFocusedOn.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.Check, glyphColor: Retro95Colors.DisabledText, focus: true);
 
         // -------- Indeterminate --------
-        States.EnabledIndeterminate.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Dash);
-        States.HighlightedIndeterminate.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Dash);
-        States.FocusedIndeterminate.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Dash);
-        States.HighlightedFocusedIndeterminate.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Dash);
-        States.PushedIndeterminate.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Dash);
-        States.DisabledIndeterminate.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.Dash);
-        States.DisabledFocusedIndeterminate.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.Dash);
+        States.EnabledIndeterminate.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Dash, focus: false);
+        States.HighlightedIndeterminate.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Dash, focus: false);
+        States.FocusedIndeterminate.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Dash, focus: true);
+        States.HighlightedFocusedIndeterminate.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Dash, focus: true);
+        States.PushedIndeterminate.Apply = () => Apply(fillWhite: true, text: Retro95Colors.Text, glyph: GlyphKind.Dash, focus: false);
+        States.DisabledIndeterminate.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.Dash, focus: false);
+        States.DisabledFocusedIndeterminate.Apply = () => Apply(fillWhite: false, text: Retro95Colors.DisabledText, glyph: GlyphKind.Dash, focus: true);
     }
 
     private enum GlyphKind { None, Check, Dash }
 
-    private void Apply(bool fillWhite, Color text, GlyphKind glyph, Color? glyphColor = null)
+    private void Apply(bool fillWhite, Color text, GlyphKind glyph, bool focus, Color? glyphColor = null)
     {
         _bevel.SetFill(fillWhite ? Retro95Colors.WhiteFill : Retro95Colors.Surface);
         TextInstance.Color = text;
@@ -156,5 +170,6 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         {
             _checkGlyph.Color = glyphColor.Value;
         }
+        if (focus) _focusRect.Show(); else _focusRect.Hide();
     }
 }
