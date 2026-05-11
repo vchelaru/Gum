@@ -4,7 +4,6 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
-using System.Diagnostics;
 using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 
 namespace Gum.Themes.DarkPro;
@@ -40,25 +39,6 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         TextInstance.XOrigin = HorizontalAlignment.Left;
         TextInstance.Width = -12f;
 
-        // Defensive font/size assignment. The V3 base ctor calls
-        // TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal) and Dark Pro's
-        // ConfigureStyling sets that Normal to DM Mono 14 — in theory this is
-        // redundant. In practice the ComboBox-dropdown path is the one place
-        // where items have shown up with the V3 fallback font, so set explicitly
-        // here as a safety net. Doesn't hurt if the styling already applied
-        // correctly; restores the right font if anything got out of order.
-        TextInstance.Font = DarkProTheme.FontFamily;
-        TextInstance.FontSize = DarkProTheme.FontSize;
-
-        // Diagnostic: print the resolved text properties at construction so we can
-        // compare the standalone-ListBox path against the ComboBox-dropdown path
-        // and see whether they diverge during construction or only later (state
-        // changes / popup attach / render). Remove once the ComboBox-dropdown
-        // font discrepancy is root-caused.
-        Debug.WriteLine(
-            $"[DarkPro ListBoxItemVisual ctor] Font={TextInstance.Font} " +
-            $"FontSize={TextInstance.FontSize} IsBold={TextInstance.IsBold} " +
-            $"IsItalic={TextInstance.IsItalic} HashCode={GetHashCode()}");
 
         WireStates();
     }
