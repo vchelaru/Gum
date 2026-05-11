@@ -65,13 +65,22 @@ public class SliderVisual : BaseSliderVisual
 
     private void WireStates()
     {
-        // Track stays identical across most states — color shift only on disabled.
-        States.Enabled.Apply = () => _trackBevel.SetFill(Retro95Colors.WhiteFill);
-        States.Highlighted.Apply = () => _trackBevel.SetFill(Retro95Colors.WhiteFill);
-        States.HighlightedFocused.Apply = () => _trackBevel.SetFill(Retro95Colors.WhiteFill);
-        States.Focused.Apply = () => _trackBevel.SetFill(Retro95Colors.WhiteFill);
-        States.Pushed.Apply = () => _trackBevel.SetFill(Retro95Colors.WhiteFill);
-        States.Disabled.Apply = () => _trackBevel.SetFill(Retro95Colors.Surface);
-        States.DisabledFocused.Apply = () => _trackBevel.SetFill(Retro95Colors.Surface);
+        // The thumb's button category never sees the slider's keyboard focus
+        // (focus lives on the Slider control, not the inner Button RangeBase
+        // wraps around our ThumbInstance) — so we drive the dotted focus rect
+        // here, from the slider's own state callbacks.
+        States.Enabled.Apply = () => Apply(Retro95Colors.WhiteFill, focus: false);
+        States.Highlighted.Apply = () => Apply(Retro95Colors.WhiteFill, focus: false);
+        States.HighlightedFocused.Apply = () => Apply(Retro95Colors.WhiteFill, focus: true);
+        States.Focused.Apply = () => Apply(Retro95Colors.WhiteFill, focus: true);
+        States.Pushed.Apply = () => Apply(Retro95Colors.WhiteFill, focus: false);
+        States.Disabled.Apply = () => Apply(Retro95Colors.Surface, focus: false);
+        States.DisabledFocused.Apply = () => Apply(Retro95Colors.Surface, focus: true);
+    }
+
+    private void Apply(Microsoft.Xna.Framework.Color trackFill, bool focus)
+    {
+        _trackBevel.SetFill(trackFill);
+        if (focus) _thumb.ShowFocusRect(); else _thumb.HideFocusRect();
     }
 }

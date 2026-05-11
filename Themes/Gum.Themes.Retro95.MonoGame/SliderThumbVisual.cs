@@ -44,24 +44,34 @@ public class SliderThumbVisual : InteractiveGue
         _buttonCategory.Name = Button.ButtonCategoryName;
         AddCategory(_buttonCategory);
 
+        // The thumb's button category is driven by the inner Button wrapper
+        // RangeBase creates around our ThumbInstance — its Focused state fires
+        // only when the BUTTON has keyboard focus. For a Slider, focus lives
+        // on the Slider control itself, so the thumb button never sees the
+        // Focused state. SliderVisual drives the focus rect explicitly via
+        // ShowFocusRect / HideFocusRect; the button category here only handles
+        // hover / press / disabled chrome.
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface, focus: false));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface));
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover, focus: false));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover));
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(mode: BevelMode.Sunken, fill: Retro95Colors.Surface, focus: false));
+            () => Apply(mode: BevelMode.Sunken, fill: Retro95Colors.Surface));
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface, focus: true));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface));
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover, focus: true));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover));
         // Win95 disabled-thumb look uses a single-tone bevel (no inner highlight
         // band) — StatusPanel mode collapses the inner ring to match the fill,
         // producing the flat "drained" appearance the OS used.
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(mode: BevelMode.StatusPanel, fill: Retro95Colors.DisabledThumb, focus: false));
+            () => Apply(mode: BevelMode.StatusPanel, fill: Retro95Colors.DisabledThumb));
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(mode: BevelMode.StatusPanel, fill: Retro95Colors.DisabledThumb, focus: false));
+            () => Apply(mode: BevelMode.StatusPanel, fill: Retro95Colors.DisabledThumb));
     }
+
+    public void ShowFocusRect() => _focusRect.Show();
+    public void HideFocusRect() => _focusRect.Hide();
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)
     {
@@ -70,10 +80,9 @@ public class SliderThumbVisual : InteractiveGue
         category.States.Add(state);
     }
 
-    private void Apply(BevelMode mode, Microsoft.Xna.Framework.Color fill, bool focus)
+    private void Apply(BevelMode mode, Microsoft.Xna.Framework.Color fill)
     {
         _bevel.SetMode(mode);
         _bevel.SetFill(fill);
-        if (focus) _focusRect.Show(); else _focusRect.Hide();
     }
 }
