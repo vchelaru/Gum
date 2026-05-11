@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+
+    <PackageId>Gum.Themes.Bubblegum.Kni</PackageId>
+    <Version>2026.5.11.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>A pastel pink casual-game theme for Gum UI. Provides styled visuals for Gum Forms controls with rounded pill buttons, soft drop shadows, and the Nunito typeface, for KNI and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\Gum.Themes.Bubblegum.MonoGame\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Gum.Themes.Bubblegum.MonoGame\**\*.cs" />
+    <Compile Remove="..\Gum.Themes.Bubblegum.MonoGame\obj\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder
+         under this assembly's Content\Fonts via <Link>, so the resource name
+         resolves to "Gum.Themes.Bubblegum.Kni.Content.Fonts.<file>" — matching
+         what BubblegumTheme.RegisterEmbeddedFont derives from assembly name. -->
+    <EmbeddedResource Include="..\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\Nunito-Regular.ttf">
+      <Link>Content\Fonts\Nunito-Regular.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\Nunito-Bold.ttf">
+      <Link>Content\Fonts\Nunito-Bold.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\Nunito-Italic.ttf">
+      <Link>Content\Fonts\Nunito-Italic.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\Nunito-BoldItalic.ttf">
+      <Link>Content\Fonts\Nunito-BoldItalic.ttf</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="KernSmith.KniGum" Version="*" />
+    <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\KniGumShapes.csproj" />
+  </ItemGroup>
+</Project>

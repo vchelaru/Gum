@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+
+    <PackageId>Gum.Themes.Bubblegum.MonoGame</PackageId>
+    <Version>2026.5.11.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>A pastel pink casual-game theme for Gum UI. Provides styled visuals for Gum Forms controls with rounded pill buttons, soft drop shadows, and the Nunito typeface, for MonoGame and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Nunito (SIL OFL) bundled as the theme typeface. Four-style coverage:
+         Regular / Bold / Italic / BoldItalic. The bubblegum design uses weights
+         700-900; all collapse onto the "Bold" slot. -->
+    <EmbeddedResource Include="Content\Fonts\Nunito-Regular.ttf" />
+    <EmbeddedResource Include="Content\Fonts\Nunito-Bold.ttf" />
+    <EmbeddedResource Include="Content\Fonts\Nunito-Italic.ttf" />
+    <EmbeddedResource Include="Content\Fonts\Nunito-BoldItalic.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- KernSmith is a runtime dependency (BubblegumTheme.Apply constructs
+         KernSmithFontCreator and calls RegisterFont). Flows transitively. -->
+    <PackageReference Include="KernSmith.MonoGameGum" Version="*" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+  </ItemGroup>
+</Project>
