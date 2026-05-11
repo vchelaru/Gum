@@ -10,28 +10,27 @@ namespace Gum.Themes.Neon;
 
 /// <summary>
 /// Neon-styled Button visual. Near-square corners (CSS <c>--r: 1px</c>),
-/// surface-1 body with a 1 px cyan accent border, cyan text, and a Gaussian
-/// glow rendered via the native Apos.Shapes drop shadow. State emphasis is
-/// carried by glow alpha — hover and focus broaden the bloom.
+/// Surface1 body with a 1 px cyan accent border, cyan text, and a Gaussian
+/// glow rendered via the native Apos.Shapes drop shadow. Hover and press
+/// switch to opaque pre-blended tinted fills (so the glow halo doesn't show
+/// through and wash the label). Focus is signalled by a distinct white 1 px
+/// ring sitting 4 px outside the body — a separate shape from the body glow.
 /// </summary>
 public class ButtonVisual : BaseButtonVisual
 {
     private const float CornerRadius = 1f;
     private const float BorderThickness = 1f;
-    private const float FocusBorderThickness = 2f;
 
-    /// <summary>
-    /// Resting glow — CSS <c>box-shadow: 0 0 8px rgba(0,229,255,.2)</c>. Bumped
-    /// in alpha/blur to compensate for the sRGB-composited vs linear-composited
-    /// rendering mismatch documented in <c>.claude/skills/gum-theming/SKILL.md</c>.
-    /// Hover/push glows kept compact so the bloom doesn't bleed across the body
-    /// and visually wash out the text label.
-    /// </summary>
     private const float RestGlowBlur = 16f;
-    private const float HoverGlowBlur = 14f;
-    private const float PushedGlowBlur = 12f;
-    private const float FocusGlowBlur = 20f;
+    private const float HoverGlowBlur = 10f;
+    private const float PushedGlowBlur = 8f;
 
+    /// <summary>White-ring focus indicator. Offset 4 px outside the body so
+    /// the gap between body border and ring is unmistakable.</summary>
+    private const float FocusRingInset = 4f;
+    private const float FocusRingThickness = 1f;
+
+    private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;
     private readonly RoundedRectangleRuntime _border;
 
@@ -49,6 +48,11 @@ public class ButtonVisual : BaseButtonVisual
         Height = 32;
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
+
+        // Focus ring goes in first so it renders behind everything. Visible
+        // only on focused states.
+        _focusRing = CreateFocusRing();
+        AddChild(_focusRing);
 
         _fill = CreateFill();
         AddChild(_fill);
@@ -78,10 +82,8 @@ public class ButtonVisual : BaseButtonVisual
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
         fill.Color = NeonColors.Surface1;
-        // Native Gaussian glow — replaces the old box-shadow stack. Toggled
-        // per state via WireStates (alpha/blur scale with hover/focus/push).
         fill.HasDropshadow = true;
-        fill.DropshadowColor = NeonPalette.GlowSubtle;
+        fill.DropshadowColor = NeonPalette.GlowMedium;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = 0f;
         fill.DropshadowBlurX = RestGlowBlur;
@@ -109,50 +111,71 @@ public class ButtonVisual : BaseButtonVisual
         return border;
     }
 
-    private void WireStates()
+    private static RoundedRectangleRuntime CreateFocusRing()
     {
-        // Text stays cyan in every interactive state — using white on hover/push
-        // washed against the glow bloom and the label became unreadable.
-        States.Enabled.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent, text: NeonColors.Accent,
-            glow: NeonPalette.GlowMedium, blur: RestGlowBlur, thickBorder: false);
-
-        States.Highlighted.Apply = () => Apply(
-            fill: NeonPalette.ButtonHoverFill, border: NeonColors.Accent, text: NeonColors.Accent,
-            glow: NeonPalette.GlowMedium, blur: HoverGlowBlur, thickBorder: false);
-
-        // Focused → thicker 2 px border + a wider glow halo. The thickness step
-        // is the primary visual cue (glow alone wasn't legible enough).
-        States.Focused.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent, text: NeonColors.Accent,
-            glow: NeonPalette.GlowStrong, blur: FocusGlowBlur, thickBorder: true);
-
-        States.HighlightedFocused.Apply = () => Apply(
-            fill: NeonPalette.ButtonHoverFill, border: NeonColors.Accent, text: NeonColors.Accent,
-            glow: NeonPalette.GlowStrong, blur: FocusGlowBlur, thickBorder: true);
-
-        States.Pushed.Apply = () => Apply(
-            fill: NeonPalette.ButtonPushedFill, border: NeonColors.Accent, text: NeonColors.Accent,
-            glow: NeonPalette.GlowMedium, blur: PushedGlowBlur, thickBorder: false);
-
-        States.Disabled.Apply = () => Apply(
-            fill: NeonColors.Background, border: NeonColors.DisabledBorder, text: NeonColors.Muted,
-            glow: NeonPalette.GlowSubtle, blur: 0f, thickBorder: false);
-
-        States.DisabledFocused.Apply = () => Apply(
-            fill: NeonColors.Background, border: NeonColors.DisabledBorder, text: NeonColors.Muted,
-            glow: NeonPalette.GlowSubtle, blur: 0f, thickBorder: false);
+        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        ring.Name = "NeonButtonFocusRing";
+        ring.XUnits = GeneralUnitType.PixelsFromMiddle;
+        ring.YUnits = GeneralUnitType.PixelsFromMiddle;
+        ring.XOrigin = HorizontalAlignment.Center;
+        ring.YOrigin = VerticalAlignment.Center;
+        ring.Width = FocusRingInset * 2f;
+        ring.Height = FocusRingInset * 2f;
+        ring.WidthUnits = DimensionUnitType.RelativeToParent;
+        ring.HeightUnits = DimensionUnitType.RelativeToParent;
+        ring.CornerRadius = CornerRadius + FocusRingInset;
+        ring.IsFilled = false;
+        ring.StrokeWidth = FocusRingThickness;
+        ring.StrokeWidthUnits = DimensionUnitType.Absolute;
+        ring.Color = NeonPalette.FocusRing;
+        ring.Visible = false;
+        return ring;
     }
 
-    private void Apply(Color fill, Color border, Color text, Color glow, float blur, bool thickBorder)
+    private void WireStates()
+    {
+        // Body fills are stored opaque (pre-blended) so the body fully blocks
+        // the dropshadow halo behind it and the label stays readable.
+        States.Enabled.Apply = () => Apply(
+            fill: NeonColors.Surface1, text: NeonColors.Accent,
+            glow: NeonPalette.GlowMedium, blur: RestGlowBlur, ring: false);
+
+        States.Highlighted.Apply = () => Apply(
+            fill: NeonPalette.ButtonHoverFill, text: NeonColors.Accent,
+            glow: NeonPalette.GlowStrong, blur: HoverGlowBlur, ring: false);
+
+        States.Focused.Apply = () => Apply(
+            fill: NeonColors.Surface1, text: NeonColors.Accent,
+            glow: NeonPalette.GlowMedium, blur: RestGlowBlur, ring: true);
+
+        States.HighlightedFocused.Apply = () => Apply(
+            fill: NeonPalette.ButtonHoverFill, text: NeonColors.Accent,
+            glow: NeonPalette.GlowStrong, blur: HoverGlowBlur, ring: true);
+
+        States.Pushed.Apply = () => Apply(
+            fill: NeonPalette.ButtonPushedFill, text: NeonColors.Accent,
+            glow: NeonPalette.GlowMedium, blur: PushedGlowBlur, ring: false);
+
+        States.Disabled.Apply = () => Apply(
+            fill: NeonColors.Background, text: NeonColors.Muted,
+            glow: NeonPalette.GlowSubtle, blur: 0f, ring: false);
+
+        States.DisabledFocused.Apply = () => Apply(
+            fill: NeonColors.Background, text: NeonColors.Muted,
+            glow: NeonPalette.GlowSubtle, blur: 0f, ring: true);
+    }
+
+    private void Apply(Color fill, Color text, Color glow, float blur, bool ring)
     {
         _fill.Color = fill;
-        _border.Color = border;
-        _border.StrokeWidth = thickBorder ? FocusBorderThickness : BorderThickness;
+        // Border stays a constant 1 px cyan — focus emphasis is carried by
+        // the separate white ring, not by border thickness.
+        _border.Color = NeonColors.Accent;
         _fill.DropshadowColor = glow;
         _fill.DropshadowBlurX = blur;
         _fill.DropshadowBlurY = blur;
         _fill.HasDropshadow = blur > 0f;
         TextInstance.Color = text;
+        _focusRing.Visible = ring;
     }
 }

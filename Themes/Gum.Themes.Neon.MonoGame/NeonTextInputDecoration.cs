@@ -18,14 +18,11 @@ internal sealed class NeonTextInputDecoration
 {
     private const float CornerRadius = 1f;
     private const float BorderThickness = 1f;
-    private const float FocusBorderThickness = 2f;
+    private const float FocusRingInset = 4f;
+    private const float FocusRingThickness = 1f;
+    private const float FocusGlowBlur = 18f;
 
-    /// <summary>
-    /// CSS <c>box-shadow: 0 0 14px rgba(0,229,255,.25)</c> on focus. Bumped
-    /// for sRGB compositing — see SKILL note on visual-vs-numerical fidelity.
-    /// </summary>
-    private const float FocusGlowBlur = 22f;
-
+    private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;
     private readonly RoundedRectangleRuntime _border;
 
@@ -34,6 +31,11 @@ internal sealed class NeonTextInputDecoration
         host.Background.Parent = null;
         host.FocusedIndicator.Parent = null;
         host.ClipContainer.Parent = null;
+
+        // Offset white focus ring goes in first (behind everything). Visible
+        // only on focus — gives focus a distinct shape from hover.
+        _focusRing = CreateFocusRing();
+        host.AddChild(_focusRing);
 
         _fill = CreateFill();
         host.AddChild(_fill);
@@ -49,6 +51,29 @@ internal sealed class NeonTextInputDecoration
         host.AddChild(_border);
 
         WireStates(host);
+    }
+
+    private static RoundedRectangleRuntime CreateFocusRing()
+    {
+        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        ring.Name = "NeonTextInputFocusRing";
+        ring.X = 0;
+        ring.Y = 0;
+        ring.XUnits = GeneralUnitType.PixelsFromMiddle;
+        ring.YUnits = GeneralUnitType.PixelsFromMiddle;
+        ring.XOrigin = HorizontalAlignment.Center;
+        ring.YOrigin = VerticalAlignment.Center;
+        ring.Width = FocusRingInset * 2f;
+        ring.Height = FocusRingInset * 2f;
+        ring.WidthUnits = DimensionUnitType.RelativeToParent;
+        ring.HeightUnits = DimensionUnitType.RelativeToParent;
+        ring.CornerRadius = CornerRadius + FocusRingInset;
+        ring.IsFilled = false;
+        ring.StrokeWidth = FocusRingThickness;
+        ring.StrokeWidthUnits = DimensionUnitType.Absolute;
+        ring.Color = NeonPalette.FocusRing;
+        ring.Visible = false;
+        return ring;
     }
 
     private static RoundedRectangleRuntime CreateFill()
@@ -130,13 +155,11 @@ internal sealed class NeonTextInputDecoration
     {
         _fill.Color = fill;
         _border.Color = border;
-        // Thicken the border whenever the focus glow is active — the glow alone
-        // wasn't a strong enough focus signal.
-        _border.StrokeWidth = glow ? FocusBorderThickness : BorderThickness;
         host.TextInstance.Color = text;
         host.PlaceholderTextInstance.Color = placeholder;
         host.CaretInstance.Color = caret;
         host.SelectionInstance.Color = selection;
         _fill.HasDropshadow = glow;
+        _focusRing.Visible = glow;
     }
 }

@@ -19,8 +19,8 @@ public class SliderThumbVisual : InteractiveGue
 {
     private const float Size = 20f;
     private const float BorderThickness = 2f;
-    private const float FocusRingInset = 3f;
-    private const float FocusRingThickness = 4f;
+    private const float FocusRingInset = 4f;
+    private const float FocusRingThickness = 1f;
 
     /// <summary>
     /// Native Gaussian cyan glow under the thumb. CSS spec is
@@ -122,7 +122,7 @@ public class SliderThumbVisual : InteractiveGue
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = NeonPalette.GlowSubtle;
+        ring.Color = NeonPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }

@@ -16,8 +16,8 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private const float OuterSize = 20f;
     private const float InnerSize = 8f;
     private const float BorderThickness = 2f;
-    private const float FocusRingInset = 2f;
-    private const float FocusRingThickness = 3f;
+    private const float FocusRingInset = 4f;
+    private const float FocusRingThickness = 1f;
     private const float BoxToLabelGap = 8f;
 
     private readonly ColoredCircleRuntime _focusRing;
@@ -106,7 +106,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.IsFilled = false;
         c.StrokeWidth = FocusRingThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
-        c.Color = NeonPalette.GlowSubtle;
+        c.Color = NeonPalette.FocusRing;
         c.Visible = false;
         return c;
     }

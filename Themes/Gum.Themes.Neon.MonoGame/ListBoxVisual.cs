@@ -15,8 +15,8 @@ public class ListBoxVisual : BaseListBoxVisual
 {
     private const float CornerRadius = 1f;
     private const float BorderThickness = 2f;
-    private const float FocusRingInset = 2f;
-    private const float FocusRingThickness = 3f;
+    private const float FocusRingInset = 4f;
+    private const float FocusRingThickness = 1f;
 
     private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;
@@ -112,7 +112,7 @@ public class ListBoxVisual : BaseListBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = NeonPalette.GlowSubtle;
+        ring.Color = NeonPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }

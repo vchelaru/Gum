@@ -22,9 +22,8 @@ public class ComboBoxVisual : BaseComboBoxVisual
 {
     private const float CornerRadius = 1f;
     private const float BorderThickness = 1f;
-    private const float FocusBorderThickness = 2f;
-    private const float FocusRingInset = 2f;
-    private const float FocusRingThickness = 3f;
+    private const float FocusRingInset = 4f;
+    private const float FocusRingThickness = 1f;
     private const float GlyphRightMargin = 12f;
     private const float GlyphContainerSize = 16f;
     private const int GlyphFontSize = 11;
@@ -125,7 +124,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = NeonPalette.GlowSubtle;
+        ring.Color = NeonPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -194,9 +193,6 @@ public class ComboBoxVisual : BaseComboBoxVisual
     {
         _fill.Color = fillDisabled ? NeonColors.Background : NeonColors.Surface1;
         _border.Color = border;
-        // Thicken the border whenever the focus ring is shown — gives focus a
-        // clearer signal than the soft halo alone.
-        _border.StrokeWidth = ring ? FocusBorderThickness : BorderThickness;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;
         _focusRing.Visible = ring;

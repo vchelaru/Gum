@@ -10,31 +10,44 @@ namespace Gum.Themes.Neon;
 internal static class NeonPalette
 {
     /// <summary>
-    /// Translucent cyan used for the Button hover fill — CSS
-    /// <c>rgba(0,229,255,.07)</c> (alpha ≈ 18).
+    /// Button hover fill — CSS spec is <c>rgba(0,229,255,.07)</c> over Surface1.
+    /// Stored OPAQUE (pre-blended against Surface1) rather than translucent so
+    /// the body's drop-shadow halo doesn't show through and wash the text.
+    /// Computed: 0×0.07 + 13×0.93, 229×0.07 + 13×0.93, 255×0.07 + 34×0.93.
     /// </summary>
-    public static readonly Color ButtonHoverFill = new Color(0, 229, 255, 18);
+    public static readonly Color ButtonHoverFill = new Color(12, 28, 50);
 
     /// <summary>
-    /// Pushed-state Button fill — CSS <c>rgba(0,229,255,.18)</c> (alpha ≈ 46).
+    /// Pushed Button fill — pre-blend of <c>rgba(0,229,255,.18)</c> over
+    /// Surface1. Same opaque-fill rationale as <see cref="ButtonHoverFill"/>.
     /// </summary>
-    public static readonly Color ButtonPushedFill = new Color(0, 229, 255, 46);
+    public static readonly Color ButtonPushedFill = new Color(11, 52, 74);
 
     /// <summary>
-    /// CheckBox checked fill — same alpha as <see cref="NeonColors.AccentDim"/>
-    /// (CSS <c>--accd</c>), restated here for symmetry with other state tints.
+    /// CheckBox checked fill — pre-blend of <c>rgba(0,229,255,.12)</c>
+    /// (<c>--accd</c>) over Surface1. Opaque.
     /// </summary>
-    public static readonly Color CheckedFill = new Color(0, 229, 255, 31);
+    public static readonly Color CheckedFill = new Color(11, 39, 61);
 
     /// <summary>
-    /// CheckBox pushed-while-checked — CSS <c>rgba(0,229,255,.25)</c>.
+    /// CheckBox hover-while-checked — brighter pre-blend (alpha ~64). Without
+    /// this, the highlighted-on state was visually identical to the resting
+    /// checked state, hiding hover feedback.
     /// </summary>
-    public static readonly Color CheckedPushedFill = new Color(0, 229, 255, 64);
+    public static readonly Color CheckedHoverFill = new Color(10, 67, 89);
 
     /// <summary>
-    /// Slider thumb pushed fill — same as <see cref="CheckedPushedFill"/>.
+    /// CheckBox pushed-while-checked — same opaque tier as the hover fill so
+    /// the press doesn't darken to invisibility.
     /// </summary>
-    public static readonly Color SliderThumbPushed = new Color(0, 229, 255, 64);
+    public static readonly Color CheckedPushedFill = new Color(10, 67, 89);
+
+    /// <summary>
+    /// Pure-white focus indicator. Painted as a 1 px ring sitting ~4 px
+    /// outside the body. Distinct shape from the body glow (which carries
+    /// hover) and unmistakable against the cyan-on-dark palette.
+    /// </summary>
+    public static readonly Color FocusRing = Color.White;
 
     /// <summary>
     /// ScrollBar thumb fill — CSS <c>rgba(0,229,255,.15)</c>.

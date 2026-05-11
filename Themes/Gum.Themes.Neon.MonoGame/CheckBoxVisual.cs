@@ -22,8 +22,8 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private const float BoxSize = 20f;
     private const float CornerRadius = 1f;
     private const float BorderThickness = 2f;
-    private const float FocusRingInset = 2f;
-    private const float FocusRingThickness = 3f;
+    private const float FocusRingInset = 4f;
+    private const float FocusRingThickness = 1f;
     private const float BoxToLabelGap = 8f;
     private const float DashWidth = 10f;
     private const float DashHeight = 2f;
@@ -133,7 +133,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = NeonPalette.GlowSubtle;
+        ring.Color = NeonPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -217,8 +217,11 @@ public class CheckBoxVisual : BaseCheckBoxVisual
             text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
             ring: false);
 
+        // Hover/push on a checked box uses a brighter pre-blended fill so the
+        // state shift is actually visible — without this, checked and
+        // checked+hover were pixel-identical.
         States.HighlightedOn.Apply = () => Apply(
-            fill: NeonPalette.CheckedFill, border: NeonColors.Accent,
+            fill: NeonPalette.CheckedHoverFill, border: NeonColors.Accent,
             text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
             ring: false);
 
@@ -228,12 +231,12 @@ public class CheckBoxVisual : BaseCheckBoxVisual
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: NeonPalette.CheckedFill, border: NeonColors.Accent,
+            fill: NeonPalette.CheckedHoverFill, border: NeonColors.Accent,
             text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: NeonPalette.CheckedFill, border: NeonColors.Accent,
+            fill: NeonPalette.CheckedPushedFill, border: NeonColors.Accent,
             text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
             ring: false);
 
