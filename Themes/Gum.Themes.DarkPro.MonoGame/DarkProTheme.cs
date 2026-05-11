@@ -187,5 +187,8 @@ public static class DarkProTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] =
             new VisualTemplate((_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] =
+            new VisualTemplate((_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
     }
 }
