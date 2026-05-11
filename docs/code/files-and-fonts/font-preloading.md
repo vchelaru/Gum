@@ -63,7 +63,7 @@ The benefit is that adding a new size in the Gum tool automatically adds it to t
 * **Every style** (bold/italic) — these produce distinct atlases.
 * **Outline thickness and font-smoothing variants** if your game uses them.
 
-If you're shipping a single locale, this set is finite and usually small enough to preload in under a few seconds even for CJK. If you ship multiple locales in one build, preload only the active locale at startup and reload on locale change — see [Font Localization](font-localization.md) for the planned support and current limitations.
+If you're shipping a single locale, this set is finite and usually small enough to preload behind a loading screen even for a large charset. If you ship multiple locales in one build, preload only the active locale at startup and reload on locale change — see [Font Localization](font-localization.md) for the planned support and current limitations.
 
 ## Verifying Preloads Worked
 

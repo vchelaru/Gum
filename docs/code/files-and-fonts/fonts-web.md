@@ -8,10 +8,10 @@ Web targets (KNI WebAssembly, BlazorGL, etc.) face a font tradeoff that desktop 
 
 You have two ways to ship a font's glyphs to the player:
 
-* **Pre-baked atlases (FontCache or custom `.fnt` files).** No CPU cost at runtime; the player just renders the textures. But the textures have to be downloaded, and for CJK a full atlas can be 10–50 MB. On a slow connection that's a multi-second delay before the player sees anything.
-* **Dynamic generation (KernSmith).** Ship a `.ttf` file, typically 1–10 MB even for CJK. The browser downloads the `.ttf` and KernSmith rasterizes glyphs in the WebAssembly process. Generation is slower than on desktop because WebAssembly is slower than native, but it happens locally — no further download.
+* **Pre-baked atlases (FontCache or custom `.fnt` files).** No CPU cost at runtime; the player just renders the textures. But the textures have to be downloaded, and for a large charset the atlas pages can be substantially larger than the source font file. On a slow connection that's a noticeable delay before the player sees anything.
+* **Dynamic generation (KernSmith).** Ship a `.ttf` file — typically much smaller than the corresponding pre-baked atlas, even for a large charset. The browser downloads the `.ttf` and KernSmith rasterizes glyphs in the WebAssembly process. Generation is slower than on desktop because WebAssembly is slower than native, but it happens locally — no further download.
 
-The orders of magnitude here are the important thing, not the exact numbers (those depend on the font, charset, and atlas page size). Bandwidth is usually the bottleneck on web.
+The general shape of the tradeoff is what matters; the actual file sizes depend on the font, charset, and atlas page size. Bandwidth is usually the bottleneck on web.
 
 ## General Recommendations
 
@@ -19,7 +19,7 @@ The orders of magnitude here are the important thing, not the exact numbers (tho
 * **CJK or other large charsets on web:** prefer **dynamic KernSmith generation**. The `.ttf` is much smaller than the atlases. The CPU cost of generation is real but it's a one-time per-session hit, and it's amortized while the player is on a loading screen anyway.
 * **Mixed (Latin UI + CJK dialogue):** dynamic generation for the CJK font, either approach for the small Latin font.
 
-The reasoning is that **bandwidth dominates page-load perception**. A 2 MB `.ttf` download followed by a 1-second generation hitch feels faster than a 30 MB atlas download even though the total CPU+IO time is similar. The player sees something on screen sooner.
+The reasoning is that **bandwidth dominates page-load perception**. A small `.ttf` download followed by a short generation step feels faster than a much larger atlas download, even when the total CPU+IO time is similar. The player sees something on screen sooner.
 
 ## What Doesn't Exist Yet
 

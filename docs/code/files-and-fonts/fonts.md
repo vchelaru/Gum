@@ -10,9 +10,9 @@ For the API surface (which properties on `TextRuntime` control the font), see th
 
 ## Pick a Strategy
 
-### Path A — Small charset (Latin/Cyrillic/Greek, under ~1000 glyphs)
+### Path A — Small charset (Latin, Cyrillic, Greek, and similar)
 
-**Use dynamic KernSmith generation.** No font files on disk, no cache to manage, no preloading needed. The first time a `(font, size, style)` combination is used, KernSmith generates the atlas in memory — fast enough for most English/European games to do during gameplay without a noticeable hitch.
+**Use dynamic KernSmith generation.** No font files on disk, no cache to manage, no preloading needed. The first time a `(font, size, style)` combination is used, KernSmith generates the atlas in memory — fast enough for most games with small character sets to do during gameplay without a noticeable hitch.
 
 This is the default recommendation for most projects.
 
@@ -55,7 +55,7 @@ The Gum tool generates these atlases automatically while you edit your project. 
 
 The following items are not yet supported. None of them are dealbreakers for shipping a game, but they're worth knowing about so you can plan around them:
 
-* **No multi-texture batching.** Gum renders one texture per draw call. A text-heavy UI (for example a 100-row list with a background atlas and a text atlas) alternates atlases every row, costing one draw call per alternation. See [Font Performance](font-performance.md) for what this means in practice.
+* **No multi-texture batching.** Gum renders one texture per draw call. A text-heavy UI (for example a long list with a background atlas and a text atlas) alternates atlases on every row, costing one draw call per alternation. See [Font Performance](font-performance.md) for what this means in practice.
 * **No packing of font glyphs into UI sprite sheets.** Font atlases are their own textures; they don't share with `NineSlice` or `Sprite` art.
 * **No on-disk cache for KernSmith-generated atlases.** Every cold start regenerates them. (Planned — [Phase 4](https://github.com/vchelaru/Gum/issues/2696).)
 * **No project-wide unified atlas.** Text and UI live in separate textures by design.

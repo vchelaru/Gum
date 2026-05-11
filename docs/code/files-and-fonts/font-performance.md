@@ -21,8 +21,8 @@ The next sections cover each in turn.
 
 KernSmith rasterizes every glyph in the requested character set into an atlas. The cost scales with the number of glyphs.
 
-* **Small charsets (Latin, Cyrillic, Greek, a few hundred glyphs).** Generation is fast enough that most projects can do it on-demand during gameplay without a perceptible hitch.
-* **Large charsets (CJK — Chinese, Japanese Kanji, Korean Hangul, anywhere from a few thousand to tens of thousands of glyphs).** Generation can be slow enough that the player sees a frame hitch, sometimes a full pause. Plan to do this work behind a loading screen.
+* **Small charsets (Latin, Cyrillic, Greek, and similar).** Generation is fast enough that most projects can do it on-demand during gameplay without a perceptible hitch.
+* **Large charsets (CJK — Chinese, Japanese Kanji, Korean Hangul).** Generation can be slow enough that the player sees a frame hitch, sometimes a full pause. Plan to do this work behind a loading screen.
 
 The rule of thumb: if your charset is "everything in this language", treat the first use of a font/size combination as expensive. See [Font Preloading](font-preloading.md) for how to move that cost off the gameplay path.
 
@@ -30,23 +30,23 @@ The rule of thumb: if your charset is "everything in this language", treat the f
 
 Each unique `(font, family, size, style, outline, smoothing)` combination produces its own atlas texture. Memory cost scales with two things:
 
-* **Atlas page dimensions** — usually a power-of-two square (typically 1024×1024 or 2048×2048).
+* **Atlas page dimensions** — usually a power-of-two square.
 * **Number of pages** — a charset that doesn't fit on one page spills onto additional pages.
 
-Small Latin atlases tend to fit on a single small page. CJK atlases routinely need multiple large pages per `(font, size, style)` combination. If your game uses several font sizes for CJK, the total VRAM footprint adds up quickly — count `(sizes × styles × pages)` and budget for it.
+Small charsets tend to fit on a single page. Large charsets such as CJK can need multiple pages per `(font, size, style)` combination. If your game uses several font sizes for a large charset, the total memory footprint adds up quickly — count `(sizes × styles × pages)` and budget for it.
 
-For a game with many text sizes/styles, consider whether you actually need all of them. Three sizes (small/medium/large) often look better than nine and use a fraction of the memory.
+For a game with many text sizes and styles, consider whether you actually need all of them. A handful of distinct sizes (small/medium/large) often looks better than a long ladder of subtly different sizes and uses a fraction of the memory.
 
 ## Draw Call Cost
 
 Gum renders text in its own atlas and UI art in its own atlas (or atlases). When the renderer encounters a different texture than the last draw, it has to start a new draw call.
 
-This matters most for **text-interleaved lists**: a 100-row list where each row alternates a background image with a text label costs roughly one draw call per row alternation. On desktop this is rarely a problem. On mobile or web it can be.
+This matters most for **text-interleaved lists**: a long list where each row alternates a background image with a text label costs roughly one draw call per row alternation. On desktop this is rarely a problem. On mobile or web it can be.
 
 Workarounds you can apply today:
 
 * **Group text together visually.** A list with all backgrounds drawn first and all text drawn on top batches better than one with alternating Z-order — but Gum's draw order follows the visual tree, so this only helps if you can restructure your hierarchy.
-* **Use fewer distinct fonts on the same screen.** Two atlases batch better than ten.
+* **Use fewer distinct fonts on the same screen.** A small number of atlases batches better than many.
 * **Accept the cost on text-heavy screens.** Loading screens, dialogue boxes, and menus tend not to be frame-budget-critical.
 
 A future Gum release (Phase 5 — [#2697](https://github.com/vchelaru/Gum/issues/2697)) targets KernSmith using one shared atlas plus a sort-by-texture pass, which removes most of this cost. bmfont users (pre-baked `.fnt`) do not benefit from that change; the migration path is to switch to KernSmith.
