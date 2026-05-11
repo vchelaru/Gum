@@ -22,7 +22,6 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     private const float CornerRadius = 2f;
     private const float BorderThickness = 1f;
     private const float FocusRingInset = 1f;
-    private const float ScrollAreaInset = 1f;
 
     private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;
@@ -50,18 +49,11 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
 
         AddChild(ScrollAndClipContainer);
 
-        // Center-shrink the scroll/clip container so its descendants — the
-        // vertical bar (anchored right), the horizontal bar (anchored bottom),
-        // and the clip container — all sit 1 px inside the Dark Pro border.
-        // The V3 default positions ScrollAndClipContainer flush, which made
-        // the Dark Pro scrollbar visibly bleed past the border at the right
-        // and bottom edges.
-        ScrollAndClipContainer.XOrigin = HorizontalAlignment.Center;
-        ScrollAndClipContainer.XUnits = GeneralUnitType.PixelsFromMiddle;
-        ScrollAndClipContainer.YOrigin = VerticalAlignment.Center;
-        ScrollAndClipContainer.YUnits = GeneralUnitType.PixelsFromMiddle;
-        ScrollAndClipContainer.Width = -ScrollAreaInset * 2f;
-        ScrollAndClipContainer.Height = -ScrollAreaInset * 2f;
+        // No per-consumer scroll bar positioning needed — Dark Pro's
+        // ScrollBarVisual bakes its own thumb insets, so the bar's bounding
+        // box can sit flush against the border (the bar's track is transparent;
+        // only the thumb is visible, and the thumb has built-in breathing
+        // room on every side).
 
         WireStates();
     }

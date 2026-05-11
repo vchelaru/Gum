@@ -45,18 +45,10 @@ public class ListBoxVisual : BaseListBoxVisual
         AddChild(_border);
 
         // Reattach the scroll/clip container last so list items render above
-        // the new background shapes.
+        // the new background shapes. The scroll bar's own thumb insets (baked
+        // into Dark Pro's ScrollBarVisual) handle the visual breathing room
+        // from the border — no per-consumer positioning needed here.
         AddChild(ClipAndScrollContainer);
-
-        // Inset the scroll bar so it sits 1 px clear of the 1 px border on
-        // top, right, and bottom (combined with the bar's own thumb inset
-        // this lands the thumb ~2 px clear of the inner border on every
-        // side, which reads balanced against Dark Pro's thin border).
-        if (VerticalScrollBarInstance != null)
-        {
-            VerticalScrollBarInstance.X = -1f;
-            VerticalScrollBarInstance.Height = -6f;
-        }
 
         WireStates();
     }
