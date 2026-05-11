@@ -48,13 +48,13 @@ public class ListBoxVisual : BaseListBoxVisual
         // the new background shapes.
         AddChild(ClipAndScrollContainer);
 
-        // Inset the scroll bar so its thumb doesn't touch (or visibly bleed
-        // through) the 1 px border. The V3 default positions the bar flush
-        // against the ListBox edges, which looked fine with the heavier V3
-        // border but reads as overlap against Dark Pro's thinner border.
+        // Inset the scroll bar vertically so its thumb doesn't touch (or
+        // visibly bleed through) the 1 px border at top/bottom. Lateral
+        // spacing already comes from the thumb's own inset inside the bar,
+        // so the bar stays flush to the right edge — adding an X inset on
+        // top of that produces a visibly off-balance right-side gap.
         if (VerticalScrollBarInstance != null)
         {
-            VerticalScrollBarInstance.X = -2f;
             VerticalScrollBarInstance.Height = -4f;
         }
 

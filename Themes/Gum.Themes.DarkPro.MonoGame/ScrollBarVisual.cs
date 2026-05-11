@@ -14,7 +14,7 @@ namespace Gum.Themes.DarkPro;
 /// </summary>
 public class ScrollBarVisual : BaseScrollBarVisual
 {
-    private const float ThumbInset = 4f;
+    private const float ThumbInset = 2f;
 
     private readonly ScrollBarThumbVisual _thumb;
 
