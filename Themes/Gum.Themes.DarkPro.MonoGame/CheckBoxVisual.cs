@@ -62,7 +62,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // into the icon font's atlas via BmfcSave.AddCharacters in
         // DarkProTheme.Apply.
         _checkGlyph.Font = DarkProTheme.IconFontFamily;
-        _checkGlyph.FontSize = 18;
+        _checkGlyph.FontSize = 22;
         _checkGlyph.Text = "✓";
         _checkGlyph.Color = DarkProColors.Accent;
         _checkGlyph.Visible = false;
