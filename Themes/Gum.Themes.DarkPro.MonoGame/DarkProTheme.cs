@@ -198,5 +198,8 @@ public static class DarkProTheme
         // here if Forms-side state plumbing is ever extended.
         FrameworkElement.DefaultFormsTemplates[typeof(Label)] =
             new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ComboBox)] =
+            new VisualTemplate((_, c) => new ComboBoxVisual(tryCreateFormsObject: c));
     }
 }
