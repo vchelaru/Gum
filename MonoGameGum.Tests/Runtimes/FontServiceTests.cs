@@ -203,4 +203,184 @@ public class FontServiceTests : BaseTestClass
     }
 
     #endregion
+
+    #region Layout Suspension / Font Batching
+
+    // These tests document the runtime behavior described in issue #2694:
+    // when font properties are changed in batches, the existing layout-suspension
+    // machinery can coalesce the per-property UpdateToFontValues calls into a
+    // single deferred font load.
+
+    // Wires the mock and returns the capture list. Call AFTER constructing the
+    // TextRuntime so the constructor's own font load isn't counted against the
+    // behavior under test.
+    private List<BmfcSave> StartCapturingFontCalls()
+    {
+        var captured = new List<BmfcSave>();
+        CustomSetPropertyOnRenderable.FontService = _mockFontService.Object;
+        _mockFontService.Setup(x => x.CreateFontIfNecessary(It.IsAny<BmfcSave>()))
+            .Callback<BmfcSave>(bmfc => captured.Add(bmfc));
+        return captured;
+    }
+
+    [Fact]
+    public void DirectSetter_ShouldCallFontGenerationOncePerProperty_WhenNotSuspended()
+    {
+        // Baseline: with no suspension, each font property setter independently
+        // triggers a font generation. This is the wasted-work problem #2694 calls out.
+        TextRuntime textRuntime = new();
+        var capturedCalls = StartCapturingFontCalls();
+
+        textRuntime.Font = "Consolas";   // setter #1 -> generation #1
+        textRuntime.FontSize = 24;       // setter #2 -> generation #2
+
+        capturedCalls.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void DirectSetter_ShouldDeferFontGeneration_WhenIsAllLayoutSuspendedIsTrue()
+    {
+        // Setting properties while IsAllLayoutSuspended is true should NOT call
+        // the font service. The element's IsFontDirty flag is set instead.
+        TextRuntime textRuntime = new();
+        var capturedCalls = StartCapturingFontCalls();
+
+        try
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            textRuntime.Font = "Consolas";
+            textRuntime.FontSize = 24;
+            textRuntime.IsBold = true;
+
+            capturedCalls.Count.ShouldBe(0);
+            textRuntime.IsFontDirty.ShouldBeTrue();
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+    }
+
+    [Fact]
+    public void UpdateFontRecursive_ShouldRunSingleFontGeneration_AfterGlobalSuspendBatch()
+    {
+        // The pattern WireframeObjectManager uses: suspend globally, set many
+        // properties, lift the global flag, then call UpdateFontRecursive to do
+        // the single deferred font load with all properties at their final values.
+        TextRuntime textRuntime = new();
+        var capturedCalls = StartCapturingFontCalls();
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        textRuntime.Font = "Consolas";
+        textRuntime.FontSize = 24;
+        textRuntime.IsBold = true;
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        textRuntime.UpdateFontRecursive();
+
+        capturedCalls.Count.ShouldBe(1);
+        capturedCalls[0].FontName.ShouldBe("Consolas");
+        capturedCalls[0].FontSize.ShouldBe(24);
+        capturedCalls[0].IsBold.ShouldBeTrue();
+        textRuntime.IsFontDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DirectSetter_ShouldDeferFontGeneration_WhenInstanceSuspendLayoutIsCalled()
+    {
+        // The direct-setter path (GraphicalUiElement.UpdateToFontValues) defers
+        // for BOTH global and per-instance suspension. This is the easy case.
+        TextRuntime textRuntime = new();
+        var capturedCalls = StartCapturingFontCalls();
+
+        textRuntime.SuspendLayout();
+        textRuntime.Font = "Consolas";
+        textRuntime.FontSize = 24;
+
+        capturedCalls.Count.ShouldBe(0);
+        textRuntime.IsFontDirty.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ResumeLayoutRecursive_ShouldFlushDeferredFontLoad_AfterInstanceSuspend()
+    {
+        // ResumeLayout(recursive: true) goes through ResumeLayoutUpdateIfDirtyRecursive,
+        // which clears mIsLayoutSuspended and then calls UpdateFontRecursive.
+        TextRuntime textRuntime = new();
+        var capturedCalls = StartCapturingFontCalls();
+
+        textRuntime.SuspendLayout();
+        textRuntime.Font = "Consolas";
+        textRuntime.FontSize = 24;
+
+        textRuntime.ResumeLayout(recursive: true);
+
+        capturedCalls.Count.ShouldBe(1);
+        capturedCalls[0].FontName.ShouldBe("Consolas");
+        capturedCalls[0].FontSize.ShouldBe(24);
+        textRuntime.IsFontDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ResumeLayoutNonRecursive_ShouldFlushDeferredFontLoad_AfterInstanceSuspend()
+    {
+        // ResumeLayout(recursive: false) takes a different path: it directly checks
+        // isFontDirty and calls UpdateToFontValues on this element only.
+        TextRuntime textRuntime = new();
+        var capturedCalls = StartCapturingFontCalls();
+
+        textRuntime.SuspendLayout();
+        textRuntime.Font = "Consolas";
+        textRuntime.FontSize = 24;
+
+        textRuntime.ResumeLayout();
+
+        capturedCalls.Count.ShouldBe(1);
+        textRuntime.IsFontDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void StringSetPath_ShouldDeferFontGeneration_WhenIsAllLayoutSuspendedIsTrue()
+    {
+        // The string-set path (SetProperty -> CustomSetPropertyOnRenderable.UpdateToFontValues)
+        // defers for the global flag. This is the path ApplyState uses.
+        TextRuntime textRuntime = new();
+        var capturedCalls = StartCapturingFontCalls();
+
+        try
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            textRuntime.SetProperty("Font", "Consolas");
+            textRuntime.SetProperty("FontSize", 24);
+
+            capturedCalls.Count.ShouldBe(0);
+            textRuntime.IsFontDirty.ShouldBeTrue();
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+    }
+
+    [Fact]
+    public void StringSetPath_ShouldNotDeferFontGeneration_WhenOnlyInstanceLayoutSuspended()
+    {
+        // Documents the "KNOWN GAP" in CustomSetPropertyOnRenderable.UpdateToFontValues:
+        // the string-set path only defers for IsAllLayoutSuspended, not for the
+        // per-instance suspension flag. ApplyState (which uses SetProperty) will
+        // therefore load fonts immediately even if the user has called SuspendLayout
+        // on the instance. The gap is intentional — see the comment block in
+        // CustomSetPropertyOnRenderable.UpdateToFontValues for why fixing it would
+        // require resolving a cascading-layout issue.
+        TextRuntime textRuntime = new();
+        var capturedCalls = StartCapturingFontCalls();
+
+        textRuntime.SuspendLayout();
+        textRuntime.SetProperty("Font", "Consolas");
+        textRuntime.SetProperty("FontSize", 24);
+
+        capturedCalls.Count.ShouldBe(2);
+    }
+
+    #endregion
 }

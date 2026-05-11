@@ -27,18 +27,17 @@ Select the agent that best matches the task at hand. For tasks that span multipl
 
 ## Building and Testing
 
-**Always build and test via a solution file**, not individual `.csproj` files. Plugin projects use `$(SolutionDir)` in post-build scripts, which is undefined when building a `.csproj` directly.
+Pick the right build target based on what you're working on:
 
-Pick the solution based on what you're working on:
-
-* **`GumFull.sln`** — the Gum tool and all tool-related projects (WPF editor, plugins, `GumToolUnitTests`, `Gum.Cli.Tests`, etc.). Use this when working on anything under `Tool/`, `Gum/`, plugins, or tool-side code.
-* **`AllLibraries.sln`** — all runtime-related projects (`GumCommon`, `MonoGameGum`, `KniGum`, `FnaGum`, `SkiaGum`, `RaylibGum`, and their test projects including `MonoGameGum.Tests`). Use this when working on runtime libraries, `GumCommon`, or anything a shipped game would reference.
+* **Tool work (`GumFull.sln`)** — anything under `Tool/`, `Gum/`, plugins, or tool-side code **must** be built via the solution. Plugin projects use `$(SolutionDir)` in post-build scripts, which is undefined when building a `.csproj` directly, so building individual tool csprojs silently breaks plugin output.
+* **Runtime/library work (`AllLibraries.sln` OR individual csprojs)** — runtime projects (`GumCommon`, `MonoGameGum`, `KniGum`, `FnaGum`, `SkiaGum`, `RaylibGum`, and their test projects including `MonoGameGum.Tests`) have no `$(SolutionDir)`-dependent post-builds. Building the relevant individual `.csproj` is fine and is usually faster than building the whole solution. Use `AllLibraries.sln` when a change spans many runtime projects or you want a single command to verify them all.
 
 Examples:
-* Build: `dotnet build GumFull.sln` or `dotnet build AllLibraries.sln`
-* Test: `dotnet test AllLibraries.sln --filter "TestClassName"`
+* Tool build: `dotnet build GumFull.sln`
+* Runtime test (focused): `dotnet test MonoGameGum.Tests/MonoGameGum.Tests.csproj --filter "TestClassName"`
+* Runtime build (broad): `dotnet build AllLibraries.sln`
 
-If a change spans both (e.g. editing `GumCommon` which is linked into both), build both solutions.
+If a runtime change is in `GumCommon` and you've already built `MonoGameGum.Tests`, that pulls in `GumCommon` and `MonoGameGum` transitively — no need to also build the solution.
 
 ## Code Style
 

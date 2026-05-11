@@ -156,7 +156,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public bool IsFontDirty
     {
         get => isFontDirty;
-        set => isFontDirty = value;
+        internal set => isFontDirty = value;
     }
 
     /// <summary>
