@@ -29,6 +29,13 @@ public static class DarkProTheme
     public const string FontFamily = "DM Mono";
 
     /// <summary>
+    /// Family name the bundled icon font (DejaVu Sans Mono) is registered under.
+    /// Use this for glyphs DM Mono doesn't cover - check marks, close buttons,
+    /// combo/scrollbar arrows, etc. (Dingbats and Geometric Shapes blocks).
+    /// </summary>
+    public const string IconFontFamily = "DM Mono Icons";
+
+    /// <summary>
     /// Default text size used by the theme. Matches the Dark Pro mockup's
     /// <c>--fs</c> token (14px).
     /// </summary>
@@ -47,6 +54,14 @@ public static class DarkProTheme
     {
         CustomSetPropertyOnRenderable.InMemoryFontCreator =
             new KernSmithFontCreator(graphicsDevice);
+
+        // Pre-register glyphs that visuals render as Text rather than as
+        // sprite-sheet icons. KernSmith bakes only the characters it has
+        // been told about, so anything outside ASCII has to be declared
+        // before the first font generation. These all live in the bundled
+        // icon font (DM Mono Icons / DejaVu Sans Mono) since DM Mono itself
+        // doesn't cover Dingbats or Geometric Shapes.
+        BmfcSave.AddCharacters("✓✕▾▴▲▼◀▶");
 
         // Dark Pro's visuals build their bodies out of Apos.Shapes-backed
         // RoundedRectangleRuntime instances, which require ShapeRenderer to
@@ -71,13 +86,17 @@ public static class DarkProTheme
         // DM Mono's true 700-weight Bold variant is not shipped; Medium (500)
         // maps to Gum's IsBold slot because the Dark Pro design uses 500 as
         // the emphasis weight. Consumers can override by re-registering.
-        RegisterEmbeddedFont("DMMono-Regular.ttf", style: null);
-        RegisterEmbeddedFont("DMMono-Medium.ttf", style: "Bold");
-        RegisterEmbeddedFont("DMMono-Italic.ttf", style: "Italic");
-        RegisterEmbeddedFont("DMMono-MediumItalic.ttf", style: "BoldItalic");
+        RegisterEmbeddedFont(FontFamily, "DMMono-Regular.ttf", style: null);
+        RegisterEmbeddedFont(FontFamily, "DMMono-Medium.ttf", style: "Bold");
+        RegisterEmbeddedFont(FontFamily, "DMMono-Italic.ttf", style: "Italic");
+        RegisterEmbeddedFont(FontFamily, "DMMono-MediumItalic.ttf", style: "BoldItalic");
+
+        // Icon font (DejaVu Sans Mono) registered under a distinct family name
+        // so the visual code addresses it explicitly via DarkProTheme.IconFontFamily.
+        RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
-    private static void RegisterEmbeddedFont(string fileName, string? style)
+    private static void RegisterEmbeddedFont(string family, string fileName, string? style)
     {
         Assembly assembly = typeof(DarkProTheme).Assembly;
         string resourceName = $"Gum.Themes.DarkPro.MonoGame.Content.Fonts.{fileName}";
@@ -96,11 +115,11 @@ public static class DarkProTheme
 
         if (style == null)
         {
-            KernSmithFontCreator.RegisterFont(FontFamily, fontBytes);
+            KernSmithFontCreator.RegisterFont(family, fontBytes);
         }
         else
         {
-            KernSmithFontCreator.RegisterFont(FontFamily, fontBytes, style: style);
+            KernSmithFontCreator.RegisterFont(family, fontBytes, style: style);
         }
     }
 
@@ -144,5 +163,8 @@ public static class DarkProTheme
     {
         FrameworkElement.DefaultFormsTemplates[typeof(Button)] =
             new VisualTemplate((_, c) => new ButtonVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] =
+            new VisualTemplate((_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
     }
 }

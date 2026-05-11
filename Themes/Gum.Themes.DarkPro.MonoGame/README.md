@@ -28,7 +28,11 @@ protected override void Initialize()
 
 ## Bundled Fonts
 
-DM Mono (SIL Open Font License) is embedded in the assembly and registered automatically. Four weights are registered under the family name `"DM Mono"`:
+Two fonts are embedded in the assembly and registered automatically.
+
+### `"DM Mono"` — user-facing text
+
+DM Mono (SIL Open Font License). Four weights:
 
 | Gum properties              | TTF                       |
 | --------------------------- | ------------------------- |
@@ -40,3 +44,9 @@ DM Mono (SIL Open Font License) is embedded in the assembly and registered autom
 DM Mono's true `Bold` weight (700) does not ship with this theme — `Medium` (500) is mapped to Gum's `IsBold = true` slot because the design intent is "Medium for emphasis." Replace via `KernSmithFontCreator.RegisterFont("DM Mono", ttfBytes, style: "Bold")` to override.
 
 See `Content/Fonts/OFL.txt` for the DM Mono license.
+
+### `"DM Mono Icons"` — internal glyphs
+
+DejaVu Sans Mono (Bitstream Vera / DejaVu license; redistribution permitted). Used by the theme's visuals for glyphs DM Mono doesn't cover — check marks, close buttons, combo and scrollbar arrows (Dingbats and Geometric Shapes Unicode blocks). The family name is also exposed as `DarkProTheme.IconFontFamily` if you need to render the same glyphs yourself.
+
+See `Content/Fonts/DejaVuSansMono-LICENSE.txt` for the DejaVu license.

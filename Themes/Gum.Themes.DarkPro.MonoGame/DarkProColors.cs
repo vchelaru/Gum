@@ -31,6 +31,12 @@ public static class DarkProColors
     /// <summary>Accent dark — pressed / pushed (<c>--accd</c>, <c>#094771</c>).</summary>
     public static readonly Color AccentDark = new Color(9, 71, 113);
 
+    /// <summary>
+    /// Darker accent used when a "filled-with-accent" element is pressed — for
+    /// example, a checked CheckBox being pushed (<c>#005A99</c> from .dp-chk.pre.chk).
+    /// </summary>
+    public static readonly Color AccentPressed = new Color(0, 90, 153);
+
     /// <summary>Primary text (<c>--txt</c>, <c>#D4D4D4</c>).</summary>
     public static readonly Color Text = new Color(212, 212, 212);
 
