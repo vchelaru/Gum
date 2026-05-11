@@ -39,6 +39,16 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         TextInstance.XOrigin = HorizontalAlignment.Left;
         TextInstance.Width = -12f;
 
+        // Defensive font/size assignment. The V3 base ctor calls
+        // TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal) and Dark Pro's
+        // ConfigureStyling sets that Normal to DM Mono 14 — in theory this is
+        // redundant. In practice the ComboBox-dropdown path is the one place
+        // where items have shown up with the V3 fallback font, so set explicitly
+        // here as a safety net. Doesn't hurt if the styling already applied
+        // correctly; restores the right font if anything got out of order.
+        TextInstance.Font = DarkProTheme.FontFamily;
+        TextInstance.FontSize = DarkProTheme.FontSize;
+
         WireStates();
     }
 
