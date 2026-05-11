@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+
+    <PackageId>Gum.Themes.DarkPro.MonoGame</PackageId>
+    <Version>2026.5.10.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>A flat dark theme for Gum UI inspired by modern code editors. Provides styled visuals for Gum Forms controls with MonoGame and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- DM Mono TTFs are embedded so DarkProTheme.Apply can register them via the
+         KernSmithFontCreator byte[] overload, sparing consumers from copying font
+         files into their own Content folder. -->
+    <EmbeddedResource Include="Content\Fonts\DMMono-Regular.ttf" />
+    <EmbeddedResource Include="Content\Fonts\DMMono-Medium.ttf" />
+    <EmbeddedResource Include="Content\Fonts\DMMono-Italic.ttf" />
+    <EmbeddedResource Include="Content\Fonts\DMMono-MediumItalic.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- KernSmith is a runtime dependency of the theme (DarkProTheme.Apply
+         constructs KernSmithFontCreator and calls RegisterFont). It must flow
+         transitively to consumers - hence no PrivateAssets here. Note: the
+         sibling Gum.Themes.Editor.MonoGame project marks this PrivateAssets="All",
+         which is likely a latent bug there since the Editor theme has the same
+         runtime requirement. -->
+    <PackageReference Include="KernSmith.MonoGameGum" Version="*" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+  </ItemGroup>
+</Project>
