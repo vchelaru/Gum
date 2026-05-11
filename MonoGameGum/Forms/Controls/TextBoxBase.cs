@@ -712,7 +712,7 @@ public abstract class TextBoxBase :
         }
         else
         {
-            var lineHeight = coreTextObject.LineHeightInPixels;
+            var lineHeight = EffectiveLineHeightInPixels;
             var topOfText = this.textComponent.GetAbsoluteTop();
             if (this.coreTextObject?.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
             {
@@ -720,7 +720,7 @@ public abstract class TextBoxBase :
             }
             var cursorYOffset = screenY - topOfText;
 
-            var lineOn = System.Math.Max(0, System.Math.Min((int)cursorYOffset / lineHeight, coreTextObject.WrappedText.Count - 1));
+            var lineOn = System.Math.Max(0, System.Math.Min((int)(cursorYOffset / lineHeight), coreTextObject.WrappedText.Count - 1));
 
             if (lineOn < coreTextObject.WrappedText.Count)
             {
@@ -1012,7 +1012,7 @@ public abstract class TextBoxBase :
         }
         else
         {
-            var lineHeight = coreTextObject.LineHeightInPixels;
+            var lineHeight = EffectiveLineHeightInPixels;
             var newY = absoluteY - lineHeight;
             var index = GetCaretIndexAtPosition(absoluteX, newY);
             CaretIndex = index;
@@ -1029,7 +1029,7 @@ public abstract class TextBoxBase :
         }
         else
         {
-            var lineHeight = coreTextObject.LineHeightInPixels;
+            var lineHeight = EffectiveLineHeightInPixels;
             var newY = absoluteY + lineHeight;
             var index = GetCaretIndexAtPosition(absoluteX, newY);
             CaretIndex = index;
@@ -1832,7 +1832,7 @@ public abstract class TextBoxBase :
         // For the clamp we want the actual content height — line count × line
         // height — so we don't over-clamp and undo a legitimate scroll.
         var lineCount = coreTextObject.WrappedText?.Count ?? 0;
-        float contentHeight = lineCount * coreTextObject.LineHeightInPixels;
+        float contentHeight = lineCount * EffectiveLineHeightInPixels;
         float containerHeight = caretComponent.EffectiveParentGue.GetAbsoluteHeight();
         float maxScrollUp = System.Math.Max(0f, contentHeight - containerHeight);
         float clamped = System.Math.Max(this.textComponent.Y, -maxScrollUp);
@@ -2054,9 +2054,17 @@ public abstract class TextBoxBase :
         return adjusted;
     }
 
+    // The font's raw line height in pixels multiplied by the inner Text's
+    // LineHeightMultiplier. This is the per-line vertical step used for caret
+    // placement, selection-rectangle placement, hit-testing, and vertical
+    // scroll-content sizing — all of which must honor the multiplier so the
+    // caret/selection line up with the text the user actually sees.
+    private float EffectiveLineHeightInPixels =>
+        coreTextObject.LineHeightInPixels * coreTextObject.LineHeightMultiplier;
+
     private float GetCenterOfYForLinePixelsFromSmall(int lineNumber)
     {
-        var lineHeight = coreTextObject.LineHeightInPixels;
+        var lineHeight = EffectiveLineHeightInPixels;
 
         float offset;
 
