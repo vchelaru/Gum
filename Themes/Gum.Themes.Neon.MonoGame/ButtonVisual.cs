@@ -49,16 +49,18 @@ public class ButtonVisual : BaseButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        // Focus ring goes in first so it renders behind everything. Visible
-        // only on focused states.
-        _focusRing = CreateFocusRing();
-        AddChild(_focusRing);
-
         _fill = CreateFill();
         AddChild(_fill);
 
         _border = CreateBorder();
         AddChild(_border);
+
+        // Focus ring renders AFTER the fill so the body's dropshadow halo
+        // doesn't alpha-blend over the white stroke and dim it. The ring
+        // pixels are entirely outside the body bounds, so painting on top
+        // doesn't obscure inner content.
+        _focusRing = CreateFocusRing();
+        AddChild(_focusRing);
 
         AddChild(TextInstance);
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);

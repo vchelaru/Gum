@@ -50,9 +50,19 @@ internal static class NeonPalette
     public static readonly Color FocusRing = Color.White;
 
     /// <summary>
-    /// ScrollBar thumb fill — CSS <c>rgba(0,229,255,.15)</c>.
+    /// ScrollBar thumb fill at rest. Intentionally muted (steel-blue
+    /// <see cref="NeonColors.Muted"/>) instead of bright cyan so a scroll
+    /// bar — chrome the user rarely interacts with — doesn't draw the eye
+    /// away from primary content.
     /// </summary>
-    public static readonly Color ScrollThumb = new Color(0, 229, 255, 38);
+    public static readonly Color ScrollThumb = NeonColors.Muted;
+
+    /// <summary>
+    /// ScrollBar thumb hover/push fill. Brightens toward cyan to confirm
+    /// the interaction, but stays a step below full Accent so the bar still
+    /// reads as secondary chrome.
+    /// </summary>
+    public static readonly Color ScrollThumbHover = new Color(120, 170, 200);
 
     /// <summary>
     /// Hover background tint for ListBox / Menu rows — CSS uses

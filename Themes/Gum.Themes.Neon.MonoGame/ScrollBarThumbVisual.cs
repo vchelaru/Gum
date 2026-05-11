@@ -54,7 +54,7 @@ public class ScrollBarThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.CornerRadius = CornerRadius;
         body.IsFilled = true;
-        body.Color = NeonColors.Accent;
+        body.Color = NeonPalette.ScrollThumb;
         return body;
     }
 
@@ -64,20 +64,22 @@ public class ScrollBarThumbVisual : InteractiveGue
         _buttonCategory.Name = Button.ButtonCategoryName;
         AddCategory(_buttonCategory);
 
+        // Muted steel-blue at rest. Hover/push step toward cyan but stay a
+        // shade below full Accent so the scroll bar reads as secondary chrome.
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => _body.Color = NeonColors.Accent);
+            () => _body.Color = NeonPalette.ScrollThumb);
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => _body.Color = NeonPalette.ButtonHoverFill);
+            () => _body.Color = NeonPalette.ScrollThumbHover);
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => _body.Color = NeonColors.Accent);
+            () => _body.Color = NeonPalette.ScrollThumbHover);
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => _body.Color = NeonColors.Accent);
+            () => _body.Color = NeonPalette.ScrollThumb);
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => _body.Color = NeonPalette.ButtonHoverFill);
+            () => _body.Color = NeonPalette.ScrollThumbHover);
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
             () => _body.Color = NeonColors.Disabled);

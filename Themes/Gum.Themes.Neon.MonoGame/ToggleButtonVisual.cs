@@ -45,14 +45,18 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = CreateFocusRing();
-        AddChild(_focusRing);
-
         _fill = CreateFill();
         AddChild(_fill);
 
         _border = CreateBorder();
         AddChild(_border);
+
+        // Focus ring is added AFTER the fill so the body's dropshadow halo
+        // (which paints during the fill's draw call) doesn't alpha-blend over
+        // it and dim the white stroke. The ring lives entirely outside the
+        // body's pixel bounds, so painting it on top doesn't obscure content.
+        _focusRing = CreateFocusRing();
+        AddChild(_focusRing);
 
         AddChild(TextInstance);
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
