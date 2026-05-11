@@ -151,8 +151,12 @@ public class RadioButtonVisual : BaseRadioButtonVisual
             fill: DarkProColors.Surface1, border: DarkProColors.Border,
             text: DarkProColors.Text, innerVisible: false, ring: false);
 
+        // Off-state hover uses BorderHover (gray), matching TextBox's
+        // hover→focus progression. On-state hover keeps Accent because the
+        // inner dot is already Accent — a gray border with an accent dot
+        // inside would read as mismatched.
         States.HighlightedOff.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
+            fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
             text: DarkProColors.Text, innerVisible: false, ring: false);
 
         States.FocusedOff.Apply = () => Apply(

@@ -190,5 +190,13 @@ public static class DarkProTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] =
             new VisualTemplate((_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
+
+        // Label gets its color from Styling.ActiveStyle.Colors.TextPrimary (set in
+        // ConfigureStyling), so V3.LabelVisual already renders Dark Pro text color
+        // without a subclass. Disabled handling is not wired — Label doesn't override
+        // UpdateState, so IsEnabled changes don't flow to the visual. Add a subclass
+        // here if Forms-side state plumbing is ever extended.
+        FrameworkElement.DefaultFormsTemplates[typeof(Label)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
     }
 }

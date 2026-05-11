@@ -196,8 +196,14 @@ public class CheckBoxVisual : BaseCheckBoxVisual
             fill: DarkProColors.Surface1, border: DarkProColors.Border,
             text: DarkProColors.Text, glyph: GlyphKind.None, ring: false);
 
+        // Off-state hover uses BorderHover (gray), matching the TextBox
+        // hover→focus progression: a transient gray hover reads as a state hint
+        // and the sustained blue on Focused/checked states reads as the actual
+        // value change. On/Indeterminate hover states keep Accent because the
+        // indicator inside is already Accent — a gray border with an accent
+        // indicator inside would read as mismatched.
         States.HighlightedOff.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
+            fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
             text: DarkProColors.Text, glyph: GlyphKind.None, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
