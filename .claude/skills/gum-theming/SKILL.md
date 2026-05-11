@@ -92,6 +92,41 @@ Practical consequences for a theme:
 
 Fixing this on the V3 side (making `ListBoxVisual : ItemsControlVisual`) is a dedicated refactor — every existing theme and every consumer reading `ListBoxVisual` field names directly would need updates. Until that happens, treat the duplication as inherent and don't try to be clever about it in a theme.
 
+## Cross-runtime NuGet packaging
+
+A theme that wants to support both MonoGame and KNI ships two NuGet packages, not one. NuGet's restore graph picks `lib/<tfm>/<dll>` by TFM — and since both `Gum.MonoGame` and `Gum.KNI` currently target `net8.0`, there's no TFM-based discriminator that lets one package serve both backends. (FRB2's single-package multi-target trick at `src/FlatRedBall2.csproj` works only because it forces KNI=net8.0 and MonoGame=net10.0 as a backend-discrimination convention. Don't replicate that here unless you're willing to force consumers onto a specific .NET version.)
+
+Pattern (see `Themes/Gum.Themes.DarkPro.MonoGame/` and `Themes/Gum.Themes.DarkPro.Kni/` for the working example):
+
+- One "primary" csproj holds the `.cs` files, the embedded fonts, and the README. Name it `Gum.Themes.<Name>.MonoGame.csproj`. References `KernSmith.MonoGameGum`, `MonoGame.Framework.DesktopGL`, `MonoGameGum.csproj`, `MonoGameGumShapes.csproj`.
+- A second csproj (`Gum.Themes.<Name>.Kni.csproj`) source-shares the same `.cs` files via `<Compile Include="..\Gum.Themes.<Name>.MonoGame\**\*.cs" />` and re-embeds each TTF via `<EmbeddedResource Include="..\…\<file>.ttf"><Link>Content\Fonts\<file>.ttf</Link></EmbeddedResource>`. The `<Link>` is load-bearing — it makes the resource manifest in the KNI assembly resolve to `Gum.Themes.<Name>.Kni.Content.Fonts.<file>` instead of some `..\` path. References `KernSmith.KniGum`, `nkast.Xna.Framework{,Graphics,Input}`, `KniGum.csproj`, `KniGumShapes.csproj`.
+- Inside `RegisterEmbeddedFont` (or wherever you read TTFs from manifest), derive the prefix from `assembly.GetName().Name` — **not** a hard-coded string. The same source compiles in both assemblies and finds its fonts in both.
+
+Match versions across the two csprojs so they read as one logical release.
+
+## InteractiveGue children capture input — reattach in V3 order
+
+When detaching a chunk of V3's children to insert custom chrome, anything containing an `InteractiveGue` (InnerPanel, ContainerInstance, ListBox.ScrollAndClipContainer, etc.) must go back at its original z-order or it eats clicks meant for sibling chrome. The Dark Pro Window's title-bar-drag bug was an hour of head-scratching because `InnerPanel` was re-added after `TitleBar`, so the panel's invisible InteractiveGue covered the visible drag bar.
+
+Rule of thumb: when you `Parent = null` a block of V3 children to insert layers behind them, reattach them in the same order V3 added them originally. Read the base visual's constructor to see that order; don't rely on memory.
+
+## Bake ScrollBar insets into the bar, not consumers
+
+A scroll bar's thumb shouldn't visually touch its container's border at scroll extremes. Resist the urge to push the inset onto consumers (`scrollBar.X = -3; scrollBar.Height -= 6;`) — that's brittle and forces every parent visual to know the magic numbers.
+
+Instead, shrink things inside the bar's own visual:
+
+- Shrink `ThumbContainer` on the long axis with negative `RelativeToParent` units (e.g. `ThumbContainer.Height = -ThumbInset * 2f; ThumbContainer.HeightUnits = RelativeToParent;` in vertical mode). RangeBase still gets to size the thumb freely within the shrunken container.
+- Inset the thumb on the short axis with negative `RelativeToParent` units on the thumb itself.
+
+Now consumers (ListBox, ScrollViewer, free-floating) can place the bar flush against any edge and the visible thumb still has consistent breathing room. The bar's track is transparent, so the flush bounding box is invisible.
+
+## Optional chrome — toggle visibility, don't restructure the tree
+
+When adding an opt-in chrome property (`ShowFrame`, `ShowShadow`, `ShowDivider`), create the chrome at construction with `Visible = false` and have the setter flip visibility. **Don't** `AddChild` / `Parent = null` at toggle time — re-parenting interacts badly with state callbacks (which target specific child references), z-order assumptions, and the rendering tree's batch ordering. Visibility toggling is O(1) and free; restructuring the tree at runtime is the kind of thing that produces "first click works, second click doesn't" reports.
+
+If the chrome's geometry depends on its visibility (e.g. ScrollBar's `ShowFrame` shifts the thumb inset by `FrameBorderThickness` so the visible gap stays symmetric), extract the geometry-applying code into its own method and call it both from the orientation/state callback **and** from the setter. Re-running the full orientation callback from the setter risks clobbering consumer-set dimensions (the Dark Pro `ScrollBarVisual.ShowFrame` regression was exactly this — `Apply` re-set `Width = 14; Height = 128` on every invocation, overwriting `bar.Width = 16; bar.Height = 130` set in the showcase).
+
 ## Cross-references
 
 - Apos.Shapes runtime types and the shape-batch scissor plumbing: [gum-monogame-rendering](../gum-monogame-rendering/SKILL.md).

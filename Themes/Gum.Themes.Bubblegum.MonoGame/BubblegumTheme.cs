@@ -148,8 +148,58 @@ public static class BubblegumTheme
         FrameworkElement.DefaultFormsTemplates[typeof(Button)] =
             new VisualTemplate((_, c) => new ButtonVisual(tryCreateFormsObject: c));
 
-        // Other visual templates land as each visual is authored. For controls
-        // not yet themed, the V3 default visuals continue to apply (consumer
-        // sees a mix until coverage is complete).
+        FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] =
+            new VisualTemplate((_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] =
+            new VisualTemplate((_, c) => new RadioButtonVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(TextBox)] =
+            new VisualTemplate((_, c) => new TextBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(PasswordBox)] =
+            new VisualTemplate((_, c) => new PasswordBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Slider)] =
+            new VisualTemplate((_, c) => new SliderVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ListBox)] =
+            new VisualTemplate((_, c) => new ListBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ListBoxItem)] =
+            new VisualTemplate((_, c) => new ListBoxItemVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] =
+            new VisualTemplate((_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] =
+            new VisualTemplate((_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
+
+        // Label gets its color from Styling.ActiveStyle.Colors.TextPrimary (set
+        // in ConfigureStyling), so the V3 LabelVisual already renders Bubblegum
+        // text color without a subclass.
+        FrameworkElement.DefaultFormsTemplates[typeof(Label)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ComboBox)] =
+            new VisualTemplate((_, c) => new ComboBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Window)] =
+            new VisualTemplate((_, c) => new WindowVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Splitter)] =
+            new VisualTemplate((_, c) => new SplitterVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Menu)] =
+            new VisualTemplate((_, c) => new MenuVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] =
+            new VisualTemplate((_, c) => new MenuItemVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ToggleButton)] =
+            new VisualTemplate((_, c) => new ToggleButtonVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] =
+            new VisualTemplate((_, c) => new TooltipVisual(tryCreateFormsObject: c));
     }
 }
