@@ -716,7 +716,7 @@ public abstract class TextBoxBase :
             var topOfText = this.textComponent.GetAbsoluteTop();
             if (this.coreTextObject?.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
             {
-                topOfText = this.textComponent.GetAbsoluteCenterY() - (lineHeight * coreTextObject.WrappedText.Count - 1) / 2.0f;
+                topOfText = this.textComponent.GetAbsoluteCenterY() - lineHeight * (coreTextObject.WrappedText.Count - 1) / 2.0f;
             }
             var cursorYOffset = screenY - topOfText;
 
@@ -2045,7 +2045,11 @@ public abstract class TextBoxBase :
         var adjusted = centerOfLineY;
         if (target.YOrigin == global::RenderingLibrary.Graphics.VerticalAlignment.Top)
         {
-            adjusted -= coreTextObject.LineHeightMultiplier * coreTextObject.LineHeightInPixels / 2.0f;
+            // Half the *rendered glyph row* height — not the full inter-line
+            // step. The multiplier only inflates the spacing between lines, so
+            // using EffectiveLineHeightInPixels here would push the top half a
+            // multiplier-worth below the actual glyph row.
+            adjusted -= ScaledLineHeightInPixels / 2.0f;
         }
         if (target.YUnits == global::Gum.Converters.GeneralUnitType.PixelsFromMiddle)
         {
@@ -2054,29 +2058,44 @@ public abstract class TextBoxBase :
         return adjusted;
     }
 
-    // The font's raw line height in pixels multiplied by the inner Text's
-    // LineHeightMultiplier. This is the per-line vertical step used for caret
-    // placement, selection-rectangle placement, hit-testing, and vertical
-    // scroll-content sizing — all of which must honor the multiplier so the
-    // caret/selection line up with the text the user actually sees.
+    // The full per-line vertical step used by the renderer:
+    // rawLineHeight × FontScale × LineHeightMultiplier. Used for inter-line
+    // stepping (hit-testing, arrow-key vertical movement, content-height
+    // clamps, and the line-to-line component of caret/selection positioning).
     private float EffectiveLineHeightInPixels =>
-        coreTextObject.LineHeightInPixels * coreTextObject.LineHeightMultiplier;
+        coreTextObject.LineHeightInPixels
+        * ((IText)coreTextObject).FontScale
+        * coreTextObject.LineHeightMultiplier;
+
+    // The height of one rendered glyph row (rawLineHeight × FontScale), with
+    // no LineHeightMultiplier. This is the right value for "half a line"
+    // offsets that map to the actual ink — e.g. the caret on line 0, whose
+    // position must NOT change when only the multiplier changes.
+    private float ScaledLineHeightInPixels =>
+        coreTextObject.LineHeightInPixels * ((IText)coreTextObject).FontScale;
 
     private float GetCenterOfYForLinePixelsFromSmall(int lineNumber)
     {
         var lineHeight = EffectiveLineHeightInPixels;
+        var glyphHalfHeight = ScaledLineHeightInPixels / 2.0f;
 
         float offset;
 
         if (coreTextObject.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
         {
-            offset = lineNumber * lineHeight;
-            offset -= lineHeight * (coreTextObject.WrappedText.Count - 1) / 2.0f;
-            offset += CoreTextObjectHeight / 2.0f;
+            // Center of glyph row N relative to the centered text block: the
+            // block top is at (componentHeight - count*lineHeight)/2, the glyph
+            // top of line N is blockTop + N*lineHeight, and the glyph center
+            // is glyphTop + glyphHalfHeight.
+            offset = (CoreTextObjectHeight - coreTextObject.WrappedText.Count * lineHeight) / 2.0f;
+            offset += lineNumber * lineHeight;
+            offset += glyphHalfHeight;
         }
         else
         {
-            offset = (lineNumber + .5f) * lineHeight;
+            // Top-aligned: glyph top of line N is at N*lineHeight (from
+            // textComponent top); its center is that + glyphHalfHeight.
+            offset = lineNumber * lineHeight + glyphHalfHeight;
         }
         var caretY = (textComponent as IPositionedSizedObject).Y + offset;
         return caretY;
