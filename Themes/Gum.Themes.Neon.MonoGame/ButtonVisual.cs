@@ -18,15 +18,19 @@ public class ButtonVisual : BaseButtonVisual
 {
     private const float CornerRadius = 1f;
     private const float BorderThickness = 1f;
+    private const float FocusBorderThickness = 2f;
 
     /// <summary>
     /// Resting glow — CSS <c>box-shadow: 0 0 8px rgba(0,229,255,.2)</c>. Bumped
     /// in alpha/blur to compensate for the sRGB-composited vs linear-composited
     /// rendering mismatch documented in <c>.claude/skills/gum-theming/SKILL.md</c>.
+    /// Hover/push glows kept compact so the bloom doesn't bleed across the body
+    /// and visually wash out the text label.
     /// </summary>
-    private const float RestGlowBlur = 12f;
-    private const float HoverGlowBlur = 22f;
-    private const float PushedGlowBlur = 26f;
+    private const float RestGlowBlur = 16f;
+    private const float HoverGlowBlur = 14f;
+    private const float PushedGlowBlur = 12f;
+    private const float FocusGlowBlur = 20f;
 
     private readonly RoundedRectangleRuntime _fill;
     private readonly RoundedRectangleRuntime _border;
@@ -107,39 +111,44 @@ public class ButtonVisual : BaseButtonVisual
 
     private void WireStates()
     {
+        // Text stays cyan in every interactive state — using white on hover/push
+        // washed against the glow bloom and the label became unreadable.
         States.Enabled.Apply = () => Apply(
             fill: NeonColors.Surface1, border: NeonColors.Accent, text: NeonColors.Accent,
-            glow: NeonPalette.GlowSubtle, blur: RestGlowBlur);
+            glow: NeonPalette.GlowMedium, blur: RestGlowBlur, thickBorder: false);
 
         States.Highlighted.Apply = () => Apply(
             fill: NeonPalette.ButtonHoverFill, border: NeonColors.Accent, text: NeonColors.Accent,
-            glow: NeonPalette.GlowMedium, blur: HoverGlowBlur);
+            glow: NeonPalette.GlowMedium, blur: HoverGlowBlur, thickBorder: false);
 
+        // Focused → thicker 2 px border + a wider glow halo. The thickness step
+        // is the primary visual cue (glow alone wasn't legible enough).
         States.Focused.Apply = () => Apply(
             fill: NeonColors.Surface1, border: NeonColors.Accent, text: NeonColors.Accent,
-            glow: NeonPalette.GlowMedium, blur: HoverGlowBlur);
+            glow: NeonPalette.GlowStrong, blur: FocusGlowBlur, thickBorder: true);
 
         States.HighlightedFocused.Apply = () => Apply(
             fill: NeonPalette.ButtonHoverFill, border: NeonColors.Accent, text: NeonColors.Accent,
-            glow: NeonPalette.GlowStrong, blur: HoverGlowBlur);
+            glow: NeonPalette.GlowStrong, blur: FocusGlowBlur, thickBorder: true);
 
         States.Pushed.Apply = () => Apply(
-            fill: NeonPalette.ButtonPushedFill, border: NeonColors.Accent, text: NeonColors.White,
-            glow: NeonPalette.GlowStrong, blur: PushedGlowBlur);
+            fill: NeonPalette.ButtonPushedFill, border: NeonColors.Accent, text: NeonColors.Accent,
+            glow: NeonPalette.GlowMedium, blur: PushedGlowBlur, thickBorder: false);
 
         States.Disabled.Apply = () => Apply(
-            fill: NeonColors.Background, border: NeonColors.DisabledBorder, text: NeonColors.DisabledBorder,
-            glow: NeonPalette.GlowSubtle, blur: 0f);
+            fill: NeonColors.Background, border: NeonColors.DisabledBorder, text: NeonColors.Muted,
+            glow: NeonPalette.GlowSubtle, blur: 0f, thickBorder: false);
 
         States.DisabledFocused.Apply = () => Apply(
-            fill: NeonColors.Background, border: NeonColors.DisabledBorder, text: NeonColors.DisabledBorder,
-            glow: NeonPalette.GlowSubtle, blur: 0f);
+            fill: NeonColors.Background, border: NeonColors.DisabledBorder, text: NeonColors.Muted,
+            glow: NeonPalette.GlowSubtle, blur: 0f, thickBorder: false);
     }
 
-    private void Apply(Color fill, Color border, Color text, Color glow, float blur)
+    private void Apply(Color fill, Color border, Color text, Color glow, float blur, bool thickBorder)
     {
         _fill.Color = fill;
         _border.Color = border;
+        _border.StrokeWidth = thickBorder ? FocusBorderThickness : BorderThickness;
         _fill.DropshadowColor = glow;
         _fill.DropshadowBlurX = blur;
         _fill.DropshadowBlurY = blur;

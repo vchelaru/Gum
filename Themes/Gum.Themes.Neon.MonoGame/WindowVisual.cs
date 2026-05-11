@@ -146,7 +146,12 @@ public class WindowVisual : BaseWindowVisual
         fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.Color = NeonColors.Surface2;
+        // CSS spec is var(--s2), but Surface2 (#131330) reads almost identical
+        // to the Surface1 body against the dark page — the title bar visually
+        // dissolved into the body. Tinting with the translucent cyan accent
+        // (AccentDim) gives the bar a recognizable header weight without
+        // departing from the palette.
+        fill.Color = NeonColors.AccentDim;
         return fill;
     }
 

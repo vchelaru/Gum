@@ -21,7 +21,8 @@ namespace Gum.Themes.Neon;
 public class ComboBoxVisual : BaseComboBoxVisual
 {
     private const float CornerRadius = 1f;
-    private const float BorderThickness = 2f;
+    private const float BorderThickness = 1f;
+    private const float FocusBorderThickness = 2f;
     private const float FocusRingInset = 2f;
     private const float FocusRingThickness = 3f;
     private const float GlyphRightMargin = 12f;
@@ -177,19 +178,25 @@ public class ComboBoxVisual : BaseComboBoxVisual
             border: NeonColors.Accent, text: NeonColors.Text,
             glyph: NeonColors.Accent, ring: false, fillDisabled: false);
 
+        // Disabled text uses Muted (not the near-black Disabled token) so the
+        // currently-selected value stays legible — otherwise a disabled combo
+        // looks empty, which reads as a bug.
         States.Disabled.Apply = () => Apply(
-            border: NeonColors.Disabled, text: NeonColors.Disabled,
-            glyph: NeonColors.Disabled, ring: false, fillDisabled: true);
+            border: NeonColors.DisabledBorder, text: NeonColors.Muted,
+            glyph: NeonColors.Muted, ring: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => Apply(
-            border: NeonColors.Disabled, text: NeonColors.Disabled,
-            glyph: NeonColors.Disabled, ring: true, fillDisabled: true);
+            border: NeonColors.DisabledBorder, text: NeonColors.Muted,
+            glyph: NeonColors.Muted, ring: true, fillDisabled: true);
     }
 
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
-        _fill.Color = fillDisabled ? NeonColors.Disabled : NeonColors.Surface1;
+        _fill.Color = fillDisabled ? NeonColors.Background : NeonColors.Surface1;
         _border.Color = border;
+        // Thicken the border whenever the focus ring is shown — gives focus a
+        // clearer signal than the soft halo alone.
+        _border.StrokeWidth = ring ? FocusBorderThickness : BorderThickness;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;
         _focusRing.Visible = ring;

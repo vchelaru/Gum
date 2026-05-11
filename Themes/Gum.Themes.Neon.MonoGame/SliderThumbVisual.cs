@@ -23,15 +23,13 @@ public class SliderThumbVisual : InteractiveGue
     private const float FocusRingThickness = 4f;
 
     /// <summary>
-    /// Native Gaussian drop shadow. CSS spec is
-    /// <c>box-shadow:0 2px 8px rgba(255,107,157,.4)</c>; per the gum-theming
-    /// skill, the CSS-literal alpha (102) reads too faint in-engine. Bumped
-    /// ~1.55× to alpha 160 — matches the Button shadow weight so the slider
-    /// thumb reads as part of the same "lifted control" family.
+    /// Native Gaussian cyan glow under the thumb. CSS spec is
+    /// <c>box-shadow:0 0 10px rgba(0,229,255,.5)</c>; bumped per the
+    /// gum-theming skill's sRGB note so the halo reads as bright in-engine.
     /// </summary>
-    private const float ShadowOffsetY = 2f;
-    private const float ShadowBlur = 10f;
-    private static readonly Color ShadowColor = new Color(255, 107, 157, 160);
+    private const float ShadowOffsetY = 0f;
+    private const float ShadowBlur = 14f;
+    private static readonly Color ShadowColor = new Color(0, 229, 255, 180);
 
     private readonly ColoredCircleRuntime _focusRing;
     private readonly ColoredCircleRuntime _body;
@@ -74,7 +72,7 @@ public class SliderThumbVisual : InteractiveGue
         body.WidthUnits = DimensionUnitType.RelativeToParent;
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.IsFilled = true;
-        body.Color = Color.White;
+        body.Color = NeonColors.Surface1;
         // Native Gaussian drop shadow under the thumb — replaces the prior
         // single-circle approximation. Toggled per state via WireStates.
         body.HasDropshadow = true;
@@ -136,19 +134,22 @@ public class SliderThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(body: Color.White, border: NeonColors.Accent, ring: false, showShadow: true));
+            () => Apply(body: NeonColors.Surface1, border: NeonColors.Accent, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(body: Color.White, border: NeonColors.Accent, ring: false, showShadow: true));
+            () => Apply(body: NeonColors.Surface1, border: NeonColors.Accent, ring: false, showShadow: true));
 
+        // Pushed kept solid (Surface1, not translucent) — translucent let the
+        // half-filled track show through the thumb, which read as a half-empty
+        // bubble rather than a pressed control.
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(body: NeonColors.AccentDim, border: NeonColors.Accent, ring: false, showShadow: true));
+            () => Apply(body: NeonColors.Surface2, border: NeonColors.Accent, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(body: Color.White, border: NeonColors.Accent, ring: true, showShadow: true));
+            () => Apply(body: NeonColors.Surface1, border: NeonColors.Accent, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(body: Color.White, border: NeonColors.Accent, ring: true, showShadow: true));
+            () => Apply(body: NeonColors.Surface1, border: NeonColors.Accent, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
             () => Apply(body: NeonColors.Disabled, border: NeonColors.Disabled, ring: false, showShadow: false));

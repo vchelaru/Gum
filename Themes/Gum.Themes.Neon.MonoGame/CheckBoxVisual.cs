@@ -213,28 +213,28 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // -------- Checked (On) --------
         // Accent-filled box, white check glyph (matches .bb-chk.chk).
         States.EnabledOn.Apply = () => Apply(
-            fill: NeonColors.Accent, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            fill: NeonPalette.CheckedFill, border: NeonColors.Accent,
+            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: NeonColors.Accent, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            fill: NeonPalette.CheckedFill, border: NeonColors.Accent,
+            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: NeonColors.Accent, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            fill: NeonPalette.CheckedFill, border: NeonColors.Accent,
+            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: NeonColors.Accent, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            fill: NeonPalette.CheckedFill, border: NeonColors.Accent,
+            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: NeonColors.Accent, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            fill: NeonPalette.CheckedFill, border: NeonColors.Accent,
+            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(

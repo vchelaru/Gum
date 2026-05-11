@@ -18,12 +18,13 @@ internal sealed class NeonTextInputDecoration
 {
     private const float CornerRadius = 1f;
     private const float BorderThickness = 1f;
+    private const float FocusBorderThickness = 2f;
 
     /// <summary>
     /// CSS <c>box-shadow: 0 0 14px rgba(0,229,255,.25)</c> on focus. Bumped
     /// for sRGB compositing — see SKILL note on visual-vs-numerical fidelity.
     /// </summary>
-    private const float FocusGlowBlur = 18f;
+    private const float FocusGlowBlur = 22f;
 
     private readonly RoundedRectangleRuntime _fill;
     private readonly RoundedRectangleRuntime _border;
@@ -115,10 +116,13 @@ internal sealed class NeonTextInputDecoration
             text: NeonColors.Text, placeholder: NeonColors.Placeholder,
             caret: NeonColors.Accent, selection: NeonColors.AccentDim, glow: true);
 
+        // Disabled body text → Muted so the value stays legible. The near-black
+        // Disabled token only colors the chrome / placeholder where there's
+        // nothing the user needs to read.
         host.States.Disabled.Apply = () => Apply(host,
             fill: NeonColors.Background, border: NeonColors.DisabledBorder,
-            text: NeonColors.Disabled, placeholder: NeonColors.Disabled,
-            caret: NeonColors.Disabled, selection: NeonColors.AccentDim, glow: false);
+            text: NeonColors.Muted, placeholder: NeonColors.Placeholder,
+            caret: NeonColors.Muted, selection: NeonColors.AccentDim, glow: false);
     }
 
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text,
@@ -126,6 +130,9 @@ internal sealed class NeonTextInputDecoration
     {
         _fill.Color = fill;
         _border.Color = border;
+        // Thicken the border whenever the focus glow is active — the glow alone
+        // wasn't a strong enough focus signal.
+        _border.StrokeWidth = glow ? FocusBorderThickness : BorderThickness;
         host.TextInstance.Color = text;
         host.PlaceholderTextInstance.Color = placeholder;
         host.CaretInstance.Color = caret;
