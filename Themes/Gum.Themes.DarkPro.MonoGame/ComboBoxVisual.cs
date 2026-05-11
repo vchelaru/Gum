@@ -27,6 +27,12 @@ public class ComboBoxVisual : BaseComboBoxVisual
     private const float GlyphRightMargin = 10f;
     private const float GlyphContainerSize = 16f;
     private const int GlyphFontSize = 10;
+    // Match the ListBoxItem TextInstance.X so the closed control's selected-item
+    // text lines up vertically with the dropdown items below it.
+    private const float TextLeftPadding = 6f;
+    // Clearance between the right edge of the text frame and the left edge of
+    // the dropdown glyph so long item names don't visually crash into the chevron.
+    private const float TextRightClearance = 4f;
 
     private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;
@@ -57,10 +63,14 @@ public class ComboBoxVisual : BaseComboBoxVisual
         AddChild(_dropdownGlyph);
 
         AddChild(TextInstance);
-        // V3 sets TextInstance.Width=-8 (4 px gutter each side). Tighten to leave
-        // clear room for the new dropdown glyph at the right edge so long item
-        // names don't visually crash into it.
-        TextInstance.Width = -(GlyphRightMargin + GlyphContainerSize + 8f);
+        // Match the dropdown ListBoxItem layout: 6 px from the left border,
+        // left-aligned, with the frame's right edge clearing the dropdown glyph.
+        // V3's default centered layout left ~17 px on the left, which made the
+        // closed-control text visibly out-of-line with the dropdown items.
+        TextInstance.X = TextLeftPadding;
+        TextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+        TextInstance.XOrigin = HorizontalAlignment.Left;
+        TextInstance.Width = -(TextLeftPadding + GlyphRightMargin + GlyphContainerSize + TextRightClearance);
 
         WireStates();
     }
