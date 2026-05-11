@@ -37,9 +37,13 @@ public class ButtonVisual : BaseButtonVisual
     /// alpha 102 ≈ 40% (matches the CSS .4). Toggled per state via
     /// <c>_fill.HasDropshadow</c>.
     /// </summary>
+    // Pink-tinted Gaussian halo. CSS spec is 0 3px 10px rgba(255,107,157,.4)
+    // but ~40% alpha read nearly invisible in practice against the pastel page
+    // background. Bumped to alpha 160 (~62%) and blur 12 for a casual-game
+    // "lift" reading without crossing into harsh-shadow territory.
     private const float ShadowOffsetY = 3f;
-    private const float ShadowBlur = 10f;
-    private static readonly Color ShadowColor = new Color(255, 107, 157, 102);
+    private const float ShadowBlur = 12f;
+    private static readonly Color ShadowColor = new Color(255, 107, 157, 160);
 
     private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;

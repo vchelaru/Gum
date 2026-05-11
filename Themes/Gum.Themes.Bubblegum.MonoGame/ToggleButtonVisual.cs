@@ -20,6 +20,15 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
     private const float FocusRingInset = 2f;
     private const float FocusRingThickness = 3f;
 
+    /// <summary>
+    /// Pink-tinted Gaussian halo, matching <see cref="ButtonVisual"/> so the
+    /// two pill controls read as one family. Toggled per state via
+    /// <c>_fill.HasDropshadow</c> (off when pressed / disabled).
+    /// </summary>
+    private const float ShadowOffsetY = 3f;
+    private const float ShadowBlur = 12f;
+    private static readonly Color ShadowColor = new Color(255, 107, 157, 160);
+
     private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;
     private readonly RoundedRectangleRuntime _border;
@@ -68,6 +77,12 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
         fill.Color = BubblegumColors.Surface1;
+        fill.HasDropshadow = true;
+        fill.DropshadowColor = ShadowColor;
+        fill.DropshadowOffsetX = 0f;
+        fill.DropshadowOffsetY = ShadowOffsetY;
+        fill.DropshadowBlurX = ShadowBlur;
+        fill.DropshadowBlurY = ShadowBlur;
         return fill;
     }
 
@@ -118,68 +133,70 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
 
     private void WireStates()
     {
-        // Off variants: white pill with pink border, pink text.
+        // Off variants: white pill with pink border, pink text. Shadow on
+        // except for pressed/disabled, matching the Button state pattern.
         States.EnabledOff.Apply = () => ApplyPalette(
             fill: BubblegumColors.Surface1, border: BubblegumColors.Border,
-            text: BubblegumColors.Text, showFocusRing: false);
+            text: BubblegumColors.Text, showShadow: true, showFocusRing: false);
 
         States.HighlightedOff.Apply = () => ApplyPalette(
             fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, showFocusRing: false);
+            text: BubblegumColors.Text, showShadow: true, showFocusRing: false);
 
         States.PushedOff.Apply = () => ApplyPalette(
             fill: BubblegumColors.Surface1, border: BubblegumColors.AccentDark,
-            text: BubblegumColors.Text, showFocusRing: false);
+            text: BubblegumColors.Text, showShadow: false, showFocusRing: false);
 
         States.FocusedOff.Apply = () => ApplyPalette(
             fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, showFocusRing: true);
+            text: BubblegumColors.Text, showShadow: true, showFocusRing: true);
 
         States.HighlightedFocusedOff.Apply = () => ApplyPalette(
             fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, showFocusRing: true);
+            text: BubblegumColors.Text, showShadow: true, showFocusRing: true);
 
         States.DisabledOff.Apply = () => ApplyPalette(
             fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, showFocusRing: false);
+            text: BubblegumColors.Disabled, showShadow: false, showFocusRing: false);
 
         States.DisabledFocusedOff.Apply = () => ApplyPalette(
             fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, showFocusRing: true);
+            text: BubblegumColors.Disabled, showShadow: false, showFocusRing: true);
 
         // On variants: accent-filled body, white text.
         States.EnabledOn.Apply = () => ApplyPalette(
             fill: BubblegumColors.Accent, border: BubblegumColors.Accent,
-            text: Color.White, showFocusRing: false);
+            text: Color.White, showShadow: true, showFocusRing: false);
 
         States.HighlightedOn.Apply = () => ApplyPalette(
             fill: BubblegumColors.AccentHover, border: BubblegumColors.AccentHover,
-            text: Color.White, showFocusRing: false);
+            text: Color.White, showShadow: true, showFocusRing: false);
 
         States.PushedOn.Apply = () => ApplyPalette(
             fill: BubblegumColors.AccentDark, border: BubblegumColors.AccentDark,
-            text: Color.White, showFocusRing: false);
+            text: Color.White, showShadow: false, showFocusRing: false);
 
         States.FocusedOn.Apply = () => ApplyPalette(
             fill: BubblegumColors.Accent, border: BubblegumColors.Accent,
-            text: Color.White, showFocusRing: true);
+            text: Color.White, showShadow: true, showFocusRing: true);
 
         States.HighlightedFocusedOn.Apply = () => ApplyPalette(
             fill: BubblegumColors.AccentHover, border: BubblegumColors.AccentHover,
-            text: Color.White, showFocusRing: true);
+            text: Color.White, showShadow: true, showFocusRing: true);
 
         States.DisabledOn.Apply = () => ApplyPalette(
             fill: BubblegumColors.Disabled, border: BubblegumColors.Disabled,
-            text: Color.White, showFocusRing: false);
+            text: Color.White, showShadow: false, showFocusRing: false);
 
         States.DisabledFocusedOn.Apply = () => ApplyPalette(
             fill: BubblegumColors.Disabled, border: BubblegumColors.Disabled,
-            text: Color.White, showFocusRing: true);
+            text: Color.White, showShadow: false, showFocusRing: true);
     }
 
-    private void ApplyPalette(Color fill, Color border, Color text, bool showFocusRing)
+    private void ApplyPalette(Color fill, Color border, Color text, bool showShadow, bool showFocusRing)
     {
         _fill.Color = fill;
+        _fill.HasDropshadow = showShadow;
         _border.Color = border;
         TextInstance.Color = text;
         _focusRing.Visible = showFocusRing;
