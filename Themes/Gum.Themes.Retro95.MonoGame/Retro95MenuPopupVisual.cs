@@ -1,4 +1,5 @@
 using Gum.Wireframe;
+using RenderingLibrary.Graphics;
 using BaseScrollViewerVisual = Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual;
 
 namespace Gum.Themes.Retro95;
@@ -28,7 +29,7 @@ public class Retro95MenuPopupVisual : BaseScrollViewerVisual
         VerticalScrollBarInstance.X = -2f;
         VerticalScrollBarInstance.Y = 2f;
         VerticalScrollBarInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        VerticalScrollBarInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
+        VerticalScrollBarInstance.YOrigin = VerticalAlignment.Top;
         VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         VerticalScrollBarInstance.Height = -4f;
     }
