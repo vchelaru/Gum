@@ -98,8 +98,13 @@ public static class DarkProTheme
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
     {
+        // Resource prefix is derived from the assembly name so this code works
+        // in both the MonoGame (Gum.Themes.DarkPro.MonoGame) and KNI
+        // (Gum.Themes.DarkPro.Kni) variants without forking. The KNI csproj
+        // re-embeds the TTFs via <Link> so the resource path inside that
+        // assembly is "<assembly-name>.Content.Fonts.<file>".
         Assembly assembly = typeof(DarkProTheme).Assembly;
-        string resourceName = $"Gum.Themes.DarkPro.MonoGame.Content.Fonts.{fileName}";
+        string resourceName = $"{assembly.GetName().Name}.Content.Fonts.{fileName}";
 
         using Stream? stream = assembly.GetManifestResourceStream(resourceName);
         if (stream == null)
