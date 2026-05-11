@@ -46,8 +46,13 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
 
     private void WireStates()
     {
+        // Win95-authentic: ListBox items had no hover styling. Only the selected
+        // item drew the navy band. The CSS source spec paints hover navy too,
+        // but that's a modernization — keeping the historical behavior here
+        // makes selected items stand out unambiguously from "the row my cursor
+        // happens to be over."
         States.Enabled.Apply = () => Apply(Color.Transparent, Retro95Colors.Text);
-        States.Highlighted.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
+        States.Highlighted.Apply = () => Apply(Color.Transparent, Retro95Colors.Text);
         States.Selected.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
         States.Focused.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
         States.Disabled.Apply = () => Apply(Color.Transparent, Retro95Colors.DisabledText);
