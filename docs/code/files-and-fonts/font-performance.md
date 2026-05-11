@@ -2,18 +2,17 @@
 
 ## Introduction
 
-Fonts are unusual in a Gum UI: they can be the cheapest thing on screen (a few labels with a pre-loaded atlas) or the most expensive (a CJK atlas regenerating mid-frame because someone touched `FontSize` in code). This page describes where the costs live so you can decide which to spend.
+Fonts are unusual in a Gum UI: they can be the cheapest thing on screen (a few labels with a small Latin atlas) or the most expensive (a CJK atlas getting generated for the first time on a mobile device). This page describes where the costs live so you can decide which to spend.
 
 This page is qualitative on purpose. Actual numbers depend on character set, platform, GPU, and how your game uses text — measure on your target hardware rather than trusting a number from a doc.
 
 ## Where the Costs Live
 
-There are four costs to think about:
+There are three costs to think about:
 
-1. **Atlas generation cost (CPU)** — the one-time work of rasterizing glyphs into a texture. Applies to KernSmith every time a new `(font, size, style)` combination is requested at runtime.
+1. **Atlas generation cost (CPU)** — the one-time work of rasterizing glyphs into a texture. Applies to KernSmith whenever a new `(font, size, style)` combination is first needed at runtime.
 2. **Atlas memory cost (VRAM and RAM)** — each atlas is a texture. More atlases means more texture memory.
 3. **Draw call cost (GPU)** — text and non-text alternation on the same screen costs one draw call per alternation. Gum does not currently sort by texture or batch across textures.
-4. **Property-change cost** — setting font properties one at a time on an existing `TextRuntime` triggers a full font resolution on each property assignment.
 
 The next sections cover each in turn.
 
@@ -21,10 +20,10 @@ The next sections cover each in turn.
 
 KernSmith rasterizes every glyph in the requested character set into an atlas. The cost scales with the number of glyphs.
 
-* **Small charsets (Latin, Cyrillic, Greek, and similar).** Generation is fast enough that most projects can do it on-demand during gameplay without a perceptible hitch.
+* **Small charsets (Latin, Cyrillic, Greek, and similar).** Generation is fast enough that most projects can absorb it during normal play without a perceptible hitch.
 * **Large charsets (CJK — Chinese, Japanese Kanji, Korean Hangul).** Generation can be slow enough that the player sees a frame hitch, sometimes a full pause. Plan to do this work behind a loading screen.
 
-The rule of thumb: if your charset is "everything in this language", treat the first use of a font/size combination as expensive. See [Font Preloading](font-preloading.md) for how to move that cost off the gameplay path.
+The rule of thumb: if your charset is "everything in this language", treat each new `(font, size, style)` combination as expensive. See [Font Preloading](font-preloading.md) for moving that cost off the gameplay path.
 
 ## Atlas Memory Cost
 
@@ -51,52 +50,15 @@ Workarounds you can apply today:
 
 A future Gum release (Phase 5 — [#2697](https://github.com/vchelaru/Gum/issues/2697)) targets KernSmith using one shared atlas plus a sort-by-texture pass, which removes most of this cost. bmfont users (pre-baked `.fnt`) do not benefit from that change; the migration path is to switch to KernSmith.
 
-## Property-Change Cost (The Footgun)
-
-This one is worth calling out because it surprises people.
-
-When you set a font-related property on a `TextRuntime` (`Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `UseFontSmoothing`), the runtime immediately resolves the font for the new combination. If KernSmith is in use, "resolves" can mean "generate a new atlas".
-
-Setting four properties in a row therefore triggers up to four font resolutions, three of which are wasted:
-
-```csharp
-// Initialize — BAD: each line may trigger an atlas generation.
-text.Font = "Noto Sans CJK";   // generates atlas for current size/style
-text.FontSize = 24;            // re-resolves
-text.IsBold = true;            // re-resolves
-text.OutlineThickness = 2;     // re-resolves
-text.AddToRoot();
-```
-
-The fix is to configure the `TextRuntime` fully **before** it's added to the layout root. While an element is detached, layout (including font resolution) is suspended:
-
-```csharp
-// Initialize — GOOD: font resolves once, after AddToRoot.
-var text = new TextRuntime();
-text.Font = "Noto Sans CJK";
-text.FontSize = 24;
-text.IsBold = true;
-text.OutlineThickness = 2;
-text.Text = "Hello";
-text.AddToRoot();              // single resolution here
-```
-
-This is the recommended pattern for any `TextRuntime` you create from code. For the deeper mechanism behind it, see Phase 2 of the font roadmap ([#2694](https://github.com/vchelaru/Gum/issues/2694)) — `GraphicalUiElement.IsAllLayoutSuspended` is the underlying knob.
-
-{% hint style="warning" %}
-There is no per-instance equivalent of "suspend layout on this one `TextRuntime`" that defers font resolution across property sets after the element has been added to the root. If you need to retune fonts on an existing on-screen `TextRuntime`, the resolution cost happens — there is no way to coalesce it today.
-{% endhint %}
-
 ## Cost by Strategy
 
 A quick reference of which costs apply to which [font strategy](font-strategies.md):
 
 | Cost | Dynamic KernSmith | Custom Font File | Direct BitmapFont | Build-Time FontCache |
 |---|---|---|---|---|
-| Atlas generation (CPU) | Yes, on first use | No | No | No |
+| Atlas generation (CPU) | Yes | No | No | No |
 | Atlas memory (VRAM) | Yes | Yes | Yes | Yes |
 | Draw call alternation | Yes | Yes | Yes | Yes |
-| Property-change footgun | Yes | N/A (one file = one atlas) | N/A | Yes |
 
 ## Related Pages
 

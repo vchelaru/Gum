@@ -22,7 +22,7 @@ By default all `TextRuntime` instances use an Arial 18-point font embedded in th
 
 ## How These Properties Resolve to a Font
 
-When any of the font-component properties change, `TextRuntime` resolves them to an actual font in one of these ways:
+A `TextRuntime`'s font is chosen by one of these paths, in priority order:
 
 1. **`BitmapFont` is set directly** → that font is used; the component properties are ignored.
 2. **`UseCustomFont` is `true`** → `CustomFontFile` is loaded from disk.
@@ -32,28 +32,11 @@ When any of the font-component properties change, `TextRuntime` resolves them to
 For the full details on each path — when to use it, code samples, and the costs involved — see:
 
 * [Font Strategies](../../files-and-fonts/font-strategies.md) — full walkthroughs.
-* [Font Performance](../../files-and-fonts/font-performance.md) — costs and the property-change footgun.
+* [Font Performance](../../files-and-fonts/font-performance.md) — generation, memory, and draw-call costs.
 
 {% hint style="info" %}
 **Choosing a font strategy?** Start at the [Fonts hub](../../files-and-fonts/fonts.md). It has a four-path decision tree that points you at the right approach in about a minute.
 {% endhint %}
-
-## Setting Font Properties Efficiently
-
-Each font-component property assignment can trigger a font resolution. On large character sets this is expensive enough to matter. The recommended pattern is to set every property **before** adding the `TextRuntime` to the root:
-
-```csharp
-// Initialize
-var text = new TextRuntime();
-text.Font = "Noto Sans CJK";
-text.FontSize = 24;
-text.IsBold = true;
-text.OutlineThickness = 2;
-text.Text = "Hello";
-text.AddToRoot();              // single resolution here
-```
-
-See [Font Performance — Property-Change Cost](../../files-and-fonts/font-performance.md#property-change-cost-the-footgun) for the full explanation.
 
 ## Missing Font Exceptions
 
