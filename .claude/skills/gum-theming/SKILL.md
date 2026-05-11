@@ -127,6 +127,49 @@ Caveat: any sub-control that lives inside the clip container and needs to be vis
 
 When per-corner radii arrive in Apos.Shapes ([apos-shapes#32](https://github.com/Apostolique/Apos.Shapes/pull/32)), this trick becomes redundant for the title-bar-style "round top corners only" case — but the border-on-top approach remains the right pattern any time rectangular clipping meets a rounded outline.
 
+## Items inside rounded containers should be square-cornered
+
+`ListBoxItem`, `MenuItem`, `ComboBox` dropdown rows, etc. tile flush inside a rounded container. Give them `CornerRadius = 0f` — not the container's radius. Rounded items inside a rounded container produce visible donut gaps at the corners where item edges don't reach the shell's rounded perimeter. The container's border (painted last per the section above) handles the visible rounded outline; the items themselves are just rectangular bands of color.
+
+The corollary: when a row hover/selection fill should extend to the visible edge, let it paint to its rectangular bounds and trust the container's border-on-top to mask the corner overhang.
+
+## Sharing shape stacks via a helper class
+
+When two visuals need identical decoration but inherit from different V3 bases — most commonly `TextBoxVisual` and `PasswordBoxVisual`, both inheriting from `TextBoxBaseVisual` — extract the shape stack into a helper class instead of duplicating it in both subclasses.
+
+Pattern (see Bubblegum's `BubblegumTextInputDecoration` for the worked example):
+
+```csharp
+internal sealed class MyTextInputDecoration
+{
+    private readonly RoundedRectangleRuntime _focusRing;
+    private readonly RoundedRectangleRuntime _fill;
+    private readonly RoundedRectangleRuntime _border;
+
+    public MyTextInputDecoration(TextBoxBaseVisual host)
+    {
+        host.Background.Parent = null;
+        host.ClipContainer.Parent = null;
+        // ... add focus ring, fill, clip container, border ...
+        WireStates(host);
+    }
+    private void WireStates(TextBoxBaseVisual host) { /* host.States.Enabled.Apply = ... */ }
+}
+
+public class TextBoxVisual : V3.TextBoxVisual
+{
+    private readonly MyTextInputDecoration _decoration;
+    public TextBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        : base(fullInstantiation, tryCreateFormsObject)
+    {
+        _decoration = new MyTextInputDecoration(this);
+    }
+}
+// PasswordBoxVisual is identical, swap the base class.
+```
+
+Holding the helper reference in a `private readonly` field (rather than constructing-and-discarding) keeps the shape rects alive for state callbacks — they're owned by the host visual via `AddChild`, but the helper still holds the references it needs to mutate from `WireStates` lambdas.
+
 ## csproj gotcha: PrivateAssets on KernSmith
 
 If your theme calls `KernSmithFontCreator` directly, KernSmith is a runtime dependency — it must flow transitively to consumers. **Do not** mark it `<PrivateAssets>All</PrivateAssets>` on the `<PackageReference>`. MonoGame.Framework can stay private (consumers always bring their own).
