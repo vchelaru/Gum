@@ -18,7 +18,7 @@ The strategies are:
 |---|---|
 | MonoGame | Yes — via KernSmith. |
 | KNI | Yes — via KernSmith. |
-| FNA | Not yet. If you need it, let us know on [Discord](https://discord.gg/PptQUuyB2T) or [open an issue](https://github.com/vchelaru/Gum/issues). |
+| FNA | Not yet. If you need it, let us know on Discord or [open an issue](https://github.com/vchelaru/Gum/issues). |
 | Raylib | Not yet. Use the [Build-Time Font Cache](#build-time-font-cache) for now. |
 | Sokol | Not yet. Use the [Build-Time Font Cache](#build-time-font-cache) for now. |
 | SkiaGum | Yes — uses SkiaSharp's own glyph rasterization. See [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum). |
@@ -81,7 +81,7 @@ text.AddToRoot();
 {% endtab %}
 
 {% tab title="FNA" %}
-KernSmith is not currently published for FNA. If you need dynamic font generation on FNA, let us know on [Discord](https://discord.gg/PptQUuyB2T) or [open an issue](https://github.com/vchelaru/Gum/issues) — the request helps us prioritize.
+KernSmith is not currently published for FNA. If you need dynamic font generation on FNA, let us know on Discord or [open an issue](https://github.com/vchelaru/Gum/issues) — the request helps us prioritize.
 
 In the meantime, use the [Build-Time Font Cache](#build-time-font-cache) strategy.
 {% endtab %}
@@ -177,7 +177,7 @@ text.IsBold = true;
 The font must be installed on the system to be used. SkiaGum does not currently support `RegisterFont`-style registration of shipped `.ttf` files.
 
 {% hint style="info" %}
-A dedicated SkiaGum fonts page is planned. For now, this section is the canonical reference. If something is unclear, ask on [Discord](https://discord.gg/PptQUuyB2T) or [open an issue](https://github.com/vchelaru/Gum/issues).
+A dedicated SkiaGum fonts page is planned. For now, this section is the canonical reference. If something is unclear, ask on Discord or [open an issue](https://github.com/vchelaru/Gum/issues).
 {% endhint %}
 
 ## Custom Font File
