@@ -36,12 +36,16 @@ internal sealed class BubblegumTextInputDecoration
         _fill = CreateFill();
         host.AddChild(_fill);
 
+        // Re-attach ClipContainer between fill and border so text / placeholder /
+        // caret / selection render above the fill, but the rounded border draws
+        // ON TOP. Gum's clip container is rectangular — without rounded
+        // clipping, content rendered to the edge would visibly poke past the
+        // rounded outline at the corners. Painting the border last masks those
+        // corner regions with the theme's pink stroke.
+        host.AddChild(host.ClipContainer);
+
         _border = CreateBorder();
         host.AddChild(_border);
-
-        // Re-attach ClipContainer last so text / placeholder / caret / selection
-        // render above the shape stack.
-        host.AddChild(host.ClipContainer);
 
         WireStates(host);
     }

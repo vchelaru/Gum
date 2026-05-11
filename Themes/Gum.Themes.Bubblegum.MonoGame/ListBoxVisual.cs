@@ -35,10 +35,14 @@ public class ListBoxVisual : BaseListBoxVisual
         _fill = CreateFill();
         AddChild(_fill);
 
+        // ClipAndScrollContainer goes between fill and border. Gum's clip
+        // container is rectangular — item hover/selection fills extend to its
+        // square corners and would visibly poke past the rounded outline.
+        // Painting the border last masks those corner regions.
+        AddChild(ClipAndScrollContainer);
+
         _border = CreateBorder();
         AddChild(_border);
-
-        AddChild(ClipAndScrollContainer);
 
         if (VerticalScrollBarInstance != null)
         {

@@ -29,6 +29,13 @@ public static class BubblegumTheme
     public const string FontFamily = "Nunito";
 
     /// <summary>
+    /// Family name the bundled icon font (DejaVu Sans Mono) is registered under.
+    /// Use this for glyphs Nunito doesn't cover — check marks, dropdown chevrons,
+    /// arrow indicators (Dingbats and Geometric Shapes blocks).
+    /// </summary>
+    public const string IconFontFamily = "Nunito Icons";
+
+    /// <summary>
     /// Default text size used by the theme. Matches the source mockup's
     /// <c>--fs</c> token (14px).
     /// </summary>
@@ -48,11 +55,13 @@ public static class BubblegumTheme
         CustomSetPropertyOnRenderable.InMemoryFontCreator =
             new KernSmithFontCreator(graphicsDevice);
 
-        // Bubblegum's CSS doesn't use Dingbats / Geometric Shapes glyphs (no
-        // ✓ / ▼ etc. in the source mockup — check marks are SVG paths there).
-        // Visuals will use Apos.Shapes line strokes for the check / dash /
-        // arrow chrome instead of Text glyphs, so no separate icon font is
-        // needed and BmfcSave.AddCharacters is unnecessary.
+        // Pre-register the icon glyphs the theme renders as Text rather than as
+        // sprite-sheet icons. KernSmith bakes only the characters it has been
+        // told about, so anything outside ASCII has to be declared before the
+        // first font generation. ✓ (Dingbats) and ▼ (Geometric Shapes) are the
+        // only icon glyphs Bubblegum needs; both live in the bundled DejaVu
+        // Sans Mono icon font (Nunito's subset doesn't cover them).
+        BmfcSave.AddCharacters("✓▼");
 
         // Bubblegum's visuals build their bodies out of Apos.Shapes-backed
         // RoundedRectangleRuntime instances, which require ShapeRenderer to
@@ -80,6 +89,10 @@ public static class BubblegumTheme
         RegisterEmbeddedFont(FontFamily, "Nunito-Bold.ttf", style: "Bold");
         RegisterEmbeddedFont(FontFamily, "Nunito-Italic.ttf", style: "Italic");
         RegisterEmbeddedFont(FontFamily, "Nunito-BoldItalic.ttf", style: "BoldItalic");
+
+        // Icon font registered under a distinct family name so visual code
+        // addresses it explicitly via BubblegumTheme.IconFontFamily.
+        RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)

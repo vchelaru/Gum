@@ -131,9 +131,9 @@ public class ComboBoxVisual : BaseComboBoxVisual
 
     private static TextRuntime CreateDropdownGlyph()
     {
-        // Bubblegum's CSS draws the dropdown chevron as a CSS triangle; we use a
-        // Text "▼" via Nunito. If the font subset lacks U+25BC the glyph will
-        // fail to render — non-blocking; replace with a primitive triangle later.
+        // ▼ is rendered through the bundled DejaVu Sans Mono icon font under the
+        // "Nunito Icons" family — Nunito itself doesn't cover Geometric Shapes.
+        // BubblegumTheme.Apply pre-registers the glyph via BmfcSave.AddCharacters.
         TextRuntime glyph = new TextRuntime();
         glyph.Name = "BubblegumDropdownGlyph";
         glyph.X = -GlyphRightMargin;
@@ -148,7 +148,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         glyph.HeightUnits = DimensionUnitType.Absolute;
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
-        glyph.Font = BubblegumTheme.FontFamily;
+        glyph.Font = BubblegumTheme.IconFontFamily;
         glyph.FontSize = GlyphFontSize;
         glyph.Text = "▼";
         glyph.Color = BubblegumColors.Accent;

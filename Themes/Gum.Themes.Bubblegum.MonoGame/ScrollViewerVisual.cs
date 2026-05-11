@@ -36,10 +36,14 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         _fill = CreateFill();
         AddChild(_fill);
 
+        // ScrollAndClipContainer goes between fill and border so the rounded
+        // border paints on top of clipped content — Gum's clip container is
+        // rectangular, so content extending into the corners would otherwise
+        // poke past the rounded outline.
+        AddChild(ScrollAndClipContainer);
+
         _border = CreateBorder();
         AddChild(_border);
-
-        AddChild(ScrollAndClipContainer);
 
         VerticalScrollBarInstance.X = -2f;
 

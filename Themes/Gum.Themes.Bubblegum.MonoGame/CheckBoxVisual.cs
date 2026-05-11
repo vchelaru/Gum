@@ -56,11 +56,11 @@ public class CheckBoxVisual : BaseCheckBoxVisual
 
         _checkGlyph = CreateCheckGlyph();
         AddChild(_checkGlyph);
-        // Nunito (the bundled theme font) is used directly for the check glyph.
-        // Bubblegum's CSS source draws checks as inline SVG, so there's no icon
-        // font bundled. If Nunito's subset lacks U+2713 the glyph will fail to
-        // render — visual gap is non-blocking; replace with primitives later.
-        _checkGlyph.Font = BubblegumTheme.FontFamily;
+        // ✓ is rendered through the bundled DejaVu Sans Mono icon font under the
+        // "Nunito Icons" family. Nunito itself (humanist sans-serif) doesn't
+        // cover the Dingbats block. BubblegumTheme.Apply pre-registers the
+        // glyph via BmfcSave.AddCharacters so KernSmith bakes it into the atlas.
+        _checkGlyph.Font = BubblegumTheme.IconFontFamily;
         _checkGlyph.FontSize = 18;
         _checkGlyph.Text = "✓";
         _checkGlyph.Color = Color.White;

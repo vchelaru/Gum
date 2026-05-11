@@ -22,6 +22,7 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Include="Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
     <!-- Nunito (SIL OFL) bundled as the theme typeface. Four-style coverage:
@@ -31,6 +32,11 @@
     <EmbeddedResource Include="Content\Fonts\Nunito-Bold.ttf" />
     <EmbeddedResource Include="Content\Fonts\Nunito-Italic.ttf" />
     <EmbeddedResource Include="Content\Fonts\Nunito-BoldItalic.ttf" />
+    <!-- DejaVu Sans Mono is bundled as the "icon font" for glyphs Nunito doesn't
+         cover (Dingbats / Geometric Shapes blocks: ✓ ▼ etc.). Registered under
+         the family name "Nunito Icons" in BubblegumTheme so visual code is
+         decoupled from the specific TTF. Same pattern as Dark Pro. -->
+    <EmbeddedResource Include="Content\Fonts\DejaVuSansMono.ttf" />
   </ItemGroup>
   <ItemGroup>
     <!-- KernSmith is a runtime dependency (BubblegumTheme.Apply constructs

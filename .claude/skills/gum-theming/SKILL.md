@@ -58,15 +58,41 @@ Visuals that need to react to a continuous Forms-control value (a slider fill ba
 - The Forms control is assigned to the visual via `FormsControlAsObject`. **Override the setter** (`InteractiveGue.FormsControlAsObject` is `virtual`) to subscribe on assignment and unsubscribe on reassignment. This is the only hook that works for both construction paths: `tryCreateFormsObject:true` (visual creates the Forms control in its ctor) and `tryCreateFormsObject:false` (FrameworkElement creates the visual via the template and then assigns the externally-created Forms control).
 - `Minimum`/`Maximum` setters fire no external event. Consumers conventionally set them before `Value`, so an initial update at assignment plus a `ValueChanged` subscription covers practical cases.
 
-## Icon fonts
+## Icon fonts — bundle DejaVu Sans Mono
 
-User-facing monospace fonts (DM Mono, JetBrains Mono, etc.) almost always lack the Dingbats (`✓ ✕`) and Geometric Shapes (`▾ ▴ ▲ ▼ ◀ ▶`) blocks. Setting any of those characters with such a font silently fails — KernSmith's atlas generator can't bake a glyph the source font doesn't have, the rendered text is blank.
+Most user-facing fonts (DM Mono, JetBrains Mono, Nunito, etc.) lack the Dingbats (`✓ ✕`) and Geometric Shapes (`▾ ▴ ▲ ▼ ◀ ▶`) blocks. Setting any of those characters with such a font silently fails — and **without** `BmfcSave.AddCharacters` even being called the glyph never reaches the atlas generator in the first place.
 
-If your theme renders these glyphs as text, bundle a separate icon-coverage font (DejaVu Sans Mono is the proven choice, Bitstream Vera / DejaVu license, redistribution permitted) under a distinct family name like `"DM Mono Icons"`. Register via `KernSmithFontCreator.RegisterFont(iconFamily, bytes)` and use it in visuals via `runtime.Font = MyTheme.IconFontFamily`. Add the license file to the NuGet root.
+**Convention for Gum themes**: bundle DejaVu Sans Mono (Bitstream Vera / DejaVu license, redistribution permitted) as your icon font alongside whatever user-facing typeface you ship. Register it under a distinct family name like `"<Theme> Icons"` (e.g. `"DM Mono Icons"`, `"Nunito Icons"`) so visual code addresses it explicitly via `MyTheme.IconFontFamily` and stays decoupled from the specific TTF.
 
-Alternative: render the glyph as a sprite sheet icon (via `Styling.ActiveStyle.Icons`) or build the shape from primitives (e.g. two `LineRuntime`s for a check mark). The font path is simplest when there are many such glyphs.
+Wiring (all four steps required):
 
-Size the glyph's `TextRuntime` Absolute, **larger** than the box it sits in (~1.5x), centered. DejaVu Sans Mono and most icon-coverage fonts aren't truly monospaced for non-Latin — symbol glyphs have wider advance widths than ASCII, and a runtime sized exactly to the box clips or drops them.
+1. Add `DejaVuSansMono.ttf` and `DejaVuSansMono-LICENSE.txt` to `Content/Fonts/` in the MonoGame variant project. Embed via `<EmbeddedResource>` (and re-`<Link>` into the KNI variant via the cross-runtime packaging pattern).
+2. Pack the license file at the NuGet root with `<None Include="Content/Fonts/DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />`.
+3. In `MyTheme.Apply`: `BmfcSave.AddCharacters("…")` listing every non-ASCII glyph the theme will render — **before** the first font generation. KernSmith bakes only declared characters. Then `RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);`.
+4. In visuals: `runtime.Font = MyTheme.IconFontFamily; runtime.Text = "✓";`.
+
+Size the glyph's `TextRuntime` `Absolute`, **larger** than the box it sits in (~1.5x), centered. DejaVu Sans Mono and most icon-coverage fonts aren't truly monospaced for non-Latin — symbol glyphs have wider advance widths than ASCII, and a runtime sized exactly to the box clips or drops them.
+
+Building glyphs from Apos.Shapes primitives (`LineRuntime` strokes, rotated `RoundedRectangleRuntime`s) is technically possible but rarely worth it once you have more than one or two glyphs. Stick with DejaVu unless you have a strong reason — the icon font's ~600 KB is the cheapest entry point in the theme.
+
+## Rounded outline + rectangular clip container: paint the border last
+
+Gum's clip containers are axis-aligned rectangles. They do not clip to rounded paths. If a themed container has a rounded outline (`RoundedRectangleRuntime` border) AND a child clip container that renders content (text, list items, hovered rows with their own pink fills), naively painting the border *behind* the clip container makes content visibly poke past the rounded outline at the corners.
+
+Fix: reattach so the **border renders last** (on top of the clip container). The stroke masks the corner-region content with the theme's accent color, and the result reads as rounded clipping even though no actual rounded clipping is happening.
+
+Order for any TextBox-/ListBox-/ScrollViewer-shaped visual:
+
+```
+1. focus ring     (added first → renders behind)
+2. fill           (rounded rect, behind content)
+3. clip container (text, items, hovered row backgrounds)
+4. border         (rounded stroke, on top of everything)
+```
+
+Caveat: any sub-control that lives inside the clip container and needs to be visually unobscured by the border — most commonly a vertical scroll bar — must be inset from the parent's right edge by at least the border's stroke width. The Bubblegum and Dark Pro ListBox/ScrollViewer subclasses set `VerticalScrollBarInstance.X = -2f` for exactly this reason.
+
+When per-corner radii arrive in Apos.Shapes ([apos-shapes#32](https://github.com/Apostolique/Apos.Shapes/pull/32)), this trick becomes redundant for the title-bar-style "round top corners only" case — but the border-on-top approach remains the right pattern any time rectangular clipping meets a rounded outline.
 
 ## csproj gotcha: PrivateAssets on KernSmith
 

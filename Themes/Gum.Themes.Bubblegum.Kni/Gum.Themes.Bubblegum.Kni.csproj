@@ -22,6 +22,7 @@
   <ItemGroup>
     <None Include="..\Gum.Themes.Bubblegum.MonoGame\README.md" Pack="true" PackagePath="\" />
     <None Include="..\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Gum.Themes.Bubblegum.MonoGame\**\*.cs" />
@@ -43,6 +44,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="..\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\Nunito-BoldItalic.ttf">
       <Link>Content\Fonts\Nunito-BoldItalic.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
+      <Link>Content\Fonts\DejaVuSansMono.ttf</Link>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
