@@ -12,29 +12,48 @@ namespace Gum.Themes.DarkPro;
 /// <summary>
 /// Dark Pro styled Window visual. Same Surface1 + 1 px border shell as the
 /// other Dark Pro controls, plus a Surface2 title bar fill so users can see
-/// where to drag. The 8 resize-border panels and the InnerPanel are left
-/// untouched — they're hit-test areas, not visible chrome.
+/// where to drag, and a 1 px Border-colored separator between the title bar
+/// and the content area.
 /// <para>
 /// Window has no state category in V3 (the only V3 styling property is a
-/// single BackgroundColor), so no state callbacks here; the shell is static.
+/// single BackgroundColor), so no state callbacks here — the shell is static.
 /// </para>
 /// </summary>
 public class WindowVisual : BaseWindowVisual
 {
     private const float CornerRadius = 2f;
     private const float BorderThickness = 1f;
+    private const float TitleBarSeparatorHeight = 1f;
 
     private readonly RoundedRectangleRuntime _fill;
     private readonly RoundedRectangleRuntime _border;
     private readonly ColoredRectangleRuntime _titleBarFill;
+    private readonly ColoredRectangleRuntime _titleBarSeparator;
 
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
     {
-        // Detach the V3 NineSlice background. The InnerPanel, title bar, and
-        // 8 resize-border panels all stay attached — they're functional zones
-        // the Forms Window relies on for drag/resize hit testing.
+        // V3 attaches children in this order:
+        //   [Background, InnerPanel, TitleBar, 8 resize borders]
+        // The borders go LAST so they sit on top for resize hit testing, and
+        // TitleBar goes AFTER InnerPanel so it sits on top for drag input.
+        //
+        // To insert the Dark Pro chrome (fill + border) UNDER everything else,
+        // detach the whole tree, add chrome first, then re-attach the V3
+        // children in the original order. Skipping the re-attach order is what
+        // caused the original Dark-Pro-Window drag bug — InnerPanel ended up on
+        // top of TitleBar and swallowed the drag input.
         Background.Parent = null;
+        InnerPanelInstance.Visual.Parent = null;
+        TitleBarInstance.Visual.Parent = null;
+        BorderTopLeftInstance.Visual.Parent = null;
+        BorderTopRightInstance.Visual.Parent = null;
+        BorderBottomLeftInstance.Visual.Parent = null;
+        BorderBottomRightInstance.Visual.Parent = null;
+        BorderTopInstance.Visual.Parent = null;
+        BorderBottomInstance.Visual.Parent = null;
+        BorderLeftInstance.Visual.Parent = null;
+        BorderRightInstance.Visual.Parent = null;
 
         _fill = CreateFill();
         AddChild(_fill);
@@ -42,23 +61,30 @@ public class WindowVisual : BaseWindowVisual
         _border = CreateBorder();
         AddChild(_border);
 
-        // Reattach interior structure on top of the new shape stack so user
-        // content, the title bar, and the resize-border hit zones render
-        // above the background. Panel is a Forms control, so the visual-tree
-        // reparenting goes through Panel.Visual.Parent.
-        InnerPanelInstance.Visual.Parent = null;
-        TitleBarInstance.Visual.Parent = null;
-
-        AddChild(TitleBarInstance.Visual);
+        // V3 order from here on.
         AddChild(InnerPanelInstance.Visual);
+        AddChild(TitleBarInstance.Visual);
+        AddChild(BorderTopLeftInstance.Visual);
+        AddChild(BorderTopRightInstance.Visual);
+        AddChild(BorderBottomLeftInstance.Visual);
+        AddChild(BorderBottomRightInstance.Visual);
+        AddChild(BorderTopInstance.Visual);
+        AddChild(BorderBottomInstance.Visual);
+        AddChild(BorderLeftInstance.Visual);
+        AddChild(BorderRightInstance.Visual);
 
-        // Give the title bar a visible Surface2 fill so the drag area reads
-        // as chrome. The 2 px corner rounding on the window background is
-        // small enough that the title bar overlapping it visually squares
-        // the top corners by ~2 px — an acceptable tradeoff for not having
-        // to special-case per-corner radii (Apos.Shapes is uniform-radius).
+        // Surface2 fill child of the title bar so the drag area is visibly
+        // chrome. GraphicalUiElement subclasses (ColoredRectangleRuntime,
+        // RoundedRectangleRuntime) don't intercept events, so this won't
+        // block the title bar's drag handling.
         _titleBarFill = CreateTitleBarFill();
         _titleBarFill.Parent = TitleBarInstance.Visual;
+
+        // 1 px Border-colored separator pinned to the bottom edge of the
+        // title bar so the title bar visually separates from the content
+        // area, matching the rest of Dark Pro's hairline borders.
+        _titleBarSeparator = CreateTitleBarSeparator();
+        _titleBarSeparator.Parent = TitleBarInstance.Visual;
     }
 
     private static RoundedRectangleRuntime CreateFill()
@@ -78,9 +104,6 @@ public class WindowVisual : BaseWindowVisual
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
         fill.Color = DarkProColors.Surface1;
-        // Pure chrome — must not swallow input destined for the title bar
-        // (drag) or the resize border zones beneath it.
-        fill.HasEvents = false;
         return fill;
     }
 
@@ -103,7 +126,6 @@ public class WindowVisual : BaseWindowVisual
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
         border.Color = DarkProColors.Border;
-        border.HasEvents = false;
         return border;
     }
 
@@ -122,11 +144,24 @@ public class WindowVisual : BaseWindowVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.Color = DarkProColors.Surface2;
-        // Critical: the title bar Panel itself is the drag handle. A child
-        // with HasEvents=true (the default for GraphicalUiElement) sits on
-        // top and swallows the drag input. Leave the panel's events to do
-        // their job.
-        fill.HasEvents = false;
         return fill;
+    }
+
+    private static ColoredRectangleRuntime CreateTitleBarSeparator()
+    {
+        ColoredRectangleRuntime separator = new ColoredRectangleRuntime();
+        separator.Name = "DarkProWindowTitleBarSeparator";
+        separator.X = 0;
+        separator.Y = 0;
+        separator.XUnits = GeneralUnitType.PixelsFromMiddle;
+        separator.YUnits = GeneralUnitType.PixelsFromLarge;
+        separator.XOrigin = HorizontalAlignment.Center;
+        separator.YOrigin = VerticalAlignment.Bottom;
+        separator.Width = 0;
+        separator.Height = TitleBarSeparatorHeight;
+        separator.WidthUnits = DimensionUnitType.RelativeToParent;
+        separator.HeightUnits = DimensionUnitType.Absolute;
+        separator.Color = DarkProColors.Border;
+        return separator;
     }
 }
