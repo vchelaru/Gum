@@ -124,6 +124,31 @@ The CSS `spread` argument (the optional fourth length value) has no direct equiv
 
 Treat CSS values as a *starting point* — typically you'll bump alpha by ~1.5–2× and tweak blur by eye until the perceived weight matches the source. The Bubblegum Button shadow ended at alpha 160 / blur 12, up from the spec's 102 / 10.
 
+### Offset focus rings render AFTER the glowing body, not before
+
+If you have both: (a) a body with `HasDropshadow = true` and (b) a separate focus ring sized larger than the body (sitting *outside* the body's pixel bounds), the focus ring MUST be added to the parent **after** the fill, not before.
+
+The halo isn't a separate render pass — it's part of the fill's draw call and extends past the body's own pixel bounds. Anything drawn earlier in that overlapping outer region gets alpha-blended over by the halo and dims. On bright bodies (Neon's "On" toggle, a saturated accent fill, etc.) the halo is opaque enough to render a 1 px white ring nearly invisible.
+
+```csharp
+// WRONG — ring is dimmed by the halo of the fill below it
+AddChild(_focusRing);   // outer ring
+AddChild(_fill);        // body with HasDropshadow=true → halo paints over ring
+AddChild(_border);
+
+// RIGHT — ring paints on top of halo, stays crisp
+AddChild(_fill);
+AddChild(_border);
+AddChild(_focusRing);   // outer ring renders last
+```
+
+This is the *opposite* of the rule for concentric focus rings inside a clip-container shape (see "Rounded outline + rectangular clip container" below — the focus ring there sits *behind* the body so the body fills over it). The distinguishing factor is whether the ring lives entirely outside the body's pixel bounds:
+
+- **Concentric / inside the parent bounds** → render first, body draws on top.
+- **Offset outside the body** → render last, on top of the halo.
+
+The ring living outside the body means painting it on top doesn't obscure any inner content — its pixels are all in the empty region around the control.
+
 ## Rounded outline + rectangular clip container: paint the border last
 
 Gum's clip containers are axis-aligned rectangles. They do not clip to rounded paths. If a themed container has a rounded outline (`RoundedRectangleRuntime` border) AND a child clip container that renders content (text, list items, hovered rows with their own pink fills), naively painting the border *behind* the clip container makes content visibly poke past the rounded outline at the corners.
