@@ -754,6 +754,25 @@ public abstract class TextBoxBase :
         return index;
     }
 
+    // Two implementations of the same logical operation: walk characters
+    // accumulating their X-advance until we pass cursorOffset, then return
+    // the character index nearest the cursor.
+    //
+    // The split exists because the XNALIKE backends (MonoGame/KNI/FNA)
+    // expose `coreTextObject.BitmapFont` and per-character `XAdvance`,
+    // giving an allocation-free O(n) walk. Raylib's Text has no BitmapFont
+    // property — it uses raylib's own font system — so the #else branch
+    // falls back to repeated MeasureString(substring), which is O(n^2) and
+    // allocates a substring per character.
+    //
+    // We considered unifying onto the substring path (it would eliminate
+    // the dual-maintenance footgun that bit issue #2687 — the FontScale
+    // fix originally only landed in the #else branch). For now we are
+    // keeping the optimization: GetIndex runs only on click and Up/Down
+    // arrow, but it's still nicer to avoid the per-char allocations on
+    // long lines. If you change behavior here, **change BOTH branches**
+    // and verify with a test that exercises GetCaretIndexAtPosition under
+    // XNALIKE (typing alone does not hit GetIndex).
     private int GetIndex(float cursorOffset, string textToUse)
     {
         var index = textToUse?.Length ?? 0;
