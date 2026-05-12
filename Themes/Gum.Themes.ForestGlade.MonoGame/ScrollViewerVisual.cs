@@ -55,16 +55,6 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         _border = CreateBorder();
         AddChild(_border);
 
-        // Re-anchor the vertical scroll bar to centre/PixelsFromMiddle so the
-        // Height-inset distributes evenly on top and bottom (the V3 default
-        // anchors top). X inset gives a gap to the body border on the right;
-        // ApplyScrollBarInset reapplies the values in PreRender because V3's
-        // RefreshMarginsFromScrollBarVisibility (which fires on scroll-bar-
-        // visibility state changes and during init) stomps Height back to
-        // -horizontalScrollBar.AbsoluteHeight.
-        VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-        VerticalScrollBarInstance.YOrigin = VerticalAlignment.Center;
-        VerticalScrollBarInstance.Y = 0f;
         ApplyScrollBarInset();
 
         WireStates();
@@ -74,6 +64,16 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
 
     private void ApplyScrollBarInset()
     {
+        // Re-anchor the vertical scroll bar to centre so the inset
+        // distributes evenly on top and bottom (V3 default anchors top
+        // with PixelsFromSmall — leaving Y=0 there means the bar's top
+        // edge kisses the parent top and the inset shows only at the
+        // bottom). All five properties have to be reapplied because V3's
+        // own layout passes / orientation state re-applies can revert any
+        // subset of them.
+        VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+        VerticalScrollBarInstance.YOrigin = VerticalAlignment.Center;
+        VerticalScrollBarInstance.Y = 0f;
         VerticalScrollBarInstance.X = -ScrollBarInset;
         VerticalScrollBarInstance.Height = -ScrollBarInset * 2f;
     }
@@ -81,10 +81,11 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     public override void PreRender()
     {
         base.PreRender();
-        // base.PreRender() can run RefreshMarginsFromScrollBarVisibility,
-        // which overwrites VerticalScrollBarInstance.Height. Reapply our
-        // top/bottom inset every frame so the scroll bar keeps its margins.
-        // Cheap — two property writes on values that usually don't change.
+        // V3's RefreshMarginsFromScrollBarVisibility and the scroll bar's
+        // own orientation state can stomp the values we set in the ctor.
+        // Reapply every frame so the scroll bar's margins stay correct.
+        // Cheap — five property writes that usually no-op when guarded
+        // by Gum's own dirty-flag layout system.
         ApplyScrollBarInset();
     }
 
