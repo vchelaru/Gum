@@ -214,17 +214,20 @@ public static class ForestGladeTheme
         FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] =
             new VisualTemplate((_, c) => new MenuItemVisual(tryCreateFormsObject: c));
 
+        FrameworkElement.DefaultFormsTemplates[typeof(Window)] =
+            new VisualTemplate((_, c) => new WindowVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Splitter)] =
+            new VisualTemplate((_, c) => new SplitterVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] =
+            new VisualTemplate((_, c) => new TooltipVisual(tryCreateFormsObject: c));
+
         // Label gets its color from Styling.ActiveStyle.Colors.TextPrimary
         // (set in ConfigureStyling), so the V3 LabelVisual already renders
         // Forest Glade text color without a subclass.
         FrameworkElement.DefaultFormsTemplates[typeof(Label)] =
             new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
 
-        // Additional control visuals (TextBox, PasswordBox, Slider, ComboBox,
-        // ListBox, ScrollBar, ScrollViewer, Window, Splitter, Menu, MenuItem,
-        // Tooltip) ship in follow-up commits as each visual is implemented.
-        // Until then the V3 defaults render those controls — the body text
-        // colors still pick up Forest Glade tokens via ConfigureStyling, but
-        // chrome stays the V3 grey baseline.
     }
 }
