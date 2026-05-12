@@ -32,12 +32,6 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         WireStates();
     }
 
-    public override void PreRender()
-    {
-        base.PreRender();
-        _chrome.SyncTextShadow();
-    }
-
     private void WireStates()
     {
         Color textShadow = new Color(0, 0, 0, 130);

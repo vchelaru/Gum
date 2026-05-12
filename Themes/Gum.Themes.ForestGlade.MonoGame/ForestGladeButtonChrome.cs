@@ -10,10 +10,18 @@ namespace Gum.Themes.ForestGlade;
 /// <summary>
 /// Shared chrome stack for Forest Glade Button and ToggleButton — they share
 /// the same silhouette and visual layers, so the gradient fill, leaf border,
-/// drop shadow, focus ring, and 1 px text drop-shadow live here. Each visual
-/// owns its own state callbacks and calls <see cref="Apply"/> with state-
-/// specific colors. The on-frame text-shadow Text mirror is done by calling
-/// <see cref="SyncTextShadow"/> from the host's <c>PreRender</c> override.
+/// drop shadow, and focus ring all live here. Each visual owns its own state
+/// callbacks and calls <see cref="Apply"/> with state-specific colors.
+/// <para>
+/// A glyph-shaped text drop shadow was attempted as a duplicate
+/// <see cref="TextRuntime"/> mirrored each frame; it was removed because
+/// <see cref="TextRuntime"/> property setters unconditionally call
+/// <c>UpdateToFontValues</c>, so syncing four font properties per frame
+/// re-triggered the KernSmith bake every frame and produced a flood of
+/// <c>FontParsingException</c> output. The right fix is to bake the shadow
+/// into the glyph atlas via KernSmith's <c>WithShadow</c> API; tracked in
+/// issue #2724.
+/// </para>
 /// </summary>
 internal sealed class ForestGladeButtonChrome
 {
@@ -33,15 +41,13 @@ internal sealed class ForestGladeButtonChrome
     public RoundedRectangleRuntime Fill { get; }
     public RoundedRectangleRuntime Border { get; }
     public RoundedRectangleRuntime FocusRing { get; }
-    public TextRuntime TextShadow { get; }
 
     private readonly TextRuntime _textInstance;
 
     /// <summary>
-    /// Builds the four chrome layers, parents them to <paramref name="host"/>
-    /// in render order (fill → border → focus ring → text shadow), then
-    /// re-parents <paramref name="textInstance"/> last so the live text
-    /// renders on top of its shadow.
+    /// Builds the chrome layers, parents them to <paramref name="host"/> in
+    /// render order (fill → border → focus ring), then re-parents
+    /// <paramref name="textInstance"/> last so the live text paints on top.
     /// </summary>
     public ForestGladeButtonChrome(GraphicalUiElement host, TextRuntime textInstance)
     {
@@ -56,10 +62,6 @@ internal sealed class ForestGladeButtonChrome
         FocusRing = CreateFocusRing();
         host.AddChild(FocusRing);
 
-        TextShadow = CreateTextShadow(textInstance);
-        host.AddChild(TextShadow);
-
-        // Re-parent the primary text last so it paints over the shadow.
         textInstance.Parent = null;
         host.AddChild(textInstance);
     }
@@ -149,55 +151,12 @@ internal sealed class ForestGladeButtonChrome
         return ring;
     }
 
-    private static TextRuntime CreateTextShadow(TextRuntime primary)
-    {
-        // Duplicate text drawn 1 px down and 1 px right with a dark colour
-        // and modest alpha — the cheapest text-shadow that reads as depth
-        // against a saturated fill. Position/size/font are mirrored on every
-        // frame by SyncTextShadow because the primary text's content can
-        // change at runtime (data binding, edit-time text edits, etc).
-        TextRuntime shadow = new TextRuntime();
-        shadow.Name = "ForestGladeButtonTextShadow";
-        shadow.XUnits = GeneralUnitType.PixelsFromMiddle;
-        shadow.YUnits = GeneralUnitType.PixelsFromMiddle;
-        shadow.XOrigin = HorizontalAlignment.Center;
-        shadow.YOrigin = VerticalAlignment.Center;
-        shadow.X = 1f;
-        shadow.Y = 1f;
-        shadow.Width = 0;
-        shadow.Height = 0;
-        shadow.WidthUnits = DimensionUnitType.RelativeToParent;
-        shadow.HeightUnits = DimensionUnitType.RelativeToParent;
-        shadow.HorizontalAlignment = primary.HorizontalAlignment;
-        shadow.VerticalAlignment = primary.VerticalAlignment;
-        shadow.Color = new Color(0, 0, 0, 130);
-        return shadow;
-    }
-
-    /// <summary>
-    /// Mirrors the primary text's content, font, and size onto the shadow
-    /// each frame. Call from the host's PreRender override so live edits
-    /// (data binding, programmatic Text changes) don't desync.
-    /// </summary>
-    public void SyncTextShadow()
-    {
-        if (TextShadow.Text != _textInstance.Text)
-        {
-            TextShadow.Text = _textInstance.Text;
-        }
-        TextShadow.Font = _textInstance.Font;
-        TextShadow.FontSize = _textInstance.FontSize;
-        TextShadow.UseCustomFont = _textInstance.UseCustomFont;
-        TextShadow.CustomFontFile = _textInstance.CustomFontFile;
-        TextShadow.HorizontalAlignment = _textInstance.HorizontalAlignment;
-        TextShadow.VerticalAlignment = _textInstance.VerticalAlignment;
-        TextShadow.Visible = _textInstance.Visible;
-    }
-
     /// <summary>
     /// Apply a state's palette to the chrome layers. Shadow is drawn only
     /// when <paramref name="shadowBlur"/> &gt; 0 — pushed/disabled states
-    /// pass 0 to suppress it entirely.
+    /// pass 0 to suppress it entirely. <paramref name="textShadow"/> is
+    /// accepted for source-compat with callers and currently unused (see
+    /// the class-level comment about issue #2724).
     /// </summary>
     public void Apply(Color fillTop, Color fillBottom, Color border,
         Color shadow, float shadowOffsetY, float shadowBlur,
@@ -212,7 +171,7 @@ internal sealed class ForestGladeButtonChrome
         Fill.DropshadowBlurY = shadowBlur;
         Fill.HasDropshadow = shadowBlur > 0f;
         _textInstance.Color = text;
-        TextShadow.Color = textShadow;
+        _ = textShadow;
         FocusRing.Visible = ring;
     }
 }
