@@ -24,7 +24,7 @@ protected override void Initialize()
 }
 ```
 
-The pattern is the same for every theme — only the `using` namespace, NuGet package, and `Apply` call change. Pick a theme from the table below and substitute its name in.
+The pattern is the same for every theme — only the `using` namespace, NuGet package, and `Apply` call change. Pick a theme from the sections below and substitute its name in.
 
 A few things to keep in mind:
 
@@ -34,13 +34,86 @@ A few things to keep in mind:
 
 ## Available themes
 
-| Theme | NuGet (MonoGame / KNI) | Apply call | Preview |
-|---|---|---|---|
-| **[Editor](editor-theme.md)** — flat dark editor/tool chrome with `PropertyGridVisual` and `Expander` controls for tool UIs. See the [Editor Theme](editor-theme.md) page for those extra controls. | `Gum.Themes.Editor.MonoGame` / `Gum.Themes.Editor.Kni` | `EditorTheme.Apply(GraphicsDevice);` | <!-- Screenshot: editor.png --> |
-| **DarkPro** — modern code-editor dark (VS Code / JetBrains feel). Bundled fonts: DM Mono (body) + DejaVu Sans Mono (icons). | `Gum.Themes.DarkPro.MonoGame` / `Gum.Themes.DarkPro.Kni` | `DarkProTheme.Apply(GraphicsDevice);` | <!-- Screenshot: dark-pro.png --> |
-| **Bubblegum** — pastel pink casual-game look with rounded pill buttons and soft drop shadows. Bundled font: Nunito. | `Gum.Themes.Bubblegum.MonoGame` / `Gum.Themes.Bubblegum.Kni` | `BubblegumTheme.Apply(GraphicsDevice);` | <!-- Screenshot: bubblegum.png --> |
-| **Neon** — cyberpunk / neon-glow dark theme with saturated cyan accent and a Gaussian glow on focus. Bundled fonts: Share Tech Mono (body) + Orbitron (titles) + DejaVu Sans Mono (icons). For the intended look, clear the back buffer to `NeonColors.Background` (`#060612`). | `Gum.Themes.Neon.MonoGame` / `Gum.Themes.Neon.Kni` | `NeonTheme.Apply(GraphicsDevice);` | <!-- Screenshot: neon.png --> |
-| **Retro95** — Windows 95 "Classic" battleship-gray chrome with raised/sunken bevels and navy selection. Bundled fonts: Nunito (MS Sans Serif stand-in) + DejaVu Sans Mono (icons). | `Gum.Themes.Retro95.MonoGame` / `Gum.Themes.Retro95.Kni` | `Retro95Theme.Apply(GraphicsDevice);` | <!-- Screenshot: retro95.png --> |
+### Editor
+
+<figure><img src="../../../.gitbook/assets/EditorThemeScreenshot.png" alt="Editor theme preview"><figcaption><p>The Editor theme applied to a sample settings panel.</p></figcaption></figure>
+
+Flat dark editor/tool chrome — intended for tool and editor interfaces rather than in-game UI. Ships with two extra controls beyond the standard Forms set: `PropertyGridVisual` and `Expander`. See the [Editor Theme](editor-theme.md) page for details on those controls.
+
+```csharp
+// Initialize
+using Gum.Themes.Editor;
+
+EditorTheme.Apply(GraphicsDevice);
+```
+
+NuGet packages: `Gum.Themes.Editor.MonoGame`, `Gum.Themes.Editor.Kni`
+
+### DarkPro
+
+<figure><img src="../../../.gitbook/assets/DarkProThemeScreenshot.png" alt="DarkPro theme preview"><figcaption><p>The DarkPro theme applied to a sample settings panel.</p></figcaption></figure>
+
+Modern code-editor dark theme with a VS Code / JetBrains feel. Bundled fonts: DM Mono (body) and DejaVu Sans Mono (icons).
+
+```csharp
+// Initialize
+using Gum.Themes.DarkPro;
+
+DarkProTheme.Apply(GraphicsDevice);
+```
+
+NuGet packages: `Gum.Themes.DarkPro.MonoGame`, `Gum.Themes.DarkPro.Kni`
+
+### Bubblegum
+
+<figure><img src="../../../.gitbook/assets/BubblegumThemeScreenshot.png" alt="Bubblegum theme preview"><figcaption><p>The Bubblegum theme applied to a sample settings panel.</p></figcaption></figure>
+
+Pastel pink casual-game look with rounded pill buttons and soft drop shadows. Bundled font: Nunito.
+
+```csharp
+// Initialize
+using Gum.Themes.Bubblegum;
+
+BubblegumTheme.Apply(GraphicsDevice);
+```
+
+NuGet packages: `Gum.Themes.Bubblegum.MonoGame`, `Gum.Themes.Bubblegum.Kni`
+
+### Neon
+
+<figure><img src="../../../.gitbook/assets/NeonThemeScreenshot.png" alt="Neon theme preview"><figcaption><p>The Neon theme applied to a sample settings panel.</p></figcaption></figure>
+
+Cyberpunk / neon-glow dark theme with a saturated cyan accent and a Gaussian glow on focus. Bundled fonts: Share Tech Mono (body), Orbitron (titles), and DejaVu Sans Mono (icons).
+
+```csharp
+// Initialize
+using Gum.Themes.Neon;
+
+NeonTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="info" %}
+For the intended look, clear the back buffer to `NeonColors.Background` (`#060612`).
+{% endhint %}
+
+NuGet packages: `Gum.Themes.Neon.MonoGame`, `Gum.Themes.Neon.Kni`
+
+### Retro95
+
+<figure><img src="../../../.gitbook/assets/Retro95ThemeScreenshot.png" alt="Retro95 theme preview"><figcaption><p>The Retro95 theme applied to a sample settings panel.</p></figcaption></figure>
+
+Windows 95 "Classic" battleship-gray chrome with raised/sunken bevels and navy selection. Bundled fonts: Nunito (MS Sans Serif stand-in) and DejaVu Sans Mono (icons).
+
+```csharp
+// Initialize
+using Gum.Themes.Retro95;
+
+Retro95Theme.Apply(GraphicsDevice);
+```
+
+NuGet packages: `Gum.Themes.Retro95.MonoGame`, `Gum.Themes.Retro95.Kni`
+
+## Fonts and licensing
 
 All bundled fonts are SIL Open Font License or the Bitstream Vera / DejaVu license — both permit redistribution. License files ship inside each NuGet.
 
