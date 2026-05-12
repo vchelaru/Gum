@@ -2,7 +2,11 @@
 using Gum.Converters;
 using Gum.Wireframe;
 using Gum.Forms.Controls;
+#if XNALIKE
 using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;

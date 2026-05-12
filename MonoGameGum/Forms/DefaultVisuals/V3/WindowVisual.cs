@@ -11,10 +11,18 @@ using System.Threading.Tasks;
 
 #if XNALIKE
 using MonoGameGum;
+#if XNALIKE
 using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 using Microsoft.Xna.Framework;
 #else
+#if XNALIKE
 using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 #endif
 using Gum.Forms.Controls;
 

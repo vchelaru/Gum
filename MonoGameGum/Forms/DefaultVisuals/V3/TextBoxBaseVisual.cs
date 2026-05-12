@@ -9,10 +9,18 @@ using System;
 
 
 #if XNALIKE
+#if XNALIKE
 using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 using Microsoft.Xna.Framework;
 #else
+#if XNALIKE
 using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 #endif
 
 

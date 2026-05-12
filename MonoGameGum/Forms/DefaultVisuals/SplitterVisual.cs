@@ -9,9 +9,17 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if XNALIKE
+#if XNALIKE
 using MonoGameGum.GueDeriving;
 #else
+using Gum.GueDeriving;
+#endif
+#else
+#if XNALIKE
 using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 #endif
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals;

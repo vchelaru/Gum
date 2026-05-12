@@ -4,10 +4,18 @@ using RenderingLibrary.Graphics;
 
 
 #if XNALIKE
+#if XNALIKE
 using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 using Microsoft.Xna.Framework;
 #else
+#if XNALIKE
 using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 #endif
 using Gum.Forms.Controls;
 namespace Gum.Forms.DefaultVisuals;

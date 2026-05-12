@@ -4,7 +4,11 @@ using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Gum.Forms.Controls;
 using Microsoft.Xna.Framework;
+#if XNALIKE
 using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
