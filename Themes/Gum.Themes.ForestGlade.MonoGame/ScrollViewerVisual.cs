@@ -14,9 +14,24 @@ namespace Gum.Themes.ForestGlade;
 /// </summary>
 public class ScrollViewerVisual : BaseScrollViewerVisual
 {
-    private const float BorderThickness = 1f;
+    // Same rationale as ListBoxVisual — tighter 8 px leaf curve so the 2 px
+    // border can fully mask any content spilling past the rounded corners
+    // (rectangular clip container can't follow the leaf path).
+    private const float RoundedRadius = 8f;
+    private const float SharpRadius = 2f;
+    private const float BorderThickness = 2f;
     private const float FocusRingInset = 3f;
     private const float FocusRingThickness = 3f;
+    private static readonly Color RestBorder = new Color(232, 255, 117, 220);
+
+    private static void ApplyLeafShape(RoundedRectangleRuntime r)
+    {
+        r.CornerRadius = SharpRadius;
+        r.CustomRadiusTopLeft = SharpRadius;
+        r.CustomRadiusTopRight = RoundedRadius;
+        r.CustomRadiusBottomRight = SharpRadius;
+        r.CustomRadiusBottomLeft = RoundedRadius;
+    }
 
     private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;
@@ -40,7 +55,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         _border = CreateBorder();
         AddChild(_border);
 
-        VerticalScrollBarInstance.X = -2f;
+        // X inset gives gap to listbox border on the right; Height inset gives
+        // the same gap at top and bottom (the thumb's in-bar inset alone is
+        // hidden by the listbox border, so it doesn't read as visible breathing
+        // room).
+        float scrollBarInset = BorderThickness + 1f;
+        VerticalScrollBarInstance.X = -scrollBarInset;
+        VerticalScrollBarInstance.Height = -scrollBarInset * 2f;
 
         WireStates();
     }
@@ -57,7 +78,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        ForestGladeLeaf.ApplyLarge(fill);
+        ApplyLeafShape(fill);
         fill.IsFilled = true;
         fill.Color = ForestGladePalette.InputFill;
         return fill;
@@ -75,11 +96,11 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         border.Height = 0;
         border.WidthUnits = DimensionUnitType.RelativeToParent;
         border.HeightUnits = DimensionUnitType.RelativeToParent;
-        ForestGladeLeaf.ApplyLarge(border);
+        ApplyLeafShape(border);
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = new Color(232, 255, 117, 56);
+        border.Color = RestBorder;
         return border;
     }
 
@@ -96,11 +117,11 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         ring.Height = halo * 2f;
         ring.WidthUnits = DimensionUnitType.RelativeToParent;
         ring.HeightUnits = DimensionUnitType.RelativeToParent;
-        ring.CornerRadius = 4f + halo;
-        ring.CustomRadiusTopLeft = 4f + halo;
-        ring.CustomRadiusTopRight = 18f + halo;
-        ring.CustomRadiusBottomRight = 4f + halo;
-        ring.CustomRadiusBottomLeft = 18f + halo;
+        ring.CornerRadius = SharpRadius + halo;
+        ring.CustomRadiusTopLeft = SharpRadius + halo;
+        ring.CustomRadiusTopRight = RoundedRadius + halo;
+        ring.CustomRadiusBottomRight = SharpRadius + halo;
+        ring.CustomRadiusBottomLeft = RoundedRadius + halo;
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
@@ -111,11 +132,9 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
 
     private void WireStates()
     {
-        Color restBorder = new Color(232, 255, 117, 56);
-
         States.Enabled.Apply = () =>
         {
-            _border.Color = restBorder;
+            _border.Color = RestBorder;
             _focusRing.Visible = false;
         };
 

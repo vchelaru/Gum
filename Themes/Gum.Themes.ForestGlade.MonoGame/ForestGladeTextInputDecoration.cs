@@ -66,6 +66,21 @@ internal sealed class ForestGladeTextInputDecoration
         ForestGladeLeaf.ApplyMedium(fill);
         fill.IsFilled = true;
         fill.Color = ForestGladePalette.InputFill;
+        // CSS .fg-input: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.18))
+        // over the canopy background — translates to a vertical gradient on
+        // the fill with a slightly darker top blending into a lighter base.
+        fill.UseGradient = true;
+        fill.GradientType = GradientType.Linear;
+        fill.GradientX1Units = GeneralUnitType.PixelsFromMiddle;
+        fill.GradientY1Units = GeneralUnitType.PixelsFromSmall;
+        fill.GradientX1 = 0f;
+        fill.GradientY1 = 0f;
+        fill.GradientX2Units = GeneralUnitType.PixelsFromMiddle;
+        fill.GradientY2Units = GeneralUnitType.PixelsFromLarge;
+        fill.GradientX2 = 0f;
+        fill.GradientY2 = 0f;
+        fill.Color1 = new Color(2, 22, 25);
+        fill.Color2 = new Color(4, 36, 40);
         return fill;
     }
 
@@ -153,6 +168,10 @@ internal sealed class ForestGladeTextInputDecoration
         Color placeholder, Color caret, Color selection, bool haloVisible, bool glow)
     {
         _fill.Color = fill;
+        // Recompute the vertical gradient stops from the state's base fill so
+        // each state stays subtly darker at the top than the bottom.
+        _fill.Color1 = Darken(fill, 0.65f);
+        _fill.Color2 = fill;
         _fill.HasDropshadow = glow;
         if (glow)
         {
@@ -168,5 +187,10 @@ internal sealed class ForestGladeTextInputDecoration
         host.CaretInstance.Color = caret;
         host.SelectionInstance.Color = selection;
         _focusHalo.Visible = haloVisible;
+    }
+
+    private static Color Darken(Color c, float factor)
+    {
+        return new Color((byte)(c.R * factor), (byte)(c.G * factor), (byte)(c.B * factor), c.A);
     }
 }

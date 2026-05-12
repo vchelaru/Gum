@@ -14,9 +14,31 @@ namespace Gum.Themes.ForestGlade;
 /// </summary>
 public class ListBoxVisual : BaseListBoxVisual
 {
-    private const float BorderThickness = 1f;
+    // Leaf curve here is tighter than the rest of the theme (8 px instead of
+    // leaf-large's 18 px). The border-on-top trick can only mask overflow up
+    // to its own width — the rectangular clip container leaks content past the
+    // rounded leaf curve at the bottom-left and top-right corners, and at
+    // leaf-large radius (18 px) a 2 px border can't fully cover the gap. An
+    // 8 px curve with a 2 px solid border keeps the asymmetric leaf identity
+    // and stays inside what the border can mask. Skia themes don't suffer
+    // this since they clip to actual rounded paths.
+    private const float RoundedRadius = 8f;
+    private const float SharpRadius = 2f;
+    private const float BorderThickness = 2f;
     private const float FocusRingInset = 3f;
     private const float FocusRingThickness = 3f;
+    private static readonly Color RestBorder = new Color(232, 255, 117, 220);
+    private static readonly Color HoverBorder = new Color(232, 255, 117, 240);
+    private static readonly Color DisabledBorderColor = new Color(232, 255, 117, 50);
+
+    private static void ApplyLeafShape(RoundedRectangleRuntime r)
+    {
+        r.CornerRadius = SharpRadius;
+        r.CustomRadiusTopLeft = SharpRadius;
+        r.CustomRadiusTopRight = RoundedRadius;
+        r.CustomRadiusBottomRight = SharpRadius;
+        r.CustomRadiusBottomLeft = RoundedRadius;
+    }
 
     private readonly RoundedRectangleRuntime _focusRing;
     private readonly RoundedRectangleRuntime _fill;
@@ -46,7 +68,16 @@ public class ListBoxVisual : BaseListBoxVisual
 
         if (VerticalScrollBarInstance != null)
         {
-            VerticalScrollBarInstance.X = -2f;
+            // X inset on top of the thumb's existing 2 px in-bar inset gives a
+            // visible gap between the thumb and the listbox border at the right
+            // (~5 px). Height inset gives the same breathing room at top and
+            // bottom — without it the thumb at min/max value hugs the listbox
+            // border at top/bottom respectively, even though the in-bar inset
+            // is there: the 2 px of in-bar inset is hidden behind the listbox's
+            // 2 px border.
+            float scrollBarInset = BorderThickness + 1f;
+            VerticalScrollBarInstance.X = -scrollBarInset;
+            VerticalScrollBarInstance.Height = -scrollBarInset * 2f;
         }
 
         WireStates();
@@ -64,7 +95,7 @@ public class ListBoxVisual : BaseListBoxVisual
         fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        ForestGladeLeaf.ApplyLarge(fill);
+        ApplyLeafShape(fill);
         fill.IsFilled = true;
         fill.Color = ForestGladePalette.InputFill;
         return fill;
@@ -82,11 +113,11 @@ public class ListBoxVisual : BaseListBoxVisual
         border.Height = 0;
         border.WidthUnits = DimensionUnitType.RelativeToParent;
         border.HeightUnits = DimensionUnitType.RelativeToParent;
-        ForestGladeLeaf.ApplyLarge(border);
+        ApplyLeafShape(border);
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = new Color(232, 255, 117, 56);
+        border.Color = RestBorder;
         return border;
     }
 
@@ -103,11 +134,11 @@ public class ListBoxVisual : BaseListBoxVisual
         ring.Height = halo * 2f;
         ring.WidthUnits = DimensionUnitType.RelativeToParent;
         ring.HeightUnits = DimensionUnitType.RelativeToParent;
-        ring.CornerRadius = 4f + halo;
-        ring.CustomRadiusTopLeft = 4f + halo;
-        ring.CustomRadiusTopRight = 18f + halo;
-        ring.CustomRadiusBottomRight = 4f + halo;
-        ring.CustomRadiusBottomLeft = 18f + halo;
+        ring.CornerRadius = SharpRadius + halo;
+        ring.CustomRadiusTopLeft = SharpRadius + halo;
+        ring.CustomRadiusTopRight = RoundedRadius + halo;
+        ring.CustomRadiusBottomRight = SharpRadius + halo;
+        ring.CustomRadiusBottomLeft = RoundedRadius + halo;
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
@@ -118,18 +149,15 @@ public class ListBoxVisual : BaseListBoxVisual
 
     private void WireStates()
     {
-        Color restBorder = new Color(232, 255, 117, 56);
-        Color hoverBorder = new Color(232, 255, 117, 115);
         Color focusBorder = ForestGladeColors.LeafBright;
-        Color disabledBorder = new Color(232, 255, 117, 26);
 
-        States.Enabled.Apply = () => ApplyPalette(border: restBorder, showFocusRing: false);
-        States.Highlighted.Apply = () => ApplyPalette(border: hoverBorder, showFocusRing: false);
+        States.Enabled.Apply = () => ApplyPalette(border: RestBorder, showFocusRing: false);
+        States.Highlighted.Apply = () => ApplyPalette(border: HoverBorder, showFocusRing: false);
         States.Focused.Apply = () => ApplyPalette(border: focusBorder, showFocusRing: true);
         States.HighlightedFocused.Apply = () => ApplyPalette(border: focusBorder, showFocusRing: true);
         States.Pushed.Apply = () => ApplyPalette(border: focusBorder, showFocusRing: false);
-        States.Disabled.Apply = () => ApplyPalette(border: disabledBorder, showFocusRing: false, fillDisabled: true);
-        States.DisabledFocused.Apply = () => ApplyPalette(border: disabledBorder, showFocusRing: true, fillDisabled: true);
+        States.Disabled.Apply = () => ApplyPalette(border: DisabledBorderColor, showFocusRing: false, fillDisabled: true);
+        States.DisabledFocused.Apply = () => ApplyPalette(border: DisabledBorderColor, showFocusRing: true, fillDisabled: true);
     }
 
     private void ApplyPalette(Color border, bool showFocusRing, bool fillDisabled = false)

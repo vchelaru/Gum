@@ -75,6 +75,20 @@ public class ComboBoxVisual : BaseComboBoxVisual
         ForestGladeLeaf.ApplyMedium(fill);
         fill.IsFilled = true;
         fill.Color = ForestGladePalette.InputFill;
+        // Same vertical dark gradient as the TextBox decoration so the closed
+        // ComboBox reads as a sibling input chrome.
+        fill.UseGradient = true;
+        fill.GradientType = GradientType.Linear;
+        fill.GradientX1Units = GeneralUnitType.PixelsFromMiddle;
+        fill.GradientY1Units = GeneralUnitType.PixelsFromSmall;
+        fill.GradientX1 = 0f;
+        fill.GradientY1 = 0f;
+        fill.GradientX2Units = GeneralUnitType.PixelsFromMiddle;
+        fill.GradientY2Units = GeneralUnitType.PixelsFromLarge;
+        fill.GradientX2 = 0f;
+        fill.GradientY2 = 0f;
+        fill.Color1 = new Color(2, 22, 25);
+        fill.Color2 = new Color(4, 36, 40);
         return fill;
     }
 
@@ -186,10 +200,18 @@ public class ComboBoxVisual : BaseComboBoxVisual
 
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
-        _fill.Color = fillDisabled ? ForestGladePalette.InputFillDisabled : ForestGladePalette.InputFill;
+        Color baseFill = fillDisabled ? ForestGladePalette.InputFillDisabled : ForestGladePalette.InputFill;
+        _fill.Color = baseFill;
+        _fill.Color1 = Darken(baseFill, 0.65f);
+        _fill.Color2 = baseFill;
         _border.Color = border;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;
         _focusRing.Visible = ring;
+    }
+
+    private static Color Darken(Color c, float factor)
+    {
+        return new Color((byte)(c.R * factor), (byte)(c.G * factor), (byte)(c.B * factor), c.A);
     }
 }

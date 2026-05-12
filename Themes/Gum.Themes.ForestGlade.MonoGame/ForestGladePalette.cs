@@ -10,21 +10,49 @@ namespace Gum.Themes.ForestGlade;
 /// </summary>
 internal static class ForestGladePalette
 {
-    // ---- Button gradients (CSS .fg-btn uses three-stop linear gradients) ----
-    // We approximate the three-stop CSS gradient with a single mid-tone fill
-    // and rely on the per-state alpha tweaks for the lighting feel. Picking
-    // the middle stop of each CSS gradient gives the closest match.
+    // ---- Button gradient stops (CSS .fg-btn uses three-stop linear gradients) ----
+    // Apos.Shapes supports 2-stop linear gradients on RoundedRectangleRuntime;
+    // we use the first and last CSS stops, dropping the middle. The middle
+    // tones (kept here as the legacy ButtonRestFill/etc. for any consumer
+    // that referenced them) are the median of the gradient and read fine as
+    // a flat-fill fallback if a visual chooses not to use the gradient.
 
-    /// <summary>Rest Button fill — middle stop of CSS <c>linear-gradient(180deg, #0fc448, #08b23b, #008c2e)</c>.</summary>
+    // 2-stop gradient using the CSS first (light) and last (dark) stops.
+    // The CSS 3-stop with mid at 55% has slightly different *shape* than
+    // a 2-stop linear (the CSS gradient has a flatter mid-area; the 2-stop
+    // is a constant slope), but the visible color range is the same — and
+    // a top→mid 2-stop loses the visible bottom darkening entirely. To
+    // approximate the CSS s-curve more faithfully we'd add inset edge
+    // strips (top sun-pale highlight + bottom dark shadow), which the
+    // ButtonVisual can layer on top of the gradient.
+
+    /// <summary>Rest Button fill TOP — CSS <c>#0fc448</c> (1st stop).</summary>
+    public static readonly Color ButtonRestFillTop = new Color(15, 196, 72);
+    /// <summary>Rest Button fill BOTTOM — CSS <c>#008c2e</c> (3rd stop).</summary>
+    public static readonly Color ButtonRestFillBottom = new Color(0, 140, 46);
+
+    /// <summary>Hover Button fill TOP — CSS <c>#2cdb5c</c> (1st stop).</summary>
+    public static readonly Color ButtonHoverFillTop = new Color(44, 219, 92);
+    /// <summary>Hover Button fill BOTTOM — CSS <c>#08b23b</c> (3rd stop).</summary>
+    public static readonly Color ButtonHoverFillBottom = new Color(8, 178, 59);
+
+    /// <summary>Pushed Button fill TOP — CSS <c>#008c2e</c>.</summary>
+    public static readonly Color ButtonPushedFillTop = new Color(0, 140, 46);
+    /// <summary>Pushed Button fill BOTTOM — CSS <c>#007028</c>.</summary>
+    public static readonly Color ButtonPushedFillBottom = new Color(0, 112, 40);
+
+    /// <summary>Disabled Button fill TOP — CSS <c>#2c4438</c>.</summary>
+    public static readonly Color ButtonDisabledFillTop = new Color(44, 68, 56);
+    /// <summary>Disabled Button fill BOTTOM — CSS <c>#243a30</c>.</summary>
+    public static readonly Color ButtonDisabledFillBottom = new Color(36, 58, 48);
+
+    /// <summary>Legacy mid-tone Button fill — middle CSS stop. Kept for visuals that prefer a flat fill (ToggleButton, etc.).</summary>
     public static readonly Color ButtonRestFill = new Color(8, 178, 59);
-
-    /// <summary>Hover Button fill — middle stop of CSS <c>linear-gradient(180deg, #2cdb5c, #16cb46, #08b23b)</c>.</summary>
+    /// <summary>Legacy mid-tone Button hover fill.</summary>
     public static readonly Color ButtonHoverFill = new Color(22, 203, 70);
-
-    /// <summary>Pushed Button fill — middle stop of CSS <c>linear-gradient(180deg, #008c2e, #007028)</c>.</summary>
+    /// <summary>Legacy mid-tone Button pushed fill.</summary>
     public static readonly Color ButtonPushedFill = new Color(0, 126, 41);
-
-    /// <summary>Disabled Button fill — CSS <c>linear-gradient(180deg, #2c4438, #243a30)</c> midpoint.</summary>
+    /// <summary>Legacy mid-tone Button disabled fill.</summary>
     public static readonly Color ButtonDisabledFill = new Color(40, 63, 52);
 
     // ---- Glow / drop shadow colors --------------------------------------
@@ -40,6 +68,14 @@ internal static class ForestGladePalette
 
     /// <summary>Subtle resting glow used on smaller chrome (slider thumb, etc.).</summary>
     public static readonly Color GlowSubtle = new Color(71, 246, 65, 80);
+
+    /// <summary>
+    /// Dark drop shadow — CSS <c>rgba(0,60,30,.55)</c>, used as the
+    /// primary "depth" shadow below a control (offset down, blurred).
+    /// Reads as "lit from above" rather than the neon halo of <see cref="GlowMedium"/>.
+    /// Alpha bumped beyond CSS literal per the gum-theming sRGB note.
+    /// </summary>
+    public static readonly Color DarkShadow = new Color(0, 60, 30, 200);
 
     /// <summary>Sun-pale glow — used on hover for elements that read warm rather than green.</summary>
     public static readonly Color GlowSunPale = new Color(232, 255, 117, 90);

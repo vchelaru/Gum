@@ -59,6 +59,20 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         fill.CornerRadius = 0f;
         fill.IsFilled = true;
         fill.Color = Color.Transparent;
+        // Selected row CSS: linear-gradient(90deg, rgba(71,246,65,.22), rgba(71,246,65,.05))
+        // — leaf-bright fading from left to right. Gradient is enabled here
+        // and the stops are toggled per state by WireStates (transparent stops
+        // for hover/rest).
+        fill.UseGradient = true;
+        fill.GradientType = GradientType.Linear;
+        fill.GradientX1Units = GeneralUnitType.PixelsFromSmall;
+        fill.GradientY1Units = GeneralUnitType.PixelsFromMiddle;
+        fill.GradientX1 = 0f;
+        fill.GradientY1 = 0f;
+        fill.GradientX2Units = GeneralUnitType.PixelsFromLarge;
+        fill.GradientY2Units = GeneralUnitType.PixelsFromMiddle;
+        fill.GradientX2 = 0f;
+        fill.GradientY2 = 0f;
         return fill;
     }
 
@@ -85,26 +99,34 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
     private void WireStates()
     {
         Color hoverFill = new Color(232, 255, 117, 20); // CSS .fg-lb-item.hov .08 alpha
+        Color selLeft = new Color(71, 246, 65, 56);     // CSS .22
+        Color selRight = new Color(71, 246, 65, 13);    // CSS .05
 
         States.Enabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: ForestGladeColors.Text, stripe: false);
+            fillLeft: Color.Transparent, fillRight: Color.Transparent,
+            text: ForestGladeColors.Text, stripe: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: hoverFill, text: ForestGladeColors.Text, stripe: false);
+            fillLeft: hoverFill, fillRight: hoverFill,
+            text: ForestGladeColors.Text, stripe: false);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: ForestGladePalette.SelectedRow, text: ForestGladeColors.SunPale, stripe: true);
+            fillLeft: selLeft, fillRight: selRight,
+            text: ForestGladeColors.SunPale, stripe: true);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: ForestGladePalette.SelectedRow, text: ForestGladeColors.SunPale, stripe: true);
+            fillLeft: selLeft, fillRight: selRight,
+            text: ForestGladeColors.SunPale, stripe: true);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: ForestGladeColors.Disabled, stripe: false);
+            fillLeft: Color.Transparent, fillRight: Color.Transparent,
+            text: ForestGladeColors.Disabled, stripe: false);
     }
 
-    private void ApplyPalette(Color fill, Color text, bool stripe)
+    private void ApplyPalette(Color fillLeft, Color fillRight, Color text, bool stripe)
     {
-        _fill.Color = fill;
+        _fill.Color1 = fillLeft;
+        _fill.Color2 = fillRight;
         TextInstance.Color = text;
         _selectionStripe.Visible = stripe;
     }

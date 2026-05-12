@@ -50,6 +50,20 @@ public class ScrollBarThumbVisual : InteractiveGue
         ForestGladeLeaf.ApplySmall(body);
         body.IsFilled = true;
         body.Color = ForestGladePalette.ScrollThumb;
+        // CSS .fg-sb-thm linear-gradient(180deg, rgba(71,246,65,.55), rgba(0,140,46,.55))
+        // — vertical, leaf-bright at top fading to canopy-lit at the bottom.
+        body.UseGradient = true;
+        body.GradientType = GradientType.Linear;
+        body.GradientX1Units = GeneralUnitType.PixelsFromMiddle;
+        body.GradientY1Units = GeneralUnitType.PixelsFromSmall;
+        body.GradientX1 = 0f;
+        body.GradientY1 = 0f;
+        body.GradientX2Units = GeneralUnitType.PixelsFromMiddle;
+        body.GradientY2Units = GeneralUnitType.PixelsFromLarge;
+        body.GradientX2 = 0f;
+        body.GradientY2 = 0f;
+        body.Color1 = new Color(71, 246, 65, 200);
+        body.Color2 = new Color(0, 140, 46, 200);
         return body;
     }
 
@@ -59,26 +73,39 @@ public class ScrollBarThumbVisual : InteractiveGue
         _buttonCategory.Name = Button.ButtonCategoryName;
         AddCategory(_buttonCategory);
 
+        Color restTop = new Color(71, 246, 65, 200);
+        Color restBottom = new Color(0, 140, 46, 200);
+        Color hoverTop = new Color(108, 255, 100, 230);
+        Color hoverBottom = new Color(8, 178, 59, 230);
+
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => _body.Color = ForestGladePalette.ScrollThumb);
+            () => ApplyGradient(restTop, restBottom, gradient: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => _body.Color = ForestGladePalette.ScrollThumbHover);
+            () => ApplyGradient(hoverTop, hoverBottom, gradient: true));
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => _body.Color = ForestGladePalette.ScrollThumbHover);
+            () => ApplyGradient(hoverTop, hoverBottom, gradient: true));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => _body.Color = ForestGladePalette.ScrollThumb);
+            () => ApplyGradient(restTop, restBottom, gradient: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => _body.Color = ForestGladePalette.ScrollThumbHover);
+            () => ApplyGradient(hoverTop, hoverBottom, gradient: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => _body.Color = ForestGladeColors.Disabled);
+            () => ApplyGradient(ForestGladeColors.Disabled, ForestGladeColors.Disabled, gradient: false));
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => _body.Color = ForestGladeColors.Disabled);
+            () => ApplyGradient(ForestGladeColors.Disabled, ForestGladeColors.Disabled, gradient: false));
+    }
+
+    private void ApplyGradient(Color top, Color bottom, bool gradient)
+    {
+        _body.UseGradient = gradient;
+        _body.Color1 = top;
+        _body.Color2 = bottom;
+        _body.Color = top;
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

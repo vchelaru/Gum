@@ -22,7 +22,7 @@ public class WindowVisual : BaseWindowVisual
 
     private readonly RoundedRectangleRuntime _fill;
     private readonly RoundedRectangleRuntime _border;
-    private readonly ColoredRectangleRuntime _titleBarFill;
+    private readonly RoundedRectangleRuntime _titleBarFill;
     private readonly ColoredRectangleRuntime _titleBarSeparator;
 
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -111,12 +111,20 @@ public class WindowVisual : BaseWindowVisual
         return border;
     }
 
-    private static ColoredRectangleRuntime CreateTitleBarFill()
+    private static RoundedRectangleRuntime CreateTitleBarFill()
     {
         // CSS spec is a wood-grain repeating gradient — represented here by
         // a single bark-soft fill so the title bar reads as warm wood
         // against the canopy body.
-        ColoredRectangleRuntime fill = new ColoredRectangleRuntime();
+        //
+        // Per-corner radii match the window body's TOP corners so the bark
+        // fill follows the leaf-xl curve at the top-right (and the sharp
+        // 6 px at top-left). The bottom of the title bar joins the body
+        // interior, so its bottom corners stay square. Without this, the
+        // rectangular fill would spill past the body's rounded top-right
+        // corner — the 1 px body border isn't thick enough to mask 24 px
+        // of spill on its own.
+        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
         fill.Name = "ForestGladeWindowTitleBarFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -126,6 +134,12 @@ public class WindowVisual : BaseWindowVisual
         fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
+        fill.CornerRadius = 0f;
+        fill.CustomRadiusTopLeft = 6f;
+        fill.CustomRadiusTopRight = 24f;
+        fill.CustomRadiusBottomRight = 0f;
+        fill.CustomRadiusBottomLeft = 0f;
+        fill.IsFilled = true;
         fill.Color = ForestGladePalette.WindowTitleBar;
         return fill;
     }
