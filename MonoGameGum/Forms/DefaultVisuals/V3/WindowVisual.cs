@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+#pragma warning disable CS0618, GUM001 // Default visuals intentionally use deprecated MonoGameGum.GueDeriving shim types for backward compatibility until V1/V2/V3 visuals are retired. See issue #2715.
+using Gum.Wireframe;
 
 using RenderingLibrary.Graphics;
 using System;
@@ -10,10 +11,18 @@ using System.Threading.Tasks;
 
 #if XNALIKE
 using MonoGameGum;
-using Gum.GueDeriving;
-using Microsoft.Xna.Framework;
+#if XNALIKE
+using MonoGameGum.GueDeriving;
 #else
 using Gum.GueDeriving;
+#endif
+using Microsoft.Xna.Framework;
+#else
+#if XNALIKE
+using MonoGameGum.GueDeriving;
+#else
+using Gum.GueDeriving;
+#endif
 #endif
 using Gum.Forms.Controls;
 
