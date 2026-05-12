@@ -196,6 +196,24 @@ public static class ForestGladeTheme
         FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] =
             new VisualTemplate((_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
 
+        FrameworkElement.DefaultFormsTemplates[typeof(ListBox)] =
+            new VisualTemplate((_, c) => new ListBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ListBoxItem)] =
+            new VisualTemplate((_, c) => new ListBoxItemVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] =
+            new VisualTemplate((_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ComboBox)] =
+            new VisualTemplate((_, c) => new ComboBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Menu)] =
+            new VisualTemplate((_, c) => new MenuVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] =
+            new VisualTemplate((_, c) => new MenuItemVisual(tryCreateFormsObject: c));
+
         // Label gets its color from Styling.ActiveStyle.Colors.TextPrimary
         // (set in ConfigureStyling), so the V3 LabelVisual already renders
         // Forest Glade text color without a subclass.
