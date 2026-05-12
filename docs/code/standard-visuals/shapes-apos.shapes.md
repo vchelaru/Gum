@@ -257,13 +257,41 @@ Defaults: `Width` = `Height` = 100, `IsFilled` = `true`, `StrokeWidth` = 1, `Col
 
 ### RoundedRectangleRuntime
 
-`RoundedRectangleRuntime` draws a rectangle with rounded corners. Its size is controlled by `Width` and `Height`. It adds a single property to the common set:
+`RoundedRectangleRuntime` draws a rectangle with rounded corners. Its size is controlled by `Width` and `Height`. It adds the following properties to the common set:
 
-| Property        | Type    | Description                                                                                              |
-| --------------- | ------- | -------------------------------------------------------------------------------------------------------- |
-| `CornerRadius`  | `float` | Radius, in pixels, of each rounded corner. A value of `0` produces a sharp-cornered rectangle.           |
+| Property                                                                                       | Type     | Description                                                                                              |
+| ---------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `CornerRadius`                                                                                 | `float`  | Radius, in pixels, used for any corner that does not have a per-corner override. `0` produces a sharp-cornered rectangle. |
+| `CustomRadiusTopLeft`, `CustomRadiusTopRight`, `CustomRadiusBottomRight`, `CustomRadiusBottomLeft` | `float?` | Optional per-corner overrides. When non-null, that corner uses the override; when null, the corner falls back to `CornerRadius`. |
 
-Defaults: `Width` = `Height` = 100, `CornerRadius` = 5, solid color = `White`.
+Defaults: `Width` = `Height` = 100, `CornerRadius` = 5, all `CustomRadius*` = `null`, solid color = `White`.
+
+#### Per-corner radii
+
+Setting any of the four `CustomRadius*` properties opts the corresponding corner out of the uniform `CornerRadius` value. This lets a single `RoundedRectangleRuntime` render asymmetric shapes — for example, a tab with rounded top corners only, or the "leaf" silhouette below where two opposing corners stay sharp.
+
+```csharp
+var leaf = new RoundedRectangleRuntime();
+parent.Children.Add(leaf);
+leaf.Width = 120;
+leaf.Height = 32;
+leaf.Color = Microsoft.Xna.Framework.Color.Green;
+
+// Sharp on TL/BR, rounded on TR/BL — the "leaf" silhouette.
+leaf.CustomRadiusTopLeft     = 2f;
+leaf.CustomRadiusTopRight    = 12f;
+leaf.CustomRadiusBottomRight = 2f;
+leaf.CustomRadiusBottomLeft  = 12f;
+
+// To undo a per-corner override and fall back to CornerRadius, set it to null:
+// leaf.CustomRadiusTopLeft = null;
+```
+
+Per-corner radii require Apos.Shapes 0.6.9 or later (which Gum.Shapes.MonoGame / Gum.Shapes.KNI depend on as of this release). The Skia backend has supported the same properties for longer.
+
+The Gum tool's variable grid does not yet expose the four `CustomRadius*` variables — only `CornerRadius`. To use per-corner radii today, set the properties in code on the runtime instance after the visual is created. Tool-side parity is tracked in [issue #2720](https://github.com/vchelaru/Gum/issues/2720).
+
+Dashed strokes (`StrokeDashLength` / `StrokeGapLength`) are not aware of per-corner radii — the dash perimeter walk currently assumes uniform corners. If you need a dashed stroke on a per-corner-radii rectangle, render the body and the dashed outline as two separate `RoundedRectangleRuntime` instances (one filled with per-corner radii, one stroked with uniform `CornerRadius` set to whichever radius reads best).
 
 ## Setup in Gum Tool
 

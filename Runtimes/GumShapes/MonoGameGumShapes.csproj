@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -36,7 +36,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Apos.Shapes" Version="0.6.8" />
+		<PackageReference Include="Apos.Shapes" Version="0.6.9-alpha" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" PrivateAssets="All" />
 	</ItemGroup>
 
