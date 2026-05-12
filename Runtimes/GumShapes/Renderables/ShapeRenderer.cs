@@ -91,10 +91,7 @@ public class ShapeRenderer
                 $"Gum.Shapes was built against Apos.Shapes {CompiledAgainstAposShapesVersion}, " +
                 $"but the resolved Apos.Shapes assembly reports version '{resolved}'. " +
                 "The shipped apos-shapes.xnb may be incompatible with this Apos.Shapes runtime. " +
-                "To fix: rebuild the XnbBuilderMonoGameDesktopGL and XnbBuilderMonoGameWindowsDX " +
-                "projects against the new Apos.Shapes version, copy the produced XNBs into " +
-                "Runtimes/GumShapes/buildTransitive/MonoGame/Content/{DesktopGL,WindowsDX}/, " +
-                "and update CompiledAgainstAposShapesVersion in ShapeRenderer.cs.");
+                "To fix, follow Runtimes/GumShapes/XnbBuilder/README.md.");
         }
     }
 }
