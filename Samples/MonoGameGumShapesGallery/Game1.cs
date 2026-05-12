@@ -40,6 +40,10 @@ public class Game1 : Game
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
         Window.Title = "Gum Shapes Gallery — Apos.Shapes 0.6.9 + per-corner radii";
+        // ContentManager's default RootDirectory is empty; the pre-built apos-shapes.xnb
+        // ships under Content/ in the build output (via Link= on the Content item in the
+        // csproj), so point Content there before any Load<T>("apos-shapes") call hits.
+        Content.RootDirectory = "Content";
     }
 
     protected override void LoadContent()
