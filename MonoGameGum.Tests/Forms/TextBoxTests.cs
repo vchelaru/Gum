@@ -289,6 +289,54 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void FontScale_ShouldScaleClickHitTestX()
+    {
+        // Issue #2687: clicking on scaled text put the caret at the wrong
+        // character because GetCaretIndexAtPosition uses GetIndex, whose
+        // hot path (under XNALIKE — i.e. MonoGame/KNI/FNA) measured each
+        // character with the raw BitmapFont XAdvance and ignored FontScale.
+        // A click at the X corresponding to character N at FontScale=2
+        // therefore mapped to character ~2N.
+        //
+        // Drive GetCaretIndexAtPosition directly: typing alone exercises
+        // the X-placement path, not the hit-test path, so a typing-only
+        // test would not catch this branch.
+
+        static int IndexAtClickX(float fontScale, float screenXOffsetFromTextLeft)
+        {
+            TextBox tb = new();
+            tb.IsFocused = true;
+
+            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            visual.TextInstance.FontScale = fontScale;
+
+            tb.HandleCharEntered('a');
+            tb.HandleCharEntered('a');
+            tb.HandleCharEntered('a');
+            tb.HandleCharEntered('a');
+
+            float textLeft = visual.TextInstance.AbsoluteLeft;
+            float textTop = visual.TextInstance.AbsoluteTop + 2f;
+            return tb.GetCaretIndexAtPosition(textLeft + screenXOffsetFromTextLeft, textTop);
+        }
+
+        // X at character boundary 2 with FontScale=1 — sanity baseline.
+        // Walk a fraction-of-the-string width that's clearly past the
+        // midpoint of the 2nd character and clearly short of the 4th.
+        // At FontScale=2 the same click X (in screen pixels) should land
+        // on roughly half as many characters.
+        int idx1xClickPastChar2 = IndexAtClickX(1.0f, 28f);
+        int idx2xClickPastChar2 = IndexAtClickX(2.0f, 28f);
+
+        idx1xClickPastChar2.ShouldBeGreaterThanOrEqualTo(2,
+            "sanity: at FontScale=1, clicking ~28px into a row of 4 'a's should land on or past the 2nd character boundary");
+        idx2xClickPastChar2.ShouldBeLessThan(idx1xClickPastChar2,
+            "because at FontScale=2 each glyph is twice as wide, so the same screen-pixel X should " +
+            "correspond to fewer characters; if the click lands on the same index the hit-test is " +
+            "ignoring FontScale (issue #2687)");
+    }
+
+    [Fact]
     public void FontScale_ShouldScaleCaretXOnFirstLine()
     {
         // Issue #2687: FontScale was ignored in the caret X math. The caret X

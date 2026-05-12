@@ -698,7 +698,9 @@ public abstract class TextBoxBase :
         return GetCaretIndexAtPosition(cursorScreenX, cursorScreenY);
     }
 
-    private int GetCaretIndexAtPosition(float screenX, float screenY)
+    // Internal for tests; otherwise this would be private. Exposes the
+    // screen-coordinates -> caret-index hit-test used by mouse clicks.
+    internal int GetCaretIndexAtPosition(float screenX, float screenY)
     {
         var leftOfText = this.textComponent.GetAbsoluteLeft();
         var cursorOffset = screenX - leftOfText;
@@ -759,19 +761,22 @@ public abstract class TextBoxBase :
 
 #if XNALIKE
 
-        var bitmapFont = this.coreTextObject.BitmapFont;
+        var bitmapFont = this.coreTextObject.BitmapFont ?? global::RenderingLibrary.Graphics.Text.DefaultBitmapFont;
+        var fontScale = ((IText)coreTextObject).FontScale;
 
         for (int i = 0; i < (textToUse?.Length ?? 0); i++)
         {
             char character = textToUse[i];
-            global::RenderingLibrary.Graphics.BitmapCharacterInfo characterInfo = bitmapFont.GetCharacterInfo(character);
+            global::RenderingLibrary.Graphics.BitmapCharacterInfo characterInfo = bitmapFont?.GetCharacterInfo(character);
 
-            int advance = 0;
+            float advance = 0;
 
             if (characterInfo != null)
             {
-                //advance = characterInfo.GetXAdvanceInPixels(coreTextObject.BitmapFont.LineHeightInPixels);
-                advance = characterInfo.XAdvance;
+                // XAdvance is raw glyph-pixel width; the rendered glyph is
+                // FontScale-wider, so the hit-test must scale to match the
+                // screen-space cursor offset coming in.
+                advance = characterInfo.XAdvance * fontScale;
             }
 
             distanceMeasuredSoFar += advance;
