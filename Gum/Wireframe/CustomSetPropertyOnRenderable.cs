@@ -1009,6 +1009,13 @@ public class CustomSetPropertyOnRenderable
         allTags.Sort((a, b) => a.StartIndex - b.StartIndex);
 
         InlineVariable lastFontInlineVariable = null;
+        // Every BBCode push (open tag) and pop (close tag) below calls
+        // GetAndCreateFontIfNecessary. The pop case re-asks for a font that was
+        // already resolved on the matching push — caching is intentionally NOT
+        // this method's job. LoaderManager handles cache hits on the second
+        // lookup, so the cost of asking twice is the cache check, not a full
+        // font generation. Do not add caching here; if a generation path is
+        // slow on cache hits, fix it in the underlying loader.
         foreach (var tag in allTags)
         {
 
