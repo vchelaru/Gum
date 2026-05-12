@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -36,7 +36,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.8" />
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.9-alpha" />
 		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />

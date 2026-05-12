@@ -63,7 +63,7 @@ normal version bump, the destinations stay the same:
 | `XnbBuilderMonoGameWindowsDX` | `bin/<config>/net8.0-windows/Content/apos-shapes.xnb` | `Runtimes/GumShapes/buildTransitive/MonoGame/Content/WindowsDX/apos-shapes.xnb` |
 | `XnbBuilderDesktopGL` | `bin/<config>/net8.0/Content/apos-shapes.xnb` | `Runtimes/GumShapes/buildTransitive/Content/DesktopGL/apos-shapes.xnb` |
 | `XnbBuilderDirectX` | `bin/<config>/net8.0-windows/Content/apos-shapes.xnb` | `Runtimes/GumShapes/buildTransitive/Content/Windows/apos-shapes.xnb` |
-| `XnbBuilderBlazorGL` | `bin/<config>/net8.0/Content/apos-shapes.xnb` | `Runtimes/GumShapes/buildTransitive/Content/BlazorGL/apos-shapes.xnb` |
+| `XnbBuilderBlazorGL` | `wwwroot/Content/apos-shapes.xnb` (Release only emits to wwwroot; Debug also emits to `bin/Debug/net8.0/Content/`) | `Runtimes/GumShapes/buildTransitive/Content/BlazorGL/apos-shapes.xnb` |
 
 ## Step-by-step upgrade
 
@@ -117,7 +117,7 @@ Copy-Item Runtimes/GumShapes/XnbBuilder/XnbBuilderMonoGameDesktopGL/bin/Release/
 Copy-Item Runtimes/GumShapes/XnbBuilder/XnbBuilderMonoGameWindowsDX/bin/Release/net8.0-windows/Content/apos-shapes.xnb Runtimes/GumShapes/buildTransitive/MonoGame/Content/WindowsDX/apos-shapes.xnb -Force
 Copy-Item Runtimes/GumShapes/XnbBuilder/XnbBuilderDesktopGL/bin/Release/net8.0/Content/apos-shapes.xnb                 Runtimes/GumShapes/buildTransitive/Content/DesktopGL/apos-shapes.xnb -Force
 Copy-Item Runtimes/GumShapes/XnbBuilder/XnbBuilderDirectX/bin/Release/net8.0-windows/Content/apos-shapes.xnb           Runtimes/GumShapes/buildTransitive/Content/Windows/apos-shapes.xnb -Force
-Copy-Item Runtimes/GumShapes/XnbBuilder/XnbBuilderBlazorGL/bin/Release/net8.0/Content/apos-shapes.xnb                  Runtimes/GumShapes/buildTransitive/Content/BlazorGL/apos-shapes.xnb -Force
+Copy-Item Runtimes/GumShapes/XnbBuilder/XnbBuilderBlazorGL/wwwroot/Content/apos-shapes.xnb                              Runtimes/GumShapes/buildTransitive/Content/BlazorGL/apos-shapes.xnb -Force
 ```
 
 ### 4. Verify the diff
