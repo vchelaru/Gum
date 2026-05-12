@@ -190,6 +190,12 @@ public static class ForestGladeTheme
         FrameworkElement.DefaultFormsTemplates[typeof(PasswordBox)] =
             new VisualTemplate((_, c) => new PasswordBoxVisual(tryCreateFormsObject: c));
 
+        FrameworkElement.DefaultFormsTemplates[typeof(Slider)] =
+            new VisualTemplate((_, c) => new SliderVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] =
+            new VisualTemplate((_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
+
         // Label gets its color from Styling.ActiveStyle.Colors.TextPrimary
         // (set in ConfigureStyling), so the V3 LabelVisual already renders
         // Forest Glade text color without a subclass.
