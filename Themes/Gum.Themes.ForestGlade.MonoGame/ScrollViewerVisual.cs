@@ -55,33 +55,37 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         _border = CreateBorder();
         AddChild(_border);
 
-        // The V3 ScrollViewer continuously refreshes VerticalScrollBarInstance.Height
-        // from the horizontal scroll bar's height (RefreshMarginsFromScrollBarVisibility)
-        // — and the assignment only happens when HorizontalScrollBarInstance.Parent
-        // is ScrollAndClipContainer. Detaching the horizontal scroll bar suppresses
-        // that overwrite so our top/bottom inset survives. The Forest Glade
-        // ScrollViewer doesn't ship a horizontal scroll bar; if a consumer needs
-        // one they'll need to re-parent it and re-establish the inset themselves.
-        if (HorizontalScrollBarInstance != null)
-        {
-            HorizontalScrollBarInstance.Parent = null;
-        }
-
         // Re-anchor the vertical scroll bar to centre/PixelsFromMiddle so the
-        // Height-inset shrinks evenly on top and bottom (V3 default anchors top).
+        // Height-inset distributes evenly on top and bottom (the V3 default
+        // anchors top). X inset gives a gap to the body border on the right;
+        // ApplyScrollBarInset reapplies the values in PreRender because V3's
+        // RefreshMarginsFromScrollBarVisibility (which fires on scroll-bar-
+        // visibility state changes and during init) stomps Height back to
+        // -horizontalScrollBar.AbsoluteHeight.
         VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
         VerticalScrollBarInstance.YOrigin = VerticalAlignment.Center;
         VerticalScrollBarInstance.Y = 0f;
-
-        // X inset gives a gap to the body border on the right; Height inset
-        // gives the same gap at top and bottom (the thumb's in-bar inset alone
-        // is hidden by the body's 2 px border, so it doesn't read as
-        // breathing room without this).
-        float scrollBarInset = BorderThickness + 1f;
-        VerticalScrollBarInstance.X = -scrollBarInset;
-        VerticalScrollBarInstance.Height = -scrollBarInset * 2f;
+        ApplyScrollBarInset();
 
         WireStates();
+    }
+
+    private const float ScrollBarInset = BorderThickness + 1f;
+
+    private void ApplyScrollBarInset()
+    {
+        VerticalScrollBarInstance.X = -ScrollBarInset;
+        VerticalScrollBarInstance.Height = -ScrollBarInset * 2f;
+    }
+
+    public override void PreRender()
+    {
+        base.PreRender();
+        // base.PreRender() can run RefreshMarginsFromScrollBarVisibility,
+        // which overwrites VerticalScrollBarInstance.Height. Reapply our
+        // top/bottom inset every frame so the scroll bar keeps its margins.
+        // Cheap — two property writes on values that usually don't change.
+        ApplyScrollBarInset();
     }
 
     private static RoundedRectangleRuntime CreateFill()
