@@ -289,6 +289,43 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void FontScale_ShouldScaleCaretXOnFirstLine()
+    {
+        // Issue #2687: FontScale was ignored in the caret X math. The caret X
+        // comes from Text.MeasureString, which explicitly returns the raw
+        // (unscaled) glyph width — so the caret sat at the unscaled offset
+        // while the rendered glyphs were FontScale-wider. The caret's X
+        // advance (caret-at-end minus caret-at-start) for the same characters
+        // should roughly double when FontScale doubles.
+
+        static float CaretXAdvance(float fontScale)
+        {
+            TextBox tb = new();
+            tb.IsFocused = true;
+
+            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            visual.TextInstance.FontScale = fontScale;
+
+            float start = visual.CaretInstance.AbsoluteLeft;
+            tb.HandleCharEntered('a');
+            tb.HandleCharEntered('a');
+            tb.HandleCharEntered('a');
+            float end = visual.CaretInstance.AbsoluteLeft;
+
+            return end - start;
+        }
+
+        float advance1x = CaretXAdvance(1.0f);
+        float advance2x = CaretXAdvance(2.0f);
+
+        advance1x.ShouldBeGreaterThan(0f, "sanity: caret should advance after typing characters");
+        advance2x.ShouldBeGreaterThan(advance1x * 1.5f,
+            "because doubling FontScale should roughly double the caret X advance " +
+            "(rendered glyphs are 2× wider); if the advance is unchanged the caret X " +
+            "math is using unscaled MeasureString (issue #2687)");
+    }
+
+    [Fact]
     public void FontScale_ShouldScaleCaretLineSpacing_Multiline()
     {
         // Issue #2687: when FontScale on the inner TextInstance is set to a

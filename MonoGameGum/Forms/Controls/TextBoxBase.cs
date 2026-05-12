@@ -659,7 +659,7 @@ public abstract class TextBoxBase :
             {
                 var xChange = MainCursor.XChange / global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
 
-                var stringLength = coreTextObject.MeasureString(DisplayedText, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+                var stringLength = MeasureStringScaled(DisplayedText, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
 
                 var minimumShift = System.Math.Min(
                     edgeToTextPadding,
@@ -795,12 +795,12 @@ public abstract class TextBoxBase :
         for (int i = 0; i < (textToUse?.Length ?? 0); i++)
         {
             // Is there a faster way to do this?
-            distanceMeasuredSoFar = coreTextObject.MeasureString(textToUse.Substring(0, i + 1));
+            distanceMeasuredSoFar = MeasureStringScaled(textToUse.Substring(0, i + 1));
 
             // This should find which side of the character you're closest to, but for now it's good enough...
             if (distanceMeasuredSoFar > cursorOffset)
             {
-                var distanceBefore = coreTextObject.MeasureString(textToUse.Substring(0, i));
+                var distanceBefore = MeasureStringScaled(textToUse.Substring(0, i));
                 var advance = distanceMeasuredSoFar - distanceBefore;
                 var halfwayPoint = distanceMeasuredSoFar - (advance / 2.0f);
                 if (halfwayPoint > cursorOffset)
@@ -1768,13 +1768,13 @@ public abstract class TextBoxBase :
         else
         {
             var selectionPosition = new SelectionPosition();
-            var firstMeasure = this.coreTextObject.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+            var firstMeasure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
             substring = DisplayedText.Substring(0, selectionStart + selectionLength);
 
             selectionPosition.XStart = this.textComponent.X + firstMeasure;
             selectionPosition.Y = this.textComponent.Y;
             selectionPosition.Width = 1 +
-                this.coreTextObject.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
+                MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
 
             selectionStartEnds.Add(selectionPosition);
         }
@@ -2008,7 +2008,7 @@ public abstract class TextBoxBase :
         // on caretComponent.X when no measurement can be performed.
         if (this.coreTextObject != null)
         {
-            var measure = this.coreTextObject.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+            var measure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
             return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
         }
         else
@@ -2022,7 +2022,7 @@ public abstract class TextBoxBase :
         if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Left)
             return 0;
 
-        float measuredLineWidth = coreTextObject.MeasureString(stringToMeasure);
+        float measuredLineWidth = MeasureStringScaled(stringToMeasure);
         float textComponentWidth = textComponent.GetAbsoluteWidth();
         float gapBetweenTextAndEdge = textComponentWidth - measuredLineWidth;
         if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
@@ -2073,6 +2073,16 @@ public abstract class TextBoxBase :
     // position must NOT change when only the multiplier changes.
     private float ScaledLineHeightInPixels =>
         coreTextObject.LineHeightInPixels * ((IText)coreTextObject).FontScale;
+
+    // Text.MeasureString returns the raw glyph-pixel width (it explicitly
+    // ignores FontScale). Caret X, selection X, hit-testing, and centering
+    // padding all live in screen space, so they must multiply by FontScale
+    // to line up with the actual rendered glyphs.
+    private float MeasureStringScaled(string value) =>
+        coreTextObject.MeasureString(value) * ((IText)coreTextObject).FontScale;
+
+    private float MeasureStringScaled(string value, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle style) =>
+        coreTextObject.MeasureString(value, style) * ((IText)coreTextObject).FontScale;
 
     private float GetCenterOfYForLinePixelsFromSmall(int lineNumber)
     {
