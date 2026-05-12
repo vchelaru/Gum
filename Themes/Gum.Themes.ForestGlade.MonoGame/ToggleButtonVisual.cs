@@ -26,10 +26,19 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _chrome = new ForestGladeButtonChrome(this, TextInstance);
+        // ApplyState BEFORE constructing the chrome so the text-shadow's
+        // seeded font is the theme's font, not TextRuntime's Arial-18 default.
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
 
+        _chrome = new ForestGladeButtonChrome(this, TextInstance);
+
         WireStates();
+    }
+
+    public override void PreRender()
+    {
+        base.PreRender();
+        _chrome.SyncTextShadow();
     }
 
     private void WireStates()

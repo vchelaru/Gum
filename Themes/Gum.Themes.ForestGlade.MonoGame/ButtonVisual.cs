@@ -27,11 +27,22 @@ public class ButtonVisual : BaseButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _chrome = new ForestGladeButtonChrome(this, TextInstance);
+        // ApplyState BEFORE constructing the chrome so TextInstance.Font /
+        // FontSize are already set to the theme's font when the chrome seeds
+        // the text-shadow's font fields. Otherwise the shadow's first bake
+        // would hit TextRuntime's Arial-18 default and throw.
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
         TextInstance.Color = ForestGladeColors.Text;
 
+        _chrome = new ForestGladeButtonChrome(this, TextInstance);
+
         WireStates();
+    }
+
+    public override void PreRender()
+    {
+        base.PreRender();
+        _chrome.SyncTextShadow();
     }
 
     private void WireStates()
