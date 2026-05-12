@@ -175,18 +175,26 @@ public static class ForestGladeTheme
         FrameworkElement.DefaultFormsTemplates[typeof(Button)] =
             new VisualTemplate((_, c) => new ButtonVisual(tryCreateFormsObject: c));
 
+        FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] =
+            new VisualTemplate((_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] =
+            new VisualTemplate((_, c) => new RadioButtonVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ToggleButton)] =
+            new VisualTemplate((_, c) => new ToggleButtonVisual(tryCreateFormsObject: c));
+
         // Label gets its color from Styling.ActiveStyle.Colors.TextPrimary
         // (set in ConfigureStyling), so the V3 LabelVisual already renders
         // Forest Glade text color without a subclass.
         FrameworkElement.DefaultFormsTemplates[typeof(Label)] =
             new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
 
-        // Additional control visuals (CheckBox, RadioButton, TextBox,
-        // PasswordBox, Slider, ComboBox, ListBox, ScrollBar, ScrollViewer,
-        // Window, Splitter, Menu, MenuItem, Tooltip, ToggleButton) ship in
-        // follow-up commits as each visual is implemented. Until then the
-        // V3 defaults render those controls — the body text colors still
-        // pick up Forest Glade tokens via ConfigureStyling, but chrome stays
-        // the V3 grey baseline.
+        // Additional control visuals (TextBox, PasswordBox, Slider, ComboBox,
+        // ListBox, ScrollBar, ScrollViewer, Window, Splitter, Menu, MenuItem,
+        // Tooltip) ship in follow-up commits as each visual is implemented.
+        // Until then the V3 defaults render those controls — the body text
+        // colors still pick up Forest Glade tokens via ConfigureStyling, but
+        // chrome stays the V3 grey baseline.
     }
 }
