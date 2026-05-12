@@ -253,6 +253,164 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void LineHeightMultiplier_ShouldNotShiftCaretOnLine0()
+    {
+        // Issue #2687 (follow-up): even after the gap between lines was fixed to
+        // honor LineHeightMultiplier, every line — including line 0 — was offset
+        // by a constant (multiplier - 1) * lineHeight / 2 because the per-line
+        // half-step used the *effective* line height instead of the raw line
+        // height. Line 0's glyph row is drawn at the same Y regardless of the
+        // multiplier (the multiplier only adds spacing *between* lines), so the
+        // caret on line 0 must not move when the multiplier changes.
+
+        static float CaretTopOnLine0(float multiplier)
+        {
+            TextBox tb = new();
+            tb.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+            tb.AcceptsReturn = true;
+            tb.Height = 400;
+            tb.IsFocused = true;
+
+            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            visual.TextInstance.LineHeightMultiplier = multiplier;
+
+            tb.HandleCharEntered('a');
+            tb.CaretIndex = 1;
+
+            return visual.CaretInstance.AbsoluteTop;
+        }
+
+        float caret1x = CaretTopOnLine0(1.0f);
+        float caret2x = CaretTopOnLine0(2.0f);
+
+        caret2x.ShouldBe(caret1x, tolerance: 0.5f,
+            "because line 0 is drawn at the same Y regardless of LineHeightMultiplier; " +
+            "the multiplier only inflates the gap *between* lines, not the position of line 0 itself");
+    }
+
+    [Fact]
+    public void FontScale_ShouldScaleClickHitTestX()
+    {
+        // Issue #2687: clicking on scaled text put the caret at the wrong
+        // character because GetCaretIndexAtPosition uses GetIndex, whose
+        // hot path (under XNALIKE — i.e. MonoGame/KNI/FNA) measured each
+        // character with the raw BitmapFont XAdvance and ignored FontScale.
+        // A click at the X corresponding to character N at FontScale=2
+        // therefore mapped to character ~2N.
+        //
+        // Drive GetCaretIndexAtPosition directly: typing alone exercises
+        // the X-placement path, not the hit-test path, so a typing-only
+        // test would not catch this branch.
+
+        static int IndexAtClickX(float fontScale, float screenXOffsetFromTextLeft)
+        {
+            TextBox tb = new();
+            tb.IsFocused = true;
+
+            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            visual.TextInstance.FontScale = fontScale;
+
+            tb.HandleCharEntered('a');
+            tb.HandleCharEntered('a');
+            tb.HandleCharEntered('a');
+            tb.HandleCharEntered('a');
+
+            float textLeft = visual.TextInstance.AbsoluteLeft;
+            float textTop = visual.TextInstance.AbsoluteTop + 2f;
+            return tb.GetCaretIndexAtPosition(textLeft + screenXOffsetFromTextLeft, textTop);
+        }
+
+        // X at character boundary 2 with FontScale=1 — sanity baseline.
+        // Walk a fraction-of-the-string width that's clearly past the
+        // midpoint of the 2nd character and clearly short of the 4th.
+        // At FontScale=2 the same click X (in screen pixels) should land
+        // on roughly half as many characters.
+        int idx1xClickPastChar2 = IndexAtClickX(1.0f, 28f);
+        int idx2xClickPastChar2 = IndexAtClickX(2.0f, 28f);
+
+        idx1xClickPastChar2.ShouldBeGreaterThanOrEqualTo(2,
+            "sanity: at FontScale=1, clicking ~28px into a row of 4 'a's should land on or past the 2nd character boundary");
+        idx2xClickPastChar2.ShouldBeLessThan(idx1xClickPastChar2,
+            "because at FontScale=2 each glyph is twice as wide, so the same screen-pixel X should " +
+            "correspond to fewer characters; if the click lands on the same index the hit-test is " +
+            "ignoring FontScale (issue #2687)");
+    }
+
+    [Fact]
+    public void FontScale_ShouldScaleCaretXOnFirstLine()
+    {
+        // Issue #2687: FontScale was ignored in the caret X math. The caret X
+        // comes from Text.MeasureString, which explicitly returns the raw
+        // (unscaled) glyph width — so the caret sat at the unscaled offset
+        // while the rendered glyphs were FontScale-wider. The caret's X
+        // advance (caret-at-end minus caret-at-start) for the same characters
+        // should roughly double when FontScale doubles.
+
+        static float CaretXAdvance(float fontScale)
+        {
+            TextBox tb = new();
+            tb.IsFocused = true;
+
+            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            visual.TextInstance.FontScale = fontScale;
+
+            float start = visual.CaretInstance.AbsoluteLeft;
+            tb.HandleCharEntered('a');
+            tb.HandleCharEntered('a');
+            tb.HandleCharEntered('a');
+            float end = visual.CaretInstance.AbsoluteLeft;
+
+            return end - start;
+        }
+
+        float advance1x = CaretXAdvance(1.0f);
+        float advance2x = CaretXAdvance(2.0f);
+
+        advance1x.ShouldBeGreaterThan(0f, "sanity: caret should advance after typing characters");
+        advance2x.ShouldBeGreaterThan(advance1x * 1.5f,
+            "because doubling FontScale should roughly double the caret X advance " +
+            "(rendered glyphs are 2× wider); if the advance is unchanged the caret X " +
+            "math is using unscaled MeasureString (issue #2687)");
+    }
+
+    [Fact]
+    public void FontScale_ShouldScaleCaretLineSpacing_Multiline()
+    {
+        // Issue #2687: when FontScale on the inner TextInstance is set to a
+        // value other than 1.0, the rendered text scales but the caret's
+        // line-to-line spacing in TextBoxBase ignored FontScale and used only
+        // the raw (unscaled) font line height. As a result, the caret drifted
+        // out of sync with the glyphs on any line past line 0.
+
+        static float CaretTopForLine(float fontScale, int caretIndex)
+        {
+            TextBox tb = new();
+            tb.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+            tb.AcceptsReturn = true;
+            tb.Height = 400;
+            tb.IsFocused = true;
+
+            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            visual.TextInstance.FontScale = fontScale;
+
+            tb.HandleCharEntered('\n');
+            tb.HandleCharEntered('\n');
+            tb.HandleCharEntered('\n');
+            tb.CaretIndex = caretIndex;
+
+            return visual.CaretInstance.AbsoluteTop;
+        }
+
+        float gap1x = CaretTopForLine(1.0f, 2) - CaretTopForLine(1.0f, 0);
+        float gap2x = CaretTopForLine(2.0f, 2) - CaretTopForLine(2.0f, 0);
+
+        gap1x.ShouldBeGreaterThan(0f, "sanity: line 2's caret should be below line 0's");
+        gap2x.ShouldBeGreaterThan(gap1x * 1.5f,
+            "because doubling the font scale should roughly double the line-to-line " +
+            "gap; if the gap is unchanged the caret-position math is ignoring FontScale (issue #2687)");
+    }
+
+    [Fact]
     public void Width_ShouldNotShiftTextX_AfterTransientNegativeWidth()
     {
         // Repro for issue #2680: when a TextBox's absolute width transitions
