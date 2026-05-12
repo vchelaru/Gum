@@ -50,43 +50,31 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         _fill = CreateFill();
         AddChild(_fill);
 
+        // Inset ScrollAndClipContainer rather than the scroll bar itself.
+        // V3 stomps VerticalScrollBarInstance's Y/Height every state apply
+        // and there is no per-frame hook on the wrapper (GraphicalUiElement.
+        // PreRender is only invoked on the contained renderable, which is
+        // an InvisibleRenderable for the ScrollViewer root). Shrinking the
+        // container is one ctor-time edit that V3 doesn't fight: every
+        // child (scroll bar + clip container) inherits the inset.
+        const float Inset = BorderThickness + 1f;
+        ScrollAndClipContainer.XUnits = GeneralUnitType.PixelsFromMiddle;
+        ScrollAndClipContainer.YUnits = GeneralUnitType.PixelsFromMiddle;
+        ScrollAndClipContainer.XOrigin = HorizontalAlignment.Center;
+        ScrollAndClipContainer.YOrigin = VerticalAlignment.Center;
+        ScrollAndClipContainer.X = 0f;
+        ScrollAndClipContainer.Y = 0f;
+        ScrollAndClipContainer.Width = -Inset * 2f;
+        ScrollAndClipContainer.Height = -Inset * 2f;
+        ScrollAndClipContainer.WidthUnits = DimensionUnitType.RelativeToParent;
+        ScrollAndClipContainer.HeightUnits = DimensionUnitType.RelativeToParent;
+
         AddChild(ScrollAndClipContainer);
 
         _border = CreateBorder();
         AddChild(_border);
 
-        ApplyScrollBarInset();
-
         WireStates();
-    }
-
-    private const float ScrollBarInset = BorderThickness + 1f;
-
-    private void ApplyScrollBarInset()
-    {
-        // Re-anchor the vertical scroll bar to centre so the inset
-        // distributes evenly on top and bottom (V3 default anchors top
-        // with PixelsFromSmall — leaving Y=0 there means the bar's top
-        // edge kisses the parent top and the inset shows only at the
-        // bottom). All five properties have to be reapplied because V3's
-        // own layout passes / orientation state re-applies can revert any
-        // subset of them.
-        VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-        VerticalScrollBarInstance.YOrigin = VerticalAlignment.Center;
-        VerticalScrollBarInstance.Y = 0f;
-        VerticalScrollBarInstance.X = -ScrollBarInset;
-        VerticalScrollBarInstance.Height = -ScrollBarInset * 2f;
-    }
-
-    public override void PreRender()
-    {
-        base.PreRender();
-        // V3's RefreshMarginsFromScrollBarVisibility and the scroll bar's
-        // own orientation state can stomp the values we set in the ctor.
-        // Reapply every frame so the scroll bar's margins stay correct.
-        // Cheap — five property writes that usually no-op when guarded
-        // by Gum's own dirty-flag layout system.
-        ApplyScrollBarInset();
     }
 
     private static RoundedRectangleRuntime CreateFill()
