@@ -2086,9 +2086,15 @@ public abstract class TextBoxBase :
     // rawLineHeight × FontScale × LineHeightMultiplier. Used for inter-line
     // stepping (hit-testing, arrow-key vertical movement, content-height
     // clamps, and the line-to-line component of caret/selection positioning).
+    // IText is fully qualified here (and below) because this file compiles
+    // under multiple backends: under XNALIKE the using directives include
+    // RenderingLibrary.Graphics, but under the #else branch (Raylib/Sokol)
+    // they do not — so the unqualified IText would not resolve. The
+    // XNALIKE-guarded cast inside GetIndex can stay unqualified because
+    // that block only compiles when the using is in scope.
     private float EffectiveLineHeightInPixels =>
         coreTextObject.LineHeightInPixels
-        * ((IText)coreTextObject).FontScale
+        * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale
         * coreTextObject.LineHeightMultiplier;
 
     // The height of one rendered glyph row (rawLineHeight × FontScale), with
@@ -2096,17 +2102,17 @@ public abstract class TextBoxBase :
     // offsets that map to the actual ink — e.g. the caret on line 0, whose
     // position must NOT change when only the multiplier changes.
     private float ScaledLineHeightInPixels =>
-        coreTextObject.LineHeightInPixels * ((IText)coreTextObject).FontScale;
+        coreTextObject.LineHeightInPixels * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale;
 
     // Text.MeasureString returns the raw glyph-pixel width (it explicitly
     // ignores FontScale). Caret X, selection X, hit-testing, and centering
     // padding all live in screen space, so they must multiply by FontScale
     // to line up with the actual rendered glyphs.
     private float MeasureStringScaled(string value) =>
-        coreTextObject.MeasureString(value) * ((IText)coreTextObject).FontScale;
+        coreTextObject.MeasureString(value) * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale;
 
     private float MeasureStringScaled(string value, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle style) =>
-        coreTextObject.MeasureString(value, style) * ((IText)coreTextObject).FontScale;
+        coreTextObject.MeasureString(value, style) * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale;
 
     private float GetCenterOfYForLinePixelsFromSmall(int lineNumber)
     {
