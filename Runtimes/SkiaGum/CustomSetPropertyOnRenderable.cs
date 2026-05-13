@@ -456,6 +456,13 @@ public class CustomSetPropertyOnRenderable
                 handled = TrySetPropertyOnSprite(asSprite, graphicalUiElement, propertyName, value);
             }
         }
+        else if(containedObjectAsIpso is NineSlice asNineSlice)
+        {
+            if(!handled)
+            {
+                handled = TrySetPropertyOnNineSlice(asNineSlice, graphicalUiElement, propertyName, value);
+            }
+        }
         else if(containedObjectAsIpso is Polygon asPolygon)
         {
             if(!handled)
@@ -488,6 +495,27 @@ public class CustomSetPropertyOnRenderable
                     return true;
                 }
                 //asPolygon.Points = ;
+                break;
+        }
+        return false;
+    }
+
+    private static bool TrySetPropertyOnNineSlice(NineSlice asNineSlice, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        switch(propertyName)
+        {
+            case "SourceFile":
+                var asString = value as string;
+                if (!string.IsNullOrEmpty(asString))
+                {
+                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                    var contentLoader = loaderManager.ContentLoader;
+                    asNineSlice.Texture = contentLoader.LoadContent<SKBitmap>(asString);
+                }
+                else
+                {
+                    asNineSlice.Texture = null;
+                }
                 break;
         }
         return false;

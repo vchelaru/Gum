@@ -24,6 +24,16 @@ public abstract class RenderableShapeBase : RenderableBase
 
     // this is the default in Skia renderables so use that here:
     public Color Color { get; set; } = Color.Red;
+
+    /// <summary>
+    /// When <c>true</c> (the default) the shape's edge is rendered with 1 px of anti-aliasing.
+    /// When <c>false</c> the AA radius is dropped to 0 and the edge rasterizes crisply — useful
+    /// for retro / pixel-art themes (Win95 dotted focus rect, hairlines, marching ants) where
+    /// AA bloom widens a nominal 1 px stroke and erodes 1 px dash/gap patterns. Mirrored on the
+    /// runtime as <c>AposShapeRuntime.IsAntialiased</c>; the runtime pushes its value here in
+    /// PreRender each frame.
+    /// </summary>
+    public bool IsAntialiased { get; set; } = true;
     public int Alpha
     {
         get => Color.A;
@@ -460,7 +470,7 @@ public abstract class RenderableShapeBase : RenderableBase
                 effectiveGradientX1 += Width;
                 break;
             case GeneralUnitType.Percentage:
-                effectiveGradientX1 = Width * GradientX1 / 100;
+                effectiveGradientX1 = absoluteLeft + Width * GradientX1 / 100;
                 break;
         }
 
@@ -475,7 +485,7 @@ public abstract class RenderableShapeBase : RenderableBase
                 effectiveGradientY1 += Height;
                 break;
             case GeneralUnitType.Percentage:
-                effectiveGradientY1 = Height * GradientY1 / 100;
+                effectiveGradientY1 = absoluteTop + Height * GradientY1 / 100;
                 break;
         }
 
@@ -492,7 +502,7 @@ public abstract class RenderableShapeBase : RenderableBase
                     effectiveGradientX2 += Width;
                     break;
                 case GeneralUnitType.Percentage:
-                    effectiveGradientX2 = Width * GradientX2 / 100;
+                    effectiveGradientX2 = absoluteLeft + Width * GradientX2 / 100;
                     break;
             }
             var effectiveGradientY2 = absoluteTop + GradientY2;
@@ -505,7 +515,7 @@ public abstract class RenderableShapeBase : RenderableBase
                     effectiveGradientY2 += Height;
                     break;
                 case GeneralUnitType.Percentage:
-                    effectiveGradientY2 = Height * GradientY2 / 100;
+                    effectiveGradientY2 = absoluteTop + Height * GradientY2 / 100;
                     break;
             }
 

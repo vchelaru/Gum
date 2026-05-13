@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -32,11 +32,13 @@
 
 	<ItemGroup>
 		<Compile Include="..\SkiaGum\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
+		<Compile Include="..\SkiaGum\GueDeriving\ArcRuntime.cs" Link="GueDeriving\ArcRuntime.cs" />
+		<Compile Include="..\SkiaGum\GueDeriving\LineRuntime.cs" Link="GueDeriving\LineRuntime.cs" />
 		<Compile Include="..\SkiaGum\GueDeriving\RoundedRectangleRuntime.cs" Link="GueDeriving\RoundedRectangleRuntime.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Apos.Shapes" Version="0.6.8" />
+		<PackageReference Include="Apos.Shapes" Version="0.6.9-alpha" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" PrivateAssets="All" />
 	</ItemGroup>
 

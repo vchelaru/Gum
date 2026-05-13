@@ -34,4 +34,4 @@ protected override void Initialize()
 
 Full documentation — including the included control list, `PropertyGridVisual`, and `Expander` — lives in the Gum docs:
 
-**https://docs.flatredball.com/gum/code/styling/editor-theme**
+**https://docs.flatredball.com/gum/code/styling/themes/editor-theme**

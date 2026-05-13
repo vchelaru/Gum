@@ -41,16 +41,16 @@ public class RoundedRectangleRuntime
     #region Contained Renderable
     protected override RenderableShapeBase ContainedRenderable => ContainedRoundedRectangle;
 
-    RoundedRectangle? mContainedRoundedRectangle;
+    RoundedRectangle? _containedRoundedRectangle;
     RoundedRectangle ContainedRoundedRectangle
     {
         get
         {
-            if (mContainedRoundedRectangle == null)
+            if (_containedRoundedRectangle == null)
             {
-                mContainedRoundedRectangle = (RoundedRectangle)this.RenderableComponent;
+                _containedRoundedRectangle = (RoundedRectangle)this.RenderableComponent;
             }
-            return mContainedRoundedRectangle;
+            return _containedRoundedRectangle;
         }
     }
 
@@ -71,15 +71,55 @@ public class RoundedRectangleRuntime
 #endif
     }
 
+    // Per-corner overrides. Available on both backends as of Apos.Shapes 0.6.9 (PR #32, which
+    // added the CornerRadii overload to DrawRectangle). The Skia side stores them as auto-props
+    // and copies them to the renderable in PreRender (so the ScreenPixel scaling below applies).
+    // The Apos side forwards directly to the renderable, the same way CornerRadius does — no
+    // ScreenPixel scaling on Apos yet (still tracked as a parity item).
+    public float? CustomRadiusTopLeft
+    {
 #if SKIA
-    // Skia-only: per-corner overrides and unit-aware corner radius. Apos.Shapes' RoundedRectangle
-    // renderable doesn't currently expose per-corner radii or ScreenPixel scaling. Tracked as a
-    // future parity item; gated here so unification doesn't block on the deeper Apos work.
+        get;
+        set;
+#else
+        get => ContainedRoundedRectangle.CustomRadiusTopLeft;
+        set => ContainedRoundedRectangle.CustomRadiusTopLeft = value;
+#endif
+    }
+    public float? CustomRadiusTopRight
+    {
+#if SKIA
+        get;
+        set;
+#else
+        get => ContainedRoundedRectangle.CustomRadiusTopRight;
+        set => ContainedRoundedRectangle.CustomRadiusTopRight = value;
+#endif
+    }
+    public float? CustomRadiusBottomRight
+    {
+#if SKIA
+        get;
+        set;
+#else
+        get => ContainedRoundedRectangle.CustomRadiusBottomRight;
+        set => ContainedRoundedRectangle.CustomRadiusBottomRight = value;
+#endif
+    }
+    public float? CustomRadiusBottomLeft
+    {
+#if SKIA
+        get;
+        set;
+#else
+        get => ContainedRoundedRectangle.CustomRadiusBottomLeft;
+        set => ContainedRoundedRectangle.CustomRadiusBottomLeft = value;
+#endif
+    }
 
-    public float? CustomRadiusTopLeft { get; set; } = null;
-    public float? CustomRadiusTopRight { get; set; } = null;
-    public float? CustomRadiusBottomRight { get; set; } = null;
-    public float? CustomRadiusBottomLeft { get; set; } = null;
+#if SKIA
+    // Skia-only: unit-aware corner radius. Apos.Shapes' RoundedRectangle renderable doesn't
+    // currently honor ScreenPixel scaling. Tracked as a future parity item.
 
     public DimensionUnitType CornerRadiusUnits
     {
@@ -161,7 +201,7 @@ public class RoundedRectangleRuntime
         // Without this, mutating the clone's CornerRadius (or any property routed through the
         // cached field) would update the original. Skia previously did this; Apos previously did
         // not (latent bug, fixed by unification).
-        toReturn.mContainedRoundedRectangle = null;
+        toReturn._containedRoundedRectangle = null;
 
         return toReturn;
     }

@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+
+    <PackageId>Gum.Themes.Retro95.MonoGame</PackageId>
+    <Version>2026.5.11.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>A retro Windows 95 / "Classic" theme for Gum UI. Provides styled visuals for Gum Forms controls with raised/sunken beveled chrome, navy selection bands, and the canonical battleship-gray (#C0C0C0) palette, for MonoGame and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Nunito (SIL OFL) is bundled as a stand-in for the Win95-era MS Sans Serif,
+         which is proprietary and not redistributable. Nunito's rounded humanist
+         shapes don't match the CSS-source 'IBM Plex Sans' verbatim, but it pairs
+         acceptably with the beveled retro chrome. Only Regular + Bold are needed
+         (no italics anywhere in the Win95 source style). -->
+    <EmbeddedResource Include="Content\Fonts\Nunito-Regular.ttf" />
+    <EmbeddedResource Include="Content\Fonts\Nunito-Bold.ttf" />
+    <!-- DejaVu Sans Mono is bundled as the "icon font" for glyphs Nunito doesn't
+         cover (Dingbats / Geometric Shapes: ✕ ▼ ▲ ◀ ▶ ✓). Registered under
+         the family name "Retro95 Icons" in Retro95Theme so visual code is
+         decoupled from the specific TTF. Same pattern as Dark Pro / Bubblegum. -->
+    <EmbeddedResource Include="Content\Fonts\DejaVuSansMono.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- KernSmith is a runtime dependency (Retro95Theme.Apply constructs
+         KernSmithFontCreator and calls RegisterFont). Flows transitively. -->
+    <PackageReference Include="KernSmith.MonoGameGum" Version="*" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- GumShapes is pulled in only for ColoredCircleRuntime used by the
+         RadioButton (the one circular element in the Win95 chrome — every
+         other control is built from rectangular bevels). No rounded rects,
+         drop shadows, or other Apos primitives are used elsewhere in this
+         theme. Apply() initializes ShapeRenderer to support the circles. -->
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+  </ItemGroup>
+</Project>

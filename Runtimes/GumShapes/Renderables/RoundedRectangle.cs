@@ -14,6 +14,16 @@ public class RoundedRectangle : RenderableShapeBase
 {
     public float CornerRadius { get; set; }
 
+    // Per-corner overrides. When any of these is non-null, the fill/border draws use the
+    // CornerRadii overload added in Apos.Shapes 0.6.9 (PR #32) so each corner is rasterized
+    // independently. Nulls fall back to CornerRadius. Mirrors the Skia renderable's API.
+    // The dashed-stroke path below intentionally still uses a single radius — its arc/edge
+    // segmentation assumes uniform corners.
+    public float? CustomRadiusTopLeft { get; set; }
+    public float? CustomRadiusTopRight { get; set; }
+    public float? CustomRadiusBottomRight { get; set; }
+    public float? CustomRadiusBottomLeft { get; set; }
+
     public override void Render(ISystemManagers managers)
     {
         var sb = ShapeRenderer.ShapeBatch;
@@ -41,7 +51,7 @@ public class RoundedRectangle : RenderableShapeBase
                 forcedColor: DropshadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, size, 1, StrokeWidth, rotationRadians);
+        RenderInternal(sb, absoluteLeft, absoluteTop, size, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians);
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb,
@@ -70,33 +80,26 @@ public class RoundedRectangle : RenderableShapeBase
             thickness = 0;
         }
 
+        bool hasCustomCorners = HasCustomCorners(out var corners);
+
         if (IsFilled)
         {
             if (UseGradient && forcedColor == null)
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop);
 
-                sb.DrawRectangle(
-                    position,
-                    size,
-                    gradient,
-                    gradient,
-                    thickness,
-                    CornerRadius,
-                    rotationRadians,
-                    antiAliasSize);
+                if (hasCustomCorners)
+                    sb.DrawRectangle(position, size, gradient, gradient, thickness, corners, rotationRadians, antiAliasSize);
+                else
+                    sb.DrawRectangle(position, size, gradient, gradient, thickness, CornerRadius, rotationRadians, antiAliasSize);
             }
             else
             {
-                sb.DrawRectangle(
-                    position,
-                    size,
-                    forcedColor ?? Color,
-                    forcedColor ?? Color,
-                    thickness,
-                    CornerRadius,
-                    rotationRadians,
-                    antiAliasSize);
+                var color = forcedColor ?? Color;
+                if (hasCustomCorners)
+                    sb.DrawRectangle(position, size, color, color, thickness, corners, rotationRadians, antiAliasSize);
+                else
+                    sb.DrawRectangle(position, size, color, color, thickness, CornerRadius, rotationRadians, antiAliasSize);
             }
         }
         else
@@ -109,15 +112,10 @@ public class RoundedRectangle : RenderableShapeBase
                 transparentGradient.AC = new Color((int)gradient.AC.R, gradient.AC.G, gradient.AC.B, 0);
                 transparentGradient.BC = new Color((int)gradient.BC.R, gradient.BC.G, gradient.BC.B, 0);
 
-                sb.DrawRectangle(
-                    position,
-                    size,
-                    transparentGradient,
-                    gradient,
-                    strokeWidth,
-                    CornerRadius,
-                    rotationRadians,
-                    antiAliasSize);
+                if (hasCustomCorners)
+                    sb.DrawRectangle(position, size, transparentGradient, gradient, strokeWidth, corners, rotationRadians, antiAliasSize);
+                else
+                    sb.DrawRectangle(position, size, transparentGradient, gradient, strokeWidth, CornerRadius, rotationRadians, antiAliasSize);
             }
             else
             {
@@ -125,17 +123,28 @@ public class RoundedRectangle : RenderableShapeBase
                 var transparentColor = color;
                 transparentColor.A = 0;
 
-                sb.DrawRectangle(
-                    position,
-                    size,
-                    transparentColor,
-                    color,
-                    strokeWidth,
-                    CornerRadius,
-                    rotationRadians,
-                    antiAliasSize);
+                if (hasCustomCorners)
+                    sb.DrawRectangle(position, size, transparentColor, color, strokeWidth, corners, rotationRadians, antiAliasSize);
+                else
+                    sb.DrawRectangle(position, size, transparentColor, color, strokeWidth, CornerRadius, rotationRadians, antiAliasSize);
             }
         }
+    }
+
+    private bool HasCustomCorners(out Apos.Shapes.CornerRadii corners)
+    {
+        if (CustomRadiusTopLeft is null && CustomRadiusTopRight is null
+            && CustomRadiusBottomLeft is null && CustomRadiusBottomRight is null)
+        {
+            corners = default;
+            return false;
+        }
+        corners = new Apos.Shapes.CornerRadii(
+            CustomRadiusTopLeft ?? CornerRadius,
+            CustomRadiusTopRight ?? CornerRadius,
+            CustomRadiusBottomRight ?? CornerRadius,
+            CustomRadiusBottomLeft ?? CornerRadius);
+        return true;
     }
 
     // Ported from the upstream Apos.Shapes dashed-line PR

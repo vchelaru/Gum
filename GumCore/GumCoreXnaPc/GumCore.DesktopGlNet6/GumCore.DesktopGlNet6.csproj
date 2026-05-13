@@ -27,7 +27,7 @@
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="BrotliSharpLib" Version="0.3.3" />
-		<PackageReference Include="SharpCompress" Version="0.47.4" />
+		<PackageReference Include="SharpCompress" Version="0.48.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\FlatRedBall\Engines\FlatRedBallXNA\FlatRedBallDesktopGLNet6\FlatRedBallDesktopGLNet6.csproj" />

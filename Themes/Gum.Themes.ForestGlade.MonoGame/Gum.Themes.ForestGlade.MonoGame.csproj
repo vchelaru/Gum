@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+
+    <PackageId>Gum.Themes.ForestGlade.MonoGame</PackageId>
+    <Version>2026.5.12.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>A lush canopy / forest theme for Gum UI. Provides styled visuals for Gum Forms controls with a leaf-shaped corner silhouette (asymmetric per-corner radii), saturated greens against a deep canopy backdrop, sunlit yellow accents, and the Nunito / Fraunces typefaces, for MonoGame and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\Nunito-LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\Fraunces-LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Nunito (SIL OFL) is the body typeface from the Forest Glade CSS spec
+         (the body 'ff' token). Regular + Bold so Gum's IsBold slot resolves
+         correctly. -->
+    <EmbeddedResource Include="Content\Fonts\Nunito-Regular.ttf" />
+    <EmbeddedResource Include="Content\Fonts\Nunito-Bold.ttf" />
+    <!-- Fraunces (SIL OFL) is the display typeface used on the Window title
+         bar (the 'ff-display' token; .fg-win-title style is bold italic).
+         One static cut covers the only place the theme uses it. -->
+    <EmbeddedResource Include="Content\Fonts\Fraunces-BoldItalic.ttf" />
+    <!-- DejaVu Sans Mono — bundled icon font for glyphs the body typeface
+         doesn't cover (Geometric Shapes ▲ ▼ ◀ ▶, Dingbats ✓ ✕, Flower ✿).
+         Registered under the family name "Forest Glade Icons" so visual code
+         addresses it via ForestGladeTheme.IconFontFamily. -->
+    <EmbeddedResource Include="Content\Fonts\DejaVuSansMono.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- KernSmith is a runtime dependency (ForestGladeTheme.Apply constructs
+         KernSmithFontCreator and calls RegisterFont). Flows transitively. -->
+    <PackageReference Include="KernSmith.MonoGameGum" Version="*" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+  </ItemGroup>
+</Project>

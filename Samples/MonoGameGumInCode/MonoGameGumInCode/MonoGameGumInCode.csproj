@@ -32,28 +32,10 @@
     <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="Content\BearTexture.png">
+    <None Update="Content\**\*.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Content\Frame.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FrameSheet.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\OutlinedFont\Font52Comic_Sans_MS_o4.fnt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\OutlinedFont\Font52Comic_Sans_MS_o4_0.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\SquareFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\WhitePeaberryOutline\WhitePeaberryOutline.fnt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\WhitePeaberryOutline\WhitePeaberryOutline.png">
+    <None Update="Content\**\*.fnt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

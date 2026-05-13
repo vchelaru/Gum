@@ -17,6 +17,11 @@ using Gum.Renderables;
 using Color = SokolGum.Color;
 using Texture2D = SokolGum.Texture2D;
 using ContainedNineSliceType = Gum.Renderables.NineSlice;
+#elif SKIA
+using SkiaGum.Renderables;
+using Color = SkiaSharp.SKColor;
+using Texture2D = SkiaSharp.SKBitmap;
+using ContainedNineSliceType = SkiaGum.Renderables.NineSlice;
 #else
 using Gum.Graphics.Animation;
 using Gum.Managers;
@@ -58,17 +63,17 @@ public class NineSliceRuntime : InteractiveGue
 
     #region Contained Nineslice
 
-    ContainedNineSliceType mContainedNineSlice;
+    ContainedNineSliceType _containedNineSlice;
 
     ContainedNineSliceType ContainedNineSlice
     {
         get
         {
-            if (mContainedNineSlice == null)
+            if (_containedNineSlice == null)
             {
-                mContainedNineSlice = (ContainedNineSliceType)this.RenderableComponent;
+                _containedNineSlice = (ContainedNineSliceType)this.RenderableComponent;
             }
-            return mContainedNineSlice;
+            return _containedNineSlice;
         }
     }
 
@@ -273,7 +278,7 @@ public class NineSliceRuntime : InteractiveGue
 
     #endregion
 
-#if XNALIKE || SOKOL
+#if XNALIKE || SOKOL || SKIA
     /// <summary>
     /// Sets the width or height of the nine slice edges in pixels. If null,
     /// the NineSlice uses 1/3 of the texture size. If set, this overrides the
@@ -292,7 +297,7 @@ public class NineSliceRuntime : InteractiveGue
     }
 #endif
 
-#if XNALIKE
+#if XNALIKE || SKIA
     /// <summary>
     /// Whether to tile (repeat) the middle sections instead of stretching them.
     /// When true, the Top, Bottom, Left, Right, and Center sections are rendered
@@ -320,8 +325,8 @@ public class NineSliceRuntime : InteractiveGue
     {
         if (fullInstantiation)
         {
-            var contained = new ContainedNineSliceType();
-            SetContainedObject(contained);
+            _containedNineSlice = new ContainedNineSliceType();
+            SetContainedObject(_containedNineSlice);
 
 #if XNALIKE
             // todo - need to make this work with different relative directories...

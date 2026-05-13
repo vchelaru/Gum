@@ -564,6 +564,24 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         set;
     }
 
+    /// <summary>
+    /// When <c>true</c> (the default) the shape's edges are rendered with 1 px of anti-aliasing,
+    /// producing the smooth-edged look Apos.Shapes is normally used for. When <c>false</c> the
+    /// AA radius is dropped to 0 and edges rasterize crisply — useful for retro / pixel-art /
+    /// 1 px dotted patterns (Win95 focus rectangle, marching ants, hairline borders) where the
+    /// AA "bloom" makes a nominal 1 px stroke read as 2-3 px and erodes a 1 px dash/gap pattern.
+    /// <para>
+    /// This only affects the main shape body's edge. Drop-shadow rendering on the shape (via
+    /// <see cref="HasDropshadow"/>) continues to use the larger AA radius derived from
+    /// <see cref="DropshadowBlurX"/> — disabling AA on the main edge doesn't kill your shadow.
+    /// </para>
+    /// </summary>
+    public bool IsAntialiased
+    {
+        get;
+        set;
+    } = true;
+
     #endregion
 
 
@@ -622,6 +640,7 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         ContainedRenderable.StrokeWidth = strokeWidth;
         ContainedRenderable.StrokeDashLength = strokeDashLength;
         ContainedRenderable.StrokeGapLength = strokeGapLength;
+        ContainedRenderable.IsAntialiased = IsAntialiased;
 
         // NOTE: do NOT call base.PreRender() here. base.PreRender() forwards to
         // mContainedObjectAsIpso.PreRender() (the shape) - and the shape's PreRender is what just

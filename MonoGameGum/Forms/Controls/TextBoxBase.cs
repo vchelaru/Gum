@@ -659,7 +659,7 @@ public abstract class TextBoxBase :
             {
                 var xChange = MainCursor.XChange / global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
 
-                var stringLength = coreTextObject.MeasureString(DisplayedText, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+                var stringLength = MeasureStringScaled(DisplayedText, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
 
                 var minimumShift = System.Math.Min(
                     edgeToTextPadding,
@@ -698,7 +698,9 @@ public abstract class TextBoxBase :
         return GetCaretIndexAtPosition(cursorScreenX, cursorScreenY);
     }
 
-    private int GetCaretIndexAtPosition(float screenX, float screenY)
+    // Internal for tests; otherwise this would be private. Exposes the
+    // screen-coordinates -> caret-index hit-test used by mouse clicks.
+    internal int GetCaretIndexAtPosition(float screenX, float screenY)
     {
         var leftOfText = this.textComponent.GetAbsoluteLeft();
         var cursorOffset = screenX - leftOfText;
@@ -712,15 +714,15 @@ public abstract class TextBoxBase :
         }
         else
         {
-            var lineHeight = coreTextObject.LineHeightInPixels;
+            var lineHeight = EffectiveLineHeightInPixels;
             var topOfText = this.textComponent.GetAbsoluteTop();
             if (this.coreTextObject?.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
             {
-                topOfText = this.textComponent.GetAbsoluteCenterY() - (lineHeight * coreTextObject.WrappedText.Count - 1) / 2.0f;
+                topOfText = this.textComponent.GetAbsoluteCenterY() - lineHeight * (coreTextObject.WrappedText.Count - 1) / 2.0f;
             }
             var cursorYOffset = screenY - topOfText;
 
-            var lineOn = System.Math.Max(0, System.Math.Min((int)cursorYOffset / lineHeight, coreTextObject.WrappedText.Count - 1));
+            var lineOn = System.Math.Max(0, System.Math.Min((int)(cursorYOffset / lineHeight), coreTextObject.WrappedText.Count - 1));
 
             if (lineOn < coreTextObject.WrappedText.Count)
             {
@@ -752,6 +754,25 @@ public abstract class TextBoxBase :
         return index;
     }
 
+    // Two implementations of the same logical operation: walk characters
+    // accumulating their X-advance until we pass cursorOffset, then return
+    // the character index nearest the cursor.
+    //
+    // The split exists because the XNALIKE backends (MonoGame/KNI/FNA)
+    // expose `coreTextObject.BitmapFont` and per-character `XAdvance`,
+    // giving an allocation-free O(n) walk. Raylib's Text has no BitmapFont
+    // property — it uses raylib's own font system — so the #else branch
+    // falls back to repeated MeasureString(substring), which is O(n^2) and
+    // allocates a substring per character.
+    //
+    // We considered unifying onto the substring path (it would eliminate
+    // the dual-maintenance footgun that bit issue #2687 — the FontScale
+    // fix originally only landed in the #else branch). For now we are
+    // keeping the optimization: GetIndex runs only on click and Up/Down
+    // arrow, but it's still nicer to avoid the per-char allocations on
+    // long lines. If you change behavior here, **change BOTH branches**
+    // and verify with a test that exercises GetCaretIndexAtPosition under
+    // XNALIKE (typing alone does not hit GetIndex).
     private int GetIndex(float cursorOffset, string textToUse)
     {
         var index = textToUse?.Length ?? 0;
@@ -759,19 +780,22 @@ public abstract class TextBoxBase :
 
 #if XNALIKE
 
-        var bitmapFont = this.coreTextObject.BitmapFont;
+        var bitmapFont = this.coreTextObject.BitmapFont ?? global::RenderingLibrary.Graphics.Text.DefaultBitmapFont;
+        var fontScale = ((IText)coreTextObject).FontScale;
 
         for (int i = 0; i < (textToUse?.Length ?? 0); i++)
         {
             char character = textToUse[i];
-            global::RenderingLibrary.Graphics.BitmapCharacterInfo characterInfo = bitmapFont.GetCharacterInfo(character);
+            global::RenderingLibrary.Graphics.BitmapCharacterInfo characterInfo = bitmapFont?.GetCharacterInfo(character);
 
-            int advance = 0;
+            float advance = 0;
 
             if (characterInfo != null)
             {
-                //advance = characterInfo.GetXAdvanceInPixels(coreTextObject.BitmapFont.LineHeightInPixels);
-                advance = characterInfo.XAdvance;
+                // XAdvance is raw glyph-pixel width; the rendered glyph is
+                // FontScale-wider, so the hit-test must scale to match the
+                // screen-space cursor offset coming in.
+                advance = characterInfo.XAdvance * fontScale;
             }
 
             distanceMeasuredSoFar += advance;
@@ -795,12 +819,12 @@ public abstract class TextBoxBase :
         for (int i = 0; i < (textToUse?.Length ?? 0); i++)
         {
             // Is there a faster way to do this?
-            distanceMeasuredSoFar = coreTextObject.MeasureString(textToUse.Substring(0, i + 1));
+            distanceMeasuredSoFar = MeasureStringScaled(textToUse.Substring(0, i + 1));
 
             // This should find which side of the character you're closest to, but for now it's good enough...
             if (distanceMeasuredSoFar > cursorOffset)
             {
-                var distanceBefore = coreTextObject.MeasureString(textToUse.Substring(0, i));
+                var distanceBefore = MeasureStringScaled(textToUse.Substring(0, i));
                 var advance = distanceMeasuredSoFar - distanceBefore;
                 var halfwayPoint = distanceMeasuredSoFar - (advance / 2.0f);
                 if (halfwayPoint > cursorOffset)
@@ -1012,7 +1036,7 @@ public abstract class TextBoxBase :
         }
         else
         {
-            var lineHeight = coreTextObject.LineHeightInPixels;
+            var lineHeight = EffectiveLineHeightInPixels;
             var newY = absoluteY - lineHeight;
             var index = GetCaretIndexAtPosition(absoluteX, newY);
             CaretIndex = index;
@@ -1029,7 +1053,7 @@ public abstract class TextBoxBase :
         }
         else
         {
-            var lineHeight = coreTextObject.LineHeightInPixels;
+            var lineHeight = EffectiveLineHeightInPixels;
             var newY = absoluteY + lineHeight;
             var index = GetCaretIndexAtPosition(absoluteX, newY);
             CaretIndex = index;
@@ -1768,13 +1792,13 @@ public abstract class TextBoxBase :
         else
         {
             var selectionPosition = new SelectionPosition();
-            var firstMeasure = this.coreTextObject.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+            var firstMeasure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
             substring = DisplayedText.Substring(0, selectionStart + selectionLength);
 
             selectionPosition.XStart = this.textComponent.X + firstMeasure;
             selectionPosition.Y = this.textComponent.Y;
             selectionPosition.Width = 1 +
-                this.coreTextObject.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
+                MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
 
             selectionStartEnds.Add(selectionPosition);
         }
@@ -1832,7 +1856,7 @@ public abstract class TextBoxBase :
         // For the clamp we want the actual content height — line count × line
         // height — so we don't over-clamp and undo a legitimate scroll.
         var lineCount = coreTextObject.WrappedText?.Count ?? 0;
-        float contentHeight = lineCount * coreTextObject.LineHeightInPixels;
+        float contentHeight = lineCount * EffectiveLineHeightInPixels;
         float containerHeight = caretComponent.EffectiveParentGue.GetAbsoluteHeight();
         float maxScrollUp = System.Math.Max(0f, contentHeight - containerHeight);
         float clamped = System.Math.Max(this.textComponent.Y, -maxScrollUp);
@@ -2008,7 +2032,7 @@ public abstract class TextBoxBase :
         // on caretComponent.X when no measurement can be performed.
         if (this.coreTextObject != null)
         {
-            var measure = this.coreTextObject.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+            var measure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
             return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
         }
         else
@@ -2022,7 +2046,7 @@ public abstract class TextBoxBase :
         if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Left)
             return 0;
 
-        float measuredLineWidth = coreTextObject.MeasureString(stringToMeasure);
+        float measuredLineWidth = MeasureStringScaled(stringToMeasure);
         float textComponentWidth = textComponent.GetAbsoluteWidth();
         float gapBetweenTextAndEdge = textComponentWidth - measuredLineWidth;
         if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
@@ -2045,7 +2069,11 @@ public abstract class TextBoxBase :
         var adjusted = centerOfLineY;
         if (target.YOrigin == global::RenderingLibrary.Graphics.VerticalAlignment.Top)
         {
-            adjusted -= coreTextObject.LineHeightMultiplier * coreTextObject.LineHeightInPixels / 2.0f;
+            // Half the *rendered glyph row* height — not the full inter-line
+            // step. The multiplier only inflates the spacing between lines, so
+            // using EffectiveLineHeightInPixels here would push the top half a
+            // multiplier-worth below the actual glyph row.
+            adjusted -= ScaledLineHeightInPixels / 2.0f;
         }
         if (target.YUnits == global::Gum.Converters.GeneralUnitType.PixelsFromMiddle)
         {
@@ -2054,21 +2082,60 @@ public abstract class TextBoxBase :
         return adjusted;
     }
 
+    // The full per-line vertical step used by the renderer:
+    // rawLineHeight × FontScale × LineHeightMultiplier. Used for inter-line
+    // stepping (hit-testing, arrow-key vertical movement, content-height
+    // clamps, and the line-to-line component of caret/selection positioning).
+    // IText is fully qualified here (and below) because this file compiles
+    // under multiple backends: under XNALIKE the using directives include
+    // RenderingLibrary.Graphics, but under the #else branch (Raylib/Sokol)
+    // they do not — so the unqualified IText would not resolve. The
+    // XNALIKE-guarded cast inside GetIndex can stay unqualified because
+    // that block only compiles when the using is in scope.
+    private float EffectiveLineHeightInPixels =>
+        coreTextObject.LineHeightInPixels
+        * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale
+        * coreTextObject.LineHeightMultiplier;
+
+    // The height of one rendered glyph row (rawLineHeight × FontScale), with
+    // no LineHeightMultiplier. This is the right value for "half a line"
+    // offsets that map to the actual ink — e.g. the caret on line 0, whose
+    // position must NOT change when only the multiplier changes.
+    private float ScaledLineHeightInPixels =>
+        coreTextObject.LineHeightInPixels * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale;
+
+    // Text.MeasureString returns the raw glyph-pixel width (it explicitly
+    // ignores FontScale). Caret X, selection X, hit-testing, and centering
+    // padding all live in screen space, so they must multiply by FontScale
+    // to line up with the actual rendered glyphs.
+    private float MeasureStringScaled(string value) =>
+        coreTextObject.MeasureString(value) * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale;
+
+    private float MeasureStringScaled(string value, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle style) =>
+        coreTextObject.MeasureString(value, style) * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale;
+
     private float GetCenterOfYForLinePixelsFromSmall(int lineNumber)
     {
-        var lineHeight = coreTextObject.LineHeightInPixels;
+        var lineHeight = EffectiveLineHeightInPixels;
+        var glyphHalfHeight = ScaledLineHeightInPixels / 2.0f;
 
         float offset;
 
         if (coreTextObject.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
         {
-            offset = lineNumber * lineHeight;
-            offset -= lineHeight * (coreTextObject.WrappedText.Count - 1) / 2.0f;
-            offset += CoreTextObjectHeight / 2.0f;
+            // Center of glyph row N relative to the centered text block: the
+            // block top is at (componentHeight - count*lineHeight)/2, the glyph
+            // top of line N is blockTop + N*lineHeight, and the glyph center
+            // is glyphTop + glyphHalfHeight.
+            offset = (CoreTextObjectHeight - coreTextObject.WrappedText.Count * lineHeight) / 2.0f;
+            offset += lineNumber * lineHeight;
+            offset += glyphHalfHeight;
         }
         else
         {
-            offset = (lineNumber + .5f) * lineHeight;
+            // Top-aligned: glyph top of line N is at N*lineHeight (from
+            // textComponent top); its center is that + glyphHalfHeight.
+            offset = lineNumber * lineHeight + glyphHalfHeight;
         }
         var caretY = (textComponent as IPositionedSizedObject).Y + offset;
         return caretY;

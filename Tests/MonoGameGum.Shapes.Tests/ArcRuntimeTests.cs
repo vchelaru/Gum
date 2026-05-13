@@ -1,5 +1,5 @@
-﻿using MonoGameAndGum.Renderables;
-using MonoGameGum.GueDeriving;
+﻿using Gum.GueDeriving;
+using MonoGameAndGum.Renderables;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
@@ -18,6 +18,17 @@ public class ArcRuntimeTests
         ArcRuntime sut = new ArcRuntime();
         sut.SetProperty("Alpha", 128);
         sut.Alpha.ShouldBe(128);
+    }
+
+    // Locked in unification (issue #2728): both backends default IsEndRounded to false
+    // (matches Skia's prior behavior and graphics-convention flat caps). Existing Apos
+    // consumers who relied on rounded caps must now set IsEndRounded = true explicitly.
+    // See docs/gum-tool/upgrading/migrating-to-2026-may.md.
+    [Fact]
+    public void IsEndRounded_DefaultShouldBeFalse()
+    {
+        ArcRuntime sut = new ArcRuntime();
+        sut.IsEndRounded.ShouldBeFalse();
     }
 
     // Regression for #2629 unification: Thickness must be a true façade for StrokeWidth on the

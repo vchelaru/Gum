@@ -39,16 +39,16 @@ namespace Gum.GueDeriving;
 /// </summary>
 public class TextRuntime : InteractiveGue
 {
-    Text? mContainedText;
+    Text? _containedText;
     Text ContainedText
     {
         get
         {
-            if (mContainedText == null)
+            if (_containedText == null)
             {
-                mContainedText = (Text)this.RenderableComponent;
+                _containedText = (Text)this.RenderableComponent;
             }
-            return mContainedText;
+            return _containedText;
         }
     }
 
@@ -515,7 +515,7 @@ public class TextRuntime : InteractiveGue
     {
         var toReturn = (TextRuntime)base.Clone();
 
-        toReturn.mContainedText = null;
+        toReturn._containedText = null;
 
         return toReturn;
     }
@@ -562,7 +562,7 @@ public class TextRuntime : InteractiveGue
 #if !RAYLIB && !SKIA
             textRenderable.RenderBoundary = false;
 #endif
-            mContainedText = textRenderable;
+            _containedText = textRenderable;
 
             SetContainedObject(textRenderable);
 
@@ -584,6 +584,15 @@ public class TextRuntime : InteractiveGue
                 else
 #endif
                 {
+                    // The surrounding SuspendLayout/ResumeLayout pair coalesces these two
+                    // assignments into a single font load at construction time. For default
+                    // Arial-18 that load hits the embedded-resource cache and is free, but
+                    // if a consumer overrides DefaultFont/DefaultFontSize to anything not
+                    // pre-loaded, every `new TextRuntime()` pays a full font generation
+                    // before the caller can configure further properties. There is no
+                    // batching mechanism for "build many TextRuntimes, generate once."
+                    // TODO: consider a sentinel-default-font scheme that defers the first
+                    // load until the element is actually added to a managed root.
                     this.FontSize = DefaultFontSize;
                     this.Font = DefaultFont;
                 }
