@@ -6,6 +6,10 @@ A **theme** is a per-backend NuGet package that restyles every default Gum Forms
 
 Themes ship one NuGet per rendering backend (for example `Gum.Themes.DarkPro.MonoGame` and `Gum.Themes.DarkPro.Kni`) so each package only carries the assets and references it needs.
 
+{% hint style="warning" %}
+All themes install and initialize KernSmith for dynamic font generation. Also, all themes except `Editor` install and initialize Apos.Shapes for vector art rendering. For more information see the [KernSmith](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) and [Apos.Shapes](../../standard-visuals/shapes-apos.shapes.md) pages.
+{% endhint %}
+
 ## Usage
 
 Install the package matching your runtime, then call the theme's `Apply` after `Initialize`:
@@ -28,9 +32,9 @@ The pattern is the same for every theme — only the `using` namespace, NuGet pa
 
 A few things to keep in mind:
 
-- **Apply one theme per app.** `Apply` mutates the default visuals — calling more than one theme's `Apply` in the same process produces a mix of leftover state.
-- **Call `Apply` after `Initialize` and before constructing Forms controls.** Controls capture their visuals at construction time, so any control built before `Apply` will keep the default styling.
-- **Themes compose with per-control styling.** For tweaking a single control on top of a theme, see [Code-Only Styling](../code-only-styling/styling-using-activestyles.md) and [Control Customization in Gum Tool](../control-customization-in-gum-tool.md).
+* **Apply one theme per app.** `Apply` mutates the default visuals — calling more than one theme's `Apply` in the same process produces a mix of leftover state.
+* **Call `Apply` after `Initialize` and before constructing Forms controls.** Controls capture their visuals at construction time, so any control built before `Apply` will keep the default styling.
+* **Themes compose with per-control styling.** For tweaking a single control on top of a theme, see [Code-Only Styling](../code-only-styling/styling-using-activestyles.md) and [Control Customization in Gum Tool](../control-customization-in-gum-tool.md).
 
 ## Available themes
 
@@ -142,7 +146,7 @@ Themes are currently published only for **MonoGame** and **KNI**. If you'd like 
 
 ## Requirements
 
-- .NET 8.0+
-- MonoGame 3.8+ (for the MonoGame packages) or KNI (for the KNI packages)
-- [Gum.MonoGame](https://www.nuget.org/packages/Gum.MonoGame) or [Gum.Kni](https://www.nuget.org/packages/Gum.Kni)
-- [KernSmith.MonoGameGum](https://www.nuget.org/packages/KernSmith.MonoGameGum) — optional, only needed when using runtime in-memory font generation
+* .NET 8.0+
+* MonoGame 3.8+ (for the MonoGame packages) or KNI (for the KNI packages)
+* [Gum.MonoGame](https://www.nuget.org/packages/Gum.MonoGame) or [Gum.Kni](https://www.nuget.org/packages/Gum.Kni)
+* [KernSmith.MonoGameGum](https://www.nuget.org/packages/KernSmith.MonoGameGum) — optional, only needed when using runtime in-memory font generation
