@@ -1,10 +1,11 @@
+using RenderingLibrary.Graphics;
 using SkiaSharp;
 using System;
 using System.Drawing;
 
 namespace SkiaGum.Renderables;
 
-public class NineSlice : RenderableShapeBase, ICloneable
+public class NineSlice : RenderableShapeBase, ICloneable, ITextureCoordinate
 {
     // Nearest-neighbour sampling. Linear filtering bleeds adjacent-section texels
     // across the boundary between two sections of the nine-slice source texture,
@@ -35,6 +36,18 @@ public class NineSlice : RenderableShapeBase, ICloneable
     public SKImage? Image { get; set; }
 
     public Rectangle? SourceRectangle { get; set; }
+
+    public float? TextureWidth => Texture?.Width;
+    public float? TextureHeight => Texture?.Height;
+
+    // RenderableShapeBase.Wrap is a non-virtual `public bool Wrap => false;`, so
+    // the ITextureCoordinate.Wrap setter is exposed via explicit interface
+    // implementation. Mirrors SkiaGum.Sprite, which has the same pattern.
+    bool ITextureCoordinate.Wrap
+    {
+        get => false;
+        set { }
+    }
 
     /// <summary>
     /// Edge thickness in texture pixels. When null, the renderable uses 1/3 of the

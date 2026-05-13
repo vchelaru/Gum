@@ -42,15 +42,14 @@ internal class NineSliceScreen : GraphicalUiElement
             sizesRow.Children.Add(ns);
         }
 
-        AddLabel(container, "Custom source rect (carving from FrameSheet.png):");
+        AddLabel(container, "TextureAddress.Custom (carving from FrameSheet.png):");
         NineSliceRuntime custom = new NineSliceRuntime();
         custom.SourceFileName = "FrameSheet.png";
-        // The unified runtime does not expose TextureLeft/TextureTop/etc. for SKIA
-        // (those properties live on GraphicalUiElement and only drive XNALIKE/Sokol
-        // renderables), so we set the SkiaGum-side SourceRectangle directly. Mirrors
-        // the MonoGameGumInCode demo's TextureAddress.Custom carve at (438,231,42,42).
-        ((SkiaGum.Renderables.NineSlice)custom.RenderableComponent).SourceRectangle =
-            new System.Drawing.Rectangle(438, 231, 42, 42);
+        custom.TextureAddress = TextureAddress.Custom;
+        custom.TextureLeft = 438;
+        custom.TextureTop = 231;
+        custom.TextureWidth = 42;
+        custom.TextureHeight = 42;
         custom.Width = 160;
         custom.Height = 64;
         container.Children.Add(custom);
