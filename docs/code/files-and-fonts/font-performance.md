@@ -25,6 +25,31 @@ KernSmith rasterizes every glyph in the requested character set into an atlas. T
 
 The rule of thumb: if your charset is "everything in this language", treat each new `(font, size, style)` combination as expensive. See [Font Preloading](font-preloading.md) for moving that cost off the gameplay path.
 
+## Batching Font Property Changes
+
+Every font-related setter on a `TextRuntime` — `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `UseFontSmoothing` — regenerates the font atlas immediately when it runs. Setting four of these in a row produces four full atlas generations, and three of them are immediately thrown away. With a small Latin charset this is hard to notice. With a CJK charset on KernSmith it can be a multi-second hit per setter.
+
+Attachment state does not change this. A freshly-constructed `TextRuntime` that has not been added to any parent still regenerates its atlas on every font-property setter. There is no "construct first, attach later" pattern that avoids the cost.
+
+The way to avoid this waste is to set `GraphicalUiElement.IsAllLayoutSuspended` to `true` before changing font properties, then clear it and trigger a single layout pass:
+
+```csharp
+GraphicalUiElement.IsAllLayoutSuspended = true;
+
+textRuntime.Font = "MyFont";
+textRuntime.FontSize = 32;
+textRuntime.IsBold = true;
+
+GraphicalUiElement.IsAllLayoutSuspended = false;
+textRuntime.UpdateLayout();
+```
+
+While the flag is set, the font-property setters mark the element as needing a font refresh but skip the actual atlas generation. When layout resumes, the regeneration happens once instead of once per setter.
+
+Note that this is the only mechanism that defers font atlas generation. Per-instance `SuspendLayout()` / `ResumeLayout()` defers layout calls but does **not** currently defer font atlas generation on the set-by-string path — the path used by `ApplyState`. To batch font property changes, use the global `IsAllLayoutSuspended` flag.
+
+This same flag also reduces general layout call counts; see [Measuring Layout Calls](../performance-and-optimization/measuring-layout-calls.md) for that side of the story.
+
 ## Atlas Memory Cost
 
 Each unique `(font, family, size, style, outline, smoothing)` combination produces its own atlas texture. Memory cost scales with two things:
