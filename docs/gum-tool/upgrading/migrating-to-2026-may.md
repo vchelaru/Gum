@@ -116,3 +116,41 @@ TextRuntime textInstance = textBox.Visual.Find<TextRuntime>("TextInstance")!;
 ```
 
 For the full set of new methods and how they compose with LINQ, see [Finding Elements](../../code/visual-tree/finding-elements.md).
+
+### ArcRuntime defaults unified — Apos `IsEndRounded` now defaults to `false`
+
+`ArcRuntime` was previously two separate per-backend classes (one for Apos.Shapes, one for SkiaGum) that had drifted apart over time. They are now a single shared source file with platform-specific code behind `#if SKIA`. Most of the unification is transparent, but **one default has changed visibly on the Apos backend**:
+
+| Property | Apos before | Apos after | Skia before & after |
+| --- | --- | --- | --- |
+| `IsEndRounded` | `true` | `false` | `false` |
+
+A freshly-constructed Apos `ArcRuntime` now renders with **flat end caps** instead of rounded. If your project relied on the rounded default — for example, when constructing arcs in code without setting `IsEndRounded` explicitly — those arcs will look different after upgrading.
+
+To preserve the previous behavior, set `IsEndRounded = true` explicitly:
+
+❌ Old (relied on the rounded default):
+
+```csharp
+ArcRuntime arc = new ArcRuntime();
+arc.SweepAngle = 270;
+arc.AddToRoot();
+```
+
+✅ New (explicit):
+
+```csharp
+ArcRuntime arc = new ArcRuntime();
+arc.IsEndRounded = true;
+arc.SweepAngle = 270;
+arc.AddToRoot();
+```
+
+If you instantiate `ArcRuntime` from saved Gum content (`.gucx` / `.glux`) and have an `IsEndRounded` value in your default state, no action is needed — the saved value takes precedence over the constructor default.
+
+Other locked-in defaults from the same unification (no migration needed, listed for reference):
+
+- `StrokeWidth` defaults to `10` on both backends (previously only Apos seeded this; freshly-constructed Skia `ArcRuntime` instances now render visibly without needing an explicit `StrokeWidth`).
+- Dropshadow defaults (`DropshadowAlpha = 255`, `DropshadowOffsetY = 3`, etc.) are now seeded on both backends. These values are inert until `HasDropshadow` is set to `true`.
+
+Dashed strokes (`StrokeDashLength`, `StrokeGapLength`) continue to render on Skia only — the underlying Apos.Shapes `Arc` primitive does not support dashing.
