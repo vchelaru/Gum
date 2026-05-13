@@ -40,16 +40,16 @@ public class ArcRuntime
     #region Contained Renderable
     protected override RenderableShapeBase ContainedRenderable => ContainedArc;
 
-    Arc? mContainedArc;
+    Arc? _containedArc;
     Arc ContainedArc
     {
         get
         {
-            if (mContainedArc == null)
+            if (_containedArc == null)
             {
-                mContainedArc = (Arc)this.RenderableComponent;
+                _containedArc = (Arc)this.RenderableComponent;
             }
-            return mContainedArc;
+            return _containedArc;
         }
     }
     #endregion
@@ -161,7 +161,7 @@ public class ArcRuntime
         // Reset the cached renderable reference so the clone re-resolves it from its own
         // RenderableComponent rather than holding a reference to the source instance's renderable.
         // Skia previously did this; Apos previously did not (latent bug, fixed by unification).
-        toReturn.mContainedArc = null;
+        toReturn._containedArc = null;
 
         return toReturn;
     }

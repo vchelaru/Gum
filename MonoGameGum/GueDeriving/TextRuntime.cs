@@ -39,16 +39,16 @@ namespace Gum.GueDeriving;
 /// </summary>
 public class TextRuntime : InteractiveGue
 {
-    Text? mContainedText;
+    Text? _containedText;
     Text ContainedText
     {
         get
         {
-            if (mContainedText == null)
+            if (_containedText == null)
             {
-                mContainedText = (Text)this.RenderableComponent;
+                _containedText = (Text)this.RenderableComponent;
             }
-            return mContainedText;
+            return _containedText;
         }
     }
 
@@ -515,7 +515,7 @@ public class TextRuntime : InteractiveGue
     {
         var toReturn = (TextRuntime)base.Clone();
 
-        toReturn.mContainedText = null;
+        toReturn._containedText = null;
 
         return toReturn;
     }
@@ -562,7 +562,7 @@ public class TextRuntime : InteractiveGue
 #if !RAYLIB && !SKIA
             textRenderable.RenderBoundary = false;
 #endif
-            mContainedText = textRenderable;
+            _containedText = textRenderable;
 
             SetContainedObject(textRenderable);
 
