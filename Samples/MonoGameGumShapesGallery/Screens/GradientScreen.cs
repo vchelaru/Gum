@@ -32,7 +32,7 @@ internal class GradientScreen : FrameworkElement
 
         ContainerRuntime container = new ContainerRuntime();
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        container.StackSpacing = 8;
+        container.StackSpacing = 32;
         container.X = 8;
         container.Y = 8;
         this.AddChild(container);
@@ -66,9 +66,10 @@ internal class GradientScreen : FrameworkElement
     {
         ContainerRuntime row = new ContainerRuntime();
         row.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
-        row.StackSpacing = 12;
+        row.StackSpacing = 38;
         row.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         row.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        row.Height = 0;
         parent.AddChild(row);
         return row;
     }
@@ -79,8 +80,10 @@ internal class GradientScreen : FrameworkElement
         ContainerRuntime cell = new ContainerRuntime();
         cell.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         cell.StackSpacing = 4;
-        cell.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        cell.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        cell.Width = RectWidth;
         cell.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        cell.Height = 0;
         row.AddChild(cell);
 
         RoundedRectangleRuntime rect = new RoundedRectangleRuntime();
