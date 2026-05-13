@@ -33,6 +33,7 @@
 	<ItemGroup>
 		<Compile Include="..\SkiaGum\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
 		<Compile Include="..\SkiaGum\GueDeriving\ArcRuntime.cs" Link="GueDeriving\ArcRuntime.cs" />
+		<Compile Include="..\SkiaGum\GueDeriving\LineRuntime.cs" Link="GueDeriving\LineRuntime.cs" />
 		<Compile Include="..\SkiaGum\GueDeriving\RoundedRectangleRuntime.cs" Link="GueDeriving\RoundedRectangleRuntime.cs" />
 	</ItemGroup>
 
