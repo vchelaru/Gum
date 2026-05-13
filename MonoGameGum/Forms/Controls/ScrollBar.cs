@@ -116,10 +116,12 @@ public class ScrollBar : RangeBase
             upButton.Push += (_, _) => this.Value -= this.SmallChange;
             upButton.Click += (_, e) =>
             {
+#if !FRB
                 if (e is InputEventArgs iea && iea.InputDevice is IInputReceiverKeyboard)
                 {
                     this.Value -= this.SmallChange;
                 }
+#endif
             };
         }
 
@@ -128,20 +130,22 @@ public class ScrollBar : RangeBase
             downButton.Push += (_, _) => this.Value += this.SmallChange;
             downButton.Click += (_, e) =>
             {
+#if !FRB
                 if (e is InputEventArgs iea && iea.InputDevice is IInputReceiverKeyboard)
                 {
                     this.Value += this.SmallChange;
                 }
+#endif
             };
         }
 
         if(Track != null)
         {
-    #if FRB
+#if FRB
             Track.Push += _ => HandleTrackPush(this, EventArgs.Empty);
-    #else
+#else
             Track.Push += HandleTrackPush;
-    #endif
+#endif
         }
         Visual.SizeChanged += HandleVisualSizeChange;
 
@@ -222,7 +226,7 @@ public class ScrollBar : RangeBase
         }
     }
 
-    #endregion
+#endregion
 
     #region Event Handlers
     protected override void HandleThumbPush(object sender, EventArgs e)
