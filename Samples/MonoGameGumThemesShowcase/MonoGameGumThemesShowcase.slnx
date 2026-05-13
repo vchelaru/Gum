@@ -1,0 +1,16 @@
+<Solution>
+  <Project Path="MonoGameGumThemesShowcase.csproj" />
+  <Folder Name="/Libraries/">
+    <Project Path="../../GumCommon/GumCommon.csproj" />
+    <Project Path="../../MonoGameGum/MonoGameGum.csproj" />
+    <Project Path="../../Runtimes/GumShapes/MonoGameGumShapes.csproj" />
+  </Folder>
+  <Folder Name="/Themes/">
+    <Project Path="../../Themes/Gum.Themes.Bubblegum.MonoGame/Gum.Themes.Bubblegum.MonoGame.csproj" />
+    <Project Path="../../Themes/Gum.Themes.DarkPro.MonoGame/Gum.Themes.DarkPro.MonoGame.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Editor.MonoGame/Gum.Themes.Editor.MonoGame.csproj" />
+    <Project Path="../../Themes/Gum.Themes.ForestGlade.MonoGame/Gum.Themes.ForestGlade.MonoGame.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Neon.MonoGame/Gum.Themes.Neon.MonoGame.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Retro95.MonoGame/Gum.Themes.Retro95.MonoGame.csproj" />
+  </Folder>
+</Solution>
