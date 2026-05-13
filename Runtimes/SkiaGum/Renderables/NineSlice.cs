@@ -6,6 +6,21 @@ namespace SkiaGum.Renderables;
 
 public class NineSlice : RenderableShapeBase, ICloneable
 {
+    // Nearest-neighbour sampling. Linear filtering bleeds adjacent-section texels
+    // across the boundary between two sections of the nine-slice source texture,
+    // producing visible seams; nearest-neighbour samples a single texel per output
+    // pixel and matches the pixel-art look that nine-slice borders typically use.
+    private static readonly SKSamplingOptions _sampling =
+        new SKSamplingOptions(SKFilterMode.Nearest, SKMipmapMode.None);
+
+    public NineSlice()
+    {
+        // RenderableShapeBase defaults Color to red, which would tint every
+        // drawn nine-slice red once we route Color through a Modulate filter.
+        // White is the no-tint identity for SKBlendMode.Modulate.
+        Color = SKColors.White;
+    }
+
     public SKBitmap? Texture
     {
         get => _texture;
@@ -42,31 +57,29 @@ public class NineSlice : RenderableShapeBase, ICloneable
 
     public object Clone() => this.MemberwiseClone();
 
+    protected override SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
+    {
+        // Modulate the image's texels by Color so the unified runtime's Color
+        // property tints the nine-slice. The base paint has Color set too, but
+        // that only matters for non-image draws (DrawRect, etc.); for DrawImage
+        // we need a ColorFilter.
+        SKPaint paint = base.GetPaint(boundingRect, absoluteRotation);
+        paint.ColorFilter = SKColorFilter.CreateBlendMode(Color, SKBlendMode.Modulate);
+        return paint;
+    }
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
+        // RenderableShapeBase.Render has already saved the canvas, translated to
+        // boundingRect.Left/Top, rotated by -absoluteRotation, and zeroed out the
+        // boundingRect origin. Do NOT re-apply rotation here.
+
         if (Image == null)
         {
             return;
         }
 
         SKPaint paint = base.GetCachedPaint(boundingRect, absoluteRotation);
-
-        bool applyRotation = absoluteRotation != 0;
-        if (applyRotation)
-        {
-            float oldX = boundingRect.Left;
-            float oldY = boundingRect.Top;
-
-            canvas.Save();
-
-            boundingRect.Left = 0;
-            boundingRect.Right -= oldX;
-            boundingRect.Top = 0;
-            boundingRect.Bottom -= oldY;
-
-            canvas.Translate(oldX, oldY);
-            canvas.RotateDegrees(-absoluteRotation);
-        }
 
         int srcLeft;
         int srcTop;
@@ -91,10 +104,6 @@ public class NineSlice : RenderableShapeBase, ICloneable
         int usedHeight = srcBottom - srcTop;
         if (usedWidth <= 0 || usedHeight <= 0)
         {
-            if (applyRotation)
-            {
-                canvas.Restore();
-            }
             return;
         }
 
@@ -196,11 +205,6 @@ public class NineSlice : RenderableShapeBase, ICloneable
             destLeft + destCornerW, destTop + destCornerH, destInsideW, destInsideH,
             tileHorizontally: IsTilingMiddleSections, tileVertically: IsTilingMiddleSections,
             canvas, paint);
-
-        if (applyRotation)
-        {
-            canvas.Restore();
-        }
     }
 
     private void DrawSection(
@@ -214,7 +218,7 @@ public class NineSlice : RenderableShapeBase, ICloneable
         }
         SKRect src = new SKRect(srcX, srcY, srcX + srcW, srcY + srcH);
         SKRect dest = new SKRect(destX, destY, destX + destW, destY + destH);
-        canvas.DrawImage(Image, src, dest, paint);
+        canvas.DrawImage(Image, src, dest, _sampling, paint);
     }
 
     private void DrawMiddleSection(
@@ -273,7 +277,7 @@ public class NineSlice : RenderableShapeBase, ICloneable
                     destY + currentY,
                     destX + currentX + thisTileDestW,
                     destY + currentY + thisTileDestH);
-                canvas.DrawImage(Image, src, dest, paint);
+                canvas.DrawImage(Image, src, dest, _sampling, paint);
 
                 currentX += thisTileDestW;
             }

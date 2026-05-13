@@ -83,6 +83,9 @@ public class NineSliceRenderableTests
         sut.CustomFrameTextureCoordinateWidth.ShouldBeNull();
         sut.Texture.ShouldBeNull();
         sut.Image.ShouldBeNull();
+        // White (identity under SKBlendMode.Modulate) so a freshly constructed
+        // NineSlice draws untinted instead of inheriting RenderableShapeBase's red.
+        sut.Color.ShouldBe(SKColors.White);
     }
 
     [Fact]
