@@ -61,16 +61,15 @@ internal class NineSliceScreen : FrameworkElement
         }
 
         // IsTilingMiddleSections: stretched (default) vs tiled.
-        // TODO: swap Frame.png for the dedicated tiling texture once it's in Content/.
         AddLabel(container, "IsTilingMiddleSections (left: stretched, right: tiled):");
         var tilingRow = AddRow(container);
         var stretched = new NineSliceRuntime();
-        stretched.SourceFileName = "Frame.png";
+        stretched.SourceFileName = "TilingFrame.png";
         stretched.Width = 220;
         stretched.Height = 56;
         tilingRow.AddChild(stretched);
         var tiled = new NineSliceRuntime();
-        tiled.SourceFileName = "Frame.png";
+        tiled.SourceFileName = "TilingFrame.png";
         tiled.Width = 220;
         tiled.Height = 56;
         tiled.IsTilingMiddleSections = true;
@@ -90,6 +89,7 @@ internal class NineSliceScreen : FrameworkElement
         rotScale1.Height = 80;
         rotScale1.BorderScale = 1f;
         rotScale1.Rotation = 25f;
+        rotScale1.Y = 50;
         borderRotRow.AddChild(rotScale1);
 
         var rotScale8 = new NineSliceRuntime();
@@ -98,6 +98,7 @@ internal class NineSliceScreen : FrameworkElement
         rotScale8.Height = 80;
         rotScale8.BorderScale = 8f;
         rotScale8.Rotation = 25f;
+        rotScale8.Y = 50f;
         borderRotRow.AddChild(rotScale8);
     }
 
@@ -117,6 +118,7 @@ internal class NineSliceScreen : FrameworkElement
         row.StackSpacing = 6;
         row.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         row.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        row.Height = 0;
         container.AddChild(row);
         return row;
     }
