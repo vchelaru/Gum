@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameAndGum.Renderables;
 
-internal class Arc : RenderableShapeBase
+public class Arc : RenderableShapeBase
 {
     public Arc()
     {

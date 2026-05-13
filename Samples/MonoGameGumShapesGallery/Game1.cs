@@ -1,12 +1,13 @@
 using System;
 using Apos.Shapes;
+using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameAndGum.Renderables;
 
 namespace MonoGameGumShapesGallery;
 
-// Visual smoke test for Gum.Shapes.MonoGame. Two stacked sections:
+// Visual smoke test for Gum.Shapes.MonoGame. Three stacked sections:
 //
 //   1. Shape gallery — every primitive Apos.Shapes exposes (Circle, Rectangle, RoundedRect
 //      uniform, Line, Hexagon, Triangle) across every visual variant (Filled, Border,
@@ -17,16 +18,21 @@ namespace MonoGameGumShapesGallery;
 //   2. Per-corner radii showcase — five RoundedRectangle configurations using the new
 //      CornerRadii overload added in Apos.Shapes 0.6.9 (PR #32). The "Leaf" cell matches the
 //      Forest Glade theme's signature silhouette (TL=2, TR=12, BR=2, BL=12); the rest cover
-//      tabs, diagonals, asymmetric corners.
+//      tabs, diagonals, asymmetric corners. The leaf cell is rendered through Gum's
+//      RoundedRectangle renderable (not the raw Apos call) so any wrapper regression jumps out
+//      visually next to the raw cells.
 //
-// To verify the Gum-side wrapper, a single RoundedRectangleRuntime is constructed with the
-// same per-corner values as the leaf cell and rendered alongside its raw-API counterpart.
-// They should be visually identical; if they're not, the wrapper has regressed.
+//   3. ArcRuntime showcase — five ArcRuntime instances exercising the unified runtime from
+//      issue #2728. First cell uses the bare default constructor (verifies the locked-in
+//      defaults: flat caps, 90 sweep, thickness 10, white). The rest vary IsEndRounded,
+//      SweepAngle, Thickness, and gradient to surface any regression in the Apos-side
+//      rendering path.
 public class Game1 : Game
 {
     private readonly GraphicsDeviceManager _graphics;
     private ShapeBatch _shapeBatch = default!;
     private RoundedRectangle _gumWrapperLeaf = default!;
+    private ArcRuntime[] _arcs = default!;
 
     public Game1()
     {
@@ -39,7 +45,7 @@ public class Game1 : Game
         _graphics.PreferredBackBufferHeight = 900;
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
-        Window.Title = "Gum Shapes Gallery — Apos.Shapes 0.6.9 + per-corner radii";
+        Window.Title = "Gum Shapes Gallery — Apos.Shapes 0.6.9 + per-corner radii + ArcRuntime";
         // ContentManager's default RootDirectory is empty; the pre-built apos-shapes.xnb
         // ships under Content/ in the build output (via Link= on the Content item in the
         // csproj), so point Content there before any Load<T>("apos-shapes") call hits.
@@ -55,9 +61,9 @@ public class Game1 : Game
         _shapeBatch = MonoGameAndGum.Renderables.ShapeRenderer.Self.ShapeBatch;
 
         // Build a single RoundedRectangle (the Gum-side renderable, the one the
-        // RoundedRectangleRuntime wraps) with the leaf-shape per-corner radii. Drawn at the
-        // bottom of Section 2 next to its raw-API counterpart to verify the wrapper forwards
-        // the per-corner properties correctly.
+        // RoundedRectangleRuntime wraps) with the leaf-shape per-corner radii. Drawn in the
+        // leaf column of Section 2 so its raw-API neighbors expose any wrapper regression
+        // visually.
         _gumWrapperLeaf = new RoundedRectangle
         {
             Width = 140,
@@ -70,6 +76,53 @@ public class Game1 : Game
             IsFilled = true,
             Color = new Color(112, 220, 80),
         };
+
+        _arcs = BuildArcShowcase();
+    }
+
+    private static ArcRuntime[] BuildArcShowcase()
+    {
+        // Bare default — verifies the locked defaults from issue #2728:
+        //   IsEndRounded = false (flat caps, the Apos-breaking change)
+        //   SweepAngle = 90
+        //   Thickness = 10
+        //   Color = white
+        ArcRuntime def = new ArcRuntime();
+
+        // Same as default but with rounded caps - the toggle Apos consumers must set
+        // explicitly post-unification if they relied on the previous true default.
+        ArcRuntime rounded = new ArcRuntime
+        {
+            IsEndRounded = true,
+        };
+
+        // Full ring - exercises the SweepAngle=360 path (DrawRing on Apos for !rounded).
+        ArcRuntime fullRing = new ArcRuntime
+        {
+            SweepAngle = 360,
+            Thickness = 8,
+        };
+
+        // Thick rounded half-circle - bigger stroke + rounded caps stress the radius math.
+        ArcRuntime thickHalf = new ArcRuntime
+        {
+            IsEndRounded = true,
+            SweepAngle = 180,
+            Thickness = 18,
+        };
+
+        // Gradient arc - exercises the UseGradient branch in Arc.Render.
+        ArcRuntime gradient = new ArcRuntime
+        {
+            IsEndRounded = true,
+            SweepAngle = 270,
+            Thickness = 14,
+            UseGradient = true,
+        };
+        // Gradient ctor seeds Red1/Green1/Blue1/Red2 = 255, Green2 = 255, Blue2 = 0 (yellow-tint
+        // gradient stop). Leave those at the seeded values; only override what differs.
+
+        return new[] { def, rounded, fullRing, thickHalf, gradient };
     }
 
     protected override void Draw(GameTime gameTime)
@@ -79,15 +132,19 @@ public class Game1 : Game
         int w = GraphicsDevice.Viewport.Width;
         int h = GraphicsDevice.Viewport.Height;
 
-        // Split the viewport ~70/30 between the gallery grid and the per-corner showcase.
-        int gallerHeight = (int)(h * 0.7f);
-        int cornerSectionTop = gallerHeight;
-        int cornerSectionHeight = h - gallerHeight;
+        // Top 65% for the primitive gallery, bottom 35% split between per-corner radii and arcs.
+        int galleryHeight = (int)(h * 0.65f);
+        int lowerSectionTop = galleryHeight;
+        int lowerSectionHeight = h - galleryHeight;
+        int cornerHeight = lowerSectionHeight / 2;
+        int arcTop = lowerSectionTop + cornerHeight;
+        int arcHeight = lowerSectionHeight - cornerHeight;
 
         _shapeBatch.Begin();
 
-        DrawGalleryGrid(w, gallerHeight);
-        DrawPerCornerShowcase(0, cornerSectionTop, w, cornerSectionHeight);
+        DrawGalleryGrid(w, galleryHeight);
+        DrawPerCornerShowcase(0, lowerSectionTop, w, cornerHeight);
+        DrawArcShowcase(0, arcTop, w, arcHeight);
 
         _shapeBatch.End();
         base.Draw(gameTime);
@@ -209,9 +266,9 @@ public class Game1 : Game
 
     private void DrawPerCornerShowcase(int x, int y, int width, int height)
     {
-        // Five per-corner radii configurations. Each pair (raw Apos call + Gum-runtime call
-        // where applicable) sits in the same column so visual regressions in the wrapper jump
-        // out at a glance.
+        // Five per-corner radii configurations. The leaf cell (column 1) goes through the
+        // Gum wrapper (RoundedRectangle renderable); the rest use raw Apos calls. A visual
+        // regression in the wrapper would make the leaf cell stand out from its neighbors.
         (string label, CornerRadii corners, Color color)[] cells =
         {
             ("Uniform 12",         new CornerRadii(12),                  new Color(80, 180, 220)),
@@ -224,28 +281,17 @@ public class Game1 : Game
         int cols = cells.Length;
         float cellW = width / (float)cols;
         Vector2 size = new Vector2(MathF.Min(cellW * 0.82f, 180f), 36f);
+        float rowCenterY = y + height * 0.5f;
 
-        // Row 1 — raw Apos.Shapes call
-        float row1CenterY = y + height * 0.32f;
         for (int i = 0; i < cells.Length; i++)
         {
             float cx = x + i * cellW + cellW / 2f;
-            Vector2 xy = new Vector2(cx, row1CenterY) - size / 2f;
-            _shapeBatch.DrawRectangle(xy, size, cells[i].color, cells[i].color,
-                thickness: 1f, cornerRadii: cells[i].corners, rotation: 0f, aaSize: 1.5f);
-        }
-
-        // Row 2 — Gum's RoundedRectangle renderable, leaf cell only (column 1). The other
-        // columns stay raw-API for compactness; the leaf is the case the Forest Glade theme
-        // depends on, so it's the one we want byte-for-byte parity verified.
-        float row2CenterY = y + height * 0.74f;
-        for (int i = 0; i < cells.Length; i++)
-        {
-            float cx = x + i * cellW + cellW / 2f;
-            Vector2 xy = new Vector2(cx, row2CenterY) - size / 2f;
+            Vector2 xy = new Vector2(cx, rowCenterY) - size / 2f;
 
             if (i == 1)
             {
+                // Leaf via the Gum wrapper. Width/Height are restamped from the cell size in case
+                // the viewport was resized.
                 _gumWrapperLeaf.X = xy.X;
                 _gumWrapperLeaf.Y = xy.Y;
                 _gumWrapperLeaf.Width = size.X;
@@ -257,6 +303,38 @@ public class Game1 : Game
                 _shapeBatch.DrawRectangle(xy, size, cells[i].color, cells[i].color,
                     thickness: 1f, cornerRadii: cells[i].corners, rotation: 0f, aaSize: 1.5f);
             }
+        }
+    }
+
+    private void DrawArcShowcase(int x, int y, int width, int height)
+    {
+        // ArcRuntime variants - the unified Apos↔Skia ArcRuntime from issue #2728. Rendering
+        // is done by calling Render on the underlying Arc renderable (the same path Apos uses
+        // when the renderer walks the layer's renderables). The runtime instances themselves
+        // verify the locked-in ctor defaults; any regression in those would show up as a
+        // visibly-different first cell (the "Default" arc).
+        int cols = _arcs.Length;
+        float cellW = width / (float)cols;
+        float arcSize = MathF.Min(cellW * 0.6f, height * 0.85f);
+        float rowCenterY = y + height * 0.5f;
+
+        for (int i = 0; i < _arcs.Length; i++)
+        {
+            float cx = x + i * cellW + cellW / 2f;
+            ArcRuntime runtime = _arcs[i];
+            Arc renderable = (Arc)runtime.RenderableComponent;
+
+            renderable.Width = arcSize;
+            renderable.Height = arcSize;
+            renderable.X = cx - arcSize / 2f;
+            renderable.Y = rowCenterY - arcSize / 2f;
+
+            // The renderable's PreRender invokes the runtime's PreRender hook, which pushes
+            // StrokeWidth (held on the runtime auto-property) down to the renderable. Without
+            // this, the renderable keeps its own ctor default (10) and Thickness overrides on
+            // individual cells (e.g. thickHalf = 18) would not render.
+            renderable.PreRender();
+            renderable.Render(null!);
         }
     }
 }
