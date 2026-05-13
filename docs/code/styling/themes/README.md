@@ -79,6 +79,25 @@ BubblegumTheme.Apply(GraphicsDevice);
 
 NuGet packages: `Gum.Themes.Bubblegum.MonoGame`, `Gum.Themes.Bubblegum.Kni`
 
+### Forest Glade
+
+<figure><img src="../../../.gitbook/assets/ForestGladeThemeScreenshot.png" alt="Forest Glade theme preview"><figcaption><p>The Forest Glade theme applied to a sample settings panel.</p></figcaption></figure>
+
+Lush green nature-themed look with gradient leaf-shaped buttons (sharp top-left / bottom-right corners, rounded top-right / bottom-left), a deep canopy background, and soft text drop shadows. Bundled font: Nunito.
+
+```csharp
+// Initialize
+using Gum.Themes.ForestGlade;
+
+ForestGladeTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="info" %}
+For the intended look, clear the back buffer to `ForestGladeColors.CanopyDeep`.
+{% endhint %}
+
+NuGet packages: `Gum.Themes.ForestGlade.MonoGame`, `Gum.Themes.ForestGlade.Kni`
+
 ### Neon
 
 <figure><img src="../../../.gitbook/assets/NeonThemeScreenshot.png" alt="Neon theme preview"><figcaption><p>The Neon theme applied to a sample settings panel.</p></figcaption></figure>

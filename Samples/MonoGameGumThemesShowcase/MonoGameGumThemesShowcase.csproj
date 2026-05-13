@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <TieredCompilation>false</TieredCompilation>
+    <RootNamespace>MonoGameGumThemesShowcase</RootNamespace>
+    <!-- Source-referencing the Gum.Shapes runtime csproj would otherwise pull
+         Apos.Shapes' apos-shapes.fx into MGCB; the Gum.Shapes.MonoGame NuGet
+         skips this via buildTransitive and we replicate it here. The prebuilt
+         apos-shapes.xnb is copied as a plain Content item below. -->
+    <SkipAposShapeContent>true</SkipAposShapeContent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Icon.ico" />
+    <None Remove="Icon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icon.ico" />
+    <EmbeddedResource Include="Icon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Bubblegum.MonoGame\Gum.Themes.Bubblegum.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.DarkPro.MonoGame\Gum.Themes.DarkPro.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Editor.MonoGame\Gum.Themes.Editor.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.ForestGlade.MonoGame\Gum.Themes.ForestGlade.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Neon.MonoGame\Gum.Themes.Neon.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Retro95.MonoGame\Gum.Themes.Retro95.MonoGame.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Mirror the Gum.Shapes.MonoGame NuGet's buildTransitive: copy the prebuilt
+         apos-shapes.xnb to the sample's Content output. -->
+    <Content Include="..\..\Runtimes\GumShapes\buildTransitive\MonoGame\Content\DesktopGL\apos-shapes.xnb"
+             Link="Content/apos-shapes.xnb"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
