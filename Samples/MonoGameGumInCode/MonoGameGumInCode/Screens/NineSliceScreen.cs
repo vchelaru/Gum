@@ -10,16 +10,21 @@ internal class NineSliceScreen : FrameworkElement
     {
         Dock(Gum.Wireframe.Dock.Fill);
 
+        // The screen has more demo rows than fit on a 720px tall area, so wrap
+        // everything in a ScrollViewer. Layout-wise the InnerPanel is what
+        // children stack inside.
+        var scroll = new ScrollViewer();
+        scroll.Visual.Dock(Gum.Wireframe.Dock.Fill);
+        this.AddChild(scroll);
+
         var container = new ContainerRuntime();
         container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        container.X = 4;
-        container.Y = 4;
-        container.Width = -8;
-        container.Height = -8;
+        // Leave room for the vertical scrollbar
+        container.Width = -20;
+        container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 6;
-        this.AddChild(container);
+        scroll.InnerPanel.Children.Add(container);
 
         // Default full-texture nine-slice at three sizes so corner/edge/center
         // stretching is visible.
