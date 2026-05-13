@@ -65,6 +65,15 @@ public class NineSlice : RenderableShapeBase, ICloneable
         // we need a ColorFilter.
         SKPaint paint = base.GetPaint(boundingRect, absoluteRotation);
         paint.ColorFilter = SKColorFilter.CreateBlendMode(Color, SKBlendMode.Modulate);
+        // Antialias on DrawImage anti-aliases the destination rect's edges. When
+        // two sections of the nine-slice abut at a fractional pixel boundary
+        // (because layout placed the whole NineSlice at a non-integer position),
+        // the two AA edges leave partial-coverage gaps along the seam and the
+        // background bleeds through as a darker line. Disabling AA gives hard
+        // edges that meet cleanly; the cost is slightly jaggier outlines when
+        // the NineSlice is rotated, which is consistent with the pixel-art use
+        // case nine-slice borders are typically authored for.
+        paint.IsAntialias = false;
         return paint;
     }
 
