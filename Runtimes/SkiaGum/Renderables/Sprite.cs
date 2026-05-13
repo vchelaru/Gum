@@ -91,6 +91,18 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         return AnimationLogic.AnimateSelf(secondDifference);
     }
 
+    protected override SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
+    {
+        // Matches MonoGame's default sampler behaviour (no edge antialias on
+        // sprites) and prevents seams when multiple Sprites abut at fractional
+        // pixel boundaries. See NineSlice.GetPaint for the longer rationale.
+        // Could be made opt-in via a property on Sprite if a consumer needs the
+        // softer rotated-edge look back.
+        SKPaint paint = base.GetPaint(boundingRect, absoluteRotation);
+        paint.IsAntialias = false;
+        return paint;
+    }
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         ////////////Early Out/////////////
@@ -100,25 +112,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         }
         /////////End Early Out///////////////
 
+        // RenderableShapeBase.Render has already saved the canvas, translated to
+        // boundingRect.Left/Top, rotated by -absoluteRotation, and zeroed out the
+        // boundingRect origin before calling DrawBound. Re-applying the rotation
+        // here would double it (a 25 deg Sprite would render at 50 deg) — see the
+        // matching fix in NineSlice.DrawBound.
+
         var paint = base.GetCachedPaint(boundingRect, absoluteRotation);
-
-        var applyRotation = absoluteRotation != 0;
-
-        if (applyRotation)
-        {
-            var oldX = boundingRect.Left;
-            var oldY = boundingRect.Top;
-
-            canvas.Save();
-
-            boundingRect.Left = 0;
-            boundingRect.Right -= oldX;
-            boundingRect.Top = 0;
-            boundingRect.Bottom -= oldY;
-
-            canvas.Translate(oldX, oldY);
-            canvas.RotateDegrees(-absoluteRotation);
-        }
 
         if(EffectiveRectangle != null)
         {
@@ -189,11 +189,6 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             {
                 canvas.DrawBitmap(Texture, boundingRect, paint);
             }
-        }
-
-        if (applyRotation)
-        {
-            canvas.Restore();
         }
     }
 

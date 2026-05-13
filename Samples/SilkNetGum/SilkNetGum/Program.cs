@@ -44,12 +44,17 @@ unsafe class Program
 
     #endregion
 
+    // Code-only screens appended after every screen from the gumx, allowing the
+    // sample to exercise runtime features (like the unified NineSliceRuntime) that
+    // are not yet authored as Gum screens.
+    private static readonly Func<GraphicalUiElement>[] codeScreenFactories =
+    {
+        () => new SilkNetGum.Screens.NineSliceScreen(),
+    };
+
     private static void InitializeGum(SKCanvas canvas)
     {
         GumService.Default.Initialize(canvas, "Content/GumProject/GumProject.gumx");
-
-        //Root = new CodeOnlyScreen();
-        //Root.AddToManagers();
 
         LoadScreen(0);
 
@@ -66,13 +71,22 @@ unsafe class Program
 
     private static void LoadScreen(int index)
     {
-        var screens = ObjectFinder.Self.GumProjectSave!.Screens;
-        if (screens.Count == 0) return;
+        var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
+        int total = gumxScreens.Count + codeScreenFactories.Length;
+        if (total == 0) return;
 
-        currentScreenIndex = ((index % screens.Count) + screens.Count) % screens.Count;
+        currentScreenIndex = ((index % total) + total) % total;
 
         Root?.RemoveFromManagers();
-        Root = screens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+        if (currentScreenIndex < gumxScreens.Count)
+        {
+            Root = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+        }
+        else
+        {
+            Root = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
+            Root.AddToManagers(SystemManagers.Default, layer: null);
+        }
     }
 
     private static void Draw()
