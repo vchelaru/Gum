@@ -97,5 +97,82 @@ internal class NineSliceScreen : FrameworkElement
         tiled.Height = 64;
         tiled.IsTilingMiddleSections = true;
         tilingRow.AddChild(tiled);
+
+        // BorderScale: scales the corner/edge regions independently of element size.
+        MixedScreen.AddText(container, "BorderScale (0.5, 1, 2):");
+
+        var borderScaleRow = new ContainerRuntime();
+        borderScaleRow.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        borderScaleRow.StackSpacing = 6;
+        borderScaleRow.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        borderScaleRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        container.AddChild(borderScaleRow);
+
+        foreach (var scale in new[] { 0.5f, 1f, 2f })
+        {
+            var ns = new NineSliceRuntime();
+            ns.SourceFileName = "Frame.png";
+            ns.Width = 140;
+            ns.Height = 80;
+            ns.BorderScale = scale;
+            borderScaleRow.AddChild(ns);
+        }
+
+        // Rotated variants: same combinations as above, each rotated 25 degrees.
+        // Rotation does not affect layout-occupied size, so the row needs absolute
+        // height/spacing or rotated corners will clip into adjacent rows.
+        MixedScreen.AddText(container, "Rotated (25 degrees) — default, custom source, tinted, tiled, BorderScale=2:");
+
+        var rotatedRow = new ContainerRuntime();
+        rotatedRow.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        rotatedRow.StackSpacing = 40;
+        rotatedRow.Height = 180;
+        rotatedRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        container.AddChild(rotatedRow);
+
+        const float rotation = 25f;
+
+        var rotatedDefault = new NineSliceRuntime();
+        rotatedDefault.SourceFileName = "Frame.png";
+        rotatedDefault.Width = 96;
+        rotatedDefault.Height = 96;
+        rotatedDefault.Rotation = rotation;
+        rotatedRow.AddChild(rotatedDefault);
+
+        var rotatedCustom = new NineSliceRuntime();
+        rotatedCustom.SourceFileName = "FrameSheet.png";
+        rotatedCustom.TextureAddress = Gum.Managers.TextureAddress.Custom;
+        rotatedCustom.TextureLeft = 438;
+        rotatedCustom.TextureTop = 231;
+        rotatedCustom.TextureWidth = 42;
+        rotatedCustom.TextureHeight = 42;
+        rotatedCustom.Width = 96;
+        rotatedCustom.Height = 96;
+        rotatedCustom.Rotation = rotation;
+        rotatedRow.AddChild(rotatedCustom);
+
+        var rotatedTinted = new NineSliceRuntime();
+        rotatedTinted.SourceFileName = "SquareFrame.png";
+        rotatedTinted.Width = 96;
+        rotatedTinted.Height = 96;
+        rotatedTinted.Color = Color.Red;
+        rotatedTinted.Rotation = rotation;
+        rotatedRow.AddChild(rotatedTinted);
+
+        var rotatedTiled = new NineSliceRuntime();
+        rotatedTiled.SourceFileName = "Frame.png";
+        rotatedTiled.Width = 140;
+        rotatedTiled.Height = 64;
+        rotatedTiled.IsTilingMiddleSections = true;
+        rotatedTiled.Rotation = rotation;
+        rotatedRow.AddChild(rotatedTiled);
+
+        var rotatedBorderScale = new NineSliceRuntime();
+        rotatedBorderScale.SourceFileName = "Frame.png";
+        rotatedBorderScale.Width = 120;
+        rotatedBorderScale.Height = 80;
+        rotatedBorderScale.BorderScale = 2f;
+        rotatedBorderScale.Rotation = rotation;
+        rotatedRow.AddChild(rotatedBorderScale);
     }
 }
