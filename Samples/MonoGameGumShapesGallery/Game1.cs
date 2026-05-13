@@ -1,262 +1,271 @@
-using System;
-using Apos.Shapes;
+using Gum.GueDeriving;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using MonoGameAndGum.Renderables;
+using MonoGameGum;
 
 namespace MonoGameGumShapesGallery;
 
-// Visual smoke test for Gum.Shapes.MonoGame. Two stacked sections:
+// Visual smoke test + consumer-facing example for Gum.Shapes.MonoGame. The intent is that
+// the code in this file is exactly what a consumer would write to get Apos-shape runtimes
+// rendering on screen - no manual ShapeBatch.Begin/End, no direct Render calls, no
+// PreRender calls. GumService.Default.Draw() drives the whole pipeline; each shape is a
+// runtime instance configured via property setters and added to the visual tree once.
 //
-//   1. Shape gallery — every primitive Apos.Shapes exposes (Circle, Rectangle, RoundedRect
-//      uniform, Line, Hexagon, Triangle) across every visual variant (Filled, Border,
-//      Fill+Border, Linear gradient, Radial gradient). Same layout as Apostolique's reference
-//      sample, ported to use the in-repo MonoGameGumShapes wiring (ShapeRenderer.Self) so the
-//      shipped XNB is what's being exercised.
-//
-//   2. Per-corner radii showcase — five RoundedRectangle configurations using the new
-//      CornerRadii overload added in Apos.Shapes 0.6.9 (PR #32). The "Leaf" cell matches the
-//      Forest Glade theme's signature silhouette (TL=2, TR=12, BR=2, BL=12); the rest cover
-//      tabs, diagonals, asymmetric corners.
-//
-// To verify the Gum-side wrapper, a single RoundedRectangleRuntime is constructed with the
-// same per-corner values as the leaf cell and rendered alongside its raw-API counterpart.
-// They should be visually identical; if they're not, the wrapper has regressed.
+// Four rows of five cells each, all using runtime types (no raw Apos.Shapes API):
+//   1. ColoredCircleRuntime - solid / gradient / stroked variants.
+//   2. RoundedRectangleRuntime - uniform CornerRadius, gradient, per-corner radii
+//      (Apos.Shapes 0.6.9's CornerRadii overload, including the Forest Glade leaf shape).
+//   3. LineRuntime - varied thickness, end caps, gradient, dropshadow.
+//   4. ArcRuntime - the unified Apos<->Skia runtime from issue #2728. First cell is a bare
+//      `new ArcRuntime()` to visually verify the locked-in defaults (flat caps,
+//      SweepAngle = 90, Thickness = 10). The other cells exercise IsEndRounded, full-ring
+//      sweep, thick stroke, and gradient.
 public class Game1 : Game
 {
     private readonly GraphicsDeviceManager _graphics;
-    private ShapeBatch _shapeBatch = default!;
-    private RoundedRectangle _gumWrapperLeaf = default!;
+
+    private const int RowCount = 4;
+    private const int ColCount = 5;
 
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
-        if (GraphicsAdapter.DefaultAdapter.IsProfileSupported(GraphicsProfile.HiDef))
-        {
-            _graphics.GraphicsProfile = GraphicsProfile.HiDef;
-        }
         _graphics.PreferredBackBufferWidth = 1280;
         _graphics.PreferredBackBufferHeight = 900;
         IsMouseVisible = true;
-        Window.AllowUserResizing = true;
-        Window.Title = "Gum Shapes Gallery — Apos.Shapes 0.6.9 + per-corner radii";
-        // ContentManager's default RootDirectory is empty; the pre-built apos-shapes.xnb
-        // ships under Content/ in the build output (via Link= on the Content item in the
-        // csproj), so point Content there before any Load<T>("apos-shapes") call hits.
         Content.RootDirectory = "Content";
+        Window.Title = "Gum Shapes Gallery";
     }
 
-    protected override void LoadContent()
+    protected override void Initialize()
     {
-        // Initialize ShapeRenderer.Self so the same singleton ShapeBatch is shared between
-        // raw shapeBatch calls in this sample and Gum's RoundedRectangleRuntime.Render path.
-        // This is what consumers of MonoGameGumShapes hit in production.
-        MonoGameAndGum.Renderables.ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-        _shapeBatch = MonoGameAndGum.Renderables.ShapeRenderer.Self.ShapeBatch;
+        // Standard Gum + Apos.Shapes setup. GumService brings up SystemManagers and the
+        // renderer; ShapeRenderer wires up the Apos.Shapes batch so any shape runtime added
+        // to the tree picks the right backend up automatically.
+        GumService.Default.Initialize(this);
+        ShapeRenderer.Self.Initialize();
 
-        // Build a single RoundedRectangle (the Gum-side renderable, the one the
-        // RoundedRectangleRuntime wraps) with the leaf-shape per-corner radii. Drawn at the
-        // bottom of Section 2 next to its raw-API counterpart to verify the wrapper forwards
-        // the per-corner properties correctly.
-        _gumWrapperLeaf = new RoundedRectangle
-        {
-            Width = 140,
-            Height = 36,
-            CornerRadius = 0,
-            CustomRadiusTopLeft = 2,
-            CustomRadiusTopRight = 12,
-            CustomRadiusBottomRight = 2,
-            CustomRadiusBottomLeft = 12,
-            IsFilled = true,
-            Color = new Color(112, 220, 80),
-        };
+        float cellW = _graphics.PreferredBackBufferWidth / (float)ColCount;
+        float rowH = _graphics.PreferredBackBufferHeight / (float)RowCount;
+
+        BuildCircleRow(0, cellW, rowH);
+        BuildRoundedRectangleRow(1, cellW, rowH);
+        BuildLineRow(2, cellW, rowH);
+        BuildArcRow(3, cellW, rowH);
+
+        base.Initialize();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        GumService.Default.Update(gameTime);
+        base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(new Color(30, 30, 30));
-
-        int w = GraphicsDevice.Viewport.Width;
-        int h = GraphicsDevice.Viewport.Height;
-
-        // Split the viewport ~70/30 between the gallery grid and the per-corner showcase.
-        int gallerHeight = (int)(h * 0.7f);
-        int cornerSectionTop = gallerHeight;
-        int cornerSectionHeight = h - gallerHeight;
-
-        _shapeBatch.Begin();
-
-        DrawGalleryGrid(w, gallerHeight);
-        DrawPerCornerShowcase(0, cornerSectionTop, w, cornerSectionHeight);
-
-        _shapeBatch.End();
+        GumService.Default.Draw();
         base.Draw(gameTime);
     }
 
-    private void DrawGalleryGrid(int width, int height)
+    private static void Place(GraphicalUiElement shape, int row, int col,
+        float cellW, float rowH, float shapeW, float shapeH)
     {
-        const int cols = 5; // Filled, Border, Fill+Border, Linear gradient, Radial gradient
-        const int rows = 6; // Circle, Rectangle, Rounded uniform, Line, Hexagon, Triangle
-
-        float cellW = width / (float)cols;
-        float cellH = height / (float)rows;
-        float shapeSize = MathF.Min(cellW, cellH) * 0.42f;
-
-        for (int row = 0; row < rows; row++)
-        {
-            float cy = row * cellH + cellH / 2f;
-            for (int col = 0; col < cols; col++)
-            {
-                float cx = col * cellW + cellW / 2f;
-                DrawGalleryCell(row, col, new Vector2(cx, cy), shapeSize);
-            }
-        }
+        float cellCenterX = col * cellW + cellW / 2f;
+        float cellCenterY = row * rowH + rowH / 2f;
+        shape.X = cellCenterX - shapeW / 2f;
+        shape.Y = cellCenterY - shapeH / 2f;
+        shape.Width = shapeW;
+        shape.Height = shapeH;
     }
 
-    private void DrawGalleryCell(int row, int col, Vector2 center, float shapeSize)
+    private static void BuildCircleRow(int row, float cellW, float rowH)
     {
-        Color fill = new Color(80, 180, 220);
-        Color border = new Color(220, 160, 60);
-        Color fillBorder = new Color(60, 180, 130);
-        Gradient linearGrad = new Gradient(
-            center - new Vector2(shapeSize, 0), new Color(220, 60, 80),
-            center + new Vector2(shapeSize, 0), new Color(60, 140, 220),
-            Gradient.Shape.Linear);
-        Gradient radialGrad = new Gradient(
-            center, new Color(255, 220, 60),
-            center + new Vector2(shapeSize, 0), new Color(140, 40, 200),
-            Gradient.Shape.Radial);
-        const float thickness = 2f;
+        const float size = 130f;
+        Color teal = new Color(80, 180, 220);
+        Color green = new Color(60, 180, 130);
+        Color orange = new Color(220, 160, 60);
+        Color purple = new Color(180, 80, 220);
 
-        switch (row)
-        {
-            case 0: // Circle
-                switch (col)
-                {
-                    case 0: _shapeBatch.FillCircle(center, shapeSize, fill); break;
-                    case 1: _shapeBatch.BorderCircle(center, shapeSize, border, thickness); break;
-                    case 2: _shapeBatch.DrawCircle(center, shapeSize, fillBorder, border, thickness); break;
-                    case 3: _shapeBatch.FillCircle(center, shapeSize, linearGrad); break;
-                    case 4: _shapeBatch.FillCircle(center, shapeSize, radialGrad); break;
-                }
-                break;
-            case 1: // Rectangle
-                {
-                    Vector2 size = new Vector2(shapeSize * 2f, shapeSize * 1.3f);
-                    Vector2 xy = center - size / 2f;
-                    switch (col)
-                    {
-                        case 0: _shapeBatch.FillRectangle(xy, size, fill); break;
-                        case 1: _shapeBatch.BorderRectangle(xy, size, border, thickness); break;
-                        case 2: _shapeBatch.DrawRectangle(xy, size, fillBorder, border, thickness); break;
-                        case 3: _shapeBatch.FillRectangle(xy, size, linearGrad); break;
-                        case 4: _shapeBatch.FillRectangle(xy, size, radialGrad); break;
-                    }
-                }
-                break;
-            case 2: // Rounded uniform
-                {
-                    Vector2 size = new Vector2(shapeSize * 2f, shapeSize * 1.3f);
-                    Vector2 xy = center - size / 2f;
-                    float rounded = shapeSize * 0.35f;
-                    switch (col)
-                    {
-                        case 0: _shapeBatch.FillRectangle(xy, size, fill, rounded); break;
-                        case 1: _shapeBatch.BorderRectangle(xy, size, border, thickness, rounded); break;
-                        case 2: _shapeBatch.DrawRectangle(xy, size, fillBorder, border, thickness, rounded); break;
-                        case 3: _shapeBatch.FillRectangle(xy, size, linearGrad, rounded); break;
-                        case 4: _shapeBatch.FillRectangle(xy, size, radialGrad, rounded); break;
-                    }
-                }
-                break;
-            case 3: // Line
-                {
-                    Vector2 a = center - new Vector2(shapeSize, 0);
-                    Vector2 b = center + new Vector2(shapeSize, 0);
-                    float radius = shapeSize * 0.15f;
-                    switch (col)
-                    {
-                        case 0: _shapeBatch.FillLine(a, b, radius, fill); break;
-                        case 1: _shapeBatch.BorderLine(a, b, radius, border, thickness); break;
-                        case 2: _shapeBatch.DrawLine(a, b, radius, fillBorder, border, thickness); break;
-                        case 3: _shapeBatch.FillLine(a, b, radius, linearGrad); break;
-                        case 4: _shapeBatch.FillLine(a, b, radius, radialGrad); break;
-                    }
-                }
-                break;
-            case 4: // Hexagon
-                switch (col)
-                {
-                    case 0: _shapeBatch.FillHexagon(center, shapeSize, fill); break;
-                    case 1: _shapeBatch.BorderHexagon(center, shapeSize, border, thickness); break;
-                    case 2: _shapeBatch.DrawHexagon(center, shapeSize, fillBorder, border, thickness); break;
-                    case 3: _shapeBatch.FillHexagon(center, shapeSize, linearGrad); break;
-                    case 4: _shapeBatch.FillHexagon(center, shapeSize, radialGrad); break;
-                }
-                break;
-            case 5: // Triangle
-                switch (col)
-                {
-                    case 0: _shapeBatch.FillEquilateralTriangle(center, shapeSize * 0.55f, fill); break;
-                    case 1: _shapeBatch.BorderEquilateralTriangle(center, shapeSize * 0.55f, border, thickness); break;
-                    case 2: _shapeBatch.DrawEquilateralTriangle(center, shapeSize * 0.55f, fillBorder, border, thickness); break;
-                    case 3: _shapeBatch.FillEquilateralTriangle(center, shapeSize * 0.55f, linearGrad); break;
-                    case 4: _shapeBatch.FillEquilateralTriangle(center, shapeSize * 0.55f, radialGrad); break;
-                }
-                break;
-        }
+        ColoredCircleRuntime filled = new ColoredCircleRuntime();
+        filled.Color = teal;
+        Place(filled, row, 0, cellW, rowH, size, size);
+        filled.AddToRoot();
+
+        ColoredCircleRuntime filledAlt = new ColoredCircleRuntime();
+        filledAlt.Color = green;
+        Place(filledAlt, row, 1, cellW, rowH, size, size);
+        filledAlt.AddToRoot();
+
+        // Gradient: the ctor seeds Red1/Green1/Blue1 = 255 (white) and Red2 = 255, Green2 =
+        // 255, Blue2 = 0 (yellow) along the gradient axis. UseGradient = true picks it up.
+        ColoredCircleRuntime gradient = new ColoredCircleRuntime();
+        gradient.UseGradient = true;
+        Place(gradient, row, 2, cellW, rowH, size, size);
+        gradient.AddToRoot();
+
+        ColoredCircleRuntime strokedThin = new ColoredCircleRuntime();
+        strokedThin.IsFilled = false;
+        strokedThin.Color = orange;
+        strokedThin.StrokeWidth = 4;
+        Place(strokedThin, row, 3, cellW, rowH, size, size);
+        strokedThin.AddToRoot();
+
+        ColoredCircleRuntime strokedThick = new ColoredCircleRuntime();
+        strokedThick.IsFilled = false;
+        strokedThick.Color = purple;
+        strokedThick.StrokeWidth = 12;
+        Place(strokedThick, row, 4, cellW, rowH, size, size);
+        strokedThick.AddToRoot();
     }
 
-    private void DrawPerCornerShowcase(int x, int y, int width, int height)
+    private static void BuildRoundedRectangleRow(int row, float cellW, float rowH)
     {
-        // Five per-corner radii configurations. Each pair (raw Apos call + Gum-runtime call
-        // where applicable) sits in the same column so visual regressions in the wrapper jump
-        // out at a glance.
-        (string label, CornerRadii corners, Color color)[] cells =
-        {
-            ("Uniform 12",         new CornerRadii(12),                  new Color(80, 180, 220)),
-            ("Leaf (2,12,2,12)",   new CornerRadii(2, 12, 2, 12),        new Color(112, 220, 80)),
-            ("Tab (16,16,0,0)",    new CornerRadii(16, 16, 0, 0),        new Color(220, 160, 60)),
-            ("Diagonal (20,0,20,0)", new CornerRadii(20, 0, 20, 0),      new Color(220, 60, 80)),
-            ("Asym (0,30,10,4)",   new CornerRadii(0, 30, 10, 4),        new Color(200, 120, 220)),
-        };
+        const float width = 200f;
+        const float height = 70f;
+        Color teal = new Color(80, 180, 220);
+        Color green = new Color(112, 220, 80);
+        Color orange = new Color(220, 160, 60);
+        Color magenta = new Color(200, 120, 220);
 
-        int cols = cells.Length;
-        float cellW = width / (float)cols;
-        Vector2 size = new Vector2(MathF.Min(cellW * 0.82f, 180f), 36f);
+        RoundedRectangleRuntime uniformSmall = new RoundedRectangleRuntime();
+        uniformSmall.Color = teal;
+        uniformSmall.CornerRadius = 8;
+        Place(uniformSmall, row, 0, cellW, rowH, width, height);
+        uniformSmall.AddToRoot();
 
-        // Row 1 — raw Apos.Shapes call
-        float row1CenterY = y + height * 0.32f;
-        for (int i = 0; i < cells.Length; i++)
-        {
-            float cx = x + i * cellW + cellW / 2f;
-            Vector2 xy = new Vector2(cx, row1CenterY) - size / 2f;
-            _shapeBatch.DrawRectangle(xy, size, cells[i].color, cells[i].color,
-                thickness: 1f, cornerRadii: cells[i].corners, rotation: 0f, aaSize: 1.5f);
-        }
+        RoundedRectangleRuntime uniformLarge = new RoundedRectangleRuntime();
+        uniformLarge.Color = orange;
+        uniformLarge.CornerRadius = 22;
+        Place(uniformLarge, row, 1, cellW, rowH, width, height);
+        uniformLarge.AddToRoot();
 
-        // Row 2 — Gum's RoundedRectangle renderable, leaf cell only (column 1). The other
-        // columns stay raw-API for compactness; the leaf is the case the Forest Glade theme
-        // depends on, so it's the one we want byte-for-byte parity verified.
-        float row2CenterY = y + height * 0.74f;
-        for (int i = 0; i < cells.Length; i++)
-        {
-            float cx = x + i * cellW + cellW / 2f;
-            Vector2 xy = new Vector2(cx, row2CenterY) - size / 2f;
+        RoundedRectangleRuntime gradient = new RoundedRectangleRuntime();
+        gradient.UseGradient = true;
+        gradient.CornerRadius = 14;
+        Place(gradient, row, 2, cellW, rowH, width, height);
+        gradient.AddToRoot();
 
-            if (i == 1)
-            {
-                _gumWrapperLeaf.X = xy.X;
-                _gumWrapperLeaf.Y = xy.Y;
-                _gumWrapperLeaf.Width = size.X;
-                _gumWrapperLeaf.Height = size.Y;
-                _gumWrapperLeaf.Render(null!);
-            }
-            else
-            {
-                _shapeBatch.DrawRectangle(xy, size, cells[i].color, cells[i].color,
-                    thickness: 1f, cornerRadii: cells[i].corners, rotation: 0f, aaSize: 1.5f);
-            }
-        }
+        // Forest Glade signature leaf shape - opposite-corner asymmetric per-corner radii.
+        // Uses the Apos.Shapes 0.6.9 CornerRadii overload exposed via CustomRadiusTopLeft etc.
+        // CornerRadius = 0 because the per-corner values take over when any Custom* is set.
+        RoundedRectangleRuntime leaf = new RoundedRectangleRuntime();
+        leaf.Color = green;
+        leaf.CornerRadius = 0;
+        leaf.CustomRadiusTopLeft = 2;
+        leaf.CustomRadiusTopRight = 18;
+        leaf.CustomRadiusBottomRight = 2;
+        leaf.CustomRadiusBottomLeft = 18;
+        Place(leaf, row, 3, cellW, rowH, width, height);
+        leaf.AddToRoot();
+
+        // Fully-asymmetric per-corner radii - sanity check that the four corners are wired
+        // to the right Custom* property (a swap would be visible immediately here).
+        RoundedRectangleRuntime asym = new RoundedRectangleRuntime();
+        asym.Color = magenta;
+        asym.CornerRadius = 0;
+        asym.CustomRadiusTopLeft = 0;
+        asym.CustomRadiusTopRight = 30;
+        asym.CustomRadiusBottomRight = 12;
+        asym.CustomRadiusBottomLeft = 4;
+        Place(asym, row, 4, cellW, rowH, width, height);
+        asym.AddToRoot();
+    }
+
+    private static void BuildLineRow(int row, float cellW, float rowH)
+    {
+        const float width = 200f;
+        const float height = 80f;
+        Color teal = new Color(80, 180, 220);
+        Color orange = new Color(220, 160, 60);
+        Color purple = new Color(180, 80, 220);
+
+        LineRuntime thin = new LineRuntime();
+        thin.Color = teal;
+        thin.StrokeWidth = 2;
+        Place(thin, row, 0, cellW, rowH, width, height);
+        thin.AddToRoot();
+
+        LineRuntime thick = new LineRuntime();
+        thick.Color = orange;
+        thick.StrokeWidth = 10;
+        Place(thick, row, 1, cellW, rowH, width, height);
+        thick.AddToRoot();
+
+        LineRuntime roundedEnds = new LineRuntime();
+        roundedEnds.Color = purple;
+        roundedEnds.StrokeWidth = 14;
+        roundedEnds.IsRounded = true;
+        Place(roundedEnds, row, 2, cellW, rowH, width, height);
+        roundedEnds.AddToRoot();
+
+        LineRuntime gradient = new LineRuntime();
+        gradient.StrokeWidth = 12;
+        gradient.IsRounded = true;
+        gradient.UseGradient = true;
+        Place(gradient, row, 3, cellW, rowH, width, height);
+        gradient.AddToRoot();
+
+        LineRuntime dropshadow = new LineRuntime();
+        dropshadow.Color = teal;
+        dropshadow.StrokeWidth = 10;
+        dropshadow.IsRounded = true;
+        dropshadow.HasDropshadow = true;
+        Place(dropshadow, row, 4, cellW, rowH, width, height);
+        dropshadow.AddToRoot();
+    }
+
+    private static void BuildArcRow(int row, float cellW, float rowH)
+    {
+        const float size = 130f;
+
+        // Bare default - verifies the locked-in defaults from issue #2728. A regression in
+        // any of the unified ctor defaults shows up as a visibly-different first cell:
+        //   IsEndRounded = false (the breaking-change default on Apos; was true pre-#2728)
+        //   SweepAngle = 90
+        //   Thickness = 10
+        //   Color = white
+        ArcRuntime defaultArc = new ArcRuntime();
+        Place(defaultArc, row, 0, cellW, rowH, size, size);
+        defaultArc.AddToRoot();
+
+        // Same as the default but with IsEndRounded explicitly set - this is the toggle
+        // existing Apos consumers must apply if they relied on the previous rounded default.
+        // Documented in docs/gum-tool/upgrading/migrating-to-2026-may.md.
+        ArcRuntime rounded = new ArcRuntime();
+        rounded.IsEndRounded = true;
+        Place(rounded, row, 1, cellW, rowH, size, size);
+        rounded.AddToRoot();
+
+        // Full ring - exercises the SweepAngle = 360 path (DrawRing under the hood when
+        // ends are flat).
+        ArcRuntime fullRing = new ArcRuntime();
+        fullRing.SweepAngle = 360;
+        fullRing.Thickness = 8;
+        Place(fullRing, row, 2, cellW, rowH, size, size);
+        fullRing.AddToRoot();
+
+        // Thick rounded half-circle - bigger stroke + rounded caps stress the radius math
+        // (the renderable computes inner/outer radii from Width/Height minus Thickness).
+        ArcRuntime thickHalf = new ArcRuntime();
+        thickHalf.SweepAngle = 180;
+        thickHalf.Thickness = 18;
+        thickHalf.IsEndRounded = true;
+        thickHalf.Color = new Color(220, 160, 60);
+        Place(thickHalf, row, 3, cellW, rowH, size, size);
+        thickHalf.AddToRoot();
+
+        // Gradient three-quarter arc - exercises the UseGradient branch in Arc.Render. The
+        // gradient stops are pre-seeded in the ctor (white to yellow); UseGradient = true
+        // picks them up.
+        ArcRuntime gradient = new ArcRuntime();
+        gradient.SweepAngle = 270;
+        gradient.Thickness = 14;
+        gradient.IsEndRounded = true;
+        gradient.UseGradient = true;
+        Place(gradient, row, 4, cellW, rowH, size, size);
+        gradient.AddToRoot();
     }
 }

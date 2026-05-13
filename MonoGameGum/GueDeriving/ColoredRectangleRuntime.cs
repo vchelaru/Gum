@@ -37,16 +37,16 @@ public class ColoredRectangleRuntime : GraphicalUiElement
     public static float DefaultWidth = 50;
     public static float DefaultHeight = 50;
 
-    ContainedRectangleType mContainedColoredRectangle;
+    ContainedRectangleType _containedColoredRectangle;
     ContainedRectangleType ContainedColoredRectangle
     {
         get
         {
-            if (mContainedColoredRectangle == null)
+            if (_containedColoredRectangle == null)
             {
-                mContainedColoredRectangle = this.RenderableComponent as ContainedRectangleType;
+                _containedColoredRectangle = this.RenderableComponent as ContainedRectangleType;
             }
-            return mContainedColoredRectangle;
+            return _containedColoredRectangle;
         }
     }
 
@@ -161,7 +161,7 @@ public class ColoredRectangleRuntime : GraphicalUiElement
         {
             var rectangle = new ContainedRectangleType();
             SetContainedObject(rectangle);
-            mContainedColoredRectangle = rectangle;
+            _containedColoredRectangle = rectangle;
 
 #if SKIA
             rectangle.CornerRadius = 0;
@@ -182,7 +182,7 @@ public class ColoredRectangleRuntime : GraphicalUiElement
     {
         var toReturn = (ColoredRectangleRuntime)base.Clone();
 
-        toReturn.mContainedColoredRectangle = null;
+        toReturn._containedColoredRectangle = null;
 
         return toReturn;
     }

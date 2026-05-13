@@ -41,16 +41,16 @@ public class RoundedRectangleRuntime
     #region Contained Renderable
     protected override RenderableShapeBase ContainedRenderable => ContainedRoundedRectangle;
 
-    RoundedRectangle? mContainedRoundedRectangle;
+    RoundedRectangle? _containedRoundedRectangle;
     RoundedRectangle ContainedRoundedRectangle
     {
         get
         {
-            if (mContainedRoundedRectangle == null)
+            if (_containedRoundedRectangle == null)
             {
-                mContainedRoundedRectangle = (RoundedRectangle)this.RenderableComponent;
+                _containedRoundedRectangle = (RoundedRectangle)this.RenderableComponent;
             }
-            return mContainedRoundedRectangle;
+            return _containedRoundedRectangle;
         }
     }
 
@@ -201,7 +201,7 @@ public class RoundedRectangleRuntime
         // Without this, mutating the clone's CornerRadius (or any property routed through the
         // cached field) would update the original. Skia previously did this; Apos previously did
         // not (latent bug, fixed by unification).
-        toReturn.mContainedRoundedRectangle = null;
+        toReturn._containedRoundedRectangle = null;
 
         return toReturn;
     }

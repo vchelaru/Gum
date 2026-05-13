@@ -58,17 +58,17 @@ public class NineSliceRuntime : InteractiveGue
 
     #region Contained Nineslice
 
-    ContainedNineSliceType mContainedNineSlice;
+    ContainedNineSliceType _containedNineSlice;
 
     ContainedNineSliceType ContainedNineSlice
     {
         get
         {
-            if (mContainedNineSlice == null)
+            if (_containedNineSlice == null)
             {
-                mContainedNineSlice = (ContainedNineSliceType)this.RenderableComponent;
+                _containedNineSlice = (ContainedNineSliceType)this.RenderableComponent;
             }
-            return mContainedNineSlice;
+            return _containedNineSlice;
         }
     }
 

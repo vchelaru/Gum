@@ -49,16 +49,16 @@ public class SpriteRuntime : GraphicalUiElement
 #endif
 {
     #region Contained Sprite
-    ContainedSpriteType mContainedSprite;
+    ContainedSpriteType _containedSprite;
     ContainedSpriteType ContainedSprite
     {
         get
         {
-            if (mContainedSprite == null)
+            if (_containedSprite == null)
             {
-                mContainedSprite = (ContainedSpriteType)this.RenderableComponent;
+                _containedSprite = (ContainedSpriteType)this.RenderableComponent;
             }
-            return mContainedSprite;
+            return _containedSprite;
         }
     }
 
@@ -510,11 +510,11 @@ public class SpriteRuntime : GraphicalUiElement
         if (fullInstantiation)
         {
 #if RAYLIB || SKIA
-            mContainedSprite = new ContainedSpriteType();
+            _containedSprite = new ContainedSpriteType();
 #else
-            mContainedSprite = new global::RenderingLibrary.Graphics.Sprite(null);
+            _containedSprite = new global::RenderingLibrary.Graphics.Sprite(null);
 #endif
-            SetContainedObject(mContainedSprite);
+            SetContainedObject(_containedSprite);
             Width = 100;
             Height = 100;
             WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
@@ -526,7 +526,7 @@ public class SpriteRuntime : GraphicalUiElement
     public override GraphicalUiElement Clone()
     {
         var toReturn = (SpriteRuntime)base.Clone();
-        toReturn.mContainedSprite = null;
+        toReturn._containedSprite = null;
         return toReturn;
     }
 
