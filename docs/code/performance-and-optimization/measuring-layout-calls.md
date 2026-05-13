@@ -152,6 +152,8 @@ for(int i = 0; i &#x3C; 20; i++)
 
 <figure><img src="../../.gitbook/assets/02_08 34 32.png" alt=""><figcaption><p>Significantly reduced layout calls</p></figcaption></figure>
 
+This same flag also defers font atlas generation, which is the recommended way to batch font property changes on a `TextRuntime` — see [Font Performance](../files-and-fonts/font-performance.md) for the font-specific story.
+
 ## States and Layout Calls
 
 States can be used to set multiple variables at once. Internally Gum automatically suppresses and resumes layouts when states are applied. The following code shows how to apply states to a button. Notice that fewer layout calls are performed compared to explicitly setting each value:

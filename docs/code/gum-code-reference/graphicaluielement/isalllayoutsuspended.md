@@ -114,3 +114,5 @@ This results in far fewer layout calls:
 ```
 Number of layout calls: 174
 ```
+
+This flag also defers font atlas generation when font properties are set on a `TextRuntime`; see [Font Performance](../../files-and-fonts/font-performance.md) for that application.
