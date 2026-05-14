@@ -9,6 +9,7 @@ using System;
 #if RAYLIB
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
+using ColorExtensions = RaylibGum.Helpers.ColorExtensions;
 using ContainedCircleType = Gum.Renderables.LineCircle;
 #elif SOKOL
 using Gum.Renderables;
@@ -20,6 +21,7 @@ using Color = SkiaSharp.SKColor;
 using ContainedCircleType = SkiaGum.Renderables.LineCircle;
 #else
 using Color = Microsoft.Xna.Framework.Color;
+using ColorExtensions = ToolsUtilitiesStandard.Helpers.ColorExtensions;
 using ContainedCircleType = global::RenderingLibrary.Math.Geometry.LineCircle;
 using global::RenderingLibrary.Math.Geometry;
 #endif
@@ -51,17 +53,7 @@ public class CircleRuntime : GraphicalUiElement
         get => ContainedLineCircle.Color.A;
         set
         {
-#if RAYLIB
-            var color = ContainedLineCircle.Color;
-            color.A = (byte)value;
-            ContainedLineCircle.Color = color;
-#else
-            // ColorExtensions.WithAlpha is defined for System.Drawing.Color (the XNA-side LineCircle's Color type).
-            // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
-            // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithAlpha(ContainedLineCircle.Color, (byte)value);
-            ContainedLineCircle.Color = color;
-#endif
+            ContainedLineCircle.Color = ColorExtensions.WithAlpha(ContainedLineCircle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -71,14 +63,7 @@ public class CircleRuntime : GraphicalUiElement
         get => ContainedLineCircle.Color.R;
         set
         {
-#if RAYLIB
-            var color = ContainedLineCircle.Color;
-            color.R = (byte)value;
-            ContainedLineCircle.Color = color;
-#else
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithRed(ContainedLineCircle.Color, (byte)value);
-            ContainedLineCircle.Color = color;
-#endif
+            ContainedLineCircle.Color = ColorExtensions.WithRed(ContainedLineCircle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -88,14 +73,7 @@ public class CircleRuntime : GraphicalUiElement
         get => ContainedLineCircle.Color.G;
         set
         {
-#if RAYLIB
-            var color = ContainedLineCircle.Color;
-            color.G = (byte)value;
-            ContainedLineCircle.Color = color;
-#else
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithGreen(ContainedLineCircle.Color, (byte)value);
-            ContainedLineCircle.Color = color;
-#endif
+            ContainedLineCircle.Color = ColorExtensions.WithGreen(ContainedLineCircle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -105,14 +83,7 @@ public class CircleRuntime : GraphicalUiElement
         get => ContainedLineCircle.Color.B;
         set
         {
-#if RAYLIB
-            var color = ContainedLineCircle.Color;
-            color.B = (byte)value;
-            ContainedLineCircle.Color = color;
-#else
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithBlue(ContainedLineCircle.Color, (byte)value);
-            ContainedLineCircle.Color = color;
-#endif
+            ContainedLineCircle.Color = ColorExtensions.WithBlue(ContainedLineCircle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -163,12 +134,8 @@ public class CircleRuntime : GraphicalUiElement
 #if SKIA
             circle.CornerRadius = 0;
             circle.Color = SkiaSharp.SKColors.White;
-#elif RAYLIB
-            circle.Color = Raylib_cs.Color.White;
-#elif SOKOL
-            circle.Color = SokolGum.Color.White;
 #else
-            circle.Color = System.Drawing.Color.White;
+            circle.Color = ColorExtensions.White;
 #endif
             Width = 32;
             Height = 32;

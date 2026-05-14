@@ -10,6 +10,7 @@ using System;
 #if RAYLIB
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
+using ColorExtensions = RaylibGum.Helpers.ColorExtensions;
 using ContainedLineRectangle = Gum.Renderables.LineRectangle;
 #elif SOKOL
 using Gum.Renderables;
@@ -21,6 +22,7 @@ using Color = SkiaSharp.SKColor;
 using ContainedLineRectangle = SkiaGum.Renderables.LineRectangle;
 #else
 using Color = Microsoft.Xna.Framework.Color;
+using ColorExtensions = ToolsUtilitiesStandard.Helpers.ColorExtensions;
 using ContainedLineRectangle = global::RenderingLibrary.Math.Geometry.LineRectangle;
 using global::RenderingLibrary.Math.Geometry;
 #endif
@@ -72,17 +74,7 @@ public class RectangleRuntime : GraphicalUiElement
         get => ContainedLineRectangle.Color.A;
         set
         {
-#if RAYLIB
-            var color = ContainedLineRectangle.Color;
-            color.A = (byte)value;
-            ContainedLineRectangle.Color = color;
-#else
-            // ColorExtensions.WithAlpha is defined for System.Drawing.Color (the XNA-side LineCircle's Color type).
-            // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
-            // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithAlpha(ContainedLineRectangle.Color, (byte)value);
-            ContainedLineRectangle.Color = color;
-#endif
+            ContainedLineRectangle.Color = ColorExtensions.WithAlpha(ContainedLineRectangle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -92,14 +84,7 @@ public class RectangleRuntime : GraphicalUiElement
         get => ContainedLineRectangle.Color.R;
         set
         {
-#if RAYLIB
-            var color = ContainedLineRectangle.Color;
-            color.R = (byte)value;
-            ContainedLineRectangle.Color = color;
-#else
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithRed(ContainedLineRectangle.Color, (byte)value);
-            ContainedLineRectangle.Color = color;
-#endif
+            ContainedLineRectangle.Color = ColorExtensions.WithRed(ContainedLineRectangle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -109,14 +94,7 @@ public class RectangleRuntime : GraphicalUiElement
         get => ContainedLineRectangle.Color.G;
         set
         {
-#if RAYLIB
-            var color = ContainedLineRectangle.Color;
-            color.G = (byte)value;
-            ContainedLineRectangle.Color = color;
-#else
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithGreen(ContainedLineRectangle.Color, (byte)value);
-            ContainedLineRectangle.Color = color;
-#endif
+            ContainedLineRectangle.Color = ColorExtensions.WithGreen(ContainedLineRectangle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -126,14 +104,7 @@ public class RectangleRuntime : GraphicalUiElement
         get => ContainedLineRectangle.Color.B;
         set
         {
-#if RAYLIB
-            var color = ContainedLineRectangle.Color;
-            color.B = (byte)value;
-            ContainedLineRectangle.Color = color;
-#else
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithBlue(ContainedLineRectangle.Color, (byte)value);
-            ContainedLineRectangle.Color = color;
-#endif
+            ContainedLineRectangle.Color = ColorExtensions.WithBlue(ContainedLineRectangle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -170,12 +141,8 @@ public class RectangleRuntime : GraphicalUiElement
 
 #if SKIA
             rectangle.Color = SkiaSharp.SKColors.White;
-#elif RAYLIB
-            rectangle.Color = Raylib_cs.Color.White;
-#elif SOKOL
-            rectangle.Color = SokolGum.Color.White;
 #else
-            rectangle.Color = System.Drawing.Color.White;
+            rectangle.Color = ColorExtensions.White;
 #endif
 
             Width = 50;
