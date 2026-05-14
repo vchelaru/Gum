@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,11 +25,13 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     /// <summary>
     /// Project directory used in characterization tests. The existing implementation
     /// derives the project directory from <c>FullFileName</c> via <c>FileManager.GetDirectory</c>,
-    /// which appends a trailing slash. Using a forward-slash absolute-style path keeps the
-    /// test platform-independent and matches the format strings the existing impl emits.
+    /// which appends a trailing slash. The path must be <em>rooted on the host OS</em> — otherwise
+    /// the impl treats it as relative and prepends the working directory. A <c>"C:/..."</c> path
+    /// is rooted on Windows but NOT on macOS/Linux, so the base directory is chosen per-platform.
     /// </summary>
-    private const string FakeProjectDirectory = "C:/FakeGumProject/";
-    private const string FakeProjectFile = FakeProjectDirectory + "MyProject.gumx";
+    private static readonly string FakeProjectDirectory =
+        OperatingSystem.IsWindows() ? "C:/FakeGumProject/" : "/tmp/FakeGumProject/";
+    private static readonly string FakeProjectFile = FakeProjectDirectory + "MyProject.gumx";
 
     private void SetProjectFullFileName()
     {
@@ -120,16 +123,18 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     [Fact]
     public void GetAllFilesInProject_includes_custom_font_file_when_UseCustomFont_is_true()
     {
-        const string customFontPath = FakeProjectDirectory + "Fonts/MyCustom.ttf";
+        // CustomFontFile is stored relative to the project directory; the impl resolves it
+        // against that directory. Passing an absolute path here would double-resolve.
+        const string customFontRelative = "Fonts/MyCustom.ttf";
 
         ScreenSave screen = BuildScreen("MainMenu");
-        AddTextInstanceWithCustomFont(screen, "Text1", customFontPath);
+        AddTextInstanceWithCustomFont(screen, "Text1", customFontRelative);
         Project.Screens.Add(screen);
         SetProjectFullFileName();
 
         IEnumerable<string> files = ObjectFinder.Self.GetAllFilesInProject();
 
-        files.ShouldContain(Standardize(customFontPath));
+        files.ShouldContain(Standardize(FakeProjectDirectory + customFontRelative));
     }
 
     [Fact]
@@ -169,25 +174,25 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     [Fact]
     public void GetAllFilesInProject_includes_referenced_textures_via_SourceFile()
     {
-        const string spritePath = FakeProjectDirectory + "Textures/bg.png";
+        const string spriteRelative = "Textures/bg.png";
 
         ScreenSave screen = BuildScreen("MainMenu");
-        AddSpriteInstance(screen, "Sprite1", spritePath);
+        AddSpriteInstance(screen, "Sprite1", spriteRelative);
         Project.Screens.Add(screen);
         SetProjectFullFileName();
 
         IEnumerable<string> files = ObjectFinder.Self.GetAllFilesInProject();
 
-        files.ShouldContain(Standardize(spritePath));
+        files.ShouldContain(Standardize(FakeProjectDirectory + spriteRelative));
     }
 
     [Fact]
     public void GetAllFilesInProject_returns_absolute_paths_not_relative()
     {
-        const string spritePath = FakeProjectDirectory + "Textures/bg.png";
+        const string spriteRelative = "Textures/bg.png";
 
         ScreenSave screen = BuildScreen("MainMenu");
-        AddSpriteInstance(screen, "Sprite1", spritePath);
+        AddSpriteInstance(screen, "Sprite1", spriteRelative);
         Project.Screens.Add(screen);
         SetProjectFullFileName();
 
@@ -204,14 +209,14 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     [Fact]
     public void GetAllFilesInProject_returns_distinct_paths_when_same_file_referenced_multiply()
     {
-        const string sharedTexture = FakeProjectDirectory + "Textures/shared.png";
+        const string sharedTextureRelative = "Textures/shared.png";
 
         ScreenSave screenA = BuildScreen("ScreenA");
-        AddSpriteInstance(screenA, "Sprite1", sharedTexture);
-        AddSpriteInstance(screenA, "Sprite2", sharedTexture);
+        AddSpriteInstance(screenA, "Sprite1", sharedTextureRelative);
+        AddSpriteInstance(screenA, "Sprite2", sharedTextureRelative);
 
         ScreenSave screenB = BuildScreen("ScreenB");
-        AddSpriteInstance(screenB, "Sprite1", sharedTexture);
+        AddSpriteInstance(screenB, "Sprite1", sharedTextureRelative);
 
         Project.Screens.Add(screenA);
         Project.Screens.Add(screenB);
@@ -219,21 +224,21 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
 
         List<string> files = ObjectFinder.Self.GetAllFilesInProject().ToList();
 
-        string expected = Standardize(sharedTexture);
+        string expected = Standardize(FakeProjectDirectory + sharedTextureRelative);
         files.Count(f => f == expected).ShouldBe(1);
     }
 
     [Fact]
     public void GetFilesReferencedBy_excludes_files_referenced_only_by_other_elements()
     {
-        const string ownTexture = FakeProjectDirectory + "Textures/own.png";
-        const string otherTexture = FakeProjectDirectory + "Textures/other.png";
+        const string ownTextureRelative = "Textures/own.png";
+        const string otherTextureRelative = "Textures/other.png";
 
         ScreenSave screenA = BuildScreen("ScreenA");
-        AddSpriteInstance(screenA, "Sprite1", ownTexture);
+        AddSpriteInstance(screenA, "Sprite1", ownTextureRelative);
 
         ScreenSave screenB = BuildScreen("ScreenB");
-        AddSpriteInstance(screenB, "Sprite1", otherTexture);
+        AddSpriteInstance(screenB, "Sprite1", otherTextureRelative);
 
         Project.Screens.Add(screenA);
         Project.Screens.Add(screenB);
@@ -241,17 +246,17 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
 
         List<string> files = ObjectFinder.Self.GetFilesReferencedBy(screenA);
 
-        files.ShouldContain(Standardize(ownTexture));
-        files.ShouldNotContain(Standardize(otherTexture));
+        files.ShouldContain(Standardize(FakeProjectDirectory + ownTextureRelative));
+        files.ShouldNotContain(Standardize(FakeProjectDirectory + otherTextureRelative));
     }
 
     [Fact]
     public void GetFilesReferencedBy_returns_absolute_paths()
     {
-        const string spritePath = FakeProjectDirectory + "Textures/bg.png";
+        const string spriteRelative = "Textures/bg.png";
 
         ScreenSave screen = BuildScreen("MainMenu");
-        AddSpriteInstance(screen, "Sprite1", spritePath);
+        AddSpriteInstance(screen, "Sprite1", spriteRelative);
         Project.Screens.Add(screen);
         SetProjectFullFileName();
 

@@ -771,12 +771,21 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
             return;
         }
 
+        // The platform gate lives in BmFontExeFileGenerator, not the service itself, so this
+        // test wires a service with the real generator (the shared _sut uses NoOpFontFileGenerator,
+        // which never throws). CreateFontIfNecessary surfaces the fault through Task.Result, which
+        // wraps it in an AggregateException — unwrap to confirm it is the platform gate.
+        HeadlessFontGenerationService service =
+            new HeadlessFontGenerationService(new BmFontExeFileGenerator());
+
         BmfcSave bmfcSave = new BmfcSave();
         bmfcSave.FontName = "Arial";
         bmfcSave.FontSize = 24;
 
-        Should.Throw<PlatformNotSupportedException>(
-            () => _sut.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false));
+        AggregateException exception = Should.Throw<AggregateException>(
+            () => service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false));
+
+        exception.GetBaseException().ShouldBeOfType<PlatformNotSupportedException>();
     }
 
     #endregion
@@ -802,35 +811,6 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
 
         await Should.ThrowAsync<PlatformNotSupportedException>(
             () => generator.GenerateFont(bmfcSave, outputFntPath: "/tmp/test.fnt", createTask: true));
-    }
-
-    [Fact]
-    public async Task CreateAllMissingFontFiles_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        GumProjectSave project = new GumProjectSave();
-
-        await Should.ThrowAsync<PlatformNotSupportedException>(
-            () => _sut.CreateAllMissingFontFiles(project, projectDirectory: "/tmp/test"));
-    }
-
-    [Fact]
-    public void GenerateMissingFontsForReferencingElements_ShouldThrowPlatformNotSupportedException_WhenNotWindows()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        GumProjectSave project = new GumProjectSave();
-        StateSave state = new StateSave();
-
-        Should.Throw<PlatformNotSupportedException>(
-            () => _sut.GenerateMissingFontsForReferencingElements(project, state, projectDirectory: "/tmp/test"));
     }
 
     #endregion

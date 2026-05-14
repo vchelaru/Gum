@@ -80,7 +80,11 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         string codeProjectRoot = settings.CodeProjectRoot;
         if (FileManager.IsRelative(codeProjectRoot))
         {
-            codeProjectRoot = projectDirectory + codeProjectRoot;
+            // Combine through the Path APIs rather than string concatenation: projectDirectory
+            // may or may not end in a separator, and a raw concat like "dir" + "./" produces
+            // "dir./" — a literal (nonexistent) directory name on macOS/Linux, though Windows
+            // silently trims the trailing dot.
+            codeProjectRoot = Path.GetFullPath(Path.Combine(projectDirectory, codeProjectRoot));
         }
 
         string? csprojPath = FindCsprojInDirectory(codeProjectRoot);
@@ -142,6 +146,12 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
             {
                 continue;
             }
+
+            // csproj Include paths use backslash separators by MSBuild convention, even in
+            // projects authored on macOS/Linux. Normalize to forward slashes so the Path
+            // APIs below resolve the directory correctly on non-Windows platforms (where
+            // '\' is not a separator and Path.GetDirectoryName would return an empty string).
+            relativePath = relativePath.Replace('\\', '/');
 
             string csprojDir = Path.GetDirectoryName(csprojPath) ?? csprojPath;
             string referencedProjectDir;

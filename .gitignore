@@ -46,6 +46,9 @@ nul
 # XNB test harnesses (not needed in repo, used for local verification only)
 Runtimes/GumShapes/XnbTest/
 
+# Test result artifacts from `dotnet test --logger trx` (regenerated every run)
+[Tt]est[Rr]esult*/
+
 /.claude/designs
 *.setj
 
