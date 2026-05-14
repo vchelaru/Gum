@@ -114,6 +114,78 @@ public class CircleRuntime : GraphicalUiElement
 #endif
     }
 
+#if XNALIKE
+    Color? _fillColor;
+
+    /// <summary>
+    /// When non-null, the circle renders as a solid fill of this color. When null (the default),
+    /// the circle renders as an outline via its <see cref="LineCircle"/> renderable.
+    /// </summary>
+    /// <remarks>
+    /// Filled rendering requires the optional MonoGameGumShapes (Apos.Shapes) package, which
+    /// registers a renderable factory with <see cref="ShapeRenderableRegistry"/>. When that
+    /// package is not referenced, setting <see cref="FillColor"/> is a graceful no-op for the
+    /// visual: the runtime stays on its outline renderable rather than crashing.
+    ///
+    /// Spike (#2758): proof-of-concept for the renderable-swap mechanism only. It does not yet
+    /// route the existing Color/Radius/Alpha properties through a swapped-in fill renderable —
+    /// that wiring is part of the actual ColoredCircle/Circle collapse, which is out of scope
+    /// for the spike.
+    /// </remarks>
+    public Color? FillColor
+    {
+        get => _fillColor;
+        set
+        {
+            _fillColor = value;
+            UpdateRenderableFromFillColor();
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Swaps the contained renderable to match the current <see cref="FillColor"/>: a
+    /// fill-capable renderable (from <see cref="ShapeRenderableRegistry"/>) when FillColor is
+    /// set, or the outline <see cref="LineCircle"/> when it is null. This is the core of the
+    /// renderable-swap mechanism the spike exists to prove.
+    /// </summary>
+    void UpdateRenderableFromFillColor()
+    {
+        if (_fillColor.HasValue)
+        {
+            if (RenderableComponent is IFilledShapeRenderable existingFill)
+            {
+                // Already on a fill-capable renderable — just update it.
+                existingFill.IsFilled = true;
+                existingFill.Color = _fillColor.Value;
+            }
+            else
+            {
+                var factory = ShapeRenderableRegistry.CreateFilledCircleRenderable;
+                if (factory != null)
+                {
+                    var fillRenderable = factory();
+                    fillRenderable.IsFilled = true;
+                    fillRenderable.Color = _fillColor.Value;
+                    containedLineCircle = null;
+                    SetContainedObject(fillRenderable);
+                }
+                // else: MonoGameGumShapes is not referenced, so no fill-capable renderable can
+                // be created. Degrade gracefully — stay on the outline LineCircle, no crash.
+            }
+        }
+        else if (RenderableComponent is not ContainedCircleType)
+        {
+            // FillColor cleared while on a fill renderable — swap back to the outline LineCircle.
+            var lineCircle = new ContainedCircleType();
+            lineCircle.CircleOrigin = CircleOrigin.TopLeft;
+            lineCircle.Color = ColorExtensions.White;
+            containedLineCircle = lineCircle;
+            SetContainedObject(lineCircle);
+        }
+    }
+#endif
+
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
     [Obsolete("Use the AddToRoot extension method instead (e.g. myCircle.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);

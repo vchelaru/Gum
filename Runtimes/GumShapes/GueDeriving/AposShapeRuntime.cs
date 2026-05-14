@@ -64,9 +64,13 @@ public abstract class AposShapeRuntime : GraphicalUiElement
 
         StandardElementsManager.Self.CustomGetDefaultState += HandleCustomGetDefaultState;
 
-        CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable += 
+        CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable +=
             MonoGameGumShapes.CustomSetPropertyOnRenderable.SetPropertyOnRenderableFunc;
 
+        // Spike (#2758): supply core CircleRuntime with a fill-capable renderable factory.
+        // Core MonoGameGum cannot reference Apos.Shapes, so it exposes ShapeRenderableRegistry
+        // as the extension point and we fill it here, from this same module initializer.
+        ShapeRenderableRegistry.CreateFilledCircleRenderable = () => new Circle();
     }
 
     private static StateSave HandleCustomGetDefaultState(string arg)
