@@ -11,6 +11,7 @@ using System.Numerics;
 #if RAYLIB
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
+using ColorExtensions = RaylibGum.Helpers.ColorExtensions;
 using ContainedPolygonType = Gum.Renderables.LinePolygon;
 #elif SOKOL
 using Gum.Renderables;
@@ -18,6 +19,7 @@ using Color = SokolGum.Color;
 using ContainedPolygonType = Gum.Renderables.LinePolygon;
 #else
 using Color = Microsoft.Xna.Framework.Color;
+using ColorExtensions = ToolsUtilitiesStandard.Helpers.ColorExtensions;
 using ContainedPolygonType = global::RenderingLibrary.Math.Geometry.LinePolygon;
 using global::RenderingLibrary.Math.Geometry;
 #endif
@@ -54,14 +56,7 @@ public class PolygonRuntime : InteractiveGue
         get => ContainedPolygon.Color.R;
         set
         {
-#if RAYLIB
-            var color = ContainedPolygon.Color;
-            color.R = (byte)value;
-            ContainedPolygon.Color = color;
-#else
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithRed(ContainedPolygon.Color, (byte)value);
-            ContainedPolygon.Color = color;
-#endif
+            ContainedPolygon.Color = ColorExtensions.WithRed(ContainedPolygon.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -74,14 +69,7 @@ public class PolygonRuntime : InteractiveGue
         get => ContainedPolygon.Color.G;
         set
         {
-#if RAYLIB
-            var color = ContainedPolygon.Color;
-            color.G = (byte)value;
-            ContainedPolygon.Color = color;
-#else
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithGreen(ContainedPolygon.Color, (byte)value);
-            ContainedPolygon.Color = color;
-#endif
+            ContainedPolygon.Color = ColorExtensions.WithGreen(ContainedPolygon.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -94,14 +82,7 @@ public class PolygonRuntime : InteractiveGue
         get => ContainedPolygon.Color.B;
         set
         {
-#if RAYLIB
-            var color = ContainedPolygon.Color;
-            color.B = (byte)value;
-            ContainedPolygon.Color = color;
-#else
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithBlue(ContainedPolygon.Color, (byte)value);
-            ContainedPolygon.Color = color;
-#endif
+            ContainedPolygon.Color = ColorExtensions.WithBlue(ContainedPolygon.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -114,14 +95,7 @@ public class PolygonRuntime : InteractiveGue
         get => ContainedPolygon.Color.A;
         set
         {
-#if RAYLIB
-            var color = ContainedPolygon.Color;
-            color.A = (byte)value;
-            ContainedPolygon.Color = color;
-#else
-            var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithAlpha(ContainedPolygon.Color, (byte)value);
-            ContainedPolygon.Color = color;
-#endif
+            ContainedPolygon.Color = ColorExtensions.WithAlpha(ContainedPolygon.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
@@ -176,13 +150,7 @@ public class PolygonRuntime : InteractiveGue
             SetContainedObject(polygon);
             containedPolygon = polygon;
 
-#if RAYLIB
-            polygon.Color = Raylib_cs.Color.White;
-#elif SOKOL
-            polygon.Color = SokolGum.Color.White;
-#else
-            polygon.Color = System.Drawing.Color.White;
-#endif
+            polygon.Color = ColorExtensions.White;
 
             polygon.SetPoints(new Vector2[]
             {

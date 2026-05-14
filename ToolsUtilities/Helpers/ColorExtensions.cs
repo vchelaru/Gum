@@ -2,6 +2,11 @@
 
 namespace ToolsUtilitiesStandard.Helpers {
 	public static class ColorExtensions {
+		/// <summary>
+		/// Gets an opaque white color.
+		/// </summary>
+		public static Color White => Color.White;
+
 		public static Color WithAlpha(this Color color, byte value) {
 			return Color.FromArgb(value, color.R, color.G, color.B);
 		}
