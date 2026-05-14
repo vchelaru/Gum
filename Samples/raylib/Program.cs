@@ -13,6 +13,7 @@ using RenderingLibrary.Graphics;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static Raylib_cs.Raylib;
+using System.Numerics;
 
 namespace Examples.Shapes;
 
@@ -213,11 +214,39 @@ public class BasicShapes
         var row = NewSection(Gum.Managers.ChildrenLayout.LeftToRightStack, spacing: 16);
         section.AddChild(row);
 
+        var lineRectangle = new RectangleRuntime();
+        lineRectangle.Width = 80;
+        lineRectangle.Height = 80;
+        lineRectangle.IsDotted = true;
+        lineRectangle.Color = new Color(80, 160, 200, 255);
+        lineRectangle.LineWidth = 3f;
+        row.AddChild(lineRectangle);
+
+        var polygon = new PolygonRuntime();
+        polygon.Color = new Color(80, 160, 200, 255);
+
+        // width/heights are used for layout
+        polygon.IsDotted = true;
+        polygon.SetPoints(new Vector2[]
+        {
+            new Vector2(0, 0),
+            new Vector2(100,0),
+            new Vector2(100,100),
+            new Vector2(0,100),
+            new Vector2(0,0),
+
+        });
+        polygon.Width = 100;
+        polygon.Height = 100;
+        row.AddChild(polygon);
+
         var rectangle = new ColoredRectangleRuntime();
         rectangle.Width = 80;
         rectangle.Height = 80;
         rectangle.Color = new Color(80, 160, 220, 255);
         row.AddChild(rectangle);
+
+
 
         var circle = new CircleRuntime();
         circle.Radius = 40;

@@ -14,7 +14,8 @@ using Gum.ToolStates;
 #if RAYLIB
 using Gum.Renderables;
 using Raylib_cs;
-
+#elif SOKOL
+using Gum.Renderables;
 #else
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math.Geometry;
@@ -35,17 +36,14 @@ namespace Gum.Wireframe
 
                 case "Container":
                 case "Component": // this should never be set in Gum, but there could be XML errors or someone could have used an old Gum...
-
+#if RAYLIB || SOKOL
+                    containedObject = new InvisibleRenderable();
+#else
                     var showComponentLineRectangles = GraphicalUiElement.ShowLineRectangles;
-
-#if RAYLIB
-                    showComponentLineRectangles = false;
-#endif
-
                     if (showComponentLineRectangles)
                     {
                         LineRectangle lineRectangle = new LineRectangle(systemManagers);
-                        lineRectangle.Color = System.Drawing.Color.FromArgb(255,255,255,255);
+                        lineRectangle.Color = System.Drawing.Color.FromArgb(255, 255, 255, 255);
 #if GUM
                         lineRectangle.IsDotted = true;
 
@@ -59,10 +57,7 @@ namespace Gum.Wireframe
 #endif
                         containedObject = lineRectangle;
                     }
-                    else
-                    {
-                        containedObject = new InvisibleRenderable();
-                    }
+#endif
                     break;
 
                 case "Rectangle":
