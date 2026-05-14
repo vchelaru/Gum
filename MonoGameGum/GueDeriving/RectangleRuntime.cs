@@ -160,11 +160,11 @@ public class RectangleRuntime : GraphicalUiElement
     [Obsolete("Use the AddToRoot extension method instead (e.g. myRectangle.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
-    public RectangleRuntime(bool fullInstantiation = true, SystemManagers systemManagers = null)
+    public RectangleRuntime(bool fullInstantiation = true, SystemManagers? systemManagers = null)
     {
         if (fullInstantiation)
         {
-            var rectangle = new ContainedLineRectangle();
+            var rectangle = new ContainedLineRectangle(systemManagers);
             SetContainedObject(rectangle);
             containedLineRectangle = rectangle;
 
