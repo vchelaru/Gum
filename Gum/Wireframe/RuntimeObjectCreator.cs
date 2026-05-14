@@ -26,10 +26,10 @@ namespace Gum.Wireframe
     public static class RuntimeObjectCreator
     {
 
-        public static IRenderable TryHandleAsBaseType(string baseType, ISystemManagers managers)
+        public static IRenderable TryHandleAsBaseType(string baseType, ISystemManagers? managers)
         {
-            var systemManagers = managers as SystemManagers;
-            IRenderable containedObject = null;
+            SystemManagers? systemManagers = managers as SystemManagers;
+            IRenderable? containedObject = null;
             switch (baseType)
             {
 #if MONOGAME || KNI || FNA || RAYLIB
@@ -56,6 +56,10 @@ namespace Gum.Wireframe
                             );
 #endif
                         containedObject = lineRectangle;
+                    }
+                    else
+                    {
+                        containedObject = new InvisibleRenderable();
                     }
 #endif
                     break;
