@@ -80,7 +80,11 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         string codeProjectRoot = settings.CodeProjectRoot;
         if (FileManager.IsRelative(codeProjectRoot))
         {
-            codeProjectRoot = projectDirectory + codeProjectRoot;
+            // Combine through the Path APIs rather than string concatenation: projectDirectory
+            // may or may not end in a separator, and a raw concat like "dir" + "./" produces
+            // "dir./" — a literal (nonexistent) directory name on macOS/Linux, though Windows
+            // silently trims the trailing dot.
+            codeProjectRoot = Path.GetFullPath(Path.Combine(projectDirectory, codeProjectRoot));
         }
 
         string? csprojPath = FindCsprojInDirectory(codeProjectRoot);
