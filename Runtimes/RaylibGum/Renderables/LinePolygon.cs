@@ -13,7 +13,7 @@ public class LinePolygon : InvisibleRenderable
 
     public Color Color { get; set; } = Color.White;
 
-    public int Alpha
+    public override int Alpha
     {
         get => Color.A;
         set
