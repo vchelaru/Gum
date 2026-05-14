@@ -77,6 +77,17 @@ public class PolygonRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void IsPointInside_ShouldReturnFalse_WhenPointWasInsideBeforeRotation()
+    {
+        // Default polygon is a 0..32 square. After 90° CCW rotation around (0,0) the
+        // occupied region moves to x∈[0,32], y∈[-32,0]. A point that was inside the
+        // un-rotated square at (16,16) should now be outside.
+        PolygonRuntime sut = new();
+        sut.Rotation = 90;
+        sut.IsPointInside(16, 16).ShouldBeFalse();
+    }
+
+    [Fact]
     public void IsPointInside_ShouldReturnTrue_WhenPointIsInsideDefaultPolygon()
     {
         PolygonRuntime sut = new();
@@ -84,10 +95,27 @@ public class PolygonRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void IsPointInside_ShouldReturnTrue_WhenPointIsInsideRotatedPolygon()
+    {
+        // After 90° CCW, world (16,-16) maps to local (16,16) which is inside the default square.
+        PolygonRuntime sut = new();
+        sut.Rotation = 90;
+        sut.IsPointInside(16, -16).ShouldBeTrue();
+    }
+
+    [Fact]
     public void LineWidth_ShouldBe1_ByDefault()
     {
         PolygonRuntime sut = new();
         sut.LineWidth.ShouldBe(1);
+    }
+
+    [Fact]
+    public void LineWidth_ShouldRoundTrip()
+    {
+        PolygonRuntime sut = new();
+        sut.LineWidth = 3f;
+        sut.LineWidth.ShouldBe(3f);
     }
 
     [Fact]

@@ -96,18 +96,28 @@ public class LinePolygon : InvisibleRenderable
         float ox = this.GetAbsoluteLeft();
         float oy = this.GetAbsoluteTop();
 
+        float rotRad = this.GetAbsoluteRotation() * MathF.PI / 180f;
+        float cos = MathF.Cos(rotRad);
+        float sin = MathF.Sin(rotRad);
+
+        // Inverse-rotate the world point into local space for the ray cast.
+        float relX = worldX - ox;
+        float relY = worldY - oy;
+        float localX = relX * cos - relY * sin;
+        float localY = relX * sin + relY * cos;
+
         int count = _points.Count;
         bool inside = false;
 
         for (int i = 0, j = count - 1; i < count; j = i++)
         {
-            float xi = _points[i].X + ox;
-            float yi = _points[i].Y + oy;
-            float xj = _points[j].X + ox;
-            float yj = _points[j].Y + oy;
+            float xi = _points[i].X;
+            float yi = _points[i].Y;
+            float xj = _points[j].X;
+            float yj = _points[j].Y;
 
-            if (((yi > worldY) != (yj > worldY)) &&
-                (worldX < (xj - xi) * (worldY - yi) / (yj - yi) + xi))
+            if (((yi > localY) != (yj > localY)) &&
+                (localX < (xj - xi) * (localY - yi) / (yj - yi) + xi))
             {
                 inside = !inside;
             }
@@ -126,24 +136,28 @@ public class LinePolygon : InvisibleRenderable
         float ox = this.GetAbsoluteLeft();
         float oy = this.GetAbsoluteTop();
 
+        float rotRad = this.GetAbsoluteRotation() * MathF.PI / 180f;
+        float cos = MathF.Cos(rotRad);
+        float sin = MathF.Sin(rotRad);
+
+        // Rotate a local point into world space around (ox, oy).
+        Vector2 T(Vector2 p) =>
+            new Vector2(ox + p.X * cos + p.Y * sin, oy - p.X * sin + p.Y * cos);
+
         if (!IsDotted)
         {
             for (int i = 0; i < _points.Count - 1; i++)
             {
-                DrawLineEx(
-                    new Vector2(ox + _points[i].X, oy + _points[i].Y),
-                    new Vector2(ox + _points[i + 1].X, oy + _points[i + 1].Y),
-                    LinePixelWidth,
-                    Color);
+                DrawLineEx(T(_points[i]), T(_points[i + 1]), LinePixelWidth, Color);
             }
         }
         else
         {
             for (int i = 0; i < _points.Count - 1; i++)
             {
-                DrawDashedSegment(
-                    ox + _points[i].X, oy + _points[i].Y,
-                    ox + _points[i + 1].X, oy + _points[i + 1].Y);
+                Vector2 a = T(_points[i]);
+                Vector2 b = T(_points[i + 1]);
+                DrawDashedSegment(a.X, a.Y, b.X, b.Y);
             }
         }
     }

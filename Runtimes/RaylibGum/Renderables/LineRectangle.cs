@@ -77,24 +77,38 @@ public class LineRectangle : InvisibleRenderable
             return;
         }
 
+        float ox = this.GetAbsoluteLeft();
+        float oy = this.GetAbsoluteTop();
+        float w = this.Width;
+        float h = this.Height;
 
-        int x = (int)this.GetAbsoluteLeft();
-        int y = (int)this.GetAbsoluteTop();
-        int width = (int)this.Width;
-        int height = (int)this.Height;
+        float rotRad = this.GetAbsoluteRotation() * MathF.PI / 180f;
+        float cos = MathF.Cos(rotRad);
+        float sin = MathF.Sin(rotRad);
+
+        // Rotate a local offset around (ox, oy). Gum rotation is CCW, matching visual CCW on screen.
+        Vector2 R(float dx, float dy) =>
+            new Vector2(ox + dx * cos + dy * sin, oy - dx * sin + dy * cos);
+
+        Vector2 tl = R(0, 0);
+        Vector2 tr = R(w, 0);
+        Vector2 br = R(w, h);
+        Vector2 bl = R(0, h);
 
         if (!IsDotted)
         {
-            DrawRectangleLinesEx(new Rectangle(x, y, width, height), LinePixelWidth, Color);
+            DrawLineEx(tl, tr, LinePixelWidth, Color);
+            DrawLineEx(tr, br, LinePixelWidth, Color);
+            DrawLineEx(br, bl, LinePixelWidth, Color);
+            DrawLineEx(bl, tl, LinePixelWidth, Color);
         }
         else
         {
-            DrawDashedSegment(x, y, x + width, y);
-            DrawDashedSegment(x + width, y, x + width, y + height);
-            DrawDashedSegment(x + width, y + height, x, y + height);
-            DrawDashedSegment(x, y + height, x, y);
+            DrawDashedSegment(tl.X, tl.Y, tr.X, tr.Y);
+            DrawDashedSegment(tr.X, tr.Y, br.X, br.Y);
+            DrawDashedSegment(br.X, br.Y, bl.X, bl.Y);
+            DrawDashedSegment(bl.X, bl.Y, tl.X, tl.Y);
         }
-
     }
 
     private void DrawDashedSegment(float ax, float ay, float bx, float by)
