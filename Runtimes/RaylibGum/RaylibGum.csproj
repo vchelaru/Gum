@@ -122,6 +122,8 @@
 		<Compile Include="..\..\MonoGameGum\GueDeriving\TextRuntime.cs" Link="GueDeriving\TextRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\CircleRuntime.cs" Link="GueDeriving\CircleRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\NineSliceRuntime.cs" Link="GueDeriving\NineSliceRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\RectangleRuntime.cs" Link="GueDeriving\RectangleRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\PolygonRuntime.cs" Link="GueDeriving\PolygonRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GumService.cs" Link="GumService.cs" />
 		<Compile Include="..\..\MonoGameGum\Async\SingleThreadSynchronizationContext.cs" Link="Async\SingleThreadSynchronizationContext.cs" />
 		<Compile Include="..\..\MonoGameGum\GumHotReloadManager.cs" Link="GumHotReloadManager.cs" />

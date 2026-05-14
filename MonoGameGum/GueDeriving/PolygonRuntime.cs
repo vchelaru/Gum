@@ -1,12 +1,26 @@
-﻿using Gum.Wireframe;
+#if MONOGAME || FNA || KNI
+#define XNALIKE
+#endif
+
+using Gum.Wireframe;
 using RenderingLibrary;
-using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+
+#if RAYLIB
+using Gum.Renderables;
+using Color = Raylib_cs.Color;
+using ContainedPolygonType = Gum.Renderables.LinePolygon;
+#elif SOKOL
+using Gum.Renderables;
+using Color = SokolGum.Color;
+using ContainedPolygonType = Gum.Renderables.LinePolygon;
+#else
+using Color = Microsoft.Xna.Framework.Color;
+using ContainedPolygonType = global::RenderingLibrary.Math.Geometry.LinePolygon;
+using global::RenderingLibrary.Math.Geometry;
+#endif
 
 #if FRB
 namespace MonoGameGum.GueDeriving;
@@ -19,14 +33,14 @@ namespace Gum.GueDeriving;
 /// </summary>
 public class PolygonRuntime : InteractiveGue
 {
-    global::RenderingLibrary.Math.Geometry.LinePolygon containedPolygon;
-    global::RenderingLibrary.Math.Geometry.LinePolygon ContainedPolygon
+    ContainedPolygonType containedPolygon;
+    ContainedPolygonType ContainedPolygon
     {
         get
         {
             if (containedPolygon == null)
             {
-                containedPolygon = this.RenderableComponent as global::RenderingLibrary.Math.Geometry.LinePolygon;
+                containedPolygon = this.RenderableComponent as ContainedPolygonType;
             }
             return containedPolygon;
         }
@@ -37,16 +51,18 @@ public class PolygonRuntime : InteractiveGue
     /// </summary>
     public int Red
     {
-        get
-        {
-            return ContainedPolygon.Color.R;
-        }
+        get => ContainedPolygon.Color.R;
         set
         {
-            // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
-            // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+#if RAYLIB
+            var color = ContainedPolygon.Color;
+            color.R = (byte)value;
+            ContainedPolygon.Color = color;
+#else
             var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithRed(ContainedPolygon.Color, (byte)value);
             ContainedPolygon.Color = color;
+#endif
+            NotifyPropertyChanged();
         }
     }
 
@@ -55,16 +71,18 @@ public class PolygonRuntime : InteractiveGue
     /// </summary>
     public int Green
     {
-        get
-        {
-            return ContainedPolygon.Color.G;
-        }
+        get => ContainedPolygon.Color.G;
         set
         {
-            // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
-            // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+#if RAYLIB
+            var color = ContainedPolygon.Color;
+            color.G = (byte)value;
+            ContainedPolygon.Color = color;
+#else
             var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithGreen(ContainedPolygon.Color, (byte)value);
             ContainedPolygon.Color = color;
+#endif
+            NotifyPropertyChanged();
         }
     }
 
@@ -73,16 +91,18 @@ public class PolygonRuntime : InteractiveGue
     /// </summary>
     public int Blue
     {
-        get
-        {
-            return ContainedPolygon.Color.B;
-        }
+        get => ContainedPolygon.Color.B;
         set
         {
-            // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
-            // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+#if RAYLIB
+            var color = ContainedPolygon.Color;
+            color.B = (byte)value;
+            ContainedPolygon.Color = color;
+#else
             var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithBlue(ContainedPolygon.Color, (byte)value);
             ContainedPolygon.Color = color;
+#endif
+            NotifyPropertyChanged();
         }
     }
 
@@ -91,31 +111,59 @@ public class PolygonRuntime : InteractiveGue
     /// </summary>
     public int Alpha
     {
-        get
-        {
-            return ContainedPolygon.Color.A;
-        }
+        get => ContainedPolygon.Color.A;
         set
         {
-            // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
-            // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+#if RAYLIB
+            var color = ContainedPolygon.Color;
+            color.A = (byte)value;
+            ContainedPolygon.Color = color;
+#else
             var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithAlpha(ContainedPolygon.Color, (byte)value);
             ContainedPolygon.Color = color;
+#endif
+            NotifyPropertyChanged();
         }
     }
 
     /// <summary>
     /// Gets or sets the color used to render the polygon. This includes color and alpha (opacity) components.
     /// </summary>
-    public Microsoft.Xna.Framework.Color Color
+    public Color Color
     {
-        get
-        {
-            return global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedPolygon.Color);
-        }
+#if XNALIKE
+        get => global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedPolygon.Color);
         set
         {
             ContainedPolygon.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            NotifyPropertyChanged();
+        }
+#else
+        get => ContainedPolygon.Color;
+        set
+        {
+            ContainedPolygon.Color = value;
+            NotifyPropertyChanged();
+        }
+#endif
+    }
+
+    public float LineWidth
+    {
+        get => ContainedPolygon.LinePixelWidth;
+        set
+        {
+            ContainedPolygon.LinePixelWidth = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public bool IsDotted
+    {
+        get => ContainedPolygon.IsDotted;
+        set
+        {
+            ContainedPolygon.IsDotted = value;
             NotifyPropertyChanged();
         }
     }
@@ -124,11 +172,18 @@ public class PolygonRuntime : InteractiveGue
     {
         if (fullInstantiation)
         {
-            var polygon = new global::RenderingLibrary.Math.Geometry.LinePolygon(systemManagers ?? SystemManagers.Default);
+            var polygon = new ContainedPolygonType(systemManagers ?? SystemManagers.Default);
             SetContainedObject(polygon);
             containedPolygon = polygon;
 
+#if RAYLIB
+            polygon.Color = Raylib_cs.Color.White;
+#elif SOKOL
+            polygon.Color = SokolGum.Color.White;
+#else
             polygon.Color = System.Drawing.Color.White;
+#endif
+
             polygon.SetPoints(new Vector2[]
             {
                 new Vector2(0, 0),
@@ -142,26 +197,14 @@ public class PolygonRuntime : InteractiveGue
 
     public void SetPoints(ICollection<Vector2> points) => ContainedPolygon.SetPoints(points);
 
-    public float LineWidth
-    {
-        get => ContainedPolygon.LinePixelWidth;
-        set => ContainedPolygon.LinePixelWidth = value;
-    }
-
-    public bool IsDotted
-    {
-        get => ContainedPolygon.IsDotted;
-        set => ContainedPolygon.IsDotted = value;
-    }
-
     public void InsertPointAt(Vector2 point, int index) => ContainedPolygon.InsertPointAt(point, index);
     public void RemovePointAtIndex(int index) => ContainedPolygon.RemovePointAtIndex(index);
     public void SetPointAt(Vector2 point, int index) => ContainedPolygon.SetPointAt(point, index);
+
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
     [Obsolete("Use the AddToRoot extension method instead (e.g. myPolygon.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
     public override bool IsPointInside(float worldX, float worldY) =>
         ContainedPolygon.IsPointInside(worldX, worldY);
-
 }
