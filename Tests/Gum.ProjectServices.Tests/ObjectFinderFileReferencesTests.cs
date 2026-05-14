@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,11 +25,13 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     /// <summary>
     /// Project directory used in characterization tests. The existing implementation
     /// derives the project directory from <c>FullFileName</c> via <c>FileManager.GetDirectory</c>,
-    /// which appends a trailing slash. Using a forward-slash absolute-style path keeps the
-    /// test platform-independent and matches the format strings the existing impl emits.
+    /// which appends a trailing slash. The path must be <em>rooted on the host OS</em> — otherwise
+    /// the impl treats it as relative and prepends the working directory. A <c>"C:/..."</c> path
+    /// is rooted on Windows but NOT on macOS/Linux, so the base directory is chosen per-platform.
     /// </summary>
-    private const string FakeProjectDirectory = "C:/FakeGumProject/";
-    private const string FakeProjectFile = FakeProjectDirectory + "MyProject.gumx";
+    private static readonly string FakeProjectDirectory =
+        OperatingSystem.IsWindows() ? "C:/FakeGumProject/" : "/tmp/FakeGumProject/";
+    private static readonly string FakeProjectFile = FakeProjectDirectory + "MyProject.gumx";
 
     private void SetProjectFullFileName()
     {
@@ -120,7 +123,7 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     [Fact]
     public void GetAllFilesInProject_includes_custom_font_file_when_UseCustomFont_is_true()
     {
-        const string customFontPath = FakeProjectDirectory + "Fonts/MyCustom.ttf";
+        string customFontPath = FakeProjectDirectory + "Fonts/MyCustom.ttf";
 
         ScreenSave screen = BuildScreen("MainMenu");
         AddTextInstanceWithCustomFont(screen, "Text1", customFontPath);
@@ -169,7 +172,7 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     [Fact]
     public void GetAllFilesInProject_includes_referenced_textures_via_SourceFile()
     {
-        const string spritePath = FakeProjectDirectory + "Textures/bg.png";
+        string spritePath = FakeProjectDirectory + "Textures/bg.png";
 
         ScreenSave screen = BuildScreen("MainMenu");
         AddSpriteInstance(screen, "Sprite1", spritePath);
@@ -184,7 +187,7 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     [Fact]
     public void GetAllFilesInProject_returns_absolute_paths_not_relative()
     {
-        const string spritePath = FakeProjectDirectory + "Textures/bg.png";
+        string spritePath = FakeProjectDirectory + "Textures/bg.png";
 
         ScreenSave screen = BuildScreen("MainMenu");
         AddSpriteInstance(screen, "Sprite1", spritePath);
@@ -204,7 +207,7 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     [Fact]
     public void GetAllFilesInProject_returns_distinct_paths_when_same_file_referenced_multiply()
     {
-        const string sharedTexture = FakeProjectDirectory + "Textures/shared.png";
+        string sharedTexture = FakeProjectDirectory + "Textures/shared.png";
 
         ScreenSave screenA = BuildScreen("ScreenA");
         AddSpriteInstance(screenA, "Sprite1", sharedTexture);
@@ -226,8 +229,8 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     [Fact]
     public void GetFilesReferencedBy_excludes_files_referenced_only_by_other_elements()
     {
-        const string ownTexture = FakeProjectDirectory + "Textures/own.png";
-        const string otherTexture = FakeProjectDirectory + "Textures/other.png";
+        string ownTexture = FakeProjectDirectory + "Textures/own.png";
+        string otherTexture = FakeProjectDirectory + "Textures/other.png";
 
         ScreenSave screenA = BuildScreen("ScreenA");
         AddSpriteInstance(screenA, "Sprite1", ownTexture);
@@ -248,7 +251,7 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     [Fact]
     public void GetFilesReferencedBy_returns_absolute_paths()
     {
-        const string spritePath = FakeProjectDirectory + "Textures/bg.png";
+        string spritePath = FakeProjectDirectory + "Textures/bg.png";
 
         ScreenSave screen = BuildScreen("MainMenu");
         AddSpriteInstance(screen, "Sprite1", spritePath);

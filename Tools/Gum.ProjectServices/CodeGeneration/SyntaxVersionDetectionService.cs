@@ -143,6 +143,12 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
                 continue;
             }
 
+            // csproj Include paths use backslash separators by MSBuild convention, even in
+            // projects authored on macOS/Linux. Normalize to forward slashes so the Path
+            // APIs below resolve the directory correctly on non-Windows platforms (where
+            // '\' is not a separator and Path.GetDirectoryName would return an empty string).
+            relativePath = relativePath.Replace('\\', '/');
+
             string csprojDir = Path.GetDirectoryName(csprojPath) ?? csprojPath;
             string referencedProjectDir;
             try
