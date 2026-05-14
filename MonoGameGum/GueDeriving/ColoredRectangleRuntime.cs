@@ -1,7 +1,3 @@
-#if MONOGAME || FNA || KNI
-#define XNALIKE
-#endif
-
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;

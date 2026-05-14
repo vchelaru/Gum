@@ -1,7 +1,4 @@
-﻿#if MONOGAME || KNI || XNA4 || FNA
-#define XNALIKE
-#endif
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 #if RAYLIB
 using Gum.Renderables;
 #elif SKIA
