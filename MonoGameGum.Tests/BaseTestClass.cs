@@ -1,5 +1,6 @@
 ﻿using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using MonoGameGum.Input;
 using Moq;
@@ -91,5 +92,12 @@ public class BaseTestClass : IDisposable
 
         RenderingLibrary.Graphics.Text.Customizations.Clear();
         RenderingLibrary.Graphics.Text.ContextCustomizations.Clear();
+
+        // RenderableRegistry holds static per-capability factories. Anything a test
+        // (or production code path exercised by a test) registers must be cleared so
+        // it doesn't leak into the next test. Module-initializer registrations from
+        // optional packages (e.g. MonoGameGumShapes) re-run at assembly load only —
+        // not after Reset — so this Reset is intended for test-introduced state.
+        RenderableRegistry.Reset();
     }
 }

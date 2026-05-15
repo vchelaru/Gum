@@ -1,5 +1,6 @@
 ﻿using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using MonoGameGum.Input;
 using Moq;
@@ -72,5 +73,9 @@ public class BaseTestClass : IDisposable
         GumService.Default.Root.Children.Clear();
         GumService.Default.ModalRoot.Children.Clear();
         GumService.Default.PopupRoot.Children.Clear();
+
+        // Clear any per-capability factories a test registered into the static
+        // RenderableRegistry so they don't leak into the next test.
+        RenderableRegistry.Reset();
     }
 }

@@ -1,4 +1,5 @@
-﻿using Gum.Managers;
+﻿using Gum.GueDeriving;
+using Gum.Managers;
 using Gum.Wireframe;
 using Gum.Forms.Controls;
 using System;
@@ -57,5 +58,9 @@ public class BaseTestClass : IDisposable
         // a .gumx, the project sticks around and pollutes tests that assert on the
         // "no project loaded" state (e.g. LoadAnimations_ThrowsException_WhenNoProjectLoaded).
         ObjectFinder.Self.GumProjectSave = null;
+
+        // Clear any per-capability factories a test registered into the static
+        // RenderableRegistry so they don't leak into the next test.
+        RenderableRegistry.Reset();
     }
 }

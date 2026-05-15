@@ -761,6 +761,17 @@ public class GumService
         LoaderManager.Self.DisposeAndClear();
 
 #if XNALIKE
+        // RenderableRegistry holds static per-capability factories. Clearing here
+        // mirrors how Uninitialize treats the other extension points
+        // (ElementSaveExtensions.ClearRegistrations, Text.Customizations.Clear,
+        // FrameworkElement.DefaultFormsTemplates.Clear, etc.) so a subsequent
+        // Initialize starts from a known empty state. Optional packages are
+        // expected to expose a static RegisterRuntimeTypes method — Initialize's
+        // reflection scan re-invokes it each cycle, so their registrations come
+        // back. Packages that register only via [ModuleInitializer] won't, by
+        // design — that's a known load-order contract gap tracked in issue #2761.
+        RenderableRegistry.Reset();
+
         Text.Customizations.Clear();
         Text.ContextCustomizations.Clear();
         Text.DefaultBitmapFont = null;

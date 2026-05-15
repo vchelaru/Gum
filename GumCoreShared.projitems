@@ -25,6 +25,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\LooseFileGumFileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\WalkResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Collections\GraphicalUiElementCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\GueDeriving\RenderableRegistry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorInstanceSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorReference.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorSave.cs" />
