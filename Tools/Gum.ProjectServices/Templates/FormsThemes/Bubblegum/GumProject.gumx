@@ -55,8 +55,8 @@
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
   <ScreenReference Name="DemoScreenGum" />
+  <ComponentReference Name="Controls/Button" />
   <ComponentReference Name="Controls/ButtonIcon" />
-  <ComponentReference Name="Controls/ButtonStandard" />
   <ComponentReference Name="Controls/CheckBox" />
   <ComponentReference Name="Controls/ComboBox" />
   <ComponentReference Name="Controls/DialogBox" />
@@ -73,7 +73,7 @@
   <ComponentReference Name="Controls/ScrollViewer" />
   <ComponentReference Name="Controls/Slider" />
   <ComponentReference Name="Controls/SliderThumb" />
-  <ComponentReference Name="Controls/SplitterStandard" />
+  <ComponentReference Name="Controls/Splitter" />
   <ComponentReference Name="Controls/StackPanel" />
   <ComponentReference Name="Controls/TextBox" />
   <ComponentReference Name="Controls/Toast" />

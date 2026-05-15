@@ -1,46 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Name>Controls/SplitterStandard</Name>
+  <Name>Controls/Splitter</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">5</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">DarkGray</Value>
+    <Variable Type="int" Name="LineInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">204</Value>
     </Variable>
-    <Variable Type="float" Name="NineSliceInstance.Height" SetsValue="true">
+    <Variable Type="int" Name="LineInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="float" Name="LineInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
     </Variable>
-    <Variable Type="DimensionUnitType" Name="NineSliceInstance.HeightUnits" SetsValue="true">
+    <Variable Type="DimensionUnitType" Name="LineInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="NineSliceInstance.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Bordered</Value>
+    <Variable Type="int" Name="LineInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">240</Value>
     </Variable>
-    <Variable Type="float" Name="NineSliceInstance.Width" SetsValue="true">
+    <Variable Type="float" Name="LineInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
     </Variable>
-    <Variable Type="DimensionUnitType" Name="NineSliceInstance.WidthUnits" SetsValue="true">
+    <Variable Type="DimensionUnitType" Name="LineInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="float" Name="NineSliceInstance.X" SetsValue="true">
+    <Variable Type="float" Name="LineInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
-    <Variable Type="HorizontalAlignment" Name="NineSliceInstance.XOrigin" SetsValue="true">
+    <Variable Type="HorizontalAlignment" Name="LineInstance.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="PositionUnitType" Name="NineSliceInstance.XUnits" SetsValue="true">
+    <Variable Type="PositionUnitType" Name="LineInstance.XUnits" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="float" Name="NineSliceInstance.Y" SetsValue="true">
+    <Variable Type="float" Name="LineInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
-    <Variable Type="VerticalAlignment" Name="NineSliceInstance.YOrigin" SetsValue="true">
+    <Variable Type="VerticalAlignment" Name="LineInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="PositionUnitType" Name="NineSliceInstance.YUnits" SetsValue="true">
+    <Variable Type="PositionUnitType" Name="LineInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
@@ -62,7 +65,7 @@
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
   </State>
-  <Instance Name="NineSliceInstance" BaseType="NineSlice" />
+  <Instance Name="LineInstance" BaseType="ColoredRectangle" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>SplitterBehavior</BehaviorName>

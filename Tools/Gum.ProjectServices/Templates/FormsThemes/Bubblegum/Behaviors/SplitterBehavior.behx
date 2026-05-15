@@ -11,5 +11,5 @@
   </FormsProperty>
   <RequiredInstances />
   <RequiredAnimations />
-  <DefaultImplementation>Controls/SplitterStandard</DefaultImplementation>
+  <DefaultImplementation>Controls/Splitter</DefaultImplementation>
 </BehaviorSave>

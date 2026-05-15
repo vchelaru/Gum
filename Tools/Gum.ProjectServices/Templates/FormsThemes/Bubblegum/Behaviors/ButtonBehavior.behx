@@ -33,5 +33,5 @@
   </Category>
   <RequiredInstances />
   <RequiredAnimations />
-  <DefaultImplementation>Controls/ButtonStandard</DefaultImplementation>
+  <DefaultImplementation>Controls/Button</DefaultImplementation>
 </BehaviorSave>

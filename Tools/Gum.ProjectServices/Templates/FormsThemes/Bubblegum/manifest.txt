@@ -33,8 +33,8 @@ Behaviors/WindowBehavior.behx
 Components/Controls/ButtonClose.gucx
 Components/Controls/ButtonConfirm.gucx
 Components/Controls/ButtonDeny.gucx
+Components/Controls/Button.gucx
 Components/Controls/ButtonIcon.gucx
-Components/Controls/ButtonStandard.gucx
 Components/Controls/ButtonStandardIcon.gucx
 Components/Controls/ButtonTab.gucx
 Components/Controls/CheckBox.gucx
@@ -58,7 +58,7 @@ Components/Controls/ScrollBar.gucx
 Components/Controls/ScrollViewer.gucx
 Components/Controls/SettingsView.gucx
 Components/Controls/Slider.gucx
-Components/Controls/SplitterStandard.gucx
+Components/Controls/Splitter.gucx
 Components/Controls/StackPanel.gucx
 Components/Controls/TextBox.gucx
 Components/Controls/TextBoxAnimations.ganx

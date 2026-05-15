@@ -594,9 +594,9 @@
   <Instance Name="TitleText1" BaseType="Text" />
   <Instance Name="ResolutionLabel" BaseType="Controls/Label" />
   <Instance Name="ResolutionBox" BaseType="Controls/ListBox" />
-  <Instance Name="DetectResolutionsButton" BaseType="Controls/ButtonStandard" />
-  <Instance Name="ShowDialogButton" BaseType="Controls/ButtonStandard" />
-  <Instance Name="ShowToastButton" BaseType="Controls/ButtonStandard" />
+  <Instance Name="DetectResolutionsButton" BaseType="Controls/Button" />
+  <Instance Name="ShowDialogButton" BaseType="Controls/Button" />
+  <Instance Name="ShowToastButton" BaseType="Controls/Button" />
   <Instance Name="FullScreenCheckbox" BaseType="Controls/CheckBox" />
   <Instance Name="MusicLabel" BaseType="Controls/Label" />
   <Instance Name="MusicSlider" BaseType="Controls/Slider" />
@@ -610,8 +610,8 @@
   <Instance Name="Background1" BaseType="NineSlice" />
   <Instance Name="ComboBoxInstance" BaseType="Controls/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
-  <Instance Name="ButtonConfirmInstance" BaseType="Controls/ButtonStandard" />
-  <Instance Name="ButtonDenyInstance" BaseType="Controls/ButtonStandard" />
+  <Instance Name="ButtonConfirmInstance" BaseType="Controls/Button" />
+  <Instance Name="ButtonDenyInstance" BaseType="Controls/Button" />
   <Instance Name="DemoDialog" BaseType="Container" />
   <Instance Name="MarginContainer" BaseType="Container" />
   <Instance Name="LabelInstance" BaseType="Controls/Label" />

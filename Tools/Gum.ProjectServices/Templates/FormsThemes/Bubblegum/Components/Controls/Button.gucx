@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Name>Controls/ButtonStandard</Name>
+  <Name>Controls/Button</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
