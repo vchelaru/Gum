@@ -64,7 +64,16 @@ public static class DiffStandardsCommand
         }
 
         IDiffStandardsService diffService = new DiffStandardsService();
-        DiffStandardsResult result = diffService.Diff(fullPath);
+        DiffStandardsResult result;
+        try
+        {
+            result = diffService.Diff(fullPath);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            return 2;
+        }
 
         if (json)
         {

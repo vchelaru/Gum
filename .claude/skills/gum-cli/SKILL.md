@@ -18,7 +18,7 @@ description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands
 |---------|---------|
 | `gumcli new <path> [--template]` | Create a new project. Templates: `forms` (default, includes all Forms UI controls) or `empty` (minimal). |
 | `gumcli check <project.gumx> [--json]` | Validate all elements (.gusx, .gutx, .gucx) that belong to the project. Human-readable or JSON output. Use this for post-write validation of any element file, not just the .gumx. |
-| `gumcli diff-standards <project.gumx> [--json]` | Compare the project's Standards (.gutx files under `Standards/`) against the bundled Default template and report variable-level drift. Exits 1 on drift, 0 on clean. Theme authors and CI use it to enforce the "Standards must match Default" invariant. |
+| `gumcli diff-standards <project.gumx> [--json]` | Compare the project's Standards against `StandardElementsManager.Self`'s programmatic defaults (the same source the Gum tool's File → New uses) and report variable-level drift. Exits 1 on drift, 0 on clean. Theme authors and CI use it to enforce the "Standards must match Default" invariant. |
 | `gumcli codegen <project.gumx> [--element <name>...]` | Generate C# code. Requires `ProjectCodeSettings.codsj`. Per-element error check gates generation. |
 | `gumcli codegen-init <project.gumx> [--force] [--csproj <path>]` | Auto-detect `.csproj`, derive namespace and output library, write `ProjectCodeSettings.codsj`. Use `--csproj` when the Gum project is not inside the MonoGame project directory. |
 | `gumcli fonts <project.gumx>` | Generate missing bitmap font files (.fnt + .png). Windows-only (bmfont.exe). |
@@ -33,7 +33,7 @@ description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands
 Program.cs
   ├── NewCommand      → ProjectCreator / FormsTemplateCreator
   ├── CheckCommand    → ProjectLoader → HeadlessErrorChecker
-  ├── DiffStandardsCommand → DiffStandardsService (raw .gutx vs embedded Default)
+  ├── DiffStandardsCommand → ProjectLoader → DiffStandardsService (project Standards vs StandardElementsManager.Self defaults)
   ├── CodegenCommand  → ProjectLoader → HeadlessErrorChecker (gates) → HeadlessCodeGenerationService
   ├── CodegenInitCommand → CodeGenerationAutoSetupService
   ├── FontsCommand    → ProjectLoader → HeadlessFontGenerationService (Windows-gated)
@@ -63,7 +63,7 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 | `CodeGenerationAutoSetupService` | Walks up to find `.csproj`, derives `CodeProjectRoot`, namespace, output library |
 | `CodeOutputProjectSettingsManager` | Loads/saves `ProjectCodeSettings.codsj` |
 | `ErrorResult` | POCO: `ElementName`, `Message`, `Severity` (`Warning`/`Error`) |
-| `DiffStandardsService` / `IDiffStandardsService` | Compares on-disk `Standards/*.gutx` against embedded Default Standards. Returns `DiffStandardsResult` with `Differences`, `MissingFromProject`, `ProjectOnlyStandards`. |
+| `DiffStandardsService` / `IDiffStandardsService` | Compares a loaded project's Standards against `StandardElementsManager.Self`'s programmatic defaults. Returns `DiffStandardsResult` with `Differences`, `MissingFromProject`, `ProjectOnlyStandards`. |
 
 **Non-obvious:** `HeadlessErrorChecker` is not a duplicate of the tool's `ErrorChecker` — the tool's `ErrorChecker` **delegates to** `HeadlessErrorChecker`. Zero duplication by design.
 
@@ -77,7 +77,7 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 
 `CodeGenerationAutoSetupService` has two `Run` overloads: `Run(gumxFilePath)` for auto-detection, and `Run(gumxFilePath, explicitCsprojPath)` for when the caller already knows the `.csproj` path. The explicit overload validates the file exists and skips directory walking entirely; all namespace/OutputLibrary derivation logic is shared via the private `BuildResultFromCsprojDirectory` helper.
 
-`DiffStandardsService` deliberately bypasses `ProjectLoader` — it deserializes each `Standards/*.gutx` file raw via `GumFileSerializer.DeserializeElementSave`. The post-load `GumProjectSave.Initialize` pass merges in `StandardElementsManager.Self` defaults (color states, missing variables) and would mask file-level drift. The diff must reflect what is checked in, not what is in memory.
+`DiffStandardsService` compares the loaded project against a fresh reference built by `StandardElementsManager.Self.PopulateProjectWithDefaultStandards(...)` — the same path the tool's File → New uses. The CLI matches the tool's import-dialog drift detection by construction. Note: the on-disk `Templates/Default/Standards/*.gutx` files (extracted by `gumcli new --template empty`) are a separate snapshot of the defaults and have known drift from `StandardElementsManager`; that drift is a distinct issue from theme-vs-Default drift.
 
 Font files are named like `Font18Arial.fnt` and `Font18Arial_0.png` (size+name convention, zero-indexed). Always use `gumcli fonts <project.gumx>` to generate missing bitmap fonts — never create `.fnt` files manually.
 

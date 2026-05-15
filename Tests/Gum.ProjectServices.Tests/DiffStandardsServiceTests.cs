@@ -1,4 +1,6 @@
-using System.Reflection;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.ProjectServices;
 using Shouldly;
 
@@ -6,34 +8,28 @@ namespace Gum.ProjectServices.Tests;
 
 public class DiffStandardsServiceTests : IDisposable
 {
-    private readonly DiffStandardsService _sut;
-    private readonly string _projectDirectory;
-    private readonly string _projectFilePath;
-    private readonly string _standardsDirectory;
+    private readonly GumProjectSave _reference;
 
     public DiffStandardsServiceTests()
     {
-        _sut = new DiffStandardsService();
+        // Initialize the StandardElementsManager singleton the same way ProjectLoader
+        // would, then build a fresh reference project from its programmatic defaults.
+        StandardElementsManager.Self.Initialize();
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
 
-        _projectDirectory = Path.Combine(
-            Path.GetTempPath(),
-            "GumDiffStandardsTests_" + Guid.NewGuid().ToString("N"));
-        _standardsDirectory = Path.Combine(_projectDirectory, "Standards");
-        Directory.CreateDirectory(_standardsDirectory);
-
-        _projectFilePath = Path.Combine(_projectDirectory, "Project.gumx");
-        File.WriteAllText(_projectFilePath, "<?xml version=\"1.0\"?><GumProjectSave />");
-
-        ExtractDefaultStandardsToDisk(_standardsDirectory);
+        _reference = new GumProjectSave();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(_reference);
     }
 
     [Fact]
-    public void Diff_ProjectWithDefaultStandards_ShouldReportNoDrift()
+    public void Diff_ProjectThatMirrorsTheReference_ShouldReportNoDrift()
     {
-        // The project's Standards directory is populated verbatim from the embedded
-        // Default resources, so diff must find no drift. This is the "Default vs itself"
-        // baseline the user asked for.
-        DiffStandardsResult result = _sut.Diff(_projectFilePath);
+        // A project built the same way as the reference (the tool's File → New flow)
+        // must by definition produce no drift.
+        GumProjectSave project = new GumProjectSave();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
+
+        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
 
         result.HasDrift.ShouldBeFalse();
         result.Differences.ShouldBeEmpty();
@@ -44,36 +40,41 @@ public class DiffStandardsServiceTests : IDisposable
     [Fact]
     public void Diff_ChangedVariableValue_ShouldReportChangedDiff()
     {
-        // Flip Font from Arial to ComicSans in the on-disk Text.gutx.
-        string textPath = Path.Combine(_standardsDirectory, "Text.gutx");
-        string content = File.ReadAllText(textPath);
-        File.WriteAllText(textPath, content.Replace(">Arial<", ">ComicSans<"));
+        GumProjectSave project = new GumProjectSave();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
 
-        DiffStandardsResult result = _sut.Diff(_projectFilePath);
+        StandardElementSave text = project.StandardElements.Single(s => s.Name == "Text");
+        VariableSave font = text.DefaultState.Variables.Single(v => v.Name == "Font");
+        object? originalFont = font.Value;
+        font.Value = "ComicSans";
+
+        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
 
         result.HasDrift.ShouldBeTrue();
         StandardVariableDiff diff = result.Differences.ShouldHaveSingleItem();
         diff.StandardName.ShouldBe("Text");
         diff.VariableName.ShouldBe("Font");
         diff.Kind.ShouldBe(StandardVariableDiffKind.Changed);
-        diff.DefaultValue.ShouldBe("Arial");
+        diff.DefaultValue.ShouldBe(originalFont?.ToString());
         diff.ProjectValue.ShouldBe("ComicSans");
     }
 
     [Fact]
     public void Diff_VariableAddedInProject_ShouldReportAddedDiff()
     {
-        string textPath = Path.Combine(_standardsDirectory, "Text.gutx");
-        string content = File.ReadAllText(textPath);
-        const string injected =
-            "    <Variable Type=\"string\" Name=\"NotInDefault\" SetsValue=\"true\">\n" +
-            "      <Value xsi:type=\"xsd:string\">x</Value>\n" +
-            "    </Variable>\n" +
-            "  </State>";
-        content = content.Replace("  </State>", injected);
-        File.WriteAllText(textPath, content);
+        GumProjectSave project = new GumProjectSave();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
 
-        DiffStandardsResult result = _sut.Diff(_projectFilePath);
+        StandardElementSave text = project.StandardElements.Single(s => s.Name == "Text");
+        text.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "NotInDefault",
+            Type = "string",
+            Value = "x",
+            SetsValue = true
+        });
+
+        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
 
         StandardVariableDiff diff = result.Differences.ShouldHaveSingleItem();
         diff.Kind.ShouldBe(StandardVariableDiffKind.AddedInProject);
@@ -83,11 +84,32 @@ public class DiffStandardsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Diff_VariableRemovedFromProject_ShouldReportRemovedDiff()
+    {
+        GumProjectSave project = new GumProjectSave();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
+
+        StandardElementSave text = project.StandardElements.Single(s => s.Name == "Text");
+        VariableSave removed = text.DefaultState.Variables.Single(v => v.Name == "Font");
+        text.DefaultState.Variables.Remove(removed);
+
+        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
+
+        StandardVariableDiff diff = result.Differences.ShouldHaveSingleItem();
+        diff.Kind.ShouldBe(StandardVariableDiffKind.RemovedFromProject);
+        diff.VariableName.ShouldBe("Font");
+        diff.ProjectValue.ShouldBe("(absent)");
+        diff.DefaultValue.ShouldBe(removed.Value?.ToString());
+    }
+
+    [Fact]
     public void Diff_StandardMissingFromProject_ShouldReportMissing()
     {
-        File.Delete(Path.Combine(_standardsDirectory, "Text.gutx"));
+        GumProjectSave project = new GumProjectSave();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
+        project.StandardElements.RemoveAll(s => s.Name == "Text");
 
-        DiffStandardsResult result = _sut.Diff(_projectFilePath);
+        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
 
         result.MissingFromProject.ShouldBe(new[] { "Text" });
         result.HasDrift.ShouldBeTrue();
@@ -96,18 +118,17 @@ public class DiffStandardsServiceTests : IDisposable
     [Fact]
     public void Diff_ProjectOnlyStandard_ShouldBeListedButNotDiffed()
     {
-        string extraPath = Path.Combine(_standardsDirectory, "RoundedRectangle.gutx");
-        File.WriteAllText(extraPath,
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-            "<StandardElementSave xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
-            "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" +
-            "  <Name>RoundedRectangle</Name>\n" +
-            "  <State>\n" +
-            "    <Name>Default</Name>\n" +
-            "  </State>\n" +
-            "</StandardElementSave>\n");
+        GumProjectSave project = new GumProjectSave();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
 
-        DiffStandardsResult result = _sut.Diff(_projectFilePath);
+        StandardElementSave extra = new StandardElementSave { Name = "RoundedRectangle" };
+        StateSave state = new StateSave { Name = "Default" };
+        state.ParentContainer = extra;
+        state.Variables.Add(new VariableSave { Name = "CornerRadius", Type = "float", Value = 5f });
+        extra.States.Add(state);
+        project.StandardElements.Add(extra);
+
+        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
 
         result.ProjectOnlyStandards.ShouldBe(new[] { "RoundedRectangle" });
         result.Differences.ShouldBeEmpty();
@@ -115,41 +136,38 @@ public class DiffStandardsServiceTests : IDisposable
     }
 
     [Fact]
-    public void Diff_NoStandardsDirectory_ShouldReportAllMissing()
+    public void Diff_NewCategoryInProject_ShouldReportItsStateVariablesAsAdded()
     {
-        Directory.Delete(_standardsDirectory, recursive: true);
+        // A theme that adds a state category like "Forms" to a Standard has effectively
+        // polluted the universal base. Every variable in those category states should
+        // surface as AddedInProject drift.
+        GumProjectSave project = new GumProjectSave();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
 
-        DiffStandardsResult result = _sut.Diff(_projectFilePath);
-
-        result.MissingFromProject.Count.ShouldBe(DiffStandardsService.DefaultStandardNames.Count);
-        result.Differences.ShouldBeEmpty();
-    }
-
-    /// <summary>
-    /// Writes each embedded Default Standard resource to <paramref name="standardsDirectory"/>
-    /// so the test project has a byte-identical Default baseline. Mutating a single file
-    /// after this call produces a known-shape diff.
-    /// </summary>
-    private static void ExtractDefaultStandardsToDisk(string standardsDirectory)
-    {
-        Assembly assembly = typeof(DiffStandardsService).Assembly;
-        foreach (string name in DiffStandardsService.DefaultStandardNames)
+        StandardElementSave text = project.StandardElements.Single(s => s.Name == "Text");
+        StateSaveCategory category = new StateSaveCategory { Name = "Forms" };
+        StateSave selected = new StateSave { Name = "Selected" };
+        selected.ParentContainer = text;
+        selected.Variables.Add(new VariableSave
         {
-            string resourceName = $"Gum.ProjectServices.Templates.Default.Standards.{name}.gutx";
-            using Stream? stream = assembly.GetManifestResourceStream(resourceName);
-            stream.ShouldNotBeNull($"missing embedded resource {resourceName}");
+            Name = "Color",
+            Type = "string",
+            Value = "Blue",
+            SetsValue = true
+        });
+        category.States.Add(selected);
+        text.Categories.Add(category);
 
-            string outputPath = Path.Combine(standardsDirectory, $"{name}.gutx");
-            using FileStream fileStream = File.Create(outputPath);
-            stream.CopyTo(fileStream);
-        }
+        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
+
+        result.HasDrift.ShouldBeTrue();
+        StandardVariableDiff diff = result.Differences.ShouldHaveSingleItem();
+        diff.StateName.ShouldBe("Selected");
+        diff.Kind.ShouldBe(StandardVariableDiffKind.AddedInProject);
     }
 
     public void Dispose()
     {
-        if (Directory.Exists(_projectDirectory))
-        {
-            Directory.Delete(_projectDirectory, recursive: true);
-        }
+        ObjectFinder.Self.GumProjectSave = null;
     }
 }

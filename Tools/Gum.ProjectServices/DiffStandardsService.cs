@@ -1,49 +1,65 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 
 namespace Gum.ProjectServices;
 
 /// <inheritdoc/>
 public class DiffStandardsService : IDiffStandardsService
 {
-    /// <summary>
-    /// The Standards that ship in the Default template. Matches
-    /// <c>ProjectCreator.StandardElementNames</c>; kept here so the diff service does
-    /// not depend on project creation.
-    /// </summary>
-    internal static readonly IReadOnlyList<string> DefaultStandardNames = new[]
-    {
-        "Circle",
-        "ColoredRectangle",
-        "Component",
-        "Container",
-        "NineSlice",
-        "Polygon",
-        "Rectangle",
-        "Sprite",
-        "Text"
-    };
-
     /// <inheritdoc/>
     public DiffStandardsResult Diff(string projectFilePath)
     {
+        // ProjectLoader.Load already calls StandardElementsManager.Self.Initialize() and
+        // RegisterExtendedDefaultStates() before deserializing the project, so by the time
+        // we build the reference below those defaults are available.
+        IProjectLoader loader = new ProjectLoader();
+        ProjectLoadResult loadResult = loader.Load(projectFilePath);
+        if (!loadResult.Success)
+        {
+            throw new InvalidOperationException(
+                loadResult.ErrorMessage ?? $"Failed to load project: {projectFilePath}");
+        }
+
+        GumProjectSave reference = BuildReferenceProject();
+        return DiffProjects(loadResult.Project!, reference);
+    }
+
+    /// <summary>
+    /// Builds a reference project the same way the Gum tool's File → New does — by
+    /// populating from <see cref="StandardElementsManager.Self"/>'s programmatic defaults.
+    /// This is the "universal base" that every runtime uses, and is what the tool's
+    /// import dialog implicitly compares against. The on-disk
+    /// <c>Templates/Default/Standards/*.gutx</c> files are a separate snapshot that may
+    /// drift from these programmatic defaults; that drift is its own concern, not what
+    /// this command enforces.
+    /// </summary>
+    private static GumProjectSave BuildReferenceProject()
+    {
+        GumProjectSave reference = new GumProjectSave();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(reference);
+        return reference;
+    }
+
+    /// <summary>
+    /// Diffs two loaded projects' StandardElements. Internal so tests can drive the
+    /// comparison without writing a project to disk.
+    /// </summary>
+    internal static DiffStandardsResult DiffProjects(
+        GumProjectSave project, GumProjectSave reference)
+    {
         var result = new DiffStandardsResult();
 
-        string projectDirectory = Path.GetDirectoryName(Path.GetFullPath(projectFilePath))
-            ?? string.Empty;
-        string standardsDirectory = Path.Combine(projectDirectory, ElementReference.StandardSubfolder);
+        Dictionary<string, StandardElementSave> referenceStandards = reference.StandardElements
+            .ToDictionary(s => s.Name, s => s);
+        Dictionary<string, StandardElementSave> projectStandards = project.StandardElements
+            .ToDictionary(s => s.Name, s => s);
 
-        Dictionary<string, StandardElementSave> defaults = LoadDefaultStandards();
-        Dictionary<string, StandardElementSave> projectStandards =
-            LoadProjectStandardsFromDisk(standardsDirectory);
-
-        foreach (string name in DefaultStandardNames)
+        foreach (string name in referenceStandards.Keys.OrderBy(n => n))
         {
             if (!projectStandards.TryGetValue(name, out StandardElementSave? projectStandard))
             {
@@ -51,18 +67,12 @@ public class DiffStandardsService : IDiffStandardsService
                 continue;
             }
 
-            if (!defaults.TryGetValue(name, out StandardElementSave? defaultStandard))
-            {
-                // Resource missing — should not happen in practice but stays safe.
-                continue;
-            }
-
-            DiffStandard(name, defaultStandard, projectStandard, result.Differences);
+            DiffStandard(name, referenceStandards[name], projectStandard, result.Differences);
         }
 
         foreach (string name in projectStandards.Keys)
         {
-            if (!DefaultStandardNames.Contains(name))
+            if (!referenceStandards.ContainsKey(name))
             {
                 result.ProjectOnlyStandards.Add(name);
             }
@@ -72,87 +82,52 @@ public class DiffStandardsService : IDiffStandardsService
         return result;
     }
 
-    private static Dictionary<string, StandardElementSave> LoadProjectStandardsFromDisk(
-        string standardsDirectory)
-    {
-        var result = new Dictionary<string, StandardElementSave>();
-        if (!Directory.Exists(standardsDirectory))
-        {
-            return result;
-        }
-
-        foreach (string filePath in Directory.EnumerateFiles(standardsDirectory, "*.gutx"))
-        {
-            string name = Path.GetFileNameWithoutExtension(filePath);
-            StandardElementSave? standard = DeserializeStandard(File.ReadAllText(filePath));
-            if (standard != null)
-            {
-                standard.Name = name;
-                result[name] = standard;
-            }
-        }
-
-        return result;
-    }
-
-    private static StandardElementSave? DeserializeStandard(string content)
-    {
-        try
-        {
-            // Pass AttributeVersion so the serializer routes by content shape, supporting
-            // both compact (v2) and legacy element files.
-            return GumFileSerializer.DeserializeElementSave<StandardElementSave>(
-                content,
-                (int)GumProjectSave.GumxVersions.AttributeVersion);
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
-
     private static void DiffStandard(
         string standardName,
-        StandardElementSave defaultStandard,
+        StandardElementSave referenceStandard,
         StandardElementSave projectStandard,
         List<StandardVariableDiff> diffs)
     {
-        Dictionary<string, StateSave> defaultStates = defaultStandard.AllStates
-            .ToDictionary(s => s.Name, s => s);
+        Dictionary<string, StateSave> referenceStates = referenceStandard.AllStates
+            .Where(s => !string.IsNullOrEmpty(s.Name))
+            .GroupBy(s => s.Name)
+            .ToDictionary(g => g.Key, g => g.First());
         Dictionary<string, StateSave> projectStates = projectStandard.AllStates
-            .ToDictionary(s => s.Name, s => s);
+            .Where(s => !string.IsNullOrEmpty(s.Name))
+            .GroupBy(s => s.Name)
+            .ToDictionary(g => g.Key, g => g.First());
 
-        foreach (string stateName in defaultStates.Keys.Union(projectStates.Keys).OrderBy(n => n))
+        foreach (string stateName in referenceStates.Keys.Union(projectStates.Keys).OrderBy(n => n))
         {
-            defaultStates.TryGetValue(stateName, out StateSave? defaultState);
+            referenceStates.TryGetValue(stateName, out StateSave? referenceState);
             projectStates.TryGetValue(stateName, out StateSave? projectState);
 
-            DiffState(standardName, stateName, defaultState, projectState, diffs);
+            DiffState(standardName, stateName, referenceState, projectState, diffs);
         }
     }
 
     private static void DiffState(
         string standardName,
         string stateName,
-        StateSave? defaultState,
+        StateSave? referenceState,
         StateSave? projectState,
         List<StandardVariableDiff> diffs)
     {
-        Dictionary<string, VariableSave> defaultVars = (defaultState?.Variables ?? new List<VariableSave>())
+        Dictionary<string, VariableSave> referenceVars = (referenceState?.Variables ?? new List<VariableSave>())
             .GroupBy(v => v.Name)
             .ToDictionary(g => g.Key, g => g.First());
         Dictionary<string, VariableSave> projectVars = (projectState?.Variables ?? new List<VariableSave>())
             .GroupBy(v => v.Name)
             .ToDictionary(g => g.Key, g => g.First());
 
-        foreach (string variableName in defaultVars.Keys.Union(projectVars.Keys).OrderBy(n => n))
+        foreach (string variableName in referenceVars.Keys.Union(projectVars.Keys).OrderBy(n => n))
         {
-            bool inDefault = defaultVars.TryGetValue(variableName, out VariableSave? defaultVar);
+            bool inReference = referenceVars.TryGetValue(variableName, out VariableSave? referenceVar);
             bool inProject = projectVars.TryGetValue(variableName, out VariableSave? projectVar);
 
-            if (inDefault && inProject)
+            if (inReference && inProject)
             {
-                if (!AreValuesEqual(defaultVar!.Value, projectVar!.Value))
+                if (!AreValuesEqual(referenceVar!.Value, projectVar!.Value))
                 {
                     diffs.Add(new StandardVariableDiff
                     {
@@ -160,7 +135,7 @@ public class DiffStandardsService : IDiffStandardsService
                         StateName = stateName,
                         VariableName = variableName,
                         Kind = StandardVariableDiffKind.Changed,
-                        DefaultValue = FormatValue(defaultVar.Value),
+                        DefaultValue = FormatValue(referenceVar.Value),
                         ProjectValue = FormatValue(projectVar.Value)
                     });
                 }
@@ -185,7 +160,7 @@ public class DiffStandardsService : IDiffStandardsService
                     StateName = stateName,
                     VariableName = variableName,
                     Kind = StandardVariableDiffKind.RemovedFromProject,
-                    DefaultValue = FormatValue(defaultVar!.Value),
+                    DefaultValue = FormatValue(referenceVar!.Value),
                     ProjectValue = "(absent)"
                 });
             }
@@ -228,33 +203,5 @@ public class DiffStandardsService : IDiffStandardsService
             return f.ToString(null, CultureInfo.InvariantCulture);
         }
         return value.ToString() ?? "(unset)";
-    }
-
-    internal static Dictionary<string, StandardElementSave> LoadDefaultStandards()
-    {
-        var result = new Dictionary<string, StandardElementSave>();
-        Assembly assembly = typeof(DiffStandardsService).Assembly;
-
-        foreach (string name in DefaultStandardNames)
-        {
-            string resourceName = $"Gum.ProjectServices.Templates.Default.Standards.{name}.gutx";
-            using Stream? stream = assembly.GetManifestResourceStream(resourceName);
-            if (stream == null)
-            {
-                continue;
-            }
-
-            using var reader = new StreamReader(stream);
-            string content = reader.ReadToEnd();
-
-            StandardElementSave? loaded = DeserializeStandard(content);
-            if (loaded != null)
-            {
-                loaded.Name = name;
-                result[name] = loaded;
-            }
-        }
-
-        return result;
     }
 }

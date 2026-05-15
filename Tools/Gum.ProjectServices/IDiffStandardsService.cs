@@ -12,11 +12,11 @@ namespace Gum.ProjectServices;
 public interface IDiffStandardsService
 {
     /// <summary>
-    /// Diffs the Standards on disk under <c>&lt;project&gt;/Standards/*.gutx</c> against
-    /// the bundled Default Standards. Project-only Standards (e.g. <c>RoundedRectangle</c>)
-    /// are listed but not diffed. Components and Behaviors are not compared. Files are
-    /// deserialized raw — the runtime project-initialize pass is deliberately skipped so
-    /// the diff reflects what is checked in, not what is in memory.
+    /// Diffs the project's Standards against the programmatic defaults defined in
+    /// <c>StandardElementsManager.Self</c> — the same source the Gum tool's File → New
+    /// uses, and the implicit ground truth for the import dialog's drift detection.
+    /// Project-only Standards (e.g. <c>RoundedRectangle</c>, <c>ColoredCircle</c>) are
+    /// listed but not diffed. Components and Behaviors are not compared.
     /// </summary>
     DiffStandardsResult Diff(string projectFilePath);
 }
