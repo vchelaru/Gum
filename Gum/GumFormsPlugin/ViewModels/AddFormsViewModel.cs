@@ -1,4 +1,5 @@
 ﻿using Gum.ToolStates;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,6 +31,20 @@ public class AddFormsViewModel : DialogViewModel
         set => Set(value);
     }
 
+    public IReadOnlyList<string> AvailableThemes
+    {
+        get => Get<IReadOnlyList<string>>() ?? Array.Empty<string>();
+        private set => Set(value);
+    }
+
+    public string? SelectedTheme
+    {
+        get => Get<string?>();
+        set => Set(value);
+    }
+
+    public bool HasMultipleThemes => AvailableThemes.Count > 1;
+
     #endregion
 
     public AddFormsViewModel(FormsFileService formsFileService,
@@ -45,11 +60,17 @@ public class AddFormsViewModel : DialogViewModel
         _importLogic = importLogic;
         _projectState = projectState;
         _fileWatchManager = fileWatchManager;
+
+        AvailableThemes = _formsFileService.GetAvailableThemes();
+        SelectedTheme = AvailableThemes.FirstOrDefault(t =>
+                            string.Equals(t, FormsFileService.DefaultThemeName, System.StringComparison.OrdinalIgnoreCase))
+                        ?? AvailableThemes.FirstOrDefault();
     }
 
     public override void OnAffirmative()
     {
-        var sourceDestinations = _formsFileService.GetSourceDestinations(IsIncludeDemoScreenGum);
+        var theme = SelectedTheme ?? FormsFileService.DefaultThemeName;
+        var sourceDestinations = _formsFileService.GetSourceDestinations(theme, IsIncludeDemoScreenGum);
         bool canSaveFiles = GetIfShouldSave(sourceDestinations);
 
         if (canSaveFiles)

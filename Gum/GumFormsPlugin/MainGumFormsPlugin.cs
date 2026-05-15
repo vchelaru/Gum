@@ -87,7 +87,10 @@ internal class MainGumFormsPlugin : PluginBase
 
     private bool GetIfProjectHasForms()
     {
-        var files = _formsFileService.GetSourceDestinations(false);
+        // Whether the project already has forms imported is independent of the theme picker,
+        // so use the default theme's destination set. The same destination paths get written
+        // regardless of which theme produced them.
+        var files = _formsFileService.GetSourceDestinations(FormsFileService.DefaultThemeName, isIncludeDemoScreenGum: false);
 
         var firstMatch = files.Values
             .FirstOrDefault(item => 
