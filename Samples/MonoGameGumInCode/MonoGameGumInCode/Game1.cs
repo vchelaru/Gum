@@ -52,6 +52,7 @@ namespace MonoGameGumInCode
             AddNavButton("Forms", () => ShowScreen<FormsScreen>());
             AddNavButton("Standards", () => ShowScreen<StandardsScreen>());
             AddNavButton("Circles", () => ShowScreen<CirclesScreen>());
+            AddNavButton("Rectangles", () => ShowScreen<RectanglesScreen>());
             AddNavButton("Text", () => ShowScreen<TextScreen>());
             AddNavButton("Mixed", () => ShowScreen<MixedScreen>());
             AddNavButton("Invisible", () => ShowScreen<InvisibleScreen>());

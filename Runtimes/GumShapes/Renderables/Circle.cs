@@ -10,15 +10,19 @@ using System.Threading.Tasks;
 
 namespace MonoGameAndGum.Renderables;
 
-public class Circle : RenderableShapeBase, Gum.GueDeriving.ICircleRenderable
+public class Circle : RenderableShapeBase,
+    Gum.GueDeriving.IFilledCircleRenderable,
+    Gum.GueDeriving.IStrokedCircleRenderable
 {
     /// <inheritdoc/>
     /// <remarks>
     /// Apos.Shapes draws the circle as <c>Width / 2</c> centered on the renderable's
     /// position — the diameter, not a separate radius field. Setting <see cref="Radius"/>
     /// keeps Width and Height in lockstep so the shape is square. Implemented to satisfy
-    /// <see cref="Gum.GueDeriving.ICircleRenderable"/>, the role contract <c>CircleRuntime</c>
-    /// drives.
+    /// both <see cref="Gum.GueDeriving.IFilledCircleRenderable"/> and
+    /// <see cref="Gum.GueDeriving.IStrokedCircleRenderable"/>; which slot any given Circle
+    /// instance fills is determined by its <c>IsFilled</c> flag, set by the factory in
+    /// <c>AposShapeRuntime.RegisterRuntimeTypes</c>.
     /// </remarks>
     public float Radius
     {

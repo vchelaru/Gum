@@ -1,6 +1,7 @@
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 using MonoGameGum.Renderables;
+using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using Shouldly;
 using Xunit;
@@ -12,48 +13,62 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
-// Phase 2 (rewrite) of #2761: CircleRuntime binds a single ICircleRenderable at construction
-// from RenderableRegistry and keeps it for life. This test project does NOT reference the
-// optional MonoGameGumShapes package, so the renderable is always the core default
-// (DefaultCircleRenderable, an outline). FillColor / StrokeColor still write into the
-// renderable's color slot — they just don't visually fill on the default. The Apos-backed
-// swap-to-fill path is covered in Tests/MonoGameGum.Shapes.Tests/CircleRuntimeTests.cs.
+// Issue #2768 two-slot model: CircleRuntime resolves IFilledCircleRenderable AND
+// IStrokedCircleRenderable at construction. Core MonoGameGum has no IFilledCircleRenderable
+// default — fill is genuinely unavailable without the optional MonoGameGumShapes (Apos.Shapes)
+// package, and FillColor setters are no-ops here. The stroke slot resolves to
+// DefaultStrokedCircleRenderable. The Apos-backed fill-and-stroke path is covered in
+// Tests/MonoGameGum.Shapes.Tests/CircleRuntimeTests.cs.
 public class CircleRuntimeTests : BaseTestClass
 {
     [Fact]
-    public void Constructor_BindsDefaultCircleRenderable()
+    public void Constructor_BindsDefaultStrokedRenderable_AsContainedObject()
     {
         CircleRuntime sut = new();
 
-        sut.RenderableComponent.ShouldBeOfType<DefaultCircleRenderable>();
+        sut.RenderableComponent.ShouldBeOfType<DefaultStrokedCircleRenderable>();
     }
 
     [Fact]
-    public void FillColor_WhenSet_WritesToRenderableColorAndSetsIsFilledTrue()
+    public void Constructor_LeavesFillSlotNull_WhenNoFactoryRegistered()
+    {
+        // Core MonoGameGum registers no IFilledCircleRenderable default. The runtime must
+        // tolerate a null fill slot — see graceful-degradation contract in #2768.
+        CircleRuntime sut = new();
+
+        // Indirectly: setting FillColor must not throw, and the stroke renderable stays the
+        // contained object (no fill instance to take its place).
+        sut.FillColor = Color.Red;
+        sut.RenderableComponent.ShouldBeOfType<DefaultStrokedCircleRenderable>();
+    }
+
+    [Fact]
+    public void FillColor_RoundTripsBackingField_WhenFillSlotIsNull()
     {
         CircleRuntime sut = new();
 
         sut.FillColor = Color.Red;
 
-        ICircleRenderable renderable = sut.RenderableComponent.ShouldBeAssignableTo<ICircleRenderable>()!;
-        renderable.IsFilled.ShouldBeTrue();
-        renderable.Color.ShouldBe(Color.Red);
+        // Stored on the runtime so a later install of MonoGameGumShapes (which would
+        // re-create the runtime) honors the user's color. Without the package, no visual
+        // effect — see DefaultStrokedCircleRenderable remarks.
+        sut.FillColor.ShouldBe(Color.Red);
     }
 
     [Fact]
-    public void LegacyColor_RoutesThroughRenderableColor()
+    public void LegacyColor_RoutesToStrokeRenderable()
     {
         CircleRuntime sut = new();
 
         sut.Color = Color.Yellow;
 
-        ICircleRenderable renderable = sut.RenderableComponent.ShouldBeAssignableTo<ICircleRenderable>()!;
-        renderable.Color.ShouldBe(Color.Yellow);
+        IStrokedCircleRenderable stroke = sut.RenderableComponent.ShouldBeAssignableTo<IStrokedCircleRenderable>()!;
+        stroke.Color.ShouldBe(Color.Yellow);
         sut.Color.ShouldBe(Color.Yellow);
     }
 
     [Fact]
-    public void Radius_RoundTrips_ThroughRenderable()
+    public void Radius_RoundTrips_ThroughStrokeRenderable()
     {
         CircleRuntime sut = new();
 
@@ -81,14 +96,13 @@ public class CircleRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void StrokeColor_WhenSet_WritesToRenderableColorAndSetsIsFilledFalse()
+    public void StrokeColor_WhenSet_WritesToStrokeRenderable()
     {
         CircleRuntime sut = new();
 
         sut.StrokeColor = Color.Lime;
 
-        ICircleRenderable renderable = sut.RenderableComponent.ShouldBeAssignableTo<ICircleRenderable>()!;
-        renderable.IsFilled.ShouldBeFalse();
-        renderable.Color.ShouldBe(Color.Lime);
+        IStrokedCircleRenderable stroke = sut.RenderableComponent.ShouldBeAssignableTo<IStrokedCircleRenderable>()!;
+        stroke.Color.ShouldBe(Color.Lime);
     }
 }

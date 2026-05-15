@@ -10,8 +10,16 @@ using System.Threading.Tasks;
 
 namespace MonoGameAndGum.Renderables;
 
-public class RoundedRectangle : RenderableShapeBase
+public class RoundedRectangle : RenderableShapeBase,
+    Gum.GueDeriving.IFilledRectangleRenderable,
+    Gum.GueDeriving.IStrokedRectangleRenderable
 {
+    /// <summary>
+    /// Rounded-corner radius in pixels. Apos.Shapes' <c>RoundedRectangle</c> honors this on
+    /// both fill and stroke draws, so <see cref="RectangleRuntime"/> pushes the same value
+    /// to both slots. Per-corner overrides via the <c>CustomRadius*</c> properties are
+    /// unchanged.
+    /// </summary>
     public float CornerRadius { get; set; }
 
     // Per-corner overrides. When any of these is non-null, the fill/border draws use the
