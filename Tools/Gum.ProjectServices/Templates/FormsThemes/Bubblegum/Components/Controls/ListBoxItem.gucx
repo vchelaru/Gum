@@ -4,8 +4,17 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">DarkGray</Value>
+    <Variable Type="int" Name="Background.Alpha" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -13,8 +22,11 @@
     <Variable Type="DimensionUnitType" Name="Background.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Solid</Value>
+    <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -40,31 +52,6 @@
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="FocusedIndicator.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Warning</Value>
-    </Variable>
-    <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
-    <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Solid</Value>
-    </Variable>
-    <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="float" Name="FocusedIndicator.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">-2</Value>
-    </Variable>
-    <Variable Type="VerticalAlignment" Name="FocusedIndicator.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="FocusedIndicator.YUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">5</Value>
-    </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -73,8 +60,11 @@
     </Variable>
     <Variable Type="ListBoxItemCategory" Name="ListBoxItemCategoryState" SetsValue="false" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-    <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">85</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">17</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -84,6 +74,9 @@
     </Variable>
     <Variable Type="HorizontalAlignment" Name="TextInstance.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">61</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextInstance.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -95,16 +88,19 @@
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">-8</Value>
+      <Value xsi:type="xsd:float">-24</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="float" Name="TextInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">12</Value>
+    </Variable>
     <Variable Type="HorizontalAlignment" Name="TextInstance.XOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="PositionUnitType" Name="TextInstance.XUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">6</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="VerticalAlignment" Name="TextInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
@@ -123,56 +119,57 @@
     <Name>ListBoxItemCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
+      <Variable Type="int" Name="Background.Alpha" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="Background.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="Background.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>Highlighted</Name>
-      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Accent</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">true</Value>
-      </Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
+      <Variable Type="int" Name="Background.Alpha" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true"><Value xsi:type="xsd:int">251</Value></Variable>
+      <Variable Type="int" Name="Background.Green" SetsValue="true"><Value xsi:type="xsd:int">245</Value></Variable>
+      <Variable Type="int" Name="Background.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>Selected</Name>
-      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">true</Value>
-      </Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
+      <Variable Type="int" Name="Background.Alpha" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true"><Value xsi:type="xsd:int">237</Value></Variable>
+      <Variable Type="int" Name="Background.Green" SetsValue="true"><Value xsi:type="xsd:int">222</Value></Variable>
+      <Variable Type="int" Name="Background.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">117</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">68</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">204</Value></Variable>
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
-      </Variable>
-      <Variable Type="bool" Name="Background.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
-        <Value xsi:type="xsd:boolean">true</Value>
-      </Variable>
+      <Variable Type="int" Name="Background.Alpha" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true"><Value xsi:type="xsd:int">237</Value></Variable>
+      <Variable Type="int" Name="Background.Green" SetsValue="true"><Value xsi:type="xsd:int">222</Value></Variable>
+      <Variable Type="int" Name="Background.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">117</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">68</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">204</Value></Variable>
+    </State>
+    <State>
+      <Name>Disabled</Name>
+      <Variable Type="int" Name="Background.Alpha" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="Background.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="Background.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
     </State>
   </Category>
-  <Instance Name="Background" BaseType="NineSlice" />
+  <Instance Name="Background" BaseType="RoundedRectangle" />
   <Instance Name="TextInstance" BaseType="Text" />
-  <Instance Name="FocusedIndicator" BaseType="NineSlice" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ListBoxItemBehavior</BehaviorName>
