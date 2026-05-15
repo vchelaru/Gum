@@ -2,6 +2,7 @@
 using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
@@ -17,6 +18,9 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace MonoGameAndGum.Renderables;
 
+// Phase 2 rewrite of #2761: ICircleRenderable (the role contract CircleRuntime drives) is
+// implemented on Circle directly, not the shared base. The base no longer participates in any
+// renderable-registry contract — only Circle does.
 public abstract class RenderableShapeBase : RenderableBase
 {
     protected ShapeRenderer ShapeRenderer => ShapeRenderer.Self;

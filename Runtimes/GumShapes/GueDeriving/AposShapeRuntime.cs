@@ -43,6 +43,31 @@ public abstract class AposShapeRuntime : GraphicalUiElement
 #pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     public static void RegisterRuntimeTypes()
     {
+        // The ICircleRenderable factory is registered OUTSIDE the _registered guard on
+        // purpose. ElementSave + event registrations are idempotent and guarded; the registry
+        // factory must be re-applied every call because GumService.Uninitialize and
+        // BaseTestClass.Dispose both reset RenderableRegistry between Initialize cycles
+        // (issue #2761 "load-order contract"). The factory is context-bearing so it can wire
+        // OnPreRender — an internal member of RenderableShapeBase that core MonoGameGum can't
+        // reach — pointing back at the runtime's PreRender override.
+        //
+        // Phase 2 rewrite (#2761): registers ICircleRenderable (the role contract) instead of
+        // the old IFilledShapeRenderable capability. Apos's Circle is now selected at
+        // CircleRuntime *construction* and kept for life — no per-property swap.
+        RenderableRegistry.RegisterFactory<Gum.GueDeriving.ICircleRenderable>(gue =>
+        {
+            var shape = new Circle();
+            if (gue is AposShapeRuntime apos)
+            {
+                shape.OnPreRender = apos.PreRender;
+            }
+            else if (gue is Gum.GueDeriving.CircleRuntime circle)
+            {
+                shape.OnPreRender = circle.PreRender;
+            }
+            return shape;
+        });
+
         if (_registered) return;
         _registered = true;
 
@@ -64,9 +89,8 @@ public abstract class AposShapeRuntime : GraphicalUiElement
 
         StandardElementsManager.Self.CustomGetDefaultState += HandleCustomGetDefaultState;
 
-        CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable += 
+        CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable +=
             MonoGameGumShapes.CustomSetPropertyOnRenderable.SetPropertyOnRenderableFunc;
-
     }
 
     private static StateSave HandleCustomGetDefaultState(string arg)

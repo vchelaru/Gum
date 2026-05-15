@@ -61,6 +61,7 @@ public class Game1 : Game
         _navStrip.AddToRoot();
 
         AddNavButton("Shape survey", NewSurveyScreen);
+        AddNavButton("Circles", () => new CirclesScreen());
         AddNavButton("Gradients", () => new GradientScreen());
     }
 
