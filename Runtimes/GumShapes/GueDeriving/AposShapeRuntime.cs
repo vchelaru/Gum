@@ -43,28 +43,41 @@ public abstract class AposShapeRuntime : GraphicalUiElement
 #pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     public static void RegisterRuntimeTypes()
     {
-        // The ICircleRenderable factory is registered OUTSIDE the _registered guard on
-        // purpose. ElementSave + event registrations are idempotent and guarded; the registry
-        // factory must be re-applied every call because GumService.Uninitialize and
+        // All four factory registrations live OUTSIDE the _registered guard on purpose.
+        // ElementSave + event registrations are idempotent and guarded; registry factories
+        // must be re-applied every call because GumService.Uninitialize and
         // BaseTestClass.Dispose both reset RenderableRegistry between Initialize cycles
-        // (issue #2761 "load-order contract"). The factory is context-bearing so it can wire
+        // (issue #2761 "load-order contract"). Each factory is context-bearing so it can wire
         // OnPreRender — an internal member of RenderableShapeBase that core MonoGameGum can't
-        // reach — pointing back at the runtime's PreRender override.
+        // reach — pointing back at the calling runtime's PreRender override.
         //
-        // Phase 2 rewrite (#2761): registers ICircleRenderable (the role contract) instead of
-        // the old IFilledShapeRenderable capability. Apos's Circle is now selected at
-        // CircleRuntime *construction* and kept for life — no per-property swap.
-        RenderableRegistry.RegisterFactory<Gum.GueDeriving.ICircleRenderable>(gue =>
+        // Issue #2768 two-slot model: each shape runtime (CircleRuntime, RectangleRuntime)
+        // resolves a fill renderable AND a stroke renderable at construction. On the Apos
+        // backend both slots are an Apos shape — the fill factory sets IsFilled=true on its
+        // instance, the stroke factory sets IsFilled=false on its instance. The runtime holds
+        // both and they draw simultaneously.
+        RenderableRegistry.RegisterFactory<Gum.GueDeriving.IFilledCircleRenderable>(gue =>
         {
-            var shape = new Circle();
-            if (gue is AposShapeRuntime apos)
-            {
-                shape.OnPreRender = apos.PreRender;
-            }
-            else if (gue is Gum.GueDeriving.CircleRuntime circle)
-            {
-                shape.OnPreRender = circle.PreRender;
-            }
+            var shape = new Circle { IsFilled = true };
+            WireOnPreRender(shape, gue);
+            return shape;
+        });
+        RenderableRegistry.RegisterFactory<Gum.GueDeriving.IStrokedCircleRenderable>(gue =>
+        {
+            var shape = new Circle { IsFilled = false };
+            WireOnPreRender(shape, gue);
+            return shape;
+        });
+        RenderableRegistry.RegisterFactory<Gum.GueDeriving.IFilledRectangleRenderable>(gue =>
+        {
+            var shape = new RoundedRectangle { IsFilled = true };
+            WireOnPreRender(shape, gue);
+            return shape;
+        });
+        RenderableRegistry.RegisterFactory<Gum.GueDeriving.IStrokedRectangleRenderable>(gue =>
+        {
+            var shape = new RoundedRectangle { IsFilled = false };
+            WireOnPreRender(shape, gue);
             return shape;
         });
 
@@ -91,6 +104,30 @@ public abstract class AposShapeRuntime : GraphicalUiElement
 
         CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable +=
             MonoGameGumShapes.CustomSetPropertyOnRenderable.SetPropertyOnRenderableFunc;
+    }
+
+    /// <summary>
+    /// Wires the factory-built Apos shape's <c>OnPreRender</c> hook back at the calling
+    /// runtime's <c>PreRender</c>. Each runtime type the shape can back gets its own arm —
+    /// the call has to land on the GUE that actually owns the shape so ScreenPixel scaling
+    /// resolves against the right camera/zoom. Both fill and stroke instances get this
+    /// wiring; the runtime's PreRender is idempotent (just pushes the stroke width once),
+    /// so being reached twice per frame from a two-slot runtime is fine.
+    /// </summary>
+    private static void WireOnPreRender(RenderableShapeBase shape, GraphicalUiElement gue)
+    {
+        switch (gue)
+        {
+            case AposShapeRuntime apos:
+                shape.OnPreRender = apos.PreRender;
+                break;
+            case Gum.GueDeriving.CircleRuntime circle:
+                shape.OnPreRender = circle.PreRender;
+                break;
+            case Gum.GueDeriving.RectangleRuntime rect:
+                shape.OnPreRender = rect.PreRender;
+                break;
+        }
     }
 
     private static StateSave HandleCustomGetDefaultState(string arg)

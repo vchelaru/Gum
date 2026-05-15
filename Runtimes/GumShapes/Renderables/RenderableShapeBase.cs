@@ -18,9 +18,11 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace MonoGameAndGum.Renderables;
 
-// Phase 2 rewrite of #2761: ICircleRenderable (the role contract CircleRuntime drives) is
-// implemented on Circle directly, not the shared base. The base no longer participates in any
-// renderable-registry contract — only Circle does.
+// Issue #2768 two-slot model: the role contracts (IFilledCircleRenderable,
+// IStrokedCircleRenderable, IFilledRectangleRenderable, IStrokedRectangleRenderable) are
+// implemented on the concrete shape classes (Circle, RoundedRectangle) directly, not the
+// shared base. The base no longer participates in any renderable-registry contract — only
+// the concrete shape classes do.
 public abstract class RenderableShapeBase : RenderableBase
 {
     protected ShapeRenderer ShapeRenderer => ShapeRenderer.Self;

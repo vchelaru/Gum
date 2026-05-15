@@ -62,6 +62,7 @@ public class Game1 : Game
 
         AddNavButton("Shape survey", NewSurveyScreen);
         AddNavButton("Circles", () => new CirclesScreen());
+        AddNavButton("Rectangles", () => new RectanglesScreen());
         AddNavButton("Gradients", () => new GradientScreen());
     }
 
