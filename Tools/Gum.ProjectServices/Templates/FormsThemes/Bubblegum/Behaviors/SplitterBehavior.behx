@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>SplitterBehavior</Name>
+  <RequiredVariables />
+  <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <FormsProperty Type="ResizeBehavior?" Name="ResizeBehavior">
+    <Description>Rows resizes the row above/below the splitter; Columns resizes the columns to either side. Empty leaves the choice to layout (StackPanel orientation determines the axis).</Description>
+  </FormsProperty>
+  <RequiredInstances />
+  <RequiredAnimations />
+  <DefaultImplementation>Controls/Splitter</DefaultImplementation>
+</BehaviorSave>

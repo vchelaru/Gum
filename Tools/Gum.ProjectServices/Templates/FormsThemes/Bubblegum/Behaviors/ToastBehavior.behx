@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>ToastBehavior</Name>
+  <RequiredVariables />
+  <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <RequiredInstances>
+    <InstanceSave>
+      <Name>TextInstance</Name>
+      <BaseType>Text</BaseType>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors />
+    </InstanceSave>
+  </RequiredInstances>
+  <RequiredAnimations />
+  <DefaultImplementation>Controls/Toast</DefaultImplementation>
+</BehaviorSave>

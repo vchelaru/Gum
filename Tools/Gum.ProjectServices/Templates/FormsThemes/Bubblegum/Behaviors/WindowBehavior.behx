@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>WindowBehavior</Name>
+  <RequiredVariables />
+  <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <FormsProperty Type="ResizeMode" Name="ResizeMode">
+    <Value xsi:type="xsd:string">CanResize</Value>
+    <Description>CanResize lets the user drag the window's borders to resize it; NoResize disables border-driven resizing.</Description>
+  </FormsProperty>
+  <RequiredInstances />
+  <RequiredAnimations />
+  <DefaultImplementation>Controls/WindowStandard</DefaultImplementation>
+</BehaviorSave>

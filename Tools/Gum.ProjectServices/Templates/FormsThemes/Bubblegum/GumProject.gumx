@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GumProjectSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <CustomProperties />
+  <FontRanges>32-126,160-255,9632-9727,10003-10007</FontRanges>
+  <FontSpacingVertical>1</FontSpacingVertical>
+  <FontSpacingHorizontal>1</FontSpacingHorizontal>
+  <UseFontCharacterFile>false</UseFontCharacterFile>
+  <AutoSizeFontOutputs>false</AutoSizeFontOutputs>
+  <FontGenerator>KernSmith</FontGenerator>
+  <Version>2</Version>
+  <DefaultCanvasWidth>1024</DefaultCanvasWidth>
+  <DefaultCanvasHeight>768</DefaultCanvasHeight>
+  <CustomCanvasSizes>
+    <CustomCanvasSize>
+      <Width xsi:nil="true" />
+      <Height xsi:nil="true" />
+      <FriendlyName>Project Default</FriendlyName>
+    </CustomCanvasSize>
+    <CustomCanvasSize>
+      <Width>640</Width>
+      <Height>480</Height>
+      <FriendlyName>480p</FriendlyName>
+    </CustomCanvasSize>
+    <CustomCanvasSize>
+      <Width>1280</Width>
+      <Height>720</Height>
+      <FriendlyName>720p</FriendlyName>
+    </CustomCanvasSize>
+    <CustomCanvasSize>
+      <Width>1280</Width>
+      <Height>800</Height>
+      <FriendlyName>Steam Deck</FriendlyName>
+    </CustomCanvasSize>
+    <CustomCanvasSize>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <FriendlyName>1080p</FriendlyName>
+    </CustomCanvasSize>
+    <CustomCanvasSize>
+      <Width>3840</Width>
+      <Height>2160</Height>
+      <FriendlyName>4k</FriendlyName>
+    </CustomCanvasSize>
+  </CustomCanvasSizes>
+  <ShowOutlines>false</ShowOutlines>
+  <ShowCanvasOutline>true</ShowCanvasOutline>
+  <ShowRuler>true</ShowRuler>
+  <ShowCheckerBackground>true</ShowCheckerBackground>
+  <TextureFilter>Point</TextureFilter>
+  <ConvertVariablesOnUnitTypeChange>false</ConvertVariablesOnUnitTypeChange>
+  <RestrictToUnitValues>true</RestrictToUnitValues>
+  <RestrictFileNamesForAndroid>false</RestrictFileNamesForAndroid>
+  <Guides />
+  <ParentProjectRoot>../</ParentProjectRoot>
+  <ShowLocalizationInGum>true</ShowLocalizationInGum>
+  <CurrentLanguageIndex>0</CurrentLanguageIndex>
+  <ScreenReference Name="DemoScreenGum" />
+  <ComponentReference Name="Controls/Button" />
+  <ComponentReference Name="Controls/ButtonIcon" />
+  <ComponentReference Name="Controls/CheckBox" />
+  <ComponentReference Name="Controls/ComboBox" />
+  <ComponentReference Name="Controls/DialogBox" />
+  <ComponentReference Name="Controls/ItemsControl" />
+  <ComponentReference Name="Controls/Label" />
+  <ComponentReference Name="Controls/ListBox" />
+  <ComponentReference Name="Controls/ListBoxItem" />
+  <ComponentReference Name="Controls/Menu" />
+  <ComponentReference Name="Controls/MenuItem" />
+  <ComponentReference Name="Controls/Panel" />
+  <ComponentReference Name="Controls/PasswordBox" />
+  <ComponentReference Name="Controls/RadioButton" />
+  <ComponentReference Name="Controls/ScrollBar" />
+  <ComponentReference Name="Controls/ScrollViewer" />
+  <ComponentReference Name="Controls/Slider" />
+  <ComponentReference Name="Controls/SliderThumb" />
+  <ComponentReference Name="Controls/Splitter" />
+  <ComponentReference Name="Controls/StackPanel" />
+  <ComponentReference Name="Controls/TextBox" />
+  <ComponentReference Name="Controls/Toast" />
+  <ComponentReference Name="Controls/UserControl" />
+  <ComponentReference Name="Controls/Window" />
+  <ComponentReference Name="Elements/Icon" />
+  <ComponentReference Name="Styles" />
+  <StandardElementReference Name="Circle" />
+  <StandardElementReference Name="ColoredCircle" />
+  <StandardElementReference Name="ColoredRectangle" />
+  <StandardElementReference Name="Component" />
+  <StandardElementReference Name="Container" />
+  <StandardElementReference Name="NineSlice" />
+  <StandardElementReference Name="Polygon" />
+  <StandardElementReference Name="Rectangle" />
+  <StandardElementReference Name="RoundedRectangle" />
+  <StandardElementReference Name="Sprite" />
+  <StandardElementReference Name="Text" />
+  <BehaviorReference Name="ButtonBehavior" />
+  <BehaviorReference Name="CheckBoxBehavior" />
+  <BehaviorReference Name="ComboBoxBehavior" />
+  <BehaviorReference Name="DialogBoxBehavior" />
+  <BehaviorReference Name="ItemsControlBehavior" />
+  <BehaviorReference Name="LabelBehavior" />
+  <BehaviorReference Name="ListBoxBehavior" />
+  <BehaviorReference Name="ListBoxItemBehavior" />
+  <BehaviorReference Name="MenuBehavior" />
+  <BehaviorReference Name="MenuItemBehavior" />
+  <BehaviorReference Name="OnScreenKeyboardBehavior" />
+  <BehaviorReference Name="PanelBehavior" />
+  <BehaviorReference Name="PasswordBoxBehavior" />
+  <BehaviorReference Name="RadioButtonBehavior" />
+  <BehaviorReference Name="ScrollBarBehavior" />
+  <BehaviorReference Name="ScrollViewerBehavior" />
+  <BehaviorReference Name="SliderBehavior" />
+  <BehaviorReference Name="SplitterBehavior" />
+  <BehaviorReference Name="StackPanelBehavior" />
+  <BehaviorReference Name="TextBoxBehavior" />
+  <BehaviorReference Name="ToastBehavior" />
+  <BehaviorReference Name="ToggleBehavior" />
+  <BehaviorReference Name="UserControlBehavior" />
+  <BehaviorReference Name="WindowBehavior" />
+  <SinglePixelTextureTop xsi:nil="true" />
+  <SinglePixelTextureLeft xsi:nil="true" />
+  <SinglePixelTextureRight xsi:nil="true" />
+  <SinglePixelTextureBottom xsi:nil="true" />
+</GumProjectSave>

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Controls/Toast</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">28</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">120</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">120</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.DropshadowBlurX" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.DropshadowBlurY" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.DropshadowGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.DropshadowOffsetX" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.DropshadowOffsetY" SetsValue="true">
+      <Value xsi:type="xsd:float">6</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.DropshadowRed" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="Background.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Background.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Background.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Background.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="Height" SetsValue="true">
+      <Value xsi:type="xsd:float">57</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="TextInstance.HorizontalAlignment" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="string" Name="TextInstance.Parent" SetsValue="true" />
+    <Variable Type="string" Name="TextInstance.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Toast Text!!!!</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="TextInstance.VerticalAlignment" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="TextInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TextInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="TextInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TextInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="Width" SetsValue="true">
+      <Value xsi:type="xsd:float">411</Value>
+    </Variable>
+    <Variable Type="float" Name="X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="Y" SetsValue="true">
+      <Value xsi:type="xsd:float">-53</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.Red</string>
+        <string>Green = Components/Styles.White.Green</string>
+        <string>Blue = Components/Styles.White.Blue</string>
+        <string>Font = Components/Styles.Strong.Font</string>
+        <string>FontSize = Components/Styles.Strong.FontSize</string>
+        <string>IsBold = Components/Styles.Strong.IsBold</string>
+      </Value>
+    </VariableList>
+  </State>
+  <Instance Name="Background" BaseType="RoundedRectangle" />
+  <Instance Name="TextInstance" BaseType="Text" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>ToastBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>

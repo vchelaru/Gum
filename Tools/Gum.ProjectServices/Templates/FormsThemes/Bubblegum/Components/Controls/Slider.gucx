@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Controls/Slider</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="float" Name="Height" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="SliderCategory" Name="SliderCategoryState" SetsValue="false" />
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="float" Name="ThumbInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ThumbInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="ThumbInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TrackInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="ThumbInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ThumbInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="ThumbInstance.X" ExposedAsName="SliderPercent" SetsValue="false" />
+    <Variable Type="HorizontalAlignment" Name="ThumbInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ThumbInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="ThumbInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ThumbInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBackground.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">237</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackBackground.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBackground.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">222</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackBackground.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TrackBackground.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="TrackBackground.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="TrackBackground.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TrackInstance</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBackground.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackBackground.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TrackBackground.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackBackground.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="TrackBackground.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TrackBackground.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackBackground.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="TrackBackground.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TrackBackground.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TrackInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-20</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TrackInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="TrackInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TrackInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="TrackInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TrackInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="Width" SetsValue="true">
+      <Value xsi:type="xsd:float">128</Value>
+    </Variable>
+  </State>
+  <Category>
+    <Name>SliderCategory</Name>
+    <State>
+      <Name>Enabled</Name>
+      <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Enabled</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>Disabled</Name>
+      <Variable Type="int" Name="TrackBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
+      <Variable Type="int" Name="TrackBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
+      <Variable Type="int" Name="TrackBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
+      <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Disabled</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledFocused</Name>
+      <Variable Type="int" Name="TrackBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
+      <Variable Type="int" Name="TrackBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
+      <Variable Type="int" Name="TrackBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
+      <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">DisabledFocused</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>Focused</Name>
+      <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Focused</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>Highlighted</Name>
+      <Variable Type="string" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Highlighted</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedFocused</Name>
+      <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">HighlightedFocused</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>Pushed</Name>
+      <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Pushed</Value>
+      </Variable>
+    </State>
+  </Category>
+  <Instance Name="TrackInstance" BaseType="Container" />
+  <Instance Name="TrackBackground" BaseType="RoundedRectangle" />
+  <Instance Name="ThumbInstance" BaseType="Controls/SliderThumb" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>SliderBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>SliderCategoryState</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>
