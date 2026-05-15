@@ -326,6 +326,75 @@ public class WindowTests : BaseTestClass
         Window sut = new();
         sut.Visual.HasEvents.ShouldBeTrue();
     }
+    [Fact]
+    public void Resizing_ShouldNotShiftWindow_WhenDraggingBottomBeyondMinHeight_StartingAboveMin()
+    {
+        // Scenario from issue #2762: window starts taller than MinHeight,
+        // user drags the bottom edge up far past the min — window should
+        // shrink to MinHeight and stop, without the window getting pushed.
+        Mock<ICursor> cursor = CreateMockCursor();
+
+        Window sut = new();
+        sut.AddToRoot();
+
+        InteractiveGue bottom =
+            sut.Visual.Find<InteractiveGue>("BorderBottomInstance")!;
+
+        sut.Visual.Y = 100;
+        sut.Visual.Height = 200;
+        sut.Visual.MinHeight = 50;
+
+        // Push the bottom edge with the cursor near the bottom.
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(300);
+        bottom.TryCallPush();
+
+        // Drag the cursor up to where shrinking would take height below the min.
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(50);
+        bottom.TryCallDragging();
+
+        sut.Y.ShouldBe(100);
+        sut.Height.ShouldBe(50);
+
+        // And a second drag at the same extreme cursor position should not
+        // accumulate any further shift.
+        bottom.TryCallDragging();
+        sut.Y.ShouldBe(100);
+        sut.Height.ShouldBe(50);
+    }
+
+    [Fact]
+    public void Resizing_ShouldNotShiftWindow_WhenDraggingTopBeyondMinHeight_StartingAboveMin()
+    {
+        Mock<ICursor> cursor = CreateMockCursor();
+
+        Window sut = new();
+        sut.AddToRoot();
+
+        InteractiveGue top =
+            sut.Visual.Find<InteractiveGue>("BorderTopInstance")!;
+
+        sut.Visual.Y = 100;
+        sut.Visual.Height = 200;
+        sut.Visual.MinHeight = 50;
+        // AbsoluteTop = 100, AbsoluteBottom = 300
+
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(100);
+        top.TryCallPush();
+
+        // Drag the top edge down — past where height would shrink below the min.
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(400);
+        top.TryCallDragging();
+
+        // Top can move down until height hits min; AbsoluteBottom should stay at 300.
+        sut.Y.ShouldBe(250);
+        sut.Height.ShouldBe(50);
+
+        // A second drag at the same cursor position must not push further.
+        top.TryCallDragging();
+        sut.Y.ShouldBe(250);
+        sut.Height.ShouldBe(50);
+    }
+
     #region Utilities
 
     private static Mock<ICursor> CreateMockCursor()
