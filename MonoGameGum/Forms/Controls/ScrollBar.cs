@@ -31,6 +31,16 @@ public class ScrollBar : RangeBase
     public Button? DownButton => downButton;
     public float MinimumThumbSize { get; set; } = 16;
 
+    // The Track whose SizeChanged we are currently subscribed to. Stored as a field rather than
+    // re-resolved through the Track property at unsubscribe time so that if Visual (and therefore
+    // Track) is swapped out, we unhook from the original Track instance rather than leaking the
+    // subscription. See issue #2781 — thumb size + position both read Track absolute dimensions,
+    // so any Track resize (parent resize, sibling resize, layout reflow, direct manipulation)
+    // must re-run UpdateThumbSize + UpdateThumbPositionAccordingToValue. The previous hook on
+    // Visual.SizeChanged missed any case where Track changed without the ScrollBar's own Visual
+    // also changing.
+    InteractiveGue? _subscribedTrack;
+
     double viewportSize = .1;
     public double ViewportSize
     {
@@ -90,6 +100,14 @@ public class ScrollBar : RangeBase
     bool hasAssignedOrientation = false;
     protected override void ReactToVisualChanged()
     {
+        // Visual may be reassigned at runtime, which swaps Track. Unhook from the previously
+        // tracked instance before resolving the new one so we don't leak a subscription.
+        if (_subscribedTrack != null)
+        {
+            _subscribedTrack.SizeChanged -= HandleTrackSizeChanged;
+            _subscribedTrack = null;
+        }
+
         if(!hasAssignedOrientation)
         {
             // default it!
@@ -147,7 +165,18 @@ public class ScrollBar : RangeBase
             Track.Push += HandleTrackPush;
 #endif
         }
-        Visual.SizeChanged += HandleVisualSizeChange;
+
+        // Subscribe to Track.SizeChanged rather than Visual.SizeChanged because Track size is what
+        // UpdateThumbSize / UpdateThumbPositionAccordingToValue actually read. If Track fills Visual
+        // (the common case) a Visual resize propagates to Track and fires this anyway. If Track is
+        // sized independently of Visual (e.g. by sibling changes or absolute sizing) we still react.
+        // Hooking only Track is strictly more correct than hooking Visual. Field-tracked for clean
+        // unsubscribe on visual change/removal.
+        if (Track != null)
+        {
+            _subscribedTrack = Track;
+            _subscribedTrack.SizeChanged += HandleTrackSizeChanged;
+        }
 
 
 
@@ -277,10 +306,22 @@ public class ScrollBar : RangeBase
         }
     }
 
-    private void HandleVisualSizeChange(object sender, EventArgs e)
+    private void HandleTrackSizeChanged(object sender, EventArgs e)
     {
-        UpdateThumbPositionAccordingToValue();
         UpdateThumbSize();
+        UpdateThumbPositionAccordingToValue();
+    }
+
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+        if (_subscribedTrack != null)
+        {
+            _subscribedTrack.SizeChanged -= HandleTrackSizeChanged;
+            _subscribedTrack = null;
+        }
     }
 
     protected override void OnMinimumChanged(double oldMinimum, double newMinimum)
