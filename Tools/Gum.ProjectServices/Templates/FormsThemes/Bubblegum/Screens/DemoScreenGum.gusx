@@ -623,7 +623,7 @@
     <Variable Type="int" Name="TitleText.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">157</Value>
     </Variable>
-    <Variable Type="string" Name="TitleText.Font" SetsValue="true">
+    <Variable IsFont="true" Type="string" Name="TitleText.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Nunito</Value>
     </Variable>
     <Variable Type="int" Name="TitleText.FontSize" SetsValue="true">
@@ -644,10 +644,13 @@
     <Variable Type="string" Name="TitleText.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Settings</Value>
     </Variable>
+    <Variable Type="float" Name="TitleText.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">172</Value>
+    </Variable>
     <Variable Type="int" Name="TitleText1.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">157</Value>
     </Variable>
-    <Variable Type="string" Name="TitleText1.Font" SetsValue="true">
+    <Variable IsFont="true" Type="string" Name="TitleText1.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Nunito</Value>
     </Variable>
     <Variable Type="int" Name="TitleText1.FontSize" SetsValue="true">
@@ -667,6 +670,9 @@
     </Variable>
     <Variable Type="string" Name="TitleText1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">New Profile</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">183</Value>
     </Variable>
     <Variable Type="float" Name="WindowStandardInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">163</Value>
