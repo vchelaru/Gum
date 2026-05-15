@@ -14,8 +14,6 @@ namespace MonoGameGumInCode
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-        private const float NavStripHeight = 40;
-
         private StackPanel _navStrip;
         private FrameworkElement _currentScreen;
 
@@ -47,6 +45,9 @@ namespace MonoGameGumInCode
             _navStrip.Spacing = 4;
             _navStrip.Visual.X = 4;
             _navStrip.Visual.Y = 4;
+            _navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            _navStrip.Width = 0;
+            _navStrip.Visual.WrapsChildren = true;
             _navStrip.AddToRoot();
 
             AddNavButton("Forms", () => ShowScreen<FormsScreen>());
@@ -80,8 +81,8 @@ namespace MonoGameGumInCode
             // by the nav strip's footprint so the two never overlap.
             _currentScreen.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
             _currentScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            _currentScreen.Visual.Y = NavStripHeight;
-            _currentScreen.Visual.Height = -NavStripHeight;
+            _currentScreen.Visual.Y = _navStrip.Visual.GetAbsoluteHeight();
+            _currentScreen.Visual.Height = -_navStrip.Visual.GetAbsoluteHeight();
             _currentScreen.AddToRoot();
         }
 
