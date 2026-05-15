@@ -108,6 +108,11 @@ internal class NineSliceScreen : FrameworkElement
         label.Text = text;
         label.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         label.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        // Width/Height = 0 + RelativeToChildren → exactly fit children. A non-zero
+        // value here would be added on top of the children-extent, producing extra
+        // padding the layout almost never wants.
+        label.Width = 0;
+        label.Height = 0;
         container.AddChild(label);
     }
 
@@ -118,6 +123,10 @@ internal class NineSliceScreen : FrameworkElement
         row.StackSpacing = 6;
         row.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         row.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        // Width/Height = 0 + RelativeToChildren → exactly fit children. A non-zero
+        // value here would be added on top of the children-extent, producing extra
+        // padding the layout almost never wants.
+        row.Width = 0;
         row.Height = 0;
         container.AddChild(row);
         return row;

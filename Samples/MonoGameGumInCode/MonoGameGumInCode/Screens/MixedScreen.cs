@@ -76,6 +76,9 @@ internal class MixedScreen : FrameworkElement
         stackingContainer.StackSpacing = 3;
         stackingContainer.WrapsChildren = true;
         stackingContainer.Y = 10;
+        // Height = 10 + RelativeToChildren → children-extent + 10 px of trailing
+        // padding. Most stack containers want Height = 0 for an exact fit; the
+        // 10 here is deliberate spacing below the last wrap row.
         stackingContainer.Height = 10;
         stackingContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
@@ -122,12 +125,17 @@ internal class MixedScreen : FrameworkElement
         // adds a gap between this text and the item above
         textInstance.Y = 8;
 
+        // Width = 0 + RelativeToChildren → exactly fit children. A non-zero value
+        // would be added on top of the children-extent, producing extra padding the
+        // layout almost never wants.
         textInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         textInstance.Width = 0;
 
         textInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
-        // Makes it so the item below appears closer to the text:
+        // Same rule as Width above, except Height = -8 here is a deliberate negative
+        // pad to pull the next sibling closer to the text — the exception to the
+        // "default to 0" guideline.
         textInstance.Height = -8;
 
         textInstance.Text = text;

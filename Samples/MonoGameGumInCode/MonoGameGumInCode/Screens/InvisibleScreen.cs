@@ -21,6 +21,9 @@ internal class InvisibleScreen : FrameworkElement
             X = 5,
             Y = 5,
             Width = 40,
+            // Height = 0 + RelativeToChildren → exactly fit children. A non-zero
+            // value here would be added on top of the children-extent, producing
+            // extra padding the layout almost never wants.
             Height = 0,
 
             HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren,
