@@ -1,11 +1,14 @@
 using Gum.Forms;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using Shouldly;
+// MonoGameGum.GueDeriving.ContainerRuntime is obsolete — Gum.GueDeriving.ContainerRuntime
+// (above) is the supported type. Drop the legacy using to avoid the CS0104 collision now
+// that this file references both namespaces' contents.
 
 namespace MonoGameGum.IntegrationTests.MonoGameGum;
 
@@ -94,6 +97,20 @@ public class UninitializeTests : BaseTestClass
     }
 
     [Fact]
+    public void Uninitialize_ClearsRenderableRegistry()
+    {
+        using GameForUninitializeTest game = new GameForUninitializeTest();
+        game.RunOneFrame();
+
+        RenderableRegistry.RegisterFactory<IRegistryCapability>(() => new RegistryCapability());
+        RenderableRegistry.GetFactory<IRegistryCapability>().ShouldNotBeNull();
+
+        game.GumService.Uninitialize();
+
+        RenderableRegistry.GetFactory<IRegistryCapability>().ShouldBeNull();
+    }
+
+    [Fact]
     public void Uninitialize_AllowsReinitialize()
     {
         using var reinitGame = new GameForReinitializeTest();
@@ -172,5 +189,15 @@ public class UninitializeTests : BaseTestClass
             LoaderManager.Self?.DisposeAndClear();
             base.Dispose(disposing);
         }
+    }
+
+    // Sentinel capability for Uninitialize_ClearsRenderableRegistry — intentionally
+    // unrelated to any real renderable contract; RenderableRegistry keys by type only.
+    private interface IRegistryCapability
+    {
+    }
+
+    private sealed class RegistryCapability : IRegistryCapability
+    {
     }
 }
