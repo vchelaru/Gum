@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Controls/UserControl</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="string" Name="Background.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Panel</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+  </State>
+  <Instance Name="Background" BaseType="NineSlice" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>UserControlBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>

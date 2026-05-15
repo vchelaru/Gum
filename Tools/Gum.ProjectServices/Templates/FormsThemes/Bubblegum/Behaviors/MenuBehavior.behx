@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>MenuBehavior</Name>
+  <RequiredVariables />
+  <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <RequiredInstances />
+  <RequiredAnimations />
+  <DefaultImplementation>Controls/Menu</DefaultImplementation>
+</BehaviorSave>

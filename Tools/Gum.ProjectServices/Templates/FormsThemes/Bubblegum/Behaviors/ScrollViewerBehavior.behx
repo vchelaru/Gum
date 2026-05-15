@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>ScrollViewerBehavior</Name>
+  <RequiredVariables />
+  <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <FormsProperty Type="double" Name="SmallChange">
+    <Value xsi:type="xsd:double">1</Value>
+    <Description>Step size for arrow buttons / mouse wheel.</Description>
+  </FormsProperty>
+  <FormsProperty Type="double" Name="LargeChange">
+    <Value xsi:type="xsd:double">10</Value>
+    <Description>Step size for clicks on the scroll bar track.</Description>
+  </FormsProperty>
+  <FormsProperty Type="ScrollBarVisibility" Name="VerticalScrollBarVisibility">
+    <Value xsi:type="xsd:string">Auto</Value>
+    <Description>Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.</Description>
+  </FormsProperty>
+  <FormsProperty Type="ScrollBarVisibility" Name="HorizontalScrollBarVisibility">
+    <Value xsi:type="xsd:string">Auto</Value>
+    <Description>Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.</Description>
+  </FormsProperty>
+  <ToolOnlyVariableReference>ScrollBarVisibilityState = VerticalScrollBarVisibility == "Hidden" ? (HorizontalScrollBarVisibility == "Hidden" ? "NoScrollBar" : "HorizontalScrollVisible") : (HorizontalScrollBarVisibility == "Hidden" ? "VerticalScrollVisible" : "BothScrollVisible")</ToolOnlyVariableReference>
+  <Category>
+    <Name>ScrollBarVisibility</Name>
+    <State>
+      <Name>NoScrollBar</Name>
+    </State>
+    <State>
+      <Name>VerticalScrollVisible</Name>
+    </State>
+  </Category>
+  <Category>
+    <Name>ScrollViewerCategory</Name>
+    <State>
+      <Name>Enabled</Name>
+    </State>
+    <State>
+      <Name>Focused</Name>
+    </State>
+  </Category>
+  <RequiredInstances>
+    <InstanceSave>
+      <Name>VerticalScrollBarInstance</Name>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors>
+        <BehaviorReference>
+          <Name>ScrollBarBehavior</Name>
+        </BehaviorReference>
+      </Behaviors>
+    </InstanceSave>
+    <InstanceSave>
+      <Name>InnerPanelInstance</Name>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors />
+    </InstanceSave>
+    <InstanceSave>
+      <Name>ClipContainerInstance</Name>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors />
+    </InstanceSave>
+  </RequiredInstances>
+  <RequiredAnimations />
+  <DefaultImplementation>Controls/ScrollViewer</DefaultImplementation>
+</BehaviorSave>

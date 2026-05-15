@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Controls/RadioButton</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="ColorCategory" Name="FocusedIndicator.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Warning</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
+    <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Solid</Value>
+    </Variable>
+    <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusedIndicator.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="FocusedIndicator.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="FocusedIndicator.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <Variable Type="float" Name="Height" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="bool" Name="Radio.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="Radio.HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="Radio.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Radio.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="IconCategory" Name="Radio.IconCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Circle2</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+      <Value xsi:type="xsd:string">White</Value>
+    </Variable>
+    <Variable Type="string" Name="Radio.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">RadioBackground</Value>
+    </Variable>
+    <Variable Type="float" Name="Radio.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Radio.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="float" Name="RadioBackground.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="RadioBackground.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="StyleCategory" Name="RadioBackground.StyleCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">CircleBordered</Value>
+    </Variable>
+    <Variable Type="float" Name="RadioBackground.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="RadioBackground.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="RadioBackground.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="RadioBackground.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="RadioBackground.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="RadioBackground.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="RadioButtonCategory" Name="RadioButtonCategoryState" SetsValue="false" />
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">White</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="StyleCategory" Name="TextInstance.StyleCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Normal</Value>
+    </Variable>
+    <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Radio Label</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="TextInstance.VerticalAlignment" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-28</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="TextInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TextInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="TextInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TextInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="Width" SetsValue="true">
+      <Value xsi:type="xsd:float">128</Value>
+    </Variable>
+  </State>
+  <Category>
+    <Name>RadioButtonCategory</Name>
+    <State>
+      <Name>EnabledOn</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Primary</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>EnabledOff</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Primary</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledOn</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">DarkGray</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledOff</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">DarkGray</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedOn</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedOff</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>PushedOn</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">PrimaryDark</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>PushedOff</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">PrimaryDark</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>FocusedOn</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Primary</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>FocusedOff</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Primary</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedFocusedOn</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedFocusedOff</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledFocusedOn</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">DarkGray</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledFocusedOff</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="Radio.IconColor" SetsValue="true">
+        <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+      <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="RadioBackground.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">DarkGray</Value>
+      </Variable>
+      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+    </State>
+  </Category>
+  <Instance Name="RadioBackground" BaseType="NineSlice" />
+  <Instance Name="Radio" BaseType="Elements/Icon" />
+  <Instance Name="TextInstance" BaseType="Text" />
+  <Instance Name="FocusedIndicator" BaseType="NineSlice" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>RadioButtonBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>RadioButtonCategoryState</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>

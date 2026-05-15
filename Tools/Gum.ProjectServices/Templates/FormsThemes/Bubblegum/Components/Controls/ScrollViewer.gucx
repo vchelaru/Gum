@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Controls/ScrollViewer</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">DarkGray</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="Background.Parent" SetsValue="true" />
+    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Bordered</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Background.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Background.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Background.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="bool" Name="ClipContainerInstance.ClipsChildren" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="ClipContainerInstance.HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="ClipContainerInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-4</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ClipContainerInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="ClipContainerInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="ClipContainerInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-27</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ClipContainerInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="ClipContainerInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="float" Name="ClipContainerInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="ClipContainerInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ClipContainerInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
+      <Value xsi:type="xsd:string">InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="FocusedIndicator.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Warning</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
+    <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Solid</Value>
+    </Variable>
+    <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusedIndicator.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="FocusedIndicator.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="FocusedIndicator.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <Variable Type="OrientationCategory" Name="HorizontalScrollBarInstance.OrientationCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Horizontal</Value>
+    </Variable>
+    <Variable Type="string" Name="HorizontalScrollBarInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="HorizontalScrollBarInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-24</Value>
+    </Variable>
+    <Variable Type="float" Name="HorizontalScrollBarInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="HorizontalScrollBarInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="HorizontalScrollBarInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="HorizontalScrollBarInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">-0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="HorizontalScrollBarInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="HorizontalScrollBarInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="InnerPanelInstance.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="bool" Name="InnerPanelInstance.HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="InnerPanelInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="InnerPanelInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="InnerPanelInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ClipContainerInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="InnerPanelInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="InnerPanelInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="ScrollBarVisibility" Name="ScrollBarVisibilityState" SetsValue="false" />
+    <Variable Type="ScrollViewerCategory" Name="ScrollViewerCategoryState" SetsValue="true" />
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="float" Name="VerticalScrollBarInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-24</Value>
+    </Variable>
+    <Variable Type="string" Name="VerticalScrollBarInstance.Parent" SetsValue="true" />
+    <Variable Type="float" Name="VerticalScrollBarInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">-0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="VerticalScrollBarInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="VerticalScrollBarInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="VerticalScrollBarInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="VerticalScrollBarInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="VerticalScrollBarInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+  </State>
+  <Category>
+    <Name>ScrollBarVisibility</Name>
+    <State>
+      <Name>NoScrollBar</Name>
+      <Variable Type="float" Name="ClipContainerInstance.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">-4</Value>
+      </Variable>
+      <Variable Type="float" Name="ClipContainerInstance.Width" SetsValue="true">
+        <Value xsi:type="xsd:float">-4</Value>
+      </Variable>
+      <Variable Type="bool" Name="HorizontalScrollBarInstance.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="HorizontalScrollBarInstance.Width" SetsValue="true">
+        <Value xsi:type="xsd:float">-24</Value>
+      </Variable>
+      <Variable Type="float" Name="VerticalScrollBarInstance.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">-24</Value>
+      </Variable>
+      <Variable Type="bool" Name="VerticalScrollBarInstance.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>VerticalScrollVisible</Name>
+      <Variable Type="float" Name="ClipContainerInstance.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">-4</Value>
+      </Variable>
+      <Variable Type="float" Name="ClipContainerInstance.Width" SetsValue="true">
+        <Value xsi:type="xsd:float">-27</Value>
+      </Variable>
+      <Variable Type="bool" Name="HorizontalScrollBarInstance.Visible" Category="States and Visibility" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="HorizontalScrollBarInstance.Width" SetsValue="true">
+        <Value xsi:type="xsd:float">-24</Value>
+      </Variable>
+      <Variable Type="float" Name="VerticalScrollBarInstance.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">0</Value>
+      </Variable>
+      <Variable Type="bool" Name="VerticalScrollBarInstance.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HorizontalScrollVisible</Name>
+      <Variable Type="float" Name="ClipContainerInstance.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">-27</Value>
+      </Variable>
+      <Variable Type="float" Name="ClipContainerInstance.Width" SetsValue="true">
+        <Value xsi:type="xsd:float">-4</Value>
+      </Variable>
+      <Variable Type="bool" Name="HorizontalScrollBarInstance.Visible" Category="States and Visibility" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="float" Name="HorizontalScrollBarInstance.Width" SetsValue="true">
+        <Value xsi:type="xsd:float">0</Value>
+      </Variable>
+      <Variable Type="float" Name="VerticalScrollBarInstance.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">-24</Value>
+      </Variable>
+      <Variable Type="bool" Name="VerticalScrollBarInstance.Visible" Category="States and Visibility" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>BothScrollVisible</Name>
+      <Variable Type="float" Name="ClipContainerInstance.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">-27</Value>
+      </Variable>
+      <Variable Type="float" Name="ClipContainerInstance.Width" SetsValue="true">
+        <Value xsi:type="xsd:float">-27</Value>
+      </Variable>
+      <Variable Type="bool" Name="HorizontalScrollBarInstance.Visible" Category="States and Visibility" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="float" Name="HorizontalScrollBarInstance.Width" SetsValue="true">
+        <Value xsi:type="xsd:float">-24</Value>
+      </Variable>
+      <Variable Type="float" Name="VerticalScrollBarInstance.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">-24</Value>
+      </Variable>
+      <Variable Type="bool" Name="VerticalScrollBarInstance.Visible" Category="States and Visibility" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+    </State>
+  </Category>
+  <Category>
+    <Name>ScrollViewerCategory</Name>
+    <State>
+      <Name>Enabled</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>Focused</Name>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+    </State>
+  </Category>
+  <Instance Name="Background" BaseType="NineSlice" />
+  <Instance Name="VerticalScrollBarInstance" BaseType="Controls/ScrollBar" />
+  <Instance Name="HorizontalScrollBarInstance" BaseType="Controls/ScrollBar" />
+  <Instance Name="ClipContainerInstance" BaseType="Container" />
+  <Instance Name="InnerPanelInstance" BaseType="Container" />
+  <Instance Name="FocusedIndicator" BaseType="NineSlice" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>ScrollViewerBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>
