@@ -3,17 +3,89 @@
   <Name>DemoScreenGum</Name>
   <State>
     <Name>Default</Name>
-    <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">242</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">14</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">231</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Background.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Panel</Value>
+    <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="Background1.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="float" Name="Background.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Background.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Background.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Background.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">242</Value>
+    </Variable>
+    <Variable Type="float" Name="Background1.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">14</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.DropshadowAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">100</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.DropshadowBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">120</Value>
+    </Variable>
+    <Variable Type="float" Name="Background1.DropshadowBlurX" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="float" Name="Background1.DropshadowBlurY" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.DropshadowGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="float" Name="Background1.DropshadowOffsetX" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Background1.DropshadowOffsetY" SetsValue="true">
+      <Value xsi:type="xsd:float">6</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.DropshadowRed" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">231</Value>
+    </Variable>
+    <Variable Type="bool" Name="Background1.HasDropshadow" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="float" Name="Background1.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -21,11 +93,14 @@
     <Variable Type="DimensionUnitType" Name="Background1.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="bool" Name="Background1.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
     <Variable Type="string" Name="Background1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">DemoDialog</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="Background1.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Panel</Value>
+    <Variable Type="int" Name="Background1.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="Background1.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -206,9 +281,6 @@
     </Variable>
     <Variable Type="string" Name="LabelInstance1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">WindowStandardInstance</Value>
-    </Variable>
-    <Variable Type="StyleCategory" Name="LabelInstance1.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Strong</Value>
     </Variable>
     <Variable Type="string" Name="LabelInstance1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">I am a label. I will line wrap if you resize this window. You can also grab the top part of the window to move it around. Try it!</Value>
@@ -548,26 +620,50 @@
     <Variable Type="float" Name="TextBoxInstance1.Y" SetsValue="true">
       <Value xsi:type="xsd:float">7</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TitleText.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="TitleText.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="string" Name="TitleText.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="TitleText.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuTitle</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TitleText.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Title</Value>
+    <Variable Type="int" Name="TitleText.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TitleText.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Settings</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TitleText1.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="TitleText1.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="string" Name="TitleText1.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText1.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText1.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText1.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="TitleText1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuTitle1</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TitleText1.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Title</Value>
+    <Variable Type="int" Name="TitleText1.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TitleText1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">New Profile</Value>
@@ -584,9 +680,39 @@
     <Variable Type="float" Name="WindowStandardInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">575</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleText.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.Red</string>
+        <string>Green = Components/Styles.Primary.Green</string>
+        <string>Blue = Components/Styles.Primary.Blue</string>
+        <string>Font = Components/Styles.Title.Font</string>
+        <string>FontSize = Components/Styles.Title.FontSize</string>
+        <string>IsBold = Components/Styles.Title.IsBold</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleText1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.Red</string>
+        <string>Green = Components/Styles.Primary.Green</string>
+        <string>Blue = Components/Styles.Primary.Blue</string>
+        <string>Font = Components/Styles.Title.Font</string>
+        <string>FontSize = Components/Styles.Title.FontSize</string>
+        <string>IsBold = Components/Styles.Title.IsBold</string>
+      </Value>
+    </VariableList>
   </State>
   <Instance Name="DemoSettingsMenu" BaseType="Container" />
-  <Instance Name="Background" BaseType="NineSlice" />
+  <Instance Name="Background" BaseType="RoundedRectangle" />
   <Instance Name="MenuTitle" BaseType="Container" />
   <Instance Name="MenuTitle1" BaseType="Container" />
   <Instance Name="MenuItems" BaseType="Container" />
@@ -607,7 +733,7 @@
   <Instance Name="RadioButtonInstance1" BaseType="Controls/RadioButton" />
   <Instance Name="RadioButtonInstance2" BaseType="Controls/RadioButton" />
   <Instance Name="DifficultyLabel" BaseType="Controls/Label" />
-  <Instance Name="Background1" BaseType="NineSlice" />
+  <Instance Name="Background1" BaseType="RoundedRectangle" />
   <Instance Name="ComboBoxInstance" BaseType="Controls/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
   <Instance Name="ButtonConfirmInstance" BaseType="Controls/Button" />

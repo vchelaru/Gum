@@ -272,8 +272,17 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-    <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Black</Value>
+    <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">85</Value>
+    </Variable>
+    <Variable Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">17</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -284,8 +293,8 @@
     <Variable Type="HorizontalAlignment" Name="TextInstance.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TextInstance.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Normal</Value>
+    <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">61</Value>
     </Variable>
     <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Text" SetsValue="true">
       <Value xsi:type="xsd:string">Label</Value>
@@ -317,6 +326,20 @@
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">128</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Black.Red</string>
+        <string>Green = Components/Styles.Black.Green</string>
+        <string>Blue = Components/Styles.Black.Blue</string>
+        <string>Font = Components/Styles.Normal.Font</string>
+        <string>FontSize = Components/Styles.Normal.FontSize</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>CheckBoxCategory</Name>
@@ -331,7 +354,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>HighlightedOff</Name>
@@ -344,7 +369,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>FocusedOff</Name>
@@ -357,7 +384,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>HighlightedFocusedOff</Name>
@@ -370,7 +399,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>PushedOff</Name>
@@ -383,7 +414,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>DisabledOff</Name>
@@ -396,7 +429,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Gray</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
     </State>
     <State>
       <Name>DisabledFocusedOff</Name>
@@ -409,7 +444,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Gray</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
     </State>
     <State>
       <Name>EnabledOn</Name>
@@ -425,7 +462,9 @@
       <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
       <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>HighlightedOn</Name>
@@ -441,7 +480,9 @@
       <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
       <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>FocusedOn</Name>
@@ -457,7 +498,9 @@
       <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
       <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>HighlightedFocusedOn</Name>
@@ -473,7 +516,9 @@
       <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
       <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>PushedOn</Name>
@@ -489,7 +534,9 @@
       <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
       <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>DisabledOn</Name>
@@ -505,7 +552,9 @@
       <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
       <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Gray</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
     </State>
     <State>
       <Name>DisabledFocusedOn</Name>
@@ -521,7 +570,9 @@
       <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
       <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Gray</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
     </State>
     <State>
       <Name>EnabledIndeterminate</Name>
@@ -534,7 +585,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>HighlightedIndeterminate</Name>
@@ -547,7 +600,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>FocusedIndeterminate</Name>
@@ -560,7 +615,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>HighlightedFocusedIndeterminate</Name>
@@ -573,7 +630,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>PushedIndeterminate</Name>
@@ -586,7 +645,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Black</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
     </State>
     <State>
       <Name>DisabledIndeterminate</Name>
@@ -599,7 +660,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Gray</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
     </State>
     <State>
       <Name>DisabledFocusedIndeterminate</Name>
@@ -612,7 +675,9 @@
       <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Gray</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
     </State>
   </Category>
   <Instance Name="CheckBoxBackground" BaseType="RoundedRectangle" />

@@ -120,8 +120,11 @@
     <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">61</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="SubmenuIndicatorInstance.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Normal</Value>
+    <Variable Type="string" Name="SubmenuIndicatorInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
+    <Variable Type="int" Name="SubmenuIndicatorInstance.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
     </Variable>
     <Variable Type="string" Name="SubmenuIndicatorInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">&gt;</Value>
@@ -174,8 +177,11 @@
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">61</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TextInstance.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Normal</Value>
+    <Variable Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
     </Variable>
     <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Header" SetsValue="true">
       <Value xsi:type="xsd:string">Menu Item</Value>
@@ -231,6 +237,28 @@
     <Variable Type="PositionUnitType" Name="YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Font = Components/Styles.Normal.Font</string>
+        <string>FontSize = Components/Styles.Normal.FontSize</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>SubmenuIndicatorInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Font = Components/Styles.Normal.Font</string>
+        <string>FontSize = Components/Styles.Normal.FontSize</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>MenuItemCategory</Name>

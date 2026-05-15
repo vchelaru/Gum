@@ -4,8 +4,17 @@
   <BaseType>Text</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="ColorCategory" Name="ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">85</Value>
+    </Variable>
+    <Variable Type="string" Name="Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
+    <Variable Type="int" Name="FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="Green" SetsValue="true">
+      <Value xsi:type="xsd:int">17</Value>
     </Variable>
     <Variable Type="float" Name="Height" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -13,16 +22,34 @@
     <Variable Type="DimensionUnitType" Name="HeightUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
-    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-    <Variable Type="StyleCategory" Name="StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Strong</Value>
+    <Variable Type="bool" Name="IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
+    <Variable Type="int" Name="Red" SetsValue="true">
+      <Value xsi:type="xsd:int">61</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="float" Name="Width" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="WidthUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Black.Red</string>
+        <string>Green = Components/Styles.Black.Green</string>
+        <string>Blue = Components/Styles.Black.Blue</string>
+        <string>Font = Components/Styles.Strong.Font</string>
+        <string>FontSize = Components/Styles.Strong.FontSize</string>
+        <string>IsBold = Components/Styles.Strong.IsBold</string>
+      </Value>
+    </VariableList>
   </State>
   <Behaviors>
     <ElementBehaviorReference>

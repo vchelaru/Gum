@@ -85,6 +85,9 @@
     <Variable Type="int" Name="DarkGray.Red" SetsValue="true">
       <Value xsi:type="xsd:int">160</Value>
     </Variable>
+    <Variable Type="string" Name="Emphasis.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
     <Variable Type="int" Name="Emphasis.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
     </Variable>
@@ -109,6 +112,9 @@
     <Variable Type="int" Name="Gray.Red" SetsValue="true">
       <Value xsi:type="xsd:int">201</Value>
     </Variable>
+    <Variable Type="string" Name="H1.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
     <Variable Type="int" Name="H1.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">22</Value>
     </Variable>
@@ -121,6 +127,9 @@
     <Variable Type="string" Name="H1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H1</Value>
     </Variable>
+    <Variable Type="string" Name="H2.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
     <Variable Type="int" Name="H2.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">18</Value>
     </Variable>
@@ -132,6 +141,9 @@
     </Variable>
     <Variable Type="string" Name="H2.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H2</Value>
+    </Variable>
+    <Variable Type="string" Name="H3.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
     </Variable>
     <Variable Type="int" Name="H3.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">16</Value>
@@ -162,6 +174,9 @@
     </Variable>
     <Variable Type="int" Name="LightGray.Red" SetsValue="true">
       <Value xsi:type="xsd:int">240</Value>
+    </Variable>
+    <Variable Type="string" Name="Normal.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
     </Variable>
     <Variable Type="int" Name="Normal.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
@@ -208,6 +223,9 @@
     <Variable Type="int" Name="PrimaryLight.Red" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
+    <Variable Type="string" Name="Small.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
     <Variable Type="int" Name="Small.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">12</Value>
     </Variable>
@@ -219,6 +237,9 @@
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
+    </Variable>
+    <Variable Type="string" Name="Strong.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
     </Variable>
     <Variable Type="int" Name="Strong.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
@@ -260,6 +281,9 @@
     <Variable Type="float" Name="TextStyles.Y" SetsValue="true">
       <Value xsi:type="xsd:float">81</Value>
     </Variable>
+    <Variable Type="string" Name="Tiny.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
     <Variable Type="int" Name="Tiny.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">10</Value>
     </Variable>
@@ -268,6 +292,9 @@
     </Variable>
     <Variable Type="string" Name="Tiny.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Tiny</Value>
+    </Variable>
+    <Variable Type="string" Name="Title.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
     </Variable>
     <Variable Type="int" Name="Title.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">28</Value>

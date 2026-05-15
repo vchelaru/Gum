@@ -11,14 +11,20 @@
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="IconCategory" Name="IconCategoryState" SetsValue="false" />
-    <Variable Type="ColorCategory" Name="IconSprite.ColorCategoryState" ExposedAsName="IconColor" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="IconSprite.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="IconSprite.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="IconSprite.Height" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="IconSprite.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
+    </Variable>
+    <Variable Type="int" Name="IconSprite.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable IsFile="true" Type="string" Name="IconSprite.SourceFile" SetsValue="true">
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
@@ -69,6 +75,18 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value />
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>IconSprite.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.Red</string>
+        <string>Green = Components/Styles.White.Green</string>
+        <string>Blue = Components/Styles.White.Blue</string>
+      </Value>
     </VariableList>
   </State>
   <Category>

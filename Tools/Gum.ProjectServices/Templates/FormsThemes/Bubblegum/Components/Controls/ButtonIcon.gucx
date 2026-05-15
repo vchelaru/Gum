@@ -214,8 +214,14 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="IconInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
     </State>
     <State>
@@ -235,8 +241,14 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="IconInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
     </State>
     <State>
@@ -256,8 +268,14 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="IconInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
     </State>
     <State>
@@ -277,8 +295,14 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="IconInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
     </State>
     <State>
@@ -298,8 +322,14 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="IconInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
     </State>
     <State>
@@ -319,8 +349,14 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="IconInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
     </State>
     <State>
@@ -340,8 +376,14 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="IconInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="IconInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
     </State>
   </Category>

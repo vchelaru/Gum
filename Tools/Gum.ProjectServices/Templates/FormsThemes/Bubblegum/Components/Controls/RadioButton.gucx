@@ -200,14 +200,23 @@
     </Variable>
     <Variable Type="RadioButtonCategory" Name="RadioButtonCategoryState" SetsValue="false" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-    <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Black</Value>
+    <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">85</Value>
+    </Variable>
+    <Variable Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">17</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TextInstance.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Normal</Value>
+    <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">61</Value>
     </Variable>
     <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Text" SetsValue="true">
       <Value xsi:type="xsd:string">Radio Label</Value>
@@ -239,6 +248,20 @@
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">128</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Black.Red</string>
+        <string>Green = Components/Styles.Black.Green</string>
+        <string>Blue = Components/Styles.Black.Blue</string>
+        <string>Font = Components/Styles.Normal.Font</string>
+        <string>FontSize = Components/Styles.Normal.FontSize</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>RadioButtonCategory</Name>
@@ -277,8 +300,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Black</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
@@ -316,8 +345,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Black</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
@@ -358,8 +393,14 @@
       <Variable Type="RadioButtonCategory" Name="RadioButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">EnabledOff</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">217</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">168</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">201</Value>
       </Variable>
     </State>
     <State>
@@ -397,8 +438,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">245</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">217</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">168</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">201</Value>
       </Variable>
     </State>
     <State>
@@ -436,8 +483,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Black</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
@@ -475,8 +528,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Black</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
@@ -514,8 +573,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Black</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
@@ -553,8 +618,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Black</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
@@ -592,8 +663,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Black</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
@@ -631,8 +708,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Black</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
@@ -670,8 +753,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Black</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
@@ -709,8 +798,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Black</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
       </Variable>
     </State>
     <State>
@@ -751,8 +846,14 @@
       <Variable Type="RadioButtonCategory" Name="RadioButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">EnabledOff</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">217</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">168</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">201</Value>
       </Variable>
     </State>
     <State>
@@ -790,8 +891,14 @@
       <Variable Type="int" Name="RadioBackground.Red" SetsValue="true">
         <Value xsi:type="xsd:int">245</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">217</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">168</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">201</Value>
       </Variable>
     </State>
   </Category>
