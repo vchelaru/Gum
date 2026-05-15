@@ -1,9 +1,9 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
+using Gum.ProjectServices;
 using System.Collections.Generic;
 using System.Linq;
-using ToolsUtilities;
 
 namespace ImportFromGumxPlugin.Services;
 
@@ -32,6 +32,15 @@ public class DependencySet
 
 public class GumxDependencyResolver
 {
+    private readonly IStandardComparer _standardComparer;
+
+    public GumxDependencyResolver() : this(new StandardComparer()) { }
+
+    public GumxDependencyResolver(IStandardComparer standardComparer)
+    {
+        _standardComparer = standardComparer;
+    }
+
     /// <summary>
     /// Computes the full transitive dependency closure for the given directly-selected elements.
     /// Items already present in the destination project are excluded from the transitive component list.
@@ -125,8 +134,7 @@ public class GumxDependencyResolver
 
             if (destinationStandardsByName.TryGetValue(standardName, out var destStandard))
             {
-                // Compare default states via XML
-                if (StandardsDiffer(sourceStandard, destStandard))
+                if (_standardComparer.Compare(sourceStandard, destStandard).HasDifferences)
                 {
                     result.DifferingStandards.Add(sourceStandard);
                 }
@@ -194,31 +202,4 @@ public class GumxDependencyResolver
         return sorted;
     }
 
-    private static bool StandardsDiffer(StandardElementSave source, StandardElementSave destination)
-    {
-        // Compare categories — forms controls add state categories (e.g., TextColor)
-        // to standard elements. If the source has categories the destination doesn't,
-        // the standard must be imported.
-        var sourceCategoryNames = source.Categories.Select(c => c.Name).OrderBy(n => n);
-        var destCategoryNames = destination.Categories.Select(c => c.Name).OrderBy(n => n);
-        if (!sourceCategoryNames.SequenceEqual(destCategoryNames)) return true;
-
-        // Compare default states
-        var sourceDefault = source.DefaultState;
-        var destDefault = destination.DefaultState;
-
-        if (sourceDefault == null && destDefault == null) return false;
-        if (sourceDefault == null || destDefault == null) return true;
-
-        // Clone and sort variables before comparing, matching the pattern in AddFormsViewModel
-        var sourceClone = sourceDefault.Clone();
-        var destClone = destDefault.Clone();
-        sourceClone.Variables.Sort((a, b) => a.Name.CompareTo(b.Name));
-        destClone.Variables.Sort((a, b) => a.Name.CompareTo(b.Name));
-
-        FileManager.XmlSerialize(sourceClone, out string sourceSerialized);
-        FileManager.XmlSerialize(destClone, out string destSerialized);
-
-        return sourceSerialized != destSerialized;
-    }
 }

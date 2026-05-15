@@ -65,6 +65,23 @@ public class StandardVariableDiff
 
     /// <summary>Display string of the value in the Default template (or <c>(unset)</c>).</summary>
     public string DefaultValue { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Per-field detail when fields other than <c>Value</c> differ (e.g.
+    /// <c>Type: int → long; Category: A → B</c>). Empty when only <c>Value</c> changed
+    /// or when the diff is a clean Add/Remove.
+    /// </summary>
+    public List<VariableFieldDiff> ChangedFields { get; } = new List<VariableFieldDiff>();
+}
+
+/// <summary>
+/// A single field-level diff inside a <see cref="StandardVariableDiff"/>.
+/// </summary>
+public class VariableFieldDiff
+{
+    public string FieldName { get; set; } = string.Empty;
+    public string ProjectValue { get; set; } = string.Empty;
+    public string DefaultValue { get; set; } = string.Empty;
 }
 
 /// <summary>

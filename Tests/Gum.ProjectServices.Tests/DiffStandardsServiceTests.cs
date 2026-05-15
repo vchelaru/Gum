@@ -8,6 +8,7 @@ namespace Gum.ProjectServices.Tests;
 
 public class DiffStandardsServiceTests : IDisposable
 {
+    private readonly DiffStandardsService _sut;
     private readonly GumProjectSave _reference;
 
     public DiffStandardsServiceTests()
@@ -17,6 +18,7 @@ public class DiffStandardsServiceTests : IDisposable
         StandardElementsManager.Self.Initialize();
         StandardElementsManager.Self.RegisterExtendedDefaultStates();
 
+        _sut = new DiffStandardsService();
         _reference = new GumProjectSave();
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(_reference);
     }
@@ -29,7 +31,7 @@ public class DiffStandardsServiceTests : IDisposable
         GumProjectSave project = new GumProjectSave();
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
 
-        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
+        DiffStandardsResult result = _sut.DiffProjects(project, _reference);
 
         result.HasDrift.ShouldBeFalse();
         result.Differences.ShouldBeEmpty();
@@ -48,7 +50,7 @@ public class DiffStandardsServiceTests : IDisposable
         object? originalFont = font.Value;
         font.Value = "ComicSans";
 
-        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
+        DiffStandardsResult result = _sut.DiffProjects(project, _reference);
 
         result.HasDrift.ShouldBeTrue();
         StandardVariableDiff diff = result.Differences.ShouldHaveSingleItem();
@@ -74,7 +76,7 @@ public class DiffStandardsServiceTests : IDisposable
             SetsValue = true
         });
 
-        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
+        DiffStandardsResult result = _sut.DiffProjects(project, _reference);
 
         StandardVariableDiff diff = result.Differences.ShouldHaveSingleItem();
         diff.Kind.ShouldBe(StandardVariableDiffKind.AddedInProject);
@@ -93,7 +95,7 @@ public class DiffStandardsServiceTests : IDisposable
         VariableSave removed = text.DefaultState.Variables.Single(v => v.Name == "Font");
         text.DefaultState.Variables.Remove(removed);
 
-        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
+        DiffStandardsResult result = _sut.DiffProjects(project, _reference);
 
         StandardVariableDiff diff = result.Differences.ShouldHaveSingleItem();
         diff.Kind.ShouldBe(StandardVariableDiffKind.RemovedFromProject);
@@ -109,7 +111,7 @@ public class DiffStandardsServiceTests : IDisposable
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
         project.StandardElements.RemoveAll(s => s.Name == "Text");
 
-        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
+        DiffStandardsResult result = _sut.DiffProjects(project, _reference);
 
         result.MissingFromProject.ShouldBe(new[] { "Text" });
         result.HasDrift.ShouldBeTrue();
@@ -128,7 +130,7 @@ public class DiffStandardsServiceTests : IDisposable
         extra.States.Add(state);
         project.StandardElements.Add(extra);
 
-        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
+        DiffStandardsResult result = _sut.DiffProjects(project, _reference);
 
         result.ProjectOnlyStandards.ShouldBe(new[] { "RoundedRectangle" });
         result.Differences.ShouldBeEmpty();
@@ -136,11 +138,11 @@ public class DiffStandardsServiceTests : IDisposable
     }
 
     [Fact]
-    public void Diff_NewCategoryInProject_ShouldReportItsStateVariablesAsAdded()
+    public void Diff_NewCategoryInProject_ShouldReportCategoryNameAsAdded()
     {
         // A theme that adds a state category like "Forms" to a Standard has effectively
-        // polluted the universal base. Every variable in those category states should
-        // surface as AddedInProject drift.
+        // polluted the universal base. Matches the tool's StandardsDiffer semantic:
+        // category name set comparison surfaces the category itself as drift.
         GumProjectSave project = new GumProjectSave();
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
 
@@ -148,21 +150,15 @@ public class DiffStandardsServiceTests : IDisposable
         StateSaveCategory category = new StateSaveCategory { Name = "Forms" };
         StateSave selected = new StateSave { Name = "Selected" };
         selected.ParentContainer = text;
-        selected.Variables.Add(new VariableSave
-        {
-            Name = "Color",
-            Type = "string",
-            Value = "Blue",
-            SetsValue = true
-        });
         category.States.Add(selected);
         text.Categories.Add(category);
 
-        DiffStandardsResult result = DiffStandardsService.DiffProjects(project, _reference);
+        DiffStandardsResult result = _sut.DiffProjects(project, _reference);
 
         result.HasDrift.ShouldBeTrue();
         StandardVariableDiff diff = result.Differences.ShouldHaveSingleItem();
-        diff.StateName.ShouldBe("Selected");
+        diff.StateName.ShouldBe("(category)");
+        diff.VariableName.ShouldBe("Forms");
         diff.Kind.ShouldBe(StandardVariableDiffKind.AddedInProject);
     }
 
