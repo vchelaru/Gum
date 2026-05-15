@@ -27,12 +27,12 @@
     </Variable>
     <Variable Type="string" Name="Parent" Category="Parent" SetsValue="true" />
     <Variable Type="float" Name="Radius" Category="Dimensions" SetsValue="true">
-      <Value xsi:type="xsd:float">60</Value>
+      <Value xsi:type="xsd:float">16</Value>
     </Variable>
     <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="false">
+    <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
