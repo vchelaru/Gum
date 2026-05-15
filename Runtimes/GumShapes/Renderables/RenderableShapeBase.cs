@@ -18,10 +18,10 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace MonoGameAndGum.Renderables;
 
-// IFilledShapeRenderable is the core-side (MonoGameGum / KniGum) capability contract that lets
-// CircleRuntime drive a fill-capable renderable across the optional-dependency boundary
-// (issue #2761). The IsFilled, Color, and StrokeWidth members it requires already exist below.
-public abstract class RenderableShapeBase : RenderableBase, IFilledShapeRenderable
+// Phase 2 rewrite of #2761: ICircleRenderable (the role contract CircleRuntime drives) is
+// implemented on Circle directly, not the shared base. The base no longer participates in any
+// renderable-registry contract — only Circle does.
+public abstract class RenderableShapeBase : RenderableBase
 {
     protected ShapeRenderer ShapeRenderer => ShapeRenderer.Self;
 

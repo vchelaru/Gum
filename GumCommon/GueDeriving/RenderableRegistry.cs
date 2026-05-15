@@ -16,7 +16,7 @@ namespace Gum.GueDeriving;
 /// <c>StandardElementsManager.CustomGetDefaultState</c>, and
 /// <c>CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable</c>: core defines the
 /// hook, an optional package (or test setup) fills it. Capabilities are keyed by type —
-/// typically a small capability interface such as <c>IFilledShapeRenderable</c>.
+/// typically a role or capability interface such as <c>ICircleRenderable</c>.
 /// </para>
 /// <para>
 /// Two registration semantics are supported, layered by priority. The general factory

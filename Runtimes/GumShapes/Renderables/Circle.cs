@@ -10,8 +10,26 @@ using System.Threading.Tasks;
 
 namespace MonoGameAndGum.Renderables;
 
-public class Circle : RenderableShapeBase
+public class Circle : RenderableShapeBase, Gum.GueDeriving.ICircleRenderable
 {
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Apos.Shapes draws the circle as <c>Width / 2</c> centered on the renderable's
+    /// position — the diameter, not a separate radius field. Setting <see cref="Radius"/>
+    /// keeps Width and Height in lockstep so the shape is square. Implemented to satisfy
+    /// <see cref="Gum.GueDeriving.ICircleRenderable"/>, the role contract <c>CircleRuntime</c>
+    /// drives.
+    /// </remarks>
+    public float Radius
+    {
+        get => Width / 2f;
+        set
+        {
+            Width = value * 2;
+            Height = value * 2;
+        }
+    }
+
     public override void Render(ISystemManagers managers)
     {
         var sb = ShapeRenderer.ShapeBatch;

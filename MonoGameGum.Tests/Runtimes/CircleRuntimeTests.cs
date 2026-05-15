@@ -1,5 +1,6 @@
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
+using MonoGameGum.Renderables;
 using RenderingLibrary.Math.Geometry;
 using Shouldly;
 using Xunit;
@@ -11,63 +12,48 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
-// Phase 2 of #2761: CircleRuntime gains nullable FillColor / StrokeColor that swap the
-// contained renderable via RenderableRegistry. This test project does NOT reference the
-// optional MonoGameGumShapes package, so no IFilledShapeRenderable factory is ever
-// registered — every test here validates the graceful-degradation path (no crash, stay on
-// the outline LineCircle) plus the legacy-property routing through whichever renderable is
-// currently contained. The swap matrix that exercises the fill-renderable path lives in
-// Tests/MonoGameGum.Shapes.Tests/CircleRuntimeFillColorTests.cs.
+// Phase 2 (rewrite) of #2761: CircleRuntime binds a single ICircleRenderable at construction
+// from RenderableRegistry and keeps it for life. This test project does NOT reference the
+// optional MonoGameGumShapes package, so the renderable is always the core default
+// (DefaultCircleRenderable, an outline). FillColor / StrokeColor still write into the
+// renderable's color slot — they just don't visually fill on the default. The Apos-backed
+// swap-to-fill path is covered in Tests/MonoGameGum.Shapes.Tests/CircleRuntimeTests.cs.
 public class CircleRuntimeTests : BaseTestClass
 {
     [Fact]
-    public void Alpha_ShouldRouteThroughLineCircle_WhenNoFillFactoryRegistered()
+    public void Constructor_BindsDefaultCircleRenderable()
     {
         CircleRuntime sut = new();
-        sut.Color = Color.White;
 
-        sut.Alpha = 128;
-
-        sut.Alpha.ShouldBe(128);
-        LineCircle line = sut.RenderableComponent.ShouldBeOfType<LineCircle>();
-        line.Color.A.ShouldBe((byte)128);
+        sut.RenderableComponent.ShouldBeOfType<DefaultCircleRenderable>();
     }
 
     [Fact]
-    public void Color_LegacyProperty_ShouldRouteThroughLineCircle_WhenNoFillFactoryRegistered()
+    public void FillColor_WhenSet_WritesToRenderableColorAndSetsIsFilledTrue()
     {
         CircleRuntime sut = new();
 
-        sut.Color = Color.Red;
-
-        sut.Color.ShouldBe(Color.Red);
-    }
-
-    [Fact]
-    public void FillColor_WhenClearedToNull_StaysOnLineCircle_WhenNoFillFactoryRegistered()
-    {
-        CircleRuntime sut = new();
         sut.FillColor = Color.Red;
-        sut.FillColor = null;
 
-        sut.RenderableComponent.ShouldBeOfType<LineCircle>();
+        ICircleRenderable renderable = sut.RenderableComponent.ShouldBeAssignableTo<ICircleRenderable>()!;
+        renderable.IsFilled.ShouldBeTrue();
+        renderable.Color.ShouldBe(Color.Red);
     }
 
     [Fact]
-    public void FillColor_WhenSetWithoutShapesPackage_DoesNotThrowAndStaysOutline()
+    public void LegacyColor_RoutesThroughRenderableColor()
     {
-        // Carried forward from spike (#2758): graceful degradation when the optional
-        // MonoGameGumShapes package is NOT referenced. Setting FillColor must NOT crash and
-        // the runtime stays on its outline LineCircle renderable.
         CircleRuntime sut = new();
 
-        Should.NotThrow(() => sut.FillColor = Color.Red);
+        sut.Color = Color.Yellow;
 
-        sut.RenderableComponent.ShouldBeOfType<LineCircle>();
+        ICircleRenderable renderable = sut.RenderableComponent.ShouldBeAssignableTo<ICircleRenderable>()!;
+        renderable.Color.ShouldBe(Color.Yellow);
+        sut.Color.ShouldBe(Color.Yellow);
     }
 
     [Fact]
-    public void Radius_ShouldRoundTrip_OnLineCircle()
+    public void Radius_RoundTrips_ThroughRenderable()
     {
         CircleRuntime sut = new();
 
@@ -79,18 +65,30 @@ public class CircleRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void StrokeColor_WhenSet_AppliesColorToLineCircle_WhenNoFillFactoryRegistered()
+    public void Renderable_IsStableAcrossPropertyChanges()
     {
-        // No factory registered ⇒ degradation path: stroke-only also stays on the outline
-        // LineCircle. The stroke color is pushed onto LineCircle.Color so the outline
-        // visually adopts the requested stroke color.
+        CircleRuntime sut = new();
+        object original = sut.RenderableComponent;
+
+        sut.FillColor = Color.Red;
+        sut.StrokeColor = Color.Blue;
+        sut.Color = Color.Lime;
+        sut.Radius = 25f;
+        sut.FillColor = null;
+        sut.StrokeColor = null;
+
+        sut.RenderableComponent.ShouldBeSameAs(original);
+    }
+
+    [Fact]
+    public void StrokeColor_WhenSet_WritesToRenderableColorAndSetsIsFilledFalse()
+    {
         CircleRuntime sut = new();
 
         sut.StrokeColor = Color.Lime;
 
-        LineCircle line = sut.RenderableComponent.ShouldBeOfType<LineCircle>();
-        line.Color.R.ShouldBe(Color.Lime.R);
-        line.Color.G.ShouldBe(Color.Lime.G);
-        line.Color.B.ShouldBe(Color.Lime.B);
+        ICircleRenderable renderable = sut.RenderableComponent.ShouldBeAssignableTo<ICircleRenderable>()!;
+        renderable.IsFilled.ShouldBeFalse();
+        renderable.Color.ShouldBe(Color.Lime);
     }
 }

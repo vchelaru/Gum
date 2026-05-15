@@ -1,5 +1,6 @@
 using Gum.Wireframe;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 
 #if RAYLIB
@@ -20,10 +21,8 @@ using Color = Microsoft.Xna.Framework.Color;
 using ColorExtensions = ToolsUtilitiesStandard.Helpers.ColorExtensions;
 using ContainedCircleType = global::RenderingLibrary.Math.Geometry.LineCircle;
 using global::RenderingLibrary.Math.Geometry;
-#endif
-
-#if XNALIKE
 using Gum.DataTypes;
+using MonoGameGum.Renderables;
 #endif
 
 #if FRB
@@ -32,9 +31,35 @@ namespace MonoGameGum.GueDeriving;
 namespace Gum.GueDeriving;
 #endif
 
+/// <summary>
+/// Runtime wrapping a circle renderable. Under XNA-likes (MonoGame/FNA/KNI), the renderable is
+/// produced once at construction by <see cref="RenderableRegistry"/> for capability
+/// <see cref="ICircleRenderable"/> and kept for the lifetime of the runtime — no per-property
+/// swap.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Core MonoGameGum registers <see cref="DefaultCircleRenderable"/> as the default; the optional
+/// MonoGameGumShapes (Apos.Shapes) package overrides it with a fill-capable
+/// <c>Circle</c> renderable. <b>The override only applies to <see cref="CircleRuntime"/>s
+/// constructed after MonoGameGumShapes registers its factory.</b> Existing instances are not
+/// retroactively re-bound. Register early — the typical place is during
+/// <c>GumService.Initialize</c>, before any user UI is built.
+/// </para>
+/// <para>
+/// On the core default, <see cref="FillColor"/> writes to the renderable's color slot and sets
+/// <c>IsFilled = true</c>, but the renderable still draws as an outline — there is no true fill
+/// mode without MonoGameGumShapes installed. This is intentional graceful degradation; layout,
+/// color, and radius round-trip correctly so user code is forward-compatible with adding the
+/// package later.
+/// </para>
+/// </remarks>
 public class CircleRuntime : GraphicalUiElement
 {
-    ContainedCircleType containedLineCircle;
+#if XNALIKE
+    ICircleRenderable _circleRenderable = null!;
+#else
+    ContainedCircleType containedLineCircle = null!;
 
     ContainedCircleType ContainedLineCircle
     {
@@ -42,233 +67,186 @@ public class CircleRuntime : GraphicalUiElement
         {
             if (containedLineCircle == null)
             {
-                containedLineCircle = this.RenderableComponent as ContainedCircleType;
+                containedLineCircle = (ContainedCircleType)this.RenderableComponent!;
             }
             return containedLineCircle;
         }
     }
+#endif
 
     /// <summary>
-    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. The legacy member
-    /// routes through whichever renderable is currently contained — <c>LineCircle</c> when
-    /// outlining, an <see cref="IFilledShapeRenderable"/> after a fill swap.
+    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
+    /// writes the alpha channel of the renderable's color slot directly.
     /// </summary>
 #if XNALIKE
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
-#endif
     public int Alpha
     {
-        get
-        {
-#if XNALIKE
-            if (RenderableComponent is IFilledShapeRenderable filled)
-            {
-                return filled.Color.A;
-            }
-#endif
-            return ContainedLineCircle.Color.A;
-        }
+        get => _circleRenderable.Color.A;
         set
         {
-#if XNALIKE
-            if (RenderableComponent is IFilledShapeRenderable filled)
-            {
-                var current = filled.Color;
-                filled.Color = new Color(current.R, current.G, current.B, (byte)value);
-                NotifyPropertyChanged();
-                return;
-            }
-#endif
+            Color current = _circleRenderable.Color;
+            _circleRenderable.Color = new Color(current.R, current.G, current.B, (byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+#else
+    public int Alpha
+    {
+        get => ContainedLineCircle.Color.A;
+        set
+        {
             ContainedLineCircle.Color = ColorExtensions.WithAlpha(ContainedLineCircle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
+#endif
 
     /// <summary>
-    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. The legacy member
-    /// routes through whichever renderable is currently contained.
+    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
+    /// writes the red channel of the renderable's color slot directly.
     /// </summary>
 #if XNALIKE
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
-#endif
     public int Red
     {
-        get
-        {
-#if XNALIKE
-            if (RenderableComponent is IFilledShapeRenderable filled)
-            {
-                return filled.Color.R;
-            }
-#endif
-            return ContainedLineCircle.Color.R;
-        }
+        get => _circleRenderable.Color.R;
         set
         {
-#if XNALIKE
-            if (RenderableComponent is IFilledShapeRenderable filled)
-            {
-                var current = filled.Color;
-                filled.Color = new Color((byte)value, current.G, current.B, current.A);
-                NotifyPropertyChanged();
-                return;
-            }
-#endif
+            Color current = _circleRenderable.Color;
+            _circleRenderable.Color = new Color((byte)value, current.G, current.B, current.A);
+            NotifyPropertyChanged();
+        }
+    }
+#else
+    public int Red
+    {
+        get => ContainedLineCircle.Color.R;
+        set
+        {
             ContainedLineCircle.Color = ColorExtensions.WithRed(ContainedLineCircle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
+#endif
 
     /// <summary>
-    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. The legacy member
-    /// routes through whichever renderable is currently contained.
+    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
+    /// writes the green channel of the renderable's color slot directly.
     /// </summary>
 #if XNALIKE
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
-#endif
     public int Green
     {
-        get
-        {
-#if XNALIKE
-            if (RenderableComponent is IFilledShapeRenderable filled)
-            {
-                return filled.Color.G;
-            }
-#endif
-            return ContainedLineCircle.Color.G;
-        }
+        get => _circleRenderable.Color.G;
         set
         {
-#if XNALIKE
-            if (RenderableComponent is IFilledShapeRenderable filled)
-            {
-                var current = filled.Color;
-                filled.Color = new Color(current.R, (byte)value, current.B, current.A);
-                NotifyPropertyChanged();
-                return;
-            }
-#endif
+            Color current = _circleRenderable.Color;
+            _circleRenderable.Color = new Color(current.R, (byte)value, current.B, current.A);
+            NotifyPropertyChanged();
+        }
+    }
+#else
+    public int Green
+    {
+        get => ContainedLineCircle.Color.G;
+        set
+        {
             ContainedLineCircle.Color = ColorExtensions.WithGreen(ContainedLineCircle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
+#endif
 
     /// <summary>
-    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. The legacy member
-    /// routes through whichever renderable is currently contained.
+    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
+    /// writes the blue channel of the renderable's color slot directly.
     /// </summary>
 #if XNALIKE
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
-#endif
     public int Blue
     {
-        get
-        {
-#if XNALIKE
-            if (RenderableComponent is IFilledShapeRenderable filled)
-            {
-                return filled.Color.B;
-            }
-#endif
-            return ContainedLineCircle.Color.B;
-        }
+        get => _circleRenderable.Color.B;
         set
         {
-#if XNALIKE
-            if (RenderableComponent is IFilledShapeRenderable filled)
-            {
-                var current = filled.Color;
-                filled.Color = new Color(current.R, current.G, (byte)value, current.A);
-                NotifyPropertyChanged();
-                return;
-            }
-#endif
+            Color current = _circleRenderable.Color;
+            _circleRenderable.Color = new Color(current.R, current.G, (byte)value, current.A);
+            NotifyPropertyChanged();
+        }
+    }
+#else
+    public int Blue
+    {
+        get => ContainedLineCircle.Color.B;
+        set
+        {
             ContainedLineCircle.Color = ColorExtensions.WithBlue(ContainedLineCircle.Color, (byte)value);
             NotifyPropertyChanged();
         }
     }
+#endif
 
     public float Radius
     {
-        get
-        {
 #if XNALIKE
-            if (RenderableComponent is IFilledShapeRenderable)
-            {
-                // IFilledShapeRenderable has no Radius member — Apos.Shapes' Circle reads
-                // Width/2 directly. Mirror that here so Radius round-trips after a swap.
-                return mWidth / 2f;
-            }
-#endif
-            return ContainedLineCircle.Radius;
-        }
+        get => _circleRenderable.Radius;
         set
         {
             mWidth = value * 2;
             mHeight = value * 2;
-#if XNALIKE
-            if (RenderableComponent is IFilledShapeRenderable)
-            {
-                // No Radius to push — the renderable reads Width/2 each frame.
-                return;
-            }
-#endif
+            _circleRenderable.Radius = value;
+        }
+#else
+        get => ContainedLineCircle.Radius;
+        set
+        {
+            mWidth = value * 2;
+            mHeight = value * 2;
             ContainedLineCircle.Radius = value;
         }
+#endif
     }
 
     /// <summary>
-    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. The legacy member
-    /// routes through whichever renderable is currently contained.
+    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
+    /// writes the renderable's color slot directly, without changing fill/stroke mode.
     /// </summary>
 #if XNALIKE
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
-#endif
     public Color Color
     {
-#if XNALIKE
-        get
-        {
-            if (RenderableComponent is IFilledShapeRenderable filled)
-            {
-                return filled.Color;
-            }
-            return global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedLineCircle.Color);
-        }
+        get => _circleRenderable.Color;
         set
         {
-            if (RenderableComponent is IFilledShapeRenderable filled)
-            {
-                filled.Color = value;
-                NotifyPropertyChanged();
-                return;
-            }
-            ContainedLineCircle.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            _circleRenderable.Color = value;
             NotifyPropertyChanged();
         }
+    }
 #else
+    public Color Color
+    {
         get => ContainedLineCircle.Color;
         set
         {
             ContainedLineCircle.Color = value;
             NotifyPropertyChanged();
         }
-#endif
     }
+#endif
 
 #if XNALIKE
     Color? _fillColor;
 
     /// <summary>
-    /// When non-null, the circle renders as a solid fill of this color. When null and
-    /// <see cref="StrokeColor"/> is also null, the circle renders as the default outline.
+    /// When non-null, the circle should render as a solid fill of this color (<c>IsFilled =
+    /// true</c> + this color is pushed to the renderable). When null and <see cref="StrokeColor"/>
+    /// is also null, the runtime restores the renderable to its default outline state.
     /// </summary>
     /// <remarks>
-    /// Filled rendering requires the optional MonoGameGumShapes (Apos.Shapes) package, which
-    /// registers a renderable factory via <see cref="RenderableRegistry"/>. When that package
-    /// is not referenced, setting <see cref="FillColor"/> is a graceful no-op for the visual:
-    /// the runtime stays on its outline <c>LineCircle</c> rather than crashing.
+    /// Visual fill requires a fill-capable <see cref="ICircleRenderable"/> implementation —
+    /// supplied by the optional MonoGameGumShapes (Apos.Shapes) package. On the core default
+    /// <see cref="DefaultCircleRenderable"/> the flag and color are stored, but the renderable
+    /// still draws as an outline. The runtime never swaps renderables.
     /// </remarks>
     public Color? FillColor
     {
@@ -276,7 +254,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             _fillColor = value;
-            UpdateContainedFromFillStrokeColors();
+            ApplyFillStrokeToRenderable();
             NotifyPropertyChanged();
         }
     }
@@ -284,14 +262,13 @@ public class CircleRuntime : GraphicalUiElement
     Color? _strokeColor;
 
     /// <summary>
-    /// When non-null and <see cref="FillColor"/> is null, the circle renders as a stroked
-    /// outline in this color. When both are null, the circle renders as the default outline.
+    /// When non-null and <see cref="FillColor"/> is null, the circle should render as a stroked
+    /// outline in this color (<c>IsFilled = false</c> + this color is pushed to the renderable).
     /// </summary>
     /// <remarks>
-    /// Prefers an <see cref="IFilledShapeRenderable"/> with <c>IsFilled=false</c> when a
-    /// factory is available (Apos.Shapes via MonoGameGumShapes), so the runtime gets the
-    /// full stroke API (StrokeWidth, dashed strokes, antialiasing). Falls back to applying
-    /// the color to the outline <c>LineCircle</c> when the factory is absent.
+    /// On the core default the color is pushed to the outline renderable's color slot;
+    /// <c>IsFilled</c> is stored but has no visual effect. On the Apos-backed renderable the
+    /// full stroke API (StrokeWidth, dashed strokes, antialiasing) becomes available.
     /// </remarks>
     public Color? StrokeColor
     {
@@ -299,7 +276,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             _strokeColor = value;
-            UpdateContainedFromFillStrokeColors();
+            ApplyFillStrokeToRenderable();
             NotifyPropertyChanged();
         }
     }
@@ -307,11 +284,10 @@ public class CircleRuntime : GraphicalUiElement
     float _strokeWidth = 1;
 
     /// <summary>
-    /// Width of the stroke when this circle is drawing an outline (no fill). Held on the
-    /// runtime alongside <see cref="StrokeWidthUnits"/> so ScreenPixel scaling can be
-    /// re-resolved against the current camera zoom each frame in <see cref="PreRender"/>.
-    /// Pushed to the contained renderable when it implements <see cref="IFilledShapeRenderable"/>;
-    /// ignored when the runtime is on the fallback <c>LineCircle</c> (which has no stroke width).
+    /// Width of the stroke when this circle is drawing an outline. Held on the runtime
+    /// alongside <see cref="StrokeWidthUnits"/> so ScreenPixel scaling can be re-resolved
+    /// against the current camera zoom each frame in <see cref="PreRender"/>. Pushed to the
+    /// renderable each frame; ignored by the core default (which has no stroke width concept).
     /// </summary>
     public float StrokeWidth
     {
@@ -342,121 +318,88 @@ public class CircleRuntime : GraphicalUiElement
     }
 
     /// <summary>
-    /// Swaps the contained renderable to match the current <see cref="FillColor"/> /
-    /// <see cref="StrokeColor"/> combination. FillColor wins when both are set — the
-    /// fill-capable renderable handles either case, just with <c>IsFilled</c> flipped.
+    /// Writes the current FillColor / StrokeColor pair onto the bound renderable. FillColor wins
+    /// when both are set. When both are null, restores the renderable to the default outline
+    /// (white). Does NOT swap renderables — the renderable is bound for life.
     /// </summary>
-    void UpdateContainedFromFillStrokeColors()
+    void ApplyFillStrokeToRenderable()
     {
-        bool wantsFill = _fillColor.HasValue;
-        bool wantsStroke = _strokeColor.HasValue && !wantsFill;
-
-        if (wantsFill)
+        if (_fillColor.HasValue)
         {
-            Color color = _fillColor!.Value;
-            if (RenderableComponent is IFilledShapeRenderable existingFill)
-            {
-                existingFill.IsFilled = true;
-                existingFill.Color = color;
-            }
-            else
-            {
-                var fill = RenderableRegistry.Create<IFilledShapeRenderable>(this);
-                if (fill != null)
-                {
-                    fill.IsFilled = true;
-                    fill.Color = color;
-                    SwapToFillRenderable(fill);
-                }
-                // else: optional package absent — stay on the outline, no visual fill.
-            }
+            _circleRenderable.IsFilled = true;
+            _circleRenderable.Color = _fillColor.Value;
             return;
         }
 
-        if (wantsStroke)
+        if (_strokeColor.HasValue)
         {
-            Color color = _strokeColor!.Value;
-            if (RenderableComponent is IFilledShapeRenderable existingFill)
-            {
-                existingFill.IsFilled = false;
-                existingFill.Color = color;
-            }
-            else
-            {
-                var fill = RenderableRegistry.Create<IFilledShapeRenderable>(this);
-                if (fill != null)
-                {
-                    fill.IsFilled = false;
-                    fill.Color = color;
-                    SwapToFillRenderable(fill);
-                }
-                else
-                {
-                    // Graceful degradation: no fill renderable available. Apply the requested
-                    // stroke color to the outline LineCircle so the user at least sees the
-                    // intended color, even without the stroke-width / dash machinery.
-                    ContainedLineCircle.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(color);
-                }
-            }
+            _circleRenderable.IsFilled = false;
+            _circleRenderable.Color = _strokeColor.Value;
             return;
         }
 
-        // Both null — swap back to the default LineCircle if currently on a fill renderable.
-        if (RenderableComponent is IFilledShapeRenderable)
-        {
-            var line = new ContainedCircleType();
-            line.CircleOrigin = CircleOrigin.TopLeft;
-            line.Color = ColorExtensions.White;
-            containedLineCircle = line;
-            SetContainedObject(line);
-        }
-    }
-
-    void SwapToFillRenderable(IFilledShapeRenderable fill)
-    {
-        containedLineCircle = null!;
-        SetContainedObject(fill);
+        // Both null — back to default outline white. The bound renderable is preserved; only
+        // its mode + color slot reset.
+        _circleRenderable.IsFilled = false;
+        _circleRenderable.Color = Color.White;
     }
 
     /// <summary>
-    /// Pushes runtime-held stroke values to the contained fill renderable each frame,
-    /// resolving <see cref="StrokeWidthUnits"/> against the current camera zoom. No-op when
-    /// the contained renderable is a plain <c>LineCircle</c> (which has no stroke width).
+    /// Pushes runtime-held stroke values to the bound renderable each frame, resolving
+    /// <see cref="StrokeWidthUnits"/> against the current camera zoom. The Apos-backed renderable
+    /// reaches this through the <c>OnPreRender</c> hook the MonoGameGumShapes factory wires up;
+    /// the core default's <c>PreRender</c> never calls back, but the stroke value still gets
+    /// pushed when this method is reached through the layout system.
     /// </summary>
     public override void PreRender()
     {
-        if (RenderableComponent is IFilledShapeRenderable fill)
+        float strokeWidth = _strokeWidth;
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
         {
-            float strokeWidth = _strokeWidth;
-            if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+            var camera = this.EffectiveManagers?.Renderer?.Camera;
+            if (camera != null)
             {
-                var camera = this.EffectiveManagers?.Renderer?.Camera;
-                if (camera != null)
-                {
-                    strokeWidth /= camera.Zoom;
-                }
+                strokeWidth /= camera.Zoom;
             }
-            fill.StrokeWidth = strokeWidth;
-
-            // Do NOT call base.PreRender() here. base.PreRender() forwards to the contained
-            // renderable's PreRender — but the renderable's PreRender is what just called us
-            // back via OnPreRender (wired by the optional MonoGameGumShapes factory). Calling
-            // it again would recurse infinitely. Same caveat as AposShapeRuntime.PreRender.
-            return;
         }
+        _circleRenderable.StrokeWidth = strokeWidth;
 
-        base.PreRender();
+        // Do NOT call base.PreRender() here. base.PreRender() forwards to the renderable's
+        // PreRender — but the Apos renderable's PreRender is what calls us back via the
+        // OnPreRender hook the MonoGameGumShapes factory wires at construction. Forwarding
+        // would recurse infinitely. Same caveat as AposShapeRuntime.PreRender. For the core
+        // default the hook is not wired, but the simpler invariant is "never forward from
+        // here"; layout-time PreRender on GraphicalUiElement runs independently.
     }
 #endif
 
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
     [Obsolete("Use the AddToRoot extension method instead (e.g. myCircle.AddToRoot()).")]
-    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
+    public new void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
     public CircleRuntime(bool fullInstantiation = true)
     {
         if (fullInstantiation)
         {
+#if XNALIKE
+            // Construct-time binding (#2761). Whatever the registry returns is what this
+            // runtime renders with for the rest of its life. The optional MonoGameGumShapes
+            // package overrides the default registration; without it, core's
+            // DefaultCircleRenderable is bound. The null-coalesce is defensive — the default
+            // factory is registered by DefaultCircleRenderable's [ModuleInitializer], so it
+            // should always be present, but if a test or consumer Reset()s the registry and
+            // then constructs a CircleRuntime before re-registering, we still produce a
+            // working renderable rather than crashing.
+            ICircleRenderable renderable = RenderableRegistry.Create<ICircleRenderable>(this)
+                ?? new DefaultCircleRenderable();
+            _circleRenderable = renderable;
+            SetContainedObject((IRenderable)renderable);
+
+            renderable.Color = Color.White;
+            renderable.Radius = 16;
+            Width = 32;
+            Height = 32;
+#else
             var circle = new ContainedCircleType();
             circle.CircleOrigin = CircleOrigin.TopLeft;
             SetContainedObject(circle);
@@ -471,6 +414,7 @@ public class CircleRuntime : GraphicalUiElement
             Width = 32;
             Height = 32;
             circle.Radius = 16;
+#endif
         }
     }
 }
