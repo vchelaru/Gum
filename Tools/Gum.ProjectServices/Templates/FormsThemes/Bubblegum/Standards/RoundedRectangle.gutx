@@ -3,440 +3,184 @@
   <Name>RoundedRectangle</Name>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>int</Type>
-      <Name>Alpha</Name>
+    <Variable Type="int" Name="Alpha" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Alpha1</Name>
+    <Variable Type="int" Name="Alpha1" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Alpha2</Name>
+    <Variable Type="int" Name="Alpha2" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>Blend</Type>
-      <Name>Blend</Name>
+    <Variable Type="Blend" Name="Blend" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Blue</Name>
+    <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Blue1</Name>
+    <Variable Type="int" Name="Blue1" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Blue2</Name>
+    <Variable Type="int" Name="Blue2" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>ClipsChildren</Name>
+    <Variable Type="bool" Name="ClipsChildren" Category="Children" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Children</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>CornerRadius</Name>
+    <Variable Type="float" Name="CornerRadius" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">5</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>DropshadowAlpha</Name>
+    <Variable Type="int" Name="DropshadowAlpha" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Dropshadow</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>DropshadowBlue</Name>
+    <Variable Type="int" Name="DropshadowBlue" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Dropshadow</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DropshadowBlurX</Name>
+    <Variable Type="float" Name="DropshadowBlurX" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Dropshadow</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DropshadowBlurY</Name>
+    <Variable Type="float" Name="DropshadowBlurY" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:float">3</Value>
-      <Category>Dropshadow</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>DropshadowGreen</Name>
+    <Variable Type="int" Name="DropshadowGreen" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Dropshadow</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DropshadowOffsetX</Name>
+    <Variable Type="float" Name="DropshadowOffsetX" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Dropshadow</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DropshadowOffsetY</Name>
+    <Variable Type="float" Name="DropshadowOffsetY" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:float">3</Value>
-      <Category>Dropshadow</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>DropshadowRed</Name>
+    <Variable Type="int" Name="DropshadowRed" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Dropshadow</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>ExposeChildrenEvents</Name>
+    <Variable Type="bool" Name="ExposeChildrenEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Behavior</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>GradientInnerRadius</Name>
+    <Variable Type="float" Name="GradientInnerRadius" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:float">50</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>GradientInnerRadiusUnits</Name>
+    <Variable Type="DimensionUnitType" Name="GradientInnerRadiusUnits" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>GradientOuterRadius</Name>
+    <Variable Type="float" Name="GradientOuterRadius" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>GradientOuterRadiusUnits</Name>
+    <Variable Type="DimensionUnitType" Name="GradientOuterRadiusUnits" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>GradientType</Type>
-      <Name>GradientType</Name>
+    <Variable Type="GradientType" Name="GradientType" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>GradientX1</Name>
+    <Variable Type="float" Name="GradientX1" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>GradientX1Units</Name>
+    <Variable Type="PositionUnitType" Name="GradientX1Units" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>GradientX2</Name>
+    <Variable Type="float" Name="GradientX2" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>GradientX2Units</Name>
+    <Variable Type="PositionUnitType" Name="GradientX2Units" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>GradientY1</Name>
+    <Variable Type="float" Name="GradientY1" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>GradientY1Units</Name>
+    <Variable Type="PositionUnitType" Name="GradientY1Units" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>GradientY2</Name>
+    <Variable Type="float" Name="GradientY2" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>GradientY2Units</Name>
+    <Variable Type="PositionUnitType" Name="GradientY2Units" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Green</Name>
+    <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Green1</Name>
+    <Variable Type="int" Name="Green1" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Green2</Name>
+    <Variable Type="int" Name="Green2" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>HasDropshadow</Name>
+    <Variable Type="bool" Name="HasDropshadow" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Dropshadow</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>HasEvents</Name>
+    <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Behavior</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Height</Name>
+    <Variable Type="float" Name="Height" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>HeightUnits</Name>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IgnoredByParentSize</Name>
+    <Variable Type="bool" Name="IgnoredByParentSize" Category="Parent" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Parent</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>IsFilled</Name>
+    <Variable Type="bool" Name="IsFilled" Category="Stroke and Fill" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <Category>Stroke and Fill</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float?</Type>
-      <Name>MaxHeight</Name>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float?</Type>
-      <Name>MaxWidth</Name>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float?</Type>
-      <Name>MinHeight</Name>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float?</Type>
-      <Name>MinWidth</Name>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Parent</Name>
-      <Category>Parent</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Red</Name>
+    <Variable Type="float?" Name="MaxHeight" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MaxWidth" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MinHeight" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MinWidth" Category="Dimensions" SetsValue="true" />
+    <Variable Type="string" Name="Parent" Category="Parent" SetsValue="true" />
+    <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Red1</Name>
+    <Variable Type="int" Name="Red1" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Red2</Name>
+    <Variable Type="int" Name="Red2" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Rotation</Name>
+    <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Flip and Rotation</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
+    <Variable Type="State" Name="State" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
-      <SetsValue>false</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>StrokeDashLength</Name>
+    <Variable Type="float" Name="StrokeDashLength" Category="Stroke and Fill" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Stroke and Fill</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>StrokeGapLength</Name>
+    <Variable Type="float" Name="StrokeGapLength" Category="Stroke and Fill" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Stroke and Fill</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>StrokeWidth</Name>
+    <Variable Type="float" Name="StrokeWidth" Category="Stroke and Fill" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
-      <Category>Stroke and Fill</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>UseGradient</Name>
+    <Variable Type="bool" Name="UseGradient" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-      <Category>Rendering</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>Visible</Name>
+    <Variable Type="bool" Name="Visible" Category="States and Visibility" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Width</Name>
+    <Variable Type="float" Name="Width" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>WidthUnits</Name>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Dimensions</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>X</Name>
+    <Variable Type="float" Name="X" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>XOrigin</Name>
+    <Variable Type="HorizontalAlignment" Name="XOrigin" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>XUnits</Name>
+    <Variable Type="PositionUnitType" Name="XUnits" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Y</Name>
+    <Variable Type="float" Name="Y" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>YOrigin</Name>
+    <Variable Type="VerticalAlignment" Name="YOrigin" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>YUnits</Name>
+    <Variable Type="PositionUnitType" Name="YUnits" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>

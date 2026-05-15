@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GumProjectSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <CustomProperties />
-  <FontRanges>32-126,160-255</FontRanges>
+  <FontRanges>32-126,160-255,9632-9727,10003-10007</FontRanges>
   <FontSpacingVertical>1</FontSpacingVertical>
   <FontSpacingHorizontal>1</FontSpacingHorizontal>
   <UseFontCharacterFile>false</UseFontCharacterFile>
@@ -55,6 +55,7 @@
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
   <ScreenReference Name="DemoScreenGum" />
+  <ComponentReference Name="Controls/ButtonIcon" />
   <ComponentReference Name="Controls/ButtonStandard" />
   <ComponentReference Name="Controls/CheckBox" />
   <ComponentReference Name="Controls/ComboBox" />
@@ -71,6 +72,7 @@
   <ComponentReference Name="Controls/ScrollBar" />
   <ComponentReference Name="Controls/ScrollViewer" />
   <ComponentReference Name="Controls/Slider" />
+  <ComponentReference Name="Controls/SliderThumb" />
   <ComponentReference Name="Controls/SplitterStandard" />
   <ComponentReference Name="Controls/StackPanel" />
   <ComponentReference Name="Controls/TextBox" />
