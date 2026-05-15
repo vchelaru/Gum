@@ -6,12 +6,17 @@ using RenderingLibrary.Graphics;
 
 namespace MonoGameGumInCode.Screens;
 
-// Visual smoke test for RectangleRuntime's two-slot model (issue #2768). Unlike circles,
-// core MonoGameGum ships defaults for BOTH slots — DefaultFilledRectangleRenderable wraps
-// SolidRectangle, DefaultStrokedRectangleRenderable wraps LineRectangle — so fill, stroke,
-// and fill+stroke all render correctly here without MonoGameGumShapes installed. CornerRadius
-// is stored but NOT rendered (the core defaults are hard-cornered): see the same screen in
-// MonoGameGumShapesGallery for visually rounded corners.
+// Visual smoke test for RectangleRuntime's two-slot model (issue #2768). Unlike the
+// circles screen, core MonoGameGum ships defaults for BOTH rectangle slots — fill via
+// SolidRectangle, stroke via LineRectangle — so fill, stroke, and fill+stroke all render
+// correctly here without MonoGameGumShapes installed. CornerRadius is intentionally
+// omitted from this screen — core defaults are hard-cornered; install MonoGameGumShapes
+// and see the gallery sample for visually rounded corners.
+//
+// Layout convention: every container that sets WidthUnits / HeightUnits to
+// RelativeToChildren also sets Width / Height = 0. RelativeToChildren means the final
+// size is children-extent + the explicit Width/Height; a non-zero value adds extra
+// padding the layout almost never wants.
 internal class RectanglesScreen : FrameworkElement
 {
     public RectanglesScreen() : base(new ContainerRuntime())
@@ -25,9 +30,11 @@ internal class RectanglesScreen : FrameworkElement
         root.Y = 8;
         AddChild(root);
 
-        root.AddChild(BuildSection("Modes: FillColor only, StrokeColor only, Fill+Stroke, default", BuildModeRow()));
+        root.AddChild(BuildSection("Sizes (40, 60, 90, 130 wide)", BuildSizesRow()));
+        root.AddChild(BuildSection("Alpha on FillColor (255, 192, 128, 64)", BuildAlphaRow()));
+        root.AddChild(BuildSection("FillColor / StrokeColor / Fill+Stroke / default", BuildModeRow()));
         root.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px on a filled card)", BuildStrokeWidthRow()));
-        root.AddChild(BuildSection("CornerRadius (0, 4, 12, 24 — stored but flat on core)", BuildCornerRadiusRow()));
+        root.AddChild(BuildSection("Alignment inside a 220x100 container (Top / Center / Bottom)", BuildAlignmentRow()));
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
@@ -47,6 +54,92 @@ internal class RectanglesScreen : FrameworkElement
         return section;
     }
 
+    static ContainerRuntime BuildSizesRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float width in new[] { 40f, 60f, 90f, 130f })
+        {
+            RectangleRuntime rect = new();
+            rect.Width = width;
+            rect.Height = 40;
+            rect.FillColor = new Color(80, 80, 120);
+            rect.StrokeColor = Color.White;
+            row.AddChild(rect);
+        }
+        return row;
+    }
+
+    static ContainerRuntime BuildAlphaRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (byte alpha in new byte[] { 255, 192, 128, 64 })
+        {
+            RectangleRuntime rect = new();
+            rect.Width = 60;
+            rect.Height = 40;
+            rect.FillColor = new Color((byte)255, (byte)255, (byte)255, alpha);
+            row.AddChild(rect);
+        }
+        return row;
+    }
+
+    static ContainerRuntime BuildModeRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        RectangleRuntime filled = new();
+        filled.Width = 80; filled.Height = 50;
+        filled.FillColor = Color.Crimson;
+        row.AddChild(filled);
+
+        RectangleRuntime stroked = new();
+        stroked.Width = 80; stroked.Height = 50;
+        stroked.StrokeColor = Color.Cyan;
+        stroked.StrokeWidth = 2;
+        row.AddChild(stroked);
+
+        RectangleRuntime both = new();
+        both.Width = 80; both.Height = 50;
+        both.FillColor = new Color(40, 40, 80);
+        both.StrokeColor = Color.Yellow;
+        both.StrokeWidth = 2;
+        row.AddChild(both);
+
+        RectangleRuntime defaultRect = new();
+        defaultRect.Width = 80; defaultRect.Height = 50;
+        row.AddChild(defaultRect);
+
+        return row;
+    }
+
+    static ContainerRuntime BuildStrokeWidthRow()
+    {
+        // LineRectangle (the core stroke default) IS LinePixelWidth-aware, so the stroke
+        // grows visibly even without MonoGameGumShapes. On Apos this same code reads as
+        // an anti-aliased version of the same visual.
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float strokeWidth in new[] { 1f, 2f, 4f, 8f })
+        {
+            RectangleRuntime rect = new();
+            rect.Width = 70; rect.Height = 50;
+            rect.FillColor = new Color(30, 30, 50);
+            rect.StrokeColor = Color.LightGreen;
+            rect.StrokeWidth = strokeWidth;
+            row.AddChild(rect);
+        }
+        return row;
+    }
+
+    static ContainerRuntime BuildAlignmentRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (VerticalAlignment alignment in new[] { VerticalAlignment.Top, VerticalAlignment.Center, VerticalAlignment.Bottom })
+        {
+            row.AddChild(BuildAlignmentCell(alignment));
+        }
+        return row;
+    }
+
     static ContainerRuntime BuildHorizontalRow()
     {
         ContainerRuntime row = new();
@@ -59,67 +152,31 @@ internal class RectanglesScreen : FrameworkElement
         return row;
     }
 
-    static ContainerRuntime BuildModeRow()
+    static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
     {
-        ContainerRuntime row = BuildHorizontalRow();
+        // ColoredRectangle is used as the visible frame (the thing whose alignment is
+        // obvious). The inner RectangleRuntime is positioned relative to it via YOrigin
+        // + PixelsFromSmall/Middle/Large — same convention the CirclesScreen uses.
+        ColoredRectangleRuntime frame = new();
+        frame.Width = 220;
+        frame.Height = 100;
+        frame.Color = new Color(40, 40, 60);
 
-        RectangleRuntime filled = new();
-        filled.Width = 80; filled.Height = 60;
-        filled.FillColor = Color.Crimson;
-        row.AddChild(filled);
-
-        RectangleRuntime stroked = new();
-        stroked.Width = 80; stroked.Height = 60;
-        stroked.StrokeColor = Color.Cyan;
-        row.AddChild(stroked);
-
-        RectangleRuntime both = new();
-        both.Width = 80; both.Height = 60;
-        both.FillColor = new Color(40, 40, 80);
-        both.StrokeColor = Color.Yellow;
-        row.AddChild(both);
-
-        RectangleRuntime defaultRect = new();
-        defaultRect.Width = 80; defaultRect.Height = 60;
-        row.AddChild(defaultRect);
-
-        return row;
-    }
-
-    static ContainerRuntime BuildStrokeWidthRow()
-    {
-        // LineRectangle (core stroke default) IS LinePixelWidth-aware, so this row varies
-        // visually even without MonoGameGumShapes. On Apos the visual is identical except
-        // the line is anti-aliased.
-        ContainerRuntime row = BuildHorizontalRow();
-        foreach (float strokeWidth in new[] { 1f, 2f, 4f, 8f })
+        RectangleRuntime rect = new();
+        rect.Width = 60;
+        rect.Height = 30;
+        rect.FillColor = Color.Orange;
+        rect.XOrigin = HorizontalAlignment.Center;
+        rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        rect.YOrigin = alignment;
+        rect.YUnits = alignment switch
         {
-            RectangleRuntime rect = new();
-            rect.Width = 80; rect.Height = 60;
-            rect.FillColor = new Color(30, 30, 50);
-            rect.StrokeColor = Color.LightGreen;
-            rect.StrokeWidth = strokeWidth;
-            row.AddChild(rect);
-        }
-        return row;
-    }
-
-    static ContainerRuntime BuildCornerRadiusRow()
-    {
-        // CornerRadius is stored but ignored visually on the core defaults — SolidRectangle
-        // and LineRectangle are hard-cornered. The shapes-package version of this screen
-        // looks visibly different at every value > 0.
-        ContainerRuntime row = BuildHorizontalRow();
-        foreach (float cornerRadius in new[] { 0f, 4f, 12f, 24f })
-        {
-            RectangleRuntime rect = new();
-            rect.Width = 80; rect.Height = 60;
-            rect.FillColor = new Color(40, 40, 80);
-            rect.StrokeColor = Color.Orange;
-            rect.StrokeWidth = 2;
-            rect.CornerRadius = cornerRadius;
-            row.AddChild(rect);
-        }
-        return row;
+            VerticalAlignment.Top => Gum.Converters.GeneralUnitType.PixelsFromSmall,
+            VerticalAlignment.Center => Gum.Converters.GeneralUnitType.PixelsFromMiddle,
+            VerticalAlignment.Bottom => Gum.Converters.GeneralUnitType.PixelsFromLarge,
+            _ => Gum.Converters.GeneralUnitType.PixelsFromMiddle,
+        };
+        frame.Children.Add(rect);
+        return frame;
     }
 }
