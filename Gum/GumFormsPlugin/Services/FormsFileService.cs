@@ -89,9 +89,11 @@ public class FormsFileService
                 continue;
             }
 
-            // Skip the manifest that ships with theme directories — it describes
-            // the theme but isn't part of the user's project.
-            if (string.Equals(Path.GetFileName(sourceFile), "manifest.txt", StringComparison.OrdinalIgnoreCase))
+            // Skip per-theme metadata files (file-list manifest and prerequisite
+            // declarations). They describe the theme but aren't part of the user's project.
+            var fileName = Path.GetFileName(sourceFile);
+            if (string.Equals(fileName, "manifest.txt", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(fileName, ThemeRequirements.ThemeRequirementsFileName, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }

@@ -70,11 +70,28 @@ public class AddFormsViewModel : DialogViewModel
     public override void OnAffirmative()
     {
         var theme = SelectedTheme ?? FormsFileService.DefaultThemeName;
+
+        // Check the theme's prerequisites against the user's project before
+        // touching any files. If the user declines the required project-level
+        // edits we abort without writing anything.
+        var requirements = ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(theme));
+        var diff = requirements.Diff(_projectState.GumProjectSave);
+        if (diff.HasGumxChanges && !ConfirmPrerequisites(theme, diff))
+        {
+            base.OnAffirmative();
+            return;
+        }
+
         var sourceDestinations = _formsFileService.GetSourceDestinations(theme, IsIncludeDemoScreenGum);
         bool canSaveFiles = GetIfShouldSave(sourceDestinations);
 
         if (canSaveFiles)
         {
+            // Apply the prerequisite edits to the in-memory project before saving,
+            // so the gumx written below already contains the new font generator
+            // and standard references.
+            diff.Apply(_projectState.GumProjectSave);
+
             SaveFilesToDestination(sourceDestinations);
 
             // now add all components and screens to the project
@@ -86,6 +103,11 @@ public class AddFormsViewModel : DialogViewModel
             if (wasSaved)
             {
                 _fileCommands.LoadProject(fileName);
+
+                if (diff.HasGumxChanges && diff.RuntimePackages.Count > 0)
+                {
+                    _dialogService.ShowMessage(BuildRuntimePackagesMessage(theme, diff.RuntimePackages));
+                }
             }
             else
             {
@@ -93,6 +115,46 @@ public class AddFormsViewModel : DialogViewModel
             }
         }
         base.OnAffirmative();
+    }
+
+    private bool ConfirmPrerequisites(string theme, ThemeRequirementsDiff diff)
+    {
+        var lines = new List<string>
+        {
+            $"The {theme} theme requires the following project-level changes:",
+            string.Empty,
+        };
+        lines.AddRange(diff.DescribeGumxChanges().Select(c => "  • " + c));
+
+        if (diff.RuntimePackages.Count > 0)
+        {
+            lines.Add(string.Empty);
+            lines.Add("Your game project will also need these runtime packages added manually:");
+            foreach (var pkg in diff.RuntimePackages)
+            {
+                lines.Add("  • " + pkg);
+            }
+        }
+
+        lines.Add(string.Empty);
+        lines.Add("Apply these project changes and proceed with the import?");
+
+        return _dialogService.ShowYesNoMessage(string.Join("\n", lines), $"Apply {theme} prerequisites?");
+    }
+
+    private static string BuildRuntimePackagesMessage(string theme, IReadOnlyList<string> packages)
+    {
+        var lines = new List<string>
+        {
+            $"{theme} imported successfully.",
+            string.Empty,
+            "Don't forget to add these runtime packages to your game project:",
+        };
+        foreach (var pkg in packages)
+        {
+            lines.Add("  • " + pkg);
+        }
+        return string.Join("\n", lines);
     }
 
 
