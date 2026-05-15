@@ -21,12 +21,11 @@
     <Variable Type="string" Name="CurrentChainName" Category="Animation" SetsValue="true" />
     <Variable Type="float?" Name="CustomFrameTextureCoordinateWidth" Category="Source" SetsValue="true" />
     <Variable Type="bool" Name="ExposeChildrenEvents" Category="Behavior" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="string" Name="Guide" Category="Position" SetsValue="true" />
     <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -54,7 +53,7 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable IsFile="true" Type="string" Name="SourceFile" Category="Source" SetsValue="true">
-      <Value xsi:type="xsd:string">ExampleSpriteFrame.png</Value>
+      <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>

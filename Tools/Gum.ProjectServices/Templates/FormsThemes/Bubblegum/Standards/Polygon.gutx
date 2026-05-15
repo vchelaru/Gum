@@ -12,7 +12,6 @@
     <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="string" Name="Guide" Category="Position" SetsValue="true" />
     <Variable Type="bool" Name="IgnoredByParentSize" Category="Parent" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -55,24 +54,24 @@
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
         <Vector2>
-          <X>-32</X>
-          <Y>-32</Y>
+          <X>0</X>
+          <Y>0</Y>
         </Vector2>
         <Vector2>
           <X>32</X>
-          <Y>-32</Y>
+          <Y>0</Y>
         </Vector2>
         <Vector2>
           <X>32</X>
           <Y>32</Y>
         </Vector2>
         <Vector2>
-          <X>-32</X>
+          <X>0</X>
           <Y>32</Y>
         </Vector2>
         <Vector2>
-          <X>-32</X>
-          <Y>-32</Y>
+          <X>0</X>
+          <Y>0</Y>
         </Vector2>
       </Value>
     </VariableList>
