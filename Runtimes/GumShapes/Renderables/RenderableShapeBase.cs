@@ -2,6 +2,7 @@
 using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
@@ -17,7 +18,10 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace MonoGameAndGum.Renderables;
 
-public abstract class RenderableShapeBase : RenderableBase
+// IFilledShapeRenderable is the core-side (MonoGameGum / KniGum) capability contract that lets
+// CircleRuntime drive a fill-capable renderable across the optional-dependency boundary
+// (issue #2761). The IsFilled, Color, and StrokeWidth members it requires already exist below.
+public abstract class RenderableShapeBase : RenderableBase, IFilledShapeRenderable
 {
     protected ShapeRenderer ShapeRenderer => ShapeRenderer.Self;
 
