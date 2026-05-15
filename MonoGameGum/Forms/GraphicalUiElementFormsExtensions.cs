@@ -24,6 +24,65 @@ namespace Gum.Forms;
 
 public static class GraphicalUiElementFormsExtensions
 {
+    #region FindFormsControl — visual-rooted lookup of FrameworkElement descendants
+
+    /// <summary>
+    /// Returns the first descendant of <paramref name="element"/> whose
+    /// <see cref="InteractiveGue.FormsControlAsObject"/> is assignable to
+    /// <typeparamref name="T"/>, or null if none. Search is shallowest-first; subclasses match.
+    /// Mirrors <c>FrameworkElement.FindVisual&lt;T&gt;</c> in the opposite direction:
+    /// start from a visual (typically a screen or component root) and walk down to a
+    /// Forms control.
+    /// </summary>
+    public static T? FindFormsControl<T>(this GraphicalUiElement element) where T : FrameworkElement
+    {
+        foreach (FrameworkElement descendant in FrameworkElementTreeExtensions.ProjectToFrameworkElements(element.Descendants()))
+        {
+            if (descendant is T match)
+            {
+                return match;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Returns the first descendant <see cref="FrameworkElement"/> whose underlying
+    /// <c>Visual.Name</c> equals <paramref name="name"/>, or null if none. Visual-only
+    /// descendants with no Forms control are skipped — only nodes that project to a
+    /// <see cref="FrameworkElement"/> are considered.
+    /// </summary>
+    public static FrameworkElement? FindFormsControlByName(this GraphicalUiElement element, string name)
+    {
+        foreach (FrameworkElement descendant in FrameworkElementTreeExtensions.ProjectToFrameworkElements(element.Descendants()))
+        {
+            if (descendant.Visual?.Name == name)
+            {
+                return descendant;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Returns the first descendant <see cref="FrameworkElement"/> assignable to
+    /// <typeparamref name="T"/> whose underlying <c>Visual.Name</c> equals
+    /// <paramref name="name"/>, or null if none. Search is shallowest-first.
+    /// </summary>
+    public static T? FindFormsControl<T>(this GraphicalUiElement element, string name) where T : FrameworkElement
+    {
+        foreach (FrameworkElement descendant in FrameworkElementTreeExtensions.ProjectToFrameworkElements(element.Descendants()))
+        {
+            if (descendant is T match && match.Visual?.Name == name)
+            {
+                return match;
+            }
+        }
+        return null;
+    }
+
+    #endregion
+
     /// <summary>
     /// Recursively returns the first matching element with the given name, or throws an exception if not found.
     /// </summary>
@@ -32,6 +91,7 @@ public static class GraphicalUiElementFormsExtensions
     /// <param name="name">The name to match</param>
     /// <returns>Teh found FrameworkElement</returns>
     /// <exception cref="ArgumentException">Throw if a visual is not found by the name, or if a child is found but its type doesn't match.</exception>
+    [Obsolete("Use FindFormsControl<T>(name) instead. This overload's diagnostics are FULL_DIAGNOSTICS-gated and silently returns null on failure in release builds.")]
     public static FrameworkElementType GetFrameworkElementByName<FrameworkElementType>(this GraphicalUiElement graphicalUiElement, string name) where FrameworkElementType : FrameworkElement
     {
         var frameworkVisual = graphicalUiElement.GetGraphicalUiElementByName(name);
@@ -75,6 +135,7 @@ public static class GraphicalUiElementFormsExtensions
         return frameworkElement;
     }
 
+    [Obsolete("Use FindFormsControl<T>(name) instead.")]
     public static FrameworkElementType TryGetFrameworkElementByName<FrameworkElementType>(this GraphicalUiElement graphicalUiElement, string name) where FrameworkElementType : FrameworkElement
     {
         var frameworkVisual = graphicalUiElement.GetGraphicalUiElementByName(name);

@@ -118,7 +118,7 @@ public static class FrameworkElementTreeExtensions
         return null;
     }
 
-    private static IEnumerable<FrameworkElement> ProjectToFrameworkElements(IEnumerable<GraphicalUiElement> visuals)
+    internal static IEnumerable<FrameworkElement> ProjectToFrameworkElements(IEnumerable<GraphicalUiElement> visuals)
     {
         foreach (GraphicalUiElement visual in visuals)
         {
