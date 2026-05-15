@@ -28,7 +28,6 @@
     <Variable Type="bool" Name="FlipHorizontal" Category="Flip and Rotation" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
-    <Variable Type="string" Name="Guide" Category="Position" SetsValue="true" />
     <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
