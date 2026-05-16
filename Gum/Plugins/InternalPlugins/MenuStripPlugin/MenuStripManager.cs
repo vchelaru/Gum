@@ -400,8 +400,97 @@ namespace Gum.Managers
             }
 
             currentParent.Items.Add(menuItem);
-            return menuItem;
 
+            ApplyLayout(topMenuName);
+
+            return menuItem;
+        }
+
+        // Stable per-menu layout. Items in each inner list form a group; separators are
+        // inserted between groups. Items not listed here fall through to a trailing group
+        // (separator + items in insertion order) so third-party plugins remain visible.
+        private static readonly Dictionary<string, string[][]> _menuLayouts = new()
+        {
+            ["Content"] = new[]
+            {
+                new[] { "Find file references..." },
+                new[] { "Add Forms Components", "Import from .gumx..." },
+                new[]
+                {
+                    "Clear Font Cache",
+                    "Re-create missing font files",
+                    "Force re-create all font files",
+                    "View Font Cache",
+                },
+            },
+        };
+
+        /// <summary>
+        /// Re-orders the children of the given top-level menu according to the layout
+        /// table and re-inserts group separators. Safe to call repeatedly; no-op if the
+        /// menu name has no layout entry. Call this after any direct manipulation of
+        /// a managed menu's <c>Items</c> collection (e.g. removing an item) so that
+        /// the declared group order is restored.
+        /// </summary>
+        public void ApplyLayout(string topMenuName)
+        {
+            if (!_menuLayouts.TryGetValue(topMenuName, out var groups))
+            {
+                return;
+            }
+
+            var parent = _menu.Items.OfType<MenuItem>()
+                .FirstOrDefault(item => item.Header as string == topMenuName);
+            if (parent == null)
+            {
+                return;
+            }
+
+            var existing = parent.Items.OfType<MenuItem>().ToList();
+            var byHeader = existing.ToDictionary(mi => mi.Header as string ?? "", mi => mi);
+
+            parent.Items.Clear();
+
+            var placed = new HashSet<MenuItem>();
+            bool anyEmitted = false;
+            foreach (var group in groups)
+            {
+                var groupItems = new List<MenuItem>();
+                foreach (var header in group)
+                {
+                    if (byHeader.TryGetValue(header, out var mi))
+                    {
+                        groupItems.Add(mi);
+                        placed.Add(mi);
+                    }
+                }
+                if (groupItems.Count == 0)
+                {
+                    continue;
+                }
+                if (anyEmitted)
+                {
+                    parent.Items.Add(new Separator());
+                }
+                foreach (var mi in groupItems)
+                {
+                    parent.Items.Add(mi);
+                }
+                anyEmitted = true;
+            }
+
+            var leftovers = existing.Where(mi => !placed.Contains(mi)).ToList();
+            if (leftovers.Count > 0)
+            {
+                if (anyEmitted)
+                {
+                    parent.Items.Add(new Separator());
+                }
+                foreach (var mi in leftovers)
+                {
+                    parent.Items.Add(mi);
+                }
+            }
         }
 
         public MenuItem GetItem(string name)
