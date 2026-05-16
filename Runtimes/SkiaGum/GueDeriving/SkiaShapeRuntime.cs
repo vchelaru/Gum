@@ -319,6 +319,18 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set;
     }
 
+    /// <summary>
+    /// Pass-through to the contained renderable's anti-aliasing flag (issue #2798). Mirrors
+    /// the property of the same name on the MonoGame <c>CircleRuntime</c>, which routes
+    /// through <c>IAntialiasedRenderable</c>; on Skia the contained renderable is always
+    /// AA-capable so the value pushes straight through.
+    /// </summary>
+    public bool IsAntialiased
+    {
+        get => ContainedRenderable.IsAntialiased;
+        set => ContainedRenderable.IsAntialiased = value;
+    }
+
     public float StrokeDashLength
     {
         get => ContainedRenderable.StrokeDashLength;

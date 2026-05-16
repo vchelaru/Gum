@@ -311,6 +311,32 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 
+    bool _isAntialiased = true;
+
+    /// <summary>
+    /// When <c>true</c> (the default, matching Apos.Shapes) the circle's edge is rendered
+    /// with 1 px of anti-aliasing. When <c>false</c> the AA radius drops to 0 for crisp
+    /// rasterization — useful for pixel-art / retro themes (Win95 dotted focus rect, hairline
+    /// borders, 1 px dash/gap patterns where AA bloom widens a nominal 1 px stroke).
+    /// </summary>
+    /// <remarks>
+    /// Pushed to both fill and stroke slots each frame in <see cref="PreRender"/> via
+    /// <see cref="IAntialiasedRenderable"/>. Visual effect requires the optional
+    /// MonoGameGumShapes (Apos.Shapes) package; without it neither slot implements the
+    /// interface and the value round-trips on the runtime but renders as a no-op —
+    /// <see cref="MonoGameGum.Renderables.DefaultStrokedCircleRenderable"/> wraps
+    /// <c>LineCircle</c>, which has no AA concept.
+    /// </remarks>
+    public bool IsAntialiased
+    {
+        get => _isAntialiased;
+        set
+        {
+            _isAntialiased = value;
+            NotifyPropertyChanged();
+        }
+    }
+
     DimensionUnitType _strokeWidthUnits;
 
     /// <summary>
@@ -675,6 +701,12 @@ public class CircleRuntime : GraphicalUiElement
             }
         }
         _stroke.StrokeWidth = strokeWidth;
+
+        // Issue #2798: push AA to both slots so a single setter flips fill + stroke together.
+        // Mirrors AposShapeRuntime.PreRender. Skipped for slots that don't implement the
+        // interface (core DefaultStrokedCircleRenderable has no AA concept).
+        if (_fill is IAntialiasedRenderable fillAa) fillAa.IsAntialiased = _isAntialiased;
+        if (_stroke is IAntialiasedRenderable strokeAa) strokeAa.IsAntialiased = _isAntialiased;
 
         // When fill is the contained object and stroke is its child, the layout system pushes
         // size onto fill but not stroke (stroke is a plain renderable, not a layout-aware
