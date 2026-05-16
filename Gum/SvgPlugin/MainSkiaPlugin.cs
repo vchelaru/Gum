@@ -16,6 +16,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.Commands;
+using Gum.Logic;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
@@ -122,7 +123,7 @@ namespace SkiaPlugin
                 }
                 else
                 {
-                    StandardAdder.AddAllStandards();
+                    Locator.GetRequiredService<ISkiaShapeStandardsLogic>().AddAllStandards();
                     _guiCommands.RefreshElementTreeView();
                 }
             };

@@ -101,6 +101,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IFavoriteComponentManager, FavoriteComponentManager>();
         services.AddSingleton<ICopyPasteLogic, CopyPasteLogic>();
         services.AddSingleton<IDeleteLogic, DeleteLogic>();
+        services.AddSingleton<ISkiaShapeStandardsLogic, SkiaShapeStandardsLogic>();
         services.AddSingleton<FileLocations>();
         services.AddSingleton<FileWatchLogic>();
         services.AddSingleton<IFontGenerationCallbacks, ToolFontGenerationCallbacks>();

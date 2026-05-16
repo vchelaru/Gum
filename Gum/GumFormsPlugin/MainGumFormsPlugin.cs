@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
+using Gum.Logic;
 using Gum.Logic.FileWatch;
 
 namespace GumFormsPlugin;
@@ -87,7 +88,10 @@ internal class MainGumFormsPlugin : PluginBase
 
     private bool GetIfProjectHasForms()
     {
-        var files = _formsFileService.GetSourceDestinations(false);
+        // Whether the project already has forms imported is independent of the theme picker,
+        // so use the default theme's destination set. The same destination paths get written
+        // regardless of which theme produced them.
+        var files = _formsFileService.GetSourceDestinations(FormsFileService.DefaultThemeName, isIncludeDemoScreenGum: false);
 
         var firstMatch = files.Values
             .FirstOrDefault(item => 
@@ -116,12 +120,13 @@ internal class MainGumFormsPlugin : PluginBase
         #endregion
 
         var viewModel = new AddFormsViewModel(
-            _formsFileService, 
+            _formsFileService,
             _dialogService,
-            _fileCommands, 
-            _importLogic, 
+            _fileCommands,
+            _importLogic,
             projectState,
-            _fileWatchManager);
+            _fileWatchManager,
+            Locator.GetRequiredService<ISkiaShapeStandardsLogic>());
         _dialogService.Show(viewModel);
     }
 

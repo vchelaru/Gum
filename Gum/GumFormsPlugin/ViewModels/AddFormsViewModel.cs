@@ -1,4 +1,5 @@
 ﻿using Gum.ToolStates;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,7 @@ using Gum.Managers;
 using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Logic;
 using Gum.Logic.FileWatch;
 
 namespace GumFormsPlugin.ViewModels;
@@ -23,12 +25,49 @@ public class AddFormsViewModel : DialogViewModel
     private readonly IImportLogic _importLogic;
     private readonly IProjectState _projectState;
     private readonly IFileWatchManager _fileWatchManager;
+    private readonly ISkiaShapeStandardsLogic _skiaShapeStandards;
 
     public bool IsIncludeDemoScreenGum
     {
         get => Get<bool>();
         set => Set(value);
     }
+
+    public IReadOnlyList<string> AvailableThemes
+    {
+        get => Get<IReadOnlyList<string>>() ?? Array.Empty<string>();
+        private set => Set(value);
+    }
+
+    public string? SelectedTheme
+    {
+        get => Get<string?>();
+        set
+        {
+            if (Set(value))
+            {
+                RefreshRequirementsDescription();
+                NotifyPropertyChanged(nameof(HasRequirements));
+            }
+        }
+    }
+
+    public bool HasMultipleThemes => AvailableThemes.Count > 1;
+
+    /// <summary>
+    /// Bullet-formatted description of the project-level changes the import
+    /// will apply for the currently-selected theme. Empty when the theme has
+    /// no prerequisites that affect this project. Bound inline in the dialog
+    /// so the user sees what's going to happen before clicking OK — no
+    /// confirmation popup.
+    /// </summary>
+    public string RequirementsDescription
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
+    public bool HasRequirements => !string.IsNullOrEmpty(RequirementsDescription);
 
     #endregion
 
@@ -37,7 +76,8 @@ public class AddFormsViewModel : DialogViewModel
         IFileCommands fileCommands,
         IImportLogic importLogic,
         IProjectState projectState,
-        IFileWatchManager fileWatchManager)
+        IFileWatchManager fileWatchManager,
+        ISkiaShapeStandardsLogic skiaShapeStandards)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;
@@ -45,15 +85,52 @@ public class AddFormsViewModel : DialogViewModel
         _importLogic = importLogic;
         _projectState = projectState;
         _fileWatchManager = fileWatchManager;
+        _skiaShapeStandards = skiaShapeStandards;
+
+        AvailableThemes = _formsFileService.GetAvailableThemes();
+        SelectedTheme = AvailableThemes.FirstOrDefault(t =>
+                            string.Equals(t, FormsFileService.DefaultThemeName, System.StringComparison.OrdinalIgnoreCase))
+                        ?? AvailableThemes.FirstOrDefault();
+
+        RefreshRequirementsDescription();
+    }
+
+    private void RefreshRequirementsDescription()
+    {
+        var theme = SelectedTheme;
+        if (string.IsNullOrEmpty(theme))
+        {
+            RequirementsDescription = string.Empty;
+            return;
+        }
+
+        var requirements = ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(theme));
+        var diff = requirements.Diff(_projectState.GumProjectSave);
+        RequirementsDescription = diff.HasChanges
+            ? string.Join(Environment.NewLine, diff.DescribeChanges().Select(c => "• " + c))
+            : string.Empty;
     }
 
     public override void OnAffirmative()
     {
-        var sourceDestinations = _formsFileService.GetSourceDestinations(IsIncludeDemoScreenGum);
+        var theme = SelectedTheme ?? FormsFileService.DefaultThemeName;
+
+        // Prerequisites have already been surfaced inline in the dialog
+        // (RequirementsDescription). The user clicking OK is their consent
+        // to apply them — no separate confirmation popup.
+        var requirements = ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(theme));
+        var diff = requirements.Diff(_projectState.GumProjectSave);
+
+        var sourceDestinations = _formsFileService.GetSourceDestinations(theme, IsIncludeDemoScreenGum);
         bool canSaveFiles = GetIfShouldSave(sourceDestinations);
 
         if (canSaveFiles)
         {
+            // Apply the prerequisite edits to the in-memory project before saving,
+            // so the gumx written below already contains the new font generator
+            // and standard references.
+            diff.Apply(_projectState.GumProjectSave, _skiaShapeStandards);
+
             SaveFilesToDestination(sourceDestinations);
 
             // now add all components and screens to the project

@@ -36,15 +36,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Embedded\Svg.gutx" />
-    <EmbeddedResource Include="Embedded\ColoredCircle.gutx" />
-    <EmbeddedResource Include="Embedded\RoundedRectangle.gutx" />
-    <EmbeddedResource Include="Embedded\Arc.gutx" />
-    <EmbeddedResource Include="Embedded\Line.gutx" />
-    <EmbeddedResource Include="Embedded\LottieAnimation.gutx" />
-    <EmbeddedResource Include="Embedded\Canvas.gutx" />
-  </ItemGroup>
-  <ItemGroup>
+    <!-- Skia shape Standards .gutx files plus the StandardAdder logic moved into
+         Gum.csproj (see Gum/Embedded/SkiaShapes/ and Gum/Logic/SkiaShapeStandardsLogic.cs)
+         so the project-authoring half is no longer Skia-plugin-specific. SkiaPlugin
+         keeps the rendering half. -->
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="SkiaSharp.Extended">
       <Version>1.60.0</Version>

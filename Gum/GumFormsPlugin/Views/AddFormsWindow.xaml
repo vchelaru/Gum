@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="GumFormsPlugin.Views.AddFormsWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,5 +8,42 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     dialogs:Dialog.DialogTitle="Add Forms"
     mc:Ignorable="d">
-    <CheckBox IsChecked="{Binding IsIncludeDemoScreenGum}">Include DemoScreenGum</CheckBox>
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+    </UserControl.Resources>
+    <StackPanel MaxWidth="420" Orientation="Vertical">
+        <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+            <Label
+                MinWidth="56"
+                VerticalAlignment="Center"
+                Content="Theme" />
+            <ComboBox
+                MinWidth="160"
+                VerticalAlignment="Center"
+                ItemsSource="{Binding AvailableThemes}"
+                SelectedItem="{Binding SelectedTheme}" />
+        </StackPanel>
+        <CheckBox IsChecked="{Binding IsIncludeDemoScreenGum}">Include DemoScreenGum</CheckBox>
+        <Border
+            Margin="0,12,0,0"
+            Padding="8"
+            Background="{DynamicResource Frb.Brushes.Contrast.Subtle}"
+            BorderBrush="{DynamicResource Frb.Brushes.Border}"
+            BorderThickness="1"
+            CornerRadius="4"
+            Visibility="{Binding HasRequirements, Converter={StaticResource BooleanToVisibility}}">
+            <StackPanel>
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource Frb.Brushes.Foreground}"
+                    Text="Clicking OK will also apply these project changes:"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    Margin="0,4,0,0"
+                    Foreground="{DynamicResource Frb.Brushes.Foreground}"
+                    Text="{Binding RequirementsDescription}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
 </UserControl>

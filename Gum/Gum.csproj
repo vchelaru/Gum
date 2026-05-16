@@ -244,6 +244,7 @@
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<EmbeddedResource Include="Content\Cursors\AddCursor.cur" />
+		<EmbeddedResource Include="Embedded\SkiaShapes\*.gutx" />
 		<None Update="Content\Icons\HeightUnits\Ratio.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
