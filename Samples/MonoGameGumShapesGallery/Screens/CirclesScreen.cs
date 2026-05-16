@@ -41,6 +41,7 @@ internal class CirclesScreen : FrameworkElement
         root.AddChild(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
         root.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
         root.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
+        root.AddChild(BuildSection("Dropshadow (off / soft / hard offset / colored) — fill-only push avoids doubling (#2797)", BuildDropshadowRow()));
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
@@ -217,6 +218,58 @@ internal class CirclesScreen : FrameworkElement
             ring.IsAntialiased = aa;
             row.AddChild(ring);
         }
+
+        return row;
+    }
+
+    // Issue #2797 visual acceptance: four cells — first is the baseline (no shadow), the
+    // remaining three exercise different shadow configurations. The runtime pushes shadow
+    // params to the fill slot only (not the stroke), so the shadow renders once per cell
+    // rather than doubling up. Mirrored on the Skia side of the gallery.
+    static ContainerRuntime BuildDropshadowRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        // Baseline: no shadow.
+        CircleRuntime baseline = new();
+        baseline.Radius = 28;
+        baseline.FillColor = Color.Goldenrod;
+        row.AddChild(baseline);
+
+        // Soft shadow: small offset, generous blur, default opaque black.
+        CircleRuntime soft = new();
+        soft.Radius = 28;
+        soft.FillColor = Color.Goldenrod;
+        soft.HasDropshadow = true;
+        soft.DropshadowOffsetX = 2;
+        soft.DropshadowOffsetY = 2;
+        soft.DropshadowBlurX = 4;
+        soft.DropshadowBlurY = 4;
+        row.AddChild(soft);
+
+        // Hard offset: bigger offset, no blur, semi-transparent black.
+        CircleRuntime hard = new();
+        hard.Radius = 28;
+        hard.FillColor = Color.Goldenrod;
+        hard.HasDropshadow = true;
+        hard.DropshadowColor = new Color(0, 0, 0, 160);
+        hard.DropshadowOffsetX = 6;
+        hard.DropshadowOffsetY = 6;
+        hard.DropshadowBlurX = 0;
+        hard.DropshadowBlurY = 0;
+        row.AddChild(hard);
+
+        // Colored shadow: deep blue glow underneath.
+        CircleRuntime colored = new();
+        colored.Radius = 28;
+        colored.FillColor = Color.Goldenrod;
+        colored.HasDropshadow = true;
+        colored.DropshadowColor = new Color(0, 80, 200, 200);
+        colored.DropshadowOffsetX = 0;
+        colored.DropshadowOffsetY = 0;
+        colored.DropshadowBlurX = 6;
+        colored.DropshadowBlurY = 6;
+        row.AddChild(colored);
 
         return row;
     }

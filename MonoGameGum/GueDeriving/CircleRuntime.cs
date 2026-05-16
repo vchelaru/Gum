@@ -682,6 +682,136 @@ public class CircleRuntime : GraphicalUiElement
 
     #endregion
 
+    #region Dropshadow
+
+    // Issue #2797: dropshadow pass-through. Backing fields live on the runtime so values
+    // round-trip even when neither slot implements IDropshadowRenderable (core-only stroke
+    // = DefaultStrokedCircleRenderable, no fill). Unlike gradient (#2791) and AA (#2798),
+    // which push to BOTH slots so a single setter covers fill and stroke, the shadow is
+    // drawn once per renderable — pushing to both would render the shadow twice and
+    // visibly double up. Prefer the fill slot; fall back to stroke when fill is null
+    // (Apos can shadow a stroked ring too, so a stroke-only Apos circle still gets one).
+    // The push-target helper is shared across every setter so the routing rule lives in
+    // one place.
+
+    IDropshadowRenderable? DropshadowTarget =>
+        _fill as IDropshadowRenderable ?? _stroke as IDropshadowRenderable;
+
+    bool _hasDropshadow;
+    /// <summary>
+    /// When <c>true</c>, the dropshadow color/offset/blur properties drive an extra render
+    /// pass behind the circle. Visual effect requires the optional MonoGameGumShapes
+    /// (Apos.Shapes) package; without it the value round-trips but does not render.
+    /// </summary>
+    public bool HasDropshadow
+    {
+        get => _hasDropshadow;
+        set
+        {
+            _hasDropshadow = value;
+            if (DropshadowTarget is { } target) target.HasDropshadow = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    Color _dropshadowColor;
+    public Color DropshadowColor
+    {
+        get => _dropshadowColor;
+        set
+        {
+            _dropshadowColor = value;
+            if (DropshadowTarget is { } target) target.DropshadowColor = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public int DropshadowAlpha
+    {
+        get => _dropshadowColor.A;
+        set
+        {
+            DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, _dropshadowColor.B, (byte)value);
+        }
+    }
+
+    public int DropshadowRed
+    {
+        get => _dropshadowColor.R;
+        set
+        {
+            DropshadowColor = new Color((byte)value, _dropshadowColor.G, _dropshadowColor.B, _dropshadowColor.A);
+        }
+    }
+
+    public int DropshadowGreen
+    {
+        get => _dropshadowColor.G;
+        set
+        {
+            DropshadowColor = new Color(_dropshadowColor.R, (byte)value, _dropshadowColor.B, _dropshadowColor.A);
+        }
+    }
+
+    public int DropshadowBlue
+    {
+        get => _dropshadowColor.B;
+        set
+        {
+            DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, (byte)value, _dropshadowColor.A);
+        }
+    }
+
+    float _dropshadowOffsetX;
+    public float DropshadowOffsetX
+    {
+        get => _dropshadowOffsetX;
+        set
+        {
+            _dropshadowOffsetX = value;
+            if (DropshadowTarget is { } target) target.DropshadowOffsetX = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _dropshadowOffsetY;
+    public float DropshadowOffsetY
+    {
+        get => _dropshadowOffsetY;
+        set
+        {
+            _dropshadowOffsetY = value;
+            if (DropshadowTarget is { } target) target.DropshadowOffsetY = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _dropshadowBlurX;
+    public float DropshadowBlurX
+    {
+        get => _dropshadowBlurX;
+        set
+        {
+            _dropshadowBlurX = value;
+            if (DropshadowTarget is { } target) target.DropshadowBlurX = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _dropshadowBlurY;
+    public float DropshadowBlurY
+    {
+        get => _dropshadowBlurY;
+        set
+        {
+            _dropshadowBlurY = value;
+            if (DropshadowTarget is { } target) target.DropshadowBlurY = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    #endregion
+
     /// <summary>
     /// Pushes runtime-held stroke values to the stroke renderable each frame, resolving
     /// <see cref="StrokeWidthUnits"/> against the current camera zoom. Reached through the
@@ -788,6 +918,14 @@ public class CircleRuntime : GraphicalUiElement
             }
             Width = 32;
             Height = 32;
+
+            // Dropshadow defaults mirror SkiaShapeRuntime: opaque black, slight downward
+            // offset, slight Y blur. HasDropshadow is false so the values are inert until
+            // toggled on at runtime, at which point a visible shadow appears without further
+            // setup. Issue #2797.
+            DropshadowAlpha = 255;
+            DropshadowOffsetY = 3;
+            DropshadowBlurY = 3;
 
             // Mirror initial size to the stroke renderable when it's a child of fill — see
             // SyncStrokeSize comment in PreRender. Layout pushed Width/Height to fill but not
