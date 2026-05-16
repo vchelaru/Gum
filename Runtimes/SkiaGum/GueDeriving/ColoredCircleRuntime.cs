@@ -41,7 +41,9 @@ public class ColoredCircleRuntime : SkiaShapeRuntime
         if (fullInstantiation)
         {
             SetContainedObject(new Circle());
+#pragma warning disable CS0618 // Color is obsolete; migration to FillColor/StrokeColor tracked in #2790 (depends on two-slot composition).
             this.Color = SKColors.White;
+#pragma warning restore CS0618
             Width = 100;
             Height = 100;
 

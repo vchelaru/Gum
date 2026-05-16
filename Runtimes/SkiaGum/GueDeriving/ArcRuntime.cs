@@ -111,7 +111,9 @@ public class ArcRuntime
         {
 #if SKIA
             SetContainedObject(new Arc());
+#pragma warning disable CS0618 // Color is obsolete; migration to FillColor/StrokeColor tracked in #2790 (depends on two-slot composition).
             this.Color = SKColors.White;
+#pragma warning restore CS0618
 #else
             SetContainedShape(new Arc());
             this.Color = Microsoft.Xna.Framework.Color.White;

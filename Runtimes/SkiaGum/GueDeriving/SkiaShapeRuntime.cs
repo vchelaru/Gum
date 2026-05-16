@@ -4,6 +4,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using SkiaGum.Renderables;
 using SkiaSharp;
+using System;
 
 #if FRB
 namespace SkiaGum.GueDeriving;
@@ -41,10 +42,92 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set => ContainedRenderable.Red = value;
     }
 
+    /// <summary>
+    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
+    /// writes the contained renderable's color slot directly without distinguishing fill from
+    /// stroke. The new fill/stroke split (issue #2785) matches the surface of
+    /// <c>CircleRuntime</c> on the XNA-likes and is the going-forward API.
+    /// </summary>
+    [Obsolete("Use FillColor or StrokeColor instead. See issue #2785; full fill+stroke composition arrives in #2790.")]
     public SKColor Color
     {
         get => ContainedRenderable.Color;
         set => ContainedRenderable.Color = value;
+    }
+
+    SKColor? _fillColor;
+
+    /// <summary>
+    /// Color of the filled disk/shape. When set non-null, the contained renderable switches to
+    /// filled mode and renders with this color. When set null, the runtime falls back to stroke
+    /// (or, if <see cref="StrokeColor"/> is also null, alpha-0 / invisible).
+    /// </summary>
+    /// <remarks>
+    /// On Skia today the contained renderable has a single color slot + <c>IsFilled</c> toggle —
+    /// setting <em>both</em> <see cref="FillColor"/> and <see cref="StrokeColor"/> non-null is
+    /// not yet visually composed; the most recently set non-null wins. Full two-slot
+    /// composition (matching the XNA-like backends) tracked in issue #2790.
+    /// </remarks>
+    public SKColor? FillColor
+    {
+        get => _fillColor;
+        set
+        {
+            _fillColor = value;
+            if (value is SKColor fill)
+            {
+                ContainedRenderable.IsFilled = true;
+                ContainedRenderable.Color = fill;
+            }
+            else if (_strokeColor is SKColor stroke)
+            {
+                // Fill cleared but a stroke is still set — keep the stroke visible.
+                ContainedRenderable.IsFilled = false;
+                ContainedRenderable.Color = stroke;
+            }
+            else
+            {
+                // Neither set — hide via alpha 0 so the runtime is fully invisible without
+                // tearing down the renderable.
+                ContainedRenderable.Color = new SKColor(0, 0, 0, 0);
+            }
+        }
+    }
+
+    SKColor? _strokeColor;
+
+    /// <summary>
+    /// Color of the stroked outline. When set non-null, the contained renderable switches to
+    /// stroke mode and renders with this color. When set null, the runtime falls back to fill
+    /// (or, if <see cref="FillColor"/> is also null, alpha-0 / invisible).
+    /// </summary>
+    /// <remarks>
+    /// On Skia today the contained renderable has a single color slot + <c>IsFilled</c> toggle —
+    /// setting <em>both</em> <see cref="FillColor"/> and <see cref="StrokeColor"/> non-null is
+    /// not yet visually composed; the most recently set non-null wins. Full two-slot
+    /// composition (matching the XNA-like backends) tracked in issue #2790.
+    /// </remarks>
+    public SKColor? StrokeColor
+    {
+        get => _strokeColor;
+        set
+        {
+            _strokeColor = value;
+            if (value is SKColor stroke)
+            {
+                ContainedRenderable.IsFilled = false;
+                ContainedRenderable.Color = stroke;
+            }
+            else if (_fillColor is SKColor fill)
+            {
+                ContainedRenderable.IsFilled = true;
+                ContainedRenderable.Color = fill;
+            }
+            else
+            {
+                ContainedRenderable.Color = new SKColor(0, 0, 0, 0);
+            }
+        }
     }
     #endregion
 
@@ -208,6 +291,13 @@ public abstract class SkiaShapeRuntime : InteractiveGue
 
     #region Filled/Stroke
 
+    /// <summary>
+    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
+    /// flips the contained renderable between filled and stroked modes. The new fill/stroke
+    /// split (issue #2785) supersedes this single-toggle by letting the caller specify the
+    /// color directly per slot.
+    /// </summary>
+    [Obsolete("Use FillColor or StrokeColor instead. See issue #2785; full fill+stroke composition arrives in #2790.")]
     public bool IsFilled
     {
         get => ContainedRenderable.IsFilled;

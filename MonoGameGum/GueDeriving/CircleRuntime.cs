@@ -13,9 +13,11 @@ using Gum.Renderables;
 using Color = SokolGum.Color;
 using ContainedCircleType = Gum.Renderables.LineCircle;
 #elif SKIA
+using Gum.DataTypes;
 using SkiaGum.Renderables;
+using SkiaSharp;
 using Color = SkiaSharp.SKColor;
-using ContainedCircleType = SkiaGum.Renderables.LineCircle;
+using ContainedCircleType = SkiaGum.Renderables.Circle;
 #else
 using Color = Microsoft.Xna.Framework.Color;
 using ColorExtensions = ToolsUtilitiesStandard.Helpers.ColorExtensions;
@@ -54,7 +56,11 @@ namespace Gum.GueDeriving;
 /// <c>_stroke</c> becomes the contained object directly.
 /// </para>
 /// </remarks>
+#if SKIA
+public class CircleRuntime : SkiaShapeRuntime
+#else
 public class CircleRuntime : GraphicalUiElement
+#endif
 {
 #if XNALIKE
     IFilledCircleRenderable? _fill;
@@ -91,7 +97,7 @@ public class CircleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#else
+#elif !SKIA
     public int Alpha
     {
         get => ContainedLineCircle.Color.A;
@@ -119,7 +125,7 @@ public class CircleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#else
+#elif !SKIA
     public int Red
     {
         get => ContainedLineCircle.Color.R;
@@ -147,7 +153,7 @@ public class CircleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#else
+#elif !SKIA
     public int Green
     {
         get => ContainedLineCircle.Color.G;
@@ -175,7 +181,7 @@ public class CircleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#else
+#elif !SKIA
     public int Blue
     {
         get => ContainedLineCircle.Color.B;
@@ -225,7 +231,7 @@ public class CircleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#else
+#elif !SKIA
     public Color Color
     {
         get => ContainedLineCircle.Color;
@@ -354,6 +360,24 @@ public class CircleRuntime : GraphicalUiElement
     }
 #endif
 
+#if SKIA
+    /// <summary>
+    /// Routes <see cref="SkiaShapeRuntime"/>'s solid/gradient/stroke/dropshadow accessors
+    /// to the contained <see cref="Circle"/>.
+    /// </summary>
+    protected override RenderableShapeBase ContainedRenderable => ContainedLineCircle;
+
+    /// <inheritdoc/>
+    public override GraphicalUiElement Clone()
+    {
+        CircleRuntime toReturn = (CircleRuntime)base.Clone();
+        // Reset cached renderable reference so the clone re-resolves against its own
+        // RenderableComponent on next access.
+        toReturn.containedLineCircle = null!;
+        return toReturn;
+    }
+#endif
+
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
     [Obsolete("Use the AddToRoot extension method instead (e.g. myCircle.AddToRoot()).")]
     public new void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
@@ -411,14 +435,24 @@ public class CircleRuntime : GraphicalUiElement
             }
 #else
             var circle = new ContainedCircleType();
-            circle.CircleOrigin = CircleOrigin.TopLeft;
             SetContainedObject(circle);
             containedLineCircle = circle;
 
 #if SKIA
-            circle.CornerRadius = 0;
-            circle.Color = SkiaSharp.SKColors.White;
+            // Skia's Circle draws from its bounding rect's center — no CircleOrigin or
+            // CornerRadius properties. StrokeColor inherited from SkiaShapeRuntime; setting
+            // it both selects stroke mode (IsFilled = false) and assigns the color in one go.
+            StrokeColor = SKColors.White;
+            StrokeWidth = 1;
+            StrokeWidthUnits = DimensionUnitType.ScreenPixel;
+
+            // Dropshadow is off by default; pre-seed alpha + offset/blur so toggling
+            // HasDropshadow = true at runtime produces a visible shadow without further setup.
+            DropshadowAlpha = 255;
+            DropshadowOffsetY = 3;
+            DropshadowBlurY = 3;
 #else
+            circle.CircleOrigin = CircleOrigin.TopLeft;
             circle.Color = ColorExtensions.White;
 #endif
             Width = 32;

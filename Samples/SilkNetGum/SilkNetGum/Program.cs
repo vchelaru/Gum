@@ -42,6 +42,9 @@ unsafe class Program
     static SKCanvas canvas;
     static SKPaint paintFromFile;
 
+    static int windowWidth = 1024;
+    static int windowHeight = 768;
+
     #endregion
 
     // Code-only screens appended after every screen from the gumx, allowing the
@@ -50,6 +53,7 @@ unsafe class Program
     private static readonly Func<GraphicalUiElement>[] codeScreenFactories =
     {
         () => new SilkNetGum.Screens.NineSliceScreen(),
+        () => new SilkNetGum.Screens.CirclesScreen(),
     };
 
     private static void InitializeGum(SKCanvas canvas)
@@ -67,6 +71,9 @@ unsafe class Program
         instructionsText.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
         instructionsText.YOrigin = VerticalAlignment.Bottom;
         instructionsText.AddToRoot();
+
+        GraphicalUiElement.CanvasWidth = windowWidth;
+        GraphicalUiElement.CanvasHeight = windowHeight;
     }
 
     private static void LoadScreen(int index)
@@ -87,10 +94,14 @@ unsafe class Program
             Root = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
             Root.AddToManagers(SystemManagers.Default, layer: null);
         }
+
+        Root.Width = GraphicalUiElement.CanvasWidth;
+        Root.Height = GraphicalUiElement.CanvasHeight;
     }
 
     private static void Draw()
     {
+
         GumService.Default.Draw();
 
         canvas.Flush();
@@ -205,12 +216,14 @@ unsafe class Program
             // Create window with appropriate flags
             uint windowFlags = (uint)(WindowFlags.Opengl | WindowFlags.Shown | WindowFlags.Resizable);
 
+
+
             Console.WriteLine("Creating window...");
             window = sdl.CreateWindow(
                 "SDL ANGLE Example",
                 Sdl.WindowposCentered,
                 Sdl.WindowposCentered,
-                800, 600,
+                windowWidth, windowHeight,
                 windowFlags
             );
 
@@ -268,7 +281,7 @@ unsafe class Program
             using var grGlInterface = GRGlInterface.Create(loadFunction);
             grGlInterface.Validate();
             using var grContext = GRContext.CreateGl(grGlInterface);
-            var renderTarget = new GRBackendRenderTarget(800, 600, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8`
+            var renderTarget = new GRBackendRenderTarget(windowWidth, windowHeight, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8`
             using var surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
             canvas = surface.Canvas;
 

@@ -117,7 +117,15 @@ TextRuntime textInstance = textBox.Visual.Find<TextRuntime>("TextInstance")!;
 
 For the full set of new methods and how they compose with LINQ, see [Finding Elements](../../code/visual-tree/finding-elements.md).
 
-### ArcRuntime defaults unified — Apos `IsEndRounded` now defaults to `false`
+### Default visual changes from runtime unification
+
+The ongoing runtime-unification work collapses per-backend runtime classes (MonoGame, FNA, KNI, Raylib, Skia, Apos.Shapes) into a single shared source file gated by `#if`. Where backends historically disagreed on constructor defaults, the unification picks one value and the others change to match — which means a freshly-constructed runtime can render visibly differently on the affected backends after upgrading.
+
+This section catalogs each visible default change. **Saved Gum content takes precedence over constructor defaults**: if you instantiate runtimes from `.gucx` / `.glux` files and the property is set in your default state, no action is needed. The migrations below only affect code that constructs runtimes directly and relied on the old per-backend defaults.
+
+Expect additional entries to land here as more runtimes are unified — if you upgrade and a visual looks different, check this section first.
+
+#### ArcRuntime — Apos `IsEndRounded` now defaults to `false`
 
 `ArcRuntime` was previously two separate per-backend classes (one for Apos.Shapes, one for SkiaGum) that had drifted apart over time. They are now a single shared source file with platform-specific code behind `#if SKIA`. Most of the unification is transparent, but **one default has changed visibly on the Apos backend**:
 
@@ -146,11 +154,43 @@ arc.SweepAngle = 270;
 arc.AddToRoot();
 ```
 
-If you instantiate `ArcRuntime` from saved Gum content (`.gucx` / `.glux`) and have an `IsEndRounded` value in your default state, no action is needed — the saved value takes precedence over the constructor default.
-
 Other locked-in defaults from the same unification (no migration needed, listed for reference):
 
 - `StrokeWidth` defaults to `10` on both backends (previously only Apos seeded this; freshly-constructed Skia `ArcRuntime` instances now render visibly without needing an explicit `StrokeWidth`).
 - Dropshadow defaults (`DropshadowAlpha = 255`, `DropshadowOffsetY = 3`, etc.) are now seeded on both backends. These values are inert until `HasDropshadow` is set to `true`.
 
 Dashed strokes (`StrokeDashLength`, `StrokeGapLength`) continue to render on Skia only — the underlying Apos.Shapes `Arc` primitive does not support dashing.
+
+#### CircleRuntime — Skia default size is now 32×32 (was 100×100)
+
+`CircleRuntime` is now a single shared source file across MonoGame, FNA, KNI, Raylib, and Skia. The Skia copy that previously lived under `SkiaGum/GueDeriving/` has been removed and its replacement is the file-linked shared runtime.
+
+| Property | Skia before | Skia after | XNA-likes / Raylib before & after |
+| --- | --- | --- | --- |
+| `Width` | `100` | `32` | `32` |
+| `Height` | `100` | `32` | `32` |
+| `Radius` | (derived) `50` | `16` | `16` |
+
+A freshly-constructed Skia `CircleRuntime` now renders at **roughly one-tenth the area** of the previous default. If your project instantiates `CircleRuntime` in code without setting `Width`/`Height` (or `Radius`) explicitly, those circles will appear smaller after upgrading.
+
+❌ Old (relied on Skia's 100×100 default):
+
+```csharp
+CircleRuntime circle = new CircleRuntime();
+circle.AddToRoot();
+```
+
+✅ New (explicit):
+
+```csharp
+CircleRuntime circle = new CircleRuntime();
+circle.Radius = 50; // or set Width = 100; Height = 100;
+circle.AddToRoot();
+```
+
+Other defaults preserved (no migration needed, listed for reference):
+
+- `IsFilled` still defaults to `false`, `StrokeWidth` still defaults to `1` with `StrokeWidthUnits = ScreenPixel`.
+- Dropshadow defaults (`DropshadowAlpha = 255`, `DropshadowOffsetY = 3`, `DropshadowBlurY = 3`) are still seeded; inert until `HasDropshadow` is set to `true`.
+
+Gradients, dropshadow, and dashed strokes remain Skia-only — those features have no equivalent on the XNA-likes / Raylib backends and stay gated behind `#if SKIA` in the shared source.
