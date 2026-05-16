@@ -131,6 +131,34 @@ public class CircleRuntimeTests
         stroke.HasDropshadow.ShouldBeFalse();
     }
 
+    // Issue #2796: dashed-stroke props on CircleRuntime push to the stroke slot only (not
+    // fill). Dashing is a stroke-mode operation — the Apos Circle's RenderDashed path is
+    // guarded by !IsFilled — so pushing to fill would be ignored. Routed through PreRender
+    // so ScreenPixel-scaled dash/gap stays in sync with camera zoom alongside StrokeWidth.
+    [Fact]
+    public void DashedStroke_PushedViaPreRender_ToStrokeSlotOnly()
+    {
+        CircleRuntime sut = new();
+
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 1;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.StrokeDashLength = 6;
+        sut.StrokeGapLength = 4;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        IRenderable asStrokeRenderable = stroke;
+        asStrokeRenderable.PreRender();
+
+        stroke.StrokeDashLength.ShouldBe(6f);
+        stroke.StrokeGapLength.ShouldBe(4f);
+        // Fill is the wrong place for dashing (Apos guards RenderDashed on !IsFilled) — the
+        // runtime intentionally skips pushing dash/gap to the fill slot.
+        fill.StrokeDashLength.ShouldBe(0f);
+        fill.StrokeGapLength.ShouldBe(0f);
+    }
+
     // Issue #2798: IsAntialiased pushes through to both slots so a single setter flips AA on
     // fill and stroke together. Default true matches Apos.Shapes' own default. The push
     // happens via PreRender (matching how StrokeWidth/StrokeDashLength flow); fire the hook

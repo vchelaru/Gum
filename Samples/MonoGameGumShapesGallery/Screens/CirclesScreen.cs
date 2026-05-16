@@ -42,6 +42,7 @@ internal class CirclesScreen : FrameworkElement
         root.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
         root.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
         root.AddChild(BuildSection("Dropshadow (off / soft / hard offset / colored) — fill-only push avoids doubling (#2797)", BuildDropshadowRow()));
+        root.AddChild(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — stroke-only push (#2796)", BuildDashedStrokeRow()));
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
@@ -270,6 +271,54 @@ internal class CirclesScreen : FrameworkElement
         colored.DropshadowBlurX = 6;
         colored.DropshadowBlurY = 6;
         row.AddChild(colored);
+
+        return row;
+    }
+
+    // Issue #2796 visual acceptance: four cells stepping through dash/gap patterns. First
+    // cell is the solid-stroke baseline (dash=0). Remaining three exercise short dashes,
+    // dotted, and a long-dash motif. Dashing applies to stroke only — the runtime skips
+    // pushing dash/gap to the fill slot since Apos' Circle.RenderDashed is guarded by
+    // !IsFilled. Mirrored on the Skia side via SkiaShapeRuntime.StrokeDashLength.
+    static ContainerRuntime BuildDashedStrokeRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        // Baseline: solid stroke (dash=0).
+        CircleRuntime solid = new();
+        solid.Radius = 28;
+        solid.StrokeColor = Color.White;
+        solid.StrokeWidth = 2;
+        row.AddChild(solid);
+
+        // Short 6/4 dash.
+        CircleRuntime short64 = new();
+        short64.Radius = 28;
+        short64.StrokeColor = Color.White;
+        short64.StrokeWidth = 2;
+        short64.StrokeDashLength = 6;
+        short64.StrokeGapLength = 4;
+        row.AddChild(short64);
+
+        // Tight 2/2 dotted. IsAntialiased=false avoids the AA bloom widening a 1 px stroke
+        // and matches the Win95-style dotted focus rect (see Themes/Retro95).
+        CircleRuntime dotted = new();
+        dotted.Radius = 28;
+        dotted.StrokeColor = Color.White;
+        dotted.StrokeWidth = 1;
+        dotted.StrokeDashLength = 2;
+        dotted.StrokeGapLength = 2;
+        dotted.IsAntialiased = false;
+        row.AddChild(dotted);
+
+        // Long-dash motif: 12/6 with a thicker stroke.
+        CircleRuntime longDash = new();
+        longDash.Radius = 28;
+        longDash.StrokeColor = Color.LightGreen;
+        longDash.StrokeWidth = 3;
+        longDash.StrokeDashLength = 12;
+        longDash.StrokeGapLength = 6;
+        row.AddChild(longDash);
 
         return row;
     }

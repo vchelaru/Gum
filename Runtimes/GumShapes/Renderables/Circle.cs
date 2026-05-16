@@ -15,12 +15,14 @@ public class Circle : RenderableShapeBase,
     Gum.GueDeriving.IStrokedCircleRenderable,
     Gum.GueDeriving.IGradientedRenderable,
     Gum.GueDeriving.IAntialiasedRenderable,
-    Gum.GueDeriving.IDropshadowRenderable
+    Gum.GueDeriving.IDropshadowRenderable,
+    Gum.GueDeriving.IDashedStrokeRenderable
 {
-    // IGradientedRenderable, IAntialiasedRenderable, and IDropshadowRenderable are all
-    // satisfied entirely by the property bag inherited from RenderableShapeBase — every
-    // member name and type lines up. The interface declarations exist only so CircleRuntime
-    // can pattern-match on each slot without coupling to the concrete Apos.Shapes Circle type.
+    // IGradientedRenderable, IAntialiasedRenderable, IDropshadowRenderable, and
+    // IDashedStrokeRenderable are all satisfied entirely by the property bag inherited from
+    // RenderableShapeBase — every member name and type lines up. The interface declarations
+    // exist only so CircleRuntime can pattern-match on each slot without coupling to the
+    // concrete Apos.Shapes Circle type.
     /// <inheritdoc/>
     /// <remarks>
     /// Apos.Shapes draws the circle as <c>Width / 2</c> centered on the renderable's

@@ -147,6 +147,26 @@ public class CircleRuntimeTests : BaseTestClass
     // package, neither slot implements IAntialiasedRenderable. The setter must round-trip on
     // the runtime so user code is forward-compatible with a later install of the package, but
     // produce no visual effect today (LineCircle has no AA concept).
+    // Issue #2796: dashed-stroke graceful-degradation contract. With no MonoGameGumShapes
+    // package, the stroke slot is DefaultStrokedCircleRenderable (wraps LineCircle, no dash
+    // concept) and does not implement IDashedStrokeRenderable. The setters must round-trip
+    // on the runtime so user code is forward-compatible with a later install of the package,
+    // but produce no visual effect today.
+    [Fact]
+    public void DashedStroke_RoundTripsBackingFields_WhenNoDashCapableSlot()
+    {
+        CircleRuntime sut = new();
+
+        sut.StrokeDashLength.ShouldBe(0f, "default 0 means solid stroke");
+        sut.StrokeGapLength.ShouldBe(0f);
+
+        sut.StrokeDashLength = 6;
+        sut.StrokeGapLength = 4;
+
+        sut.StrokeDashLength.ShouldBe(6f);
+        sut.StrokeGapLength.ShouldBe(4f);
+    }
+
     [Fact]
     public void IsAntialiased_RoundTripsBackingField_WhenNoAntialiasedCapableSlot()
     {
