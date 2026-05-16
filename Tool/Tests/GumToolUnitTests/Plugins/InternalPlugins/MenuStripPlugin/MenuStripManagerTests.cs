@@ -228,4 +228,99 @@ public class MenuStripManagerTests : BaseTestClass
             countAfterSecond.ShouldBe(countAfterFirst);
         });
     }
+
+    [Fact]
+    public void ContentMenu_OrdersByLayoutTable_RegardlessOfRegistrationOrder()
+    {
+        RunOnSta(() =>
+        {
+            Menu firstMenu = new Menu();
+            _menuStripManager.PopulateMenu(firstMenu);
+
+            // Register in one order
+            _menuStripManager.AddMenuItem(new[] { "Content", "View Font Cache" });
+            _menuStripManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
+            _menuStripManager.AddMenuItem(new[] { "Content", "Import from .gumx..." });
+            _menuStripManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
+            _menuStripManager.AddMenuItem(new[] { "Content", "Force re-create all font files" });
+            _menuStripManager.AddMenuItem(new[] { "Content", "Re-create missing font files" });
+
+            object[] firstHeaders = HeadersOf(firstMenu, "Content");
+
+            MenuStripManager secondManager = new MenuStripManager(
+                _selectedState.Object,
+                _undoManager.Object,
+                _editCommands.Object,
+                _dialogService.Object,
+                _fileCommands.Object,
+                _projectManager.Object);
+            Menu secondMenu = new Menu();
+            secondManager.PopulateMenu(secondMenu);
+
+            // Register in a different order
+            secondManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
+            secondManager.AddMenuItem(new[] { "Content", "Re-create missing font files" });
+            secondManager.AddMenuItem(new[] { "Content", "Import from .gumx..." });
+            secondManager.AddMenuItem(new[] { "Content", "Force re-create all font files" });
+            secondManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
+            secondManager.AddMenuItem(new[] { "Content", "View Font Cache" });
+
+            object[] secondHeaders = HeadersOf(secondMenu, "Content");
+
+            firstHeaders.ShouldBe(secondHeaders);
+
+            object[] expected = new object[]
+            {
+                "Find file references...",
+                "<separator>",
+                "Add Forms Components",
+                "Import from .gumx...",
+                "<separator>",
+                "Clear Font Cache",
+                "Re-create missing font files",
+                "Force re-create all font files",
+                "View Font Cache",
+            };
+            firstHeaders.ShouldBe(expected);
+        });
+    }
+
+    [Fact]
+    public void ContentMenu_UnknownItem_GoesToEndWithSeparator()
+    {
+        RunOnSta(() =>
+        {
+            Menu menu = new Menu();
+            _menuStripManager.PopulateMenu(menu);
+
+            _menuStripManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
+            _menuStripManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
+            _menuStripManager.AddMenuItem(new[] { "Content", "Some Third-Party Plugin Item" });
+
+            object[] headers = HeadersOf(menu, "Content");
+
+            headers[^2].ShouldBe("<separator>");
+            headers[^1].ShouldBe("Some Third-Party Plugin Item");
+        });
+    }
+
+    private static object[] HeadersOf(Menu menu, string topMenuName)
+    {
+        MenuItem parent = menu.Items.OfType<MenuItem>()
+            .First(mi => mi.Header as string == topMenuName);
+
+        List<object> headers = new List<object>();
+        foreach (object item in parent.Items)
+        {
+            if (item is Separator)
+            {
+                headers.Add("<separator>");
+            }
+            else if (item is MenuItem mi)
+            {
+                headers.Add(mi.Header);
+            }
+        }
+        return headers.ToArray();
+    }
 }
