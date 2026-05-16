@@ -1,3 +1,4 @@
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
@@ -67,6 +68,38 @@ public class CircleRuntimeTests
     // Load-order contract guard for #2761 / #2768: if any of the four factory registrations
     // moves back inside the _registered guard in AposShapeRuntime, this catches the
     // regression. After Reset + re-call, a new CircleRuntime must still bind Apos Circles.
+    // Issue #2791: gradient props on CircleRuntime push through to both Apos Circles so a single
+    // gradient can paint fill and stroke at once (matches Skia's single-renderable behavior).
+    [Fact]
+    public void Gradient_PropertiesPushedToBothFillAndStrokeSlots()
+    {
+        CircleRuntime sut = new();
+
+        sut.UseGradient = true;
+        sut.GradientType = GradientType.Linear;
+        sut.Color1 = Color.Red;
+        sut.Color2 = Color.Blue;
+        sut.GradientX2 = 56;
+        sut.GradientInnerRadius = 4;
+        sut.GradientInnerRadiusUnits = DimensionUnitType.Absolute;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+
+        fill.UseGradient.ShouldBeTrue();
+        stroke.UseGradient.ShouldBeTrue();
+        fill.GradientType.ShouldBe(GradientType.Linear);
+        stroke.GradientType.ShouldBe(GradientType.Linear);
+        fill.Red1.ShouldBe(Color.Red.R);
+        stroke.Red1.ShouldBe(Color.Red.R);
+        fill.Blue2.ShouldBe(Color.Blue.B);
+        stroke.Blue2.ShouldBe(Color.Blue.B);
+        fill.GradientX2.ShouldBe(56);
+        stroke.GradientX2.ShouldBe(56);
+        fill.GradientInnerRadius.ShouldBe(4);
+        stroke.GradientInnerRadius.ShouldBe(4);
+    }
+
     [Fact]
     public void LoadOrderRecovery_AfterRegistryResetAndRecall_StillBindsAposCircles()
     {

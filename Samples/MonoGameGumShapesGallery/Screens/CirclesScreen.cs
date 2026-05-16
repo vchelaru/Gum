@@ -39,14 +39,7 @@ internal class CirclesScreen : FrameworkElement
         root.AddChild(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
         root.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
         root.AddChild(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
-
-        // A "Gradients" row exists on the Skia mirror of this screen
-        // (Samples/SilkNetGum/SilkNetGum/Screens/CirclesScreen.cs). It is not duplicated
-        // here yet because the XNA-like CircleRuntime does not expose UseGradient /
-        // GradientType / Color1 / Color2 / etc. through its renderable interfaces
-        // (IFilledCircleRenderable / IStrokedCircleRenderable). The Apos.Shapes Circle
-        // renderable supports gradients natively, so the work is interface widening +
-        // runtime pass-through. Tracked in #2791.
+        root.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
@@ -138,6 +131,66 @@ internal class CirclesScreen : FrameworkElement
         {
             row.AddChild(BuildAlignmentCell(alignment));
         }
+        return row;
+    }
+
+    // Mirror of the gradient row on Samples/SilkNetGum/SilkNetGum/Screens/CirclesScreen.cs
+    // (issue #2791). Each cell exercises a different gradient configuration; with
+    // MonoGameGumShapes loaded, CircleRuntime pushes gradient state through to both Apos
+    // Circles (fill and stroke), so a single gradient covers the filled disk.
+    static ContainerRuntime BuildGradientRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        // Linear horizontal: white → blue
+        CircleRuntime linearH = new();
+        linearH.Radius = 28;
+        linearH.FillColor = Color.White; // fill mode; gradient overrides solid color
+        linearH.UseGradient = true;
+        linearH.GradientType = GradientType.Linear;
+        linearH.Color1 = Color.White;
+        linearH.Color2 = Color.SteelBlue;
+        linearH.GradientX1 = 0; linearH.GradientY1 = 0;
+        linearH.GradientX2 = 56; linearH.GradientY2 = 0;
+        row.AddChild(linearH);
+
+        // Linear vertical: gold → crimson
+        CircleRuntime linearV = new();
+        linearV.Radius = 28;
+        linearV.FillColor = Color.White;
+        linearV.UseGradient = true;
+        linearV.GradientType = GradientType.Linear;
+        linearV.Color1 = Color.Gold;
+        linearV.Color2 = Color.Crimson;
+        linearV.GradientX1 = 0; linearV.GradientY1 = 0;
+        linearV.GradientX2 = 0; linearV.GradientY2 = 56;
+        row.AddChild(linearV);
+
+        // Linear diagonal: cyan → magenta
+        CircleRuntime linearD = new();
+        linearD.Radius = 28;
+        linearD.FillColor = Color.White;
+        linearD.UseGradient = true;
+        linearD.GradientType = GradientType.Linear;
+        linearD.Color1 = Color.Cyan;
+        linearD.Color2 = Color.Magenta;
+        linearD.GradientX1 = 0; linearD.GradientY1 = 0;
+        linearD.GradientX2 = 56; linearD.GradientY2 = 56;
+        row.AddChild(linearD);
+
+        // Radial centered: white → dark green
+        CircleRuntime radial = new();
+        radial.Radius = 28;
+        radial.FillColor = Color.White;
+        radial.UseGradient = true;
+        radial.GradientType = GradientType.Radial;
+        radial.Color1 = Color.White;
+        radial.Color2 = Color.DarkGreen;
+        radial.GradientX1 = 28; radial.GradientY1 = 28;
+        radial.GradientInnerRadius = 0;
+        radial.GradientOuterRadius = 28;
+        row.AddChild(radial);
+
         return row;
     }
 
