@@ -1,6 +1,8 @@
 <Solution>
-  <Project Path="../../GumCommon/GumCommon.csproj" />
-  <Project Path="../../MonoGameGum/MonoGameGum.csproj" />
-  <Project Path="../../Runtimes/GumShapes/MonoGameGumShapes.csproj" />
+  <Folder Name="/LibraryProjects/">
+    <Project Path="../../GumCommon/GumCommon.csproj" />
+    <Project Path="../../MonoGameGum/MonoGameGum.csproj" />
+    <Project Path="../../Runtimes/GumShapes/MonoGameGumShapes.csproj" />
+  </Folder>
   <Project Path="MonoGameGumShapesGallery.csproj" />
 </Solution>

@@ -42,8 +42,8 @@ unsafe class Program
     static SKCanvas canvas;
     static SKPaint paintFromFile;
 
-    static int windowWidth = 1024;
-    static int windowHeight = 768;
+    static int windowWidth = 1400;
+    static int windowHeight = 900;
 
     #endregion
 
