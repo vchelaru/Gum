@@ -39,6 +39,14 @@ internal class CirclesScreen : FrameworkElement
         root.AddChild(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
         root.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
         root.AddChild(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+
+        // A "Gradients" row exists on the Skia mirror of this screen
+        // (Samples/SilkNetGum/SilkNetGum/Screens/CirclesScreen.cs). It is not duplicated
+        // here yet because the XNA-like CircleRuntime does not expose UseGradient /
+        // GradientType / Color1 / Color2 / etc. through its renderable interfaces
+        // (IFilledCircleRenderable / IStrokedCircleRenderable). The Apos.Shapes Circle
+        // renderable supports gradients natively, so the work is interface widening +
+        // runtime pass-through. Tracked in #2791.
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
