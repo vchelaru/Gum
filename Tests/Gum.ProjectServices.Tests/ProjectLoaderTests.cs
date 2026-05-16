@@ -1,3 +1,4 @@
+using Gum.DataTypes;
 using Gum.ProjectServices;
 using Shouldly;
 
@@ -10,6 +11,65 @@ public class ProjectLoaderTests
     public ProjectLoaderTests()
     {
         _sut = new ProjectLoader();
+    }
+
+    [Fact]
+    public void Load_ShouldDefaultFontGeneratorToBmFont_WhenFontGeneratorElementMissing()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            ProjectCreator creator = new ProjectCreator();
+            creator.Create(gumxPath);
+
+            // Strip the <FontGenerator> element to simulate a legacy project that predates the setting.
+            string gumxContent = File.ReadAllText(gumxPath);
+            gumxContent = System.Text.RegularExpressions.Regex.Replace(
+                gumxContent,
+                @"\s*<FontGenerator>[^<]*</FontGenerator>",
+                string.Empty);
+            File.WriteAllText(gumxPath, gumxContent);
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            result.Success.ShouldBeTrue();
+            result.Project!.FontGenerator.ShouldBe(FontGeneratorType.BmFont);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_ShouldHonorExplicitBmFontGenerator()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            ProjectCreator creator = new ProjectCreator();
+            creator.Create(gumxPath);
+
+            string gumxContent = File.ReadAllText(gumxPath);
+            gumxContent = System.Text.RegularExpressions.Regex.Replace(
+                gumxContent,
+                @"<FontGenerator>[^<]*</FontGenerator>",
+                "<FontGenerator>BmFont</FontGenerator>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            result.Success.ShouldBeTrue();
+            result.Project!.FontGenerator.ShouldBe(FontGeneratorType.BmFont);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
     }
 
     [Fact]

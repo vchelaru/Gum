@@ -96,6 +96,27 @@ public class ProjectCreatorTests : IDisposable
     }
 
     [Fact]
+    public void Create_ShouldDefaultFontGeneratorToKernSmith()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+
+        GumProjectSave project = _sut.Create(filePath);
+
+        project.FontGenerator.ShouldBe(FontGeneratorType.KernSmith);
+    }
+
+    [Fact]
+    public void Create_ShouldPersistKernSmithFontGeneratorToDisk()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+
+        _sut.Create(filePath);
+
+        string gumxContent = File.ReadAllText(filePath);
+        gumxContent.ShouldContain("<FontGenerator>KernSmith</FontGenerator>");
+    }
+
+    [Fact]
     public void Create_ShouldProduceProjectThatLoadsStandardElements()
     {
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
