@@ -154,7 +154,10 @@ public class ProjectManager : IProjectManager
 
     public void CreateNewProject()
     {
-        _gumProjectSave = new GumProjectSave();
+        _gumProjectSave = new GumProjectSave
+        {
+            FontGenerator = FontGeneratorType.KernSmith
+        };
         ObjectFinder.Self.GumProjectSave = _gumProjectSave;
 
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(_gumProjectSave);

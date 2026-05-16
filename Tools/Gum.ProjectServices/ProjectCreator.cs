@@ -43,8 +43,11 @@ public class ProjectCreator : IProjectCreator
         ExtractStandardElements(directory);
         ExtractExampleSpriteFrame(directory);
 
-        var project = new GumProjectSave();
-        project.FullFileName = filePath;
+        var project = new GumProjectSave
+        {
+            FontGenerator = FontGeneratorType.KernSmith,
+            FullFileName = filePath
+        };
 
         foreach (var name in StandardElementNames)
         {
