@@ -95,6 +95,54 @@ public class CircleRuntimeTests : BaseTestClass
         sut.GradientOuterRadiusUnits.ShouldBe(DimensionUnitType.RelativeToParent);
     }
 
+    // Issue #2797: dropshadow graceful-degradation contract. With no MonoGameGumShapes
+    // package, neither slot implements IDropshadowRenderable. The setters must round-trip on
+    // the runtime so user code is forward-compatible with a later install of the package, but
+    // produce no visual effect today.
+    [Fact]
+    public void Dropshadow_RoundTripsBackingFields_WhenNoDropshadowCapableSlot()
+    {
+        CircleRuntime sut = new();
+
+        // Constructor seeds the same defaults as SkiaShapeRuntime so HasDropshadow = true
+        // immediately produces a visible shadow without further setup.
+        sut.DropshadowAlpha.ShouldBe(255);
+        sut.DropshadowOffsetY.ShouldBe(3);
+        sut.DropshadowBlurY.ShouldBe(3);
+        sut.HasDropshadow.ShouldBeFalse();
+
+        sut.HasDropshadow = true;
+        sut.DropshadowColor = new Color(10, 20, 30, 40);
+        sut.DropshadowOffsetX = 5;
+        sut.DropshadowOffsetY = 7;
+        sut.DropshadowBlurX = 2;
+        sut.DropshadowBlurY = 4;
+
+        sut.HasDropshadow.ShouldBeTrue();
+        sut.DropshadowColor.ShouldBe(new Color(10, 20, 30, 40));
+        sut.DropshadowRed.ShouldBe(10);
+        sut.DropshadowGreen.ShouldBe(20);
+        sut.DropshadowBlue.ShouldBe(30);
+        sut.DropshadowAlpha.ShouldBe(40);
+        sut.DropshadowOffsetX.ShouldBe(5);
+        sut.DropshadowOffsetY.ShouldBe(7);
+        sut.DropshadowBlurX.ShouldBe(2);
+        sut.DropshadowBlurY.ShouldBe(4);
+    }
+
+    [Fact]
+    public void DropshadowChannelSetters_ComposeDropshadowColor()
+    {
+        CircleRuntime sut = new();
+
+        sut.DropshadowRed = 11;
+        sut.DropshadowGreen = 22;
+        sut.DropshadowBlue = 33;
+        sut.DropshadowAlpha = 44;
+
+        sut.DropshadowColor.ShouldBe(new Color(11, 22, 33, 44));
+    }
+
     // Issue #2798: IsAntialiased graceful-degradation contract. With no MonoGameGumShapes
     // package, neither slot implements IAntialiasedRenderable. The setter must round-trip on
     // the runtime so user code is forward-compatible with a later install of the package, but

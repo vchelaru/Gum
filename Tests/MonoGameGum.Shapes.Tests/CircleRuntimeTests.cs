@@ -100,6 +100,37 @@ public class CircleRuntimeTests
         stroke.GradientInnerRadius.ShouldBe(4);
     }
 
+    // Issue #2797: dropshadow pushes to the fill slot only (with fallback to stroke when fill
+    // is null) because Apos draws one shadow per renderable — pushing to BOTH slots would
+    // render the shadow twice and visibly double up. This deliberately differs from gradient
+    // (#2791) and AA (#2798), which DO push to both slots. With both slots Apos here, the
+    // shadow lands on fill and stroke stays clean.
+    [Fact]
+    public void Dropshadow_PropertiesPushedToFillSlotOnly_NotStroke()
+    {
+        CircleRuntime sut = new();
+
+        sut.HasDropshadow = true;
+        sut.DropshadowColor = new Color(10, 20, 30, 40);
+        sut.DropshadowOffsetX = 5;
+        sut.DropshadowOffsetY = 7;
+        sut.DropshadowBlurX = 2;
+        sut.DropshadowBlurY = 4;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+
+        fill.HasDropshadow.ShouldBeTrue();
+        fill.DropshadowColor.ShouldBe(new Color(10, 20, 30, 40));
+        fill.DropshadowOffsetX.ShouldBe(5);
+        fill.DropshadowOffsetY.ShouldBe(7);
+        fill.DropshadowBlurX.ShouldBe(2);
+        fill.DropshadowBlurY.ShouldBe(4);
+
+        // Stroke must stay shadow-free — see XML remarks on IDropshadowRenderable.
+        stroke.HasDropshadow.ShouldBeFalse();
+    }
+
     // Issue #2798: IsAntialiased pushes through to both slots so a single setter flips AA on
     // fill and stroke together. Default true matches Apos.Shapes' own default. The push
     // happens via PreRender (matching how StrokeWidth/StrokeDashLength flow); fire the hook

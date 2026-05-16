@@ -38,6 +38,7 @@ internal class CirclesScreen : GraphicalUiElement
         root.Children.Add(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
         root.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
         root.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
+        root.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — Skia draws the shadow on the single contained renderable (#2797)", BuildDropshadowRow()));
         root.Children.Add(BuildSection("Known limitation: FillColor + StrokeColor on the same instance — only the most-recently-set one renders today (see #2790).", BuildBothColorsRow()));
     }
 
@@ -240,6 +241,59 @@ internal class CirclesScreen : GraphicalUiElement
             ring.IsAntialiased = aa;
             row.Children.Add(ring);
         }
+
+        return row;
+    }
+
+    // Issue #2797 visual acceptance: mirror of the MonoGameGumShapesGallery dropshadow row.
+    // Same four cells — baseline, soft, hard offset, colored — so visual regressions in one
+    // backend are easy to spot against the other.
+    static ContainerRuntime BuildDropshadowRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        // Baseline: no shadow.
+        CircleRuntime baseline = new();
+        baseline.Radius = 28;
+        baseline.FillColor = SKColors.Goldenrod;
+        row.Children.Add(baseline);
+
+        // Soft shadow: small offset, generous blur, default opaque black.
+        CircleRuntime soft = new();
+        soft.Radius = 28;
+        soft.FillColor = SKColors.Goldenrod;
+        soft.HasDropshadow = true;
+        soft.DropshadowOffsetX = 2;
+        soft.DropshadowOffsetY = 2;
+        soft.DropshadowBlurX = 4;
+        soft.DropshadowBlurY = 4;
+        row.Children.Add(soft);
+
+        // Hard offset: bigger offset, no blur, semi-transparent black. Skia exposes only
+        // per-channel ints on the SkiaShapeRuntime dropshadow surface (no DropshadowColor
+        // composite), so set the channels individually here.
+        CircleRuntime hard = new();
+        hard.Radius = 28;
+        hard.FillColor = SKColors.Goldenrod;
+        hard.HasDropshadow = true;
+        hard.DropshadowRed = 0; hard.DropshadowGreen = 0; hard.DropshadowBlue = 0; hard.DropshadowAlpha = 160;
+        hard.DropshadowOffsetX = 6;
+        hard.DropshadowOffsetY = 6;
+        hard.DropshadowBlurX = 0;
+        hard.DropshadowBlurY = 0;
+        row.Children.Add(hard);
+
+        // Colored shadow: deep blue glow underneath.
+        CircleRuntime colored = new();
+        colored.Radius = 28;
+        colored.FillColor = SKColors.Goldenrod;
+        colored.HasDropshadow = true;
+        colored.DropshadowRed = 0; colored.DropshadowGreen = 80; colored.DropshadowBlue = 200; colored.DropshadowAlpha = 200;
+        colored.DropshadowOffsetX = 0;
+        colored.DropshadowOffsetY = 0;
+        colored.DropshadowBlurX = 6;
+        colored.DropshadowBlurY = 6;
+        row.Children.Add(colored);
 
         return row;
     }
