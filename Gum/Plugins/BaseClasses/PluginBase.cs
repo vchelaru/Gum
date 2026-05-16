@@ -333,6 +333,8 @@ public abstract class PluginBase : IPlugin
             itemToAddTo.Items.Insert(indexToInsertAt, menuItem);
         }
 
+        _menuStripManager.ApplyLayout(container);
+
         return menuItem;
     }
 

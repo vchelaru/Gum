@@ -425,7 +425,14 @@ namespace Gum.Managers
             },
         };
 
-        private void ApplyLayout(string topMenuName)
+        /// <summary>
+        /// Re-orders the children of the given top-level menu according to the layout
+        /// table and re-inserts group separators. Safe to call repeatedly; no-op if the
+        /// menu name has no layout entry. Call this after any direct manipulation of
+        /// a managed menu's <c>Items</c> collection (e.g. removing an item) so that
+        /// the declared group order is restored.
+        /// </summary>
+        public void ApplyLayout(string topMenuName)
         {
             if (!_menuLayouts.TryGetValue(topMenuName, out var groups))
             {

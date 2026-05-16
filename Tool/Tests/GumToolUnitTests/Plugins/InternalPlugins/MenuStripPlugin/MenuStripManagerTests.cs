@@ -286,6 +286,47 @@ public class MenuStripManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void ContentMenu_AfterRemoveAndReadd_RestoresLayoutPosition()
+    {
+        RunOnSta(() =>
+        {
+            Menu menu = new Menu();
+            _menuStripManager.PopulateMenu(menu);
+
+            _menuStripManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
+            _menuStripManager.AddMenuItem(new[] { "Content", "Import from .gumx..." });
+            _menuStripManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
+            _menuStripManager.AddMenuItem(new[] { "Content", "View Font Cache" });
+
+            MenuItem content = (MenuItem)menu.Items.OfType<MenuItem>()
+                .First(mi => mi.Header as string == "Content");
+            MenuItem addForms = content.Items.OfType<MenuItem>()
+                .First(mi => mi.Header as string == "Add Forms Components");
+
+            // Simulate the project-load handler removing the item when the project
+            // already has forms imported.
+            content.Items.Remove(addForms);
+
+            // Now simulate re-adding it on a subsequent project load (forms not present).
+            // The Forms plugin uses AddMenuItemTo which appends directly into the parent's
+            // Items collection, so mimic that path here and then re-apply the layout.
+            MenuItem readded = new MenuItem { Header = "Add Forms Components" };
+            content.Items.Add(readded);
+            _menuStripManager.ApplyLayout("Content");
+
+            object[] headers = HeadersOf(menu, "Content");
+
+            // The re-added item must land back in its forms group, not at the end.
+            int formsIndex = Array.IndexOf(headers, (object)"Add Forms Components");
+            int importIndex = Array.IndexOf(headers, (object)"Import from .gumx...");
+            int clearFontIndex = Array.IndexOf(headers, (object)"Clear Font Cache");
+
+            formsIndex.ShouldBeLessThan(importIndex);
+            importIndex.ShouldBeLessThan(clearFontIndex);
+        });
+    }
+
+    [Fact]
     public void ContentMenu_UnknownItem_GoesToEndWithSeparator()
     {
         RunOnSta(() =>
