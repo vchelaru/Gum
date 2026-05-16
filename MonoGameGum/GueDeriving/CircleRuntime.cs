@@ -3,6 +3,10 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 
+#if XNALIKE
+using Gum.Converters;
+#endif
+
 #if RAYLIB
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
@@ -323,6 +327,334 @@ public class CircleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
+
+    #region Gradient
+
+    // Issue #2791: gradient pass-through. Backing fields live on the runtime so values
+    // round-trip even when neither slot implements IGradientedRenderable (e.g. core-only stroke
+    // = DefaultStrokedCircleRenderable, no fill). Setters push to whichever slot(s) implement
+    // it. Pushing to both slots matches Skia's single-renderable behavior, where fill mode and
+    // dashed-stroke mode both consult the same gradient parameters; an Apos-backed
+    // CircleRuntime with both FillColor and StrokeColor + UseGradient = true renders a
+    // gradient-filled disk with a gradient stroke sharing the same gradient.
+
+    bool _useGradient;
+    /// <summary>
+    /// When <c>true</c>, the gradient color/coordinate properties drive rendering instead of
+    /// <see cref="FillColor"/> / <see cref="StrokeColor"/>. Visual effect requires the optional
+    /// MonoGameGumShapes (Apos.Shapes) package; without it the value round-trips but does not
+    /// render.
+    /// </summary>
+    public bool UseGradient
+    {
+        get => _useGradient;
+        set
+        {
+            _useGradient = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.UseGradient = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.UseGradient = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    GradientType _gradientType;
+    public GradientType GradientType
+    {
+        get => _gradientType;
+        set
+        {
+            _gradientType = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientType = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientType = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    int _alpha1 = 255;
+    public int Alpha1
+    {
+        get => _alpha1;
+        set
+        {
+            _alpha1 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.Alpha1 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Alpha1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    int _red1;
+    public int Red1
+    {
+        get => _red1;
+        set
+        {
+            _red1 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.Red1 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Red1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    int _green1;
+    public int Green1
+    {
+        get => _green1;
+        set
+        {
+            _green1 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.Green1 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Green1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    int _blue1;
+    public int Blue1
+    {
+        get => _blue1;
+        set
+        {
+            _blue1 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.Blue1 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Blue1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public Color Color1
+    {
+        get => new Color(_red1, _green1, _blue1, _alpha1);
+        set
+        {
+            Red1 = value.R;
+            Green1 = value.G;
+            Blue1 = value.B;
+            Alpha1 = value.A;
+        }
+    }
+
+    int _alpha2 = 255;
+    public int Alpha2
+    {
+        get => _alpha2;
+        set
+        {
+            _alpha2 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.Alpha2 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Alpha2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    int _red2;
+    public int Red2
+    {
+        get => _red2;
+        set
+        {
+            _red2 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.Red2 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Red2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    int _green2;
+    public int Green2
+    {
+        get => _green2;
+        set
+        {
+            _green2 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.Green2 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Green2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    int _blue2;
+    public int Blue2
+    {
+        get => _blue2;
+        set
+        {
+            _blue2 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.Blue2 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Blue2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public Color Color2
+    {
+        get => new Color(_red2, _green2, _blue2, _alpha2);
+        set
+        {
+            Red2 = value.R;
+            Green2 = value.G;
+            Blue2 = value.B;
+            Alpha2 = value.A;
+        }
+    }
+
+    float _gradientX1;
+    public float GradientX1
+    {
+        get => _gradientX1;
+        set
+        {
+            _gradientX1 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientX1 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientX1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    GeneralUnitType _gradientX1Units;
+    public GeneralUnitType GradientX1Units
+    {
+        get => _gradientX1Units;
+        set
+        {
+            _gradientX1Units = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientX1Units = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientX1Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _gradientY1;
+    public float GradientY1
+    {
+        get => _gradientY1;
+        set
+        {
+            _gradientY1 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientY1 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientY1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    GeneralUnitType _gradientY1Units;
+    public GeneralUnitType GradientY1Units
+    {
+        get => _gradientY1Units;
+        set
+        {
+            _gradientY1Units = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientY1Units = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientY1Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _gradientX2;
+    public float GradientX2
+    {
+        get => _gradientX2;
+        set
+        {
+            _gradientX2 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientX2 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientX2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    GeneralUnitType _gradientX2Units;
+    public GeneralUnitType GradientX2Units
+    {
+        get => _gradientX2Units;
+        set
+        {
+            _gradientX2Units = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientX2Units = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientX2Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _gradientY2;
+    public float GradientY2
+    {
+        get => _gradientY2;
+        set
+        {
+            _gradientY2 = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientY2 = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientY2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    GeneralUnitType _gradientY2Units;
+    public GeneralUnitType GradientY2Units
+    {
+        get => _gradientY2Units;
+        set
+        {
+            _gradientY2Units = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientY2Units = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientY2Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _gradientInnerRadius;
+    public float GradientInnerRadius
+    {
+        get => _gradientInnerRadius;
+        set
+        {
+            _gradientInnerRadius = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientInnerRadius = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientInnerRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    DimensionUnitType _gradientInnerRadiusUnits;
+    public DimensionUnitType GradientInnerRadiusUnits
+    {
+        get => _gradientInnerRadiusUnits;
+        set
+        {
+            _gradientInnerRadiusUnits = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientInnerRadiusUnits = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientInnerRadiusUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _gradientOuterRadius;
+    public float GradientOuterRadius
+    {
+        get => _gradientOuterRadius;
+        set
+        {
+            _gradientOuterRadius = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientOuterRadius = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientOuterRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    DimensionUnitType _gradientOuterRadiusUnits;
+    public DimensionUnitType GradientOuterRadiusUnits
+    {
+        get => _gradientOuterRadiusUnits;
+        set
+        {
+            _gradientOuterRadiusUnits = value;
+            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientOuterRadiusUnits = value;
+            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientOuterRadiusUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    #endregion
 
     /// <summary>
     /// Pushes runtime-held stroke values to the stroke renderable each frame, resolving

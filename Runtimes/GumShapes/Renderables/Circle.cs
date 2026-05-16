@@ -12,8 +12,13 @@ namespace MonoGameAndGum.Renderables;
 
 public class Circle : RenderableShapeBase,
     Gum.GueDeriving.IFilledCircleRenderable,
-    Gum.GueDeriving.IStrokedCircleRenderable
+    Gum.GueDeriving.IStrokedCircleRenderable,
+    Gum.GueDeriving.IGradientedRenderable
 {
+    // IGradientedRenderable surface is satisfied entirely by the property bag inherited from
+    // RenderableShapeBase — every member name and type lines up. This interface declaration
+    // exists only so CircleRuntime can `(_fill as IGradientedRenderable)?...` without coupling
+    // to the concrete Apos.Shapes Circle type.
     /// <inheritdoc/>
     /// <remarks>
     /// Apos.Shapes draws the circle as <c>Width / 2</c> centered on the renderable's

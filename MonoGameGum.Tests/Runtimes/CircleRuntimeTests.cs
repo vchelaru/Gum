@@ -1,3 +1,5 @@
+using Gum.Converters;
+using Gum.DataTypes;
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 using MonoGameGum.Renderables;
@@ -53,6 +55,44 @@ public class CircleRuntimeTests : BaseTestClass
         // re-create the runtime) honors the user's color. Without the package, no visual
         // effect — see DefaultStrokedCircleRenderable remarks.
         sut.FillColor.ShouldBe(Color.Red);
+    }
+
+    // Issue #2791 graceful-degradation contract: with no MonoGameGumShapes package the stroke
+    // slot is DefaultStrokedCircleRenderable (does not implement IGradientedRenderable). The
+    // gradient setters must round-trip on the runtime so user code is forward-compatible with
+    // a later install of the package, but produce no visual effect today.
+    [Fact]
+    public void Gradient_RoundTripsBackingFields_WhenNoGradientCapableSlot()
+    {
+        CircleRuntime sut = new();
+
+        sut.UseGradient = true;
+        sut.GradientType = GradientType.Radial;
+        sut.Color1 = Color.Red;
+        sut.Color2 = Color.Blue;
+        sut.GradientX1 = 1;
+        sut.GradientY1 = 2;
+        sut.GradientX2 = 3;
+        sut.GradientY2 = 4;
+        sut.GradientX1Units = GeneralUnitType.PixelsFromMiddle;
+        sut.GradientInnerRadius = 5;
+        sut.GradientOuterRadius = 6;
+        sut.GradientInnerRadiusUnits = DimensionUnitType.PercentageOfParent;
+        sut.GradientOuterRadiusUnits = DimensionUnitType.RelativeToParent;
+
+        sut.UseGradient.ShouldBeTrue();
+        sut.GradientType.ShouldBe(GradientType.Radial);
+        sut.Color1.ShouldBe(Color.Red);
+        sut.Color2.ShouldBe(Color.Blue);
+        sut.GradientX1.ShouldBe(1);
+        sut.GradientY1.ShouldBe(2);
+        sut.GradientX2.ShouldBe(3);
+        sut.GradientY2.ShouldBe(4);
+        sut.GradientX1Units.ShouldBe(GeneralUnitType.PixelsFromMiddle);
+        sut.GradientInnerRadius.ShouldBe(5);
+        sut.GradientOuterRadius.ShouldBe(6);
+        sut.GradientInnerRadiusUnits.ShouldBe(DimensionUnitType.PercentageOfParent);
+        sut.GradientOuterRadiusUnits.ShouldBe(DimensionUnitType.RelativeToParent);
     }
 
     [Fact]
