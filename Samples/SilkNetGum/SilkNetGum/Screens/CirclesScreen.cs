@@ -39,6 +39,7 @@ internal class CirclesScreen : GraphicalUiElement
         root.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
         root.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
         root.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — Skia draws the shadow on the single contained renderable (#2797)", BuildDropshadowRow()));
+        root.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — Skia routes through SkiaShapeRuntime.StrokeDashLength (#2796)", BuildDashedStrokeRow()));
         root.Children.Add(BuildSection("Known limitation: FillColor + StrokeColor on the same instance — only the most-recently-set one renders today (see #2790).", BuildBothColorsRow()));
     }
 
@@ -294,6 +295,51 @@ internal class CirclesScreen : GraphicalUiElement
         colored.DropshadowBlurX = 6;
         colored.DropshadowBlurY = 6;
         row.Children.Add(colored);
+
+        return row;
+    }
+
+    // Issue #2796 mirror of the MG dashed-stroke row. Skia inherits StrokeDashLength /
+    // StrokeGapLength from SkiaShapeRuntime, so no per-runtime plumbing was added on this
+    // side — the dashing flows through the single contained renderable.
+    static ContainerRuntime BuildDashedStrokeRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        // Baseline: solid stroke (dash=0).
+        CircleRuntime solid = new();
+        solid.Radius = 28;
+        solid.StrokeColor = SKColors.White;
+        solid.StrokeWidth = 2;
+        row.Children.Add(solid);
+
+        // Short 6/4 dash.
+        CircleRuntime short64 = new();
+        short64.Radius = 28;
+        short64.StrokeColor = SKColors.White;
+        short64.StrokeWidth = 2;
+        short64.StrokeDashLength = 6;
+        short64.StrokeGapLength = 4;
+        row.Children.Add(short64);
+
+        // Tight 2/2 dotted. IsAntialiased=false keeps a 1 px dot from blooming.
+        CircleRuntime dotted = new();
+        dotted.Radius = 28;
+        dotted.StrokeColor = SKColors.White;
+        dotted.StrokeWidth = 1;
+        dotted.StrokeDashLength = 2;
+        dotted.StrokeGapLength = 2;
+        dotted.IsAntialiased = false;
+        row.Children.Add(dotted);
+
+        // Long-dash motif: 12/6 with a thicker stroke.
+        CircleRuntime longDash = new();
+        longDash.Radius = 28;
+        longDash.StrokeColor = SKColors.LightGreen;
+        longDash.StrokeWidth = 3;
+        longDash.StrokeDashLength = 12;
+        longDash.StrokeGapLength = 6;
+        row.Children.Add(longDash);
 
         return row;
     }

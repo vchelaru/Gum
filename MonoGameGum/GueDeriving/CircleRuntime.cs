@@ -812,6 +812,58 @@ public class CircleRuntime : GraphicalUiElement
 
     #endregion
 
+    #region DashedStroke
+
+    // Issue #2796: dashed-stroke pass-through. Backing fields live on the runtime so values
+    // round-trip even when the stroke slot does not implement IDashedStrokeRenderable (the
+    // core DefaultStrokedCircleRenderable wraps LineCircle, which has no dash concept).
+    // Pushed to the stroke slot only — dashing is a stroke-mode operation (Apos.Shapes'
+    // Circle.RenderDashed path is guarded by !IsFilled), and the fill slot would ignore it.
+    // The push happens in PreRender alongside StrokeWidth so ScreenPixel scaling stays in
+    // sync with camera zoom — mirroring AposShapeRuntime.PreRender, which divides all three
+    // (strokeWidth, dashLen, gapLen) by the same zoom under ScreenPixel units.
+
+    float _strokeDashLength;
+    /// <summary>
+    /// Length of each dash segment in <see cref="StrokeWidthUnits"/>. A value of 0 (the
+    /// default) produces a solid stroke; both <see cref="StrokeDashLength"/> and
+    /// <see cref="StrokeGapLength"/> must be &gt; 0 for dashed rendering to engage.
+    /// </summary>
+    /// <remarks>
+    /// Visual dashing requires the optional MonoGameGumShapes (Apos.Shapes) package; without
+    /// it the stroke slot is <see cref="MonoGameGum.Renderables.DefaultStrokedCircleRenderable"/>
+    /// (wraps <c>LineCircle</c>, no dash concept) and this setter is a visual no-op. The
+    /// backing field still round-trips so user code is forward-compatible with adding the
+    /// package later. Pushed each frame in <see cref="PreRender"/> with the same ScreenPixel
+    /// scaling as <see cref="StrokeWidth"/>.
+    /// </remarks>
+    public float StrokeDashLength
+    {
+        get => _strokeDashLength;
+        set
+        {
+            _strokeDashLength = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _strokeGapLength;
+    /// <summary>
+    /// Length of each gap between dashes in <see cref="StrokeWidthUnits"/>. Ignored when
+    /// <see cref="StrokeDashLength"/> is 0.
+    /// </summary>
+    public float StrokeGapLength
+    {
+        get => _strokeGapLength;
+        set
+        {
+            _strokeGapLength = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    #endregion
+
     /// <summary>
     /// Pushes runtime-held stroke values to the stroke renderable each frame, resolving
     /// <see cref="StrokeWidthUnits"/> against the current camera zoom. Reached through the
@@ -822,15 +874,31 @@ public class CircleRuntime : GraphicalUiElement
     public override void PreRender()
     {
         float strokeWidth = _strokeWidth;
+        float strokeDashLength = _strokeDashLength;
+        float strokeGapLength = _strokeGapLength;
         if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
         {
             var camera = this.EffectiveManagers?.Renderer?.Camera;
             if (camera != null)
             {
+                // Mirrors AposShapeRuntime.PreRender — dash and gap scale alongside stroke
+                // width so a "1 px dotted" pattern stays 1 px on screen regardless of zoom.
                 strokeWidth /= camera.Zoom;
+                strokeDashLength /= camera.Zoom;
+                strokeGapLength /= camera.Zoom;
             }
         }
         _stroke.StrokeWidth = strokeWidth;
+
+        // Issue #2796: push dash/gap to the stroke slot when it supports dashing. Skipped
+        // for slots that don't implement the interface (core DefaultStrokedCircleRenderable
+        // wraps LineCircle, no dash concept). Stroke-only — dashing is guarded by !IsFilled
+        // in the Apos renderable, so pushing to fill would be ignored anyway.
+        if (_stroke is IDashedStrokeRenderable strokeDashed)
+        {
+            strokeDashed.StrokeDashLength = strokeDashLength;
+            strokeDashed.StrokeGapLength = strokeGapLength;
+        }
 
         // Issue #2798: push AA to both slots so a single setter flips fill + stroke together.
         // Mirrors AposShapeRuntime.PreRender. Skipped for slots that don't implement the

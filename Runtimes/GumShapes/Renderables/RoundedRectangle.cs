@@ -13,12 +13,14 @@ namespace MonoGameAndGum.Renderables;
 public class RoundedRectangle : RenderableShapeBase,
     Gum.GueDeriving.IFilledRectangleRenderable,
     Gum.GueDeriving.IStrokedRectangleRenderable,
-    Gum.GueDeriving.IDropshadowRenderable
+    Gum.GueDeriving.IDropshadowRenderable,
+    Gum.GueDeriving.IDashedStrokeRenderable
 {
-    // IDropshadowRenderable is satisfied entirely by the property bag inherited from
-    // RenderableShapeBase — declared here so the future RectangleRuntime (#2797 follow-up)
-    // can pattern-match the dropshadow surface the same way CircleRuntime does today,
-    // without coupling to the concrete Apos.Shapes RoundedRectangle type.
+    // IDropshadowRenderable and IDashedStrokeRenderable are satisfied entirely by the
+    // property bag inherited from RenderableShapeBase — declared here so the future
+    // RectangleRuntime (#2797 / #2796 follow-up) can pattern-match those surfaces the same
+    // way CircleRuntime does today, without coupling to the concrete Apos.Shapes
+    // RoundedRectangle type.
 
     /// <summary>
     /// Rounded-corner radius in pixels. Apos.Shapes' <c>RoundedRectangle</c> honors this on
