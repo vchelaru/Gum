@@ -95,6 +95,22 @@ public class CircleRuntimeTests : BaseTestClass
         sut.GradientOuterRadiusUnits.ShouldBe(DimensionUnitType.RelativeToParent);
     }
 
+    // Issue #2798: IsAntialiased graceful-degradation contract. With no MonoGameGumShapes
+    // package, neither slot implements IAntialiasedRenderable. The setter must round-trip on
+    // the runtime so user code is forward-compatible with a later install of the package, but
+    // produce no visual effect today (LineCircle has no AA concept).
+    [Fact]
+    public void IsAntialiased_RoundTripsBackingField_WhenNoAntialiasedCapableSlot()
+    {
+        CircleRuntime sut = new();
+
+        sut.IsAntialiased.ShouldBeTrue("default matches Apos.Shapes' own default");
+
+        sut.IsAntialiased = false;
+
+        sut.IsAntialiased.ShouldBeFalse();
+    }
+
     [Fact]
     public void LegacyColor_RoutesToStrokeRenderable()
     {

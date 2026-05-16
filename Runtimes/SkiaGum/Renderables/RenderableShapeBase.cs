@@ -438,6 +438,27 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         }
     }
 
+    bool _isAntialiased = true;
+    /// <summary>
+    /// When <c>true</c> (the default) edges are rendered with Skia's <c>SKPaint.IsAntialias</c>
+    /// on, producing smooth edges. When <c>false</c> the paint is created without anti-aliasing
+    /// for crisp / pixel-art rasterization (issue #2798). Surfaced on
+    /// <see cref="Gum.GueDeriving.SkiaShapeRuntime"/> so that <c>CircleRuntime</c> etc. expose
+    /// the same <c>IsAntialiased</c> property as their Apos.Shapes counterparts on MonoGame.
+    /// </summary>
+    public bool IsAntialiased
+    {
+        get => _isAntialiased;
+        set
+        {
+            if (_isAntialiased != value)
+            {
+                _isAntialiased = value;
+                ClearCachedPaint();
+            }
+        }
+    }
+
     float _strokeWidth = 2;
     public float StrokeWidth
     {
@@ -745,7 +766,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
             Color = effectiveColor,
             Style = IsFilled ? SKPaintStyle.Fill : SKPaintStyle.Stroke,
             StrokeWidth = StrokeWidth,
-            IsAntialias = true
+            IsAntialias = _isAntialiased
         };
 
         if (HasDropshadow)

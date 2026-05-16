@@ -100,6 +100,26 @@ public class CircleRuntimeTests
         stroke.GradientInnerRadius.ShouldBe(4);
     }
 
+    // Issue #2798: IsAntialiased pushes through to both slots so a single setter flips AA on
+    // fill and stroke together. Default true matches Apos.Shapes' own default. The push
+    // happens via PreRender (matching how StrokeWidth/StrokeDashLength flow); fire the hook
+    // explicitly here to mirror the renderer's PreRender walk.
+    [Fact]
+    public void IsAntialiased_PushedViaPreRender_ToBothFillAndStrokeSlots()
+    {
+        CircleRuntime sut = new();
+
+        sut.IsAntialiased = false;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        IRenderable asFillRenderable = fill;
+        asFillRenderable.PreRender();
+
+        fill.IsAntialiased.ShouldBeFalse();
+        stroke.IsAntialiased.ShouldBeFalse();
+    }
+
     [Fact]
     public void LoadOrderRecovery_AfterRegistryResetAndRecall_StillBindsAposCircles()
     {

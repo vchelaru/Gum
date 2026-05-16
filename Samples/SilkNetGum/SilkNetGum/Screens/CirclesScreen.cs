@@ -37,6 +37,7 @@ internal class CirclesScreen : GraphicalUiElement
         root.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
         root.Children.Add(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
         root.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
+        root.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
         root.Children.Add(BuildSection("Known limitation: FillColor + StrokeColor on the same instance — only the most-recently-set one renders today (see #2790).", BuildBothColorsRow()));
     }
 
@@ -213,6 +214,32 @@ internal class CirclesScreen : GraphicalUiElement
         fillWins.StrokeWidth = 4;
         fillWins.FillColor = SKColors.Gold;
         row.Children.Add(fillWins);
+
+        return row;
+    }
+
+    // Issue #2798 visual acceptance: two pairs (filled disk + 1 px outline ring), once with
+    // IsAntialiased = true (the default — soft edges) and once false (crisp pixels). On Skia
+    // this flips SKPaint.IsAntialias on the contained renderable.
+    static ContainerRuntime BuildAntialiasingRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        foreach (bool aa in new[] { true, false })
+        {
+            CircleRuntime filled = new();
+            filled.Radius = 28;
+            filled.FillColor = SKColors.Goldenrod;
+            filled.IsAntialiased = aa;
+            row.Children.Add(filled);
+
+            CircleRuntime ring = new();
+            ring.Radius = 28;
+            ring.StrokeColor = SKColors.White;
+            ring.StrokeWidth = 1;
+            ring.IsAntialiased = aa;
+            row.Children.Add(ring);
+        }
 
         return row;
     }

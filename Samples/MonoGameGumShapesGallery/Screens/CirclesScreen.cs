@@ -40,6 +40,7 @@ internal class CirclesScreen : FrameworkElement
         root.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
         root.AddChild(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
         root.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
+        root.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
@@ -190,6 +191,32 @@ internal class CirclesScreen : FrameworkElement
         radial.GradientInnerRadius = 0;
         radial.GradientOuterRadius = 28;
         row.AddChild(radial);
+
+        return row;
+    }
+
+    // Issue #2798 visual acceptance: two pairs (filled disk + 1 px outline ring), once with
+    // IsAntialiased = true (the default — soft edges) and once false (crisp pixels).
+    // The 1 px stroke makes the AA bloom obvious.
+    static ContainerRuntime BuildAntialiasingRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        foreach (bool aa in new[] { true, false })
+        {
+            CircleRuntime filled = new();
+            filled.Radius = 28;
+            filled.FillColor = Color.Goldenrod;
+            filled.IsAntialiased = aa;
+            row.AddChild(filled);
+
+            CircleRuntime ring = new();
+            ring.Radius = 28;
+            ring.StrokeColor = Color.White;
+            ring.StrokeWidth = 1;
+            ring.IsAntialiased = aa;
+            row.AddChild(ring);
+        }
 
         return row;
     }
