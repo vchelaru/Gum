@@ -89,6 +89,34 @@ The convention for these:
 
 The control-page note exists so that a reader troubleshooting "why doesn't my int binding take" while reading the TextBox page finds what they need without bouncing around. The feature-page section exists so that a reader learning the binding system isn't surprised later. Both audiences are real; the split avoids both blind spots without duplicating content.
 
+## Date-Specific Content Goes in Hint Blocks
+
+Anything that is only true relative to a release date — "as of <month> <year>", "before <date>", "in <version> X changed" — must live in a `{% hint %}` block, not in the body paragraphs of a section. Phrase the surrounding prose in terms of current behavior so it stays correct after the dated note is removed.
+
+Why: dated notes eventually become noise once enough time has passed (everyone reading the docs is on the new behavior). Keeping them in hint blocks gives a single, visually obvious anchor to delete later instead of forcing the author to re-read every paragraph hunting for embedded dates.
+
+Pattern:
+
+```
+The Font Generator project property controls ... There are two options:
+
+* **KernSmith** — ... This is the default for new projects.
+* **BMFont** — ... a separate external tool.
+
+{% hint style="info" %}
+**As of May 2026:** New projects default to **KernSmith**. Before this, the default was **BMFont**. Existing projects keep their current setting.
+{% endhint %}
+```
+
+Not this — date leaks into body bullets, so removing the dated context later means rewriting prose:
+
+```
+* **KernSmith** — ... Default for new projects starting in May 2026.
+* **BMFont** — ... Was the default before May 2026.
+```
+
+This applies to: "as of <date>", "starting in <date>", "before <date>", "in version X", "the May 2026 release", and any "what changed in <release>" section heading. When in doubt: if deleting the sentence later would leave the surrounding paragraph still accurate, it's safe in the body; if deleting it would leave a contradiction or dangling reference, lift it into a hint.
+
 ## Tone and Style
 
 - Second person ("you"), present tense, instructional tone.

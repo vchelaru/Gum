@@ -76,14 +76,14 @@ Gum does not check whether the font range you have added is supported in each of
 
 The Font Generator project property controls which tool Gum uses to bake `.fnt` files and PNG atlases into the project's FontCache. There are two options:
 
-* **KernSmith** — Gum's own font generator. This is the default for new projects created with Gum starting in May 2026.
-* **BMFont** — [Bitmap Font Generator](https://www.angelcode.com/products/bmfont/), an external tool. This was the default for projects created before May 2026.
-
-### What Changed in May 2026
-
-New projects default to **KernSmith**. Existing projects keep their current setting — a project saved before May 2026 that did not explicitly choose a generator continues to load as **BMFont**. There is no auto-migration; opening an older project in a newer version of the Gum tool does not switch its generator.
+* **KernSmith** — a standalone font generator that Gum integrates with. This is the default for new projects.
+* **BMFont** — [Bitmap Font Generator](https://www.angelcode.com/products/bmfont/), a separate external tool.
 
 You can change the setting at any time in **Project Properties**. The next FontCache rebuild uses the chosen generator.
+
+{% hint style="info" %}
+**As of May 2026:** New projects default to **KernSmith**. Before this, the default was **BMFont**. Existing projects keep their current setting — opening an older project in a newer version of the Gum tool does not switch its generator, and there is no auto-migration.
+{% endhint %}
 
 {% hint style="warning" %}
 Switching the Font Generator wipes and re-creates every font in the FontCache. The two generators produce slightly different output for the same `.ttf` and Font Ranges — glyph shapes, antialiasing, and reported sizes can shift a small amount. After switching, review your text in the editor to confirm everything still looks the way you expect. Because the rebuild is automatic, switching back is just as easy if you want to compare.
