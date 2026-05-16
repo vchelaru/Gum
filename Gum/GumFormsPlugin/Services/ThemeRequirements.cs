@@ -3,16 +3,23 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Gum.DataTypes;
+using Gum.Logic;
 
 namespace GumFormsPlugin.Services;
 
 /// <summary>
-/// Per-theme prerequisite metadata read from an optional <c>theme.txt</c> sitting in
-/// the theme's content folder. Each theme can declare project-level settings it
-/// needs (FontGenerator, extra Standard element references) and runtime NuGet
-/// packages the user must add to their game project. A theme without a
-/// <c>theme.txt</c> declares no prerequisites — that's the case for Standard.
+/// Per-theme prerequisite metadata read from an optional <c>theme.txt</c> sitting
+/// in the theme's content folder. Each theme can declare project-level edits
+/// it needs before the components/screens can be imported cleanly. A theme
+/// without a <c>theme.txt</c> declares no prerequisites — Standard is one
+/// such theme.
 /// </summary>
+/// <remarks>
+/// The tool only describes and applies changes to the Gum project itself.
+/// Runtime concerns (NuGet packages on the user's game project) are out of
+/// scope: each runtime has different package names, and we'd rather say
+/// nothing than say something wrong.
+/// </remarks>
 public sealed class ThemeRequirements
 {
     public const string ThemeRequirementsFileName = "theme.txt";
@@ -23,17 +30,12 @@ public sealed class ThemeRequirements
     public FontGeneratorType? FontGenerator { get; init; }
 
     /// <summary>
-    /// Standard element references that must be present in the project's gumx
-    /// (e.g. <c>RoundedRectangle</c>, <c>ColoredCircle</c>).
+    /// True when the theme uses any Skia-backed Standard (e.g. RoundedRectangle,
+    /// ColoredCircle). When set, the apply step adds the full Skia shape bundle
+    /// via <see cref="ISkiaShapeStandardsLogic.AddAllStandards"/> — Arc, Canvas,
+    /// ColoredCircle, Line, LottieAnimation, RoundedRectangle, Svg.
     /// </summary>
-    public IReadOnlyList<string> RequiredStandards { get; init; } = Array.Empty<string>();
-
-    /// <summary>
-    /// NuGet package families the user must add to their game project for the
-    /// theme to render at runtime. Informational only — the tool cannot edit
-    /// the user's .csproj.
-    /// </summary>
-    public IReadOnlyList<string> RuntimePackages { get; init; } = Array.Empty<string>();
+    public bool RequiresSkiaShapes { get; init; }
 
     public static ThemeRequirements LoadFromThemeDirectory(string themeDirectory)
     {
@@ -43,15 +45,14 @@ public sealed class ThemeRequirements
     }
 
     /// <summary>
-    /// Parses the simple <c>key: value</c> format. Values that name a list are
-    /// comma-separated. Lines starting with <c>#</c> are comments. Unknown
-    /// keys are ignored (forward-compatibility with future themes).
+    /// Parses the simple <c>key: value</c> format. Lines starting with <c>#</c>
+    /// are comments. Unknown keys are ignored (forward-compatibility with
+    /// future themes).
     /// </summary>
     public static ThemeRequirements Parse(string text)
     {
         FontGeneratorType? fontGen = null;
-        IReadOnlyList<string> standards = Array.Empty<string>();
-        IReadOnlyList<string> packages = Array.Empty<string>();
+        bool requiresSkiaShapes = false;
 
         foreach (var rawLine in text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
         {
@@ -70,11 +71,9 @@ public sealed class ThemeRequirements
                     if (Enum.TryParse<FontGeneratorType>(value, ignoreCase: true, out var fg))
                         fontGen = fg;
                     break;
-                case "requiredstandards":
-                    standards = SplitList(value);
-                    break;
-                case "runtimepackages":
-                    packages = SplitList(value);
+                case "requiresskiashapes":
+                    if (bool.TryParse(value, out var b))
+                        requiresSkiaShapes = b;
                     break;
             }
         }
@@ -82,53 +81,45 @@ public sealed class ThemeRequirements
         return new ThemeRequirements
         {
             FontGenerator = fontGen,
-            RequiredStandards = standards,
-            RuntimePackages = packages,
+            RequiresSkiaShapes = requiresSkiaShapes,
         };
     }
 
-    private static IReadOnlyList<string> SplitList(string value) =>
-        value.Split(',')
-             .Select(s => s.Trim())
-             .Where(s => s.Length > 0)
-             .ToList();
-
     /// <summary>
     /// Compares the requirements against <paramref name="project"/> and returns
-    /// the delta the user would need to accept before importing the theme.
+    /// the changes the import would need to apply. <c>RoundedRectangle</c>'s
+    /// presence is the proxy for "this project already has Skia shapes" — the
+    /// apply step is idempotent so a more thorough check isn't necessary.
     /// </summary>
     public ThemeRequirementsDiff Diff(GumProjectSave project)
     {
-        var standardsToAdd = RequiredStandards
-            .Where(name => !project.StandardElementReferences.Any(r =>
-                string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase)))
-            .ToList();
-
         FontGeneratorType? fontGenChange =
             FontGenerator is { } targetGen && project.FontGenerator != targetGen
                 ? targetGen
                 : null;
 
-        return new ThemeRequirementsDiff(fontGenChange, project.FontGenerator, standardsToAdd, RuntimePackages);
+        bool addSkiaShapes = RequiresSkiaShapes &&
+            !project.StandardElementReferences.Any(r =>
+                string.Equals(r.Name, "RoundedRectangle", StringComparison.OrdinalIgnoreCase));
+
+        return new ThemeRequirementsDiff(fontGenChange, project.FontGenerator, addSkiaShapes);
     }
 }
 
 /// <summary>
-/// The set of project-level edits needed before a theme can be imported,
-/// plus the informational runtime-package list to show the user afterwards.
+/// The set of project-level edits an import needs to apply before copying
+/// the theme's content files.
 /// </summary>
 public sealed class ThemeRequirementsDiff
 {
     public ThemeRequirementsDiff(
         FontGeneratorType? fontGeneratorChange,
         FontGeneratorType currentFontGenerator,
-        IReadOnlyList<string> standardsToAdd,
-        IReadOnlyList<string> runtimePackages)
+        bool addSkiaShapes)
     {
         FontGeneratorChange = fontGeneratorChange;
         CurrentFontGenerator = currentFontGenerator;
-        StandardsToAdd = standardsToAdd;
-        RuntimePackages = runtimePackages;
+        AddSkiaShapes = addSkiaShapes;
     }
 
     /// <summary>The new font generator to apply, or null if no change is needed.</summary>
@@ -137,44 +128,37 @@ public sealed class ThemeRequirementsDiff
     /// <summary>The font generator the project currently has, for use in dialog text.</summary>
     public FontGeneratorType CurrentFontGenerator { get; }
 
-    /// <summary>Names of Standard element references missing from the project.</summary>
-    public IReadOnlyList<string> StandardsToAdd { get; }
+    /// <summary>True when the full Skia shape Standard bundle must be added.</summary>
+    public bool AddSkiaShapes { get; }
 
-    /// <summary>Runtime NuGet package families the user should add to their game project.</summary>
-    public IReadOnlyList<string> RuntimePackages { get; }
+    public bool HasChanges => FontGeneratorChange.HasValue || AddSkiaShapes;
 
-    /// <summary>True when applying this diff will write something to the project's gumx.</summary>
-    public bool HasGumxChanges => FontGeneratorChange.HasValue || StandardsToAdd.Count > 0;
-
-    /// <summary>One human-readable line per gumx-level change.</summary>
-    public IReadOnlyList<string> DescribeGumxChanges()
+    /// <summary>One human-readable bullet per change. Empty when <see cref="HasChanges"/> is false.</summary>
+    public IReadOnlyList<string> DescribeChanges()
     {
         var lines = new List<string>();
         if (FontGeneratorChange is { } target)
         {
             lines.Add($"Switch font generator from {CurrentFontGenerator} to {target} " +
-                      "(this re-rasterizes every font in your project).");
+                      "(re-rasterizes every font in your project).");
         }
-        if (StandardsToAdd.Count > 0)
+        if (AddSkiaShapes)
         {
-            lines.Add("Add Standard element references: " + string.Join(", ", StandardsToAdd));
+            lines.Add("Add Skia shape Standards (Arc, Canvas, ColoredCircle, Line, " +
+                      "LottieAnimation, RoundedRectangle, Svg).");
         }
         return lines;
     }
 
-    public void Apply(GumProjectSave project)
+    public void Apply(GumProjectSave project, ISkiaShapeStandardsLogic skiaShapeStandards)
     {
         if (FontGeneratorChange is { } target)
         {
             project.FontGenerator = target;
         }
-        foreach (var name in StandardsToAdd)
+        if (AddSkiaShapes)
         {
-            project.StandardElementReferences.Add(new ElementReference
-            {
-                Name = name,
-                ElementType = ElementType.Standard,
-            });
+            skiaShapeStandards.AddAllStandards();
         }
     }
 }

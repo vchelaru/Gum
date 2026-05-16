@@ -10,6 +10,7 @@ using Gum.Managers;
 using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Logic;
 using Gum.Logic.FileWatch;
 
 namespace GumFormsPlugin.ViewModels;
@@ -24,6 +25,7 @@ public class AddFormsViewModel : DialogViewModel
     private readonly IImportLogic _importLogic;
     private readonly IProjectState _projectState;
     private readonly IFileWatchManager _fileWatchManager;
+    private readonly ISkiaShapeStandardsLogic _skiaShapeStandards;
 
     public bool IsIncludeDemoScreenGum
     {
@@ -40,10 +42,32 @@ public class AddFormsViewModel : DialogViewModel
     public string? SelectedTheme
     {
         get => Get<string?>();
-        set => Set(value);
+        set
+        {
+            if (Set(value))
+            {
+                RefreshRequirementsDescription();
+                NotifyPropertyChanged(nameof(HasRequirements));
+            }
+        }
     }
 
     public bool HasMultipleThemes => AvailableThemes.Count > 1;
+
+    /// <summary>
+    /// Bullet-formatted description of the project-level changes the import
+    /// will apply for the currently-selected theme. Empty when the theme has
+    /// no prerequisites that affect this project. Bound inline in the dialog
+    /// so the user sees what's going to happen before clicking OK — no
+    /// confirmation popup.
+    /// </summary>
+    public string RequirementsDescription
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
+    public bool HasRequirements => !string.IsNullOrEmpty(RequirementsDescription);
 
     #endregion
 
@@ -52,7 +76,8 @@ public class AddFormsViewModel : DialogViewModel
         IFileCommands fileCommands,
         IImportLogic importLogic,
         IProjectState projectState,
-        IFileWatchManager fileWatchManager)
+        IFileWatchManager fileWatchManager,
+        ISkiaShapeStandardsLogic skiaShapeStandards)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;
@@ -60,27 +85,41 @@ public class AddFormsViewModel : DialogViewModel
         _importLogic = importLogic;
         _projectState = projectState;
         _fileWatchManager = fileWatchManager;
+        _skiaShapeStandards = skiaShapeStandards;
 
         AvailableThemes = _formsFileService.GetAvailableThemes();
         SelectedTheme = AvailableThemes.FirstOrDefault(t =>
                             string.Equals(t, FormsFileService.DefaultThemeName, System.StringComparison.OrdinalIgnoreCase))
                         ?? AvailableThemes.FirstOrDefault();
+
+        RefreshRequirementsDescription();
+    }
+
+    private void RefreshRequirementsDescription()
+    {
+        var theme = SelectedTheme;
+        if (string.IsNullOrEmpty(theme))
+        {
+            RequirementsDescription = string.Empty;
+            return;
+        }
+
+        var requirements = ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(theme));
+        var diff = requirements.Diff(_projectState.GumProjectSave);
+        RequirementsDescription = diff.HasChanges
+            ? string.Join(Environment.NewLine, diff.DescribeChanges().Select(c => "• " + c))
+            : string.Empty;
     }
 
     public override void OnAffirmative()
     {
         var theme = SelectedTheme ?? FormsFileService.DefaultThemeName;
 
-        // Check the theme's prerequisites against the user's project before
-        // touching any files. If the user declines the required project-level
-        // edits we abort without writing anything.
+        // Prerequisites have already been surfaced inline in the dialog
+        // (RequirementsDescription). The user clicking OK is their consent
+        // to apply them — no separate confirmation popup.
         var requirements = ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(theme));
         var diff = requirements.Diff(_projectState.GumProjectSave);
-        if (diff.HasGumxChanges && !ConfirmPrerequisites(theme, diff))
-        {
-            base.OnAffirmative();
-            return;
-        }
 
         var sourceDestinations = _formsFileService.GetSourceDestinations(theme, IsIncludeDemoScreenGum);
         bool canSaveFiles = GetIfShouldSave(sourceDestinations);
@@ -90,7 +129,7 @@ public class AddFormsViewModel : DialogViewModel
             // Apply the prerequisite edits to the in-memory project before saving,
             // so the gumx written below already contains the new font generator
             // and standard references.
-            diff.Apply(_projectState.GumProjectSave);
+            diff.Apply(_projectState.GumProjectSave, _skiaShapeStandards);
 
             SaveFilesToDestination(sourceDestinations);
 
@@ -103,11 +142,6 @@ public class AddFormsViewModel : DialogViewModel
             if (wasSaved)
             {
                 _fileCommands.LoadProject(fileName);
-
-                if (diff.HasGumxChanges && diff.RuntimePackages.Count > 0)
-                {
-                    _dialogService.ShowMessage(BuildRuntimePackagesMessage(theme, diff.RuntimePackages));
-                }
             }
             else
             {
@@ -115,46 +149,6 @@ public class AddFormsViewModel : DialogViewModel
             }
         }
         base.OnAffirmative();
-    }
-
-    private bool ConfirmPrerequisites(string theme, ThemeRequirementsDiff diff)
-    {
-        var lines = new List<string>
-        {
-            $"The {theme} theme requires the following project-level changes:",
-            string.Empty,
-        };
-        lines.AddRange(diff.DescribeGumxChanges().Select(c => "  • " + c));
-
-        if (diff.RuntimePackages.Count > 0)
-        {
-            lines.Add(string.Empty);
-            lines.Add("Your game project will also need these runtime packages added manually:");
-            foreach (var pkg in diff.RuntimePackages)
-            {
-                lines.Add("  • " + pkg);
-            }
-        }
-
-        lines.Add(string.Empty);
-        lines.Add("Apply these project changes and proceed with the import?");
-
-        return _dialogService.ShowYesNoMessage(string.Join("\n", lines), $"Apply {theme} prerequisites?");
-    }
-
-    private static string BuildRuntimePackagesMessage(string theme, IReadOnlyList<string> packages)
-    {
-        var lines = new List<string>
-        {
-            $"{theme} imported successfully.",
-            string.Empty,
-            "Don't forget to add these runtime packages to your game project:",
-        };
-        foreach (var pkg in packages)
-        {
-            lines.Add("  • " + pkg);
-        }
-        return string.Join("\n", lines);
     }
 
 

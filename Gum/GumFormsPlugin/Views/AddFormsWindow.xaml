@@ -8,6 +8,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     dialogs:Dialog.DialogTitle="Add Forms"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+    </UserControl.Resources>
     <StackPanel Orientation="Vertical">
         <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
             <Label
@@ -21,5 +24,22 @@
                 SelectedItem="{Binding SelectedTheme}" />
         </StackPanel>
         <CheckBox IsChecked="{Binding IsIncludeDemoScreenGum}">Include DemoScreenGum</CheckBox>
+        <Border
+            Margin="0,12,0,0"
+            Padding="8"
+            Background="#FFFBEA"
+            BorderBrush="#E0C46C"
+            BorderThickness="1"
+            Visibility="{Binding HasRequirements, Converter={StaticResource BooleanToVisibility}}">
+            <StackPanel>
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Text="Clicking OK will also apply these project changes:" />
+                <TextBlock
+                    Margin="0,4,0,0"
+                    Text="{Binding RequirementsDescription}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
     </StackPanel>
 </UserControl>

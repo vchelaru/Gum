@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
+using Gum.Logic;
 using Gum.Logic.FileWatch;
 
 namespace GumFormsPlugin;
@@ -119,12 +120,13 @@ internal class MainGumFormsPlugin : PluginBase
         #endregion
 
         var viewModel = new AddFormsViewModel(
-            _formsFileService, 
+            _formsFileService,
             _dialogService,
-            _fileCommands, 
-            _importLogic, 
+            _fileCommands,
+            _importLogic,
             projectState,
-            _fileWatchManager);
+            _fileWatchManager,
+            Locator.GetRequiredService<ISkiaShapeStandardsLogic>());
         _dialogService.Show(viewModel);
     }
 

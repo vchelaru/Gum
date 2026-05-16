@@ -1,6 +1,7 @@
-using System.Linq;
 using Gum.DataTypes;
+using Gum.Logic;
 using GumFormsPlugin.Services;
+using Moq;
 using Shouldly;
 
 namespace GumToolUnitTests.FormsPlugin;
@@ -8,51 +9,58 @@ namespace GumToolUnitTests.FormsPlugin;
 public class ThemeRequirementsTests
 {
     [Fact]
-    public void Apply_AddsMissingStandardsAndSwitchesFontGenerator()
+    public void Apply_AddsSkiaShapesAndSwitchesFontGenerator()
     {
         var project = new GumProjectSave { FontGenerator = FontGeneratorType.BmFont };
-        project.StandardElementReferences.Add(new ElementReference { Name = "Rectangle", ElementType = ElementType.Standard });
+        var skiaShapes = new Mock<ISkiaShapeStandardsLogic>();
 
         var requirements = ThemeRequirements.Parse(
-            "FontGenerator: KernSmith\n" +
-            "RequiredStandards: RoundedRectangle, ColoredCircle\n");
+            "FontGenerator: KernSmith\nRequiresSkiaShapes: true\n");
 
         var diff = requirements.Diff(project);
-        diff.HasGumxChanges.ShouldBeTrue();
+        diff.HasChanges.ShouldBeTrue();
         diff.FontGeneratorChange.ShouldBe(FontGeneratorType.KernSmith);
-        diff.StandardsToAdd.ShouldBe(new[] { "RoundedRectangle", "ColoredCircle" });
+        diff.AddSkiaShapes.ShouldBeTrue();
 
-        diff.Apply(project);
+        diff.Apply(project, skiaShapes.Object);
         project.FontGenerator.ShouldBe(FontGeneratorType.KernSmith);
-        project.StandardElementReferences.Select(r => r.Name)
-            .ShouldBe(new[] { "Rectangle", "RoundedRectangle", "ColoredCircle" });
+        skiaShapes.Verify(s => s.AddAllStandards(), Times.Once);
     }
 
     [Fact]
-    public void Diff_IgnoresStandardsAlreadyPresentCaseInsensitively()
+    public void Diff_SkipsSkiaShapeAdd_WhenRoundedRectangleAlreadyPresent()
     {
         var project = new GumProjectSave();
-        project.StandardElementReferences.Add(new ElementReference { Name = "roundedrectangle", ElementType = ElementType.Standard });
+        project.StandardElementReferences.Add(new ElementReference
+        {
+            Name = "RoundedRectangle",
+            ElementType = ElementType.Standard,
+        });
 
-        var requirements = ThemeRequirements.Parse("RequiredStandards: RoundedRectangle, ColoredCircle");
+        var requirements = ThemeRequirements.Parse("RequiresSkiaShapes: true");
 
         var diff = requirements.Diff(project);
-        diff.StandardsToAdd.ShouldBe(new[] { "ColoredCircle" });
+        diff.AddSkiaShapes.ShouldBeFalse();
+        diff.HasChanges.ShouldBeFalse();
     }
 
     [Fact]
     public void Diff_NoChanges_WhenProjectAlreadySatisfiesRequirements()
     {
         var project = new GumProjectSave { FontGenerator = FontGeneratorType.KernSmith };
-        project.StandardElementReferences.Add(new ElementReference { Name = "RoundedRectangle", ElementType = ElementType.Standard });
+        project.StandardElementReferences.Add(new ElementReference
+        {
+            Name = "RoundedRectangle",
+            ElementType = ElementType.Standard,
+        });
 
         var requirements = ThemeRequirements.Parse(
-            "FontGenerator: KernSmith\nRequiredStandards: RoundedRectangle");
+            "FontGenerator: KernSmith\nRequiresSkiaShapes: true");
 
         var diff = requirements.Diff(project);
-        diff.HasGumxChanges.ShouldBeFalse();
+        diff.HasChanges.ShouldBeFalse();
         diff.FontGeneratorChange.ShouldBeNull();
-        diff.StandardsToAdd.ShouldBeEmpty();
+        diff.AddSkiaShapes.ShouldBeFalse();
     }
 
     [Fact]
@@ -63,11 +71,10 @@ public class ThemeRequirementsTests
             "\n" +
             "FontGenerator: KernSmith\n" +
             "FutureKey: somevalue\n" +
-            "RuntimePackages: A, B\n");
+            "RequiresSkiaShapes: true\n");
 
         requirements.FontGenerator.ShouldBe(FontGeneratorType.KernSmith);
-        requirements.RuntimePackages.ShouldBe(new[] { "A", "B" });
-        requirements.RequiredStandards.ShouldBeEmpty();
+        requirements.RequiresSkiaShapes.ShouldBeTrue();
     }
 
     [Fact]
@@ -76,7 +83,6 @@ public class ThemeRequirementsTests
         var requirements = ThemeRequirements.Parse(string.Empty);
 
         requirements.FontGenerator.ShouldBeNull();
-        requirements.RequiredStandards.ShouldBeEmpty();
-        requirements.RuntimePackages.ShouldBeEmpty();
+        requirements.RequiresSkiaShapes.ShouldBeFalse();
     }
 }

@@ -1,16 +1,15 @@
 # Prerequisites for the Bubblegum Forms theme.
 # Read by GumFormsPlugin.Services.ThemeRequirements at import time.
+# This file describes project-level edits only — runtime concerns
+# (NuGet packages on the user's game project) are not the tool's job.
 # Unknown keys are ignored (forward-compatible).
 
-# Dynamic font generation. Bubblegum's fonts are sized at runtime and rely
-# on KernSmith; BMFont can't produce equivalent output.
+# Bubblegum sizes fonts dynamically at runtime; BMFont can't produce
+# equivalent output. Switching re-rasterizes every font in the project.
 FontGenerator: KernSmith
 
-# Skia-backed Standard elements. Required for the rounded chrome on
-# Button/Window/etc. and the circular icons.
-RequiredStandards: RoundedRectangle, ColoredCircle
-
-# NuGet packages the user must add to their game project. The tool surfaces
-# this list at the end of the import as a reminder; it does not edit the
-# user's .csproj.
-RuntimePackages: KernSmith.MonoGameGum (or .KniGum/.FnaGum), Gum.Themes.Bubblegum.MonoGame (or matching runtime)
+# Bubblegum uses Skia-backed Standards (RoundedRectangle, ColoredCircle)
+# for its chrome. The apply step adds the full Skia shape bundle —
+# Arc, Canvas, ColoredCircle, Line, LottieAnimation, RoundedRectangle, Svg —
+# since they ship as a unit.
+RequiresSkiaShapes: true
