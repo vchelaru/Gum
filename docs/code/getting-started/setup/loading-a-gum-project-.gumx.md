@@ -32,6 +32,12 @@ Create a folder inside of your game's Content folder, such as `Content/GumProjec
 Create a folder inside of your game's resources folder, such as `resources/GumProject`, then save the file in the newly-created folder.
 {% endtab %}
 
+{% tab title="MonoGame/KNI Web" %}
+Web targets (KNI BlazorGL and other WebAssembly hosts) must serve the Gum project from `wwwroot`. Create a folder inside your web project's `wwwroot/Content` folder, such as `wwwroot/Content/GumProject`, then save the file in the newly-created folder.
+
+Files placed anywhere else are not published as static web assets and will fail to load at runtime with a 404.
+{% endtab %}
+
 {% tab title=".NET MAUI" %}
 Create a folder inside of your project's folder, such as `GumProject`, then save the file in the newly-created folder.
 {% endtab %}
@@ -77,6 +83,24 @@ If you are using the Contentless project ([https://github.com/Ellpeck/Contentles
     </None>
 </ItemGroup>
 ```
+{% endtab %}
+
+{% tab title="MonoGame/KNI Web" %}
+The `Microsoft.NET.Sdk.BlazorWebAssembly` SDK automatically publishes everything under `wwwroot` as static web assets, so a Gum project saved into `wwwroot/Content/GumProject` requires no additional `<ItemGroup>` entry to ship.
+
+If you keep your Gum project outside `wwwroot` and want to include it via a wildcard, you can copy the files into `wwwroot` at build time:
+
+```xml
+<ItemGroup>
+    <Content Include="..\Shared\GumProject\**\*.*"
+             Link="wwwroot\Content\GumProject\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
+```
+
+{% hint style="warning" %}
+The Gum project files must end up under `wwwroot` in the published output. Files placed anywhere else are not served by the WebAssembly host and `GumService.Default.Initialize` will fail to load the `.gumx`.
+{% endhint %}
 {% endtab %}
 
 {% tab title=".NET MAUI" %}
@@ -132,7 +156,7 @@ protected override void Initialize()
 }
 ```
 
-By default the Gum path is relative to your game's Content folder.
+By default the Gum path is relative to your game's Content folder. On KNI BlazorGL (and other WebAssembly hosts) this resolves under `wwwroot/Content`, so the same `"GumProject/GumProject.gumx"` value works on web as long as the project lives at `wwwroot/Content/GumProject/GumProject.gumx`.
 
 If your Gum project is not part of the the folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumx`:
 
