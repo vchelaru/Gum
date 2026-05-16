@@ -72,6 +72,36 @@ Notice that the CJK characters are not supported. By contrast the Batang font fa
 
 Gum does not check whether the font range you have added is supported in each of the font faces used in your application. If you are extending your character set, you should verify that the font is supported in Bitmap Font Generator.
 
+## Font Generator
+
+The Font Generator project property controls which tool Gum uses to bake `.fnt` files and PNG atlases into the project's FontCache. There are two options:
+
+* **KernSmith** — a standalone font generator that Gum integrates with. This is the default for new projects.
+* **BMFont** — [Bitmap Font Generator](https://www.angelcode.com/products/bmfont/), a separate external tool.
+
+You can change the setting at any time in **Project Properties**. The next FontCache rebuild uses the chosen generator.
+
+{% hint style="info" %}
+**As of May 2026:** New projects default to **KernSmith**. Before this, the default was **BMFont**. Existing projects keep their current setting — opening an older project in a newer version of the Gum tool does not switch its generator, and there is no auto-migration.
+{% endhint %}
+
+{% hint style="warning" %}
+Switching the Font Generator wipes and re-creates every font in the FontCache. The two generators produce slightly different output for the same `.ttf` and Font Ranges — glyph shapes, antialiasing, and reported sizes can shift a small amount. After switching, review your text in the editor to confirm everything still looks the way you expect. Because the rebuild is automatic, switching back is just as easy if you want to compare.
+{% endhint %}
+
+### Why Pick KernSmith
+
+* **Faster font generation in the tool**, especially when editing Font Ranges or adding new fonts. KernSmith runs in-process; BMFont shells out to the external Bitmap Font Generator executable for every rebuild.
+* **Consistency between authoring and runtime.** Runtimes that perform dynamic font generation (for example web targets, where shipping a `.ttf` is smaller than shipping pre-baked atlases for large character sets) use KernSmith. Authoring with KernSmith means the glyphs you see in the editor match what the player sees at runtime. See [Fonts on Web](../code/files-and-fonts/fonts-web.md) for more on the web tradeoff, especially for CJK projects.
+* **Future feature support.** Upcoming font features such as colored outlines and gradients are planned to land on KernSmith first; BMFont's external pipeline will not receive them. These features are not yet available.
+
+### Why Someone Might Stick with BMFont
+
+* They have an existing project with an established FontCache, fine-tuned in BMFont, and don't want to rebuild it.
+* They have a specific BMFont tooling or workflow they rely on.
+
+For background on the runtime side of font generation, see [Fonts](../code/files-and-fonts/fonts.md).
+
 ## Font Spacing Horizontal and Font Spacing Vertical
 
 The Font Spacing Horizontal and Font Spacing Vertical values control the amount of space (padding) added between each letter in the generated .fnt file. These values do not affect the size of the letters in the Editor tab or at runtime, but the additional spacing can be used to separate the letters. This is important if your font rendering may end up implementing any kind of blurring to improve font appearance. This type of blurring may occur if:
