@@ -27,23 +27,44 @@ internal class CirclesScreen : FrameworkElement
     {
         Dock(Gum.Wireframe.Dock.Fill);
 
+        // Two-column root so the screen grows wide rather than tall as rows accumulate. No
+        // ScrollViewer parity in SkiaGum yet, so this is the cheapest layout that works on
+        // both backends (mirrored in SilkNetGum/Screens/CirclesScreen).
         ContainerRuntime root = new();
-        root.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        root.StackSpacing = 14;
+        root.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        root.StackSpacing = 24;
         root.X = 10;
         root.Y = 10;
         AddChild(root);
 
-        root.AddChild(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
-        root.AddChild(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
-        root.AddChild(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
-        root.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
-        root.AddChild(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
-        root.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
-        root.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
-        root.AddChild(BuildSection("Dropshadow (off / soft / hard offset / colored) — fill-only push avoids doubling (#2797)", BuildDropshadowRow()));
-        root.AddChild(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — stroke-only push (#2796)", BuildDashedStrokeRow()));
-        root.AddChild(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract; mirrors SilkNetGum)", BuildInscribedRow()));
+        ContainerRuntime left = BuildColumn();
+        ContainerRuntime right = BuildColumn();
+        root.AddChild(left);
+        root.AddChild(right);
+
+        left.AddChild(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
+        left.AddChild(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
+        left.AddChild(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
+        left.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
+        left.AddChild(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+
+        right.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
+        right.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
+        right.AddChild(BuildSection("Dropshadow (off / soft / hard offset / colored) — fill-only push avoids doubling (#2797)", BuildDropshadowRow()));
+        right.AddChild(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — stroke-only push (#2796)", BuildDashedStrokeRow()));
+        right.AddChild(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract; mirrors SilkNetGum)", BuildInscribedRow()));
+    }
+
+    static ContainerRuntime BuildColumn()
+    {
+        ContainerRuntime column = new();
+        column.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        column.StackSpacing = 14;
+        column.WidthUnits = DimensionUnitType.RelativeToChildren;
+        column.HeightUnits = DimensionUnitType.RelativeToChildren;
+        column.Width = 0;
+        column.Height = 0;
+        return column;
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)

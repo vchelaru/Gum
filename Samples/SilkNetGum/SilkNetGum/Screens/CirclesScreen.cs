@@ -24,24 +24,45 @@ internal class CirclesScreen : GraphicalUiElement
 {
     public CirclesScreen() : base(new InvisibleRenderable())
     {
+        // Two-column root so the screen grows wide rather than tall as rows accumulate. No
+        // ScrollViewer in SkiaGum yet, so this is the cheapest layout that works on both
+        // backends (mirrored in MonoGameGumShapesGallery/Screens/CirclesScreen).
         ContainerRuntime root = new();
-        root.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        root.StackSpacing = 14;
+        root.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        root.StackSpacing = 24;
         root.X = 10;
         root.Y = 10;
         this.Children.Add(root);
 
-        root.Children.Add(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
-        root.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
-        root.Children.Add(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
-        root.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
-        root.Children.Add(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
-        root.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
-        root.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
-        root.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — Skia draws the shadow on the single contained renderable (#2797)", BuildDropshadowRow()));
-        root.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — Skia routes through SkiaShapeRuntime.StrokeDashLength (#2796)", BuildDashedStrokeRow()));
-        root.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2790)", BuildBothColorsRow()));
-        root.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract)", BuildInscribedRow()));
+        ContainerRuntime left = BuildColumn();
+        ContainerRuntime right = BuildColumn();
+        root.Children.Add(left);
+        root.Children.Add(right);
+
+        left.Children.Add(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
+        left.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
+        left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
+        left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
+        left.Children.Add(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+        left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
+
+        right.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
+        right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — Skia draws the shadow on the single contained renderable (#2797)", BuildDropshadowRow()));
+        right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — Skia routes through SkiaShapeRuntime.StrokeDashLength (#2796)", BuildDashedStrokeRow()));
+        right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2790)", BuildBothColorsRow()));
+        right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract)", BuildInscribedRow()));
+    }
+
+    static ContainerRuntime BuildColumn()
+    {
+        ContainerRuntime column = new();
+        column.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        column.StackSpacing = 14;
+        column.WidthUnits = DimensionUnitType.RelativeToChildren;
+        column.HeightUnits = DimensionUnitType.RelativeToChildren;
+        column.Width = 0;
+        column.Height = 0;
+        return column;
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
