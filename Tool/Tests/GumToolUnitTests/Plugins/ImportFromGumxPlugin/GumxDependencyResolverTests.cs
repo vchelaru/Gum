@@ -142,6 +142,58 @@ public class GumxDependencyResolverTests
         result.DifferingStandards[0].Name.ShouldBe("Text");
     }
 
+    [Fact]
+    public void ComputeTransitive_DifferingStandard_ExposesComparisonResultWithCategoryDiff()
+    {
+        // Issue #2779: the resolver should preserve the per-standard StandardComparisonResult
+        // so the import dialog can show what differs, not just that something differs.
+        var sourceText = new StandardElementSave { Name = "Text" };
+        sourceText.Categories.Add(new StateSaveCategory { Name = "TextColor" });
+        sourceText.States.Add(new StateSave { Name = "Default" });
+
+        var destText = new StandardElementSave { Name = "Text" };
+        destText.States.Add(new StateSave { Name = "Default" });
+
+        var source = CreateProject(
+            Component("Button", instance: ("TextInstance", "Text")));
+        source.StandardElements.Add(sourceText);
+
+        var destination = new GumProjectSave();
+        destination.StandardElements.Add(destText);
+
+        var result = _resolver.ComputeTransitive(
+            new[] { source.Components[0] }, source, destination);
+
+        result.DifferingStandardDiffs.ShouldContainKey(sourceText);
+        var comparison = result.DifferingStandardDiffs[sourceText];
+        comparison.HasDifferences.ShouldBeTrue();
+        comparison.CategoryNamesDiffer.ShouldBeTrue();
+        comparison.CategoryNamesOnlyInSource.ShouldContain("TextColor");
+    }
+
+    [Fact]
+    public void ComputeTransitive_StandardMissingFromDestination_HasDiffEntryWithEmptyVariableList()
+    {
+        // Wholesale-added standards (not present in destination at all) should still be in the
+        // diff dictionary so the dialog can decide what to show — they just have no per-variable rows.
+        var sourceCustom = new StandardElementSave { Name = "Container" };
+        sourceCustom.States.Add(new StateSave { Name = "Default" });
+
+        var source = CreateProject(
+            Component("Holder", instance: ("Inner", "Container")));
+        source.StandardElements.Add(sourceCustom);
+
+        // Destination has no Container standard at all.
+        var destination = new GumProjectSave();
+
+        var result = _resolver.ComputeTransitive(
+            new[] { source.Components[0] }, source, destination);
+
+        result.DifferingStandardDiffs.ShouldContainKey(sourceCustom);
+        result.DifferingStandardDiffs[sourceCustom].HasDifferences.ShouldBeTrue();
+        result.DifferingStandardDiffs[sourceCustom].VariableDifferences.ShouldBeEmpty();
+    }
+
     private static GumProjectSave CreateProject(params ComponentSave[] components)
     {
         var project = new GumProjectSave();

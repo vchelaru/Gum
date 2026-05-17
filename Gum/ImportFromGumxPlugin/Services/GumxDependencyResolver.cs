@@ -28,6 +28,20 @@ public class DependencySet
     /// from the corresponding standard in the destination project.
     /// </summary>
     public List<StandardElementSave> DifferingStandards { get; } = new List<StandardElementSave>();
+
+    /// <summary>
+    /// Per-standard <see cref="StandardComparisonResult"/> for every entry in
+    /// <see cref="DifferingStandards"/>. The import dialog uses this to render
+    /// a variable-level diff under each flagged standard row (#2779).
+    /// </summary>
+    /// <remarks>
+    /// Standards that are wholesale-new in the source (absent from the destination
+    /// project) still get an entry whose <see cref="StandardComparisonResult.HasDifferences"/>
+    /// is true and whose <see cref="StandardComparisonResult.VariableDifferences"/> is empty —
+    /// there is no destination state to diff against per-variable.
+    /// </remarks>
+    public Dictionary<StandardElementSave, StandardComparisonResult> DifferingStandardDiffs { get; }
+        = new Dictionary<StandardElementSave, StandardComparisonResult>();
 }
 
 public class GumxDependencyResolver
@@ -134,15 +148,22 @@ public class GumxDependencyResolver
 
             if (destinationStandardsByName.TryGetValue(standardName, out var destStandard))
             {
-                if (_standardComparer.Compare(sourceStandard, destStandard).HasDifferences)
+                StandardComparisonResult comparison = _standardComparer.Compare(sourceStandard, destStandard);
+                if (comparison.HasDifferences)
                 {
                     result.DifferingStandards.Add(sourceStandard);
+                    result.DifferingStandardDiffs[sourceStandard] = comparison;
                 }
             }
             else
             {
-                // Not in destination at all — include it
+                // Not in destination at all — include it with a synthesized "differs" result
+                // so the dialog can still surface the row (with no per-variable detail).
                 result.DifferingStandards.Add(sourceStandard);
+                result.DifferingStandardDiffs[sourceStandard] = new StandardComparisonResult
+                {
+                    HasDifferences = true
+                };
             }
         }
 

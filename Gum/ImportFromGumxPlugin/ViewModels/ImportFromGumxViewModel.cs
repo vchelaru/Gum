@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Mvvm;
 using Gum.Plugins.ImportPlugin.Services;
+using Gum.ProjectServices;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using ImportFromGumxPlugin.Services;
@@ -10,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -149,6 +151,13 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     public AsyncRelayCommand LoadPreviewCommand { get; }
 
+    /// <summary>
+    /// Opens a read-only modal showing the per-variable diff for a flagged Standard row
+    /// (#2779). Bound to the row's "Details..." button via RelativeSource; the parameter
+    /// is the row's <see cref="ImportTreeNodeViewModel"/>.
+    /// </summary>
+    public RelayCommand<ImportTreeNodeViewModel> ShowStandardDiffCommand { get; }
+
     public ImportFromGumxViewModel(
         GumxSourceService sourceService,
         GumxDependencyResolver dependencyResolver,
@@ -166,6 +175,16 @@ public class ImportFromGumxViewModel : DialogViewModel
         SourceType = SourceType.LocalFile;
 
         LoadPreviewCommand = new AsyncRelayCommand(ExecuteLoadPreviewAsync, CanExecuteLoadPreview);
+        ShowStandardDiffCommand = new RelayCommand<ImportTreeNodeViewModel>(ExecuteShowStandardDiff);
+    }
+
+    private void ExecuteShowStandardDiff(ImportTreeNodeViewModel? row)
+    {
+        if (row?.StandardDiffRows is null || row.StandardDiffRows.Count == 0) { return; }
+
+        StandardDiffDetailsViewModel detailsVm =
+            new StandardDiffDetailsViewModel(row.DisplayName, row.StandardDiffRows);
+        _dialogService.Show(detailsVm);
     }
 
     public override bool CanExecuteAffirmative() => IsPreviewLoaded && !IsLoading;
@@ -562,14 +581,72 @@ public class ImportFromGumxViewModel : DialogViewModel
 
         // Auto-check differing standards, plus any the user explicitly picked; uncheck others
         var differingStandardNames = new HashSet<string>(deps.DifferingStandards.Select(s => s.Name));
+        var diffsByName = deps.DifferingStandardDiffs
+            .ToDictionary(kvp => kvp.Key.Name, kvp => kvp.Value);
         foreach (ImportTreeNodeViewModel item in _allLeafItems.Where(i => i.ElementType == ElementItemType.Standard))
         {
             bool shouldBeExplicit = differingStandardNames.Contains(item.FullName)
                 || _userExplicitStandardNames.Contains(item.FullName);
             item.PropertyChanged -= OnItemPropertyChanged;
             item.InclusionState = shouldBeExplicit ? InclusionState.Explicit : InclusionState.NotIncluded;
+            item.StandardDiffRows = diffsByName.TryGetValue(item.FullName, out StandardComparisonResult? comparison)
+                ? BuildDiffRows(comparison)
+                : null;
             item.PropertyChanged += OnItemPropertyChanged;
         }
+    }
+
+    /// <summary>
+    /// Flattens a <see cref="StandardComparisonResult"/> into display rows: one per added/removed
+    /// category, then one per variable diff with <c>ChangedFields</c> joined into the summary
+    /// (e.g. <c>"Rotation · SetsValue: True → False"</c>).
+    /// </summary>
+    private static IReadOnlyList<StandardDiffRowViewModel>? BuildDiffRows(StandardComparisonResult comparison)
+    {
+        var rows = new List<StandardDiffRowViewModel>();
+
+        foreach (string categoryName in comparison.CategoryNamesOnlyInSource)
+        {
+            rows.Add(new StandardDiffRowViewModel("Category added", categoryName));
+        }
+        foreach (string categoryName in comparison.CategoryNamesOnlyInDestination)
+        {
+            rows.Add(new StandardDiffRowViewModel("Category removed", categoryName));
+        }
+
+        foreach (StandardVariableDiff diff in comparison.VariableDifferences)
+        {
+            string kind = diff.Kind switch
+            {
+                StandardVariableDiffKind.AddedInProject => "Added",
+                StandardVariableDiffKind.RemovedFromProject => "Removed",
+                _ => "Changed",
+            };
+            rows.Add(new StandardDiffRowViewModel(kind, FormatVariableSummary(diff)));
+        }
+
+        return rows.Count == 0 ? null : rows;
+    }
+
+    private static string FormatVariableSummary(StandardVariableDiff diff)
+    {
+        var sb = new StringBuilder(diff.VariableName);
+
+        if (diff.Kind == StandardVariableDiffKind.Changed
+            && diff.ChangedFields.Count == 0
+            && (diff.ProjectValue.Length > 0 || diff.DefaultValue.Length > 0))
+        {
+            sb.Append(": ").Append(diff.DefaultValue).Append(" → ").Append(diff.ProjectValue);
+        }
+
+        foreach (VariableFieldDiff field in diff.ChangedFields)
+        {
+            sb.Append(" · ")
+              .Append(field.FieldName).Append(": ")
+              .Append(field.DefaultValue).Append(" → ").Append(field.ProjectValue);
+        }
+
+        return sb.ToString();
     }
 
     private ImportSelections BuildSelections()
