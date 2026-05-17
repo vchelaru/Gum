@@ -103,19 +103,46 @@ The replaced methods:
 
 The new generic methods (`Find<T>`, `OfType<T>`) match subclasses (`is T` semantics). The old methods only matched the exact type. If your code relied on the exact-type behavior, add an explicit `GetType() == typeof(T)` filter to the LINQ pipeline.
 
-❌Old:
+❌ Old:
 
 ```csharp
 var textInstance = (TextRuntime)textBox.Visual.GetChildByNameRecursively("TextInstance")!;
 ```
 
-✅New:
+✅ New:
 
 ```csharp
 TextRuntime textInstance = textBox.Visual.Find<TextRuntime>("TextInstance")!;
 ```
 
 For the full set of new methods and how they compose with LINQ, see [Finding Elements](../../code/visual-tree/finding-elements.md).
+
+### GraphicalUiElement → Forms control lookup methods replaced
+
+Two extension methods on `GraphicalUiElement` for reaching from a visual down to a Forms control are now `[Obsolete]` in favor of a single unified replacement. Existing calls keep working but now produce `CS0618` compiler warnings.
+
+The replaced methods:
+
+* `GetFrameworkElementByName<T>(name)` → `FindFormsControl<T>(name)`
+* `TryGetFrameworkElementByName<T>(name)` → `FindFormsControl<T>(name)`
+
+Both old methods migrate to the same replacement because `FindFormsControl<T>` returns `T?` — it is nullable by design and returns `null` when no match is found, so the `Try` prefix is unnecessary. The old `Get...` overload's "throw on miss" behavior was already gated behind `FULL_DIAGNOSTICS` and silently returned `null` in release builds, so the new method matches the actual runtime behavior of both old overloads.
+
+❌ Old:
+
+```csharp
+TextBox nameBox = screenRoot.GetFrameworkElementByName<TextBox>("NameTextBox");
+Button? cancel = screenRoot.TryGetFrameworkElementByName<Button>("CancelButton");
+```
+
+✅ New:
+
+```csharp
+TextBox nameBox = screenRoot.FindFormsControl<TextBox>("NameTextBox")!;
+Button? cancel = screenRoot.FindFormsControl<Button>("CancelButton");
+```
+
+For the full set of visual-to-Forms lookup methods, see [Finding Elements](../../code/visual-tree/finding-elements.md).
 
 ### Default visual changes from runtime unification
 
