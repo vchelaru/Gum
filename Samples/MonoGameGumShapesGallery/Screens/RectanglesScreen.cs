@@ -44,7 +44,7 @@ internal class RectanglesScreen : FrameworkElement
         left.AddChild(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
         left.AddChild(BuildSection("Modes: FillColor, StrokeColor, Fill+Stroke, default", BuildModeRow()));
         left.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px on a filled card)", BuildStrokeWidthRow()));
-        left.AddChild(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+        left.AddChild(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
         left.AddChild(BuildSection("CornerRadius (0, 6, 16, 28 — visibly rounded on Apos)", BuildCornerRadiusRow()));
 
         right.AddChild(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2768 / #2814)", BuildBothColorsRow()));
@@ -98,7 +98,6 @@ internal class RectanglesScreen : FrameworkElement
             rect.Width = width;
             rect.Height = 40;
             rect.StrokeColor = Color.White;
-            rect.CornerRadius = 6;
             row.AddChild(rect);
         }
         return row;
@@ -113,7 +112,6 @@ internal class RectanglesScreen : FrameworkElement
             rect.Width = 60;
             rect.Height = 40;
             rect.StrokeColor = new Color((byte)255, (byte)255, (byte)255, alpha);
-            rect.CornerRadius = 6;
             row.AddChild(rect);
         }
         return row;
@@ -126,14 +124,12 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime filled = new();
         filled.Width = 80; filled.Height = 50;
         filled.FillColor = Color.Crimson;
-        filled.CornerRadius = 8;
         row.AddChild(filled);
 
         RectangleRuntime stroked = new();
         stroked.Width = 80; stroked.Height = 50;
         stroked.StrokeColor = Color.Cyan;
         stroked.StrokeWidth = 2;
-        stroked.CornerRadius = 8;
         row.AddChild(stroked);
 
         RectangleRuntime both = new();
@@ -141,7 +137,6 @@ internal class RectanglesScreen : FrameworkElement
         both.FillColor = new Color(40, 40, 80);
         both.StrokeColor = Color.Yellow;
         both.StrokeWidth = 2;
-        both.CornerRadius = 8;
         row.AddChild(both);
 
         RectangleRuntime defaultRect = new();
@@ -161,7 +156,6 @@ internal class RectanglesScreen : FrameworkElement
             rect.FillColor = new Color(30, 30, 50);
             rect.StrokeColor = Color.LightGreen;
             rect.StrokeWidth = strokeWidth;
-            rect.CornerRadius = 6;
             row.AddChild(rect);
         }
         return row;
@@ -208,7 +202,6 @@ internal class RectanglesScreen : FrameworkElement
         strokeLast.FillColor = Color.Crimson;
         strokeLast.StrokeColor = Color.Cyan;
         strokeLast.StrokeWidth = 4;
-        strokeLast.CornerRadius = 8;
         row.AddChild(strokeLast);
 
         RectangleRuntime fillLast = new();
@@ -216,7 +209,6 @@ internal class RectanglesScreen : FrameworkElement
         fillLast.StrokeColor = Color.Magenta;
         fillLast.StrokeWidth = 4;
         fillLast.FillColor = Color.Gold;
-        fillLast.CornerRadius = 8;
         row.AddChild(fillLast);
 
         return row;
@@ -251,7 +243,6 @@ internal class RectanglesScreen : FrameworkElement
         rect.StrokeColor = Color.Yellow;
         rect.StrokeWidth = strokeWidth;
         rect.StrokeWidthUnits = DimensionUnitType.Absolute;
-        rect.CornerRadius = 6;
         frame.Children.Add(rect);
         return frame;
     }
@@ -270,11 +261,11 @@ internal class RectanglesScreen : FrameworkElement
 
     static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
     {
-        // ColoredRectangle frame (hard-cornered on purpose so the inner Apos rectangle's
-        // rounded corners are visually distinct from the frame's). The inner RectangleRuntime
-        // is positioned relative to it via YOrigin + PixelsFromSmall/Middle/Large.
+        // Frame size matches the Skia (SilkNetGum) RectanglesScreen sibling so the two
+        // galleries lay out the same. The inner RectangleRuntime is positioned via
+        // YOrigin + PixelsFromSmall/Middle/Large.
         ColoredRectangleRuntime frame = new();
-        frame.Width = 220;
+        frame.Width = 128;
         frame.Height = 100;
         frame.Color = new Color(50, 50, 70);
 
@@ -282,7 +273,6 @@ internal class RectanglesScreen : FrameworkElement
         rect.Width = 60;
         rect.Height = 30;
         rect.FillColor = Color.Orange;
-        rect.CornerRadius = 6;
         rect.XOrigin = HorizontalAlignment.Center;
         rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = alignment;
