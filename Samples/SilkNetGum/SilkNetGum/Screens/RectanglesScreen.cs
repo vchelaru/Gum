@@ -43,7 +43,7 @@ internal class RectanglesScreen : GraphicalUiElement
 
         left.Children.Add(BuildSection("Sizes (40, 60, 90, 130 wide) — default outline", BuildSizesRow()));
         left.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
-        left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
+        left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, Fill+Stroke, default", BuildModeRow()));
         left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
         left.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
         left.Children.Add(BuildSection("CornerRadius (0, 6, 16, 28) — exercises RoundedRectangleRuntime (#2814)", BuildCornerRadiusRow()));
@@ -129,8 +129,15 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime stroked = new();
         stroked.Width = 80; stroked.Height = 50;
         stroked.StrokeColor = SKColors.Cyan;
-        stroked.StrokeWidth = 3;
+        stroked.StrokeWidth = 2;
         row.Children.Add(stroked);
+
+        RectangleRuntime both = new();
+        both.Width = 80; both.Height = 50;
+        both.FillColor = new SKColor(40, 40, 80);
+        both.StrokeColor = SKColors.Yellow;
+        both.StrokeWidth = 2;
+        row.Children.Add(both);
 
         RectangleRuntime defaultRect = new();
         defaultRect.Width = 80; defaultRect.Height = 50;

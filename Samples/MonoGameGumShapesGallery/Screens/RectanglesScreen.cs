@@ -174,6 +174,7 @@ internal class RectanglesScreen : FrameworkElement
             rect.FillColor = new Color(40, 40, 80);
             rect.StrokeColor = Color.Orange;
             rect.StrokeWidth = 2;
+            rect.IsAntialiased = true;
             rect.CornerRadius = cornerRadius;
             row.AddChild(rect);
         }
@@ -200,73 +201,76 @@ internal class RectanglesScreen : FrameworkElement
     }
 
     // Issue #2818 — mirror of CirclesScreen.BuildGradientRow. RectangleRuntime pushes
-    // gradient state through to both Apos RoundedRectangles (fill and stroke).
+    // gradient state through to both Apos RoundedRectangles (fill and stroke). Cell sizes
+    // (70x50 cells, gradient endpoints in cell-local coords) match the SilkNetGum sibling so
+    // the two galleries lay out the same.
     static ContainerRuntime BuildGradientRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
 
         RectangleRuntime linearH = new();
-        linearH.Width = 80; linearH.Height = 56;
+        linearH.Width = 70; linearH.Height = 50;
         linearH.FillColor = Color.White;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
         linearH.Color1 = Color.White;
         linearH.Color2 = Color.SteelBlue;
         linearH.GradientX1 = 0; linearH.GradientY1 = 0;
-        linearH.GradientX2 = 80; linearH.GradientY2 = 0;
+        linearH.GradientX2 = 70; linearH.GradientY2 = 0;
         row.AddChild(linearH);
 
         RectangleRuntime linearV = new();
-        linearV.Width = 80; linearV.Height = 56;
+        linearV.Width = 70; linearV.Height = 50;
         linearV.FillColor = Color.White;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
         linearV.Color1 = Color.Gold;
         linearV.Color2 = Color.Crimson;
         linearV.GradientX1 = 0; linearV.GradientY1 = 0;
-        linearV.GradientX2 = 0; linearV.GradientY2 = 56;
+        linearV.GradientX2 = 0; linearV.GradientY2 = 50;
         row.AddChild(linearV);
 
         RectangleRuntime linearD = new();
-        linearD.Width = 80; linearD.Height = 56;
+        linearD.Width = 70; linearD.Height = 50;
         linearD.FillColor = Color.White;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
         linearD.Color1 = Color.Cyan;
         linearD.Color2 = Color.Magenta;
         linearD.GradientX1 = 0; linearD.GradientY1 = 0;
-        linearD.GradientX2 = 80; linearD.GradientY2 = 56;
+        linearD.GradientX2 = 70; linearD.GradientY2 = 50;
         row.AddChild(linearD);
 
         RectangleRuntime radial = new();
-        radial.Width = 80; radial.Height = 56;
+        radial.Width = 70; radial.Height = 50;
         radial.FillColor = Color.White;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
         radial.Color1 = Color.White;
         radial.Color2 = Color.DarkGreen;
-        radial.GradientX1 = 40; radial.GradientY1 = 28;
+        radial.GradientX1 = 35; radial.GradientY1 = 25;
         radial.GradientInnerRadius = 0;
-        radial.GradientOuterRadius = 40;
+        radial.GradientOuterRadius = 35;
         row.AddChild(radial);
 
         return row;
     }
 
-    // Issue #2818 — mirror of CirclesScreen.BuildAntialiasingRow.
+    // Issue #2818 — mirror of CirclesScreen.BuildAntialiasingRow. Cell size 60x50 matches
+    // the SilkNetGum sibling.
     static ContainerRuntime BuildAntialiasingRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
         foreach (bool aa in new[] { true, false })
         {
             RectangleRuntime filled = new();
-            filled.Width = 80; filled.Height = 56;
+            filled.Width = 60; filled.Height = 50;
             filled.FillColor = Color.Goldenrod;
             filled.IsAntialiased = aa;
             row.AddChild(filled);
 
             RectangleRuntime ring = new();
-            ring.Width = 80; ring.Height = 56;
+            ring.Width = 60; ring.Height = 50;
             ring.StrokeColor = Color.White;
             ring.StrokeWidth = 1;
             ring.IsAntialiased = aa;
@@ -276,18 +280,19 @@ internal class RectanglesScreen : FrameworkElement
     }
 
     // Issue #2818 — mirror of CirclesScreen.BuildDropshadowRow. Shadow pushes to the fill
-    // slot only; rendered once per cell rather than doubling.
+    // slot only; rendered once per cell rather than doubling. Cell size 60x50 matches
+    // SilkNetGum.
     static ContainerRuntime BuildDropshadowRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
 
         RectangleRuntime baseline = new();
-        baseline.Width = 80; baseline.Height = 56;
+        baseline.Width = 60; baseline.Height = 50;
         baseline.FillColor = Color.Goldenrod;
         row.AddChild(baseline);
 
         RectangleRuntime soft = new();
-        soft.Width = 80; soft.Height = 56;
+        soft.Width = 60; soft.Height = 50;
         soft.FillColor = Color.Goldenrod;
         soft.HasDropshadow = true;
         soft.DropshadowOffsetX = 4;
@@ -297,7 +302,7 @@ internal class RectanglesScreen : FrameworkElement
         row.AddChild(soft);
 
         RectangleRuntime hard = new();
-        hard.Width = 80; hard.Height = 56;
+        hard.Width = 60; hard.Height = 50;
         hard.FillColor = Color.Goldenrod;
         hard.HasDropshadow = true;
         hard.DropshadowColor = new Color(0, 0, 0, 160);
@@ -308,7 +313,7 @@ internal class RectanglesScreen : FrameworkElement
         row.AddChild(hard);
 
         RectangleRuntime colored = new();
-        colored.Width = 80; colored.Height = 56;
+        colored.Width = 60; colored.Height = 50;
         colored.FillColor = Color.Goldenrod;
         colored.HasDropshadow = true;
         colored.DropshadowColor = new Color(220, 40, 160, 220);
@@ -323,18 +328,19 @@ internal class RectanglesScreen : FrameworkElement
 
     // Issue #2818 — mirror of CirclesScreen.BuildDashedStrokeRow. Dashing applies to the
     // stroke slot only; the Apos RoundedRectangle's RenderDashed path is guarded by !IsFilled.
+    // Cell size 60x50 matches SilkNetGum.
     static ContainerRuntime BuildDashedStrokeRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
 
         RectangleRuntime solid = new();
-        solid.Width = 80; solid.Height = 56;
+        solid.Width = 60; solid.Height = 50;
         solid.StrokeColor = Color.White;
         solid.StrokeWidth = 2;
         row.AddChild(solid);
 
         RectangleRuntime short64 = new();
-        short64.Width = 80; short64.Height = 56;
+        short64.Width = 60; short64.Height = 50;
         short64.StrokeColor = Color.White;
         short64.StrokeWidth = 2;
         short64.StrokeDashLength = 6;
@@ -342,7 +348,7 @@ internal class RectanglesScreen : FrameworkElement
         row.AddChild(short64);
 
         RectangleRuntime dotted = new();
-        dotted.Width = 80; dotted.Height = 56;
+        dotted.Width = 60; dotted.Height = 50;
         dotted.StrokeColor = Color.White;
         dotted.StrokeWidth = 1;
         dotted.StrokeDashLength = 2;
@@ -350,7 +356,7 @@ internal class RectanglesScreen : FrameworkElement
         row.AddChild(dotted);
 
         RectangleRuntime longDash = new();
-        longDash.Width = 80; longDash.Height = 56;
+        longDash.Width = 60; longDash.Height = 50;
         longDash.StrokeColor = Color.LightGreen;
         longDash.StrokeWidth = 3;
         longDash.StrokeDashLength = 12;
@@ -450,7 +456,7 @@ internal class RectanglesScreen : FrameworkElement
         frame.Color = new Color(50, 50, 70);
 
         RectangleRuntime rect = new();
-        rect.Width = 60;
+        rect.Width = 50;
         rect.Height = 30;
         rect.FillColor = Color.Orange;
         rect.XOrigin = HorizontalAlignment.Center;
