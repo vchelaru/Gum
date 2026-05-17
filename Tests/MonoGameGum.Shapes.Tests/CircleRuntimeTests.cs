@@ -289,12 +289,14 @@ public class CircleRuntimeTests
         stroke.StrokeWidth.ShouldBe(3f);
     }
 
-    // Special case: at user StrokeWidth = 1 with AA on, naive subtraction would push 0 to Apos
-    // and the stroke disappears. The runtime floors the pushed value so a thin ring still
-    // renders, accepting a small (~0.5 px) Skia/Apos visual mismatch at this size in exchange
-    // for not vanishing.
+    // Special case: at user StrokeWidth = 1 with AA on, subtraction would push 0 to Apos and
+    // the stroke vanishes. Bloom compensation falls back to disabling AA on the stroke slot
+    // for that frame and pushing the raw width — produces a crisp 1 px stroke that matches
+    // Skia's 1-px-with-AA visual width much more closely than a wider AA-on Apos stroke would.
+    // The runtime's IsAntialiased property stays at the user's value (true); only the
+    // renderable-side flag changes for that frame.
     [Fact]
-    public void StrokeWidth_AaOn_AtOnePixel_FloorsInsteadOfPushingZero()
+    public void StrokeWidth_AaOn_AtOnePixel_FallsBackToAaOff_PreservingVisibleWidth()
     {
         CircleRuntime sut = new();
         sut.StrokeColor = Color.Green;
@@ -306,7 +308,8 @@ public class CircleRuntimeTests
         IRenderable asRenderable = stroke;
         asRenderable.PreRender();
 
-        stroke.StrokeWidth.ShouldBeGreaterThan(0f);
-        stroke.StrokeWidth.ShouldBeLessThanOrEqualTo(1f);
+        stroke.StrokeWidth.ShouldBe(1f);
+        stroke.IsAntialiased.ShouldBeFalse();
+        sut.IsAntialiased.ShouldBeTrue();  // user-facing value preserved
     }
 }

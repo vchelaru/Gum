@@ -891,19 +891,33 @@ public class CircleRuntime : GraphicalUiElement
         // Issue #2790 — Apos.Shapes' antialiased stroke renders ~0.5 px of soft bloom on each
         // side OUTSIDE the nominal stroke thickness, while Skia's SKPaint fits AA WITHIN the
         // thickness. To give cross-backend visual parity for the same user-set StrokeWidth,
-        // subtract one total bloom-px when AA is on. Floored at 0.5 so a user StrokeWidth = 1
-        // doesn't push 0 and disappear; the remaining mismatch at sub-pixel sizes is
-        // documented (and slightly visible on the CirclesScreen StrokeWidth row). Gated by
-        // IAntialiasedRenderable so the core stroke default (LineCircle wrapper, no AA
-        // concept) still receives the raw value.
+        // subtract one total bloom-px when AA is on. Gated by IAntialiasedRenderable so the
+        // core stroke default (LineCircle wrapper, no AA concept) still receives the raw value.
+        //
+        // Edge case: at user StrokeWidth ~= 1 the subtraction would push 0 (or below) and the
+        // stroke vanishes. Floor with min 0.5 still produces a 1.5 px visible ring on Apos vs
+        // 1 px on Skia — the compensation simply can't reach a 1 px visible thickness while
+        // AA is on. Falling back to AA-off at small sizes lets Apos draw a true crisp N-px
+        // stroke that matches Skia's visual width almost exactly. The style change (crisp vs
+        // soft) is less noticeable than a ring that's twice as thick as its Skia counterpart.
         const float aposAaBloomPerSide = 0.5f;
-        const float minRenderableStrokeWidth = 0.5f;
+        const float aposCompensationFloor = 0.5f;
         float renderableStrokeWidth = strokeWidth;
+        bool effectiveStrokeAntialiased = _isAntialiased;
         if (_isAntialiased && _stroke is IAntialiasedRenderable)
         {
-            renderableStrokeWidth = Math.Max(
-                minRenderableStrokeWidth,
-                strokeWidth - 2f * aposAaBloomPerSide);
+            float compensated = strokeWidth - 2f * aposAaBloomPerSide;
+            if (compensated < aposCompensationFloor)
+            {
+                // Compensation would zero out the stroke. Disable AA for this frame and push
+                // the user's value as-is — crisp N px matches Skia better than a too-thick AA
+                // ring would.
+                effectiveStrokeAntialiased = false;
+            }
+            else
+            {
+                renderableStrokeWidth = compensated;
+            }
         }
         _stroke.StrokeWidth = renderableStrokeWidth;
 
@@ -921,7 +935,7 @@ public class CircleRuntime : GraphicalUiElement
         // Mirrors AposShapeRuntime.PreRender. Skipped for slots that don't implement the
         // interface (core DefaultStrokedCircleRenderable has no AA concept).
         if (_fill is IAntialiasedRenderable fillAa) fillAa.IsAntialiased = _isAntialiased;
-        if (_stroke is IAntialiasedRenderable strokeAa) strokeAa.IsAntialiased = _isAntialiased;
+        if (_stroke is IAntialiasedRenderable strokeAa) strokeAa.IsAntialiased = effectiveStrokeAntialiased;
 
         // When fill is the contained object and stroke is its child, the layout system pushes
         // size onto fill but not stroke (stroke is a plain renderable, not a layout-aware
