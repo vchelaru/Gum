@@ -30,17 +30,18 @@ public class ImportFromGumxViewModelTests
     private readonly ImportFromGumxViewModel _sut;
 
     private readonly FakeDialogService _dialogService;
+    private readonly FakeProjectState _projectState;
 
     public ImportFromGumxViewModelTests()
     {
         GumxSourceService sourceService = new GumxSourceService();
         GumxDependencyResolver resolver = new GumxDependencyResolver();
-        FakeProjectState projectState = new FakeProjectState();
+        _projectState = new FakeProjectState();
         GumxImportService importService = new GumxImportService(
-            new FakeImportLogic(), projectState, new FakeFileCommands(), sourceService);
+            new FakeImportLogic(), _projectState, new FakeFileCommands(), sourceService);
 
         _dialogService = new FakeDialogService();
-        _sut = new ImportFromGumxViewModel(sourceService, resolver, importService, projectState, _dialogService);
+        _sut = new ImportFromGumxViewModel(sourceService, resolver, importService, _projectState, _dialogService);
     }
 
     [Fact]
@@ -214,6 +215,64 @@ public class ImportFromGumxViewModelTests
         _sut.RecomputeTransitiveDependencies();
 
         secondLeaf.InclusionState.ShouldBe(InclusionState.NotIncluded);
+    }
+
+    // ── standard diff rows (#2779) ────────────────────────────────────────
+
+    [Fact]
+    public void RecomputeTransitiveDependencies_DifferingStandard_PopulatesDiffRows()
+    {
+        // Source Text standard has an extra category; destination Text does not.
+        // A component referencing Text should cause the standard to flag as differing,
+        // and the corresponding tree node should expose diff rows.
+        StandardElementSave sourceText = new StandardElementSave { Name = "Text" };
+        sourceText.Categories.Add(new StateSaveCategory { Name = "TextColor" });
+        sourceText.States.Add(new StateSave { Name = "Default" });
+
+        StandardElementSave destText = new StandardElementSave { Name = "Text" };
+        destText.States.Add(new StateSave { Name = "Default" });
+
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.Instances.Add(new InstanceSave { Name = "Label", BaseType = "Text" });
+
+        GumProjectSave source = new GumProjectSave();
+        source.Components.Add(button);
+        source.StandardElements.Add(sourceText);
+
+        _projectState.GumProjectSave.StandardElements.Add(destText);
+
+        _sut.InitializeFromProjectForTesting(source);
+        ImportTreeNodeViewModel buttonLeaf = FindLeaf("Button", ElementItemType.Component);
+        ImportTreeNodeViewModel textStandardLeaf = FindLeaf("Text", ElementItemType.Standard);
+
+        buttonLeaf.InclusionState = InclusionState.Explicit;
+        _sut.RecomputeTransitiveDependencies();
+
+        textStandardLeaf.HasStandardDiffRows.ShouldBeTrue();
+        textStandardLeaf.StandardDiffRows!.ShouldContain(r => r.Kind == "Category added" && r.Summary == "TextColor");
+    }
+
+    [Fact]
+    public void RecomputeTransitiveDependencies_StandardMatchingDestination_HasNoDiffRows()
+    {
+        // Identical source and destination standard — nothing to diff, no expander.
+        StandardElementSave sourceText = new StandardElementSave { Name = "Text" };
+        sourceText.States.Add(new StateSave { Name = "Default" });
+
+        StandardElementSave destText = new StandardElementSave { Name = "Text" };
+        destText.States.Add(new StateSave { Name = "Default" });
+
+        GumProjectSave source = new GumProjectSave();
+        source.StandardElements.Add(sourceText);
+        _projectState.GumProjectSave.StandardElements.Add(destText);
+
+        _sut.InitializeFromProjectForTesting(source);
+        ImportTreeNodeViewModel textStandardLeaf = FindLeaf("Text", ElementItemType.Standard);
+
+        _sut.RecomputeTransitiveDependencies();
+
+        textStandardLeaf.HasStandardDiffRows.ShouldBeFalse();
+        textStandardLeaf.StandardDiffRows.ShouldBeNull();
     }
 
     // ── conflict-resolution dialog (#2644) ────────────────────────────────

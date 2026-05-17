@@ -1,7 +1,9 @@
 using Gum.Mvvm;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Windows;
 
 namespace ImportFromGumxPlugin.ViewModels;
 
@@ -9,6 +11,7 @@ public class ImportTreeNodeViewModel : ViewModel
 {
     private InclusionState _inclusionState;
     private bool _suppressChildNotifications;
+    private IReadOnlyList<StandardDiffRowViewModel>? _standardDiffRows;
 
     public string DisplayName { get; }
     public string FullName { get; }
@@ -16,6 +19,33 @@ public class ImportTreeNodeViewModel : ViewModel
     public bool IsLeaf => !IsFolder;
     public ElementItemType? ElementType { get; }
     public ObservableCollection<ImportTreeNodeViewModel> Children { get; }
+
+    /// <summary>
+    /// Per-row diff detail for a flagged Standard (#2779). Null on non-standard rows
+    /// and on standards that match the destination. The view's template selector keys
+    /// off <see cref="HasStandardDiffRows"/> to show an expander.
+    /// </summary>
+    public IReadOnlyList<StandardDiffRowViewModel>? StandardDiffRows
+    {
+        get => _standardDiffRows;
+        set
+        {
+            if (!ReferenceEquals(_standardDiffRows, value))
+            {
+                _standardDiffRows = value;
+                NotifyPropertyChanged(nameof(StandardDiffRows));
+                NotifyPropertyChanged(nameof(HasStandardDiffRows));
+            }
+        }
+    }
+
+    /// <summary>True when this row has at least one diff entry to display.</summary>
+    public bool HasStandardDiffRows => _standardDiffRows != null && _standardDiffRows.Count > 0;
+
+    /// <summary>Visibility of the "Details..." button next to the checkbox. Shown iff there are diff rows.</summary>
+    [DependsOn(nameof(StandardDiffRows))]
+    public Visibility DetailsButtonVisibility =>
+        HasStandardDiffRows ? Visibility.Visible : Visibility.Collapsed;
 
     public InclusionState InclusionState
     {

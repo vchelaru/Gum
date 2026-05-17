@@ -110,16 +110,38 @@
                             </Style>
                         </TreeView.ItemContainerStyle>
 
+                        <!--
+                            One HierarchicalDataTemplate per row: checkbox, plus an optional
+                            "Details..." button on flagged Standards that opens a modal showing the
+                            per-variable diff. The button's Command is bound up to the outer
+                            ImportFromGumxViewModel via RelativeSource — the row VM itself doesn't
+                            know about the dialog service. (#2779)
+                        -->
                         <TreeView.ItemTemplate>
                             <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                <CheckBox
-                                    IsChecked="{Binding IsChecked, Mode=OneWay}"
-                                    Style="{StaticResource ImportItemCheckBoxStyle}"
-                                    Loaded="OnCheckBoxLoaded"
-                                    Click="OnCheckBoxClick">
-
-                                    <TextBlock Text="{Binding DisplayName, Mode=OneWay}" />
-                                </CheckBox>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox
+                                        IsChecked="{Binding IsChecked, Mode=OneWay}"
+                                        Style="{StaticResource ImportItemCheckBoxStyle}"
+                                        Loaded="OnCheckBoxLoaded"
+                                        Click="OnCheckBoxClick">
+                                        <TextBlock Text="{Binding DisplayName, Mode=OneWay}" />
+                                    </CheckBox>
+                                    <!--
+                                        Hyperlink rather than Button — inline text avoids the row-height
+                                        overflow that a padded Button causes inside a TreeViewItem.
+                                    -->
+                                    <TextBlock
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding DetailsButtonVisibility}">
+                                        <Hyperlink
+                                            Command="{Binding DataContext.ShowStandardDiffCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                            CommandParameter="{Binding}">
+                                            Details...
+                                        </Hyperlink>
+                                    </TextBlock>
+                                </StackPanel>
                             </HierarchicalDataTemplate>
                         </TreeView.ItemTemplate>
                     </TreeView>

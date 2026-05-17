@@ -43,11 +43,17 @@
 		<Compile Include="ViewModels\ImportFromGumxViewModel.cs" />
 		<Compile Include="ViewModels\ImportPreviewItemViewModel.cs" />
 		<Compile Include="ViewModels\ImportTreeNodeViewModel.cs" />
+		<Compile Include="ViewModels\StandardDiffDetailsViewModel.cs" />
+		<Compile Include="ViewModels\StandardDiffRowViewModel.cs" />
 		<Compile Include="Views\ImportFromGumxView.xaml.cs" />
+		<Compile Include="Views\StandardDiffDetailsView.xaml.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Page Include="Views\ImportFromGumxView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Include="Views\StandardDiffDetailsView.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>
 	</ItemGroup>
