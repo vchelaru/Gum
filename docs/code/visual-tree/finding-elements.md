@@ -76,6 +76,25 @@ Window? containingWindow = someInnerVisual.Ancestors().OfType<Window>().FirstOrD
 
 The full set on `GraphicalUiElement`: `Find<T>`, `Find<T>(name)`, `FindByName(name)`, `Descendants`, `DescendantsAndSelf`, `Ancestors`, `AncestorsAndSelf`. The Forms-layer methods are thin projections built on top of these.
 
+### Reaching From a Visual to a Forms Control
+
+`Find<T>` on `GraphicalUiElement` stays in the visual layer — it walks visual descendants and returns visuals. When you have a visual root (typically a screen or component) and need to reach a Forms control wrapping one of its visual descendants, use `FindFormsControl<T>` instead. It walks the visual tree, projects each node to its underlying Forms control (skipping pure visuals with no Forms wrapper), and returns the first match:
+
+```csharp
+// Initialize
+TextBox nameBox = screenRoot.FindFormsControl<TextBox>("NameTextBox")!;
+Button firstButton = screenRoot.FindFormsControl<Button>()!;
+FrameworkElement anyControl = screenRoot.FindFormsControlByName("OkButton")!;
+```
+
+`FindFormsControl<T>()` returns the first descendant whose Forms control is assignable to `T`. `FindFormsControl<T>(name)` adds a name filter on the underlying visual. `FindFormsControlByName(name)` matches on name only, without a type filter. All three return `null` when no match is found.
+
+This is the cross-layer counterpart to `FindVisual<T>` on `FrameworkElement` — one goes visual → Forms, the other goes Forms → visual.
+
+{% hint style="warning" %}
+`FindFormsControl<T>`, `FindFormsControl<T>(name)`, and `FindFormsControlByName(name)` are available starting in the 2026 May release.
+{% endhint %}
+
 ## Ordering
 
 `Descendants()` and the `Find*` methods enumerate **shallowest-first**, so the closest match wins. A `ListBox` has a `FocusedIndicator` near its root and another inside each `ListBoxItem`; shallowest-first returns the outer one, which is what you want.
