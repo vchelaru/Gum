@@ -187,7 +187,16 @@ public class Circle : RenderableShapeBase,
         var circumference = 2f * MathHelper.Pi * radius;
 
         var dashLen = StrokeDashLength;
-        var period = dashLen + StrokeGapLength;
+        // Issue #2790: when AA is on, each dash's tangential end-cap halo (~aaSize px) leaks
+        // into the neighboring gap from each side, eating ~aaSize total from the gap. Inflate
+        // the effective gap by aaSize so a user-set 2/2 pattern still reads as ~2/2 instead
+        // of dashes smearing into a near-continuous ring. Dash length is left alone — keeping
+        // the user's nominal length means dashes stay visually distinct (a too-short dash
+        // shrinks to mostly-halo and fuzzes out). The trade is dashes ~aaSize wider than
+        // nominal; period grows by aaSize so the perimeter has one or two fewer dashes, but
+        // each is recognizable.
+        var effectiveGapLen = StrokeGapLength + antiAliasSize;
+        var period = dashLen + effectiveGapLen;
         if (period <= 0) return;
 
         // Build the stroke "paint" once and pass the same Gradient/Color to every dash so the
