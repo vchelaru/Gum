@@ -258,6 +258,14 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             var desiredLeft = cursorX - leftGrabbedInOffset.Value;
             var difference = desiredLeft - Visual.AbsoluteLeft;
 
+            // Capture before any mutation so we can derive how mWidth maps to
+            // absolute width for the current WidthUnits (e.g. Absolute is 1:1,
+            // RelativeToChildren has a children-size offset). This lets the
+            // MinWidth clamp below restore the absolute width to at least
+            // MinWidth without overshooting for non-absolute units.
+            var widthUnitBefore = Visual.Width;
+            var absoluteWidthBefore = Visual.GetAbsoluteWidth();
+
             switch (Visual.XOrigin)
             {
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Left:
@@ -280,15 +288,15 @@ public class Window : Gum.Forms.Controls.FrameworkElement
                     Visual.Width -= difference;
                     break;
             }
-            if (Visual.MinWidth != null)
-            {
-                Visual.Width = Math.Max(Visual.MinWidth.Value, Visual.Width);
-            }
+            ClampMinWidth(widthUnitBefore, absoluteWidthBefore);
         }
         if (topGrabbedInOffset != null)
         {
             var desiredTop = cursorY - topGrabbedInOffset.Value;
             var difference = desiredTop - Visual.AbsoluteTop;
+
+            var heightUnitBefore = Visual.Height;
+            var absoluteHeightBefore = Visual.GetAbsoluteHeight();
 
             switch (Visual.YOrigin)
             {
@@ -312,17 +320,17 @@ public class Window : Gum.Forms.Controls.FrameworkElement
                     Visual.Height -= difference;
                     break;
             }
-            if (Visual.MinHeight != null)
-            {
-                Visual.Height = Math.Max(Visual.MinHeight.Value, Visual.Height);
-            }
+            ClampMinHeight(heightUnitBefore, absoluteHeightBefore);
         }
         if (rightGrabbedInOffset != null)
         {
             var desiredRight = cursorX + rightGrabbedInOffset.Value;
-             
+
             var difference = desiredRight - Visual.AbsoluteRight;
-            
+
+            var widthUnitBefore = Visual.Width;
+            var absoluteWidthBefore = Visual.GetAbsoluteWidth();
+
             switch (Visual.XOrigin)
             {
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Left:
@@ -346,16 +354,16 @@ public class Window : Gum.Forms.Controls.FrameworkElement
                     }
                     break;
             }
-            if(Visual.MinWidth != null)
-            {
-                Visual.Width = Math.Max(Visual.MinWidth.Value, Visual.Width);
-            }
+            ClampMinWidth(widthUnitBefore, absoluteWidthBefore);
         }
         if (bottomGrabbedInOffset != null)
         {
             // todo - finish here
             var desiredBottom = cursorY + bottomGrabbedInOffset.Value;
             var difference = desiredBottom - Visual.AbsoluteBottom;
+
+            var heightUnitBefore = Visual.Height;
+            var absoluteHeightBefore = Visual.GetAbsoluteHeight();
 
             switch (Visual.YOrigin)
             {
@@ -380,10 +388,7 @@ public class Window : Gum.Forms.Controls.FrameworkElement
                     }
                     break;
             }
-            if(Visual.MinHeight != null)
-            {
-                Visual.Height = Math.Max(Visual.MinHeight.Value, Visual.Height);
-            }
+            ClampMinHeight(heightUnitBefore, absoluteHeightBefore);
         }
 
         if (titleGrabbedInXOffset != null)
@@ -398,6 +403,49 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             Visual.Y += differenceY;
         }
 
+    }
+
+    /// <summary>
+    /// Ensures Visual.GetAbsoluteWidth() is at least Visual.MinWidth by adjusting Visual.Width
+    /// by the deficit only. Using Math.Max(MinWidth, Visual.Width) directly is only correct
+    /// for WidthUnits=Absolute; for RelativeToChildren the unit value is an offset added to
+    /// children's size, so clamping it to MinWidth overshoots and inflates the absolute width,
+    /// which then causes the window to shift on the next drag tick.
+    /// </summary>
+    private void ClampMinWidth(float widthUnitBefore, float absoluteWidthBefore)
+    {
+        if (Visual.MinWidth == null)
+        {
+            return;
+        }
+
+        // For Absolute the offset is 0 and the relation is 1:1. For RelativeToChildren
+        // the offset is the children's intrinsic width (absoluteBefore - unitBefore), and
+        // changing the unit value shifts absolute by the same amount.
+        var unitToAbsoluteOffset = absoluteWidthBefore - widthUnitBefore;
+        var projectedAbsoluteWidth = unitToAbsoluteOffset + Visual.Width;
+        if (projectedAbsoluteWidth < Visual.MinWidth.Value)
+        {
+            Visual.Width += Visual.MinWidth.Value - projectedAbsoluteWidth;
+        }
+    }
+
+    /// <summary>
+    /// Height counterpart of <see cref="ClampMinWidth"/>. See that method's remarks.
+    /// </summary>
+    private void ClampMinHeight(float heightUnitBefore, float absoluteHeightBefore)
+    {
+        if (Visual.MinHeight == null)
+        {
+            return;
+        }
+
+        var unitToAbsoluteOffset = absoluteHeightBefore - heightUnitBefore;
+        var projectedAbsoluteHeight = unitToAbsoluteOffset + Visual.Height;
+        if (projectedAbsoluteHeight < Visual.MinHeight.Value)
+        {
+            Visual.Height += Visual.MinHeight.Value - projectedAbsoluteHeight;
+        }
     }
 
     private bool IsOverParentRecursively(IRenderableIpso item, float cursorX, float cursorY)
