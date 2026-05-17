@@ -888,7 +888,24 @@ public class CircleRuntime : GraphicalUiElement
                 strokeGapLength /= camera.Zoom;
             }
         }
-        _stroke.StrokeWidth = strokeWidth;
+        // Issue #2790 — Apos.Shapes' antialiased stroke renders ~0.5 px of soft bloom on each
+        // side OUTSIDE the nominal stroke thickness, while Skia's SKPaint fits AA WITHIN the
+        // thickness. To give cross-backend visual parity for the same user-set StrokeWidth,
+        // subtract one total bloom-px when AA is on. Floored at 0.5 so a user StrokeWidth = 1
+        // doesn't push 0 and disappear; the remaining mismatch at sub-pixel sizes is
+        // documented (and slightly visible on the CirclesScreen StrokeWidth row). Gated by
+        // IAntialiasedRenderable so the core stroke default (LineCircle wrapper, no AA
+        // concept) still receives the raw value.
+        const float aposAaBloomPerSide = 0.5f;
+        const float minRenderableStrokeWidth = 0.5f;
+        float renderableStrokeWidth = strokeWidth;
+        if (_isAntialiased && _stroke is IAntialiasedRenderable)
+        {
+            renderableStrokeWidth = Math.Max(
+                minRenderableStrokeWidth,
+                strokeWidth - 2f * aposAaBloomPerSide);
+        }
+        _stroke.StrokeWidth = renderableStrokeWidth;
 
         // Issue #2796: push dash/gap to the stroke slot when it supports dashing. Skipped
         // for slots that don't implement the interface (core DefaultStrokedCircleRenderable
