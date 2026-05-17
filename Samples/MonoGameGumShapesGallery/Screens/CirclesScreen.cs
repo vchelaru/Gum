@@ -42,16 +42,19 @@ internal class CirclesScreen : FrameworkElement
         root.AddChild(left);
         root.AddChild(right);
 
+        // Column split mirrors SilkNetGum/Screens/CirclesScreen so visual regressions in one
+        // backend are easy to spot against the other.
         left.AddChild(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
         left.AddChild(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
         left.AddChild(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
         left.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
         left.AddChild(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+        left.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
 
-        right.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
         right.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
         right.AddChild(BuildSection("Dropshadow (off / soft / hard offset / colored) — fill-only push avoids doubling (#2797)", BuildDropshadowRow()));
         right.AddChild(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — stroke-only push (#2796)", BuildDashedStrokeRow()));
+        right.AddChild(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2790)", BuildBothColorsRow()));
         right.AddChild(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract; mirrors SilkNetGum)", BuildInscribedRow()));
     }
 
@@ -354,6 +357,30 @@ internal class CirclesScreen : FrameworkElement
         row.HeightUnits = DimensionUnitType.RelativeToChildren;
         row.Width = 0;
         row.Height = 0;
+        return row;
+    }
+
+    // Visual acceptance for #2790 — mirrors the SilkNetGum row of the same name. Both layers
+    // (fill + stroke) render simultaneously regardless of setter order; pre-#2790 only the
+    // most-recently-set non-null color was visible.
+    static ContainerRuntime BuildBothColorsRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        CircleRuntime strokeLast = new();
+        strokeLast.Radius = 28;
+        strokeLast.FillColor = Color.Crimson;
+        strokeLast.StrokeColor = Color.Cyan;
+        strokeLast.StrokeWidth = 4;
+        row.AddChild(strokeLast);
+
+        CircleRuntime fillLast = new();
+        fillLast.Radius = 28;
+        fillLast.StrokeColor = Color.Magenta;
+        fillLast.StrokeWidth = 4;
+        fillLast.FillColor = Color.Gold;
+        row.AddChild(fillLast);
+
         return row;
     }
 
