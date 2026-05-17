@@ -13,14 +13,33 @@ namespace MonoGameAndGum.Renderables;
 public class RoundedRectangle : RenderableShapeBase,
     Gum.GueDeriving.IFilledRectangleRenderable,
     Gum.GueDeriving.IStrokedRectangleRenderable,
+    Gum.GueDeriving.IGradientedRenderable,
+    Gum.GueDeriving.IAntialiasedRenderable,
     Gum.GueDeriving.IDropshadowRenderable,
-    Gum.GueDeriving.IDashedStrokeRenderable
+    Gum.GueDeriving.IDashedStrokeRenderable,
+    System.ICloneable
 {
-    // IDropshadowRenderable and IDashedStrokeRenderable are satisfied entirely by the
-    // property bag inherited from RenderableShapeBase — declared here so the future
-    // RectangleRuntime (#2797 / #2796 follow-up) can pattern-match those surfaces the same
-    // way CircleRuntime does today, without coupling to the concrete Apos.Shapes
-    // RoundedRectangle type.
+    // IGradientedRenderable, IAntialiasedRenderable, IDropshadowRenderable, and
+    // IDashedStrokeRenderable are all satisfied entirely by the property bag inherited from
+    // RenderableShapeBase — declared here so RectangleRuntime (#2818) can pattern-match
+    // those surfaces the same way CircleRuntime does, without coupling to the concrete
+    // Apos.Shapes RoundedRectangle type.
+
+    /// <summary>
+    /// Issue #2818 — required by <see cref="Gum.Wireframe.GraphicalUiElement.Clone"/> so
+    /// shape runtimes can be deep-copied. Mirrors the Circle.Clone implementation: the
+    /// children collection, parent pointer, and OnPreRender hook (which still points back at
+    /// the source runtime) are reset so the clone is structurally independent.
+    /// RectangleRuntime.Clone is responsible for re-wiring OnPreRender against the new runtime.
+    /// </summary>
+    public object Clone()
+    {
+        RoundedRectangle clone = (RoundedRectangle)MemberwiseClone();
+        clone._children = new();
+        clone._parent = null;
+        clone.OnPreRender = null;
+        return clone;
+    }
 
     /// <summary>
     /// Rounded-corner radius in pixels. Apos.Shapes' <c>RoundedRectangle</c> honors this on
@@ -199,7 +218,15 @@ public class RoundedRectangle : RenderableShapeBase,
         var perimeter = 2f * (straightX + straightY) + 4f * cornerArc;
         if (perimeter <= 0) return;
 
-        var period = StrokeDashLength + StrokeGapLength;
+        // Issue #2818 (mirror of Circle.RenderDashed #2790): when AA is on, each dash's
+        // tangential end-cap halo leaks into the neighboring gap and smears dotted patterns
+        // into near-continuous borders. Shift 1.5 * aaSize into the gap and trim 0.5 * aaSize
+        // off each dash so the gap opens up noticeably while dashes shrink slightly to
+        // compensate. Dash length floored at a small epsilon so a tight 1-px-dash pattern
+        // doesn't push 0 (Apos won't render a zero-length dash).
+        var effectiveGapLen = StrokeGapLength + 1.5f * antiAliasSize;
+        var dashLen = MathHelper.Max(0.01f, StrokeDashLength - 0.5f * antiAliasSize);
+        var period = dashLen + effectiveGapLen;
         if (period <= 0) return;
 
         var topY = absoluteTop;
@@ -223,7 +250,7 @@ public class RoundedRectangle : RenderableShapeBase,
         for (float t = 0; t < perimeter; t += period)
         {
             var dashStart = t;
-            var dashEnd = MathHelper.Min(t + StrokeDashLength, perimeter);
+            var dashEnd = MathHelper.Min(t + dashLen, perimeter);
             if (dashEnd <= dashStart) continue;
 
             float segOff = 0f;

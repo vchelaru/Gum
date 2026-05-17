@@ -30,8 +30,8 @@ public class RectangleRuntimeTests
         clone.FillColor = SKColors.Green;
         clone.StrokeColor = SKColors.Yellow;
 
-        LineRectangle sourceFill = (LineRectangle)source.RenderableComponent;
-        LineRectangle sourceStroke = (LineRectangle)sourceFill.Children.Single();
+        RoundedRectangle sourceFill = (RoundedRectangle)source.RenderableComponent;
+        RoundedRectangle sourceStroke = (RoundedRectangle)sourceFill.Children.Single();
         sourceFill.Color.ShouldBe(SKColors.Red);
         sourceStroke.Color.ShouldBe(SKColors.Blue);
     }
@@ -45,10 +45,10 @@ public class RectangleRuntimeTests
 
         RectangleRuntime clone = (RectangleRuntime)source.Clone();
 
-        LineRectangle sourceFill = (LineRectangle)source.RenderableComponent;
-        LineRectangle cloneFill = (LineRectangle)clone.RenderableComponent;
-        LineRectangle sourceStroke = (LineRectangle)sourceFill.Children.Single();
-        LineRectangle cloneStroke = (LineRectangle)cloneFill.Children.Single();
+        RoundedRectangle sourceFill = (RoundedRectangle)source.RenderableComponent;
+        RoundedRectangle cloneFill = (RoundedRectangle)clone.RenderableComponent;
+        RoundedRectangle sourceStroke = (RoundedRectangle)sourceFill.Children.Single();
+        RoundedRectangle cloneStroke = (RoundedRectangle)cloneFill.Children.Single();
 
         cloneFill.ShouldNotBeSameAs(sourceFill);
         cloneStroke.ShouldNotBeSameAs(sourceStroke);
@@ -60,18 +60,71 @@ public class RectangleRuntimeTests
         RectangleRuntime sut = new();
         sut.Color1 = new SKColor(10, 20, 30, 40);
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.Red1.ShouldBe(10);
         strokeSlot.Red1.ShouldBe(10);
         strokeSlot.Alpha1.ShouldBe(40);
     }
 
     [Fact]
-    public void ContainedRenderable_ShouldBeLineRectangle()
+    public void ContainedRenderable_ShouldBeRoundedRectangle()
     {
         RectangleRuntime sut = new();
-        sut.RenderableComponent.ShouldBeOfType<LineRectangle>();
+        sut.RenderableComponent.ShouldBeOfType<RoundedRectangle>();
+    }
+
+    // Issue #2818: default CornerRadius = 0 keeps the historical hard-cornered visual even
+    // though the contained type is now RoundedRectangle (whose own ctor defaults to 5).
+    [Fact]
+    public void CornerRadius_ShouldBe0_ByDefault()
+    {
+        RectangleRuntime sut = new();
+
+        sut.CornerRadius.ShouldBe(0f);
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        fillSlot.CornerRadius.ShouldBe(0f);
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
+        strokeSlot.CornerRadius.ShouldBe(0f);
+    }
+
+    // Issue #2818: CornerRadius mirrors onto both slots each frame in PreRender so the outline
+    // traces the same rounded corners as the fill.
+    [Fact]
+    public void CornerRadius_PushedToBothSlots_InPreRender()
+    {
+        RectangleRuntime sut = new();
+        sut.CornerRadius = 8f;
+
+        sut.PreRender();
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
+        fillSlot.CornerRadius.ShouldBe(8f);
+        strokeSlot.CornerRadius.ShouldBe(8f);
+    }
+
+    [Fact]
+    public void PerCornerRadii_PushedToBothSlots_InPreRender()
+    {
+        RectangleRuntime sut = new();
+        sut.CustomRadiusTopLeft = 1f;
+        sut.CustomRadiusTopRight = 2f;
+        sut.CustomRadiusBottomLeft = 3f;
+        sut.CustomRadiusBottomRight = 4f;
+
+        sut.PreRender();
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
+        fillSlot.CustomRadiusTopLeft.ShouldBe(1f);
+        fillSlot.CustomRadiusTopRight.ShouldBe(2f);
+        fillSlot.CustomRadiusBottomLeft.ShouldBe(3f);
+        fillSlot.CustomRadiusBottomRight.ShouldBe(4f);
+        strokeSlot.CustomRadiusTopLeft.ShouldBe(1f);
+        strokeSlot.CustomRadiusTopRight.ShouldBe(2f);
+        strokeSlot.CustomRadiusBottomLeft.ShouldBe(3f);
+        strokeSlot.CustomRadiusBottomRight.ShouldBe(4f);
     }
 
     [Fact]
@@ -82,8 +135,8 @@ public class RectangleRuntimeTests
 
         sut.PreRender();
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         strokeSlot.HasDropshadow.ShouldBeTrue();
         fillSlot.HasDropshadow.ShouldBeFalse();
     }
@@ -97,8 +150,8 @@ public class RectangleRuntimeTests
 
         sut.PreRender();
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.HasDropshadow.ShouldBeTrue();
         strokeSlot.HasDropshadow.ShouldBeFalse();
     }
@@ -110,8 +163,8 @@ public class RectangleRuntimeTests
         sut.FillColor = SKColors.Red;
         sut.HasDropshadow = true;
         sut.PreRender();
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.HasDropshadow.ShouldBeTrue();
 
         sut.FillColor = null;
@@ -135,8 +188,8 @@ public class RectangleRuntimeTests
         sut.FillColor = SKColors.Crimson;
         sut.StrokeColor = SKColors.Cyan;
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
 
         fillSlot.Color.ShouldBe(SKColors.Crimson);
         fillSlot.IsFilled.ShouldBeTrue();
@@ -151,8 +204,8 @@ public class RectangleRuntimeTests
         sut.StrokeColor = SKColors.Magenta;
         sut.FillColor = SKColors.Gold;
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
 
         fillSlot.Color.ShouldBe(SKColors.Gold);
         strokeSlot.Color.ShouldBe(SKColors.Magenta);
@@ -172,8 +225,8 @@ public class RectangleRuntimeTests
 
         sut.IsAntialiased = false;
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.IsAntialiased.ShouldBeFalse();
         strokeSlot.IsAntialiased.ShouldBeFalse();
     }
@@ -190,8 +243,8 @@ public class RectangleRuntimeTests
 
         sut.PreRender();
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         strokeSlot.Width.ShouldBe(fillSlot.Width);
         strokeSlot.Height.ShouldBe(fillSlot.Height);
         strokeSlot.IsOffsetAppliedForStroke.ShouldBeTrue();
@@ -202,7 +255,7 @@ public class RectangleRuntimeTests
     {
         RectangleRuntime sut = new();
         sut.UseGradient = true;
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
         fillSlot.UseGradient.ShouldBeFalse();
 
         sut.FillColor = SKColors.White;
@@ -222,10 +275,10 @@ public class RectangleRuntimeTests
     {
         RectangleRuntime sut = new();
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
         fillSlot.Children.Count.ShouldBe(1);
 
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         strokeSlot.IsFilled.ShouldBeFalse();
         fillSlot.IsFilled.ShouldBeTrue();
     }
@@ -239,8 +292,8 @@ public class RectangleRuntimeTests
 
         sut.PreRender();
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         strokeSlot.StrokeWidth.ShouldBe(5);
     }
 
@@ -258,8 +311,8 @@ public class RectangleRuntimeTests
         sut.FillColor = SKColors.White;
         sut.UseGradient = true;
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.UseGradient.ShouldBeTrue();
         strokeSlot.UseGradient.ShouldBeTrue();
     }
@@ -270,8 +323,8 @@ public class RectangleRuntimeTests
         RectangleRuntime sut = new();
         sut.UseGradient = true;
 
-        LineRectangle fillSlot = (LineRectangle)sut.RenderableComponent;
-        LineRectangle strokeSlot = (LineRectangle)fillSlot.Children.Single();
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.UseGradient.ShouldBeFalse();
         strokeSlot.UseGradient.ShouldBeTrue();
     }

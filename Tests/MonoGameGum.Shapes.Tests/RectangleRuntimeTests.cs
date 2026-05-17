@@ -1,3 +1,4 @@
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
@@ -104,5 +105,165 @@ public class RectangleRuntimeTests
         asRenderable.PreRender();
 
         stroke.StrokeWidth.ShouldBe(7f);
+    }
+
+    // Issue #2818: gradient props on RectangleRuntime push through to both Apos RoundedRectangles
+    // so a single gradient can paint fill and stroke at once (mirror of CircleRuntime #2791).
+    [Fact]
+    public void Gradient_PropertiesPushedToBothFillAndStrokeSlots()
+    {
+        RectangleRuntime sut = new();
+
+        sut.UseGradient = true;
+        sut.GradientType = GradientType.Linear;
+        sut.Color1 = Color.Red;
+        sut.Color2 = Color.Blue;
+        sut.GradientX2 = 56;
+        sut.GradientInnerRadius = 4;
+        sut.GradientInnerRadiusUnits = DimensionUnitType.Absolute;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+
+        fill.UseGradient.ShouldBeTrue();
+        stroke.UseGradient.ShouldBeTrue();
+        fill.GradientType.ShouldBe(GradientType.Linear);
+        stroke.GradientType.ShouldBe(GradientType.Linear);
+        fill.Red1.ShouldBe(Color.Red.R);
+        stroke.Red1.ShouldBe(Color.Red.R);
+        fill.Blue2.ShouldBe(Color.Blue.B);
+        stroke.Blue2.ShouldBe(Color.Blue.B);
+        fill.GradientX2.ShouldBe(56);
+        stroke.GradientX2.ShouldBe(56);
+        fill.GradientInnerRadius.ShouldBe(4);
+        stroke.GradientInnerRadius.ShouldBe(4);
+    }
+
+    // Issue #2818: dropshadow pushes to the fill slot only (with fallback to stroke when fill
+    // is null) — pushing to BOTH slots would render the shadow twice and visibly double up.
+    [Fact]
+    public void Dropshadow_PropertiesPushedToFillSlotOnly_NotStroke()
+    {
+        RectangleRuntime sut = new();
+
+        sut.HasDropshadow = true;
+        sut.DropshadowColor = new Color(10, 20, 30, 40);
+        sut.DropshadowOffsetX = 5;
+        sut.DropshadowOffsetY = 7;
+        sut.DropshadowBlurX = 2;
+        sut.DropshadowBlurY = 4;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+
+        fill.HasDropshadow.ShouldBeTrue();
+        fill.DropshadowColor.ShouldBe(new Color(10, 20, 30, 40));
+        fill.DropshadowOffsetX.ShouldBe(5);
+        fill.DropshadowOffsetY.ShouldBe(7);
+        fill.DropshadowBlurX.ShouldBe(2);
+        fill.DropshadowBlurY.ShouldBe(4);
+
+        stroke.HasDropshadow.ShouldBeFalse();
+    }
+
+    // Issue #2818: dashed-stroke props push to stroke slot only via PreRender (mirror of
+    // CircleRuntime #2796). Fill slot must stay 0 because RenderDashed is guarded by !IsFilled.
+    [Fact]
+    public void DashedStroke_PushedViaPreRender_ToStrokeSlotOnly()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 1;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.StrokeDashLength = 6;
+        sut.StrokeGapLength = 4;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        IRenderable asStrokeRenderable = stroke;
+        asStrokeRenderable.PreRender();
+
+        stroke.StrokeDashLength.ShouldBe(6f);
+        stroke.StrokeGapLength.ShouldBe(4f);
+        fill.StrokeDashLength.ShouldBe(0f);
+        fill.StrokeGapLength.ShouldBe(0f);
+    }
+
+    // Issue #2818: IsAntialiased pushes through to both slots via PreRender (mirror of
+    // CircleRuntime #2798).
+    [Fact]
+    public void IsAntialiased_PushedViaPreRender_ToBothFillAndStrokeSlots()
+    {
+        RectangleRuntime sut = new();
+
+        sut.IsAntialiased = false;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        IRenderable asFillRenderable = fill;
+        asFillRenderable.PreRender();
+
+        fill.IsAntialiased.ShouldBeFalse();
+        stroke.IsAntialiased.ShouldBeFalse();
+    }
+
+    // Issue #2818: per-corner radii push to both slots so the outline matches the fill.
+    [Fact]
+    public void PerCornerRadii_PushedToBothSlots()
+    {
+        RectangleRuntime sut = new();
+
+        sut.CustomRadiusTopLeft = 1f;
+        sut.CustomRadiusTopRight = 2f;
+        sut.CustomRadiusBottomLeft = 3f;
+        sut.CustomRadiusBottomRight = 4f;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+
+        fill.CustomRadiusTopLeft.ShouldBe(1f);
+        fill.CustomRadiusTopRight.ShouldBe(2f);
+        fill.CustomRadiusBottomLeft.ShouldBe(3f);
+        fill.CustomRadiusBottomRight.ShouldBe(4f);
+        stroke.CustomRadiusTopLeft.ShouldBe(1f);
+        stroke.CustomRadiusTopRight.ShouldBe(2f);
+        stroke.CustomRadiusBottomLeft.ShouldBe(3f);
+        stroke.CustomRadiusBottomRight.ShouldBe(4f);
+    }
+
+    // Issue #2818: Clone re-resolves fresh fill/stroke slots so the clone is independent.
+    [Fact]
+    public void Clone_BothSlots_AreFreshFactoryInstances_NotShallowCopiesOfSource()
+    {
+        RectangleRuntime source = new();
+        source.FillColor = Color.Red;
+        source.StrokeColor = Color.Blue;
+
+        RectangleRuntime clone = (RectangleRuntime)source.Clone();
+
+        RoundedRectangle sourceFill = (RoundedRectangle)source.RenderableComponent;
+        RoundedRectangle cloneFill = (RoundedRectangle)clone.RenderableComponent;
+        RoundedRectangle sourceStroke = (RoundedRectangle)sourceFill.Children[0];
+        RoundedRectangle cloneStroke = (RoundedRectangle)cloneFill.Children[0];
+
+        cloneFill.ShouldNotBeSameAs(sourceFill);
+        cloneStroke.ShouldNotBeSameAs(sourceStroke);
+    }
+
+    [Fact]
+    public void Clone_MutatingClone_DoesNotMutateSource()
+    {
+        RectangleRuntime source = new();
+        source.FillColor = Color.Red;
+        source.StrokeColor = Color.Blue;
+
+        RectangleRuntime clone = (RectangleRuntime)source.Clone();
+        clone.FillColor = Color.Green;
+        clone.StrokeColor = Color.Yellow;
+
+        RoundedRectangle sourceFill = (RoundedRectangle)source.RenderableComponent;
+        RoundedRectangle sourceStroke = (RoundedRectangle)sourceFill.Children[0];
+        sourceFill.Color.ShouldBe(Color.Red);
+        sourceStroke.Color.ShouldBe(Color.Blue);
     }
 }
