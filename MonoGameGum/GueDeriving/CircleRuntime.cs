@@ -894,15 +894,17 @@ public class CircleRuntime : GraphicalUiElement
         // Runtimes/GumShapes/Renderables/Circle.cs), so Apos always contributes exactly 1 px
         // to the visible thickness. Skia fits its AA WITHIN the nominal thickness, so the
         // same user-set StrokeWidth would otherwise read 1 px wider on Apos than on Skia.
-        // Subtract that 1 px before pushing. Floored at 0 because Apos draws a thickness = 0
-        // stroke with aaSize = 1 as a clean 1 px AA halo — perfect parity for a user
-        // StrokeWidth = 1. Gated by IAntialiasedRenderable so the core stroke default
-        // (LineCircle wrapper, no AA concept) still receives the raw value.
+        // Subtract that 1 px before pushing. Floored at a tiny positive epsilon (not 0) as a
+        // hedge against Apos's shader interpreting thickness = 0 as "don't draw"; the 1 px AA
+        // halo dominates the visible width either way, so the sub-pixel under-draw of the
+        // nominal stroke is invisible. Gated by IAntialiasedRenderable so the core stroke
+        // default (LineCircle wrapper, no AA concept) still receives the raw value.
         const float aposAaContribution = 1f;
+        const float aposMinThicknessEpsilon = 0.01f;
         float renderableStrokeWidth = strokeWidth;
         if (_isAntialiased && _stroke is IAntialiasedRenderable)
         {
-            renderableStrokeWidth = Math.Max(0f, strokeWidth - aposAaContribution);
+            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContribution);
         }
         _stroke.StrokeWidth = renderableStrokeWidth;
 

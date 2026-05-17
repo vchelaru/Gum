@@ -288,11 +288,11 @@ public class CircleRuntimeTests
         stroke.StrokeWidth.ShouldBe(3f);
     }
 
-    // At user StrokeWidth = 1 with AA on, the compensation pushes 0 to Apos and AA stays on.
-    // Apos draws thickness = 0 + aaSize = 1 as a clean 1 px halo, exact match for Skia's
-    // 1-px-with-AA visible width.
+    // At user StrokeWidth = 1 with AA on, the compensation pushes a tiny epsilon (not 0) to
+    // Apos so its shader can't interpret the value as "don't draw". The 1 px AA halo
+    // dominates the visible width — exact match for Skia's 1-px-with-AA visible width.
     [Fact]
-    public void StrokeWidth_AaOn_AtOnePixel_PushesZeroForPureAaHalo()
+    public void StrokeWidth_AaOn_AtOnePixel_PushesEpsilonForPureAaHalo()
     {
         CircleRuntime sut = new();
         sut.StrokeColor = Color.Green;
@@ -304,7 +304,8 @@ public class CircleRuntimeTests
         IRenderable asRenderable = stroke;
         asRenderable.PreRender();
 
-        stroke.StrokeWidth.ShouldBe(0f);
+        stroke.StrokeWidth.ShouldBeGreaterThan(0f);
+        stroke.StrokeWidth.ShouldBeLessThan(0.1f);
         stroke.IsAntialiased.ShouldBeTrue();
     }
 }
