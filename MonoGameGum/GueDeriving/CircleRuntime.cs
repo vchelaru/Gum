@@ -888,23 +888,21 @@ public class CircleRuntime : GraphicalUiElement
                 strokeGapLength /= camera.Zoom;
             }
         }
-        // Issue #2790 — Apos.Shapes' antialiased stroke renders ~0.5 px of soft bloom on each
-        // side OUTSIDE the nominal stroke thickness, while Skia's SKPaint fits AA WITHIN the
-        // thickness. To give cross-backend visual parity for the same user-set StrokeWidth,
-        // subtract one total bloom-px when AA is on. Floored at 0.5 so a user StrokeWidth = 1
-        // doesn't push 0 to Apos and vanish; the remaining ~0.5 px overdraw at sub-2-px
-        // strokes is a known limitation of the Apos AA model (cannot reach a 1 px visible
-        // thickness without disabling AA, which would jag the circle's curve). Gated by
-        // IAntialiasedRenderable so the core stroke default (LineCircle wrapper, no AA
-        // concept) still receives the raw value.
-        const float aposAaBloomPerSide = 0.5f;
-        const float minRenderableStrokeWidth = 0.5f;
+        // Issue #2790 — Apos.Shapes' DrawCircle takes a stroke thickness plus an aaSize and
+        // renders aaSize pixels of antialiased halo OUTSIDE the nominal thickness. Gum/Apos's
+        // Circle.Render passes aaSize = 1 when IsAntialiased is true (see
+        // Runtimes/GumShapes/Renderables/Circle.cs), so Apos always contributes exactly 1 px
+        // to the visible thickness. Skia fits its AA WITHIN the nominal thickness, so the
+        // same user-set StrokeWidth would otherwise read 1 px wider on Apos than on Skia.
+        // Subtract that 1 px before pushing. Floored at 0 because Apos draws a thickness = 0
+        // stroke with aaSize = 1 as a clean 1 px AA halo — perfect parity for a user
+        // StrokeWidth = 1. Gated by IAntialiasedRenderable so the core stroke default
+        // (LineCircle wrapper, no AA concept) still receives the raw value.
+        const float aposAaContribution = 1f;
         float renderableStrokeWidth = strokeWidth;
         if (_isAntialiased && _stroke is IAntialiasedRenderable)
         {
-            renderableStrokeWidth = Math.Max(
-                minRenderableStrokeWidth,
-                strokeWidth - 2f * aposAaBloomPerSide);
+            renderableStrokeWidth = Math.Max(0f, strokeWidth - aposAaContribution);
         }
         _stroke.StrokeWidth = renderableStrokeWidth;
 

@@ -266,14 +266,13 @@ public class CircleRuntimeTests
         stroke.StrokeWidth.ShouldBe(5f);
     }
 
-    // Apos.Shapes renders ~0.5 px of antialiased bloom on each side OF the nominal stroke,
-    // while Skia's SKPaint fits AA WITHIN the stroke. To give cross-backend visual parity for
-    // the same user-set StrokeWidth (the contract the user reasonably expects), CircleRuntime
-    // subtracts ~1 px (2 * 0.5) from the value pushed to the Apos stroke renderable when
-    // IsAntialiased = true. Without compensation a "1 px" ring on MG reads ~2 px while Skia
-    // reads ~1 px — visible asymmetry across the CirclesScreen sample.
+    // Apos.Shapes' DrawCircle adds exactly 1 px of antialiased halo OUTSIDE the nominal
+    // stroke thickness (see Runtimes/GumShapes/Renderables/Circle.cs — aaSize passed as 1
+    // when IsAntialiased is true). Skia fits AA WITHIN the thickness instead, so the same
+    // user-set StrokeWidth would otherwise read 1 px wider on Apos. CircleRuntime subtracts
+    // the 1 px before pushing to give visual parity across backends.
     [Fact]
-    public void StrokeWidth_AaOn_SubtractsBloomBeforePushingToAposStroke()
+    public void StrokeWidth_AaOn_SubtractsAaContributionBeforePushingToAposStroke()
     {
         CircleRuntime sut = new();
         sut.StrokeColor = Color.Green;
@@ -285,17 +284,15 @@ public class CircleRuntimeTests
         IRenderable asRenderable = stroke;
         asRenderable.PreRender();
 
-        // 4 - (2 * 0.5) = 3
+        // 4 - 1 = 3
         stroke.StrokeWidth.ShouldBe(3f);
     }
 
-    // Special case: at user StrokeWidth = 1 with AA on, naive subtraction would push 0 to Apos
-    // and the stroke disappears. The runtime floors the pushed value at 0.5 so a thin AA-soft
-    // ring still renders. Visible result is ~1.5 px on Apos vs ~1 px on Skia — a known small
-    // residual mismatch at sub-2-px strokes; cannot be removed without disabling AA, which
-    // jags the circle's curve and is disallowed.
+    // At user StrokeWidth = 1 with AA on, the compensation pushes 0 to Apos and AA stays on.
+    // Apos draws thickness = 0 + aaSize = 1 as a clean 1 px halo, exact match for Skia's
+    // 1-px-with-AA visible width.
     [Fact]
-    public void StrokeWidth_AaOn_AtOnePixel_FloorsInsteadOfPushingZero()
+    public void StrokeWidth_AaOn_AtOnePixel_PushesZeroForPureAaHalo()
     {
         CircleRuntime sut = new();
         sut.StrokeColor = Color.Green;
@@ -307,7 +304,7 @@ public class CircleRuntimeTests
         IRenderable asRenderable = stroke;
         asRenderable.PreRender();
 
-        stroke.StrokeWidth.ShouldBe(0.5f);
+        stroke.StrokeWidth.ShouldBe(0f);
         stroke.IsAntialiased.ShouldBeTrue();
     }
 }
