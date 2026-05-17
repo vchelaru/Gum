@@ -141,6 +141,15 @@ public class RoundedRectangleRuntime
         {
             SetContainedShape(new RoundedRectangle());
 
+#if SKIA
+            // Issue #2814: opt this Skia runtime into two-slot fill+stroke composition (recipe
+            // documented on SkiaShapeRuntime). The contained RoundedRectangle is the fill slot;
+            // a second RoundedRectangle, parented under fill, draws the stroke. Defaults below
+            // (no explicit FillColor / StrokeColor) keep pre-#2814 visual behavior - neither
+            // slot lights up until the user sets a color - but the slots are now independent.
+            SetStrokeRenderable(new RoundedRectangle());
+#endif
+
             // Defaults of 100 to match Glue / FRB conventions.
             Width = 100;
             Height = 100;
@@ -203,41 +212,59 @@ public class RoundedRectangleRuntime
         // not (latent bug, fixed by unification).
         toReturn._containedRoundedRectangle = null;
 
+#if SKIA
+        // Issue #2814 recipe (mirror of CircleRuntime.Clone): drop the inherited reference to
+        // the source stroke slot and rebuild a fresh one parented to the clone fill so the
+        // clone is fully independent.
+        toReturn.ClearStrokeRenderable();
+        toReturn.SetStrokeRenderable(new RoundedRectangle());
+        // Re-fire StrokeColor so the user color (held on _strokeColor via MemberwiseClone) is
+        // pushed into the fresh stroke slot.
+        toReturn.StrokeColor = toReturn.StrokeColor;
+#endif
+
         return toReturn;
     }
 
 #if SKIA
     public override void PreRender()
     {
-        if (this.EffectiveManagers != null)
+        // Resolve unit-aware corner radii once. ScreenPixel scaling needs a Camera (lives on
+        // EffectiveManagers) but the un-scaled Absolute path also wants the values pushed onto
+        // the contained renderable + (since #2814) the stroke slot, so the EffectiveManagers
+        // gate is narrow: only the divide-by-zoom step requires it.
+        var cornerRadius = CornerRadius;
+        var topLeft = CustomRadiusTopLeft;
+        var topRight = CustomRadiusTopRight;
+        var bottomLeft = CustomRadiusBottomLeft;
+        var bottomRight = CustomRadiusBottomRight;
+
+        if (CornerRadiusUnits == DimensionUnitType.ScreenPixel && this.EffectiveManagers != null)
         {
             var camera = this.EffectiveManagers.Renderer.Camera;
-            var cornerRadius = CornerRadius;
-            var topLeft = CustomRadiusTopLeft;
-            var topRight = CustomRadiusTopRight;
-            var bottomLeft = CustomRadiusBottomLeft;
-            var bottomRight = CustomRadiusBottomRight;
+            cornerRadius /= camera.Zoom;
 
-            switch (CornerRadiusUnits)
-            {
-                case DimensionUnitType.Absolute:
-                    // do nothing
-                    break;
-                case DimensionUnitType.ScreenPixel:
-                    cornerRadius /= camera.Zoom;
+            topLeft /= camera.Zoom;
+            topRight /= camera.Zoom;
+            bottomLeft /= camera.Zoom;
+            bottomRight /= camera.Zoom;
+        }
 
-                    topLeft /= camera.Zoom;
-                    topRight /= camera.Zoom;
-                    bottomLeft /= camera.Zoom;
-                    bottomRight /= camera.Zoom;
+        ContainedRoundedRectangle.CornerRadius = cornerRadius;
+        ContainedRoundedRectangle.CustomRadiusTopLeft = topLeft;
+        ContainedRoundedRectangle.CustomRadiusTopRight = topRight;
+        ContainedRoundedRectangle.CustomRadiusBottomLeft = bottomLeft;
+        ContainedRoundedRectangle.CustomRadiusBottomRight = bottomRight;
 
-                    break;
-            }
-            ContainedRoundedRectangle.CornerRadius = cornerRadius;
-            ContainedRoundedRectangle.CustomRadiusTopLeft = topLeft;
-            ContainedRoundedRectangle.CustomRadiusTopRight = topRight;
-            ContainedRoundedRectangle.CustomRadiusBottomLeft = bottomLeft;
-            ContainedRoundedRectangle.CustomRadiusBottomRight = bottomRight;
+        // Issue #2814: mirror corner radii onto the stroke slot when two-slot composition
+        // is engaged so the outline traces the same rounded corners as the fill.
+        if (StrokeRenderable is RoundedRectangle strokeRounded)
+        {
+            strokeRounded.CornerRadius = cornerRadius;
+            strokeRounded.CustomRadiusTopLeft = topLeft;
+            strokeRounded.CustomRadiusTopRight = topRight;
+            strokeRounded.CustomRadiusBottomLeft = bottomLeft;
+            strokeRounded.CustomRadiusBottomRight = bottomRight;
         }
         base.PreRender();
     }

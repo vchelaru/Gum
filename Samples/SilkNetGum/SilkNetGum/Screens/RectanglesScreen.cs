@@ -1,0 +1,465 @@
+using Gum.DataTypes;
+using Gum.GueDeriving;
+using Gum.Wireframe;
+using RenderingLibrary.Graphics;
+using SkiaSharp;
+
+namespace SilkNetGum.Screens;
+
+// Skia mirror of MonoGameGumShapesGallery/Screens/RectanglesScreen.cs (issue #2814). The two
+// files should stay in lock-step structurally — same sections, same parameter sweeps — so
+// visual regressions in one backend are easy to spot against the other.
+//
+// What forces the two files apart:
+//   - Base class. Forms (FrameworkElement / Dock / AddChild) hasn't reached the Skia runtime
+//     yet, so this screen derives from GraphicalUiElement and uses Children.Add directly.
+//   - Color type. XNA Microsoft.Xna.Framework.Color becomes SKColor; named colors come from
+//     SkiaSharp.SKColors instead of Color.X.
+//   - CornerRadius row uses RoundedRectangleRuntime here (the Skia two-slot rounded variant
+//     added in #2814). MG side reuses RectangleRuntime since the Apos package overrides the
+//     core rectangle slots with RoundedRectangle and CornerRadius routes through directly.
+//
+// Sections the MG side can't currently mirror (gated by missing API on MG RectangleRuntime
+// rather than a design difference): Gradients, Antialiasing, Dropshadow, DashedStrokes. The
+// MG header for those sections will land alongside follow-up plumbing.
+internal class RectanglesScreen : GraphicalUiElement
+{
+    public RectanglesScreen() : base(new InvisibleRenderable())
+    {
+        // Two-column root so the screen grows wide rather than tall as rows accumulate. No
+        // ScrollViewer in SkiaGum yet, so this is the cheapest layout that works on both
+        // backends (mirrored in MonoGameGumShapesGallery/Screens/RectanglesScreen).
+        ContainerRuntime root = new();
+        root.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        root.StackSpacing = 24;
+        root.X = 10;
+        root.Y = 10;
+        this.Children.Add(root);
+
+        ContainerRuntime left = BuildColumn();
+        ContainerRuntime right = BuildColumn();
+        root.Children.Add(left);
+        root.Children.Add(right);
+
+        left.Children.Add(BuildSection("Sizes (40, 60, 90, 130 wide) — default outline", BuildSizesRow()));
+        left.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
+        left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
+        left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
+        left.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+        left.Children.Add(BuildSection("CornerRadius (0, 6, 16, 28) — exercises RoundedRectangleRuntime (#2814)", BuildCornerRadiusRow()));
+        left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
+
+        right.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
+        right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — Skia draws the shadow on the single contained renderable (#2797)", BuildDropshadowRow()));
+        right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — Skia routes through SkiaShapeRuntime.StrokeDashLength (#2796)", BuildDashedStrokeRow()));
+        right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2814)", BuildBothColorsRow()));
+        right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2814 visual contract)", BuildInscribedRow()));
+    }
+
+    static ContainerRuntime BuildColumn()
+    {
+        ContainerRuntime column = new();
+        column.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        column.StackSpacing = 14;
+        column.WidthUnits = DimensionUnitType.RelativeToChildren;
+        column.HeightUnits = DimensionUnitType.RelativeToChildren;
+        column.Width = 0;
+        column.Height = 0;
+        return column;
+    }
+
+    static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
+    {
+        ContainerRuntime section = new();
+        section.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        section.StackSpacing = 4;
+        section.WidthUnits = DimensionUnitType.RelativeToChildren;
+        section.HeightUnits = DimensionUnitType.RelativeToChildren;
+        section.Width = 0;
+        section.Height = 0;
+
+        TextRuntime header = new();
+        header.Text = label;
+        header.Red = 220;
+        header.Green = 220;
+        header.Blue = 220;
+        section.Children.Add(header);
+        section.Children.Add(body);
+        return section;
+    }
+
+    static ContainerRuntime BuildSizesRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float width in new[] { 40f, 60f, 90f, 130f })
+        {
+            RectangleRuntime rect = new();
+            rect.Width = width;
+            rect.Height = 40;
+            rect.StrokeColor = SKColors.White;
+            row.Children.Add(rect);
+        }
+        return row;
+    }
+
+    static ContainerRuntime BuildAlphaRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (byte alpha in new byte[] { 255, 192, 128, 64 })
+        {
+            RectangleRuntime rect = new();
+            rect.Width = 60;
+            rect.Height = 40;
+            rect.StrokeColor = new SKColor(255, 255, 255, alpha);
+            row.Children.Add(rect);
+        }
+        return row;
+    }
+
+    static ContainerRuntime BuildModeRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        RectangleRuntime filled = new();
+        filled.Width = 80; filled.Height = 50;
+        filled.FillColor = SKColors.Crimson;
+        row.Children.Add(filled);
+
+        RectangleRuntime stroked = new();
+        stroked.Width = 80; stroked.Height = 50;
+        stroked.StrokeColor = SKColors.Cyan;
+        stroked.StrokeWidth = 3;
+        row.Children.Add(stroked);
+
+        RectangleRuntime defaultRect = new();
+        defaultRect.Width = 80; defaultRect.Height = 50;
+        row.Children.Add(defaultRect);
+
+        return row;
+    }
+
+    static ContainerRuntime BuildStrokeWidthRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float strokeWidth in new[] { 1f, 2f, 4f, 8f })
+        {
+            RectangleRuntime rect = new();
+            rect.Width = 70;
+            rect.Height = 50;
+            rect.StrokeColor = SKColors.LightGreen;
+            rect.StrokeWidth = strokeWidth;
+            row.Children.Add(rect);
+        }
+        return row;
+    }
+
+    static ContainerRuntime BuildAlignmentRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (VerticalAlignment alignment in new[] { VerticalAlignment.Top, VerticalAlignment.Center, VerticalAlignment.Bottom })
+        {
+            row.Children.Add(BuildAlignmentCell(alignment));
+        }
+        return row;
+    }
+
+    // CornerRadius row exercises RoundedRectangleRuntime — the Skia two-slot variant added in
+    // #2814 alongside the rectangle's two-slot rework. Same fill+stroke composition, just
+    // with rounded corners.
+    static ContainerRuntime BuildCornerRadiusRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float cornerRadius in new[] { 0f, 6f, 16f, 28f })
+        {
+            RoundedRectangleRuntime rect = new();
+            rect.Width = 80;
+            rect.Height = 60;
+            rect.FillColor = new SKColor(40, 40, 80);
+            rect.StrokeColor = SKColors.Orange;
+            rect.StrokeWidth = 2;
+            rect.CornerRadius = cornerRadius;
+            row.Children.Add(rect);
+        }
+        return row;
+    }
+
+    static ContainerRuntime BuildGradientRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        // Linear horizontal: white → blue
+        RectangleRuntime linearH = new();
+        linearH.Width = 70; linearH.Height = 50;
+        linearH.FillColor = SKColors.White; // fill mode; gradient overrides solid color
+        linearH.UseGradient = true;
+        linearH.GradientType = GradientType.Linear;
+        linearH.Color1 = SKColors.White;
+        linearH.Color2 = SKColors.SteelBlue;
+        linearH.GradientX1 = 0; linearH.GradientY1 = 0;
+        linearH.GradientX2 = 70; linearH.GradientY2 = 0;
+        row.Children.Add(linearH);
+
+        // Linear vertical: gold → crimson
+        RectangleRuntime linearV = new();
+        linearV.Width = 70; linearV.Height = 50;
+        linearV.FillColor = SKColors.White;
+        linearV.UseGradient = true;
+        linearV.GradientType = GradientType.Linear;
+        linearV.Color1 = SKColors.Gold;
+        linearV.Color2 = SKColors.Crimson;
+        linearV.GradientX1 = 0; linearV.GradientY1 = 0;
+        linearV.GradientX2 = 0; linearV.GradientY2 = 50;
+        row.Children.Add(linearV);
+
+        // Linear diagonal: cyan → magenta
+        RectangleRuntime linearD = new();
+        linearD.Width = 70; linearD.Height = 50;
+        linearD.FillColor = SKColors.White;
+        linearD.UseGradient = true;
+        linearD.GradientType = GradientType.Linear;
+        linearD.Color1 = SKColors.Cyan;
+        linearD.Color2 = SKColors.Magenta;
+        linearD.GradientX1 = 0; linearD.GradientY1 = 0;
+        linearD.GradientX2 = 70; linearD.GradientY2 = 50;
+        row.Children.Add(linearD);
+
+        // Radial centered: white → dark green
+        RectangleRuntime radial = new();
+        radial.Width = 70; radial.Height = 50;
+        radial.FillColor = SKColors.White;
+        radial.UseGradient = true;
+        radial.GradientType = GradientType.Radial;
+        radial.Color1 = SKColors.White;
+        radial.Color2 = SKColors.DarkGreen;
+        radial.GradientX1 = 35; radial.GradientY1 = 25;
+        radial.GradientInnerRadius = 0;
+        radial.GradientOuterRadius = 35;
+        row.Children.Add(radial);
+
+        return row;
+    }
+
+    // Visual acceptance for #2814. Two-slot composition means setting both FillColor and
+    // StrokeColor lights up both layers simultaneously — order-independent. Each cell here
+    // should render a filled card with a contrasting frame around it.
+    static ContainerRuntime BuildBothColorsRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        RectangleRuntime strokeLast = new();
+        strokeLast.Width = 80; strokeLast.Height = 50;
+        strokeLast.FillColor = SKColors.Crimson;
+        strokeLast.StrokeColor = SKColors.Cyan;
+        strokeLast.StrokeWidth = 4;
+        row.Children.Add(strokeLast);
+
+        RectangleRuntime fillLast = new();
+        fillLast.Width = 80; fillLast.Height = 50;
+        fillLast.StrokeColor = SKColors.Magenta;
+        fillLast.StrokeWidth = 4;
+        fillLast.FillColor = SKColors.Gold;
+        row.Children.Add(fillLast);
+
+        return row;
+    }
+
+    // Visual contract for #2814: the stroke slot mirrors the runtime's Width/Height (pushed
+    // each frame in SkiaShapeRuntime.PreRender) and RenderableShapeBase.IsOffsetAppliedForStroke
+    // insets the rendered frame by half the stroke width. Cells get progressively thicker
+    // strokes (1, 4, 8, 12) — every frame must stay inside the gray rectangle. If a stroke
+    // bleeds past the frame, layout or PreRender mirroring is wrong.
+    static ContainerRuntime BuildInscribedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float strokeWidth in new[] { 1f, 4f, 8f, 12f })
+        {
+            row.Children.Add(BuildInscribedCell(strokeWidth));
+        }
+        return row;
+    }
+
+    static ColoredRectangleRuntime BuildInscribedCell(float strokeWidth)
+    {
+        ColoredRectangleRuntime frame = new();
+        frame.Width = 64;
+        frame.Height = 64;
+        frame.Color = new SKColor(60, 60, 80);
+
+        RectangleRuntime rect = new();
+        rect.Width = 64;
+        rect.Height = 64;
+        rect.FillColor = SKColors.SeaGreen;
+        rect.StrokeColor = SKColors.Yellow;
+        rect.StrokeWidth = strokeWidth;
+        rect.StrokeWidthUnits = DimensionUnitType.Absolute;
+        frame.Children.Add(rect);
+        return frame;
+    }
+
+    // Issue #2798 visual acceptance: two pairs (filled card + 1 px outline frame), once with
+    // IsAntialiased = true (the default — soft edges) and once false (crisp pixels). On Skia
+    // this flips SKPaint.IsAntialias on the contained renderable.
+    static ContainerRuntime BuildAntialiasingRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        foreach (bool aa in new[] { true, false })
+        {
+            RectangleRuntime filled = new();
+            filled.Width = 60; filled.Height = 50;
+            filled.FillColor = SKColors.Goldenrod;
+            filled.IsAntialiased = aa;
+            row.Children.Add(filled);
+
+            RectangleRuntime frame = new();
+            frame.Width = 60; frame.Height = 50;
+            frame.StrokeColor = SKColors.White;
+            frame.StrokeWidth = 1;
+            frame.IsAntialiased = aa;
+            row.Children.Add(frame);
+        }
+
+        return row;
+    }
+
+    // Issue #2797 visual acceptance: mirror of the MonoGameGumShapesGallery dropshadow row.
+    // Same four cells — baseline, soft, hard offset, colored — so visual regressions in one
+    // backend are easy to spot against the other.
+    static ContainerRuntime BuildDropshadowRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        // Baseline: no shadow.
+        RectangleRuntime baseline = new();
+        baseline.Width = 60; baseline.Height = 50;
+        baseline.FillColor = SKColors.Goldenrod;
+        row.Children.Add(baseline);
+
+        // Soft shadow: noticeable offset, generous blur, default opaque black.
+        RectangleRuntime soft = new();
+        soft.Width = 60; soft.Height = 50;
+        soft.FillColor = SKColors.Goldenrod;
+        soft.HasDropshadow = true;
+        soft.DropshadowOffsetX = 4;
+        soft.DropshadowOffsetY = 4;
+        soft.DropshadowBlurX = 4;
+        soft.DropshadowBlurY = 4;
+        row.Children.Add(soft);
+
+        // Hard offset: bigger offset, no blur, semi-transparent black. Skia exposes only
+        // per-channel ints on the SkiaShapeRuntime dropshadow surface (no DropshadowColor
+        // composite), so set the channels individually here.
+        RectangleRuntime hard = new();
+        hard.Width = 60; hard.Height = 50;
+        hard.FillColor = SKColors.Goldenrod;
+        hard.HasDropshadow = true;
+        hard.DropshadowRed = 0; hard.DropshadowGreen = 0; hard.DropshadowBlue = 0; hard.DropshadowAlpha = 160;
+        hard.DropshadowOffsetX = 6;
+        hard.DropshadowOffsetY = 6;
+        hard.DropshadowBlurX = 0;
+        hard.DropshadowBlurY = 0;
+        row.Children.Add(hard);
+
+        // Colored shadow: magenta cast, real offset so the cast is visible against the blue
+        // background (offset = 0 would tuck the entire shadow under the opaque card and leave
+        // only a thin halo, which on a blue page reads as nothing).
+        RectangleRuntime colored = new();
+        colored.Width = 60; colored.Height = 50;
+        colored.FillColor = SKColors.Goldenrod;
+        colored.HasDropshadow = true;
+        colored.DropshadowRed = 220; colored.DropshadowGreen = 40; colored.DropshadowBlue = 160; colored.DropshadowAlpha = 220;
+        colored.DropshadowOffsetX = 6;
+        colored.DropshadowOffsetY = 6;
+        colored.DropshadowBlurX = 6;
+        colored.DropshadowBlurY = 6;
+        row.Children.Add(colored);
+
+        return row;
+    }
+
+    // Issue #2796 mirror of the MG dashed-stroke row. Skia inherits StrokeDashLength /
+    // StrokeGapLength from SkiaShapeRuntime, so no per-runtime plumbing was added on this
+    // side — the dashing flows through the single contained renderable.
+    static ContainerRuntime BuildDashedStrokeRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        // Baseline: solid stroke (dash=0).
+        RectangleRuntime solid = new();
+        solid.Width = 60; solid.Height = 50;
+        solid.StrokeColor = SKColors.White;
+        solid.StrokeWidth = 2;
+        row.Children.Add(solid);
+
+        // Short 6/4 dash.
+        RectangleRuntime short64 = new();
+        short64.Width = 60; short64.Height = 50;
+        short64.StrokeColor = SKColors.White;
+        short64.StrokeWidth = 2;
+        short64.StrokeDashLength = 6;
+        short64.StrokeGapLength = 4;
+        row.Children.Add(short64);
+
+        // Tight 2/2 dotted. AA stays ON for visual parity with the MG side (which uses the
+        // runtime's AA-bloom compensation, #2790, to keep dashes crisp without disabling AA).
+        // Skia's 1 px stroke with AA on already reads as ~1 px, so no compensation is needed
+        // here — just don't override IsAntialiased and the dashes stay smooth.
+        RectangleRuntime dotted = new();
+        dotted.Width = 60; dotted.Height = 50;
+        dotted.StrokeColor = SKColors.White;
+        dotted.StrokeWidth = 1;
+        dotted.StrokeDashLength = 2;
+        dotted.StrokeGapLength = 2;
+        row.Children.Add(dotted);
+
+        // Long-dash motif: 12/6 with a thicker stroke.
+        RectangleRuntime longDash = new();
+        longDash.Width = 60; longDash.Height = 50;
+        longDash.StrokeColor = SKColors.LightGreen;
+        longDash.StrokeWidth = 3;
+        longDash.StrokeDashLength = 12;
+        longDash.StrokeGapLength = 6;
+        row.Children.Add(longDash);
+
+        return row;
+    }
+
+    static ContainerRuntime BuildHorizontalRow()
+    {
+        ContainerRuntime row = new();
+        row.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        row.StackSpacing = 16;
+        row.WidthUnits = DimensionUnitType.RelativeToChildren;
+        row.HeightUnits = DimensionUnitType.RelativeToChildren;
+        row.Width = 0;
+        row.Height = 0;
+        return row;
+    }
+
+    static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
+    {
+        // ColoredRectangle is used as a visible frame so the alignment is obvious. Children
+        // are positioned relative to it via YOrigin + PixelsFromSmall/Middle/Large.
+        ColoredRectangleRuntime frame = new();
+        frame.Width = 128;
+        frame.Height = 100;
+        frame.Color = new SKColor(50, 50, 70);
+
+        RectangleRuntime rect = new();
+        rect.Width = 50;
+        rect.Height = 30;
+        rect.FillColor = SKColors.Orange;
+        rect.XOrigin = HorizontalAlignment.Center;
+        rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        rect.YOrigin = alignment;
+        rect.YUnits = alignment switch
+        {
+            VerticalAlignment.Top => Gum.Converters.GeneralUnitType.PixelsFromSmall,
+            VerticalAlignment.Center => Gum.Converters.GeneralUnitType.PixelsFromMiddle,
+            VerticalAlignment.Bottom => Gum.Converters.GeneralUnitType.PixelsFromLarge,
+            _ => Gum.Converters.GeneralUnitType.PixelsFromMiddle,
+        };
+        frame.Children.Add(rect);
+        return frame;
+    }
+}

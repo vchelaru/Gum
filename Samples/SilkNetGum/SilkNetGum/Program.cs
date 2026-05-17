@@ -54,6 +54,7 @@ unsafe class Program
     {
         () => new SilkNetGum.Screens.NineSliceScreen(),
         () => new SilkNetGum.Screens.CirclesScreen(),
+        () => new SilkNetGum.Screens.RectanglesScreen(),
     };
 
     private static void InitializeGum(SKCanvas canvas)

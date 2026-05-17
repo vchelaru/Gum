@@ -14,7 +14,9 @@ using Gum.Renderables;
 using Color = SokolGum.Color;
 using ContainedLineRectangle = Gum.Renderables.LineRectangle;
 #elif SKIA
+using Gum.DataTypes;
 using SkiaGum.Renderables;
+using SkiaSharp;
 using Color = SkiaSharp.SKColor;
 using ContainedLineRectangle = SkiaGum.Renderables.LineRectangle;
 #else
@@ -45,20 +47,24 @@ namespace Gum.GueDeriving;
 /// the defaults but not rendered; install MonoGameGumShapes for rounded corners. Backends
 /// other than XNA-like are still on the single <c>LineRectangle</c> model.
 /// </remarks>
+#if SKIA
+public class RectangleRuntime : SkiaShapeRuntime
+#else
 public class RectangleRuntime : GraphicalUiElement
+#endif
 {
 #if XNALIKE
     IFilledRectangleRenderable? _fill;
     IStrokedRectangleRenderable _stroke = null!;
 #else
-    ContainedLineRectangle containedLineRectangle;
+    ContainedLineRectangle containedLineRectangle = null!;
     ContainedLineRectangle ContainedLineRectangle
     {
         get
         {
             if (containedLineRectangle == null)
             {
-                containedLineRectangle = this.RenderableComponent as ContainedLineRectangle;
+                containedLineRectangle = (ContainedLineRectangle)this.RenderableComponent!;
             }
             return containedLineRectangle;
         }
@@ -80,7 +86,8 @@ public class RectangleRuntime : GraphicalUiElement
            NotifyPropertyChanged();
        }
     }
-#else
+#elif !SKIA
+    // SKIA: SkiaShapeRuntime.StrokeWidth supersedes; #2814.
     public float LineWidth
     {
        get => ContainedLineRectangle.LinePixelWidth;
@@ -112,7 +119,7 @@ public class RectangleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#else
+#elif !SKIA
     public bool IsDotted
     {
         get => ContainedLineRectangle.IsDotted;
@@ -140,7 +147,7 @@ public class RectangleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#else
+#elif !SKIA
     public int Alpha
     {
         get => ContainedLineRectangle.Color.A;
@@ -165,7 +172,7 @@ public class RectangleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#else
+#elif !SKIA
     public int Red
     {
         get => ContainedLineRectangle.Color.R;
@@ -190,7 +197,7 @@ public class RectangleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#else
+#elif !SKIA
     public int Green
     {
         get => ContainedLineRectangle.Color.G;
@@ -215,7 +222,7 @@ public class RectangleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#else
+#elif !SKIA
     public int Blue
     {
         get => ContainedLineRectangle.Color.B;
@@ -232,6 +239,8 @@ public class RectangleRuntime : GraphicalUiElement
     /// stroke slot for back-compat — <see cref="RectangleRuntime"/> was historically
     /// outline-only.
     /// </summary>
+#if !SKIA
+    // SkiaShapeRuntime base supplies an obsolete Color pass-through under SKIA. #2814.
     public Color Color
     {
 #if XNALIKE
@@ -259,6 +268,7 @@ public class RectangleRuntime : GraphicalUiElement
         }
 #endif
     }
+#endif
 
 #if XNALIKE
     Color? _fillColor;
@@ -368,6 +378,32 @@ public class RectangleRuntime : GraphicalUiElement
     }
 #endif
 
+#if SKIA
+    /// <summary>
+    /// Routes SkiaShapeRuntime solid/gradient/stroke/dropshadow accessors to the
+    /// contained LineRectangle. Issue #2814.
+    /// </summary>
+    protected override RenderableShapeBase ContainedRenderable => ContainedLineRectangle;
+
+    /// <inheritdoc/>
+    public override GraphicalUiElement Clone()
+    {
+        RectangleRuntime toReturn = (RectangleRuntime)base.Clone();
+        // Reset cached renderable reference so the clone re-resolves against its own
+        // RenderableComponent on next access. The fill slot color/dimensions were copied
+        // by LineRectangle.Clone (ICloneable, MemberwiseClone).
+        toReturn.containedLineRectangle = null!;
+        // Issue #2790 recipe - drop the inherited stroke-slot reference and rebuild a fresh
+        // one parented to the clone fill so the clone is fully independent.
+        toReturn.ClearStrokeRenderable();
+        toReturn.SetStrokeRenderable(new ContainedLineRectangle());
+        // Re-fire StrokeColor so the user color (held on _strokeColor via MemberwiseClone)
+        // is pushed into the fresh stroke slot.
+        toReturn.StrokeColor = toReturn.StrokeColor;
+        return toReturn;
+    }
+#endif
+
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
     [Obsolete("Use the AddToRoot extension method instead (e.g. myRectangle.AddToRoot()).")]
     public new void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
@@ -415,16 +451,39 @@ public class RectangleRuntime : GraphicalUiElement
                 ctorStroke.Width = ctorFill.Width;
                 ctorStroke.Height = ctorFill.Height;
             }
+#elif SKIA
+            // Issue #2814: two-slot fill+stroke composition for Skia (mirrors the CircleRuntime
+            // wiring from issue #2790). The contained LineRectangle becomes the fill slot; a
+            // second LineRectangle, registered via SetStrokeRenderable, is parented under the
+            // fill so SkiaShapeRuntime.FillColor and StrokeColor each route to their own
+            // renderable rather than fighting over a single IsFilled toggle.
+            var rectangle = new ContainedLineRectangle();
+            SetContainedObject(rectangle);
+            containedLineRectangle = rectangle;
+
+            SetStrokeRenderable(new ContainedLineRectangle());
+
+            // Defaults: invisible fill, white stroke - supplies RectangleRuntime historical
+            // outline-only visual, now via the dedicated stroke slot.
+            FillColor = null;
+            StrokeColor = SKColors.White;
+            StrokeWidth = 1;
+            StrokeWidthUnits = DimensionUnitType.ScreenPixel;
+
+            // Dropshadow off by default; pre-seed alpha/offset/blur so toggling HasDropshadow =
+            // true at runtime produces a visible shadow without further setup.
+            DropshadowAlpha = 255;
+            DropshadowOffsetY = 3;
+            DropshadowBlurY = 3;
+
+            Width = 50;
+            Height = 50;
 #else
             var rectangle = new ContainedLineRectangle(systemManagers);
             SetContainedObject(rectangle);
             containedLineRectangle = rectangle;
 
-#if SKIA
-            rectangle.Color = SkiaSharp.SKColors.White;
-#else
             rectangle.Color = ColorExtensions.White;
-#endif
 
             Width = 50;
             Height = 50;
