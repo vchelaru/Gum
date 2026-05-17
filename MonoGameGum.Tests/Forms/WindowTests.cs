@@ -363,6 +363,51 @@ public class WindowTests : BaseTestClass
     }
 
     [Fact]
+    public void Resizing_ShouldNotShiftWindow_WhenDraggingTopBeyondMinHeight_HeightUnitsRelativeToChildren()
+    {
+        // Repro from issue: HeightUnits = RelativeToChildren with Height = 0 and
+        // MinHeight = 256 means MinHeight is what determines the absolute height.
+        // Dragging the top edge must not shift the window downward.
+        Mock<ICursor> cursor = CreateMockCursor();
+
+        Window sut = new();
+        sut.AddToRoot();
+
+        // Add a small child so InnerPanel reports a non-zero children size,
+        // but well below MinHeight so MinHeight is the binding constraint.
+        Panel child = new();
+        child.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        child.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        child.Width = 30;
+        child.Height = 30;
+        sut.AddChild(child);
+
+        sut.Visual.Y = 100;
+        sut.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
+        sut.Visual.Height = 0;
+        sut.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        sut.Visual.MinHeight = 256;
+
+        InteractiveGue top =
+            sut.Visual.Find<InteractiveGue>("BorderTopInstance")!;
+
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(100);
+        top.TryCallPush();
+
+        // Drag the top edge down past where shrinking would violate the min.
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(400);
+        top.TryCallDragging();
+
+        sut.Y.ShouldBe(100);
+        sut.Visual.GetAbsoluteHeight().ShouldBe(256);
+
+        // A second drag at the same cursor position must not push further.
+        top.TryCallDragging();
+        sut.Y.ShouldBe(100);
+        sut.Visual.GetAbsoluteHeight().ShouldBe(256);
+    }
+
+    [Fact]
     public void Resizing_ShouldNotShiftWindow_WhenDraggingTopBeyondMinHeight_StartingAboveMin()
     {
         Mock<ICursor> cursor = CreateMockCursor();
