@@ -83,6 +83,7 @@ public class RectangleRuntimeTests
         sut.StrokeColor = Color.Green;
         sut.StrokeWidth = 5f;
         sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = false;
 
         RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
@@ -99,12 +100,53 @@ public class RectangleRuntimeTests
         sut.StrokeColor = Color.Green;
         sut.StrokeWidth = 7f;
         sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        // IsAntialiased = false skips the Apos AA-bloom compensation so this test asserts
+        // exact propagation. Compensation math is covered in StrokeWidth_AaOn_* below.
+        sut.IsAntialiased = false;
 
         RoundedRectangle stroke = (RoundedRectangle)((RoundedRectangle)sut.RenderableComponent).Children[0];
         IRenderable asRenderable = stroke;
         asRenderable.PreRender();
 
         stroke.StrokeWidth.ShouldBe(7f);
+    }
+
+    // Issue #2818 (mirror of CircleRuntime #2790) — Apos.Shapes' DrawRectangle adds aaSize
+    // pixels of halo OUTSIDE the nominal stroke thickness, same as DrawCircle. Skia fits AA
+    // WITHIN the thickness, so RectangleRuntime subtracts the 1 px AA contribution before
+    // pushing for visual parity on axis-aligned 1-px borders.
+    [Fact]
+    public void StrokeWidth_AaOn_SubtractsAaContributionBeforePushingToAposStroke()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeColor = Color.Green;
+        sut.StrokeWidth = 4f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = true;
+
+        RoundedRectangle stroke = (RoundedRectangle)((RoundedRectangle)sut.RenderableComponent).Children[0];
+        IRenderable asRenderable = stroke;
+        asRenderable.PreRender();
+
+        stroke.StrokeWidth.ShouldBe(3f);
+    }
+
+    [Fact]
+    public void StrokeWidth_AaOn_AtOnePixel_PushesEpsilonForPureAaHalo()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeColor = Color.Green;
+        sut.StrokeWidth = 1f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = true;
+
+        RoundedRectangle stroke = (RoundedRectangle)((RoundedRectangle)sut.RenderableComponent).Children[0];
+        IRenderable asRenderable = stroke;
+        asRenderable.PreRender();
+
+        stroke.StrokeWidth.ShouldBeGreaterThan(0f);
+        stroke.StrokeWidth.ShouldBeLessThan(0.1f);
+        stroke.IsAntialiased.ShouldBeTrue();
     }
 
     // Issue #2818: gradient props on RectangleRuntime push through to both Apos RoundedRectangles

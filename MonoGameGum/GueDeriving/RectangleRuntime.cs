@@ -940,7 +940,24 @@ public class RectangleRuntime : GraphicalUiElement
                 strokeGapLength /= camera.Zoom;
             }
         }
-        _stroke.StrokeWidth = strokeWidth;
+        // Issue #2818 (mirror of CircleRuntime #2790) — Apos.Shapes' DrawRectangle adds aaSize
+        // pixels of AA halo OUTSIDE the nominal thickness, same shape as DrawCircle. Skia fits
+        // its AA WITHIN the thickness, so without this compensation the same user-set
+        // StrokeWidth reads ~1 px wider on Apos. Subtract the 1 px AA contribution before
+        // pushing. Floored at a tiny positive epsilon (not 0) — Apos's shader treats
+        // thickness = 0 as "don't draw", and the 1 px halo dominates the visible width so the
+        // sub-pixel under-draw of the nominal stroke is invisible. Gated by
+        // IAntialiasedRenderable so the core stroke default (LineRectangle wrapper, no AA
+        // concept) still receives the raw value. Visible-thickness parity for axis-aligned
+        // straights is the headline — rounded corner arcs still get the AA they need.
+        const float aposAaContribution = 1f;
+        const float aposMinThicknessEpsilon = 0.01f;
+        float renderableStrokeWidth = strokeWidth;
+        if (_isAntialiased && _stroke is IAntialiasedRenderable)
+        {
+            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContribution);
+        }
+        _stroke.StrokeWidth = renderableStrokeWidth;
 
         // Issue #2818: push dash/gap to the stroke slot when it supports dashing.
         if (_stroke is IDashedStrokeRenderable strokeDashed)

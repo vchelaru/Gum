@@ -48,8 +48,8 @@ internal class RectanglesScreen : FrameworkElement
         left.AddChild(BuildSection("CornerRadius (0, 6, 16, 28 — visibly rounded on Apos)", BuildCornerRadiusRow()));
 
         left.AddChild(BuildSection("Per-corner radii (TL=20, TR=2, BR=20, BL=2 — opposite corners)", BuildPerCornerRow()));
+        left.AddChild(BuildSection("Gradients (linear horizontal / vertical / diagonal / radial)", BuildGradientRow()));
 
-        right.AddChild(BuildSection("Gradients (linear horizontal / vertical / diagonal / radial)", BuildGradientRow()));
         right.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2818)", BuildAntialiasingRow()));
         right.AddChild(BuildSection("Dropshadow (off / soft / hard offset / colored) — fill-only push avoids doubling (#2818)", BuildDropshadowRow()));
         right.AddChild(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — stroke-only push (#2818)", BuildDashedStrokeRow()));
