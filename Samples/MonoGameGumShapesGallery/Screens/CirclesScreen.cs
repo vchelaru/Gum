@@ -43,6 +43,7 @@ internal class CirclesScreen : FrameworkElement
         root.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
         root.AddChild(BuildSection("Dropshadow (off / soft / hard offset / colored) — fill-only push avoids doubling (#2797)", BuildDropshadowRow()));
         root.AddChild(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — stroke-only push (#2796)", BuildDashedStrokeRow()));
+        root.AddChild(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract; mirrors SilkNetGum)", BuildInscribedRow()));
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
@@ -333,6 +334,39 @@ internal class CirclesScreen : FrameworkElement
         row.Width = 0;
         row.Height = 0;
         return row;
+    }
+
+    // Visual contract for #2790 — mirrors the SilkNetGum CirclesScreen row of the same name.
+    // RenderableRegistry's Apos two-slot runtime mirrors the runtime's Width/Height onto the
+    // stroke slot in PreRender; the renderer's stroke-inset handling keeps the ring inscribed
+    // inside the bounds. Cells get progressively thicker strokes (1, 4, 8, 12) — every ring
+    // must stay inside the gray rectangle. Bleeding past the frame means PreRender mirroring
+    // is broken.
+    static ContainerRuntime BuildInscribedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float strokeWidth in new[] { 1f, 4f, 8f, 12f })
+        {
+            row.AddChild(BuildInscribedCell(strokeWidth));
+        }
+        return row;
+    }
+
+    static ColoredRectangleRuntime BuildInscribedCell(float strokeWidth)
+    {
+        ColoredRectangleRuntime frame = new();
+        frame.Width = 64;
+        frame.Height = 64;
+        frame.Color = new Color(60, 60, 80);
+
+        CircleRuntime circle = new();
+        circle.Radius = 32;
+        circle.FillColor = Color.SeaGreen;
+        circle.StrokeColor = Color.Yellow;
+        circle.StrokeWidth = strokeWidth;
+        circle.StrokeWidthUnits = DimensionUnitType.Absolute;
+        frame.Children.Add(circle);
+        return frame;
     }
 
     static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)

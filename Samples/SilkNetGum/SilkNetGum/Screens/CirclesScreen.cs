@@ -40,7 +40,8 @@ internal class CirclesScreen : GraphicalUiElement
         root.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
         root.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — Skia draws the shadow on the single contained renderable (#2797)", BuildDropshadowRow()));
         root.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — Skia routes through SkiaShapeRuntime.StrokeDashLength (#2796)", BuildDashedStrokeRow()));
-        root.Children.Add(BuildSection("Known limitation: FillColor + StrokeColor on the same instance — only the most-recently-set one renders today (see #2790).", BuildBothColorsRow()));
+        root.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2790)", BuildBothColorsRow()));
+        root.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract)", BuildInscribedRow()));
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
@@ -191,33 +192,60 @@ internal class CirclesScreen : GraphicalUiElement
         return row;
     }
 
-    // Visual acceptance test for #2790. Today the contained Skia renderable has a single color
-    // slot + IsFilled toggle, so SkiaShapeRuntime.FillColor and StrokeColor route through the
-    // same fields — the most recently set non-null wins. Each cell sets both colors, varying
-    // the order, so the limitation is obvious and the fix in #2790 has a clear before/after.
-    // When two-slot composition lands, every cell here should show a filled crimson disk with
-    // a cyan ring around it (and gold + magenta in the second cell).
+    // Visual acceptance for #2790. Two-slot composition means setting both FillColor and
+    // StrokeColor lights up both layers simultaneously — order-independent. Each cell here
+    // should render a filled disk with a contrasting ring around it.
     static ContainerRuntime BuildBothColorsRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
 
-        // Stroke set last → only stroke (cyan ring) renders today.
-        CircleRuntime strokeWins = new();
-        strokeWins.Radius = 28;
-        strokeWins.FillColor = SKColors.Crimson;
-        strokeWins.StrokeColor = SKColors.Cyan;
-        strokeWins.StrokeWidth = 4;
-        row.Children.Add(strokeWins);
+        CircleRuntime strokeLast = new();
+        strokeLast.Radius = 28;
+        strokeLast.FillColor = SKColors.Crimson;
+        strokeLast.StrokeColor = SKColors.Cyan;
+        strokeLast.StrokeWidth = 4;
+        row.Children.Add(strokeLast);
 
-        // Fill set last → only fill (gold disk) renders today.
-        CircleRuntime fillWins = new();
-        fillWins.Radius = 28;
-        fillWins.StrokeColor = SKColors.Magenta;
-        fillWins.StrokeWidth = 4;
-        fillWins.FillColor = SKColors.Gold;
-        row.Children.Add(fillWins);
+        CircleRuntime fillLast = new();
+        fillLast.Radius = 28;
+        fillLast.StrokeColor = SKColors.Magenta;
+        fillLast.StrokeWidth = 4;
+        fillLast.FillColor = SKColors.Gold;
+        row.Children.Add(fillLast);
 
         return row;
+    }
+
+    // Visual contract for #2790: the stroke slot mirrors the runtime's Width/Height (pushed
+    // each frame in SkiaShapeRuntime.PreRender) and RenderableShapeBase.IsOffsetAppliedForStroke
+    // insets the rendered ring by half the stroke width. Cells get progressively thicker
+    // strokes (1, 4, 8, 12) — every ring must stay inside the gray rectangle. If a stroke
+    // bleeds past the frame, layout or PreRender mirroring is wrong.
+    static ContainerRuntime BuildInscribedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float strokeWidth in new[] { 1f, 4f, 8f, 12f })
+        {
+            row.Children.Add(BuildInscribedCell(strokeWidth));
+        }
+        return row;
+    }
+
+    static ColoredRectangleRuntime BuildInscribedCell(float strokeWidth)
+    {
+        ColoredRectangleRuntime frame = new();
+        frame.Width = 64;
+        frame.Height = 64;
+        frame.Color = new SKColor(60, 60, 80);
+
+        CircleRuntime circle = new();
+        circle.Radius = 32;
+        circle.FillColor = SKColors.SeaGreen;
+        circle.StrokeColor = SKColors.Yellow;
+        circle.StrokeWidth = strokeWidth;
+        circle.StrokeWidthUnits = DimensionUnitType.Absolute;
+        frame.Children.Add(circle);
+        return frame;
     }
 
     // Issue #2798 visual acceptance: two pairs (filled disk + 1 px outline ring), once with

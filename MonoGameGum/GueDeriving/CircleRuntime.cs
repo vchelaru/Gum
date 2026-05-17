@@ -936,6 +936,10 @@ public class CircleRuntime : GraphicalUiElement
         // Reset cached renderable reference so the clone re-resolves against its own
         // RenderableComponent on next access.
         toReturn.containedLineCircle = null!;
+        // Issue #2790: drop the inherited reference to the source's stroke slot and rebuild a
+        // fresh one parented to the clone's fill so the clone is fully independent.
+        toReturn.ClearStrokeRenderable();
+        toReturn.SetStrokeRenderable(new ContainedCircleType());
         return toReturn;
     }
 #endif
@@ -1009,9 +1013,16 @@ public class CircleRuntime : GraphicalUiElement
             containedLineCircle = circle;
 
 #if SKIA
-            // Skia's Circle draws from its bounding rect's center — no CircleOrigin or
-            // CornerRadius properties. StrokeColor inherited from SkiaShapeRuntime; setting
-            // it both selects stroke mode (IsFilled = false) and assigns the color in one go.
+            // Issue #2790: opt this Skia runtime into two-slot fill+stroke composition. The
+            // contained circle (created above) becomes the fill slot; this second Circle is the
+            // stroke slot, registered with the base so SkiaShapeRuntime.FillColor and StrokeColor
+            // each route to their own renderable. Without this call the runtime stays on the
+            // single-slot legacy model (last-non-null-setter-wins).
+            SetStrokeRenderable(new ContainedCircleType());
+
+            // Defaults: invisible fill, white stroke — matches the pre-#2790 visual where the
+            // single Circle was set to StrokeColor = White (which forced IsFilled = false).
+            FillColor = null;
             StrokeColor = SKColors.White;
             StrokeWidth = 1;
             StrokeWidthUnits = DimensionUnitType.ScreenPixel;
