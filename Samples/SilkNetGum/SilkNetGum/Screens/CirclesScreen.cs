@@ -85,11 +85,6 @@ internal class CirclesScreen : GraphicalUiElement
         return section;
     }
 
-    // Rows where the stroke *width* isn't the demo's topic explicitly set StrokeWidth = 2 so
-    // the Apos.Shapes AA bloom (which renders ~1 px of soft edge OVER the nominal stroke,
-    // unlike Skia which fits AA WITHIN the stroke) is a small fraction of the total ring and
-    // the two backends read as the same thickness. StrokeWidthRow + AntialiasingRow keep the
-    // default 1 px because that bloom is the lesson there.
     static ContainerRuntime BuildSizesRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
@@ -98,7 +93,6 @@ internal class CirclesScreen : GraphicalUiElement
             CircleRuntime circle = new();
             circle.Radius = radius;
             circle.StrokeColor = SKColors.White;
-            circle.StrokeWidth = 2;
             row.Children.Add(circle);
         }
         return row;
@@ -112,7 +106,6 @@ internal class CirclesScreen : GraphicalUiElement
             CircleRuntime circle = new();
             circle.Radius = 24;
             circle.StrokeColor = new SKColor(255, 255, 255, alpha);
-            circle.StrokeWidth = 2;
             row.Children.Add(circle);
         }
         return row;
