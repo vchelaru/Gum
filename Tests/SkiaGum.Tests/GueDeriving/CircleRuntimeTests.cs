@@ -259,6 +259,61 @@ public class CircleRuntimeTests
         strokeSlot.IsAntialiased.ShouldBeFalse();
     }
 
+    // Issue #2790 — Clone must rebuild a fresh stroke slot so the clone's slot isn't a
+    // shallow-copied pointer to the source's. CircleRuntime.Clone (Skia branch) does this via
+    // ClearStrokeRenderable + SetStrokeRenderable(new Circle()).
+    [Fact]
+    public void Clone_StrokeSlot_IsFreshInstance_NotShallowCopyOfSource()
+    {
+        CircleRuntime source = new();
+        source.FillColor = SKColors.Red;
+        source.StrokeColor = SKColors.Blue;
+
+        CircleRuntime clone = (CircleRuntime)source.Clone();
+
+        Circle sourceFill = (Circle)source.RenderableComponent;
+        Circle cloneFill = (Circle)clone.RenderableComponent;
+        Circle sourceStroke = (Circle)sourceFill.Children.Single();
+        Circle cloneStroke = (Circle)cloneFill.Children.Single();
+
+        cloneFill.ShouldNotBeSameAs(sourceFill);
+        cloneStroke.ShouldNotBeSameAs(sourceStroke);
+    }
+
+    [Fact]
+    public void Clone_MutatingClone_DoesNotMutateSource()
+    {
+        CircleRuntime source = new();
+        source.FillColor = SKColors.Red;
+        source.StrokeColor = SKColors.Blue;
+
+        CircleRuntime clone = (CircleRuntime)source.Clone();
+        clone.FillColor = SKColors.Green;
+        clone.StrokeColor = SKColors.Yellow;
+
+        Circle sourceFill = (Circle)source.RenderableComponent;
+        Circle sourceStroke = (Circle)sourceFill.Children.Single();
+        sourceFill.Color.ShouldBe(SKColors.Red);
+        sourceStroke.Color.ShouldBe(SKColors.Blue);
+    }
+
+    // Composite DropshadowColor mirrors the MG runtime so cross-backend sample code can set
+    // the color in one call instead of four per-channel writes.
+    [Fact]
+    public void DropshadowColor_RoundTrips()
+    {
+        CircleRuntime sut = new();
+        SKColor color = new(10, 20, 30, 40);
+
+        sut.DropshadowColor = color;
+
+        sut.DropshadowColor.ShouldBe(color);
+        sut.DropshadowRed.ShouldBe(10);
+        sut.DropshadowGreen.ShouldBe(20);
+        sut.DropshadowBlue.ShouldBe(30);
+        sut.DropshadowAlpha.ShouldBe(40);
+    }
+
     [Fact]
     public void Dropshadow_TargetSwitch_ClearsPreviousSlot()
     {

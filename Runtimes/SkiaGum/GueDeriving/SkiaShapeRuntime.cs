@@ -12,6 +12,73 @@ namespace SkiaGum.GueDeriving;
 namespace Gum.GueDeriving;
 #endif
 
+/// <summary>
+/// Base class for Skia shape runtimes (Circle, RoundedRectangle, Arc, Polygon, ColoredCircle,
+/// etc.). Holds the cross-cutting solid/gradient/stroke/dropshadow accessors that pass through
+/// to the underlying <see cref="RenderableShapeBase"/>, and (since issue #2790) provides the
+/// two-slot fill+stroke composition model for derived runtimes that want to draw both layers
+/// of a shape simultaneously.
+/// </summary>
+/// <remarks>
+/// <para><b>Two-slot composition recipe (issue #2790)</b></para>
+/// <para>
+/// A derived runtime opts in to two-slot composition so a single instance can render a filled
+/// disk AND a stroked outline at the same time, matching the XNA-like backends' <c>_fill</c> +
+/// <c>_stroke</c> model. The Skia renderable is single-slot (one <c>RenderableShapeBase</c>
+/// chooses fill or stroke via <c>IsFilled</c>), so composition is built up at the runtime
+/// layer by wiring two renderable instances:
+/// </para>
+/// <list type="number">
+/// <item>
+/// In the runtime's constructor, after <c>SetContainedObject(fillSlot)</c>, call
+/// <see cref="SetStrokeRenderable"/> with a second renderable instance. The base wires it as
+/// a child of the fill so the Skia renderer draws fill first, then stroke on top.
+/// </item>
+/// <item>
+/// Override <see cref="GraphicalUiElement.Clone"/> on the derived runtime: call
+/// <see cref="ClearStrokeRenderable"/> on the clone (its <see cref="StrokeRenderable"/>
+/// field was shallow-copied via MemberwiseClone and still points at the source's stroke),
+/// then <see cref="SetStrokeRenderable"/> with a fresh instance. See
+/// <c>CircleRuntime.Clone</c> (Skia branch) for the canonical example.
+/// </item>
+/// <item>
+/// User-facing color routing is automatic: <see cref="FillColor"/> writes to the fill slot,
+/// <see cref="StrokeColor"/> writes to the stroke slot. Either can be set to <c>null</c> to
+/// hide that slot independently.
+/// </item>
+/// <item>
+/// Stroke-flavored properties (<see cref="StrokeWidth"/>, <see cref="StrokeDashLength"/>,
+/// <see cref="StrokeGapLength"/>) route to <see cref="StrokeTarget"/>, which prefers the
+/// stroke slot when two-slot is engaged.
+/// </item>
+/// <item>
+/// Gradient on a slot is silenced when the slot's color is <c>null</c> — see
+/// <c>RefreshSlotGradients</c>. Without this gate <c>SKPaint.Shader</c> would draw a gradient
+/// over the alpha-0 color anyway, defeating the "null = invisible" contract.
+/// </item>
+/// <item>
+/// Dropshadow is live-routed each frame in <see cref="PreRender"/> via
+/// <c>DropshadowTarget</c> (fill if FillColor is set, else stroke). Drawing the shadow on
+/// both slots would visibly double up.
+/// </item>
+/// <item>
+/// PreRender mirrors the runtime's <c>Width</c> / <c>Height</c> onto the stroke slot each
+/// frame because the stroke is a plain renderable (not a layout-aware
+/// <see cref="GraphicalUiElement"/>) and won't auto-track its parent's size.
+/// </item>
+/// </list>
+/// <para>
+/// Runtimes that don't opt in stay on the legacy single-slot model where fill and stroke
+/// share one renderable's color + IsFilled toggle (last non-null setter wins). Most existing
+/// Skia shape runtimes (RoundedRectangle, Arc, Polygon, ColoredCircle, Line, LineGrid) are
+/// still single-slot; opting them in is a per-runtime change following the recipe above.
+/// </para>
+/// <para>
+/// The MG/XNA-like backends use a different mechanism — <c>RenderableRegistry</c> resolves
+/// fill and stroke slots via factories at construction (see <c>AposShapeRuntime</c>) — but
+/// the resulting runtime API surface is identical, by design.
+/// </para>
+/// </remarks>
 public abstract class SkiaShapeRuntime : InteractiveGue
 {
     protected abstract RenderableShapeBase ContainedRenderable { get; }
@@ -485,6 +552,17 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     {
         get => _dropshadowColor.Red;
         set => _dropshadowColor = new SKColor((byte)value, _dropshadowColor.Green, _dropshadowColor.Blue, _dropshadowColor.Alpha);
+    }
+
+    /// <summary>
+    /// Composite read/write for the dropshadow color, mirroring the same-named property on
+    /// the MonoGame <c>AposShapeRuntime</c> so cross-backend sample code can set the
+    /// dropshadow color in one assignment instead of four per-channel writes.
+    /// </summary>
+    public SKColor DropshadowColor
+    {
+        get => _dropshadowColor;
+        set => _dropshadowColor = value;
     }
 
     bool _hasDropshadow;

@@ -16,8 +16,25 @@ public class Circle : RenderableShapeBase,
     Gum.GueDeriving.IGradientedRenderable,
     Gum.GueDeriving.IAntialiasedRenderable,
     Gum.GueDeriving.IDropshadowRenderable,
-    Gum.GueDeriving.IDashedStrokeRenderable
+    Gum.GueDeriving.IDashedStrokeRenderable,
+    System.ICloneable
 {
+    /// <summary>
+    /// Issue #2790 — required by <see cref="Gum.Wireframe.GraphicalUiElement.Clone"/> so
+    /// shape runtimes can be deep-copied. MemberwiseClone copies the property bag; the
+    /// children collection, parent pointer, and the OnPreRender hook (which still points
+    /// back at the source runtime) are reset so the clone is structurally independent.
+    /// CircleRuntime.Clone is responsible for re-wiring OnPreRender against the new runtime.
+    /// </summary>
+    public object Clone()
+    {
+        Circle clone = (Circle)MemberwiseClone();
+        clone._children = new();
+        clone._parent = null;
+        clone.OnPreRender = null;
+        return clone;
+    }
+
     // IGradientedRenderable, IAntialiasedRenderable, IDropshadowRenderable, and
     // IDashedStrokeRenderable are all satisfied entirely by the property bag inherited from
     // RenderableShapeBase — every member name and type lines up. The interface declarations

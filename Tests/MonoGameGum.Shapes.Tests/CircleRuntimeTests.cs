@@ -309,6 +309,45 @@ public class CircleRuntimeTests
         stroke.IsAntialiased.ShouldBeTrue();
     }
 
+    // Issue #2790 — Clone must re-resolve fresh _fill / _stroke slots from
+    // RenderableRegistry so the clone is fully independent of the source. Without the
+    // override, MemberwiseClone shallow-copies _fill and _stroke fields and the clone
+    // mutates the source's slots. Mirrors the equivalent Skia-side guard.
+    [Fact]
+    public void Clone_BothSlots_AreFreshFactoryInstances_NotShallowCopiesOfSource()
+    {
+        CircleRuntime source = new();
+        source.FillColor = Color.Red;
+        source.StrokeColor = Color.Blue;
+
+        CircleRuntime clone = (CircleRuntime)source.Clone();
+
+        Circle sourceFill = (Circle)source.RenderableComponent;
+        Circle cloneFill = (Circle)clone.RenderableComponent;
+        Circle sourceStroke = (Circle)sourceFill.Children[0];
+        Circle cloneStroke = (Circle)cloneFill.Children[0];
+
+        cloneFill.ShouldNotBeSameAs(sourceFill);
+        cloneStroke.ShouldNotBeSameAs(sourceStroke);
+    }
+
+    [Fact]
+    public void Clone_MutatingClone_DoesNotMutateSource()
+    {
+        CircleRuntime source = new();
+        source.FillColor = Color.Red;
+        source.StrokeColor = Color.Blue;
+
+        CircleRuntime clone = (CircleRuntime)source.Clone();
+        clone.FillColor = Color.Green;
+        clone.StrokeColor = Color.Yellow;
+
+        Circle sourceFill = (Circle)source.RenderableComponent;
+        Circle sourceStroke = (Circle)sourceFill.Children[0];
+        sourceFill.Color.ShouldBe(Color.Red);
+        sourceStroke.Color.ShouldBe(Color.Blue);
+    }
+
     // Issue #2790 — runtime no longer compensates dash/gap. The Apos renderable (Gum.Shapes
     // Circle.RenderDashed) inflates the effective gap by aaSize internally when AA is on, so
     // dashes stay visually distinct without the runtime needing to second-guess the user's

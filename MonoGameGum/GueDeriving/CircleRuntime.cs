@@ -941,6 +941,51 @@ public class CircleRuntime : GraphicalUiElement
         // to the contained renderable's PreRender would recurse via the OnPreRender hook the
         // MonoGameGumShapes factory wires up.
     }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Issue #2790: rebuild both slots so the clone is fully independent of the source.
+    /// <list type="number">
+    /// <item><c>base.Clone</c> deep-copies the fill renderable via <c>ICloneable</c> (Apos
+    /// <c>Circle.Clone</c>) and sets it as the clone's contained object. <c>MemberwiseClone</c>
+    /// leaves the clone's <c>_fill</c> field pointing at the source's fill instance — we
+    /// re-assign it to the freshly-cloned contained object.</item>
+    /// <item>The <c>_stroke</c> field is similarly stale; re-resolve via
+    /// <see cref="RenderableRegistry"/> so the new stroke instance's <c>OnPreRender</c> hook is
+    /// wired against the clone, not the source.</item>
+    /// <item>Re-wire the stroke's parent to the new fill so the renderer's hierarchy walk
+    /// draws stroke after fill (visual order preserved).</item>
+    /// <item>Push <see cref="StrokeColor"/> through its setter so the freshly-built stroke
+    /// renderable picks up the user's color (the runtime's <c>_strokeColor</c> field was
+    /// MemberwiseCloned but the new slot is at its default).</item>
+    /// </list>
+    /// </remarks>
+    public override GraphicalUiElement Clone()
+    {
+        CircleRuntime toReturn = (CircleRuntime)base.Clone();
+
+        toReturn._fill = (IFilledCircleRenderable?)toReturn.mContainedObjectAsIpso;
+        toReturn._stroke = RenderableRegistry.Create<IStrokedCircleRenderable>(toReturn)
+            ?? new DefaultStrokedCircleRenderable();
+
+        if (toReturn._fill is IRenderableIpso fillIpso
+            && toReturn._stroke is IRenderableIpso strokeIpso)
+        {
+            strokeIpso.Parent = fillIpso;
+        }
+        else if (toReturn._fill == null)
+        {
+            toReturn.SetContainedObject(toReturn._stroke);
+        }
+
+        toReturn.StrokeColor = toReturn.StrokeColor;
+        if (toReturn._fill != null)
+        {
+            toReturn._stroke.Radius = toReturn._fill.Radius;
+        }
+
+        return toReturn;
+    }
 #endif
 
 #if SKIA
@@ -955,12 +1000,17 @@ public class CircleRuntime : GraphicalUiElement
     {
         CircleRuntime toReturn = (CircleRuntime)base.Clone();
         // Reset cached renderable reference so the clone re-resolves against its own
-        // RenderableComponent on next access.
+        // RenderableComponent on next access. The fill slot's Color/Radius/etc. were copied
+        // by Circle.Clone (ICloneable, MemberwiseClone) so the clone's fill matches source.
         toReturn.containedLineCircle = null!;
         // Issue #2790: drop the inherited reference to the source's stroke slot and rebuild a
         // fresh one parented to the clone's fill so the clone is fully independent.
         toReturn.ClearStrokeRenderable();
         toReturn.SetStrokeRenderable(new ContainedCircleType());
+        // The fresh stroke renderable defaults to red; re-fire the StrokeColor setter so the
+        // user's color (held on _strokeColor via MemberwiseClone) is pushed into the new
+        // slot. Same trick for Width/Height mirrored in PreRender — no need here.
+        toReturn.StrokeColor = toReturn.StrokeColor;
         return toReturn;
     }
 #endif
