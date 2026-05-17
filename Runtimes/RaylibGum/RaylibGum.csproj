@@ -179,10 +179,21 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-		<ProjectReference Include="..\..\Tools\Gum.Analyzers\Gum.Analyzers.csproj"
-						  Condition="'$(IncludeAnalyzers)' != 'false'"
-						  OutputItemType="Analyzer"
-						  ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+	<!--
+		Bundle the Gum.Analyzers Roslyn analyzer DLL into this package so NuGet consumers
+		get GUM001 namespace-migration warnings + code fixes. This is NOT a ProjectReference
+		because we do not want source-linkers' .sln files to require Tools/Gum.Analyzers/
+		to build. The analyzer is built independently (e.g. via AllLibraries.sln /
+		GumFull.sln) and the Exists() guard makes this include a no-op if the DLL is not
+		present, so source-only builds keep working with zero impact.
+	-->
+	<ItemGroup Condition="'$(IncludeAnalyzers)' != 'false' AND Exists('..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll')">
+		<None Include="..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll"
+			  Pack="true"
+			  PackagePath="analyzers/dotnet/cs/"
+			  Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup>
