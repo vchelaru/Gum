@@ -186,16 +186,15 @@ public class Circle : RenderableShapeBase,
         var ringRadius = radius - strokeWidth / 2f;
         var circumference = 2f * MathHelper.Pi * radius;
 
-        var dashLen = StrokeDashLength;
-        // Issue #2790: when AA is on, each dash's tangential end-cap halo (~aaSize px) leaks
-        // into the neighboring gap from each side, eating ~aaSize total from the gap. Inflate
-        // the effective gap by aaSize so a user-set 2/2 pattern still reads as ~2/2 instead
-        // of dashes smearing into a near-continuous ring. Dash length is left alone — keeping
-        // the user's nominal length means dashes stay visually distinct (a too-short dash
-        // shrinks to mostly-halo and fuzzes out). The trade is dashes ~aaSize wider than
-        // nominal; period grows by aaSize so the perimeter has one or two fewer dashes, but
-        // each is recognizable.
-        var effectiveGapLen = StrokeGapLength + antiAliasSize;
+        // Issue #2790: when AA is on, each dash's tangential end-cap halo leaks into the
+        // neighboring gap from each side, smearing dotted patterns into near-continuous
+        // rings. Shift 1.5 * aaSize into the gap and trim 0.5 * aaSize off each dash so the
+        // gap opens up noticeably while the dashes shrink slightly to compensate. Total
+        // period grows by aaSize so the perimeter still has one or two fewer dashes overall,
+        // but each one reads as a discrete dot. Dash length floored at a small epsilon so a
+        // tight 1-px-dash pattern doesn't push 0 (Apos won't render a zero-length dash).
+        var effectiveGapLen = StrokeGapLength + 1.5f * antiAliasSize;
+        var dashLen = MathHelper.Max(0.01f, StrokeDashLength - 0.5f * antiAliasSize);
         var period = dashLen + effectiveGapLen;
         if (period <= 0) return;
 
