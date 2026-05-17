@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using System;
 using System.IO;
 using System.Linq;
@@ -21,14 +22,42 @@ public class GumxSourceService
     /// </summary>
     public async Task<GumProjectSave?> LoadProjectAsync(string pathOrUrl, IProgress<(int loaded, int total)>? progress = null)
     {
+        GumProjectSave? gps;
         if (IsUrl(pathOrUrl))
         {
             pathOrUrl = NormalizeGitHubUrl(pathOrUrl);
-            return await LoadProjectFromUrlAsync(pathOrUrl, progress);
+            gps = await LoadProjectFromUrlAsync(pathOrUrl, progress);
         }
         else
         {
-            return GumProjectSave.Load(pathOrUrl, out _);
+            gps = GumProjectSave.Load(pathOrUrl, out _);
+        }
+
+        if (gps != null)
+        {
+            FixEnumerationsOnAllElements(gps);
+        }
+
+        return gps;
+    }
+
+    /// <summary>
+    /// Coerces int-on-disk enum values to their CLR enum types on every loaded element's
+    /// states. The main tool load path does this via <c>GumProjectSave.Initialize()</c>; the
+    /// import pipeline deserializes elements directly and must apply the same fix-up so that
+    /// downstream XML-string comparisons (e.g. <c>StandardComparer</c>) don't see a typed-enum
+    /// destination drift from an int source for semantically identical values. See issue #2810.
+    /// </summary>
+    private static void FixEnumerationsOnAllElements(GumProjectSave gps)
+    {
+        foreach (var element in gps.StandardElements.Cast<ElementSave>()
+            .Concat(gps.Components)
+            .Concat(gps.Screens))
+        {
+            foreach (var state in element.AllStates)
+            {
+                state.FixEnumerations();
+            }
         }
     }
 
