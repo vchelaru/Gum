@@ -327,15 +327,17 @@ internal class CirclesScreen : FrameworkElement
         short64.StrokeGapLength = 4;
         row.AddChild(short64);
 
-        // Tight 2/2 dotted. IsAntialiased=false avoids the AA bloom widening a 1 px stroke
-        // and matches the Win95-style dotted focus rect (see Themes/Retro95).
+        // Tight 2/2 dotted. AA stays ON — the runtime's AA-bloom compensation (#2790) pushes
+        // a near-zero thickness with aaSize = 1 so the dashes render as crisp 1 px dots with
+        // smooth (not jaggy) edges. Pre-#2790 this cell forced IsAntialiased = false to avoid
+        // a fat AA-bloomed dash, accepting jaggies on the circle's curve as the lesser evil;
+        // that trade is no longer required.
         CircleRuntime dotted = new();
         dotted.Radius = 28;
         dotted.StrokeColor = Color.White;
         dotted.StrokeWidth = 1;
         dotted.StrokeDashLength = 2;
         dotted.StrokeGapLength = 2;
-        dotted.IsAntialiased = false;
         row.AddChild(dotted);
 
         // Long-dash motif: 12/6 with a thicker stroke.

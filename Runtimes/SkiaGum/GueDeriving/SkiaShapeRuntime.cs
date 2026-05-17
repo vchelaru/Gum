@@ -424,12 +424,19 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     /// Pass-through to the contained renderable's anti-aliasing flag (issue #2798). Mirrors
     /// the property of the same name on the MonoGame <c>CircleRuntime</c>, which routes
     /// through <c>IAntialiasedRenderable</c>; on Skia the contained renderable is always
-    /// AA-capable so the value pushes straight through.
+    /// AA-capable so the value pushes straight through. Issue #2790: when two-slot
+    /// composition is engaged, the value is mirrored to the stroke slot too so a user can
+    /// flip a dashed/dotted ring to crisp pixels (Win95-style) without the override silently
+    /// not reaching the slot that's actually drawing the stroke.
     /// </summary>
     public bool IsAntialiased
     {
         get => ContainedRenderable.IsAntialiased;
-        set => ContainedRenderable.IsAntialiased = value;
+        set
+        {
+            ContainedRenderable.IsAntialiased = value;
+            if (StrokeRenderable != null) StrokeRenderable.IsAntialiased = value;
+        }
     }
 
     public float StrokeDashLength

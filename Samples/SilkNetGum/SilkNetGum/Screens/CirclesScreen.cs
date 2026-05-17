@@ -373,14 +373,16 @@ internal class CirclesScreen : GraphicalUiElement
         short64.StrokeGapLength = 4;
         row.Children.Add(short64);
 
-        // Tight 2/2 dotted. IsAntialiased=false keeps a 1 px dot from blooming.
+        // Tight 2/2 dotted. AA stays ON for visual parity with the MG side (which uses the
+        // runtime's AA-bloom compensation, #2790, to keep dashes crisp without disabling AA).
+        // Skia's 1 px stroke with AA on already reads as ~1 px, so no compensation is needed
+        // here — just don't override IsAntialiased and the dashes stay smooth.
         CircleRuntime dotted = new();
         dotted.Radius = 28;
         dotted.StrokeColor = SKColors.White;
         dotted.StrokeWidth = 1;
         dotted.StrokeDashLength = 2;
         dotted.StrokeGapLength = 2;
-        dotted.IsAntialiased = false;
         row.Children.Add(dotted);
 
         // Long-dash motif: 12/6 with a thicker stroke.

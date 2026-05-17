@@ -242,6 +242,23 @@ public class CircleRuntimeTests
         fillSlot.HasDropshadow.ShouldBeFalse();
     }
 
+    // #2790: IsAntialiased writes to BOTH slots in two-slot mode so flipping it actually
+    // reaches the slot that's drawing the stroke. Without this, setting IsAntialiased = false
+    // on a stroke-only CircleRuntime would silently no-op (the stroke slot is the runtime's
+    // only visible renderable yet the pass-through only wrote to the fill slot).
+    [Fact]
+    public void IsAntialiased_MirrorsToStrokeSlot_InTwoSlotMode()
+    {
+        CircleRuntime sut = new();
+
+        sut.IsAntialiased = false;
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        fillSlot.IsAntialiased.ShouldBeFalse();
+        strokeSlot.IsAntialiased.ShouldBeFalse();
+    }
+
     [Fact]
     public void Dropshadow_TargetSwitch_ClearsPreviousSlot()
     {
