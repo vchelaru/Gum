@@ -145,6 +145,9 @@ public class CircleRuntimeTests
         sut.StrokeWidthUnits = DimensionUnitType.Absolute;
         sut.StrokeDashLength = 6;
         sut.StrokeGapLength = 4;
+        // IsAntialiased = false skips the AA-bloom dash/gap compensation so this test asserts
+        // exact propagation; compensation math is covered in DashedStroke_AaOn_* tests below.
+        sut.IsAntialiased = false;
 
         Circle fill = (Circle)sut.RenderableComponent;
         Circle stroke = (Circle)fill.Children[0];
@@ -307,5 +310,53 @@ public class CircleRuntimeTests
         stroke.StrokeWidth.ShouldBeGreaterThan(0f);
         stroke.StrokeWidth.ShouldBeLessThan(0.1f);
         stroke.IsAntialiased.ShouldBeTrue();
+    }
+
+    // Apos's aaSize = 1 px halo extends past the dash's tangential end-caps too, eating into
+    // the gaps from each side. A nominal 2/2 pattern renders as ~3/1 visible without
+    // compensation. CircleRuntime subtracts 1 from dash and adds 1 to gap so the visible
+    // dashes match user intent; period (dash + gap) stays the same so the dash count around
+    // the perimeter is preserved.
+    [Fact]
+    public void DashedStroke_AaOn_ShiftsHalfBloomFromDashIntoGap()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 1;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.StrokeDashLength = 6;
+        sut.StrokeGapLength = 4;
+        sut.IsAntialiased = true;
+
+        Circle stroke = (Circle)((Circle)sut.RenderableComponent).Children[0];
+        IRenderable asRenderable = stroke;
+        asRenderable.PreRender();
+
+        // 6 - 1 = 5, 4 + 1 = 5. Period 10 unchanged.
+        stroke.StrokeDashLength.ShouldBe(5f);
+        stroke.StrokeGapLength.ShouldBe(5f);
+    }
+
+    // At user StrokeDashLength = 1 + AA on, naive subtraction would push 0 and Apos's
+    // RenderDashed branch is gated on dash > 0. Floor at the same thickness epsilon so dashes
+    // still render.
+    [Fact]
+    public void DashedStroke_AaOn_AtOnePixelDash_FloorsDashAtEpsilon()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 1;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.StrokeDashLength = 1;
+        sut.StrokeGapLength = 1;
+        sut.IsAntialiased = true;
+
+        Circle stroke = (Circle)((Circle)sut.RenderableComponent).Children[0];
+        IRenderable asRenderable = stroke;
+        asRenderable.PreRender();
+
+        stroke.StrokeDashLength.ShouldBeGreaterThan(0f);
+        stroke.StrokeDashLength.ShouldBeLessThan(0.1f);
+        stroke.StrokeGapLength.ShouldBe(2f);  // 1 + 1
     }
 }

@@ -912,10 +912,29 @@ public class CircleRuntime : GraphicalUiElement
         // for slots that don't implement the interface (core DefaultStrokedCircleRenderable
         // wraps LineCircle, no dash concept). Stroke-only — dashing is guarded by !IsFilled
         // in the Apos renderable, so pushing to fill would be ignored anyway.
+        //
+        // Issue #2790 — same AA-bloom problem the thickness compensation solves, applied
+        // tangentially. Apos's aaSize = 1 px halo extends past every edge of the rendered
+        // arc, including the two end-caps along the perimeter. A nominal 2/2 dash/gap
+        // pattern renders as ~3/1 visible because each dash's end-cap halo eats ~0.5 px from
+        // each side of the neighboring gap. Subtract 1 px from dash and add 1 px to gap so
+        // visible matches user intent; period (dash + gap) stays constant so the number of
+        // dashes around the perimeter is unchanged. Floored at the same thickness epsilon
+        // because Apos won't render dashes with dashLen = 0.
         if (_stroke is IDashedStrokeRenderable strokeDashed)
         {
-            strokeDashed.StrokeDashLength = strokeDashLength;
-            strokeDashed.StrokeGapLength = strokeGapLength;
+            float pushedDash = strokeDashLength;
+            float pushedGap = strokeGapLength;
+            if (_isAntialiased
+                && _stroke is IAntialiasedRenderable
+                && strokeDashLength > 0
+                && strokeGapLength > 0)
+            {
+                pushedDash = Math.Max(aposMinThicknessEpsilon, strokeDashLength - aposAaContribution);
+                pushedGap = strokeGapLength + aposAaContribution;
+            }
+            strokeDashed.StrokeDashLength = pushedDash;
+            strokeDashed.StrokeGapLength = pushedGap;
         }
 
         // Issue #2798: push AA to both slots so a single setter flips fill + stroke together.
