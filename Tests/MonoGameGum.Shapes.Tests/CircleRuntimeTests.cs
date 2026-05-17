@@ -235,6 +235,9 @@ public class CircleRuntimeTests
         sut.StrokeColor = Color.Green;
         sut.StrokeWidth = 7f;
         sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        // IsAntialiased = false skips the Apos AA-bloom compensation so this test asserts
+        // exact propagation. Compensation math is covered in StrokeWidth_AaOn_* below.
+        sut.IsAntialiased = false;
 
         Circle stroke = (Circle)((Circle)sut.RenderableComponent).Children[0];
         IRenderable asRenderable = stroke;
@@ -253,6 +256,7 @@ public class CircleRuntimeTests
         sut.StrokeColor = Color.Green;
         sut.StrokeWidth = 5f;
         sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = false;
 
         Circle fill = (Circle)sut.RenderableComponent;
         Circle stroke = (Circle)fill.Children[0];
@@ -260,5 +264,111 @@ public class CircleRuntimeTests
         asFillRenderable.PreRender();
 
         stroke.StrokeWidth.ShouldBe(5f);
+    }
+
+    // Apos.Shapes' DrawCircle adds exactly 1 px of antialiased halo OUTSIDE the nominal
+    // stroke thickness (see Runtimes/GumShapes/Renderables/Circle.cs — aaSize passed as 1
+    // when IsAntialiased is true). Skia fits AA WITHIN the thickness instead, so the same
+    // user-set StrokeWidth would otherwise read 1 px wider on Apos. CircleRuntime subtracts
+    // the 1 px before pushing to give visual parity across backends.
+    [Fact]
+    public void StrokeWidth_AaOn_SubtractsAaContributionBeforePushingToAposStroke()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeColor = Color.Green;
+        sut.StrokeWidth = 4f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = true;
+
+        Circle stroke = (Circle)((Circle)sut.RenderableComponent).Children[0];
+        IRenderable asRenderable = stroke;
+        asRenderable.PreRender();
+
+        // 4 - 1 = 3
+        stroke.StrokeWidth.ShouldBe(3f);
+    }
+
+    // At user StrokeWidth = 1 with AA on, the compensation pushes a tiny epsilon (not 0) to
+    // Apos so its shader can't interpret the value as "don't draw". The 1 px AA halo
+    // dominates the visible width — exact match for Skia's 1-px-with-AA visible width.
+    [Fact]
+    public void StrokeWidth_AaOn_AtOnePixel_PushesEpsilonForPureAaHalo()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeColor = Color.Green;
+        sut.StrokeWidth = 1f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = true;
+
+        Circle stroke = (Circle)((Circle)sut.RenderableComponent).Children[0];
+        IRenderable asRenderable = stroke;
+        asRenderable.PreRender();
+
+        stroke.StrokeWidth.ShouldBeGreaterThan(0f);
+        stroke.StrokeWidth.ShouldBeLessThan(0.1f);
+        stroke.IsAntialiased.ShouldBeTrue();
+    }
+
+    // Issue #2790 — Clone must re-resolve fresh _fill / _stroke slots from
+    // RenderableRegistry so the clone is fully independent of the source. Without the
+    // override, MemberwiseClone shallow-copies _fill and _stroke fields and the clone
+    // mutates the source's slots. Mirrors the equivalent Skia-side guard.
+    [Fact]
+    public void Clone_BothSlots_AreFreshFactoryInstances_NotShallowCopiesOfSource()
+    {
+        CircleRuntime source = new();
+        source.FillColor = Color.Red;
+        source.StrokeColor = Color.Blue;
+
+        CircleRuntime clone = (CircleRuntime)source.Clone();
+
+        Circle sourceFill = (Circle)source.RenderableComponent;
+        Circle cloneFill = (Circle)clone.RenderableComponent;
+        Circle sourceStroke = (Circle)sourceFill.Children[0];
+        Circle cloneStroke = (Circle)cloneFill.Children[0];
+
+        cloneFill.ShouldNotBeSameAs(sourceFill);
+        cloneStroke.ShouldNotBeSameAs(sourceStroke);
+    }
+
+    [Fact]
+    public void Clone_MutatingClone_DoesNotMutateSource()
+    {
+        CircleRuntime source = new();
+        source.FillColor = Color.Red;
+        source.StrokeColor = Color.Blue;
+
+        CircleRuntime clone = (CircleRuntime)source.Clone();
+        clone.FillColor = Color.Green;
+        clone.StrokeColor = Color.Yellow;
+
+        Circle sourceFill = (Circle)source.RenderableComponent;
+        Circle sourceStroke = (Circle)sourceFill.Children[0];
+        sourceFill.Color.ShouldBe(Color.Red);
+        sourceStroke.Color.ShouldBe(Color.Blue);
+    }
+
+    // Issue #2790 — runtime no longer compensates dash/gap. The Apos renderable (Gum.Shapes
+    // Circle.RenderDashed) inflates the effective gap by aaSize internally when AA is on, so
+    // dashes stay visually distinct without the runtime needing to second-guess the user's
+    // values. This test guards that the runtime pushes the raw values through unchanged even
+    // with AA on.
+    [Fact]
+    public void DashedStroke_AaOn_PushesRawValuesUnchanged()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 1;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.StrokeDashLength = 6;
+        sut.StrokeGapLength = 4;
+        sut.IsAntialiased = true;
+
+        Circle stroke = (Circle)((Circle)sut.RenderableComponent).Children[0];
+        IRenderable asRenderable = stroke;
+        asRenderable.PreRender();
+
+        stroke.StrokeDashLength.ShouldBe(6f);
+        stroke.StrokeGapLength.ShouldBe(4f);
     }
 }

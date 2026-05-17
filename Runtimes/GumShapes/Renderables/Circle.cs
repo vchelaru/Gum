@@ -16,8 +16,25 @@ public class Circle : RenderableShapeBase,
     Gum.GueDeriving.IGradientedRenderable,
     Gum.GueDeriving.IAntialiasedRenderable,
     Gum.GueDeriving.IDropshadowRenderable,
-    Gum.GueDeriving.IDashedStrokeRenderable
+    Gum.GueDeriving.IDashedStrokeRenderable,
+    System.ICloneable
 {
+    /// <summary>
+    /// Issue #2790 — required by <see cref="Gum.Wireframe.GraphicalUiElement.Clone"/> so
+    /// shape runtimes can be deep-copied. MemberwiseClone copies the property bag; the
+    /// children collection, parent pointer, and the OnPreRender hook (which still points
+    /// back at the source runtime) are reset so the clone is structurally independent.
+    /// CircleRuntime.Clone is responsible for re-wiring OnPreRender against the new runtime.
+    /// </summary>
+    public object Clone()
+    {
+        Circle clone = (Circle)MemberwiseClone();
+        clone._children = new();
+        clone._parent = null;
+        clone.OnPreRender = null;
+        return clone;
+    }
+
     // IGradientedRenderable, IAntialiasedRenderable, IDropshadowRenderable, and
     // IDashedStrokeRenderable are all satisfied entirely by the property bag inherited from
     // RenderableShapeBase — every member name and type lines up. The interface declarations
@@ -93,7 +110,14 @@ public class Circle : RenderableShapeBase,
         {
             // as outlined here:
             // https://github.com/Apostolique/Apos.Shapes/issues/12
-            // There is a strange issue with rendering. However, adding 1 antialias with 1 border results in teh correct size and no artifacts:
+            // There is a strange issue with rendering. However, adding 1 antialias with 1 border results in teh correct size and no artifacts.
+            //
+            // NOTE FOR CALLERS: the Apos shader treats stroke thickness = 0 as "don't draw"
+            // even when aaSize > 0 — the AA halo cannot render without a non-zero stroke to
+            // attach to. Confirmed empirically while wiring CircleRuntime's AA-bloom
+            // compensation (#2790). If you need a thin-as-possible AA-only stroke, push a
+            // small positive epsilon (e.g. 0.01) instead of 0; the 1 px AA halo dominates and
+            // the sub-pixel stroke is invisible.
 
             if (UseGradient && forcedColor == null)
             {
@@ -179,8 +203,16 @@ public class Circle : RenderableShapeBase,
         var ringRadius = radius - strokeWidth / 2f;
         var circumference = 2f * MathHelper.Pi * radius;
 
-        var dashLen = StrokeDashLength;
-        var period = dashLen + StrokeGapLength;
+        // Issue #2790: when AA is on, each dash's tangential end-cap halo leaks into the
+        // neighboring gap from each side, smearing dotted patterns into near-continuous
+        // rings. Shift 1.5 * aaSize into the gap and trim 0.5 * aaSize off each dash so the
+        // gap opens up noticeably while the dashes shrink slightly to compensate. Total
+        // period grows by aaSize so the perimeter still has one or two fewer dashes overall,
+        // but each one reads as a discrete dot. Dash length floored at a small epsilon so a
+        // tight 1-px-dash pattern doesn't push 0 (Apos won't render a zero-length dash).
+        var effectiveGapLen = StrokeGapLength + 1.5f * antiAliasSize;
+        var dashLen = MathHelper.Max(0.01f, StrokeDashLength - 0.5f * antiAliasSize);
+        var period = dashLen + effectiveGapLen;
         if (period <= 0) return;
 
         // Build the stroke "paint" once and pass the same Gradient/Color to every dash so the

@@ -888,12 +888,33 @@ public class CircleRuntime : GraphicalUiElement
                 strokeGapLength /= camera.Zoom;
             }
         }
-        _stroke.StrokeWidth = strokeWidth;
+        // Issue #2790 — Apos.Shapes' DrawCircle takes a stroke thickness plus an aaSize and
+        // renders aaSize pixels of antialiased halo OUTSIDE the nominal thickness. Gum/Apos's
+        // Circle.Render passes aaSize = 1 when IsAntialiased is true (see
+        // Runtimes/GumShapes/Renderables/Circle.cs), so Apos always contributes exactly 1 px
+        // to the visible thickness. Skia fits its AA WITHIN the nominal thickness, so the
+        // same user-set StrokeWidth would otherwise read 1 px wider on Apos than on Skia.
+        // Subtract that 1 px before pushing. Floored at a tiny positive epsilon (not 0) as a
+        // hedge against Apos's shader interpreting thickness = 0 as "don't draw"; the 1 px AA
+        // halo dominates the visible width either way, so the sub-pixel under-draw of the
+        // nominal stroke is invisible. Gated by IAntialiasedRenderable so the core stroke
+        // default (LineCircle wrapper, no AA concept) still receives the raw value.
+        const float aposAaContribution = 1f;
+        const float aposMinThicknessEpsilon = 0.01f;
+        float renderableStrokeWidth = strokeWidth;
+        if (_isAntialiased && _stroke is IAntialiasedRenderable)
+        {
+            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContribution);
+        }
+        _stroke.StrokeWidth = renderableStrokeWidth;
 
         // Issue #2796: push dash/gap to the stroke slot when it supports dashing. Skipped
         // for slots that don't implement the interface (core DefaultStrokedCircleRenderable
         // wraps LineCircle, no dash concept). Stroke-only — dashing is guarded by !IsFilled
-        // in the Apos renderable, so pushing to fill would be ignored anyway.
+        // in the Apos renderable, so pushing to fill would be ignored anyway. The Apos
+        // renderable itself inflates the effective gap by aaSize when AA is on (see
+        // Runtimes/GumShapes/Renderables/Circle.cs RenderDashed) so dashes stay visually
+        // distinct — runtime just pushes the user's values through unchanged.
         if (_stroke is IDashedStrokeRenderable strokeDashed)
         {
             strokeDashed.StrokeDashLength = strokeDashLength;
@@ -920,6 +941,51 @@ public class CircleRuntime : GraphicalUiElement
         // to the contained renderable's PreRender would recurse via the OnPreRender hook the
         // MonoGameGumShapes factory wires up.
     }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Issue #2790: rebuild both slots so the clone is fully independent of the source.
+    /// <list type="number">
+    /// <item><c>base.Clone</c> deep-copies the fill renderable via <c>ICloneable</c> (Apos
+    /// <c>Circle.Clone</c>) and sets it as the clone's contained object. <c>MemberwiseClone</c>
+    /// leaves the clone's <c>_fill</c> field pointing at the source's fill instance — we
+    /// re-assign it to the freshly-cloned contained object.</item>
+    /// <item>The <c>_stroke</c> field is similarly stale; re-resolve via
+    /// <see cref="RenderableRegistry"/> so the new stroke instance's <c>OnPreRender</c> hook is
+    /// wired against the clone, not the source.</item>
+    /// <item>Re-wire the stroke's parent to the new fill so the renderer's hierarchy walk
+    /// draws stroke after fill (visual order preserved).</item>
+    /// <item>Push <see cref="StrokeColor"/> through its setter so the freshly-built stroke
+    /// renderable picks up the user's color (the runtime's <c>_strokeColor</c> field was
+    /// MemberwiseCloned but the new slot is at its default).</item>
+    /// </list>
+    /// </remarks>
+    public override GraphicalUiElement Clone()
+    {
+        CircleRuntime toReturn = (CircleRuntime)base.Clone();
+
+        toReturn._fill = (IFilledCircleRenderable?)toReturn.mContainedObjectAsIpso;
+        toReturn._stroke = RenderableRegistry.Create<IStrokedCircleRenderable>(toReturn)
+            ?? new DefaultStrokedCircleRenderable();
+
+        if (toReturn._fill is IRenderableIpso fillIpso
+            && toReturn._stroke is IRenderableIpso strokeIpso)
+        {
+            strokeIpso.Parent = fillIpso;
+        }
+        else if (toReturn._fill == null)
+        {
+            toReturn.SetContainedObject(toReturn._stroke);
+        }
+
+        toReturn.StrokeColor = toReturn.StrokeColor;
+        if (toReturn._fill != null)
+        {
+            toReturn._stroke.Radius = toReturn._fill.Radius;
+        }
+
+        return toReturn;
+    }
 #endif
 
 #if SKIA
@@ -934,8 +1000,17 @@ public class CircleRuntime : GraphicalUiElement
     {
         CircleRuntime toReturn = (CircleRuntime)base.Clone();
         // Reset cached renderable reference so the clone re-resolves against its own
-        // RenderableComponent on next access.
+        // RenderableComponent on next access. The fill slot's Color/Radius/etc. were copied
+        // by Circle.Clone (ICloneable, MemberwiseClone) so the clone's fill matches source.
         toReturn.containedLineCircle = null!;
+        // Issue #2790: drop the inherited reference to the source's stroke slot and rebuild a
+        // fresh one parented to the clone's fill so the clone is fully independent.
+        toReturn.ClearStrokeRenderable();
+        toReturn.SetStrokeRenderable(new ContainedCircleType());
+        // The fresh stroke renderable defaults to red; re-fire the StrokeColor setter so the
+        // user's color (held on _strokeColor via MemberwiseClone) is pushed into the new
+        // slot. Same trick for Width/Height mirrored in PreRender — no need here.
+        toReturn.StrokeColor = toReturn.StrokeColor;
         return toReturn;
     }
 #endif
@@ -1009,9 +1084,16 @@ public class CircleRuntime : GraphicalUiElement
             containedLineCircle = circle;
 
 #if SKIA
-            // Skia's Circle draws from its bounding rect's center — no CircleOrigin or
-            // CornerRadius properties. StrokeColor inherited from SkiaShapeRuntime; setting
-            // it both selects stroke mode (IsFilled = false) and assigns the color in one go.
+            // Issue #2790: opt this Skia runtime into two-slot fill+stroke composition. The
+            // contained circle (created above) becomes the fill slot; this second Circle is the
+            // stroke slot, registered with the base so SkiaShapeRuntime.FillColor and StrokeColor
+            // each route to their own renderable. Without this call the runtime stays on the
+            // single-slot legacy model (last-non-null-setter-wins).
+            SetStrokeRenderable(new ContainedCircleType());
+
+            // Defaults: invisible fill, white stroke — matches the pre-#2790 visual where the
+            // single Circle was set to StrokeColor = White (which forced IsFilled = false).
+            FillColor = null;
             StrokeColor = SKColors.White;
             StrokeWidth = 1;
             StrokeWidthUnits = DimensionUnitType.ScreenPixel;

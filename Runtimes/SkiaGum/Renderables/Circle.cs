@@ -1,9 +1,25 @@
-﻿using SkiaSharp;
+﻿using System;
+using SkiaSharp;
 
 namespace SkiaGum.Renderables;
 
-public class Circle : RenderableShapeBase
+public class Circle : RenderableShapeBase, ICloneable
 {
+    /// <summary>
+    /// Issue #2790 — required by <see cref="Gum.Wireframe.GraphicalUiElement.Clone"/> so
+    /// shape runtimes can be deep-copied. MemberwiseClone copies every paint/dimension
+    /// field; the children collection, parent pointer, and cached paint are reset so the
+    /// clone is structurally independent of the source.
+    /// </summary>
+    public object Clone()
+    {
+        Circle clone = (Circle)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        clone.ClearCachedPaint();
+        return clone;
+    }
+
     /// <summary>
     /// Derived radius — computed from the current bounding box on get (matching what
     /// <see cref="DrawBound"/> uses), and on set assigns <see cref="RenderableShapeBase.Width"/>

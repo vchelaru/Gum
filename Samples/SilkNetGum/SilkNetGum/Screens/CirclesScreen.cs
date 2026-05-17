@@ -24,23 +24,45 @@ internal class CirclesScreen : GraphicalUiElement
 {
     public CirclesScreen() : base(new InvisibleRenderable())
     {
+        // Two-column root so the screen grows wide rather than tall as rows accumulate. No
+        // ScrollViewer in SkiaGum yet, so this is the cheapest layout that works on both
+        // backends (mirrored in MonoGameGumShapesGallery/Screens/CirclesScreen).
         ContainerRuntime root = new();
-        root.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        root.StackSpacing = 14;
+        root.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        root.StackSpacing = 24;
         root.X = 10;
         root.Y = 10;
         this.Children.Add(root);
 
-        root.Children.Add(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
-        root.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
-        root.Children.Add(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
-        root.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
-        root.Children.Add(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
-        root.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
-        root.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
-        root.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — Skia draws the shadow on the single contained renderable (#2797)", BuildDropshadowRow()));
-        root.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — Skia routes through SkiaShapeRuntime.StrokeDashLength (#2796)", BuildDashedStrokeRow()));
-        root.Children.Add(BuildSection("Known limitation: FillColor + StrokeColor on the same instance — only the most-recently-set one renders today (see #2790).", BuildBothColorsRow()));
+        ContainerRuntime left = BuildColumn();
+        ContainerRuntime right = BuildColumn();
+        root.Children.Add(left);
+        root.Children.Add(right);
+
+        left.Children.Add(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
+        left.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
+        left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
+        left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
+        left.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+        left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
+
+        right.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
+        right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — Skia draws the shadow on the single contained renderable (#2797)", BuildDropshadowRow()));
+        right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — Skia routes through SkiaShapeRuntime.StrokeDashLength (#2796)", BuildDashedStrokeRow()));
+        right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2790)", BuildBothColorsRow()));
+        right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract)", BuildInscribedRow()));
+    }
+
+    static ContainerRuntime BuildColumn()
+    {
+        ContainerRuntime column = new();
+        column.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        column.StackSpacing = 14;
+        column.WidthUnits = DimensionUnitType.RelativeToChildren;
+        column.HeightUnits = DimensionUnitType.RelativeToChildren;
+        column.Width = 0;
+        column.Height = 0;
+        return column;
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
@@ -191,33 +213,60 @@ internal class CirclesScreen : GraphicalUiElement
         return row;
     }
 
-    // Visual acceptance test for #2790. Today the contained Skia renderable has a single color
-    // slot + IsFilled toggle, so SkiaShapeRuntime.FillColor and StrokeColor route through the
-    // same fields — the most recently set non-null wins. Each cell sets both colors, varying
-    // the order, so the limitation is obvious and the fix in #2790 has a clear before/after.
-    // When two-slot composition lands, every cell here should show a filled crimson disk with
-    // a cyan ring around it (and gold + magenta in the second cell).
+    // Visual acceptance for #2790. Two-slot composition means setting both FillColor and
+    // StrokeColor lights up both layers simultaneously — order-independent. Each cell here
+    // should render a filled disk with a contrasting ring around it.
     static ContainerRuntime BuildBothColorsRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
 
-        // Stroke set last → only stroke (cyan ring) renders today.
-        CircleRuntime strokeWins = new();
-        strokeWins.Radius = 28;
-        strokeWins.FillColor = SKColors.Crimson;
-        strokeWins.StrokeColor = SKColors.Cyan;
-        strokeWins.StrokeWidth = 4;
-        row.Children.Add(strokeWins);
+        CircleRuntime strokeLast = new();
+        strokeLast.Radius = 28;
+        strokeLast.FillColor = SKColors.Crimson;
+        strokeLast.StrokeColor = SKColors.Cyan;
+        strokeLast.StrokeWidth = 4;
+        row.Children.Add(strokeLast);
 
-        // Fill set last → only fill (gold disk) renders today.
-        CircleRuntime fillWins = new();
-        fillWins.Radius = 28;
-        fillWins.StrokeColor = SKColors.Magenta;
-        fillWins.StrokeWidth = 4;
-        fillWins.FillColor = SKColors.Gold;
-        row.Children.Add(fillWins);
+        CircleRuntime fillLast = new();
+        fillLast.Radius = 28;
+        fillLast.StrokeColor = SKColors.Magenta;
+        fillLast.StrokeWidth = 4;
+        fillLast.FillColor = SKColors.Gold;
+        row.Children.Add(fillLast);
 
         return row;
+    }
+
+    // Visual contract for #2790: the stroke slot mirrors the runtime's Width/Height (pushed
+    // each frame in SkiaShapeRuntime.PreRender) and RenderableShapeBase.IsOffsetAppliedForStroke
+    // insets the rendered ring by half the stroke width. Cells get progressively thicker
+    // strokes (1, 4, 8, 12) — every ring must stay inside the gray rectangle. If a stroke
+    // bleeds past the frame, layout or PreRender mirroring is wrong.
+    static ContainerRuntime BuildInscribedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float strokeWidth in new[] { 1f, 4f, 8f, 12f })
+        {
+            row.Children.Add(BuildInscribedCell(strokeWidth));
+        }
+        return row;
+    }
+
+    static ColoredRectangleRuntime BuildInscribedCell(float strokeWidth)
+    {
+        ColoredRectangleRuntime frame = new();
+        frame.Width = 64;
+        frame.Height = 64;
+        frame.Color = new SKColor(60, 60, 80);
+
+        CircleRuntime circle = new();
+        circle.Radius = 32;
+        circle.FillColor = SKColors.SeaGreen;
+        circle.StrokeColor = SKColors.Yellow;
+        circle.StrokeWidth = strokeWidth;
+        circle.StrokeWidthUnits = DimensionUnitType.Absolute;
+        frame.Children.Add(circle);
+        return frame;
     }
 
     // Issue #2798 visual acceptance: two pairs (filled disk + 1 px outline ring), once with
@@ -259,13 +308,13 @@ internal class CirclesScreen : GraphicalUiElement
         baseline.FillColor = SKColors.Goldenrod;
         row.Children.Add(baseline);
 
-        // Soft shadow: small offset, generous blur, default opaque black.
+        // Soft shadow: noticeable offset, generous blur, default opaque black.
         CircleRuntime soft = new();
         soft.Radius = 28;
         soft.FillColor = SKColors.Goldenrod;
         soft.HasDropshadow = true;
-        soft.DropshadowOffsetX = 2;
-        soft.DropshadowOffsetY = 2;
+        soft.DropshadowOffsetX = 4;
+        soft.DropshadowOffsetY = 4;
         soft.DropshadowBlurX = 4;
         soft.DropshadowBlurY = 4;
         row.Children.Add(soft);
@@ -284,14 +333,16 @@ internal class CirclesScreen : GraphicalUiElement
         hard.DropshadowBlurY = 0;
         row.Children.Add(hard);
 
-        // Colored shadow: deep blue glow underneath.
+        // Colored shadow: magenta cast, real offset so the cast is visible against the blue
+        // background (offset = 0 would tuck the entire shadow under the opaque disk and leave
+        // only a thin halo, which on a blue page reads as nothing).
         CircleRuntime colored = new();
         colored.Radius = 28;
         colored.FillColor = SKColors.Goldenrod;
         colored.HasDropshadow = true;
-        colored.DropshadowRed = 0; colored.DropshadowGreen = 80; colored.DropshadowBlue = 200; colored.DropshadowAlpha = 200;
-        colored.DropshadowOffsetX = 0;
-        colored.DropshadowOffsetY = 0;
+        colored.DropshadowRed = 220; colored.DropshadowGreen = 40; colored.DropshadowBlue = 160; colored.DropshadowAlpha = 220;
+        colored.DropshadowOffsetX = 6;
+        colored.DropshadowOffsetY = 6;
         colored.DropshadowBlurX = 6;
         colored.DropshadowBlurY = 6;
         row.Children.Add(colored);
@@ -322,14 +373,16 @@ internal class CirclesScreen : GraphicalUiElement
         short64.StrokeGapLength = 4;
         row.Children.Add(short64);
 
-        // Tight 2/2 dotted. IsAntialiased=false keeps a 1 px dot from blooming.
+        // Tight 2/2 dotted. AA stays ON for visual parity with the MG side (which uses the
+        // runtime's AA-bloom compensation, #2790, to keep dashes crisp without disabling AA).
+        // Skia's 1 px stroke with AA on already reads as ~1 px, so no compensation is needed
+        // here — just don't override IsAntialiased and the dashes stay smooth.
         CircleRuntime dotted = new();
         dotted.Radius = 28;
         dotted.StrokeColor = SKColors.White;
         dotted.StrokeWidth = 1;
         dotted.StrokeDashLength = 2;
         dotted.StrokeGapLength = 2;
-        dotted.IsAntialiased = false;
         row.Children.Add(dotted);
 
         // Long-dash motif: 12/6 with a thicker stroke.
@@ -361,7 +414,11 @@ internal class CirclesScreen : GraphicalUiElement
         // ColoredRectangle is used as a visible frame so the alignment is obvious. Children
         // are positioned relative to it via YOrigin + PixelsFromSmall/Middle/Large.
         ColoredRectangleRuntime frame = new();
-        frame.Width = 220;
+        // Narrowed from 220 to 128 to keep the left column from forcing the page wider than
+        // the right column needs (the long section labels in the right column would otherwise
+        // get clipped or push the overall layout). 128 still gives 3 cells * 60 px clearance
+        // for the three alignment circles plus row spacing.
+        frame.Width = 128;
         frame.Height = 100;
         frame.Color = new SKColor(50, 50, 70);
 

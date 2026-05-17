@@ -27,22 +27,47 @@ internal class CirclesScreen : FrameworkElement
     {
         Dock(Gum.Wireframe.Dock.Fill);
 
+        // Two-column root so the screen grows wide rather than tall as rows accumulate. No
+        // ScrollViewer parity in SkiaGum yet, so this is the cheapest layout that works on
+        // both backends (mirrored in SilkNetGum/Screens/CirclesScreen).
         ContainerRuntime root = new();
-        root.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        root.StackSpacing = 14;
+        root.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        root.StackSpacing = 24;
         root.X = 10;
         root.Y = 10;
         AddChild(root);
 
-        root.AddChild(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
-        root.AddChild(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
-        root.AddChild(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
-        root.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
-        root.AddChild(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
-        root.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
-        root.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
-        root.AddChild(BuildSection("Dropshadow (off / soft / hard offset / colored) — fill-only push avoids doubling (#2797)", BuildDropshadowRow()));
-        root.AddChild(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — stroke-only push (#2796)", BuildDashedStrokeRow()));
+        ContainerRuntime left = BuildColumn();
+        ContainerRuntime right = BuildColumn();
+        root.AddChild(left);
+        root.AddChild(right);
+
+        // Column split mirrors SilkNetGum/Screens/CirclesScreen so visual regressions in one
+        // backend are easy to spot against the other.
+        left.AddChild(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
+        left.AddChild(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
+        left.AddChild(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
+        left.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
+        left.AddChild(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+        left.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
+
+        right.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
+        right.AddChild(BuildSection("Dropshadow (off / soft / hard offset / colored) — fill-only push avoids doubling (#2797)", BuildDropshadowRow()));
+        right.AddChild(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — stroke-only push (#2796)", BuildDashedStrokeRow()));
+        right.AddChild(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2790)", BuildBothColorsRow()));
+        right.AddChild(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract; mirrors SilkNetGum)", BuildInscribedRow()));
+    }
+
+    static ContainerRuntime BuildColumn()
+    {
+        ContainerRuntime column = new();
+        column.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        column.StackSpacing = 14;
+        column.WidthUnits = DimensionUnitType.RelativeToChildren;
+        column.HeightUnits = DimensionUnitType.RelativeToChildren;
+        column.Width = 0;
+        column.Height = 0;
+        return column;
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
@@ -237,13 +262,13 @@ internal class CirclesScreen : FrameworkElement
         baseline.FillColor = Color.Goldenrod;
         row.AddChild(baseline);
 
-        // Soft shadow: small offset, generous blur, default opaque black.
+        // Soft shadow: noticeable offset, generous blur, default opaque black.
         CircleRuntime soft = new();
         soft.Radius = 28;
         soft.FillColor = Color.Goldenrod;
         soft.HasDropshadow = true;
-        soft.DropshadowOffsetX = 2;
-        soft.DropshadowOffsetY = 2;
+        soft.DropshadowOffsetX = 4;
+        soft.DropshadowOffsetY = 4;
         soft.DropshadowBlurX = 4;
         soft.DropshadowBlurY = 4;
         row.AddChild(soft);
@@ -260,14 +285,16 @@ internal class CirclesScreen : FrameworkElement
         hard.DropshadowBlurY = 0;
         row.AddChild(hard);
 
-        // Colored shadow: deep blue glow underneath.
+        // Colored shadow: magenta cast, real offset so the cast is visible against the blue
+        // background (offset = 0 would tuck the entire shadow under the opaque disk and leave
+        // only a thin halo, which on a blue page reads as nothing).
         CircleRuntime colored = new();
         colored.Radius = 28;
         colored.FillColor = Color.Goldenrod;
         colored.HasDropshadow = true;
-        colored.DropshadowColor = new Color(0, 80, 200, 200);
-        colored.DropshadowOffsetX = 0;
-        colored.DropshadowOffsetY = 0;
+        colored.DropshadowColor = new Color(220, 40, 160, 220);
+        colored.DropshadowOffsetX = 6;
+        colored.DropshadowOffsetY = 6;
         colored.DropshadowBlurX = 6;
         colored.DropshadowBlurY = 6;
         row.AddChild(colored);
@@ -300,15 +327,17 @@ internal class CirclesScreen : FrameworkElement
         short64.StrokeGapLength = 4;
         row.AddChild(short64);
 
-        // Tight 2/2 dotted. IsAntialiased=false avoids the AA bloom widening a 1 px stroke
-        // and matches the Win95-style dotted focus rect (see Themes/Retro95).
+        // Tight 2/2 dotted. AA stays ON — the runtime's AA-bloom compensation (#2790) pushes
+        // a near-zero thickness with aaSize = 1 so the dashes render as crisp 1 px dots with
+        // smooth (not jaggy) edges. Pre-#2790 this cell forced IsAntialiased = false to avoid
+        // a fat AA-bloomed dash, accepting jaggies on the circle's curve as the lesser evil;
+        // that trade is no longer required.
         CircleRuntime dotted = new();
         dotted.Radius = 28;
         dotted.StrokeColor = Color.White;
         dotted.StrokeWidth = 1;
         dotted.StrokeDashLength = 2;
         dotted.StrokeGapLength = 2;
-        dotted.IsAntialiased = false;
         row.AddChild(dotted);
 
         // Long-dash motif: 12/6 with a thicker stroke.
@@ -335,12 +364,73 @@ internal class CirclesScreen : FrameworkElement
         return row;
     }
 
+    // Visual acceptance for #2790 — mirrors the SilkNetGum row of the same name. Both layers
+    // (fill + stroke) render simultaneously regardless of setter order; pre-#2790 only the
+    // most-recently-set non-null color was visible.
+    static ContainerRuntime BuildBothColorsRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        CircleRuntime strokeLast = new();
+        strokeLast.Radius = 28;
+        strokeLast.FillColor = Color.Crimson;
+        strokeLast.StrokeColor = Color.Cyan;
+        strokeLast.StrokeWidth = 4;
+        row.AddChild(strokeLast);
+
+        CircleRuntime fillLast = new();
+        fillLast.Radius = 28;
+        fillLast.StrokeColor = Color.Magenta;
+        fillLast.StrokeWidth = 4;
+        fillLast.FillColor = Color.Gold;
+        row.AddChild(fillLast);
+
+        return row;
+    }
+
+    // Visual contract for #2790 — mirrors the SilkNetGum CirclesScreen row of the same name.
+    // RenderableRegistry's Apos two-slot runtime mirrors the runtime's Width/Height onto the
+    // stroke slot in PreRender; the renderer's stroke-inset handling keeps the ring inscribed
+    // inside the bounds. Cells get progressively thicker strokes (1, 4, 8, 12) — every ring
+    // must stay inside the gray rectangle. Bleeding past the frame means PreRender mirroring
+    // is broken.
+    static ContainerRuntime BuildInscribedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float strokeWidth in new[] { 1f, 4f, 8f, 12f })
+        {
+            row.AddChild(BuildInscribedCell(strokeWidth));
+        }
+        return row;
+    }
+
+    static ColoredRectangleRuntime BuildInscribedCell(float strokeWidth)
+    {
+        ColoredRectangleRuntime frame = new();
+        frame.Width = 64;
+        frame.Height = 64;
+        frame.Color = new Color(60, 60, 80);
+
+        CircleRuntime circle = new();
+        circle.Radius = 32;
+        circle.FillColor = Color.SeaGreen;
+        circle.StrokeColor = Color.Yellow;
+        circle.StrokeWidth = strokeWidth;
+        circle.StrokeWidthUnits = DimensionUnitType.Absolute;
+        frame.Children.Add(circle);
+        return frame;
+    }
+
     static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
     {
         // ColoredRectangle is used as a visible frame so the alignment is obvious. Children
         // are positioned relative to it via YOrigin + PixelsFromSmall/Middle/Large.
         ColoredRectangleRuntime frame = new();
-        frame.Width = 220;
+        // Narrowed from 220 to 128 to keep the left column from forcing the page wider than
+        // the right column needs (the long section labels in the right column would otherwise
+        // get clipped or push the overall layout). 128 still gives 3 cells * 60 px clearance
+        // for the three alignment circles plus row spacing.
+        frame.Width = 128;
         frame.Height = 100;
         frame.Color = new Color(50, 50, 70);
 

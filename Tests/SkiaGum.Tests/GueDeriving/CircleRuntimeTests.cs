@@ -3,6 +3,7 @@ using Shouldly;
 using SkiaGum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
+using System.Linq;
 
 namespace SkiaGum.Tests.GueDeriving;
 
@@ -66,5 +67,268 @@ public class CircleRuntimeTests
     {
         CircleRuntime sut = new();
         sut.Width.ShouldBe(32);
+    }
+
+    // Two-slot composition (#2790) — the fill renderable is the contained object and the stroke
+    // renderable is its first child. The renderer draws parent before children so the visual
+    // order is fill under stroke.
+    [Fact]
+    public void StrokeSlot_ShouldExistAsChildOfFillSlot_ByDefault()
+    {
+        CircleRuntime sut = new();
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        fillSlot.Children.Count.ShouldBe(1);
+
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        strokeSlot.IsFilled.ShouldBeFalse();
+        fillSlot.IsFilled.ShouldBeTrue();
+    }
+
+    // #2790 acceptance: setting both FillColor and StrokeColor non-null paints the fill slot
+    // with the fill color (filled) and the stroke slot with the stroke color (outline). No
+    // last-write-wins clobber.
+    [Fact]
+    public void FillColorAndStrokeColor_BothSet_PaintsEachSlotIndependently()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = SKColors.Crimson;
+        sut.StrokeColor = SKColors.Cyan;
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+
+        fillSlot.Color.ShouldBe(SKColors.Crimson);
+        fillSlot.IsFilled.ShouldBeTrue();
+        strokeSlot.Color.ShouldBe(SKColors.Cyan);
+        strokeSlot.IsFilled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FillColorAndStrokeColor_SetInReverseOrder_StillPaintsBothSlots()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeColor = SKColors.Magenta;
+        sut.FillColor = SKColors.Gold;
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+
+        fillSlot.Color.ShouldBe(SKColors.Gold);
+        strokeSlot.Color.ShouldBe(SKColors.Magenta);
+    }
+
+    // PreRender mirrors the runtime's Width/Height onto the stroke slot. The stroke renderable
+    // honors IsOffsetAppliedForStroke so the drawn ring stays inscribed inside those bounds
+    // rather than spilling past — that's the "stroke is contained inside the bounds" check
+    // called out in #2790.
+    [Fact]
+    public void PreRender_ShouldMirrorWidthAndHeight_OntoStrokeSlot()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 80;
+        sut.Height = 60;
+        sut.FillColor = SKColors.Crimson;
+        sut.StrokeColor = SKColors.Cyan;
+        sut.StrokeWidth = 4;
+
+        sut.PreRender();
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        strokeSlot.Width.ShouldBe(fillSlot.Width);
+        strokeSlot.Height.ShouldBe(fillSlot.Height);
+        strokeSlot.IsOffsetAppliedForStroke.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void StrokeWidth_AfterPreRender_AppliesToStrokeSlotNotFillSlot()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeWidth = 5;
+        sut.StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        strokeSlot.StrokeWidth.ShouldBe(5);
+    }
+
+    // #2790: UseGradient is a single user knob that applies to whichever slots are active.
+    // FillColor null => fill slot stays gradient-off even when UseGradient = true; otherwise
+    // SKPaint.Shader would override the alpha-0 fill color and the gradient would render anyway.
+    [Fact]
+    public void UseGradient_FillColorNull_FillSlotStaysOff()
+    {
+        CircleRuntime sut = new();
+        sut.UseGradient = true;
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        fillSlot.UseGradient.ShouldBeFalse();
+        strokeSlot.UseGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UseGradient_BothColorsSet_BothSlotsOn()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = SKColors.White;
+        sut.UseGradient = true;
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        fillSlot.UseGradient.ShouldBeTrue();
+        strokeSlot.UseGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SettingFillColor_AfterUseGradientTrue_LightsUpFillSlotGradient()
+    {
+        CircleRuntime sut = new();
+        sut.UseGradient = true;
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        fillSlot.UseGradient.ShouldBeFalse();
+
+        sut.FillColor = SKColors.White;
+
+        fillSlot.UseGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Color1_MirrorsToBothSlots()
+    {
+        CircleRuntime sut = new();
+        sut.Color1 = new SKColor(10, 20, 30, 40);
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        fillSlot.Red1.ShouldBe(10);
+        strokeSlot.Red1.ShouldBe(10);
+        strokeSlot.Alpha1.ShouldBe(40);
+    }
+
+    // #2790: dropshadow routes to fill when FillColor is set (shadow underneath the disk reads
+    // through any stroke layered on top), otherwise stroke (a stroke-only ring still casts a
+    // shadow). Live-routed in PreRender so toggling FillColor moves the shadow.
+    [Fact]
+    public void Dropshadow_FillColorSet_AppliesToFillSlot()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = SKColors.Red;
+        sut.HasDropshadow = true;
+
+        sut.PreRender();
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        fillSlot.HasDropshadow.ShouldBeTrue();
+        strokeSlot.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Dropshadow_FillColorNull_AppliesToStrokeSlot()
+    {
+        CircleRuntime sut = new();
+        // FillColor stays null by default; StrokeColor stays white by default.
+        sut.HasDropshadow = true;
+
+        sut.PreRender();
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        strokeSlot.HasDropshadow.ShouldBeTrue();
+        fillSlot.HasDropshadow.ShouldBeFalse();
+    }
+
+    // #2790: IsAntialiased writes to BOTH slots in two-slot mode so flipping it actually
+    // reaches the slot that's drawing the stroke. Without this, setting IsAntialiased = false
+    // on a stroke-only CircleRuntime would silently no-op (the stroke slot is the runtime's
+    // only visible renderable yet the pass-through only wrote to the fill slot).
+    [Fact]
+    public void IsAntialiased_MirrorsToStrokeSlot_InTwoSlotMode()
+    {
+        CircleRuntime sut = new();
+
+        sut.IsAntialiased = false;
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        fillSlot.IsAntialiased.ShouldBeFalse();
+        strokeSlot.IsAntialiased.ShouldBeFalse();
+    }
+
+    // Issue #2790 — Clone must rebuild a fresh stroke slot so the clone's slot isn't a
+    // shallow-copied pointer to the source's. CircleRuntime.Clone (Skia branch) does this via
+    // ClearStrokeRenderable + SetStrokeRenderable(new Circle()).
+    [Fact]
+    public void Clone_StrokeSlot_IsFreshInstance_NotShallowCopyOfSource()
+    {
+        CircleRuntime source = new();
+        source.FillColor = SKColors.Red;
+        source.StrokeColor = SKColors.Blue;
+
+        CircleRuntime clone = (CircleRuntime)source.Clone();
+
+        Circle sourceFill = (Circle)source.RenderableComponent;
+        Circle cloneFill = (Circle)clone.RenderableComponent;
+        Circle sourceStroke = (Circle)sourceFill.Children.Single();
+        Circle cloneStroke = (Circle)cloneFill.Children.Single();
+
+        cloneFill.ShouldNotBeSameAs(sourceFill);
+        cloneStroke.ShouldNotBeSameAs(sourceStroke);
+    }
+
+    [Fact]
+    public void Clone_MutatingClone_DoesNotMutateSource()
+    {
+        CircleRuntime source = new();
+        source.FillColor = SKColors.Red;
+        source.StrokeColor = SKColors.Blue;
+
+        CircleRuntime clone = (CircleRuntime)source.Clone();
+        clone.FillColor = SKColors.Green;
+        clone.StrokeColor = SKColors.Yellow;
+
+        Circle sourceFill = (Circle)source.RenderableComponent;
+        Circle sourceStroke = (Circle)sourceFill.Children.Single();
+        sourceFill.Color.ShouldBe(SKColors.Red);
+        sourceStroke.Color.ShouldBe(SKColors.Blue);
+    }
+
+    // Composite DropshadowColor mirrors the MG runtime so cross-backend sample code can set
+    // the color in one call instead of four per-channel writes.
+    [Fact]
+    public void DropshadowColor_RoundTrips()
+    {
+        CircleRuntime sut = new();
+        SKColor color = new(10, 20, 30, 40);
+
+        sut.DropshadowColor = color;
+
+        sut.DropshadowColor.ShouldBe(color);
+        sut.DropshadowRed.ShouldBe(10);
+        sut.DropshadowGreen.ShouldBe(20);
+        sut.DropshadowBlue.ShouldBe(30);
+        sut.DropshadowAlpha.ShouldBe(40);
+    }
+
+    [Fact]
+    public void Dropshadow_TargetSwitch_ClearsPreviousSlot()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = SKColors.Red;
+        sut.HasDropshadow = true;
+        sut.PreRender();
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        fillSlot.HasDropshadow.ShouldBeTrue();
+
+        sut.FillColor = null;
+        sut.PreRender();
+
+        fillSlot.HasDropshadow.ShouldBeFalse();
+        strokeSlot.HasDropshadow.ShouldBeTrue();
     }
 }
