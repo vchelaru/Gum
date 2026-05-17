@@ -19,7 +19,7 @@ namespace MonoGameGumShapesGallery;
 public class Game1 : Game
 {
     private const int BackBufferWidth = 1280;
-    private const int BackBufferHeight = 900;
+    private const int BackBufferHeight = 1000;
     private const float NavStripHeight = 40;
 
     private readonly GraphicsDeviceManager _graphics;
@@ -103,7 +103,9 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(new Color(30, 30, 30));
+        // Matches the SilkNetGum clear color so the two galleries render shadows against the
+        // same backdrop and visual diffs stay attributable to the shape code, not the page.
+        GraphicsDevice.Clear(new Color(51, 76, 204));
         GumService.Default.Draw();
         base.Draw(gameTime);
     }

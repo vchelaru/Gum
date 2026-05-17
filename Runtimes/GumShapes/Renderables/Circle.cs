@@ -93,7 +93,14 @@ public class Circle : RenderableShapeBase,
         {
             // as outlined here:
             // https://github.com/Apostolique/Apos.Shapes/issues/12
-            // There is a strange issue with rendering. However, adding 1 antialias with 1 border results in teh correct size and no artifacts:
+            // There is a strange issue with rendering. However, adding 1 antialias with 1 border results in teh correct size and no artifacts.
+            //
+            // NOTE FOR CALLERS: the Apos shader treats stroke thickness = 0 as "don't draw"
+            // even when aaSize > 0 — the AA halo cannot render without a non-zero stroke to
+            // attach to. Confirmed empirically while wiring CircleRuntime's AA-bloom
+            // compensation (#2790). If you need a thin-as-possible AA-only stroke, push a
+            // small positive epsilon (e.g. 0.01) instead of 0; the 1 px AA halo dominates and
+            // the sub-pixel stroke is invisible.
 
             if (UseGradient && forcedColor == null)
             {

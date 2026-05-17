@@ -43,7 +43,7 @@ internal class CirclesScreen : GraphicalUiElement
         left.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
         left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
         left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
-        left.Children.Add(BuildSection("Alignment inside a 220x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+        left.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
         left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
 
         right.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
@@ -308,13 +308,13 @@ internal class CirclesScreen : GraphicalUiElement
         baseline.FillColor = SKColors.Goldenrod;
         row.Children.Add(baseline);
 
-        // Soft shadow: small offset, generous blur, default opaque black.
+        // Soft shadow: noticeable offset, generous blur, default opaque black.
         CircleRuntime soft = new();
         soft.Radius = 28;
         soft.FillColor = SKColors.Goldenrod;
         soft.HasDropshadow = true;
-        soft.DropshadowOffsetX = 2;
-        soft.DropshadowOffsetY = 2;
+        soft.DropshadowOffsetX = 4;
+        soft.DropshadowOffsetY = 4;
         soft.DropshadowBlurX = 4;
         soft.DropshadowBlurY = 4;
         row.Children.Add(soft);
@@ -333,14 +333,16 @@ internal class CirclesScreen : GraphicalUiElement
         hard.DropshadowBlurY = 0;
         row.Children.Add(hard);
 
-        // Colored shadow: deep blue glow underneath.
+        // Colored shadow: magenta cast, real offset so the cast is visible against the blue
+        // background (offset = 0 would tuck the entire shadow under the opaque disk and leave
+        // only a thin halo, which on a blue page reads as nothing).
         CircleRuntime colored = new();
         colored.Radius = 28;
         colored.FillColor = SKColors.Goldenrod;
         colored.HasDropshadow = true;
-        colored.DropshadowRed = 0; colored.DropshadowGreen = 80; colored.DropshadowBlue = 200; colored.DropshadowAlpha = 200;
-        colored.DropshadowOffsetX = 0;
-        colored.DropshadowOffsetY = 0;
+        colored.DropshadowRed = 220; colored.DropshadowGreen = 40; colored.DropshadowBlue = 160; colored.DropshadowAlpha = 220;
+        colored.DropshadowOffsetX = 6;
+        colored.DropshadowOffsetY = 6;
         colored.DropshadowBlurX = 6;
         colored.DropshadowBlurY = 6;
         row.Children.Add(colored);
@@ -410,7 +412,11 @@ internal class CirclesScreen : GraphicalUiElement
         // ColoredRectangle is used as a visible frame so the alignment is obvious. Children
         // are positioned relative to it via YOrigin + PixelsFromSmall/Middle/Large.
         ColoredRectangleRuntime frame = new();
-        frame.Width = 220;
+        // Narrowed from 220 to 128 to keep the left column from forcing the page wider than
+        // the right column needs (the long section labels in the right column would otherwise
+        // get clipped or push the overall layout). 128 still gives 3 cells * 60 px clearance
+        // for the three alignment circles plus row spacing.
+        frame.Width = 128;
         frame.Height = 100;
         frame.Color = new SKColor(50, 50, 70);
 
