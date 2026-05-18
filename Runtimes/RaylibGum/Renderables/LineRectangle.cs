@@ -301,21 +301,23 @@ public class LineRectangle : InvisibleRenderable
 
             if (blur > 0f)
             {
-                // Approximate Skia's SKImageFilter.CreateDropShadow Gaussian blur. Skia treats
-                // BlurX/BlurY as Gaussian sigma — visible falloff extends to ~3σ — and raylib
-                // has no blur shader, so the band layout is:
-                //   - falloffExtent = 3 * blur (where blur = max(BlurX, BlurY)).
+                // Approximate Skia's SKImageFilter.CreateDropShadow output. Skia treats user-set
+                // BlurX/BlurY as the VISIBLE blur radius — internally it divides by 3 to get
+                // Gaussian sigma (RenderableShapeBase.cs lines 778-779: "BlurX / 3.0f"), and the
+                // Gaussian's visible falloff extends ~3σ which works back out to the user-set
+                // blur value. So the visible fade extent in raylib is just `blur`, NOT 3*blur as
+                // an earlier iteration of this code assumed (that version made the dropshadow
+                // bleed ~3× further than Skia's).
+                //
+                // Band layout:
+                //   - falloffExtent = blur (where blur = max(BlurX, BlurY)).
                 //   - blurRings non-overlapping outlines, each bandThickness px thick,
                 //     positioned at increasing distances outside the solid core.
                 //   - Gaussian-ish alpha profile exp(-t²*3) sampled at the band centerline.
-                //     exp(-3) ≈ 0.05 at the outer edge — soft tail without going invisible
-                //     so fast that the rings stairstep visibly.
-                // The old code drew overlapping bands all starting at the shape edge with
-                // thicknesses scaling i*bandThickness, which collapsed the visible fade onto
-                // a narrow ring near the shape silhouette and made the dropshadow read as
-                // hard with a thin halo.
+                //     exp(-3) ≈ 0.05 at the outer edge — soft tail without going invisible so
+                //     fast that the rings stairstep visibly.
                 const int blurRings = 32;
-                float falloffExtent = blur * 3f;
+                float falloffExtent = blur;
                 float bandThickness = falloffExtent / blurRings;
                 for (int i = 0; i < blurRings; i++)
                 {
