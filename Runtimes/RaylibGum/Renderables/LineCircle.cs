@@ -275,18 +275,19 @@ public class LineCircle : InvisibleRenderable
                 // Solid core (full-alpha shadow silhouette at Radius) draws LAST so it
                 // sits on top of the band composite inside the shape's silhouette.
                 const int blurRings = 32;
-                // Tuned smaller (blur * 0.35) than the earlier ring-based code's blur * 0.5
-                // because the concentric-filled-circles approach renders the bands at their
-                // intended alpha instead of partially obscuring them with rasterization
-                // artifacts. Same user-set BlurX maps to the same visible extent on screen.
-                float falloffExtent = blur * 0.35f;
+                // Tuning constants empirical from side-by-side gallery comparisons:
+                //   falloffExtent = blur * 0.25 — visible extent matches Skia.
+                //   profile = (1 - t)^1.5 — drops faster than sqrt(1 - t) (which lingered
+                //   too long at intermediate distances), reaches 0 at t = 1.
+                float falloffExtent = blur * 0.25f;
                 float bandThickness = falloffExtent / blurRings;
                 Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
                 float prevP = 1f;
                 for (int j = blurRings - 1; j >= 0; j--)
                 {
                     float tOuter = (j + 1f) / blurRings;
-                    float targetAlpha = System.MathF.Sqrt(System.MathF.Max(0f, 1f - tOuter));
+                    float oneMinusT = System.MathF.Max(0f, 1f - tOuter);
+                    float targetAlpha = oneMinusT * System.MathF.Sqrt(oneMinusT);
                     float currP = 1f - targetAlpha;
                     float beta = prevP > 0f ? 1f - currP / prevP : 0f;
                     prevP = currP;
