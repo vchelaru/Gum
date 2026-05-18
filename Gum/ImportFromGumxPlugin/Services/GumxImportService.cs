@@ -92,6 +92,7 @@ public class GumxImportService
 
         var result = new ImportResult();
         var nameMap = BuildNameMap(selections, destinationSubfolder);
+        var qualifiedNameMap = BuildQualifiedNameMap(selections, destinationSubfolder);
 
         // Conflicts are file-level: a destination element file already exists at the same path.
         // The set of names is needed downstream regardless of resolution so writers can decide
@@ -141,7 +142,7 @@ public class GumxImportService
 
         // 2. Transitive components — topological order (already sorted by GumxDependencyResolver)
         foreach (var component in selections.TransitiveComponents.Where(c => !skippedElements.Contains(c)))
-            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap, conflictNameSet, conflictResolution);
+            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
 
         // 3. Behaviors (no asset dependencies)
         foreach (var behavior in selections.Behaviors)
@@ -149,11 +150,11 @@ public class GumxImportService
 
         // 4. Direct components
         foreach (var component in selections.DirectComponents.Where(c => !skippedElements.Contains(c)))
-            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap, conflictNameSet, conflictResolution);
+            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
 
         // 5. Screens
         foreach (var screen in selections.DirectScreens.Where(s => !skippedElements.Contains(s)))
-            await WriteAndImportScreenAsync(screen, source, sourceBase, projectDir, nameMap, conflictNameSet, conflictResolution);
+            await WriteAndImportScreenAsync(screen, source, sourceBase, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
 
         // 6. Write pre-fetched asset files to disk for imported elements
         var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
@@ -336,6 +337,36 @@ public class GumxImportService
         return map;
     }
 
+    /// <summary>
+    /// Builds a map of qualified element names (e.g. "Components/Styles" → "Components/Theme/Styles")
+    /// for use in rewriting VariableReferences entries whose right-hand sides reference other
+    /// simultaneously-imported elements by qualified name.
+    /// </summary>
+    private static Dictionary<string, string> BuildQualifiedNameMap(
+        ImportSelections selections,
+        string destinationSubfolder)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (string.IsNullOrWhiteSpace(destinationSubfolder))
+        {
+            return map;
+        }
+
+        string subfolder = destinationSubfolder.TrimEnd('/');
+
+        foreach (var component in selections.DirectComponents.Concat(selections.TransitiveComponents))
+        {
+            map[$"Components/{component.Name}"] = $"Components/{subfolder}/{component.Name}";
+        }
+
+        foreach (var screen in selections.DirectScreens)
+        {
+            map[$"Screens/{screen.Name}"] = $"Screens/{subfolder}/{screen.Name}";
+        }
+
+        return map;
+    }
+
     private async Task WriteAndImportStandardAsync(
         StandardElementSave standard,
         GumProjectSave source,
@@ -358,6 +389,7 @@ public class GumxImportService
         string sourceBase,
         string projectDir,
         Dictionary<string, string> nameMap,
+        Dictionary<string, string> qualifiedNameMap,
         HashSet<string> conflictNameSet,
         ConflictResolution conflictResolution)
     {
@@ -372,7 +404,7 @@ public class GumxImportService
         string destPath = Path.Combine(projectDir, "Components", $"{destName}.{GumProjectSave.ComponentExtension}");
 
         bool wrote = await CopyElementFileWithRemapAsync(
-            relativeSrc, sourceBase, destPath, sourceName, destName, nameMap);
+            relativeSrc, sourceBase, destPath, sourceName, destName, nameMap, qualifiedNameMap);
 
         // Overwrite resolution: the element is already in the in-memory project, so skip
         // ImportLogic registration. The end-of-import save+reload picks up the new file content.
@@ -408,6 +440,7 @@ public class GumxImportService
         string sourceBase,
         string projectDir,
         Dictionary<string, string> nameMap,
+        Dictionary<string, string> qualifiedNameMap,
         HashSet<string> conflictNameSet,
         ConflictResolution conflictResolution)
     {
@@ -421,7 +454,7 @@ public class GumxImportService
         string destPath = Path.Combine(projectDir, "Screens", $"{destName}.{GumProjectSave.ScreenExtension}");
 
         bool wrote = await CopyElementFileWithRemapAsync(
-            relativeSrc, sourceBase, destPath, sourceName, destName, nameMap);
+            relativeSrc, sourceBase, destPath, sourceName, destName, nameMap, qualifiedNameMap);
 
         if (wrote && !isConflict)
         {
@@ -453,7 +486,8 @@ public class GumxImportService
         string destPath,
         string sourceName,
         string destName,
-        Dictionary<string, string> nameMap)
+        Dictionary<string, string> nameMap,
+        Dictionary<string, string> qualifiedNameMap)
     {
         string? content = await _sourceService.FetchElementTextAsync(relativeSourcePath, sourceBase);
         if (content == null) return false;
@@ -461,7 +495,7 @@ public class GumxImportService
         // If there are name remappings, apply them to the file content before writing
         if (nameMap.Count > 0)
         {
-            content = ApplyNameRemappings(content, sourceName, destName, nameMap);
+            content = ApplyNameRemappings(content, sourceName, destName, nameMap, qualifiedNameMap);
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
@@ -470,14 +504,15 @@ public class GumxImportService
     }
 
     /// <summary>
-    /// Applies Name and BaseType remappings to the raw XML content of an element file.
-    /// Uses simple string replacement on the serialized XML to avoid full deserialization.
+    /// Applies Name, BaseType, and VariableReferences remappings to the raw XML content of an
+    /// element file. Uses simple string replacement on the serialized XML to avoid full deserialization.
     /// </summary>
     private static string ApplyNameRemappings(
         string content,
         string sourceName,
         string destName,
-        Dictionary<string, string> nameMap)
+        Dictionary<string, string> nameMap,
+        Dictionary<string, string> qualifiedNameMap)
     {
         // Remap the element's own name
         if (sourceName != destName)
@@ -494,6 +529,15 @@ public class GumxImportService
 
             content = content.Replace($"<BaseType>{oldName}</BaseType>", $"<BaseType>{newName}</BaseType>");
             content = content.Replace($" BaseType=\"{oldName}\"", $" BaseType=\"{newName}\"");
+        }
+
+        // Remap the right-hand side of VariableReferences entries. These are serialized as
+        // <string>LeftSide = QualifiedName.Member</string>. The qualified prefix points at
+        // another imported element (e.g. "Components/Styles") which gains the destination
+        // subfolder during this import (e.g. "Components/Theme/Styles"). Issue #2839.
+        foreach (var (oldQualified, newQualified) in qualifiedNameMap)
+        {
+            content = content.Replace($"= {oldQualified}.", $"= {newQualified}.");
         }
 
         return content;

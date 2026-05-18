@@ -552,6 +552,70 @@ public class GumxImportServiceTests : IDisposable
         _importLogic.ImportedComponentPaths.ShouldBeEmpty();
     }
 
+    // ── variable reference remapping (issue #2839) ────────────────────────
+
+    [Fact]
+    public async Task ImportAsync_WithSubfolder_RewritesVariableReferenceRightHandSideToRemappedName()
+    {
+        // Issue #2839: when importing components into a subfolder, the right-hand side of
+        // VariableReferences entries that point at other simultaneously-imported components
+        // must be updated to reflect the new subfolder location.
+
+        string aName = "A";
+        string stylesName = "Styles";
+        string subfolder = "Theme";
+
+        // Source A.gucx contains a VariableReferences list pointing at Styles
+        string srcComponentsDir = Path.Combine(_sourceDir, "Components");
+        Directory.CreateDirectory(srcComponentsDir);
+        string aContent =
+            "<ComponentSave>" +
+              "<Name>A</Name>" +
+              "<States>" +
+                "<StateSave>" +
+                  "<Name>Default</Name>" +
+                  "<VariableLists>" +
+                    "<VariableListSave>" +
+                      "<Name>VariableReferences</Name>" +
+                      "<Value>" +
+                        "<string>Red = Components/Styles.Primary.Red</string>" +
+                      "</Value>" +
+                    "</VariableListSave>" +
+                  "</VariableLists>" +
+                "</StateSave>" +
+              "</States>" +
+            "</ComponentSave>";
+        File.WriteAllText(Path.Combine(srcComponentsDir, $"{aName}.{GumProjectSave.ComponentExtension}"), aContent);
+        WriteSourceComponent(stylesName);
+
+        ComponentSave a = ComponentNoAssets(aName);
+        ComponentSave styles = ComponentNoAssets(stylesName);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(a);
+        source.Components.Add(styles);
+
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = new() { a, styles },
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new(),
+            Standards = new(),
+        };
+
+        // Act
+        ImportResult result = await _sut.ImportAsync(
+            selections, source, _sourceDir, destinationSubfolder: subfolder);
+
+        // Assert — the written A file's VariableReferences right-hand side reflects the new subfolder.
+        result.ConflictingElements.ShouldBeEmpty();
+        string aDestPath = Path.Combine(
+            _projectDir, "Components", subfolder, $"{aName}.{GumProjectSave.ComponentExtension}");
+        string writtenContent = File.ReadAllText(aDestPath);
+        writtenContent.ShouldContain("Red = Components/Theme/Styles.Primary.Red");
+        writtenContent.ShouldNotContain("Red = Components/Styles.Primary.Red");
+    }
+
     // ── test doubles ──────────────────────────────────────────────────────
 
     private class FakeImportLogic : IImportLogic
