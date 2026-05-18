@@ -203,6 +203,34 @@ protected override void Draw(GameTime gameTime)
 
 <figure><img src="../../.gitbook/assets/ButtonTextOverBlueButton.png" alt=""><figcaption><p>buttonRectangle drawn with its child buttonText</p></figcaption></figure>
 
+### Mixing with SpriteBatch
+
+GumBatch wraps an internal `SpriteBatch` and exposes it through the `SpriteBatch` property. This lets you issue your own SpriteBatch draw calls between `GumBatch.Begin` and `GumBatch.End` without managing a second batch — both your draws and Gum's draws land in the same batch, so they share sort order, blend state, and transform matrix.
+
+This is useful when you want to draw a few of your own textures alongside Gum's immediate-mode output without paying for two Begin/End pairs.
+
+```csharp
+// Draw
+gumBatch.Begin();
+
+// Your own SpriteBatch draw, sharing the batch Gum is using:
+gumBatch.SpriteBatch.Draw(
+    myTexture,
+    new Vector2(50, 50),
+    Color.White);
+
+// Gum draws into the same batch:
+gumBatch.Draw(someGumObject);
+
+gumBatch.End();
+```
+
+The underlying `SpriteBatch` instance is stable for the lifetime of the GumBatch — Gum may mutate its state (clip regions, blend, transform) but never swaps the instance — so it is safe to cache the reference if you want.
+
+{% hint style="warning" %}
+You are sharing a batch with Gum, so any state you change on the SpriteBatch directly (e.g. by calling `End` and re-issuing `Begin` with different parameters) will affect subsequent Gum draws. If you need independent state, use your own separate SpriteBatch instead.
+{% endhint %}
+
 ### RenderTargets
 
 GumBatch can be used to render Gum objects on RenderTarget2Ds, just like regular SpriteBatch calls.
