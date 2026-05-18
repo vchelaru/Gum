@@ -218,13 +218,8 @@ public class SpriteRuntime : GraphicalUiElement
     /// </summary>
     public bool Animate
     {
-#if XNALIKE
-        get => ContainedSprite.Animate;
-        set => ContainedSprite.Animate = value;
-#else
         get => ContainedSprite.AnimationLogic.Animate;
         set => ContainedSprite.AnimationLogic.Animate = value;
-#endif
     }
 
     /// <summary>
@@ -232,13 +227,8 @@ public class SpriteRuntime : GraphicalUiElement
     /// </summary>
     public string? CurrentChainName
     {
-#if XNALIKE
-        get => ContainedSprite.CurrentChainName;
-        set => ContainedSprite.CurrentChainName = value;
-#else
         get => ContainedSprite.AnimationLogic.CurrentChainName;
         set => ContainedSprite.AnimationLogic.CurrentChainName = value;
-#endif
     }
 
     /// <summary>
@@ -246,17 +236,6 @@ public class SpriteRuntime : GraphicalUiElement
     /// </summary>
     public AnimationChainList? AnimationChains
     {
-#if XNALIKE
-        get => ContainedSprite.AnimationChains;
-        set
-        {
-            ContainedSprite.AnimationChains = value;
-            if (ContainedSprite.UpdateToCurrentAnimationFrame())
-            {
-                UpdateTextureValuesFrom(ContainedSprite);
-            }
-        }
-#else
         get => ContainedSprite.AnimationLogic.AnimationChains;
         set
         {
@@ -266,7 +245,6 @@ public class SpriteRuntime : GraphicalUiElement
                 UpdateTextureValuesFrom(ContainedSprite);
             }
         }
-#endif
     }
 
     /// <summary>
@@ -274,13 +252,8 @@ public class SpriteRuntime : GraphicalUiElement
     /// </summary>
     public int AnimationChainFrameIndex
     {
-#if XNALIKE
-        get => ContainedSprite.CurrentFrameIndex;
-        set => ContainedSprite.CurrentFrameIndex = value;
-#else
         get => ContainedSprite.AnimationLogic.CurrentFrameIndex;
         set => ContainedSprite.AnimationLogic.CurrentFrameIndex = value;
-#endif
     }
 
     /// <summary>
@@ -288,13 +261,8 @@ public class SpriteRuntime : GraphicalUiElement
     /// </summary>
     public double AnimationChainTime
     {
-#if XNALIKE
-        get => ContainedSprite.TimeIntoAnimation;
-        set => ContainedSprite.TimeIntoAnimation = value;
-#else
         get => ContainedSprite.AnimationLogic.TimeIntoAnimation;
         set => ContainedSprite.AnimationLogic.TimeIntoAnimation = value;
-#endif
     }
 
     /// <summary>
@@ -302,13 +270,8 @@ public class SpriteRuntime : GraphicalUiElement
     /// </summary>
     public float AnimationChainSpeed
     {
-#if XNALIKE
-        get => ContainedSprite.AnimationSpeed;
-        set => ContainedSprite.AnimationSpeed = value;
-#else
         get => ContainedSprite.AnimationLogic.AnimationSpeed;
         set => ContainedSprite.AnimationLogic.AnimationSpeed = value;
-#endif
     }
 
     /// <summary>
@@ -316,13 +279,8 @@ public class SpriteRuntime : GraphicalUiElement
     /// </summary>
     public bool IsAnimationChainLooping
     {
-#if XNALIKE
-        get => ContainedSprite.IsAnimationChainLooping;
-        set => ContainedSprite.IsAnimationChainLooping = value;
-#else
         get => ContainedSprite.AnimationLogic.IsAnimationChainLooping;
         set => ContainedSprite.AnimationLogic.IsAnimationChainLooping = value;
-#endif
     }
 
     /// <summary>
@@ -330,22 +288,8 @@ public class SpriteRuntime : GraphicalUiElement
     /// </summary>
     public event Action AnimationChainCycled
     {
-        add 
-        {
-#if XNALIKE
-            ContainedSprite.AnimationChainCycled += value;
-#else
-            ContainedSprite.AnimationLogic.AnimationChainCycled += value;
-#endif
-        }
-        remove
-        {
-#if XNALIKE
-            ContainedSprite.AnimationChainCycled -= value;
-#else
-            ContainedSprite.AnimationLogic.AnimationChainCycled -= value;
-#endif
-        }
+        add => ContainedSprite.AnimationLogic.AnimationChainCycled += value;
+        remove => ContainedSprite.AnimationLogic.AnimationChainCycled -= value;
     }
 
     #endregion
@@ -458,17 +402,10 @@ public class SpriteRuntime : GraphicalUiElement
         set
         {
             base.SetProperty("SourceFile", value);
-#if XNALIKE
-            if (ContainedSprite.UpdateToCurrentAnimationFrame())
-            {
-                UpdateTextureValuesFrom(ContainedSprite);
-            }
-#else
             if (ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame())
             {
                 UpdateTextureValuesFrom(ContainedSprite);
             }
-#endif
         }
     }
 
