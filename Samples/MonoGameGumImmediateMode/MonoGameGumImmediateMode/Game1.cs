@@ -76,6 +76,7 @@ namespace MonoGameGumImmediateMode
             AddNavButton("TextRuntime", () => ShowScreen(new TextRuntimeScreen()));
             AddNavButton("Parent/Child", () => ShowScreen(new ParentChildScreen()));
             AddNavButton("RenderTarget", () => ShowScreen(new RenderTargetScreen()));
+            AddNavButton("Mixed Batch", () => ShowScreen(new MixedBatchScreen()));
         }
 
         private void AddNavButton(string text, Action onClick)
