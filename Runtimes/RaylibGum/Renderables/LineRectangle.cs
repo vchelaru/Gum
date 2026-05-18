@@ -410,6 +410,24 @@ public class LineRectangle : InvisibleRenderable
         // outline. Rotated or dashed paths fall back to per-edge DrawLineEx so the rotation
         // composition and dash perimeter-walk apply cleanly.
         bool runStroke = StrokeColor.HasValue || !runFill;
+
+        // Skia parity (#2757): SkiaShapeRuntime.RefreshSlotGradients auto-gates each slot's
+        // UseGradient flag by whether that slot has a non-null color, so a cell with both
+        // FillColor and StrokeColor set + UseGradient = true paints the gradient as BOTH the
+        // fill and the stroke. The stroke's gradient samples match the fill's gradient samples
+        // at the boundary pixels, so the stroke is visually indistinguishable from the fill
+        // underneath — no visible outline. raylib has one UseGradient flag per renderable and
+        // would otherwise paint the stroke as solid strokeColor over the gradient fill, which
+        // shows up as a visible outline that Skia doesn't draw. Suppressing the stroke here
+        // matches Skia's rendered output without needing a separate gradient-stroke draw path.
+        //
+        // Corner case not yet implemented: UseGradient = true with only StrokeColor (no fill).
+        // Skia paints a gradient outline; raylib would currently fall through to solid stroke.
+        // Not exercised by the sample; tracked as a #2757 follow-up.
+        if (runStroke && UseGradient && runFill)
+        {
+            runStroke = false;
+        }
         if (runStroke)
         {
             Color strokeColor = StrokeColor ?? Color;
