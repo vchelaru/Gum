@@ -10,24 +10,34 @@ Usage of GumBatch is completely optional, and it is only needed if you want to d
 
 ### GumBatch Quick Start
 
-GumBatch takes the place of GumService, so if your project includes GumService you should remove its usage from your Game code.
+This quick start uses **KernSmith** to generate font atlases in memory at runtime. This means you do not need to ship any `.fnt` or `.png` font files with your game — fonts are created on demand from whatever size and family you ask for. KernSmith is the recommended font path for MonoGame and KNI projects.
 
 To initialize a GumBatch, you must:
 
+* Add the `KernSmith.MonoGameGum` NuGet package to your project
 * Declare a GumBatch at class scope
 * Initialize the Gum SystemManagers
-* Initialize the GumBatch
-* (optional) load a .fnt file
+* Assign a `KernSmithFontCreator` so fonts can be generated on demand
+* Create a `BitmapFont` for whatever font/size you want to draw
 * Draw with GumBatch in your Draw
 
-The following shows a simple Game1.cs file which renders Gum Text:
+The following shows a simple Game1.cs file which renders Gum Text using KernSmith:
 
-<pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
+```csharp
+using Gum.Wireframe;
+using KernSmith.Gum;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum;
+using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
+
+public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-<strong>    RenderingLibrary.Graphics.BitmapFont font;
-</strong><strong>    GumBatch gumBatch;
-</strong>
+    BitmapFont font;
+    GumBatch gumBatch;
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -37,13 +47,20 @@ The following shows a simple Game1.cs file which renders Gum Text:
 
     protected override void Initialize()
     {
-<strong>        MonoGameGum.GumService.Default.Initialize(this);
-</strong>        
-<strong>        gumBatch = new GumBatch();
-</strong><strong>        font = new RenderingLibrary.Graphics.BitmapFont(
-</strong><strong>            "Fonts/Font18Caladea.fnt", 
-</strong><strong>            SystemManagers.Default);
-</strong>
+        MonoGameGum.GumService.Default.Initialize(this);
+
+        CustomSetPropertyOnRenderable.InMemoryFontCreator =
+            new KernSmithFontCreator(GraphicsDevice);
+
+        gumBatch = new GumBatch();
+
+        font = CustomSetPropertyOnRenderable.InMemoryFontCreator
+            .TryCreateFont(new BmfcSave
+            {
+                FontName = "Arial",
+                FontSize = 24,
+            });
+
         base.Initialize();
     }
 
@@ -51,30 +68,48 @@ The following shows a simple Game1.cs file which renders Gum Text:
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-<strong>        gumBatch.Begin();
-</strong>        
-<strong>        gumBatch.DrawString(
-</strong><strong>            font, 
-</strong><strong>            "This is using Gum Batch", 
-</strong><strong>            new Vector2(0, 150), 
-</strong><strong>            Color.White);
-</strong>            
-<strong>        gumBatch.End();
-</strong>
+        gumBatch.Begin();
+
+        gumBatch.DrawString(
+            font,
+            "This is using Gum Batch",
+            new Vector2(0, 150),
+            Color.White);
+
+        gumBatch.End();
+
         base.Draw(gameTime);
     }
 }
-
-</code></pre>
+```
 
 This code produces the following image:
 
 <figure><img src="../../../.gitbook/assets/image (61).png" alt=""><figcaption><p>GumBatch rendering text</p></figcaption></figure>
 
-Note that this code assumes a font .fnt file (and matching .png) are in the Content/Fonts/ folder. All content is loaded relative to the Content folder, just like normal content in MonoGame. Also note that this content does not use the content pipeline, but must be set to Copy to Output.
+`BmfcSave` is a small description of the font you want — `FontName`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `UseSmoothing` are the most common properties. KernSmith reads it, rasterizes the glyphs into a texture, and returns a `BitmapFont` you can immediately use with `DrawString`.
+
+By default `FontName` refers to a font installed on the operating system (such as `"Arial"` on Windows). To ship your own `.ttf` files instead — recommended for any font your game depends on — see [Registering Custom .ttf Fonts](../../files-and-fonts/font-strategies.md#registering-custom-ttf-fonts).
+
+{% hint style="info" %}
+KernSmith dynamic font generation is available today on MonoGame and KNI. SkiaGum has its own built-in dynamic rasterization. Raylib has dynamic fonts through its own path (not KernSmith). For runtimes that do not yet support dynamic generation, use a pre-built `.fnt` file as shown in [Alternative: Loading a .fnt File](#alternative-loading-a-fnt-file) below.
+{% endhint %}
+
+For a more detailed discussion of using GumBatch, see the [GumBatch](../../rendering/gumbatch.md) page.
+
+### Alternative: Loading a .fnt File
+
+If you have a hand-tuned `.fnt` file (for example one produced by the Gum tool's FontCache, or by an external tool such as bmfont) you can load it directly instead of generating with KernSmith:
+
+```csharp
+// Initialize
+font = new RenderingLibrary.Graphics.BitmapFont(
+    "Fonts/Font18Caladea.fnt",
+    SystemManagers.Default);
+```
+
+This code assumes a font `.fnt` file (and its matching `.png`) are in the `Content/Fonts/` folder. All content is loaded relative to the Content folder, just like normal content in MonoGame. Note that this content does not use the content pipeline, but must be set to **Copy to Output**.
 
 <figure><img src="../../../.gitbook/assets/image (62).png" alt=""><figcaption><p>.fnt file copied to output folder</p></figcaption></figure>
 
-For more information on loading FNT files, see the [File Loading](../../files-and-fonts/file-loading.md) documentation.
-
-For a more detailed discussion of using GumBatch, see the [GumBatch](../../rendering/gumbatch.md) page.
+For more information on loading FNT files, see the [File Loading](../../files-and-fonts/file-loading.md) documentation. For a fuller comparison of font strategies (dynamic vs. pre-baked, OS fonts vs. shipped `.ttf` files, large character sets, localization), see the [Fonts](../../files-and-fonts/fonts.md) hub page.

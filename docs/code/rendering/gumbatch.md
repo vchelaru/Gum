@@ -4,14 +4,13 @@
 
 GumBatch is an object which supports _immediate mode_ rendering, similar to MonoGame's SpriteBatch. GumBatch can support rendering text with DrawString as well as any IRenderableIpso.
 
-For information on getting your project set up to use GumBatch, see the [Setup for GumBatch](../getting-started/setup/setup-for-gumbatch.md) page.
+For information on getting your project set up to use GumBatch — including how to wire up KernSmith so you do not need to ship any `.fnt` files — see the [Setup for GumBatch](../getting-started/setup/setup-for-gumbatch.md) page.
 
 {% hint style="info" %}
 GumBatch draws only what you pass it. In some cases controls may create additional controls on the popup layer, such as ComboBox and Tooltip. If your UI includes these controls, you may need to also draw your popup layers, as shown in the following code:
 
-
-
 ```csharp
+// Draw
 Core.GumBatch.Begin();
 Core.GumBatch.Draw(YourCustomObjects);
 // Now draw the popup root so popups show up
@@ -20,11 +19,82 @@ Core.GumBatch.End();
 ```
 {% endhint %}
 
+### Rendering TextRuntimes
+
+The most flexible way to draw text with GumBatch is to create a `TextRuntime`. TextRuntimes support all of Gum's layout rules — wrapping, alignment, rotation, sizing — and integrate with Gum's font system so you can set `Font` and `FontSize` directly and let KernSmith create the atlas on demand.
+
+The following code shows how to create a `TextRuntime` and render it using GumBatch:
+
+```csharp
+// Class scope
+TextRuntime textRuntime;
+
+protected override void Initialize()
+{
+    // This assumes CustomSetPropertyOnRenderable.InMemoryFontCreator
+    // has already been assigned to a KernSmithFontCreator — see the
+    // Setup for GumBatch page.
+    textRuntime = new TextRuntime();
+    textRuntime.Font = "Arial";
+    textRuntime.FontSize = 16;
+    textRuntime.Text =
+        "I am an immediate mode TextRuntime. I am really long text which will wrap within the bounds of the TextRuntime";
+    textRuntime.X = 0;
+    textRuntime.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+    textRuntime.XOrigin = HorizontalAlignment.Center;
+
+    textRuntime.Y = 0;
+    textRuntime.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+    textRuntime.YOrigin = VerticalAlignment.Center;
+
+    textRuntime.HorizontalAlignment = HorizontalAlignment.Center;
+    textRuntime.VerticalAlignment = VerticalAlignment.Center;
+
+    textRuntime.Width = 300;
+    textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+    textRuntime.Height = 0;
+    textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+    textRuntime.Rotation = 90;
+}
+
+protected override void Draw(GameTime gameTime)
+{
+    gumBatch.Begin();
+    gumBatch.Draw(textRuntime);
+    gumBatch.End();
+}
+```
+
+<figure><img src="../../.gitbook/assets/image (66).png" alt=""><figcaption><p>Rendering a TextRuntime in immediate mode with GumBatch</p></figcaption></figure>
+
+If you would rather load a specific `.fnt` file instead of using KernSmith, set `UseCustomFont = true` and assign `CustomFontFile` to the path of the `.fnt` file. See [Custom Font File](../files-and-fonts/font-strategies.md#custom-font-file) for details.
+
 ### Rendering Strings
 
-GumBatch can be used to render strings directly. This requires a BitmapFont.
+GumBatch can also render strings directly via `DrawString`. This is a lower-level API than `TextRuntime` — it does not support layout, wrapping, or rotation — but the call shape matches `SpriteBatch.DrawString` and is convenient for quick HUD-style text.
 
-The following code renders a string at X = 100, Y=200:
+`DrawString` takes a `BitmapFont`. The recommended way to obtain one is to ask KernSmith for it directly:
+
+```csharp
+// Class scope
+BitmapFont font;
+
+protected override void Initialize()
+{
+    // After CustomSetPropertyOnRenderable.InMemoryFontCreator has been
+    // assigned (see Setup for GumBatch), you can ask it for a BitmapFont
+    // at any font/size combination, with no files on disk:
+    font = CustomSetPropertyOnRenderable.InMemoryFontCreator
+        .TryCreateFont(new BmfcSave
+        {
+            FontName = "Arial",
+            FontSize = 18,
+        });
+}
+```
+
+The following code renders a string at X = 100, Y = 200:
 
 ```csharp
 // Draw
@@ -63,63 +133,24 @@ DrawString can accept newlines and color the text:
 ```csharp
 // Draw
 gumBatch.Begin();
-    gumBatch.DrawString(
-        font,
-        $"This string contains\nnewlines which result in\nthe text rendering over multiple lines",
-        new Vector2(20, 20),
-        Color.Purple);
+gumBatch.DrawString(
+    font,
+    $"This string contains\nnewlines which result in\nthe text rendering over multiple lines",
+    new Vector2(20, 20),
+    Color.Purple);
 gumBatch.End();
 ```
 
 <figure><img src="../../.gitbook/assets/image (65).png" alt=""><figcaption><p>Colored text with newlines</p></figcaption></figure>
 
-### Rendering TextRuntimes
-
-If your text rendering requires more advanced positioning, wrapping, rotation, sizing, and so on, you can use TextRuntime instances.
-
-TextRuntimes can be used in both GumBatch as well as they can be added to the SystemManagers if you use SystemManagers.Draw (retained mode).
-
-The following code shows how to create a TextRuntime instance and render it using GumBatch:
+If you would rather load a pre-built `.fnt` file instead of generating with KernSmith, you can construct a `BitmapFont` directly:
 
 ```csharp
-// Class scope
-TextRuntime textRuntime;
-
-protected override void Initialize()
-{
-    textRuntime = new TextRuntime();
-    textRuntime.UseCustomFont = true;
-    textRuntime.CustomFontFile = "Fonts/Font16Jing_Jing.fnt";
-    textRuntime.Text =
-        "I am an immediate mode TextRuntime. I am really long text which will wrap within the bounds of the TextRuntime";
-    textRuntime.X = 0;
-    textRuntime.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-    textRuntime.XOrigin = HorizontalAlignment.Center;
-
-    textRuntime.Y = 0;
-    textRuntime.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-    textRuntime.YOrigin = VerticalAlignment.Center;
-
-    textRuntime.HorizontalAlignment = HorizontalAlignment.Center;
-    textRuntime.VerticalAlignment = VerticalAlignment.Center;
-
-    textRuntime.Width = 300;
-    textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-    textRuntime.Height = 0;
-    textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-
-    textRuntime.Rotation = 90;
-}
-
-protected override void Draw(GameTime gameTime)
-{
-    gumBatch.Begin();
-    gumBatch.Draw(textRuntime);
-    gumBatch.End();
-}
+// Initialize
+font = new BitmapFont("Fonts/Font18Caladea.fnt", SystemManagers.Default);
 ```
 
-<figure><img src="../../.gitbook/assets/image (66).png" alt=""><figcaption><p>Rendering a TextRuntime in immediate mode with GumBatch</p></figcaption></figure>
+This is useful when you have a hand-tuned font atlas (for example one produced by the Gum tool's FontCache or by an external tool such as bmfont). See [File Loading](../files-and-fonts/file-loading.md) for the file resolution rules.
 
 ### Rendering Parent/Child Hierarchy
 
@@ -155,8 +186,8 @@ protected override void Initialize()
     buttonText.YOrigin = VerticalAlignment.Center;
     buttonText.HorizontalAlignment = HorizontalAlignment.Center;
     buttonText.VerticalAlignment = VerticalAlignment.Center;
-    buttonText.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-    buttonText.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+    buttonText.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+    buttonText.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
     buttonRectangle.Children.Add(buttonText);
 }
 

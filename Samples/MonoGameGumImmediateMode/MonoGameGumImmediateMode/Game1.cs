@@ -1,146 +1,121 @@
-﻿using Gum.Wireframe;
+using System;
+using Gum.Forms;
+using Gum.Forms.Controls;
+using Gum.Wireframe;
+using KernSmith.Gum;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Gum.Forms;
-using Gum.GueDeriving;
+using MonoGameGum;
+using MonoGameGumImmediateMode.Screens;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 
 namespace MonoGameGumImmediateMode
 {
+    /// <summary>
+    /// Sample showing GumBatch (immediate-mode rendering) in action. A retained-mode
+    /// nav strip at the top — built with Gum Forms controls — switches between
+    /// example screens. Each screen demonstrates a different way to use GumBatch.
+    ///
+    /// Fonts are generated in memory by KernSmith — there are no .fnt files
+    /// shipped with this sample.
+    /// </summary>
     public class Game1 : Game
     {
         private GraphicsDeviceManager _graphics;
+        private SpriteBatch _spriteBatch;
+        private GumBatch _gumBatch;
 
-        // See Initialize for an explanation of the different types (such as TextRuntime vs normal Text)
-        TextRuntime textRuntime;
-
-        ColoredRectangleRuntime redBackgroundRectangle;
-        ColoredRectangleRuntime halfTransparentRectangle;
-
-        Text text;
-
-        BitmapFont font;
-        GumBatch gumBatch;
-        // We can mix SpriteBatch with GumBatch draws, including using RenderTargets
-        SpriteBatch spriteBatch;
-
-        RenderTarget2D renderTarget;
-
-        float xForMatrix = 0;
-        float yForMatrix = 0;
+        private StackPanel _navStrip;
+        private IImmediateModeScreen _currentScreen;
 
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
+            _graphics.PreferredBackBufferWidth = 1024;
+            _graphics.PreferredBackBufferHeight = 768;
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
         }
 
         protected override void Initialize()
         {
-            SystemManagers.Default = new SystemManagers();
-            SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+            // GumService initialization sets up SystemManagers, Forms input, and
+            // everything needed for retained-mode controls. We use it for the nav
+            // strip; the example screens themselves use GumBatch in Draw.
+            GumService.Default.Initialize(this);
 
-            // Use FormsUtilities to get access to keyboard/mouse
-            FormsUtilities.InitializeDefaults();
+            // Wire up KernSmith so any TextRuntime or DrawString call can get a
+            // font for any (family, size, style) without a .fnt file on disk.
+            CustomSetPropertyOnRenderable.InMemoryFontCreator =
+                new KernSmithFontCreator(GraphicsDevice);
 
-            // "Runtime" objects such as TextRuntime, SpriteRuntime, and ColoredRectangleRuntime
-            // are Gum objects which inherit from GraphicalUiElement. They have full support for
-            // all of Gum's layout rules (such as X/Y units, origins, and width/height units)
-            textRuntime = new TextRuntime();
-            textRuntime.UseCustomFont = true;
-            textRuntime.CustomFontFile = "Fonts/Font16Jing_Jing.fnt";
-            textRuntime.Text = "I am an immediate mode TextRuntime";
-            textRuntime.X = 0;
-            textRuntime.Y = 50;
+            _gumBatch = new GumBatch();
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // Any type is supported, not just Text. For example, ColoredRectangleRuntime:
-            redBackgroundRectangle = new ColoredRectangleRuntime();
-            redBackgroundRectangle.Width = 1000;
-            redBackgroundRectangle.Height = 1000;
-            redBackgroundRectangle.Color = Color.Red;
-
-            halfTransparentRectangle= new ColoredRectangleRuntime();
-            halfTransparentRectangle.Width = 200;
-            halfTransparentRectangle.Height = 100;
-            halfTransparentRectangle.Color = Color.White;
-            halfTransparentRectangle.Alpha = 128;
-
-            
-
-
-            var blendState = new BlendState();
-
-            blendState.ColorSourceBlend = BlendState.NonPremultiplied.ColorSourceBlend;
-            blendState.ColorDestinationBlend = BlendState.NonPremultiplied.ColorDestinationBlend;
-            blendState.ColorBlendFunction = BlendState.NonPremultiplied.ColorBlendFunction;
-
-            blendState.AlphaSourceBlend = Blend.SourceAlpha;
-            blendState.AlphaDestinationBlend = Blend.DestinationAlpha;
-            blendState.AlphaBlendFunction = BlendFunction.Add;
-
-            halfTransparentRectangle.BlendState = blendState;
-
-            gumBatch = new GumBatch();
-            spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            font = new BitmapFont("Fonts/Font18Caladea.fnt", SystemManagers.Default);
-
-            renderTarget = new RenderTarget2D(GraphicsDevice, 300, 300);
+            BuildNavStrip();
+            ShowScreen(new DrawStringScreen());
 
             base.Initialize();
         }
 
+        private void BuildNavStrip()
+        {
+            _navStrip = new StackPanel();
+            _navStrip.Orientation = Orientation.Horizontal;
+            _navStrip.Spacing = 4;
+            _navStrip.Visual.X = 4;
+            _navStrip.Visual.Y = 4;
+            _navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            _navStrip.Width = 0;
+            _navStrip.Visual.WrapsChildren = true;
+            _navStrip.AddToRoot();
+
+            AddNavButton("DrawString", () => ShowScreen(new DrawStringScreen()));
+            AddNavButton("TextRuntime", () => ShowScreen(new TextRuntimeScreen()));
+            AddNavButton("Parent/Child", () => ShowScreen(new ParentChildScreen()));
+            AddNavButton("RenderTarget", () => ShowScreen(new RenderTargetScreen()));
+        }
+
+        private void AddNavButton(string text, Action onClick)
+        {
+            Button button = new Button();
+            button.Text = text;
+            button.Click += (_, _) => onClick();
+            _navStrip.AddChild(button);
+        }
+
+        private void ShowScreen(IImmediateModeScreen screen)
+        {
+            _currentScreen?.Dispose();
+            _currentScreen = screen;
+            _currentScreen.Initialize(GraphicsDevice);
+        }
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed
+                || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            {
                 Exit();
-
-            FormsUtilities.Update(this, gameTime, (GraphicalUiElement) null);
-
-            if(FormsUtilities.Keyboard.KeyPushed(Keys.Left))
-            {
-                xForMatrix -= 10;
             }
-            if (FormsUtilities.Keyboard.KeyPushed(Keys.Right))
-            {
-                xForMatrix += 10;
-            }
+
+            GumService.Default.Update(gameTime);
 
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-
-            GraphicsDevice.SetRenderTarget(renderTarget);
-            {
-                gumBatch.Begin();
-                gumBatch.Draw(redBackgroundRectangle);
-                gumBatch.Draw(redBackgroundRectangle);
-                gumBatch.Draw(halfTransparentRectangle);
-                gumBatch.Draw(halfTransparentRectangle);
-                gumBatch.End();
-            }
-            GraphicsDevice.SetRenderTarget(null);
-
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            var matrix= Matrix.CreateTranslation(xForMatrix, yForMatrix, 0);
+            // The current example screen does its immediate-mode draws first…
+            _currentScreen?.Draw(_gumBatch, _spriteBatch);
 
-            gumBatch.Begin(matrix);
-
-            // We can do immediate mode without creating any objects by calling DrawString:
-            gumBatch.DrawString(font, $"This is using Gum Batch, with translation {xForMatrix}, {yForMatrix}", new Vector2(10, 10), Color.White);
-
-            gumBatch.End();
-
-            spriteBatch.Begin();
-            spriteBatch.Draw(renderTarget, new Vector2(50, 40), Color.White);
-            spriteBatch.End();
+            // …then GumService.Default.Draw() renders the retained-mode nav strip
+            // on top, so the buttons stay visible no matter what the screen drew.
+            GumService.Default.Draw();
 
             base.Draw(gameTime);
         }
