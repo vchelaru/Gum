@@ -21,7 +21,7 @@ Styling.ActiveStyle.Colors.Primary = Color.DarkGreen;
 
 The following properties exist on Colors:
 
-<table><thead><tr><th width="212.18182373046875">Colors Property</th><th>Used By</th></tr></thead><tbody><tr><td>Primary</td><td><ul><li>Button Background</li><li>CheckBox Background</li><li>ComboBox DropdownIndicator</li><li>ListBoxItem Background (Selected)</li><li>MenuItem Background (Selected)</li><li>RadioButton Background</li><li>Slider Thumb Background</li><li>TextBox Caret</li><li>Window Background (Default only border)</li></ul></td></tr><tr><td>Warning</td><td><ul><li>FocusIndicators on all controls</li></ul></td></tr><tr><td>Accent</td><td><ul><li>ListBoxItem Background (Highlight)</li><li>MenuItem Background (Highlight)</li></ul></td></tr><tr><td>InputBackground</td><td><ul><li>ComboBox Background</li><li>ListBox Background</li><li>Menu Background</li><li>PasswordBox Background</li><li>ScrollViewer Background</li><li>Slider Track Background</li><li>Splitter Background</li><li>TextBox Background</li></ul></td></tr><tr><td>SurfaceVariant</td><td><ul><li>ScrollBar Track Background</li></ul></td></tr><tr><td>IconDefault</td><td><ul><li>CheckBox Check</li><li>RadioButton Radio</li><li>ScrollBar UpButton/DownButton Icon</li></ul></td></tr><tr><td>TextPrimary</td><td><ul><li>Button Text</li><li>CheckBox Text</li><li>ComboBox Text</li><li>Label</li><li>ListBoxItem Text</li><li>MenuItem Text</li><li>MenuItem SubmenuIndicator </li><li>PasswordBox Text</li><li>RadioButton Text</li><li>TextBox Text</li></ul></td></tr><tr><td>TextMuted</td><td><ul><li>PasswordBox PlaceholderTextInstance</li><li>TextBox PlaceholderTextInstance</li></ul></td></tr></tbody></table>
+<table><thead><tr><th width="212.18182373046875">Colors Property</th><th>Used By</th></tr></thead><tbody><tr><td>Primary</td><td><ul><li>Button Background</li><li>CheckBox Background</li><li>ComboBox DropdownIndicator</li><li>ListBoxItem Background (Selected)</li><li>MenuItem Background (Selected)</li><li>RadioButton Background</li><li>Slider Thumb Background</li><li>TextBox Caret</li><li>Window Background (Default only border)</li></ul></td></tr><tr><td>Warning</td><td><ul><li>FocusIndicators on all controls</li></ul></td></tr><tr><td>Accent</td><td><ul><li>ListBoxItem Background (Highlight)</li><li>MenuItem Background (Highlight)</li></ul></td></tr><tr><td>InputBackground</td><td><ul><li>ComboBox Background</li><li>ListBox Background</li><li>Menu Background</li><li>PasswordBox Background</li><li>ScrollViewer Background</li><li>Slider Track Background</li><li>Splitter Background</li><li>TextBox Background</li></ul></td></tr><tr><td>SurfaceVariant</td><td><ul><li>ScrollBar Track Background</li></ul></td></tr><tr><td>IconDefault</td><td><ul><li>CheckBox Check</li><li>RadioButton Radio</li><li>ScrollBar UpButton/DownButton Icon</li></ul></td></tr><tr><td>TextPrimary</td><td><ul><li>Button Text</li><li>CheckBox Text</li><li>ComboBox Text</li><li>Label</li><li>ListBoxItem Text</li><li>MenuItem Text</li><li>MenuItem SubmenuIndicator</li><li>PasswordBox Text</li><li>RadioButton Text</li><li>TextBox Text</li></ul></td></tr><tr><td>TextMuted</td><td><ul><li>PasswordBox PlaceholderTextInstance</li><li>TextBox PlaceholderTextInstance</li></ul></td></tr></tbody></table>
 
 ## Code Example: Applying Styles Before Creating Controls
 
@@ -122,6 +122,31 @@ By changing these colors, controls are created using the new colors:
 {% endcolumn %}
 {% endcolumns %}
 
+## Styling and Fonts
+
+The `Styling` object includes properties for adjusting font values. For example, the `Normal` state can be modified to change an app's font. The following code relies on KernSmith for dynamic font creation. For more information on dynamic fonts and information on using KernSmith, see the [Font Strategies](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) page.
+
+```csharp
+// initialize
+GumUI.Initialize(this);
+
+CustomSetPropertyOnRenderable.InMemoryFontCreator =
+    new KernSmithFontCreator(GraphicsDevice);
+
+var textStyling = Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text;
+var normalState = textStyling.Normal;
+normalState.SetValue("Font", "Consolas", "string");
+normalState.SetValue("FontSize", 28, "int");
+
+var button = new Button();
+button.AddToRoot();
+button.Anchor(Anchor.Center);
+
+base.Initialize();
+```
+
+<figure><img src="../../../.gitbook/assets/18_04 59 05.png" alt=""><figcaption><p>Button using larger Consolas font</p></figcaption></figure>
+
 ## Styling and Creation Order
 
 Styling only applies after it has been set. Controls which are created before styling is set do not automatically update to the new style. The following code shows how order can impact how styling is assigned:
@@ -152,4 +177,3 @@ stackPanel.AddChild(button3);
 {% hint style="info" %}
 This behavior may change in future versions of Gum.
 {% endhint %}
-
