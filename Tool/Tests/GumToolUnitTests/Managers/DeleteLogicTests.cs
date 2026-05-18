@@ -165,6 +165,32 @@ public class DeleteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void PerformConfirmedMixedTypeDelete_MultipleInstancesInSameElement_FiresInstancesDeleteOnPluginManager()
+    {
+        // Regression: deleting multiple instances at once never fired InstancesDelete on the
+        // plugin manager, so plugins listening for instance removal (e.g. the codegen plugin
+        // that regenerates a screen's .Generated.cs) never refreshed.
+        ScreenSave screen = CreateScreenWithInstances("InstA", "InstB");
+        List<InstanceSave> instances = screen.Instances.ToList();
+
+        _deleteLogic.PerformConfirmedMixedTypeDelete(
+            new List<ElementSave>(),
+            new List<BehaviorSave>(),
+            instances,
+            instances.Cast<object>().ToArray(),
+            optionsWindow: null);
+
+        _pluginManager.Verify(
+            p => p.InstancesDelete(
+                screen,
+                It.Is<InstanceSave[]>(arr =>
+                    arr.Length == 2 &&
+                    arr.Contains(instances[0]) &&
+                    arr.Contains(instances[1]))),
+            Times.Once);
+    }
+
+    [Fact]
     public void RemoveBehavior_RemovesBehaviorAndReferences()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "TestBehavior" };
