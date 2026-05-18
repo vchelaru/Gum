@@ -943,6 +943,7 @@ public class CircleRuntime : GraphicalUiElement
     }
 
     float _dropshadowBlurX;
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
     public float DropshadowBlurX
     {
         get => _dropshadowBlurX;
@@ -955,6 +956,7 @@ public class CircleRuntime : GraphicalUiElement
     }
 
     float _dropshadowBlurY;
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
     public float DropshadowBlurY
     {
         get => _dropshadowBlurY;
@@ -1463,6 +1465,15 @@ public class CircleRuntime : GraphicalUiElement
 #else
             circle.CircleOrigin = CircleOrigin.TopLeft;
             circle.Color = ColorExtensions.White;
+#if RAYLIB
+            // #2757 — match Skia's default: a fresh CircleRuntime ships with an opaque 1 px
+            // white stroke so cells that only set FillColor still get a visible outline.
+            // Without this the gallery's Modes / Alignment rows lost their outlines on raylib
+            // but kept them on Skia. SOKOL renderable doesn't expose StrokeColor yet — leave
+            // it null there so the existing outline-via-Color path keeps working unchanged.
+            // Same fix landed for RectangleRuntime earlier in this PR.
+            circle.StrokeColor = ColorExtensions.White;
+#endif
 #endif
             Width = 32;
             Height = 32;

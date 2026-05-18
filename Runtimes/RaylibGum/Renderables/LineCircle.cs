@@ -151,10 +151,14 @@ public class LineCircle : InvisibleRenderable
     /// <summary>Y offset of the dropshadow center in world-space pixels.</summary>
     public float DropshadowOffsetY { get; set; }
 
-    /// <summary>Horizontal blur radius. Treated as isotropic with <see cref="DropshadowBlurY"/> on raylib.</summary>
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <remarks>raylib note: treated as isotropic with <see cref="DropshadowBlurY"/> —
+    /// rendering collapses anisotropic blur to <c>max(BlurX, BlurY)</c>.</remarks>
     public float DropshadowBlurX { get; set; }
 
-    /// <summary>Vertical blur radius. Treated as isotropic with <see cref="DropshadowBlurX"/> on raylib.</summary>
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <remarks>raylib note: treated as isotropic with <see cref="DropshadowBlurX"/> —
+    /// rendering collapses anisotropic blur to <c>max(BlurX, BlurY)</c>.</remarks>
     public float DropshadowBlurY { get; set; }
 
     /// <inheritdoc/>
@@ -246,28 +250,65 @@ public class LineCircle : InvisibleRenderable
             float shadowCy = cy + DropshadowOffsetY;
             float blur = System.MathF.Max(DropshadowBlurX, DropshadowBlurY);
 
-            DrawCircle((int)shadowCx, (int)shadowCy, Radius, DropshadowColor);
-
             if (blur > 0f)
             {
-                const int blurRings = 8;
+                // Skia's Gaussian convolution of the shape silhouette makes the silhouette
+                // BOUNDARY itself half-opaque (alpha 0.5), then fades both ways — inward to
+                // alpha 1 deep inside, outward to alpha 0 far outside. The visible halo
+                // around the offset shadow has a SOFT inner edge as a result. Previous
+                // approaches in this file drew a hard-alpha core at radius R and only faded
+                // outward, which made the visible halo's inner edge sharp and concentrated
+                // the gradient in a thin outer band — read as "gradient stops at the shape"
+                // when Skia's gradient extends through the boundary.
+                //
+                // Fix: bands span [R - blur, R + blur] (total width 2*blur), so the band at
+                // d = R has the linear profile midpoint alpha 0.5. Inner core covers only
+                // d < R - blur so deep interior stays fully opaque. Outer boundary stays at
+                // R + blur (matches user-confirmed correct edge size).
+                //
+                // Concentric filled circles drawn outside-in, per-circle alpha derived by
+                // inverting source-over blend so composite at each band lands on the target
+                // linear profile (1 - t) sampled at the band's outer edge.
+                const int blurRings = 32;
+                float bandSpan = blur;
+                float totalExtent = 2f * bandSpan;
+                float bandThickness = totalExtent / blurRings;
                 Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
-                for (int i = 1; i <= blurRings; i++)
+                float prevP = 1f;
+                for (int j = blurRings - 1; j >= 0; j--)
                 {
-                    float tInner = (float)(i - 1) / blurRings;
-                    float tOuter = (float)i / blurRings;
-                    float innerR = Radius + tInner * blur;
-                    float outerR = Radius + tOuter * blur;
-                    // Raised-cosine alpha at the band's outer edge — gives a smoother
-                    // Gaussian-like falloff than linear without doing any actual blur math.
-                    float alphaScale = 0.5f * (1f + System.MathF.Cos(System.MathF.PI * tOuter));
-                    byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
-                    Color ringColor = new Color(DropshadowColor.R, DropshadowColor.G,
-                        DropshadowColor.B, ringAlpha);
-                    int ringSegments = System.Math.Max(36, (int)(outerR * 2));
-                    DrawRing(shadowCenter, innerR, outerR,
-                        startAngle: 0f, endAngle: 360f, ringSegments, ringColor);
+                    float tOuter = (j + 1f) / blurRings;
+                    float targetAlpha = System.MathF.Max(0f, 1f - tOuter);
+                    float currP = 1f - targetAlpha;
+                    float beta = prevP > 0f ? 1f - currP / prevP : 0f;
+                    prevP = currP;
+                    byte circleAlpha = (byte)(DropshadowColor.A * beta);
+                    if (circleAlpha == 0)
+                    {
+                        continue;
+                    }
+                    Color circleColor = new Color(DropshadowColor.R, DropshadowColor.G,
+                        DropshadowColor.B, circleAlpha);
+                    float r = Radius - bandSpan + (j + 1) * bandThickness;
+                    if (r > 0f)
+                    {
+                        DrawCircleV(shadowCenter, r, circleColor);
+                    }
                 }
+
+                // Solid inner core for pixels deeper than the innermost band so they read
+                // as full-alpha shadow. Outermost band already fades to 0 so no outer core
+                // is needed.
+                float innerCoreR = Radius - bandSpan;
+                if (innerCoreR > 0f)
+                {
+                    DrawCircle((int)shadowCx, (int)shadowCy, innerCoreR, DropshadowColor);
+                }
+            }
+            else
+            {
+                // blur = 0: hard offset silhouette, no fade.
+                DrawCircle((int)shadowCx, (int)shadowCy, Radius, DropshadowColor);
             }
         }
 
@@ -304,6 +345,21 @@ public class LineCircle : InvisibleRenderable
         // RenderableShapeBase.IsOffsetAppliedForStroke contract, which the #2790 gallery's
         // "inscribed in 64x64 frame" row treats as the visual acceptance.
         bool runStroke = StrokeColor.HasValue || !runFill;
+
+        // Skia parity (#2757): SkiaShapeRuntime.RefreshSlotGradients auto-gates each slot's
+        // UseGradient flag by whether that slot has a non-null color, so a cell with both
+        // FillColor and StrokeColor set + UseGradient = true paints the gradient as BOTH the
+        // fill and the stroke. The stroke's gradient samples match the fill's gradient samples
+        // at the boundary pixels, so the stroke is visually indistinguishable from the fill
+        // underneath — no visible outline. raylib has one UseGradient flag per renderable and
+        // would otherwise paint the stroke as solid strokeColor over the gradient fill, which
+        // shows up as a visible outline that Skia doesn't draw. Suppressing the stroke here
+        // matches Skia's rendered output without needing a separate gradient-stroke draw path.
+        // Same gate landed on LineRectangle in commit 7f1e3b55b.
+        if (runStroke && UseGradient && runFill)
+        {
+            runStroke = false;
+        }
         if (runStroke)
         {
             Color strokeColor = StrokeColor ?? Color;

@@ -372,6 +372,10 @@ public abstract class RenderableShapeBase : RenderableBase
 
     private float _dropshadowBlurX;
 
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <remarks>Apos approximates the visible falloff using the shape primitive's
+    /// <c>antiAliasSize</c> parameter — no true Gaussian, but the user-set value still
+    /// represents how many pixels the shadow visibly extends.</remarks>
     public float DropshadowBlurX
     {
         get => _dropshadowBlurX;
@@ -383,6 +387,7 @@ public abstract class RenderableShapeBase : RenderableBase
 
     private float _dropshadowBlurY;
 
+    /// <inheritdoc cref="DropshadowBlurX"/>
     public float DropshadowBlurY
     {
         get => _dropshadowBlurY;

@@ -450,7 +450,9 @@ namespace SkiaGum.Renderables
         public float DropshadowOffsetX { get; set; }
         public float DropshadowOffsetY { get; set; }
 
+        /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
         public float DropshadowBlurX { get; set; }
+        /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
         public float DropshadowBlurY { get; set; }
 
 

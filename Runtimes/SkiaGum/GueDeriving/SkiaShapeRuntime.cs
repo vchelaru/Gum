@@ -587,6 +587,21 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     }
 
     float _dropshadowBlurX;
+    /// <summary>
+    /// Horizontal blur radius of the dropshadow, in pixels. This is the VISIBLE blur radius —
+    /// roughly how far the soft falloff extends outward from the shape silhouette. A value of
+    /// 0 produces a hard-edged shadow; larger values produce a softer, wider halo.
+    /// </summary>
+    /// <remarks>
+    /// <para>Skia is the authoritative renderer for this property. The Skia paint code at
+    /// <c>RenderableShapeBase.CreatePaint</c> (Runtimes/SkiaGum/Renderables/RenderableShapeBase.cs)
+    /// passes <c>DropshadowBlurX / 3.0f</c> to <c>SKImageFilter.CreateDropShadow</c> as the
+    /// Gaussian sigma. A Gaussian's visible falloff extends to roughly 3σ, so the visible blur
+    /// radius works back out to the user-set <see cref="DropshadowBlurX"/>.</para>
+    /// <para>Other backends approximate the same visible extent without a true Gaussian shader.
+    /// Treat the user-set value as "how far the shadow visibly bleeds," not as sigma — sigma
+    /// would require multiplying by 3 to get the visible radius.</para>
+    /// </remarks>
     public float DropshadowBlurX
     {
         get => _dropshadowBlurX;
@@ -594,6 +609,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     }
 
     float _dropshadowBlurY;
+    /// <inheritdoc cref="DropshadowBlurX"/>
     public float DropshadowBlurY
     {
         get => _dropshadowBlurY;

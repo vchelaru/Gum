@@ -75,6 +75,7 @@ public class BasicShapes
         AddNavButton("Raw visuals", () => new RawVisualsScreen());
         AddNavButton("Forms controls", () => new FormsControlsScreen());
         AddNavButton("Circles", () => new CirclesScreen());
+        AddNavButton("Rectangles", () => new RectanglesScreen());
     }
 
     private static void AddNavButton(string text, Func<FrameworkElement> factory)

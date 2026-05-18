@@ -82,6 +82,22 @@ public class CircleRuntimeTests : BaseTestClass
     // the round-trip + push-to-renderable contract.
 
     [Fact]
+    public void StrokeColor_DefaultsToWhite_MatchingSkia()
+    {
+        // Skia's CircleRuntime ctor seeds StrokeColor = SKColors.White so cells that set only
+        // FillColor still render with a visible 1 px white outline (e.g. the gallery's Modes
+        // and Alignment rows). Raylib must match or fill-only cells render without the outline
+        // Skia draws. Same fix landed for RectangleRuntime in this PR.
+        CircleRuntime sut = new();
+
+        sut.StrokeColor.ShouldNotBeNull();
+        sut.StrokeColor!.Value.R.ShouldBe((byte)255);
+        sut.StrokeColor!.Value.G.ShouldBe((byte)255);
+        sut.StrokeColor!.Value.B.ShouldBe((byte)255);
+        sut.StrokeColor!.Value.A.ShouldBe((byte)255);
+    }
+
+    [Fact]
     public void FillColor_RoundTrips_AndPushesToContainedRenderable()
     {
         CircleRuntime sut = new();
