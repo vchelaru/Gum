@@ -943,6 +943,7 @@ public class CircleRuntime : GraphicalUiElement
     }
 
     float _dropshadowBlurX;
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
     public float DropshadowBlurX
     {
         get => _dropshadowBlurX;
@@ -955,6 +956,7 @@ public class CircleRuntime : GraphicalUiElement
     }
 
     float _dropshadowBlurY;
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
     public float DropshadowBlurY
     {
         get => _dropshadowBlurY;

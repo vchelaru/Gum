@@ -548,18 +548,14 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         set => ContainedRenderable.DropshadowOffsetY = value;
     }
 
-    /// <summary>
-    /// The amount of horizontal blur applied to the drop shadow. A value of 0 means no blur (sharp shadow).
-    /// </summary>
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
     public float DropshadowBlurX
     {
         get => ContainedRenderable.DropshadowBlurX;
         set => ContainedRenderable.DropshadowBlurX = value;
     }
 
-    /// <summary>
-    /// The amount of vertical blur applied to the drop shadow. A value of 0 means no blur (sharp shadow).
-    /// </summary>
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
     public float DropshadowBlurY
     {
         get => ContainedRenderable.DropshadowBlurY;

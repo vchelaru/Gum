@@ -151,10 +151,14 @@ public class LineCircle : InvisibleRenderable
     /// <summary>Y offset of the dropshadow center in world-space pixels.</summary>
     public float DropshadowOffsetY { get; set; }
 
-    /// <summary>Horizontal blur radius. Treated as isotropic with <see cref="DropshadowBlurY"/> on raylib.</summary>
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <remarks>raylib note: treated as isotropic with <see cref="DropshadowBlurY"/> —
+    /// rendering collapses anisotropic blur to <c>max(BlurX, BlurY)</c>.</remarks>
     public float DropshadowBlurX { get; set; }
 
-    /// <summary>Vertical blur radius. Treated as isotropic with <see cref="DropshadowBlurX"/> on raylib.</summary>
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <remarks>raylib note: treated as isotropic with <see cref="DropshadowBlurX"/> —
+    /// rendering collapses anisotropic blur to <c>max(BlurX, BlurY)</c>.</remarks>
     public float DropshadowBlurY { get; set; }
 
     /// <inheritdoc/>

@@ -603,6 +603,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
     private float _dropshadowBlurX;
 
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
     public float DropshadowBlurX
     {
         get => _dropshadowBlurX;
@@ -615,6 +616,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
     private float _dropshadowBlurY;
 
+    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
     public float DropshadowBlurY
     {
         get => _dropshadowBlurY;
