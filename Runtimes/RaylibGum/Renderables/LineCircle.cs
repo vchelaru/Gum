@@ -250,41 +250,58 @@ public class LineCircle : InvisibleRenderable
             float shadowCy = cy + DropshadowOffsetY;
             float blur = System.MathF.Max(DropshadowBlurX, DropshadowBlurY);
 
-            DrawCircle((int)shadowCx, (int)shadowCy, Radius, DropshadowColor);
-
             if (blur > 0f)
             {
-                // Approximate Skia's SKImageFilter.CreateDropShadow output. Same algorithm
-                // LineRectangle uses. Tuning constants are empirical — side-by-side comparison
-                // against the Skia gallery converged on:
-                //   - falloffExtent = blur * 0.5 (visible boundary matches Skia).
-                //   - sqrt(1 - t) profile sustains higher alpha at intermediate distances
-                //     than linear (1 - t) and approaches zero with a softer tangent, so the
-                //     fade reads as a longer gradient that tapers into the page rather than
-                //     a hard line where alpha drops out. Boundary at t = 1 still goes to 0.
+                // Concentric filled circles drawn outside-in, NOT thin rings. Earlier
+                // iterations used DrawRing per band, which broke down when bandThickness
+                // was sub-pixel (typical for the gallery's blur=4..6 → bandThickness <
+                // 0.2 px): adjacent rings shared rasterization boundaries that drew the
+                // same pixel rows twice (visible alpha accumulation stripes) or skipped
+                // pixels (gaps), and the outermost ring with residual non-zero alpha
+                // rendered as a visible halo at the boundary.
+                //
+                // Filled-circles approach: draw N filled circles from largest (j=N-1) to
+                // smallest (j=0), each at the appropriate alpha so that source-over
+                // composite of the bands that cover a pixel produces the target gradient
+                // alpha at that pixel. Solving the source-over blend recursion:
+                //   target alpha at band j = α_j = sqrt(1 - (j+1)/N)   [outer-edge sample]
+                //   composite at j = 1 - Π_{i≥j} (1 - β_i)
+                // gives β_j = 1 - P_j / P_{j+1} where P_j = 1 - α_j.
+                // P_{N-1} = 1 (no circle outside), so β_{N-1} = 0 (skip — outermost has
+                // target alpha 0 anyway, which kills the halo artifact for free). Inner
+                // circles overdraw outer ones with the right per-circle alpha so the
+                // visible composite tracks the gradient smoothly.
+                //
+                // Solid core (full-alpha shadow silhouette at Radius) draws LAST so it
+                // sits on top of the band composite inside the shape's silhouette.
                 const int blurRings = 32;
                 float falloffExtent = blur * 0.5f;
                 float bandThickness = falloffExtent / blurRings;
                 Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
-                for (int i = 0; i < blurRings; i++)
+                float prevP = 1f;
+                for (int j = blurRings - 1; j >= 0; j--)
                 {
-                    float innerR = Radius + i * bandThickness;
-                    float outerR = innerR + bandThickness;
-                    float bandMidD = (i + 0.5f) * bandThickness;
-                    float tCenter = bandMidD / falloffExtent;
-                    float alphaScale = System.MathF.Sqrt(System.MathF.Max(0f, 1f - tCenter));
-                    byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
-                    if (ringAlpha == 0)
+                    float tOuter = (j + 1f) / blurRings;
+                    float targetAlpha = System.MathF.Sqrt(System.MathF.Max(0f, 1f - tOuter));
+                    float currP = 1f - targetAlpha;
+                    float beta = prevP > 0f ? 1f - currP / prevP : 0f;
+                    prevP = currP;
+                    byte circleAlpha = (byte)(DropshadowColor.A * beta);
+                    if (circleAlpha == 0)
                     {
                         continue;
                     }
-                    Color ringColor = new Color(DropshadowColor.R, DropshadowColor.G,
-                        DropshadowColor.B, ringAlpha);
-                    int ringSegments = System.Math.Max(36, (int)(outerR * 2));
-                    DrawRing(shadowCenter, innerR, outerR,
-                        startAngle: 0f, endAngle: 360f, ringSegments, ringColor);
+                    Color circleColor = new Color(DropshadowColor.R, DropshadowColor.G,
+                        DropshadowColor.B, circleAlpha);
+                    float r = Radius + (j + 1) * bandThickness;
+                    DrawCircleV(shadowCenter, r, circleColor);
                 }
             }
+
+            // Solid core LAST — its full-alpha shadow color sits on top of the band
+            // composite inside the shape's silhouette. Drawn unconditionally so the
+            // no-blur case (blur=0, "hard offset" cell) still gets a hard shadow.
+            DrawCircle((int)shadowCx, (int)shadowCy, Radius, DropshadowColor);
         }
 
         // Fill pass — runs when FillColor is set, or when IsFilled is true with no explicit
