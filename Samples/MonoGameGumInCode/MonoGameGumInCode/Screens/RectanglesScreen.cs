@@ -174,15 +174,15 @@ internal class RectanglesScreen : FrameworkElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
+    static RectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
     {
-        // ColoredRectangle is used as the visible frame (the thing whose alignment is
-        // obvious). The inner RectangleRuntime is positioned relative to it via YOrigin
+        // Outer RectangleRuntime is used as the visible frame (the thing whose alignment
+        // is obvious). The inner RectangleRuntime is positioned relative to it via YOrigin
         // + PixelsFromSmall/Middle/Large — same convention the CirclesScreen uses.
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = 220;
         frame.Height = 100;
-        frame.Color = new Color(40, 40, 60);
+        frame.FillColor = new Color(40, 40, 60);
 
         RectangleRuntime rect = new();
         rect.Width = 60;
