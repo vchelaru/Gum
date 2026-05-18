@@ -134,20 +134,20 @@ internal class RawVisualsScreen : FrameworkElement
         rotatedPolygon.Rotation = -20;
         row.AddChild(rotatedPolygon);
 
-        var rectangle = new ColoredRectangleRuntime();
+        var rectangle = new RectangleRuntime();
         rectangle.Width = 80;
         rectangle.Height = 80;
-        rectangle.Color = new Color(80, 160, 220, 255);
+        rectangle.FillColor = new Color(80, 160, 220, 255);
         row.AddChild(rectangle);
 
         var circle = new CircleRuntime();
         circle.Radius = 40;
-        circle.Color = new Color(255, 100, 50, 255);
+        circle.FillColor = new Color(255, 100, 50, 255);
         row.AddChild(circle);
 
         var bigCircle = new CircleRuntime();
         bigCircle.Radius = 60;
-        bigCircle.Color = new Color(50, 180, 80, 255);
+        bigCircle.FillColor = new Color(50, 180, 80, 255);
         row.AddChild(bigCircle);
     }
 

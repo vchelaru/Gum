@@ -18,15 +18,15 @@ internal class MixedScreen : FrameworkElement
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         this.AddChild(container);
 
-        AddText(container, "This is a colored rectangle:");
+        AddText(container, "This is a filled rectangle:");
 
-        var coloredRectangleInstance = new ColoredRectangleRuntime();
-        coloredRectangleInstance.X = 10;
-        coloredRectangleInstance.Y = 10;
-        coloredRectangleInstance.Width = 120;
-        coloredRectangleInstance.Height = 24;
-        coloredRectangleInstance.Color = Color.White;
-        container.Children.Add(coloredRectangleInstance);
+        var filledRectangleInstance = new RectangleRuntime();
+        filledRectangleInstance.X = 10;
+        filledRectangleInstance.Y = 10;
+        filledRectangleInstance.Width = 120;
+        filledRectangleInstance.Height = 24;
+        filledRectangleInstance.FillColor = Color.White;
+        container.Children.Add(filledRectangleInstance);
 
         AddText(container, "This is a (line) rectangle:");
 
@@ -84,10 +84,11 @@ internal class MixedScreen : FrameworkElement
 
         for (int i = 0; i < 70; i++)
         {
-            var rectangle = new ColoredRectangleRuntime();
+            var rectangle = new RectangleRuntime();
             stackingContainer.Children.Add(rectangle);
             rectangle.Width = 7;
             rectangle.Height = 7;
+            rectangle.FillColor = Color.White;
         }
 
         container.Children.Add(stackingContainer);

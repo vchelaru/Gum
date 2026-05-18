@@ -121,14 +121,14 @@ internal class CirclesScreen : FrameworkElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
+    static RectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
     {
-        // ColoredRectangle is used as a visible frame so the alignment is obvious. Children
+        // RectangleRuntime is used as a visible frame so the alignment is obvious. Children
         // are positioned relative to it via YOrigin + PixelsFromSmall/Middle/Large.
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = 200;
         frame.Height = 100;
-        frame.Color = new Color(40, 40, 60);
+        frame.FillColor = new Color(40, 40, 60);
 
         CircleRuntime circle = new();
         circle.Radius = 20;

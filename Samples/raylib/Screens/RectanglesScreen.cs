@@ -183,12 +183,12 @@ internal class RectanglesScreen : FrameworkElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
+    static RectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
     {
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = 128;
         frame.Height = 100;
-        frame.Color = new Color(50, 50, 70, 255);
+        frame.FillColor = new Color(50, 50, 70, 255);
 
         RectangleRuntime rect = new();
         rect.Width = 50;
@@ -324,12 +324,12 @@ internal class RectanglesScreen : FrameworkElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildInscribedCell(float strokeWidth)
+    static RectangleRuntime BuildInscribedCell(float strokeWidth)
     {
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = 64;
         frame.Height = 64;
-        frame.Color = new Color(60, 60, 80, 255);
+        frame.FillColor = new Color(60, 60, 80, 255);
 
         RectangleRuntime rect = new();
         rect.Width = 64;

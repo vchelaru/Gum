@@ -78,12 +78,12 @@ internal class PolygonsScreen : GraphicalUiElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildCell(PolygonRuntime polygon)
+    static RectangleRuntime BuildCell(PolygonRuntime polygon)
     {
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = CellSize;
         frame.Height = CellSize;
-        frame.Color = new SKColor(50, 50, 70);
+        frame.FillColor = new SKColor(50, 50, 70);
         frame.Children.Add(polygon);
         return frame;
     }

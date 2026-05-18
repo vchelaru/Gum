@@ -4,6 +4,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using SkiaGum.Renderables;
 using SkiaSharp;
+using System;
 
 #if FRB
 namespace SkiaGum.GueDeriving;
@@ -11,6 +12,7 @@ namespace SkiaGum.GueDeriving;
 namespace Gum.GueDeriving;
 #endif
 
+[Obsolete("Use CircleRuntime with FillColor (when IsFilled is true, the default) or StrokeColor (when IsFilled is false) instead. ColoredCircleRuntime will be removed in a future release. See docs/gum-tool/upgrading/migrating-to-2026-may.md for the full migration guide.")]
 public class ColoredCircleRuntime : SkiaShapeRuntime
 {
     protected override RenderableShapeBase ContainedRenderable => ContainedCircle;

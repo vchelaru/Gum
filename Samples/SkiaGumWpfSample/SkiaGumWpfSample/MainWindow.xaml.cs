@@ -31,17 +31,13 @@ namespace SkiaGumWpfSample
             SkiaElement.Children.Add(container);
 
 
-            var rectangle = new RoundedRectangleRuntime();
+            var rectangle = new RectangleRuntime();
 
-            rectangle.Red = 50;
-            rectangle.Green = 100;
-            rectangle.Blue = 0;
+            rectangle.FillColor = new SkiaSharp.SKColor(50, 100, 0);
             container.Children.Add(rectangle);
 
-            var rectangle2 = new RoundedRectangleRuntime();
-            rectangle2.Red = 200;
-            rectangle2.Green = 0;
-            rectangle2.Blue = 0;
+            var rectangle2 = new RectangleRuntime();
+            rectangle2.FillColor = new SkiaSharp.SKColor(200, 0, 0);
 
             container.Children.Add(rectangle2);
 

@@ -28,6 +28,7 @@ namespace Gum.GueDeriving;
 #endif
 
 
+[Obsolete("Use RectangleRuntime with FillColor instead. ColoredRectangleRuntime will be removed in a future release. See docs/gum-tool/upgrading/migrating-to-2026-may.md for the full migration guide.")]
 public class ColoredRectangleRuntime : GraphicalUiElement
 {
     public static float DefaultWidth = 50;

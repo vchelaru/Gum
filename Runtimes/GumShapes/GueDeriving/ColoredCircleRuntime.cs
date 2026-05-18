@@ -18,6 +18,7 @@ namespace Gum.GueDeriving;
 /// Runtime that draws a circle (or ellipse) sized by its Width and Height. Adds no properties beyond
 /// the AposShapeRuntime common set - color, gradient, drop shadow, and fill/stroke are inherited.
 /// </summary>
+[Obsolete("Use CircleRuntime with FillColor (when IsFilled is true, the default) or StrokeColor (when IsFilled is false) instead. ColoredCircleRuntime will be removed in a future release. See docs/gum-tool/upgrading/migrating-to-2026-may.md for the full migration guide.")]
 public class ColoredCircleRuntime : AposShapeRuntime
 {
     protected override RenderableShapeBase ContainedRenderable => ContainedCircle;

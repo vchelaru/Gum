@@ -1,12 +1,14 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.5.2.0
+# Visual Studio Version 18
+VisualStudioVersion = 18.6.11806.211 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumTest", "GumTest.csproj", "{1E0BB435-C50E-A2C7-CCFA-DF49C3924E5E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "..\..\GumCommon\GumCommon.csproj", "{5B23E538-252F-4AD1-9149-541654225D7B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum", "..\..\Runtimes\RaylibGum\RaylibGum.csproj", "{6807EC07-BC95-45CD-AB76-7E322C8D7A45}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{4313C869-9260-4A30-B99B-00CFA8C35580}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +31,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5B23E538-252F-4AD1-9149-541654225D7B} = {4313C869-9260-4A30-B99B-00CFA8C35580}
+		{6807EC07-BC95-45CD-AB76-7E322C8D7A45} = {4313C869-9260-4A30-B99B-00CFA8C35580}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4F5D3CDA-0162-4973-9D14-9F313B9DAEB4}

@@ -221,3 +221,73 @@ Other defaults preserved (no migration needed, listed for reference):
 - Dropshadow defaults (`DropshadowAlpha = 255`, `DropshadowOffsetY = 3`, `DropshadowBlurY = 3`) are still seeded; inert until `HasDropshadow` is set to `true`.
 
 Gradients, dropshadow, and dashed strokes remain Skia-only — those features have no equivalent on the XNA-likes / Raylib backends and stay gated behind `#if SKIA` in the shared source.
+
+### Shape runtime shims obsolete: `ColoredCircleRuntime`, `ColoredRectangleRuntime`, `SolidRectangleRuntime`, `RoundedRectangleRuntime`
+
+`CircleRuntime` and `RectangleRuntime` now cover the full fill + stroke + corner-radius surface on every backend (MonoGame, FNA, KNI, Raylib, Skia, and Apos.Shapes) via a two-slot composition model — one renderable for the fill, a second parented under it for the stroke. With that consolidation in place, the older shape runtime types that wrapped a single renderable each are now `[Obsolete]` and will be removed in a future release.
+
+Existing code continues to compile, but each reference now produces a `CS0618` compiler warning. The replacement types live alongside the obsolete ones in `Gum.GueDeriving`, so the only change at most call sites is the type name (and the property name, per the mapping below).
+
+The obsoleted types and their replacements:
+
+| Old type | Replacement | Color property mapping |
+| --- | --- | --- |
+| `ColoredCircleRuntime` (Apos + Skia) | `CircleRuntime` | `Color` → `FillColor` when `IsFilled` is `true` (the Apos default), `Color` → `StrokeColor` when `IsFilled` is `false` (see note below) |
+| `ColoredRectangleRuntime` (core, used by all XNA-likes + Raylib + Skia) | `RectangleRuntime` | `Color` → `FillColor` |
+| `SolidRectangleRuntime` (Skia) | `RectangleRuntime` | `Color` → `FillColor` |
+| `RoundedRectangleRuntime` (Apos + Skia) | `RectangleRuntime` + `CornerRadius` | `Red` / `Green` / `Blue` → `FillColor`; existing `CornerRadius` maps 1:1 |
+
+{% hint style="info" %}
+**`ColoredCircleRuntime.Color` is a passthrough — the rendered slot depends on `IsFilled`.** The Apos constructor defaults `IsFilled = true`, so `Color` paints the **fill** in the common case. If your code sets `IsFilled = false` (outline-only circle), migrate `Color` to `StrokeColor` instead. If the circle is both filled and outlined, set `FillColor` and `StrokeColor` explicitly on the new `CircleRuntime`.
+{% endhint %}
+
+{% hint style="warning" %}
+**`CircleRuntime` ships with a default 1 px white outline.** `ColoredCircleRuntime` had no stroke slot, so a freshly-constructed `ColoredCircleRuntime` with only `Color` set rendered as a solid disc with no outline. `CircleRuntime` (#2790 two-slot model) defaults to `StrokeColor = White` so cells that only set `FillColor` still get a visible outline — which means a literal `new CircleRuntime { FillColor = Color.Red }` renders as a red disc surrounded by a thin white ring. If you want the old solid-disc visual, suppress the outline explicitly:
+
+```csharp
+CircleRuntime circle = new();
+circle.FillColor = Color.Red;
+circle.StrokeColor = null; // disable the default white outline
+```
+
+The same caveat applies anywhere you migrate a fill-only `ColoredCircleRuntime` — including the Maui / Skia counter circles in the bundled samples, which add this line for the same reason.
+{% endhint %}
+
+❌ Old:
+
+```csharp
+var rect = new ColoredRectangleRuntime();
+rect.Color = Color.Red;
+
+var disc = new ColoredCircleRuntime(); // IsFilled = true by default
+disc.Color = Color.Yellow;
+
+var ring = new ColoredCircleRuntime();
+ring.IsFilled = false;
+ring.Color = Color.Yellow; // paints the stroke when IsFilled = false
+
+var rounded = new RoundedRectangleRuntime();
+rounded.Red = 0; rounded.Green = 128; rounded.Blue = 255;
+rounded.CornerRadius = 8;
+```
+
+✅ New:
+
+```csharp
+var rect = new RectangleRuntime();
+rect.FillColor = Color.Red;
+
+var disc = new CircleRuntime();
+disc.FillColor = Color.Yellow;
+
+var ring = new CircleRuntime();
+ring.StrokeColor = Color.Yellow;
+
+var rounded = new RectangleRuntime();
+rounded.FillColor = new Color(0, 128, 255);
+rounded.CornerRadius = 8;
+```
+
+An automated code fix is planned via the `Gum.Analyzers` package (`GUM002`) — once published, place the cursor on the warning, trigger the lightbulb (Ctrl+.), and choose the **Change to `RectangleRuntime`** / **Change to `CircleRuntime`** fix. **Fix all in solution** will migrate the entire project at once.
+
+The obsolete types will remain in place until at least the November 2026 release. After that window, they may be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
