@@ -308,6 +308,21 @@ public class LineCircle : InvisibleRenderable
         // RenderableShapeBase.IsOffsetAppliedForStroke contract, which the #2790 gallery's
         // "inscribed in 64x64 frame" row treats as the visual acceptance.
         bool runStroke = StrokeColor.HasValue || !runFill;
+
+        // Skia parity (#2757): SkiaShapeRuntime.RefreshSlotGradients auto-gates each slot's
+        // UseGradient flag by whether that slot has a non-null color, so a cell with both
+        // FillColor and StrokeColor set + UseGradient = true paints the gradient as BOTH the
+        // fill and the stroke. The stroke's gradient samples match the fill's gradient samples
+        // at the boundary pixels, so the stroke is visually indistinguishable from the fill
+        // underneath — no visible outline. raylib has one UseGradient flag per renderable and
+        // would otherwise paint the stroke as solid strokeColor over the gradient fill, which
+        // shows up as a visible outline that Skia doesn't draw. Suppressing the stroke here
+        // matches Skia's rendered output without needing a separate gradient-stroke draw path.
+        // Same gate landed on LineRectangle in commit 7f1e3b55b.
+        if (runStroke && UseGradient && runFill)
+        {
+            runStroke = false;
+        }
         if (runStroke)
         {
             Color strokeColor = StrokeColor ?? Color;
