@@ -1,22 +1,163 @@
-﻿using RenderingLibrary;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Numerics;
+using Raylib_cs;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
 
 
+/// <summary>
+/// Raylib rectangle renderable. Originally a 1 px stroke-only outline via four
+/// <c>DrawLineEx</c> calls; extended in issue #2757 to also paint a filled rectangle, a
+/// variable-width stroke (via <c>DrawRectangleLinesEx</c>), perimeter-walked dashed strokes,
+/// linear + radial gradients (via an <c>rlgl</c> triangle mesh), and an approximated
+/// dropshadow (concentric semi-transparent rectangles with raised-cosine alpha falloff). The
+/// legacy <see cref="Color"/> / <see cref="Red"/> / <see cref="Green"/> / <see cref="Blue"/> /
+/// <see cref="Alpha"/> surface is preserved so the shared <c>RectangleRuntime</c>'s raylib
+/// branch keeps working unchanged — when <see cref="FillColor"/> and <see cref="StrokeColor"/>
+/// are both <c>null</c> the render path collapses to the original behavior.
+/// </summary>
 public class LineRectangle : InvisibleRenderable
 {
+    /// <summary>
+    /// Legacy binary-dotted flag. When <c>true</c>, the stroke renders as <see cref="DashLength"/>-px
+    /// dashes with equal-length gaps. Superseded by the <see cref="StrokeDashLength"/> /
+    /// <see cref="StrokeGapLength"/> pair (#2757) which support independent dash/gap lengths;
+    /// kept for back-compat with callers that only know about <c>IsDotted</c>.
+    /// </summary>
     public bool IsDotted { get; set; }
 
     /// <summary>Length of each dash (and gap) in pixels when <see cref="IsDotted"/>.</summary>
     public float DashLength { get; set; } = 2f;
 
+    /// <summary>
+    /// Stroke width in world-space pixels. Drives <c>DrawRectangleLinesEx</c> when no fill is
+    /// painted, and the four <c>DrawLineEx</c> calls on the rotated path. Default 1.
+    /// </summary>
     public float LinePixelWidth { get; set; } = 1f;
 
+    /// <summary>
+    /// Legacy single-color slot used as the stroke color when <see cref="StrokeColor"/> is
+    /// <c>null</c>. Defaults to white so the pre-#2757 outline path renders the same as before.
+    /// </summary>
     public Color Color { get; set; } = Color.White;
+
+    /// <summary>
+    /// When <c>true</c>, draws a filled rectangle using <see cref="Color"/> (or
+    /// <see cref="FillColor"/> when set). Independent of the stroke pass — both fill and stroke
+    /// may render in the same <see cref="Render"/> call.
+    /// </summary>
+    public bool IsFilled { get; set; }
+
+    /// <summary>
+    /// Explicit fill-pass color. When set, the fill pass runs regardless of <see cref="IsFilled"/>
+    /// — the raylib analog of Skia's two-slot composition (#2790). When <c>null</c> the fill
+    /// pass only runs if <see cref="IsFilled"/> is <c>true</c>, in which case <see cref="Color"/>
+    /// is used.
+    /// </summary>
+    public Color? FillColor { get; set; }
+
+    /// <summary>
+    /// Explicit stroke-pass color. When <c>null</c>, the stroke pass uses <see cref="Color"/>
+    /// (legacy behavior) — but only if no fill is rendered. When non-<c>null</c>, the stroke
+    /// always renders regardless of fill, enabling a filled rectangle with a contrasting outline.
+    /// </summary>
+    public Color? StrokeColor { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, the fill pass paints a gradient from <see cref="Color1"/> to
+    /// <see cref="Color2"/> rather than a solid color. Both <see cref="GradientType.Linear"/>
+    /// and <see cref="GradientType.Radial"/> are supported (#2757); rendering goes through
+    /// <c>rlgl</c> immediate mode with per-vertex colors computed from
+    /// <see cref="GradientX1"/>/<see cref="GradientY1"/>, <see cref="GradientX2"/>/<see cref="GradientY2"/>,
+    /// and (for radial) <see cref="GradientInnerRadius"/>/<see cref="GradientOuterRadius"/>.
+    /// </summary>
+    public bool UseGradient { get; set; }
+
+    /// <summary>
+    /// Gradient mode. <see cref="GradientType.Linear"/> uses (X1,Y1)→(X2,Y2) as the gradient
+    /// axis; <see cref="GradientType.Radial"/> uses (X1,Y1) as the center with InnerRadius/
+    /// OuterRadius as the falloff band.
+    /// </summary>
+    public GradientType GradientType { get; set; }
+
+    /// <summary>Start color (linear: at the axis start; radial: at the inner radius).</summary>
+    public Color Color1 { get; set; } = Color.White;
+
+    /// <summary>End color (linear: at the axis end; radial: at the outer radius).</summary>
+    public Color Color2 { get; set; } = Color.White;
+
+    /// <summary>
+    /// X coordinate of the gradient axis start (linear) or radial gradient center, in pixels
+    /// relative to the rectangle's top-left. Default 0.
+    /// </summary>
+    public float GradientX1 { get; set; }
+
+    /// <summary>Y coordinate of <see cref="GradientX1"/>, same coord space.</summary>
+    public float GradientY1 { get; set; }
+
+    /// <summary>
+    /// X coordinate of the gradient axis end (linear only — ignored for radial).
+    /// </summary>
+    public float GradientX2 { get; set; }
+
+    /// <summary>Y coordinate of <see cref="GradientX2"/>.</summary>
+    public float GradientY2 { get; set; }
+
+    /// <summary>
+    /// Inner radius for a radial gradient — at this radius the color is <see cref="Color1"/>.
+    /// Default 0 (solid inner color at the gradient center).
+    /// </summary>
+    public float GradientInnerRadius { get; set; }
+
+    /// <summary>
+    /// Outer radius for a radial gradient — at this radius the color is <see cref="Color2"/>.
+    /// When 0 (the default), half the diagonal of the rectangle is used so a default-configured
+    /// radial gradient covers the whole shape.
+    /// </summary>
+    public float GradientOuterRadius { get; set; }
+
+    /// <summary>
+    /// Length in world-space pixels of each dash segment around the perimeter.
+    /// A value of 0 (the default) draws a solid stroke. Both <see cref="StrokeDashLength"/>
+    /// and <see cref="StrokeGapLength"/> must be &gt; 0 for dashed rendering to engage.
+    /// Issue #2757 — implemented via a perimeter-walking loop that emits per-dash
+    /// <c>DrawLineEx</c> calls.
+    /// </summary>
+    public float StrokeDashLength { get; set; }
+
+    /// <summary>
+    /// Length in world-space pixels of each gap between dashes. Ignored when
+    /// <see cref="StrokeDashLength"/> is 0.
+    /// </summary>
+    public float StrokeGapLength { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, a dropshadow pass renders behind the fill/stroke passes using
+    /// <see cref="DropshadowColor"/>, offset by <see cref="DropshadowOffsetX"/>/<see cref="DropshadowOffsetY"/>
+    /// with an isotropic blur radius of <c>max(DropshadowBlurX, DropshadowBlurY)</c>.
+    /// Issue #2757 — raylib has no shader-free blur primitive, so the blur is approximated
+    /// with concentric semi-transparent rectangles (raised-cosine falloff). Anisotropic blur
+    /// (BlurX ≠ BlurY) collapses to the larger of the two on raylib.
+    /// </summary>
+    public bool HasDropshadow { get; set; }
+
+    /// <summary>Color of the dropshadow rectangle (alpha channel scales the falloff).</summary>
+    public Color DropshadowColor { get; set; } = new Color((byte)0, (byte)0, (byte)0, (byte)255);
+
+    /// <summary>X offset of the dropshadow center in world-space pixels.</summary>
+    public float DropshadowOffsetX { get; set; }
+
+    /// <summary>Y offset of the dropshadow center in world-space pixels.</summary>
+    public float DropshadowOffsetY { get; set; }
+
+    /// <summary>Horizontal blur radius. Treated as isotropic with <see cref="DropshadowBlurY"/> on raylib.</summary>
+    public float DropshadowBlurX { get; set; }
+
+    /// <summary>Vertical blur radius. Treated as isotropic with <see cref="DropshadowBlurX"/> on raylib.</summary>
+    public float DropshadowBlurY { get; set; }
 
     public override int Alpha
     {
@@ -82,7 +223,9 @@ public class LineRectangle : InvisibleRenderable
         float w = this.Width;
         float h = this.Height;
 
-        float rotRad = this.GetAbsoluteRotation() * MathF.PI / 180f;
+        float rotDeg = this.GetAbsoluteRotation();
+        bool rotated = MathF.Abs(rotDeg) > 0.0001f;
+        float rotRad = rotDeg * MathF.PI / 180f;
         float cos = MathF.Cos(rotRad);
         float sin = MathF.Sin(rotRad);
 
@@ -95,44 +238,314 @@ public class LineRectangle : InvisibleRenderable
         Vector2 br = R(w, h);
         Vector2 bl = R(0, h);
 
-        if (!IsDotted)
+        // Dropshadow pre-pass — runs first so the shape draws over it. raylib has no
+        // SKImageFilter.CreateDropShadow equivalent and no shader-free blur primitive, so the
+        // blurred edge is approximated by N concentric rectangles of decreasing alpha around a
+        // solid core. Anisotropic blur collapses to max(BlurX, BlurY). Rotation is not applied
+        // to the shadow — same limitation the circle dropshadow has, kept consistent.
+        if (HasDropshadow && w > 0f && h > 0f)
         {
-            DrawLineEx(tl, tr, LinePixelWidth, Color);
-            DrawLineEx(tr, br, LinePixelWidth, Color);
-            DrawLineEx(br, bl, LinePixelWidth, Color);
-            DrawLineEx(bl, tl, LinePixelWidth, Color);
+            float shadowX = ox + DropshadowOffsetX;
+            float shadowY = oy + DropshadowOffsetY;
+            float blur = MathF.Max(DropshadowBlurX, DropshadowBlurY);
+
+            DrawRectangleV(new Vector2(shadowX, shadowY), new Vector2(w, h), DropshadowColor);
+
+            if (blur > 0f)
+            {
+                const int blurRings = 8;
+                for (int i = 1; i <= blurRings; i++)
+                {
+                    float tOuter = (float)i / blurRings;
+                    float bandOuter = tOuter * blur;
+                    // Raised-cosine alpha at the band's outer edge — smoother Gaussian-like
+                    // falloff than linear without doing any actual blur math.
+                    float alphaScale = 0.5f * (1f + MathF.Cos(MathF.PI * tOuter));
+                    byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
+                    Color ringColor = new Color(DropshadowColor.R, DropshadowColor.G,
+                        DropshadowColor.B, ringAlpha);
+                    // Inflated rectangle outline — width = bandOuter so the band fully overlaps
+                    // the previous, hiding any gap from the rasterizer. DrawRectangleLinesEx
+                    // centers stroke on the rectangle edge, so the inflated outer rect is
+                    // (bandOuter / 2) larger on each side.
+                    float halfBand = bandOuter * 0.5f;
+                    Rectangle outerRect = new Rectangle(
+                        shadowX - halfBand,
+                        shadowY - halfBand,
+                        w + bandOuter,
+                        h + bandOuter);
+                    DrawRectangleLinesEx(outerRect, bandOuter, ringColor);
+                }
+            }
         }
-        else
+
+        // Fill pass — runs when FillColor is set, or when IsFilled is true with no explicit
+        // FillColor (legacy Color slot supplies the fill color). Mirrors Skia's two-slot
+        // composition (#2790) where setting FillColor alone, StrokeColor alone, or both lights
+        // up the appropriate layers.
+        bool runFill = FillColor.HasValue || IsFilled;
+        if (runFill)
         {
-            DrawDashedSegment(tl.X, tl.Y, tr.X, tr.Y);
-            DrawDashedSegment(tr.X, tr.Y, br.X, br.Y);
-            DrawDashedSegment(br.X, br.Y, bl.X, bl.Y);
-            DrawDashedSegment(bl.X, bl.Y, tl.X, tl.Y);
+            Color fillColor = FillColor ?? Color;
+            if (UseGradient)
+            {
+                // #2757 follow-up — rectangle gradient via rlgl. Linear uses 2 triangles over
+                // the four corners with per-vertex colors (exact for a planar gradient). Radial
+                // uses a triangle fan from the centroid → many perimeter samples for smooth
+                // falloff. Both paths read GradientX1/Y1/X2/Y2/InnerRadius/OuterRadius in
+                // rectangle-local coords (origin = top-left, +X right, +Y down). Rotation
+                // applied via the same R() helper used by the outline path.
+                if (GradientType == GradientType.Linear)
+                {
+                    DrawLinearGradientQuad(tl, tr, br, bl, w, h);
+                }
+                else
+                {
+                    DrawRadialGradientFan(R, w, h);
+                }
+            }
+            else
+            {
+                if (rotated)
+                {
+                    // Rotated solid fill — split the rotated quad into two triangles. Vertex
+                    // order: tl → tr → br and tl → br → bl. raylib uses CCW front-facing under
+                    // default backface culling, and Gum rotation is CCW (sin sign in R()
+                    // mirrors that), so this winding stays visible regardless of rotation
+                    // angle.
+                    DrawTriangle(tl, tr, br, fillColor);
+                    DrawTriangle(tl, br, bl, fillColor);
+                }
+                else
+                {
+                    DrawRectangleV(new Vector2(ox, oy), new Vector2(w, h), fillColor);
+                }
+            }
+        }
+
+        // Stroke pass — runs when StrokeColor is explicitly set (paired with fill), or when
+        // no fill ran (so the legacy outline path stays the default visible behavior). For the
+        // unrotated, solid case we use DrawRectangleLinesEx which gives a proper inset thick
+        // outline. Rotated or dashed paths fall back to per-edge DrawLineEx so the rotation
+        // composition and dash perimeter-walk apply cleanly.
+        bool runStroke = StrokeColor.HasValue || !runFill;
+        if (runStroke)
+        {
+            Color strokeColor = StrokeColor ?? Color;
+            bool dashed =
+                (StrokeDashLength > 0f && StrokeGapLength > 0f) ||
+                IsDotted;
+            if (!rotated && !dashed)
+            {
+                // Hot path — single raylib call. DrawRectangleLinesEx centers the stroke on the
+                // edge by default; that's the historical Gum behavior so the existing samples
+                // visually match.
+                DrawRectangleLinesEx(new Rectangle(ox, oy, w, h), LinePixelWidth, strokeColor);
+            }
+            else if (!dashed)
+            {
+                DrawLineEx(tl, tr, LinePixelWidth, strokeColor);
+                DrawLineEx(tr, br, LinePixelWidth, strokeColor);
+                DrawLineEx(br, bl, LinePixelWidth, strokeColor);
+                DrawLineEx(bl, tl, LinePixelWidth, strokeColor);
+            }
+            else
+            {
+                // Dashed perimeter — translate pixel dash/gap lengths into segment lengths along
+                // each edge. The two new properties (StrokeDashLength + StrokeGapLength) take
+                // precedence over the legacy IsDotted flag, which collapses to a "DashLength /
+                // DashLength" pattern. Mirrors the dash arc loop in LineCircle.Render.
+                float dashLen;
+                float gapLen;
+                if (StrokeDashLength > 0f && StrokeGapLength > 0f)
+                {
+                    dashLen = StrokeDashLength;
+                    gapLen = StrokeGapLength;
+                }
+                else
+                {
+                    dashLen = MathF.Max(DashLength, 1f);
+                    gapLen = dashLen;
+                }
+                DrawDashedSegment(tl, tr, dashLen, gapLen, strokeColor);
+                DrawDashedSegment(tr, br, dashLen, gapLen, strokeColor);
+                DrawDashedSegment(br, bl, dashLen, gapLen, strokeColor);
+                DrawDashedSegment(bl, tl, dashLen, gapLen, strokeColor);
+            }
         }
     }
 
-    private void DrawDashedSegment(float ax, float ay, float bx, float by)
+    private void DrawDashedSegment(Vector2 a, Vector2 b, float dashLen, float gapLen, Color color)
     {
-        var dx = bx - ax;
-        var dy = by - ay;
-        var len = MathF.Sqrt(dx * dx + dy * dy);
+        float dx = b.X - a.X;
+        float dy = b.Y - a.Y;
+        float len = MathF.Sqrt(dx * dx + dy * dy);
         if (len < 0.5f) return;
 
-        var nx = dx / len;
-        var ny = dy / len;
-        var step = MathF.Max(DashLength, 1f);
+        float nx = dx / len;
+        float ny = dy / len;
+        float pattern = dashLen + gapLen;
 
-
-
-        // Pattern: dash, gap, dash, gap — each segment is `step` long.
-        for (float t = 0; t < len; t += step * 2)
+        for (float t = 0; t < len; t += pattern)
         {
-            var t2 = MathF.Min(t + step, len);
+            float t2 = MathF.Min(t + dashLen, len);
             DrawLineEx(
-                new Vector2(ax + nx * t, ay + ny * t),
-                new Vector2(ax + nx * t2, ay + ny * t2),
+                new Vector2(a.X + nx * t, a.Y + ny * t),
+                new Vector2(a.X + nx * t2, a.Y + ny * t2),
                 LinePixelWidth,
-                Color);
+                color);
         }
+    }
+
+    /// <summary>
+    /// Emits two triangles covering the rotated quad with per-vertex colors computed from the
+    /// linear gradient axis. Exact for a planar gradient — barycentric interpolation across each
+    /// triangle reproduces the gradient correctly across the diagonal seam.
+    /// </summary>
+    private void DrawLinearGradientQuad(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl,
+        float w, float h)
+    {
+        // Coords are rectangle-local (0,0 = top-left). Cache the four corner t values then
+        // emit two triangles. Same vertex order rule as raylib's DrawTriangle / the circle's
+        // gradient fan: CCW front-facing.
+        Color cTl = SampleLinearAt(0f, 0f);
+        Color cTr = SampleLinearAt(w, 0f);
+        Color cBr = SampleLinearAt(w, h);
+        Color cBl = SampleLinearAt(0f, h);
+
+        Rlgl.Begin((int)DrawMode.Triangles);
+        EmitVertexColored(tl, cTl);
+        EmitVertexColored(br, cBr);
+        EmitVertexColored(tr, cTr);
+
+        EmitVertexColored(tl, cTl);
+        EmitVertexColored(bl, cBl);
+        EmitVertexColored(br, cBr);
+        Rlgl.End();
+    }
+
+    /// <summary>
+    /// Triangle fan from the rectangle's centroid out to many perimeter samples. Each fan
+    /// triangle gets per-vertex colors sampled from the radial gradient function — many small
+    /// triangles approximate the smooth color change a true shader would produce.
+    /// </summary>
+    private void DrawRadialGradientFan(Func<float, float, Vector2> R, float w, float h)
+    {
+        // 64 samples around the perimeter is plenty for typical UI rectangle sizes — same
+        // smoothness budget as the circle's segment-count rule (~4° resolution at typical
+        // radii). The four corners are always included so the rectangle edges stay sharp.
+        const int perimeterSamples = 64;
+        Vector2 center = R(w * 0.5f, h * 0.5f);
+        Color centerColor = SampleRadialAt(w * 0.5f, h * 0.5f, w, h);
+
+        // Walk the perimeter clockwise in local space: top edge → right edge → bottom edge →
+        // left edge. Sample at evenly-spaced perimeter distances. Then close the fan by
+        // re-emitting the first perimeter point.
+        float perimeter = 2f * (w + h);
+        float step = perimeter / perimeterSamples;
+
+        Vector2 firstWorld = default;
+        Color firstColor = default;
+        Vector2 prevWorld = default;
+        Color prevColor = default;
+        bool havePrev = false;
+
+        Rlgl.Begin((int)DrawMode.Triangles);
+        for (int i = 0; i < perimeterSamples; i++)
+        {
+            float d = i * step;
+            (float lx, float ly) = PerimeterLocalCoord(d, w, h);
+            Vector2 worldP = R(lx, ly);
+            Color cP = SampleRadialAt(lx, ly, w, h);
+
+            if (!havePrev)
+            {
+                firstWorld = worldP;
+                firstColor = cP;
+                prevWorld = worldP;
+                prevColor = cP;
+                havePrev = true;
+                continue;
+            }
+
+            // Vertex order: center → previous → current. CCW front-facing under raylib's
+            // default culling matches LineCircle's gradient fan rule.
+            EmitVertexColored(center, centerColor);
+            EmitVertexColored(prevWorld, prevColor);
+            EmitVertexColored(worldP, cP);
+
+            prevWorld = worldP;
+            prevColor = cP;
+        }
+        // Close the fan.
+        EmitVertexColored(center, centerColor);
+        EmitVertexColored(prevWorld, prevColor);
+        EmitVertexColored(firstWorld, firstColor);
+        Rlgl.End();
+    }
+
+    /// <summary>
+    /// Maps a clockwise perimeter distance to a rectangle-local coordinate. Used by the radial
+    /// fan to walk the rectangle's edge.
+    /// </summary>
+    private static (float x, float y) PerimeterLocalCoord(float d, float w, float h)
+    {
+        if (d < w) return (d, 0f);
+        d -= w;
+        if (d < h) return (w, d);
+        d -= h;
+        if (d < w) return (w - d, h);
+        d -= w;
+        return (0f, h - d);
+    }
+
+    private Color SampleLinearAt(float localX, float localY)
+    {
+        float dx = GradientX2 - GradientX1;
+        float dy = GradientY2 - GradientY1;
+        float lenSq = dx * dx + dy * dy;
+        if (lenSq <= 0f)
+        {
+            return Color1;
+        }
+        float t = ((localX - GradientX1) * dx + (localY - GradientY1) * dy) / lenSq;
+        return LerpClamped(t);
+    }
+
+    private Color SampleRadialAt(float localX, float localY, float w, float h)
+    {
+        float dx = localX - GradientX1;
+        float dy = localY - GradientY1;
+        float dist = MathF.Sqrt(dx * dx + dy * dy);
+        // OuterRadius = 0 (default) collapses to half-diagonal so a no-config radial covers
+        // the whole rectangle. Matches the spirit of the circle's "outer defaults to Radius"
+        // rule for the rectangle's shape.
+        float outer = GradientOuterRadius > 0f
+            ? GradientOuterRadius
+            : 0.5f * MathF.Sqrt(w * w + h * h);
+        float span = outer - GradientInnerRadius;
+        if (span <= 0f)
+        {
+            return Color2;
+        }
+        float t = (dist - GradientInnerRadius) / span;
+        return LerpClamped(t);
+    }
+
+    private Color LerpClamped(float t)
+    {
+        if (t < 0f) t = 0f;
+        else if (t > 1f) t = 1f;
+        byte r = (byte)(Color1.R + (Color2.R - Color1.R) * t);
+        byte g = (byte)(Color1.G + (Color2.G - Color1.G) * t);
+        byte b = (byte)(Color1.B + (Color2.B - Color1.B) * t);
+        byte a = (byte)(Color1.A + (Color2.A - Color1.A) * t);
+        return new Color(r, g, b, a);
+    }
+
+    private static void EmitVertexColored(Vector2 p, Color c)
+    {
+        Rlgl.Color4ub(c.R, c.G, c.B, c.A);
+        Rlgl.Vertex2f(p.X, p.Y);
     }
 }

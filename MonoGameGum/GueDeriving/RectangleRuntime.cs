@@ -178,7 +178,14 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             _strokeDashLength = value;
-            ApplyDashState();
+#if RAYLIB
+            // #2757: previously the raylib branch only flipped the binary IsDotted flag on the
+            // renderable. The LineRectangle now exposes real StrokeDashLength / StrokeGapLength
+            // for a perimeter-walk dashed path, so push the actual length through. SOKOL
+            // renderable has no equivalent yet — values round-trip on the runtime as forward
+            // compat (same pattern as CircleRuntime's RAYLIB || SOKOL block).
+            ContainedLineRectangle.StrokeDashLength = value;
+#endif
             NotifyPropertyChanged();
         }
     }
@@ -192,16 +199,11 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             _strokeGapLength = value;
-            ApplyDashState();
+#if RAYLIB
+            ContainedLineRectangle.StrokeGapLength = value;
+#endif
             NotifyPropertyChanged();
         }
-    }
-
-    // Mirrors PolygonRuntime.ApplyDashState (#2757): both lengths must be positive to engage
-    // the LineRectangle's binary dotted texture, matching Skia's CreateDash guard.
-    void ApplyDashState()
-    {
-        ContainedLineRectangle.IsDotted = _strokeDashLength > 0 && _strokeGapLength > 0;
     }
 
     /// <summary>
@@ -222,6 +224,252 @@ public class RectangleRuntime : GraphicalUiElement
             }
         }
         ContainedLineRectangle.LinePixelWidth = strokeWidth;
+    }
+#endif
+
+#if RAYLIB
+    // Issue #2757 — raylib rectangle parity: surface the same property names the XNALIKE/SKIA
+    // branches expose so the cross-backend RectanglesScreen sample compiles against raylib. The
+    // setters push through to the contained LineRectangle, whose Render() handles fill/stroke/
+    // gradient/dropshadow composition. SOKOL is not extended here yet — its renderable doesn't
+    // implement any of this; when it gains support, lift the relevant blocks into RAYLIB ||
+    // SOKOL (mirror the CircleRuntime pattern).
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.FillColor"/>
+    public Color? FillColor
+    {
+        get => ContainedLineRectangle.FillColor;
+        set
+        {
+            ContainedLineRectangle.FillColor = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.StrokeColor"/>
+    public Color? StrokeColor
+    {
+        get => ContainedLineRectangle.StrokeColor;
+        set
+        {
+            ContainedLineRectangle.StrokeColor = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.IsFilled"/>
+    public bool IsFilled
+    {
+        get => ContainedLineRectangle.IsFilled;
+        set
+        {
+            ContainedLineRectangle.IsFilled = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.UseGradient"/>
+    public bool UseGradient
+    {
+        get => ContainedLineRectangle.UseGradient;
+        set
+        {
+            ContainedLineRectangle.UseGradient = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.GradientType"/>
+    public GradientType GradientType
+    {
+        get => ContainedLineRectangle.GradientType;
+        set
+        {
+            ContainedLineRectangle.GradientType = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.Color1"/>
+    public Color Color1
+    {
+        get => ContainedLineRectangle.Color1;
+        set
+        {
+            ContainedLineRectangle.Color1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.Color2"/>
+    public Color Color2
+    {
+        get => ContainedLineRectangle.Color2;
+        set
+        {
+            ContainedLineRectangle.Color2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.GradientX1"/>
+    public float GradientX1
+    {
+        get => ContainedLineRectangle.GradientX1;
+        set
+        {
+            ContainedLineRectangle.GradientX1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.GradientY1"/>
+    public float GradientY1
+    {
+        get => ContainedLineRectangle.GradientY1;
+        set
+        {
+            ContainedLineRectangle.GradientY1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.GradientX2"/>
+    public float GradientX2
+    {
+        get => ContainedLineRectangle.GradientX2;
+        set
+        {
+            ContainedLineRectangle.GradientX2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.GradientY2"/>
+    public float GradientY2
+    {
+        get => ContainedLineRectangle.GradientY2;
+        set
+        {
+            ContainedLineRectangle.GradientY2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.GradientInnerRadius"/>
+    public float GradientInnerRadius
+    {
+        get => ContainedLineRectangle.GradientInnerRadius;
+        set
+        {
+            ContainedLineRectangle.GradientInnerRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.GradientOuterRadius"/>
+    public float GradientOuterRadius
+    {
+        get => ContainedLineRectangle.GradientOuterRadius;
+        set
+        {
+            ContainedLineRectangle.GradientOuterRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.HasDropshadow"/>
+    public bool HasDropshadow
+    {
+        get => ContainedLineRectangle.HasDropshadow;
+        set
+        {
+            ContainedLineRectangle.HasDropshadow = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.DropshadowColor"/>
+    public Color DropshadowColor
+    {
+        get => ContainedLineRectangle.DropshadowColor;
+        set
+        {
+            ContainedLineRectangle.DropshadowColor = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Alpha channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowAlpha
+    {
+        get => ContainedLineRectangle.DropshadowColor.A;
+        set => DropshadowColor = ColorExtensions.WithAlpha(ContainedLineRectangle.DropshadowColor, (byte)value);
+    }
+
+    /// <summary>Red channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowRed
+    {
+        get => ContainedLineRectangle.DropshadowColor.R;
+        set => DropshadowColor = ColorExtensions.WithRed(ContainedLineRectangle.DropshadowColor, (byte)value);
+    }
+
+    /// <summary>Green channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowGreen
+    {
+        get => ContainedLineRectangle.DropshadowColor.G;
+        set => DropshadowColor = ColorExtensions.WithGreen(ContainedLineRectangle.DropshadowColor, (byte)value);
+    }
+
+    /// <summary>Blue channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowBlue
+    {
+        get => ContainedLineRectangle.DropshadowColor.B;
+        set => DropshadowColor = ColorExtensions.WithBlue(ContainedLineRectangle.DropshadowColor, (byte)value);
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.DropshadowOffsetX"/>
+    public float DropshadowOffsetX
+    {
+        get => ContainedLineRectangle.DropshadowOffsetX;
+        set
+        {
+            ContainedLineRectangle.DropshadowOffsetX = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.DropshadowOffsetY"/>
+    public float DropshadowOffsetY
+    {
+        get => ContainedLineRectangle.DropshadowOffsetY;
+        set
+        {
+            ContainedLineRectangle.DropshadowOffsetY = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.DropshadowBlurX"/>
+    public float DropshadowBlurX
+    {
+        get => ContainedLineRectangle.DropshadowBlurX;
+        set
+        {
+            ContainedLineRectangle.DropshadowBlurX = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.DropshadowBlurY"/>
+    public float DropshadowBlurY
+    {
+        get => ContainedLineRectangle.DropshadowBlurY;
+        set
+        {
+            ContainedLineRectangle.DropshadowBlurY = value;
+            NotifyPropertyChanged();
+        }
     }
 #endif
 
