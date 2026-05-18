@@ -306,18 +306,19 @@ public class LineRectangle : InvisibleRenderable
             if (blur > 0f)
             {
                 // Approximate Skia's SKImageFilter.CreateDropShadow output. Tuning constants
-                // are empirical — side-by-side comparison against the Skia gallery:
-                // falloffExtent = blur * 0.5 produces a visible shadow boundary matching
-                // Skia, but a Gaussian profile collapses most of the density into the inner
-                // half (at t = 0.8 alpha is already 0.05), giving a hard-looking cutoff in
-                // the outer half. Linear (1 - t) spreads density evenly across the whole
-                // fade range so the gradient reads smoothly out to t = 1.
+                // are empirical — side-by-side comparison against the Skia gallery converged
+                // on:
+                //   - falloffExtent = blur * 0.5 (visible boundary matches Skia).
+                //   - sqrt(1 - t) profile sustains higher alpha at intermediate distances
+                //     than linear (1 - t) and approaches zero with a softer tangent, so the
+                //     fade reads as a longer gradient that tapers into the page rather than
+                //     a hard line where alpha drops out. Boundary at t = 1 still goes to 0.
                 //
                 // Band layout:
                 //   - falloffExtent = blur * 0.5 (where blur = max(BlurX, BlurY)).
                 //   - blurRings non-overlapping outlines, each bandThickness px thick,
                 //     positioned at increasing distances outside the solid core.
-                //   - Linear alpha profile (1 - t) sampled at the band centerline.
+                //   - sqrt(1 - t) alpha profile sampled at the band centerline.
                 const int blurRings = 32;
                 float falloffExtent = blur * 0.5f;
                 float bandThickness = falloffExtent / blurRings;
@@ -325,7 +326,7 @@ public class LineRectangle : InvisibleRenderable
                 {
                     float bandCenter = (i + 0.5f) * bandThickness;
                     float tCenter = bandCenter / falloffExtent;
-                    float alphaScale = 1f - tCenter;
+                    float alphaScale = MathF.Sqrt(MathF.Max(0f, 1f - tCenter));
                     byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
                     if (ringAlpha == 0)
                     {
