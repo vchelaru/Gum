@@ -418,41 +418,35 @@ public class LineRectangle : InvisibleRenderable
                 IsDotted;
 
             // Stroke is inset entirely inside the nominal bounds — outer edge sits at the
-            // (ox,oy,w,h) rectangle, inner edge sits halfStroke deep. raylib's DrawRectangle*Lines*
-            // primitives center the stroke on the edge by default, so we inset the rect passed
-            // in by halfStroke on each side and shrink width/height by a full stroke width.
-            // Mirrors Skia's RenderableShapeBase.IsOffsetAppliedForStroke contract (#2814) and
-            // the LineCircle inner/outer ring pattern from the #2757 circle PR. Without this the
-            // "Inscribed in 64x64" sample's thick strokes bleed outside the parent frame.
-            float halfStroke = LinePixelWidth * 0.5f;
-            float innerW = w - LinePixelWidth;
-            float innerH = h - LinePixelWidth;
-            bool innerFits = innerW > 0f && innerH > 0f;
+            // (ox, oy, w, h) rectangle. Two different inset strategies depending on which raylib
+            // primitive renders the stroke:
+            //
+            //   - DrawRectangleLinesEx and DrawRectangleRoundedLinesEx already inset internally
+            //     (they compose four inward-drawn rectangles whose outer edges sit at the rect's
+            //     edge). Pass the FULL nominal rect — no manual inset, or the stroke gets
+            //     visibly insetting twice and the cell shrinks as StrokeWidth grows.
+            //   - DrawLineEx (rotated and dashed paths) centers the line on its endpoints, so
+            //     a stroke=8 corner-to-corner line would bleed 4 px outside the nominal bounds.
+            //     Inset the corners by halfStroke before drawing so the outer edge of the stroke
+            //     sits at the nominal bounds.
+            //
+            // Both strategies produce the same visual contract: outer edge at the nominal rect,
+            // matching Skia's RenderableShapeBase.IsOffsetAppliedForStroke (#2814).
 
-            if (!rotated && !dashed && useRounded && innerFits)
+            if (!rotated && !dashed && useRounded)
             {
-                // Inset the rounded outline. CornerRadius shrinks too so the outer arc sits at
-                // the nominal CornerRadius — matches what Skia does when it strokes a
-                // RoundedRectangle: the rendered outer corner is at the user-set radius.
-                float innerCornerRadius = MathF.Max(0f, CornerRadius - halfStroke);
-                float innerMinHalf = MathF.Min(innerW, innerH) * 0.5f;
-                float innerRoundness = innerMinHalf > 0f
-                    ? MathF.Min(1f, innerCornerRadius / innerMinHalf)
-                    : 0f;
-                DrawRectangleRoundedLinesEx(
-                    new Rectangle(ox + halfStroke, oy + halfStroke, innerW, innerH),
-                    innerRoundness, roundedSegments, LinePixelWidth, strokeColor);
+                DrawRectangleRoundedLinesEx(new Rectangle(ox, oy, w, h), roundness,
+                    roundedSegments, LinePixelWidth, strokeColor);
             }
-            else if (!rotated && !dashed && innerFits)
+            else if (!rotated && !dashed)
             {
-                DrawRectangleLinesEx(
-                    new Rectangle(ox + halfStroke, oy + halfStroke, innerW, innerH),
-                    LinePixelWidth, strokeColor);
+                DrawRectangleLinesEx(new Rectangle(ox, oy, w, h), LinePixelWidth, strokeColor);
             }
-            else if (!dashed && innerFits)
+            else if (!dashed)
             {
-                // Rotated solid stroke — rotate the inset corners so the four edges form an
-                // inset rectangle in rotated space too.
+                // Rotated solid stroke — DrawLineEx centers on endpoints, so use halfStroke-inset
+                // corners rotated into world space.
+                float halfStroke = LinePixelWidth * 0.5f;
                 Vector2 stl = R(halfStroke, halfStroke);
                 Vector2 str = R(w - halfStroke, halfStroke);
                 Vector2 sbr = R(w - halfStroke, h - halfStroke);
@@ -462,13 +456,13 @@ public class LineRectangle : InvisibleRenderable
                 DrawLineEx(sbr, sbl, LinePixelWidth, strokeColor);
                 DrawLineEx(sbl, stl, LinePixelWidth, strokeColor);
             }
-            else if (dashed && innerFits)
+            else
             {
-                // Dashed perimeter — translate pixel dash/gap lengths into segment lengths along
-                // each edge. The two new properties (StrokeDashLength + StrokeGapLength) take
+                // Dashed perimeter — pixel dash/gap lengths translate into segment lengths along
+                // each edge. The new StrokeDashLength + StrokeGapLength pair (#2757) takes
                 // precedence over the legacy IsDotted flag, which collapses to a "DashLength /
-                // DashLength" pattern. Mirrors the dash arc loop in LineCircle.Render. Uses the
-                // inset corners so dashed strokes stay inside the nominal bounds too.
+                // DashLength" pattern. Inset corners again because DrawDashedSegment uses
+                // DrawLineEx internally.
                 float dashLen;
                 float gapLen;
                 if (StrokeDashLength > 0f && StrokeGapLength > 0f)
@@ -481,6 +475,7 @@ public class LineRectangle : InvisibleRenderable
                     dashLen = MathF.Max(DashLength, 1f);
                     gapLen = dashLen;
                 }
+                float halfStroke = LinePixelWidth * 0.5f;
                 Vector2 stl = R(halfStroke, halfStroke);
                 Vector2 str = R(w - halfStroke, halfStroke);
                 Vector2 sbr = R(w - halfStroke, h - halfStroke);
@@ -490,9 +485,6 @@ public class LineRectangle : InvisibleRenderable
                 DrawDashedSegment(sbr, sbl, dashLen, gapLen, strokeColor);
                 DrawDashedSegment(sbl, stl, dashLen, gapLen, strokeColor);
             }
-            // If the stroke would consume the entire shape (innerFits == false), skip drawing —
-            // raylib's primitives draw nothing useful at that point and Skia's stroke-inset path
-            // clips similarly.
         }
     }
 
