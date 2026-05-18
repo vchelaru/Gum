@@ -308,6 +308,16 @@ public class DeleteLogic : IDeleteLogic
 
         if (result != true) return;
 
+        PerformConfirmedMixedTypeDelete(elements, behaviors, deletableInstances, combinedArray, optionsWindow);
+    }
+
+    internal void PerformConfirmedMixedTypeDelete(
+        List<ElementSave> elements,
+        List<BehaviorSave> behaviors,
+        List<InstanceSave> deletableInstances,
+        Array combinedArray,
+        DeleteOptionsWindow? optionsWindow)
+    {
         // Cache behavior parents before removal (GetBehaviorContainerOf won't find them after)
         var affectedBehaviorParents = deletableInstances
             .Select(i => ObjectFinder.Self.GetBehaviorContainerOf(i))
@@ -318,7 +328,15 @@ public class DeleteLogic : IDeleteLogic
         // 1. Notify plugins before removal so they can still find children via
         //    parent reference variables (e.g. "Child.Parent = thisInstance").
         //    RemoveInstanceFromElement destroys those references, breaking GetChildrenOf.
-        _pluginManager.DeleteConfirmed(optionsWindow, combinedArray);
+        _pluginManager.DeleteConfirmed(optionsWindow!, combinedArray);
+
+        // Group instances by their (non-deleted) parent element. Used both for the
+        // post-removal InstancesDelete plugin notification and for the file-save pass below.
+        // Capture before removal so ParentContainer back-references are still intact.
+        var instancesByElementParent = deletableInstances
+            .Where(i => i.ParentContainer != null && !elements.Contains(i.ParentContainer))
+            .GroupBy(i => i.ParentContainer!)
+            .ToList();
 
         // 2. Remove instances (skip if parent element/behavior is also being deleted)
         foreach (var instance in deletableInstances)
@@ -337,19 +355,27 @@ public class DeleteLogic : IDeleteLogic
             }
         }
 
-        // 3. Remove elements
+        // 3. Notify plugins per affected parent element so listeners (e.g. the codegen
+        //    plugin that regenerates a screen's .Generated.cs) see the change. Without
+        //    this, multi-instance deletes leave plugin-owned state stale.
+        foreach (var group in instancesByElementParent)
+        {
+            _pluginManager.InstancesDelete(group.Key, group.ToArray());
+        }
+
+        // 4. Remove elements
         foreach (var element in elements)
         {
             RemoveElement(element);
         }
 
-        // 4. Remove behaviors
+        // 5. Remove behaviors
         foreach (var behavior in behaviors)
         {
             RemoveBehavior(behavior);
         }
 
-        // 5. Update selection to avoid stale references
+        // 6. Update selection to avoid stale references
         if (elements.Count > 0)
         {
             _selectedState.SelectedElement = null;
@@ -360,18 +386,12 @@ public class DeleteLogic : IDeleteLogic
             _selectedState.SelectedInstance = null;
         }
 
-        // 6. Refresh and save for instance parents that were not themselves deleted
+        // 7. Refresh and save for instance parents that were not themselves deleted
         if (deletableInstances.Count > 0)
         {
-            var affectedElementParents = deletableInstances
-                .Select(i => i.ParentContainer)
-                .Where(e => e != null && !elements.Contains(e))
-                .Distinct()
-                .ToList();
-
-            foreach (var parent in affectedElementParents)
+            foreach (var group in instancesByElementParent)
             {
-                SaveElementAfterInstanceRemoval(parent);
+                SaveElementAfterInstanceRemoval(group.Key);
             }
 
             foreach (var behavior in affectedBehaviorParents)
