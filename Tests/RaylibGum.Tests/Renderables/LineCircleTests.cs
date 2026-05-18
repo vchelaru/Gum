@@ -100,6 +100,81 @@ public class LineCircleTests
     }
 
     [Fact]
+    public void GradientAxis_PropertiesRoundTrip()
+    {
+        // #2757 follow-ups #8 (linear axis) and #9 (offset-center / inner-outer radius).
+        // The renderable holds bbox-local pixel coords; rlgl triangle fan reads them per
+        // vertex.
+        LineCircle circle = new LineCircle();
+
+        circle.GradientX1.ShouldBe(0f);
+        circle.GradientY1.ShouldBe(0f);
+        circle.GradientX2.ShouldBe(0f);
+        circle.GradientY2.ShouldBe(0f);
+        circle.GradientInnerRadius.ShouldBe(0f);
+        circle.GradientOuterRadius.ShouldBe(0f);
+
+        circle.GradientX1 = 4f;
+        circle.GradientY1 = 8f;
+        circle.GradientX2 = 56f;
+        circle.GradientY2 = 28f;
+        circle.GradientInnerRadius = 4f;
+        circle.GradientOuterRadius = 28f;
+
+        circle.GradientX1.ShouldBe(4f);
+        circle.GradientY1.ShouldBe(8f);
+        circle.GradientX2.ShouldBe(56f);
+        circle.GradientY2.ShouldBe(28f);
+        circle.GradientInnerRadius.ShouldBe(4f);
+        circle.GradientOuterRadius.ShouldBe(28f);
+    }
+
+    [Fact]
+    public void DashedStroke_PropertiesRoundTrip()
+    {
+        // #2757 follow-up #10 — dashed stroke uses StrokeDashLength + StrokeGapLength;
+        // both default to 0 (solid stroke). Both must be > 0 for the render path to engage.
+        LineCircle circle = new LineCircle();
+
+        circle.StrokeDashLength.ShouldBe(0f);
+        circle.StrokeGapLength.ShouldBe(0f);
+
+        circle.StrokeDashLength = 6f;
+        circle.StrokeGapLength = 4f;
+
+        circle.StrokeDashLength.ShouldBe(6f);
+        circle.StrokeGapLength.ShouldBe(4f);
+    }
+
+    [Fact]
+    public void Dropshadow_PropertiesRoundTrip()
+    {
+        // #2757 follow-up #12 — dropshadow defaults to off (HasDropshadow == false) with
+        // opaque-black color, zero offset/blur. All props round-trip independently.
+        LineCircle circle = new LineCircle();
+
+        circle.HasDropshadow.ShouldBeFalse();
+        circle.DropshadowColor.A.ShouldBe((byte)255);
+        circle.DropshadowOffsetX.ShouldBe(0f);
+        circle.DropshadowBlurY.ShouldBe(0f);
+
+        circle.HasDropshadow = true;
+        circle.DropshadowColor = new Color(220, 40, 160, 220);
+        circle.DropshadowOffsetX = 6f;
+        circle.DropshadowOffsetY = 4f;
+        circle.DropshadowBlurX = 6f;
+        circle.DropshadowBlurY = 4f;
+
+        circle.HasDropshadow.ShouldBeTrue();
+        circle.DropshadowColor.R.ShouldBe((byte)220);
+        circle.DropshadowColor.A.ShouldBe((byte)220);
+        circle.DropshadowOffsetX.ShouldBe(6f);
+        circle.DropshadowOffsetY.ShouldBe(4f);
+        circle.DropshadowBlurX.ShouldBe(6f);
+        circle.DropshadowBlurY.ShouldBe(4f);
+    }
+
+    [Fact]
     public void LegacyColorChannel_StillRoundTripsViaColor()
     {
         // Back-compat: shared CircleRuntime's raylib branch reads/writes Color, Red, Green,

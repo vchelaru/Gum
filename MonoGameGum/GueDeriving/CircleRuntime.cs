@@ -335,6 +335,72 @@ public class CircleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.GradientX1"/>
+    public float GradientX1
+    {
+        get => ContainedLineCircle.GradientX1;
+        set
+        {
+            ContainedLineCircle.GradientX1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.GradientY1"/>
+    public float GradientY1
+    {
+        get => ContainedLineCircle.GradientY1;
+        set
+        {
+            ContainedLineCircle.GradientY1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.GradientX2"/>
+    public float GradientX2
+    {
+        get => ContainedLineCircle.GradientX2;
+        set
+        {
+            ContainedLineCircle.GradientX2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.GradientY2"/>
+    public float GradientY2
+    {
+        get => ContainedLineCircle.GradientY2;
+        set
+        {
+            ContainedLineCircle.GradientY2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.GradientInnerRadius"/>
+    public float GradientInnerRadius
+    {
+        get => ContainedLineCircle.GradientInnerRadius;
+        set
+        {
+            ContainedLineCircle.GradientInnerRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.GradientOuterRadius"/>
+    public float GradientOuterRadius
+    {
+        get => ContainedLineCircle.GradientOuterRadius;
+        set
+        {
+            ContainedLineCircle.GradientOuterRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
 #endif
 
 #if XNALIKE
@@ -1119,9 +1185,11 @@ public class CircleRuntime : GraphicalUiElement
 
     /// <inheritdoc cref="PolygonRuntime.StrokeDashLength"/>
     /// <remarks>
-    /// Round-trips on Raylib/Sokol but renders as a no-op — <c>LineCircle</c> has no dash
-    /// concept. Skia honors the lengths verbatim; XNALIKE with MonoGameGumShapes routes
-    /// through the Apos stroke slot.
+    /// On Raylib (#2757) the value is pushed to the contained <see cref="Gum.Renderables.LineCircle"/>,
+    /// which renders the dashed pattern as a loop of <c>DrawRing</c> arcs. On Sokol the
+    /// renderable has no dash support yet, so the value round-trips but is visually inert.
+    /// Skia honors the lengths verbatim; XNALIKE with MonoGameGumShapes routes through the
+    /// Apos stroke slot.
     /// </remarks>
     public float StrokeDashLength
     {
@@ -1129,6 +1197,9 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             _strokeDashLength = value;
+#if RAYLIB
+            ContainedLineCircle.StrokeDashLength = value;
+#endif
             NotifyPropertyChanged();
         }
     }
@@ -1142,6 +1213,133 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             _strokeGapLength = value;
+#if RAYLIB
+            ContainedLineCircle.StrokeGapLength = value;
+#endif
+            NotifyPropertyChanged();
+        }
+    }
+
+    // #2757 dropshadow on raylib (#12 follow-up). Approximated via concentric semi-transparent
+    // rings on the renderable side — no shader, no render-to-texture. Anisotropic blur
+    // collapses to max(BlurX, BlurY); the per-axis props are kept for API parity with Skia/MG.
+    // Backing fields live on the runtime so values round-trip on Sokol (renderable has no
+    // dropshadow support there); RAYLIB pushes to the renderable.
+
+    bool _hasDropshadow;
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.HasDropshadow"/>
+    public bool HasDropshadow
+    {
+        get => _hasDropshadow;
+        set
+        {
+            _hasDropshadow = value;
+#if RAYLIB
+            ContainedLineCircle.HasDropshadow = value;
+#endif
+            NotifyPropertyChanged();
+        }
+    }
+
+    Color _dropshadowColor = new Color((byte)0, (byte)0, (byte)0, (byte)255);
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.DropshadowColor"/>
+    public Color DropshadowColor
+    {
+        get => _dropshadowColor;
+        set
+        {
+            _dropshadowColor = value;
+#if RAYLIB
+            ContainedLineCircle.DropshadowColor = value;
+#endif
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Alpha channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowAlpha
+    {
+        get => _dropshadowColor.A;
+        set => DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, _dropshadowColor.B, (byte)value);
+    }
+
+    /// <summary>Red channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowRed
+    {
+        get => _dropshadowColor.R;
+        set => DropshadowColor = new Color((byte)value, _dropshadowColor.G, _dropshadowColor.B, _dropshadowColor.A);
+    }
+
+    /// <summary>Green channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowGreen
+    {
+        get => _dropshadowColor.G;
+        set => DropshadowColor = new Color(_dropshadowColor.R, (byte)value, _dropshadowColor.B, _dropshadowColor.A);
+    }
+
+    /// <summary>Blue channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowBlue
+    {
+        get => _dropshadowColor.B;
+        set => DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, (byte)value, _dropshadowColor.A);
+    }
+
+    float _dropshadowOffsetX;
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.DropshadowOffsetX"/>
+    public float DropshadowOffsetX
+    {
+        get => _dropshadowOffsetX;
+        set
+        {
+            _dropshadowOffsetX = value;
+#if RAYLIB
+            ContainedLineCircle.DropshadowOffsetX = value;
+#endif
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _dropshadowOffsetY;
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.DropshadowOffsetY"/>
+    public float DropshadowOffsetY
+    {
+        get => _dropshadowOffsetY;
+        set
+        {
+            _dropshadowOffsetY = value;
+#if RAYLIB
+            ContainedLineCircle.DropshadowOffsetY = value;
+#endif
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _dropshadowBlurX;
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.DropshadowBlurX"/>
+    public float DropshadowBlurX
+    {
+        get => _dropshadowBlurX;
+        set
+        {
+            _dropshadowBlurX = value;
+#if RAYLIB
+            ContainedLineCircle.DropshadowBlurX = value;
+#endif
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _dropshadowBlurY;
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.DropshadowBlurY"/>
+    public float DropshadowBlurY
+    {
+        get => _dropshadowBlurY;
+        set
+        {
+            _dropshadowBlurY = value;
+#if RAYLIB
+            ContainedLineCircle.DropshadowBlurY = value;
+#endif
             NotifyPropertyChanged();
         }
     }
