@@ -63,6 +63,7 @@
 
 	<ItemGroup>
 		<None Include="buildTransitive\Gum.Shapes.MonoGame.props" Pack="true" PackagePath="buildTransitive\" />
+		<None Include="buildTransitive\Gum.Shapes.MonoGame.targets" Pack="true" PackagePath="buildTransitive\" />
 		<None Include="buildTransitive\MonoGame\Content\DesktopGL\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\MonoGame\Content\DesktopGL\" />
 		<None Include="buildTransitive\MonoGame\Content\WindowsDX\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\MonoGame\Content\WindowsDX\" />
 	</ItemGroup>

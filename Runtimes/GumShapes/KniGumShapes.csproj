@@ -73,6 +73,7 @@
 
 	<ItemGroup>
 		<None Include="buildTransitive\Gum.Shapes.KNI.props" Pack="true" PackagePath="buildTransitive\" />
+		<None Include="buildTransitive\Gum.Shapes.KNI.targets" Pack="true" PackagePath="buildTransitive\" />
 		<None Include="buildTransitive\Content\DesktopGL\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\Content\DesktopGL\" />
 		<None Include="buildTransitive\Content\Windows\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\Content\Windows\" />
 		<None Include="buildTransitive\Content\BlazorGL\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\Content\BlazorGL\" />
