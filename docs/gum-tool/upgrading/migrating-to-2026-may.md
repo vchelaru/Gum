@@ -241,6 +241,18 @@ The obsoleted types and their replacements:
 **`ColoredCircleRuntime.Color` is a passthrough — the rendered slot depends on `IsFilled`.** The Apos constructor defaults `IsFilled = true`, so `Color` paints the **fill** in the common case. If your code sets `IsFilled = false` (outline-only circle), migrate `Color` to `StrokeColor` instead. If the circle is both filled and outlined, set `FillColor` and `StrokeColor` explicitly on the new `CircleRuntime`.
 {% endhint %}
 
+{% hint style="warning" %}
+**`CircleRuntime` ships with a default 1 px white outline.** `ColoredCircleRuntime` had no stroke slot, so a freshly-constructed `ColoredCircleRuntime` with only `Color` set rendered as a solid disc with no outline. `CircleRuntime` (#2790 two-slot model) defaults to `StrokeColor = White` so cells that only set `FillColor` still get a visible outline — which means a literal `new CircleRuntime { FillColor = Color.Red }` renders as a red disc surrounded by a thin white ring. If you want the old solid-disc visual, suppress the outline explicitly:
+
+```csharp
+CircleRuntime circle = new();
+circle.FillColor = Color.Red;
+circle.StrokeColor = null; // disable the default white outline
+```
+
+The same caveat applies anywhere you migrate a fill-only `ColoredCircleRuntime` — including the Maui / Skia counter circles in the bundled samples, which add this line for the same reason.
+{% endhint %}
+
 ❌ Old:
 
 ```csharp

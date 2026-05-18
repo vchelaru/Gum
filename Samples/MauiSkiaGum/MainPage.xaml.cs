@@ -91,6 +91,10 @@ namespace MauiSkiaGum
             disc.Width = diameter;
             disc.Height = diameter;
             disc.FillColor = SKColors.Red;
+            // CircleRuntime defaults to a 1 px white outline (#2790 two-slot defaults).
+            // The pre-#2771 ColoredCircleRuntime had no stroke slot, so suppress the
+            // outline to preserve the original solid-disc visual.
+            disc.StrokeColor = null;
 
             var arc = new ArcRuntime();
             container.AddChild(arc);
@@ -135,6 +139,9 @@ namespace MauiSkiaGum
             var circle = new CircleRuntime();
             MainStack.AddChild(circle);
             circle.FillColor = SKColors.Red;
+            // Suppress the default 1 px white outline (see #2771 migration note) to
+            // match the pre-migration ColoredCircleRuntime visual.
+            circle.StrokeColor = null;
             circle.Width = 30;
             circle.Height = 30;
 
