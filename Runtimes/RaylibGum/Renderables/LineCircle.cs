@@ -255,17 +255,17 @@ public class LineCircle : InvisibleRenderable
             if (blur > 0f)
             {
                 // Approximate Skia's SKImageFilter.CreateDropShadow output. Same algorithm
-                // LineRectangle uses — see commit bd6700806 for the full rationale. Short
-                // version: Skia treats user-set BlurX/BlurY as the VISIBLE blur radius (it
-                // divides by 3 internally to get Gaussian sigma; visible falloff = ~3σ =
-                // user-set blur). Render 32 non-overlapping concentric rings extending to
-                // `blur` (NOT 3*blur), with a Gaussian-ish alpha profile exp(-t²*3) sampled
-                // at each band's MIDPOINT (not outer edge — outer-edge sampling under-shades
-                // intermediate distances). The old 8-band raised-cosine outer-edge code made
-                // intermediate distances visibly denser than Skia, which read as "bleeding
-                // too far" even though the absolute extent was correct.
+                // LineRectangle uses. Tuning constants are empirical — comparing side-by-side
+                // against the Skia gallery shows Skia's rendered visible extent is roughly 2×
+                // the user-set blur value (not 1× as the BlurX/3 → "sigma" → "visible = 3σ"
+                // interpretation in RenderableShapeBase.cs lines 778-779 would suggest), so
+                // falloffExtent = blur * 2. The profile coefficient also softened from 3 to
+                // 1.5 — at t = 1 (the visible outer edge) alpha is now exp(-1.5) ≈ 0.22 rather
+                // than exp(-3) ≈ 0.05, giving a more Skia-like density at intermediate
+                // distances. 32 bands, midpoint-sampled, so individual band stairsteps stay
+                // invisible at typical UI sizes.
                 const int blurRings = 32;
-                float falloffExtent = blur;
+                float falloffExtent = blur * 2f;
                 float bandThickness = falloffExtent / blurRings;
                 Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
                 for (int i = 0; i < blurRings; i++)
@@ -274,7 +274,7 @@ public class LineCircle : InvisibleRenderable
                     float outerR = innerR + bandThickness;
                     float bandMidD = (i + 0.5f) * bandThickness;
                     float tCenter = bandMidD / falloffExtent;
-                    float alphaScale = System.MathF.Exp(-tCenter * tCenter * 3f);
+                    float alphaScale = System.MathF.Exp(-tCenter * tCenter * 1.5f);
                     byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
                     if (ringAlpha == 0)
                     {

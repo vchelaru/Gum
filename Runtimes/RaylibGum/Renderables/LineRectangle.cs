@@ -305,29 +305,28 @@ public class LineRectangle : InvisibleRenderable
 
             if (blur > 0f)
             {
-                // Approximate Skia's SKImageFilter.CreateDropShadow output. Skia treats user-set
-                // BlurX/BlurY as the VISIBLE blur radius — internally it divides by 3 to get
-                // Gaussian sigma (RenderableShapeBase.cs lines 778-779: "BlurX / 3.0f"), and the
-                // Gaussian's visible falloff extends ~3σ which works back out to the user-set
-                // blur value. So the visible fade extent in raylib is just `blur`, NOT 3*blur as
-                // an earlier iteration of this code assumed (that version made the dropshadow
-                // bleed ~3× further than Skia's).
+                // Approximate Skia's SKImageFilter.CreateDropShadow output. Tuning constants
+                // are empirical — side-by-side comparison against the Skia gallery shows
+                // Skia's rendered visible extent is roughly 2× the user-set blur value (not
+                // 1× as the BlurX/3 → "sigma" → "visible = 3σ" interpretation in
+                // RenderableShapeBase.cs lines 778-779 would suggest), so falloffExtent =
+                // blur * 2. The profile coefficient also softened from 3 to 1.5 — at t = 1
+                // (the visible outer edge) alpha is now exp(-1.5) ≈ 0.22 rather than
+                // exp(-3) ≈ 0.05, giving a more Skia-like density at intermediate distances.
                 //
                 // Band layout:
-                //   - falloffExtent = blur (where blur = max(BlurX, BlurY)).
+                //   - falloffExtent = blur * 2 (where blur = max(BlurX, BlurY)).
                 //   - blurRings non-overlapping outlines, each bandThickness px thick,
                 //     positioned at increasing distances outside the solid core.
-                //   - Gaussian-ish alpha profile exp(-t²*3) sampled at the band centerline.
-                //     exp(-3) ≈ 0.05 at the outer edge — soft tail without going invisible so
-                //     fast that the rings stairstep visibly.
+                //   - Gaussian-ish alpha profile exp(-t²*1.5) sampled at the band centerline.
                 const int blurRings = 32;
-                float falloffExtent = blur;
+                float falloffExtent = blur * 2f;
                 float bandThickness = falloffExtent / blurRings;
                 for (int i = 0; i < blurRings; i++)
                 {
                     float bandCenter = (i + 0.5f) * bandThickness;
                     float tCenter = bandCenter / falloffExtent;
-                    float alphaScale = MathF.Exp(-tCenter * tCenter * 3f);
+                    float alphaScale = MathF.Exp(-tCenter * tCenter * 1.5f);
                     byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
                     if (ringAlpha == 0)
                     {
