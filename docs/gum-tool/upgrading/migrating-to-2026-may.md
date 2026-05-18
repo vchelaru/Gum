@@ -276,6 +276,11 @@ rounded.FillColor = new Color(0, 128, 255);
 rounded.CornerRadius = 8;
 ```
 
+For runnable examples of the replacement API surface — including `FillColor`-only, `StrokeColor`-only, combined fill + stroke, alpha, and `CornerRadius` cases — see the `MonoGameGumInCode` sample:
+
+* [`Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/CirclesScreen.cs`](../../../Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/CirclesScreen.cs) — `CircleRuntime` with `FillColor`, `StrokeColor`, default (outline-only), and alpha rows.
+* [`Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/RectanglesScreen.cs`](../../../Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/RectanglesScreen.cs) — `RectangleRuntime` with `FillColor`, `StrokeColor`, fill + stroke combined, alpha, and `CornerRadius` rows (uses the two-slot composition model that powers the migration).
+
 An automated code fix is planned via the `Gum.Analyzers` package (`GUM002`) — once published, place the cursor on the warning, trigger the lightbulb (Ctrl+.), and choose the **Change to `RectangleRuntime`** / **Change to `CircleRuntime`** fix. **Fix all in solution** will migrate the entire project at once.
 
 The obsolete types will remain in place until at least the November 2026 release. After that window, they may be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
