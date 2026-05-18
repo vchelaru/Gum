@@ -39,5 +39,10 @@ public class DefaultFilledRectangleRenderable : SolidRectangle, IFilledRectangle
 
     // Stored but not rendered: SolidRectangle is hard-cornered. Set fully for round-tripping.
     public float CornerRadius { get; set; }
+
+    public float? CustomRadiusTopLeft { get; set; }
+    public float? CustomRadiusTopRight { get; set; }
+    public float? CustomRadiusBottomLeft { get; set; }
+    public float? CustomRadiusBottomRight { get; set; }
 }
 #endif

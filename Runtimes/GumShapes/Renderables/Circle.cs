@@ -106,6 +106,14 @@ public class Circle : RenderableShapeBase,
             return;
         }
 
+        // See RoundedRectangle for more info
+        if (antiAliasSize != 0)
+        {
+            center.X += .5f;
+            center.Y += .5f;
+            radius -= .5f;
+        }
+
         if (IsFilled)
         {
             // as outlined here:

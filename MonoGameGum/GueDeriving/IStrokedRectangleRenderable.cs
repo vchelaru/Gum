@@ -30,5 +30,20 @@ public interface IStrokedRectangleRenderable : IRenderable
     /// graceful-degradation contract as <see cref="IFilledRectangleRenderable.CornerRadius"/>.
     /// </summary>
     float CornerRadius { get; set; }
+
+    /// <summary>
+    /// Per-corner radius override. Null falls back to <see cref="CornerRadius"/>. Issue #2818:
+    /// honored by Apos.Shapes' RoundedRectangle; stored but not rendered on the core default.
+    /// </summary>
+    float? CustomRadiusTopLeft { get; set; }
+
+    /// <inheritdoc cref="CustomRadiusTopLeft"/>
+    float? CustomRadiusTopRight { get; set; }
+
+    /// <inheritdoc cref="CustomRadiusTopLeft"/>
+    float? CustomRadiusBottomLeft { get; set; }
+
+    /// <inheritdoc cref="CustomRadiusTopLeft"/>
+    float? CustomRadiusBottomRight { get; set; }
 }
 #endif

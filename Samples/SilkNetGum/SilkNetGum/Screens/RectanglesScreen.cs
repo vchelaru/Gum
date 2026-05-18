@@ -43,10 +43,11 @@ internal class RectanglesScreen : GraphicalUiElement
 
         left.Children.Add(BuildSection("Sizes (40, 60, 90, 130 wide) — default outline", BuildSizesRow()));
         left.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
-        left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
+        left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, Fill+Stroke, default", BuildModeRow()));
         left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
         left.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
         left.Children.Add(BuildSection("CornerRadius (0, 6, 16, 28) — exercises RoundedRectangleRuntime (#2814)", BuildCornerRadiusRow()));
+        left.Children.Add(BuildSection("Per-corner radii on RectangleRuntime (TL=20, TR=2, BR=20, BL=2 — #2818)", BuildPerCornerRow()));
         left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
 
         right.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
@@ -128,8 +129,15 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime stroked = new();
         stroked.Width = 80; stroked.Height = 50;
         stroked.StrokeColor = SKColors.Cyan;
-        stroked.StrokeWidth = 3;
+        stroked.StrokeWidth = 2;
         row.Children.Add(stroked);
+
+        RectangleRuntime both = new();
+        both.Width = 80; both.Height = 50;
+        both.FillColor = new SKColor(40, 40, 80);
+        both.StrokeColor = SKColors.Yellow;
+        both.StrokeWidth = 2;
+        row.Children.Add(both);
 
         RectangleRuntime defaultRect = new();
         defaultRect.Width = 80; defaultRect.Height = 50;
@@ -180,6 +188,25 @@ internal class RectanglesScreen : GraphicalUiElement
             rect.CornerRadius = cornerRadius;
             row.Children.Add(rect);
         }
+        return row;
+    }
+
+    // Issue #2818 — RectangleRuntime now exposes per-corner radii on Skia (the contained type
+    // was swapped from LineRectangle to RoundedRectangle to make this possible). Pushed to
+    // both fill and stroke slots in PreRender so the outline matches the fill.
+    static ContainerRuntime BuildPerCornerRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        RectangleRuntime rect = new();
+        rect.Width = 120; rect.Height = 70;
+        rect.FillColor = new SKColor(40, 40, 80);
+        rect.StrokeColor = SKColors.Orange;
+        rect.StrokeWidth = 2;
+        rect.CustomRadiusTopLeft = 20;
+        rect.CustomRadiusTopRight = 2;
+        rect.CustomRadiusBottomRight = 20;
+        rect.CustomRadiusBottomLeft = 2;
+        row.Children.Add(rect);
         return row;
     }
 

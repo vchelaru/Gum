@@ -34,6 +34,7 @@ internal class RectanglesScreen : FrameworkElement
         root.AddChild(BuildSection("Alpha on FillColor (255, 192, 128, 64)", BuildAlphaRow()));
         root.AddChild(BuildSection("FillColor / StrokeColor / Fill+Stroke / default", BuildModeRow()));
         root.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px on a filled card)", BuildStrokeWidthRow()));
+        root.AddChild(BuildSection("Antialiasing (true vs false — visual no-op without MonoGameGumShapes)", BuildAntialiasingRow()));
         root.AddChild(BuildSection("Alignment inside a 220x100 container (Top / Center / Bottom)", BuildAlignmentRow()));
     }
 
@@ -125,6 +126,27 @@ internal class RectanglesScreen : FrameworkElement
             rect.FillColor = new Color(30, 30, 50);
             rect.StrokeColor = Color.LightGreen;
             rect.StrokeWidth = strokeWidth;
+            row.AddChild(rect);
+        }
+        return row;
+    }
+
+    static ContainerRuntime BuildAntialiasingRow()
+    {
+        // Issue #2818: IsAntialiased flips both fill and stroke slots when MonoGameGumShapes
+        // is installed. Core SolidRectangle / LineRectangle defaults don't implement
+        // IAntialiasedRenderable, so this row reads identical here — load MonoGameGumShapes
+        // (see MonoGameGumShapesGallery) for the visible smooth-vs-crisp comparison.
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (bool aa in new[] { true, false })
+        {
+            RectangleRuntime rect = new();
+            rect.Width = 80;
+            rect.Height = 50;
+            rect.FillColor = new Color(30, 30, 50);
+            rect.StrokeColor = Color.LightGreen;
+            rect.StrokeWidth = 2;
+            rect.IsAntialiased = aa;
             row.AddChild(rect);
         }
         return row;

@@ -42,5 +42,10 @@ public class DefaultStrokedRectangleRenderable : LineRectangle, IStrokedRectangl
 
     // Stored but not rendered: LineRectangle is hard-cornered.
     public float CornerRadius { get; set; }
+
+    public float? CustomRadiusTopLeft { get; set; }
+    public float? CustomRadiusTopRight { get; set; }
+    public float? CustomRadiusBottomLeft { get; set; }
+    public float? CustomRadiusBottomRight { get; set; }
 }
 #endif
