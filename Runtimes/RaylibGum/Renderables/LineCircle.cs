@@ -252,45 +252,33 @@ public class LineCircle : InvisibleRenderable
 
             if (blur > 0f)
             {
-                // Concentric filled circles drawn outside-in, NOT thin rings. Earlier
-                // iterations used DrawRing per band, which broke down when bandThickness
-                // was sub-pixel (typical for the gallery's blur=4..6 → bandThickness <
-                // 0.2 px): adjacent rings shared rasterization boundaries that drew the
-                // same pixel rows twice (visible alpha accumulation stripes) or skipped
-                // pixels (gaps), and the outermost ring with residual non-zero alpha
-                // rendered as a visible halo at the boundary.
+                // Skia's Gaussian convolution of the shape silhouette makes the silhouette
+                // BOUNDARY itself half-opaque (alpha 0.5), then fades both ways — inward to
+                // alpha 1 deep inside, outward to alpha 0 far outside. The visible halo
+                // around the offset shadow has a SOFT inner edge as a result. Previous
+                // approaches in this file drew a hard-alpha core at radius R and only faded
+                // outward, which made the visible halo's inner edge sharp and concentrated
+                // the gradient in a thin outer band — read as "gradient stops at the shape"
+                // when Skia's gradient extends through the boundary.
                 //
-                // Filled-circles approach: draw N filled circles from largest (j=N-1) to
-                // smallest (j=0), each at the appropriate alpha so that source-over
-                // composite of the bands that cover a pixel produces the target gradient
-                // alpha at that pixel. Solving the source-over blend recursion:
-                //   target alpha at band j = α_j = sqrt(1 - (j+1)/N)   [outer-edge sample]
-                //   composite at j = 1 - Π_{i≥j} (1 - β_i)
-                // gives β_j = 1 - P_j / P_{j+1} where P_j = 1 - α_j.
-                // P_{N-1} = 1 (no circle outside), so β_{N-1} = 0 (skip — outermost has
-                // target alpha 0 anyway, which kills the halo artifact for free). Inner
-                // circles overdraw outer ones with the right per-circle alpha so the
-                // visible composite tracks the gradient smoothly.
+                // Fix: bands span [R - blur, R + blur] (total width 2*blur), so the band at
+                // d = R has the linear profile midpoint alpha 0.5. Inner core covers only
+                // d < R - blur so deep interior stays fully opaque. Outer boundary stays at
+                // R + blur (matches user-confirmed correct edge size).
                 //
-                // Solid core (full-alpha shadow silhouette at Radius) draws LAST so it
-                // sits on top of the band composite inside the shape's silhouette.
+                // Concentric filled circles drawn outside-in, per-circle alpha derived by
+                // inverting source-over blend so composite at each band lands on the target
+                // linear profile (1 - t) sampled at the band's outer edge.
                 const int blurRings = 32;
-                // Tuning constants empirical from side-by-side gallery comparisons:
-                //   falloffExtent = blur * 1.0 — gradient region is wide enough to perceive
-                //   as a fade at typical viewing scales. Earlier attempts at 0.25-0.5 crammed
-                //   the whole fade into 1-2 px which the eye couldn't resolve as a gradient.
-                //   profile = (1 - t)^3 — concentrates density in the inner third (so visible
-                //   "weight" of the shadow stays close to the shape) and falls off fast
-                //   through the outer two thirds. Reaches 0 at t = 1.
-                float falloffExtent = blur * 1.0f;
-                float bandThickness = falloffExtent / blurRings;
+                float bandSpan = blur;
+                float totalExtent = 2f * bandSpan;
+                float bandThickness = totalExtent / blurRings;
                 Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
                 float prevP = 1f;
                 for (int j = blurRings - 1; j >= 0; j--)
                 {
                     float tOuter = (j + 1f) / blurRings;
-                    float oneMinusT = System.MathF.Max(0f, 1f - tOuter);
-                    float targetAlpha = oneMinusT * oneMinusT * oneMinusT;
+                    float targetAlpha = System.MathF.Max(0f, 1f - tOuter);
                     float currP = 1f - targetAlpha;
                     float beta = prevP > 0f ? 1f - currP / prevP : 0f;
                     prevP = currP;
@@ -301,15 +289,27 @@ public class LineCircle : InvisibleRenderable
                     }
                     Color circleColor = new Color(DropshadowColor.R, DropshadowColor.G,
                         DropshadowColor.B, circleAlpha);
-                    float r = Radius + (j + 1) * bandThickness;
-                    DrawCircleV(shadowCenter, r, circleColor);
+                    float r = Radius - bandSpan + (j + 1) * bandThickness;
+                    if (r > 0f)
+                    {
+                        DrawCircleV(shadowCenter, r, circleColor);
+                    }
+                }
+
+                // Solid inner core for pixels deeper than the innermost band so they read
+                // as full-alpha shadow. Outermost band already fades to 0 so no outer core
+                // is needed.
+                float innerCoreR = Radius - bandSpan;
+                if (innerCoreR > 0f)
+                {
+                    DrawCircle((int)shadowCx, (int)shadowCy, innerCoreR, DropshadowColor);
                 }
             }
-
-            // Solid core LAST — its full-alpha shadow color sits on top of the band
-            // composite inside the shape's silhouette. Drawn unconditionally so the
-            // no-blur case (blur=0, "hard offset" cell) still gets a hard shadow.
-            DrawCircle((int)shadowCx, (int)shadowCy, Radius, DropshadowColor);
+            else
+            {
+                // blur = 0: hard offset silhouette, no fade.
+                DrawCircle((int)shadowCx, (int)shadowCy, Radius, DropshadowColor);
+            }
         }
 
         // Fill pass — runs when FillColor is set, or when IsFilled is true with no explicit

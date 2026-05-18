@@ -291,38 +291,26 @@ public class LineRectangle : InvisibleRenderable
 
             if (blur > 0f)
             {
-                // Concentric inflated FILLED rectangles drawn outside-in, NOT thin outlines.
-                // See LineCircle.Render's dropshadow comment for the full rationale — short
-                // version: the old DrawRectangleLinesEx approach with N sub-pixel-thick rings
-                // produced visible halo + striping artifacts because adjacent rings shared
-                // rasterization boundaries. Filled rectangles drawn outside-in compose
-                // cleanly with source-over blend; per-rect alpha is derived from inverting
-                // the composite equation:
-                //   target alpha at band j = α_j = sqrt(1 - (j+1)/N)   [outer-edge sample]
-                //   composite at j = 1 - Π_{i≥j} (1 - β_i)
-                //   => β_j = 1 - P_j / P_{j+1}, where P_j = 1 - α_j, P_N = 1.
-                // Outermost rectangle (j = N-1) has β = 0 so the outer halo artifact is
-                // suppressed for free; inner rectangles overdraw outer ones with the
-                // appropriate per-rect alpha.
+                // Bands span both sides of the silhouette boundary: from -blur to +blur
+                // measured perpendicular to each edge. The band at the exact silhouette
+                // boundary has linear profile midpoint alpha 0.5, matching how Skia's
+                // Gaussian convolution makes the shape silhouette boundary half-opaque.
+                // See LineCircle.Render's dropshadow comment for the full rationale —
+                // previous outer-only fade approach left the halo's inner edge sharp and
+                // the gradient compressed into a thin band; extending bands inward gives
+                // the soft inner edge Skia produces.
                 //
-                // Solid core (full-alpha shadow silhouette at w x h) draws LAST so it sits
-                // on top of the band composite inside the shape's silhouette.
+                // Inner core covers pixels deeper than the innermost band so they read as
+                // full-alpha shadow.
                 const int blurRings = 32;
-                // Tuning constants empirical from side-by-side gallery comparisons:
-                //   falloffExtent = blur * 1.0 — gradient region is wide enough to perceive
-                //   as a fade at typical viewing scales. Earlier attempts at 0.25-0.5 crammed
-                //   the whole fade into 1-2 px which the eye couldn't resolve as a gradient.
-                //   profile = (1 - t)^3 — concentrates density in the inner third (so visible
-                //   "weight" of the shadow stays close to the shape) and falls off fast
-                //   through the outer two thirds. Reaches 0 at t = 1.
-                float falloffExtent = blur * 1.0f;
-                float bandThickness = falloffExtent / blurRings;
+                float bandSpan = blur;
+                float totalExtent = 2f * bandSpan;
+                float bandThickness = totalExtent / blurRings;
                 float prevP = 1f;
                 for (int j = blurRings - 1; j >= 0; j--)
                 {
                     float tOuter = (j + 1f) / blurRings;
-                    float oneMinusT = MathF.Max(0f, 1f - tOuter);
-                    float targetAlpha = oneMinusT * oneMinusT * oneMinusT;
+                    float targetAlpha = MathF.Max(0f, 1f - tOuter);
                     float currP = 1f - targetAlpha;
                     float beta = prevP > 0f ? 1f - currP / prevP : 0f;
                     prevP = currP;
@@ -333,42 +321,76 @@ public class LineRectangle : InvisibleRenderable
                     }
                     Color bandColor = new Color(DropshadowColor.R, DropshadowColor.G,
                         DropshadowColor.B, bandAlpha);
-                    float inflate = (j + 1) * bandThickness;
-                    Rectangle outerRect = new Rectangle(
+                    float inflate = -bandSpan + (j + 1) * bandThickness;
+                    float bandW = w + 2f * inflate;
+                    float bandH = h + 2f * inflate;
+                    if (bandW <= 0f || bandH <= 0f)
+                    {
+                        continue;
+                    }
+                    Rectangle bandRect = new Rectangle(
                         shadowX - inflate,
                         shadowY - inflate,
-                        w + 2f * inflate,
-                        h + 2f * inflate);
+                        bandW,
+                        bandH);
                     if (useRounded && !rotated)
                     {
-                        // Outer corner radius grows by `inflate` so the rounded silhouette
-                        // tracks the shape outward — pixel-space outer corner radius stays
-                        // (CornerRadius + inflate) instead of shrinking as the rect inflates.
-                        float bandMinDim = MathF.Min(outerRect.Width, outerRect.Height);
+                        // Corner radius tracks the inflate: at the silhouette boundary
+                        // (inflate = 0) it's CornerRadius, expands outward, shrinks inward
+                        // clamped at 0.
+                        float bandCornerR = MathF.Max(0f, CornerRadius + inflate);
+                        float bandMinDim = MathF.Min(bandRect.Width, bandRect.Height);
                         float bandRoundness = bandMinDim > 0f
-                            ? MathF.Min(1f, (CornerRadius + inflate) * 2f / bandMinDim)
+                            ? MathF.Min(1f, bandCornerR * 2f / bandMinDim)
                             : 0f;
-                        DrawRectangleRounded(outerRect, bandRoundness, roundedSegments, bandColor);
+                        DrawRectangleRounded(bandRect, bandRoundness, roundedSegments, bandColor);
                     }
                     else
                     {
-                        DrawRectangleV(new Vector2(outerRect.X, outerRect.Y),
-                            new Vector2(outerRect.Width, outerRect.Height), bandColor);
+                        DrawRectangleV(new Vector2(bandRect.X, bandRect.Y),
+                            new Vector2(bandRect.Width, bandRect.Height), bandColor);
+                    }
+                }
+
+                // Solid inner core for pixels deeper than the innermost band so they read
+                // as full-alpha shadow.
+                float innerCoreW = w - 2f * bandSpan;
+                float innerCoreH = h - 2f * bandSpan;
+                if (innerCoreW > 0f && innerCoreH > 0f)
+                {
+                    Rectangle innerCore = new Rectangle(
+                        shadowX + bandSpan,
+                        shadowY + bandSpan,
+                        innerCoreW,
+                        innerCoreH);
+                    if (useRounded && !rotated)
+                    {
+                        float innerCornerR = MathF.Max(0f, CornerRadius - bandSpan);
+                        float innerMinDim = MathF.Min(innerCoreW, innerCoreH);
+                        float innerRoundness = innerMinDim > 0f
+                            ? MathF.Min(1f, innerCornerR * 2f / innerMinDim)
+                            : 0f;
+                        DrawRectangleRounded(innerCore, innerRoundness, roundedSegments, DropshadowColor);
+                    }
+                    else
+                    {
+                        DrawRectangleV(new Vector2(innerCore.X, innerCore.Y),
+                            new Vector2(innerCoreW, innerCoreH), DropshadowColor);
                     }
                 }
             }
-
-            // Solid core LAST — full-alpha shadow color, rounded if the shape is, axis-
-            // aligned only (raylib's rounded primitives have no rotation parameter, matching
-            // the existing shadow's "no rotation" limitation).
-            if (useRounded && !rotated)
-            {
-                Rectangle shadowRect = new Rectangle(shadowX, shadowY, w, h);
-                DrawRectangleRounded(shadowRect, roundness, roundedSegments, DropshadowColor);
-            }
             else
             {
-                DrawRectangleV(new Vector2(shadowX, shadowY), new Vector2(w, h), DropshadowColor);
+                // blur = 0: hard offset silhouette, no fade.
+                if (useRounded && !rotated)
+                {
+                    Rectangle shadowRect = new Rectangle(shadowX, shadowY, w, h);
+                    DrawRectangleRounded(shadowRect, roundness, roundedSegments, DropshadowColor);
+                }
+                else
+                {
+                    DrawRectangleV(new Vector2(shadowX, shadowY), new Vector2(w, h), DropshadowColor);
+                }
             }
         }
 
