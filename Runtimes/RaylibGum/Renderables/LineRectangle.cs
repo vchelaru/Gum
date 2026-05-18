@@ -308,7 +308,11 @@ public class LineRectangle : InvisibleRenderable
                 // Solid core (full-alpha shadow silhouette at w x h) draws LAST so it sits
                 // on top of the band composite inside the shape's silhouette.
                 const int blurRings = 32;
-                float falloffExtent = blur * 0.5f;
+                // Tuned smaller (blur * 0.35) than the earlier outline-based code's blur * 0.5
+                // because the concentric-filled-rectangles approach renders the bands at their
+                // intended alpha instead of partially obscuring them with rasterization
+                // artifacts. Same user-set BlurX maps to the same visible extent on screen.
+                float falloffExtent = blur * 0.35f;
                 float bandThickness = falloffExtent / blurRings;
                 float prevP = 1f;
                 for (int j = blurRings - 1; j >= 0; j--)
