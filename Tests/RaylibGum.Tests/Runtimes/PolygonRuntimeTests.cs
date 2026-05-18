@@ -54,6 +54,10 @@ public class PolygonRuntimeTests : BaseTestClass
         sut.Green.ShouldBe(32);
     }
 
+    // IsDotted was obsoleted in #2757 in favor of StrokeDashLength + StrokeGapLength for
+    // cross-backend naming parity. The legacy property is preserved on MG/Raylib (these
+    // tests pin that it still works); the new properties are tested below.
+#pragma warning disable CS0618 // Type or member is obsolete
     [Fact]
     public void IsDotted_ShouldBeFalse_ByDefault()
     {
@@ -67,6 +71,27 @@ public class PolygonRuntimeTests : BaseTestClass
         PolygonRuntime sut = new();
         sut.IsDotted = true;
         sut.IsDotted.ShouldBeTrue();
+    }
+#pragma warning restore CS0618
+
+    // StrokeDashLength + StrokeGapLength on MG/Raylib drive the contained LinePolygon's
+    // binary IsDotted toggle — both lengths must be positive for dashing to engage, matching
+    // Skia's RenderableShapeBase guard. These tests pin that contract.
+    [Fact]
+    public void StrokeDashLength_ShouldEngageContainedIsDotted_WhenPairedWithGap()
+    {
+        PolygonRuntime sut = new();
+        sut.StrokeDashLength = 4;
+        sut.StrokeGapLength = 2;
+        ((Gum.Renderables.LinePolygon)sut.RenderableComponent).IsDotted.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void StrokeDashLength_ShouldNotEngageContainedIsDotted_WhenGapIsZero()
+    {
+        PolygonRuntime sut = new();
+        sut.StrokeDashLength = 4;
+        ((Gum.Renderables.LinePolygon)sut.RenderableComponent).IsDotted.ShouldBeFalse();
     }
 
     [Fact]
@@ -103,6 +128,9 @@ public class PolygonRuntimeTests : BaseTestClass
         sut.IsPointInside(16, -16).ShouldBeTrue();
     }
 
+    // LineWidth was obsoleted in #2757 in favor of StrokeWidth + StrokeWidthUnits, but the
+    // legacy property is preserved on MG/Raylib for back-compat.
+#pragma warning disable CS0618 // Type or member is obsolete
     [Fact]
     public void LineWidth_ShouldBe1_ByDefault()
     {
@@ -116,6 +144,22 @@ public class PolygonRuntimeTests : BaseTestClass
         PolygonRuntime sut = new();
         sut.LineWidth = 3f;
         sut.LineWidth.ShouldBe(3f);
+    }
+#pragma warning restore CS0618
+
+    [Fact]
+    public void StrokeWidth_ShouldBe1_ByDefault()
+    {
+        PolygonRuntime sut = new();
+        sut.StrokeWidth.ShouldBe(1);
+    }
+
+    [Fact]
+    public void StrokeWidth_ShouldRoundTrip()
+    {
+        PolygonRuntime sut = new();
+        sut.StrokeWidth = 4f;
+        sut.StrokeWidth.ShouldBe(4f);
     }
 
     [Fact]

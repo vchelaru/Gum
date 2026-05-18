@@ -8,11 +8,13 @@ using Gum.Converters;
 #endif
 
 #if RAYLIB
+using Gum.DataTypes;
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
 using ColorExtensions = RaylibGum.Helpers.ColorExtensions;
 using ContainedLineRectangle = Gum.Renderables.LineRectangle;
 #elif SOKOL
+using Gum.DataTypes;
 using Gum.Renderables;
 using Color = SokolGum.Color;
 using ContainedLineRectangle = Gum.Renderables.LineRectangle;
@@ -82,7 +84,7 @@ public class RectangleRuntime : GraphicalUiElement
     /// stroke renderable's stroke width directly, bypassing <see cref="StrokeWidthUnits"/>.
     /// </summary>
 #if XNALIKE
-    [Obsolete("Use StrokeWidth instead. Bypasses unit handling — preserves pre-#2768 semantics.")]
+    [Obsolete("Renamed to StrokeWidth in #2768 for cross-backend naming parity. Functional behavior is unchanged; switch to StrokeWidth to also pick up StrokeWidthUnits scaling.")]
     public float LineWidth
     {
        get => _stroke.StrokeWidth;
@@ -94,6 +96,7 @@ public class RectangleRuntime : GraphicalUiElement
     }
 #elif !SKIA
     // SKIA: SkiaShapeRuntime.StrokeWidth supersedes; #2814.
+    [Obsolete("Renamed to StrokeWidth in #2757 for cross-backend naming parity. Functional behavior is unchanged; switch to StrokeWidth to also pick up StrokeWidthUnits scaling.")]
     public float LineWidth
     {
        get => ContainedLineRectangle.LinePixelWidth;
@@ -106,13 +109,14 @@ public class RectangleRuntime : GraphicalUiElement
 #endif
 
     /// <summary>
-    /// Obsolete: Apos.Shapes exposes dashed strokes via <c>StrokeDashLength</c> /
-    /// <c>StrokeGapLength</c>. <c>IsDotted</c> is preserved on the core default
-    /// (<see cref="LineRectangle.IsDotted"/>) for back-compat — when the stroke slot is not a
-    /// <c>LineRectangle</c> the setter is a no-op.
+    /// Obsolete: superseded by the <see cref="StrokeDashLength"/> / <see cref="StrokeGapLength"/>
+    /// pair for cross-backend naming parity. On MG/Raylib the underlying <c>LineRectangle</c>
+    /// only has a binary dotted texture; on XNALIKE Apos.Shapes adds true per-segment dashes
+    /// through the stroke slot, on Skia <c>SKPathEffect.CreateDash</c> consumes the lengths
+    /// verbatim.
     /// </summary>
 #if XNALIKE
-    [Obsolete("Use AposShapeRuntime.StrokeDashLength + StrokeGapLength on the optional MonoGameGumShapes package for cross-backend dashed strokes.")]
+    [Obsolete("Renamed to StrokeDashLength + StrokeGapLength in #2768 for cross-backend parity. With the optional MonoGameGumShapes package the lengths drive true per-segment dashes; without it the core LineRectangle stroke shows the binary dotted texture.")]
     public bool IsDotted
     {
         get => _stroke is LineRectangle lr && lr.IsDotted;
@@ -126,6 +130,7 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 #elif !SKIA
+    [Obsolete("Renamed to StrokeDashLength + StrokeGapLength in #2757 for cross-backend parity. On MG/Raylib the visual is a fixed-pattern dotted texture (LineRectangle has no per-segment dash control); set both new properties to non-zero values to engage the same dotted pattern.")]
     public bool IsDotted
     {
         get => ContainedLineRectangle.IsDotted;
@@ -134,6 +139,89 @@ public class RectangleRuntime : GraphicalUiElement
             ContainedLineRectangle.IsDotted = value;
             NotifyPropertyChanged();
         }
+    }
+#endif
+
+#if RAYLIB || SOKOL
+    float _strokeWidth = 1;
+
+    /// <inheritdoc cref="CircleRuntime.StrokeWidth"/>
+    public float StrokeWidth
+    {
+        get => _strokeWidth;
+        set
+        {
+            _strokeWidth = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    DimensionUnitType _strokeWidthUnits;
+
+    /// <inheritdoc cref="CircleRuntime.StrokeWidthUnits"/>
+    public DimensionUnitType StrokeWidthUnits
+    {
+        get => _strokeWidthUnits;
+        set
+        {
+            _strokeWidthUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _strokeDashLength;
+
+    /// <inheritdoc cref="PolygonRuntime.StrokeDashLength"/>
+    public float StrokeDashLength
+    {
+        get => _strokeDashLength;
+        set
+        {
+            _strokeDashLength = value;
+            ApplyDashState();
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _strokeGapLength;
+
+    /// <inheritdoc cref="PolygonRuntime.StrokeGapLength"/>
+    public float StrokeGapLength
+    {
+        get => _strokeGapLength;
+        set
+        {
+            _strokeGapLength = value;
+            ApplyDashState();
+            NotifyPropertyChanged();
+        }
+    }
+
+    // Mirrors PolygonRuntime.ApplyDashState (#2757): both lengths must be positive to engage
+    // the LineRectangle's binary dotted texture, matching Skia's CreateDash guard.
+    void ApplyDashState()
+    {
+        ContainedLineRectangle.IsDotted = _strokeDashLength > 0 && _strokeGapLength > 0;
+    }
+
+    /// <summary>
+    /// Pushes the stroke width to the contained <c>LineRectangle</c> each frame, resolving
+    /// <see cref="StrokeWidthUnits"/> against the current camera zoom so a ScreenPixel stroke
+    /// holds its on-screen pixel width regardless of zoom. Mirrors the XNALIKE
+    /// <see cref="PreRender"/> below and the Polygon/Circle equivalents (#2757).
+    /// </summary>
+    public override void PreRender()
+    {
+        float strokeWidth = _strokeWidth;
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+        {
+            var camera = this.EffectiveManagers?.Renderer?.Camera;
+            if (camera != null)
+            {
+                strokeWidth /= camera.Zoom;
+            }
+        }
+        ContainedLineRectangle.LinePixelWidth = strokeWidth;
     }
 #endif
 

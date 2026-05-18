@@ -45,4 +45,11 @@ public static class ColorExtensions
     {
         return new Color(color.R, color.G, value, color.A);
     }
+
+    // Identity overloads of the container/user color round-trip helpers added in #2757 for
+    // shared runtime files (e.g. PolygonRuntime). On Raylib the contained renderable's color
+    // type matches the user-facing Color, so no conversion is needed — but exposing the same
+    // method names lets the unified runtime call them without #if-gating.
+    public static Color ToUserColor(this Color color) => color;
+    public static Color ToContainerColor(this Color color) => color;
 }
