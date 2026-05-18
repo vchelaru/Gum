@@ -74,24 +74,64 @@ public class PolygonRuntimeTests : BaseTestClass
     }
 #pragma warning restore CS0618
 
-    // StrokeDashLength + StrokeGapLength on MG/Raylib drive the contained LinePolygon's
-    // binary IsDotted toggle — both lengths must be positive for dashing to engage, matching
-    // Skia's RenderableShapeBase guard. These tests pin that contract.
+    // StrokeDashLength + StrokeGapLength on raylib push the actual lengths through to the
+    // contained LinePolygon for per-segment dashed rendering. Both must be positive for
+    // dashing to engage, matching Skia's SKPathEffect.CreateDash guard in
+    // RenderableShapeBase.
     [Fact]
-    public void StrokeDashLength_ShouldEngageContainedIsDotted_WhenPairedWithGap()
+    public void StrokeDashLength_ShouldPushLengthsThroughToContained_WhenPairedWithGap()
     {
         PolygonRuntime sut = new();
         sut.StrokeDashLength = 4;
         sut.StrokeGapLength = 2;
-        ((Gum.Renderables.LinePolygon)sut.RenderableComponent).IsDotted.ShouldBeTrue();
+        Gum.Renderables.LinePolygon inner = (Gum.Renderables.LinePolygon)sut.RenderableComponent;
+        inner.StrokeDashLength.ShouldBe(4f);
+        inner.StrokeGapLength.ShouldBe(2f);
     }
 
     [Fact]
-    public void StrokeDashLength_ShouldNotEngageContainedIsDotted_WhenGapIsZero()
+    public void StrokeDashLength_ShouldNotPushNonZeroLengthAlone_WhenGapIsZero()
     {
         PolygonRuntime sut = new();
         sut.StrokeDashLength = 4;
-        ((Gum.Renderables.LinePolygon)sut.RenderableComponent).IsDotted.ShouldBeFalse();
+        Gum.Renderables.LinePolygon inner = (Gum.Renderables.LinePolygon)sut.RenderableComponent;
+        // Both must be > 0 to engage — gap is still 0, so the renderable's dash length stays
+        // un-set (renderable then falls through to its solid-stroke path).
+        inner.StrokeGapLength.ShouldBe(0f);
+    }
+
+    [Fact]
+    public void StrokeColor_RoundTrips_AndPushesToContainedRenderable()
+    {
+        // #2757 follow-up — raylib branch surfaces StrokeColor for cross-backend naming parity
+        // with the SilkNet/Skia PolygonsScreen sample (which sets polygon.StrokeColor = ...).
+        PolygonRuntime sut = new();
+        Color expected = new Color(40, 50, 60, 255);
+
+        sut.StrokeColor = expected;
+
+        sut.StrokeColor.ShouldNotBeNull();
+        Gum.Renderables.LinePolygon inner = (Gum.Renderables.LinePolygon)sut.RenderableComponent;
+        inner.StrokeColor.ShouldNotBeNull();
+        inner.StrokeColor!.Value.G.ShouldBe((byte)50);
+    }
+
+    [Fact]
+    public void IsClosed_DefaultsToTrue_MatchingSkia()
+    {
+        // Skia's Polygon defaults IsClosed = true; raylib matches so the cross-backend
+        // PolygonsScreen sample reads identically without per-cell wiring on closed cells.
+        PolygonRuntime sut = new();
+        sut.IsClosed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsClosed_RoundTrips_AndPushesToContainedRenderable()
+    {
+        PolygonRuntime sut = new();
+        sut.IsClosed = false;
+        sut.IsClosed.ShouldBeFalse();
+        ((Gum.Renderables.LinePolygon)sut.RenderableComponent).IsClosed.ShouldBeFalse();
     }
 
     [Fact]
@@ -160,6 +200,19 @@ public class PolygonRuntimeTests : BaseTestClass
         PolygonRuntime sut = new();
         sut.StrokeWidth = 4f;
         sut.StrokeWidth.ShouldBe(4f);
+    }
+
+    [Fact]
+    public void PreRender_ShouldPushStrokeWidthToContainedRenderable()
+    {
+        // Canonical resolve path for StrokeWidth is PreRender (handles StrokeWidthUnits
+        // ScreenPixel ↔ camera zoom). The setter intentionally does NOT push — raylib's
+        // Renderer.Draw walks the tree calling PreRender before render so this lands in time
+        // for the first frame.
+        PolygonRuntime sut = new();
+        sut.StrokeWidth = 5f;
+        sut.PreRender();
+        ((Gum.Renderables.LinePolygon)sut.RenderableComponent).LinePixelWidth.ShouldBe(5f);
     }
 
     [Fact]

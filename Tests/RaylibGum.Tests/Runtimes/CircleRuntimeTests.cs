@@ -125,13 +125,19 @@ public class CircleRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void StrokeWidth_RoundTrips_AndPushesToContainedRenderable()
+    public void PreRender_ShouldPushStrokeWidthToContainedRenderable()
     {
+        // Canonical resolve path for StrokeWidth is PreRender (handles StrokeWidthUnits
+        // ScreenPixel ↔ camera zoom). The setter intentionally does NOT push immediately —
+        // raylib's Renderer.Draw walks the tree calling PreRender before render so this lands
+        // in time for the first frame. Symmetric across CircleRuntime, RectangleRuntime, and
+        // PolygonRuntime.
         CircleRuntime sut = new();
 
         sut.StrokeWidth = 5f;
-
         sut.StrokeWidth.ShouldBe(5f);
+
+        sut.PreRender();
         ((LineCircle)sut.RenderableComponent!).StrokeWidth.ShouldBe(5f);
     }
 

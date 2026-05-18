@@ -112,6 +112,13 @@ public class Renderer : IRenderer
             {
                 //mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
             }
+            // Walk the visual tree calling PreRender on every visible IRenderable before
+            // drawing the layer. Mirrors SkiaGum's Renderer.PreRender pattern. This is the
+            // canonical hook for runtimes that need camera/zoom-aware resolution of
+            // properties (e.g. StrokeWidthUnits = ScreenPixel on CircleRuntime /
+            // RectangleRuntime / PolygonRuntime — see #2757). Without it those runtimes had
+            // to push StrokeWidth immediately in the setter as a workaround.
+            PreRender(layer.Renderables);
             RenderLayer(managers, layer, prerender: false);
         }
 
@@ -123,6 +130,27 @@ public class Renderer : IRenderer
         layer.SortRenderables();
 
         Render(layer.Renderables, managers, layer);
+    }
+
+    // Recursive PreRender walk — mirrors SkiaGum.Renderer.PreRender. Hidden subtrees are
+    // skipped (no need to resolve unit-aware properties for things that won't draw). Both the
+    // layer's ReadOnlyCollection and a renderable's ObservableCollection<IRenderableIpso>
+    // implement IList<IRenderableIpso>, so one overload covers both.
+    private void PreRender(System.Collections.Generic.IList<IRenderableIpso> renderables)
+    {
+        for (int i = 0; i < renderables.Count; i++)
+        {
+            IRenderableIpso renderable = renderables[i];
+            if (!renderable.Visible)
+            {
+                continue;
+            }
+            renderable.PreRender();
+            if (renderable.Children != null)
+            {
+                PreRender(renderable.Children);
+            }
+        }
     }
 
     private void Render(ReadOnlyCollection<IRenderableIpso> renderables, ISystemManagers managers, Layer layer)

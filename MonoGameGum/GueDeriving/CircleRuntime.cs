@@ -1163,9 +1163,6 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             _strokeWidth = value;
-#if RAYLIB
-            ContainedLineCircle.StrokeWidth = value;
-#endif
             NotifyPropertyChanged();
         }
     }
@@ -1221,6 +1218,30 @@ public class CircleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
+
+#if RAYLIB
+    /// <summary>
+    /// Pushes the stroke width to the contained <see cref="Gum.Renderables.LineCircle"/> each
+    /// frame, resolving <see cref="StrokeWidthUnits"/> against the current camera zoom so a
+    /// ScreenPixel stroke holds its on-screen pixel width regardless of zoom. Mirrors the
+    /// XNALIKE <see cref="PreRender"/> above and the Rectangle/Polygon equivalents (#2757).
+    /// raylib's <c>Renderer.Draw</c> walks the visual tree calling this before render so the
+    /// resolved width lands in time for the first frame.
+    /// </summary>
+    public override void PreRender()
+    {
+        float strokeWidth = _strokeWidth;
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+        {
+            var camera = this.EffectiveManagers?.Renderer?.Camera;
+            if (camera != null)
+            {
+                strokeWidth /= camera.Zoom;
+            }
+        }
+        ContainedLineCircle.StrokeWidth = strokeWidth;
+    }
+#endif
 
     // #2757 dropshadow on raylib (#12 follow-up). Approximated via concentric semi-transparent
     // rings on the renderable side — no shader, no render-to-texture. Anisotropic blur
