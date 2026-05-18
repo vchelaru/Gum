@@ -254,18 +254,32 @@ public class LineCircle : InvisibleRenderable
 
             if (blur > 0f)
             {
-                const int blurRings = 8;
+                // Approximate Skia's SKImageFilter.CreateDropShadow output. Same algorithm
+                // LineRectangle uses — see commit bd6700806 for the full rationale. Short
+                // version: Skia treats user-set BlurX/BlurY as the VISIBLE blur radius (it
+                // divides by 3 internally to get Gaussian sigma; visible falloff = ~3σ =
+                // user-set blur). Render 32 non-overlapping concentric rings extending to
+                // `blur` (NOT 3*blur), with a Gaussian-ish alpha profile exp(-t²*3) sampled
+                // at each band's MIDPOINT (not outer edge — outer-edge sampling under-shades
+                // intermediate distances). The old 8-band raised-cosine outer-edge code made
+                // intermediate distances visibly denser than Skia, which read as "bleeding
+                // too far" even though the absolute extent was correct.
+                const int blurRings = 32;
+                float falloffExtent = blur;
+                float bandThickness = falloffExtent / blurRings;
                 Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
-                for (int i = 1; i <= blurRings; i++)
+                for (int i = 0; i < blurRings; i++)
                 {
-                    float tInner = (float)(i - 1) / blurRings;
-                    float tOuter = (float)i / blurRings;
-                    float innerR = Radius + tInner * blur;
-                    float outerR = Radius + tOuter * blur;
-                    // Raised-cosine alpha at the band's outer edge — gives a smoother
-                    // Gaussian-like falloff than linear without doing any actual blur math.
-                    float alphaScale = 0.5f * (1f + System.MathF.Cos(System.MathF.PI * tOuter));
+                    float innerR = Radius + i * bandThickness;
+                    float outerR = innerR + bandThickness;
+                    float bandMidD = (i + 0.5f) * bandThickness;
+                    float tCenter = bandMidD / falloffExtent;
+                    float alphaScale = System.MathF.Exp(-tCenter * tCenter * 3f);
                     byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
+                    if (ringAlpha == 0)
+                    {
+                        continue;
+                    }
                     Color ringColor = new Color(DropshadowColor.R, DropshadowColor.G,
                         DropshadowColor.B, ringAlpha);
                     int ringSegments = System.Math.Max(36, (int)(outerR * 2));
