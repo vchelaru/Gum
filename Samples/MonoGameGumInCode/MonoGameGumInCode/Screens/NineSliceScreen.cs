@@ -121,10 +121,12 @@ internal class NineSliceScreen : FrameworkElement
 
     private static AnimationChainList LoadAnimatedFrameChain()
     {
-        // FromFile resolves the .achx's own directory and sets FileRelativeTextures,
-        // so the per-frame texture references (tile_0064.png / tile_0065.png) resolve
-        // alongside the .achx in the Content folder.
-        AnimationChainListSave save = AnimationChainListSave.FromFile("Content/AnimatedFrame1.achx");
+        // Path is relative to FileManager.RelativeDirectory (set to "Content/" by the
+        // sample's initialization), matching the convention used by SourceFileName
+        // elsewhere on this screen. Inside ToAnimationChainList, FileRelativeTextures
+        // resolves the per-frame texture references (tile_0064.png / tile_0065.png)
+        // from the same directory as the .achx.
+        AnimationChainListSave save = AnimationChainListSave.FromFile("AnimatedFrame1.achx");
         return save.ToAnimationChainList();
     }
 
