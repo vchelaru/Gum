@@ -163,7 +163,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         DrawTexturePro(Texture.Value, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
     }
 
-    public SpriteAnimationLogic AnimationLogic { get; } = new SpriteAnimationLogic();
+    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
 
     public Sprite(Texture2D? texture = null)
     {

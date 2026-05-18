@@ -55,7 +55,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
     public float AspectRatio => Texture != null ? (Texture.Width / (float)Texture.Height) : 1.0f;
 
-    public SpriteAnimationLogic AnimationLogic { get; } = new SpriteAnimationLogic();
+    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
 
     public Sprite()
     {

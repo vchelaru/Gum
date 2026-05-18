@@ -1,6 +1,6 @@
 ---
 name: gum-runtime-animation-chains
-description: AnimationChain playback on Sprites and NineSlices — .achx -> AnimationChain pipeline, SpriteAnimationLogic tick loop, apply-frame vs render-time split, RelativeX/Y mismatch with FRB AnimationEditor. Triggers: .achx, AnimationChain, AnimationFrame, AnimationChainList, SpriteAnimationLogic, ApplyAnimationFrame, RelativeX/Y offsets, CurrentChainName.
+description: AnimationChain playback on Sprites and NineSlices — .achx -> AnimationChain pipeline, AnimationChainLogic tick loop, apply-frame vs render-time split, RelativeX/Y mismatch with FRB AnimationEditor. Triggers: .achx, AnimationChain, AnimationFrame, AnimationChainList, AnimationChainLogic, SpriteAnimationLogic, ApplyAnimationFrame, RelativeX/Y offsets, CurrentChainName.
 ---
 
 # Runtime Animation Chains
@@ -13,17 +13,17 @@ Gum plays back FRB-style `.achx` animations on `Sprite` and `NineSlice`. An `.ac
 
 **`TextureCoordinateType` matters at load time, not render time.** The `AnimationFrame.LeftCoordinate/RightCoordinate/TopCoordinate/BottomCoordinate` fields are always stored as UV (0–1). If the source `.achx` declares `<CoordinateType>Pixel</CoordinateType>`, the loader divides by `Texture.Width/Height` during conversion. UV-mode `.achx` files copy the values verbatim. A frame loaded before its texture resolves cannot perform pixel-to-UV conversion — its coords stay zero.
 
-## Playback: SpriteAnimationLogic
+## Playback: AnimationChainLogic
 
-`Sprite` composes a `SpriteAnimationLogic` instance. NineSlice does **not** — it has its own near-duplicate implementation inline (see "NineSlice divergence" below).
+Both `Sprite` and `NineSlice` compose an `AnimationChainLogic` instance (XNA, Sokol, Raylib, Skia all share the same playback type). `SpriteAnimationLogic` is a back-compat `[Obsolete]` subclass; new code should use `AnimationChainLogic`.
 
-State lives entirely on `SpriteAnimationLogic`:
+State lives entirely on `AnimationChainLogic`:
 
 - `_currentChainIndex` defaults to 0 so assigning `AnimationChains` + `Animate = true` works without setting `CurrentChainName`. `CurrentChainName` setter sets `_currentChainIndex = -1` and resolves the desired name lazily once chains are populated (`RefreshCurrentChainToDesiredName`).
 - `AnimateSelf(secondDifference)` advances `_timeIntoAnimation`, loops or clamps based on `IsAnimationChainLooping`, fires `AnimationChainCycled`, picks a new frame via `UpdateFrameBasedOffOfTimeIntoAnimation`, and — only if the frame index changed — calls `UpdateToCurrentAnimationFrame()`.
-- `UpdateToCurrentAnimationFrame()` invokes the `ApplyFrame` delegate the host wired up. **It does not directly mutate the Sprite.**
+- `UpdateToCurrentAnimationFrame()` invokes the `ApplyFrame` delegate the host wired up. **It does not directly mutate the renderable.**
 
-`AnimateSelf` is driven once per frame by `GraphicalUiElement.AnimateSelf` (recursively). The whole subsystem is platform-agnostic — there is no MonoGame coupling in `SpriteAnimationLogic`.
+`AnimateSelf` is driven once per frame by `GraphicalUiElement.AnimateSelf` (recursively). The whole subsystem is platform-agnostic — there is no MonoGame coupling in `AnimationChainLogic`.
 
 ## Frame application is split across two times
 
@@ -42,18 +42,21 @@ This split matters: changing `RelativeX/Y` on a live frame takes effect on the n
 
 To match FRB visuals on a height-tracking Sprite, the offset has to be applied around the sprite's center, not its top-left — or an extra `(referenceHeight - currentHeight) / 2` must be added to Y.
 
-## NineSlice divergence
+## NineSlice: same playback, no RelativeX/Y
 
-`NineSlice` predates `SpriteAnimationLogic` and embeds its own copy of the tick loop and `UpdateToCurrentAnimationFrame`. It does **not** apply `RelativeX/Y` at all — only texture and source rect. If `RelativeX/Y` support is ever needed on NineSlice (or if the duplication is unified onto `SpriteAnimationLogic`), expect to add the offset application in NineSlice's render path the same way Sprite does.
+XNA `NineSlice` now composes `AnimationChainLogic` (same pattern as Sprite) — the inline tick loop is gone. Its `ApplyFrame` handler distributes the frame's texture to all 9 internal sprites via `SetSingleTexture`, derives the `SourceRectangle` from the frame's UV coords, and copies `FlipHorizontal`. It does **not** apply `RelativeX/Y`. If `RelativeX/Y` support is ever needed on NineSlice, add the offset application in NineSlice's render path the same way Sprite does.
+
+Skia and Raylib `NineSlice` renderables do not yet expose `AnimationLogic` — animation on those backends is a follow-up tracked under #2753.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `RenderingLibrary/Graphics/Animation/SpriteAnimationLogic.cs` | Platform-agnostic playback state and tick |
+| `RenderingLibrary/Graphics/Animation/AnimationChainLogic.cs` | Platform-agnostic playback state and tick |
+| `RenderingLibrary/Graphics/Animation/SpriteAnimationLogic.cs` | `[Obsolete]` back-compat subclass of `AnimationChainLogic` |
 | `RenderingLibrary/Graphics/Animation/AnimationFrame.cs` | Runtime frame; `ToAnimationFrame` extension converts from save with `TextureCoordinateType` |
 | `RenderingLibrary/Graphics/Animation/AnimationChain.cs` | `List<AnimationFrame>`; `ToAnimationChain` extension |
 | `RenderingLibrary/Graphics/Animation/AnimationChainList.cs` | `List<AnimationChain>`; `.achx` deserialization entry point |
 | `RenderingLibrary/Graphics/Sprite.cs` | `ApplyAnimationFrame` (frame-change side) and `Render` (per-render `RelativeX/Y` application) |
-| `RenderingLibrary/Graphics/NineSlice.cs` | Duplicate inline animation tick; no `RelativeX/Y` support |
+| `RenderingLibrary/Graphics/NineSlice.cs` | `ApplyAnimationFrame` distributes frame texture across 9 slices; no `RelativeX/Y` support |
 | `Gum/Graphics/Animation/Content/AnimationFrameSave.cs` | XML-serializable frame; pixel or UV coords per `AnimationChainListSave.CoordinateType` |

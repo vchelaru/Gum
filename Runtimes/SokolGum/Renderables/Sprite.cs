@@ -17,7 +17,7 @@ namespace Gum.Renderables;
 /// local coordinates.
 ///
 /// Animation chain playback is delegated to a composed
-/// <see cref="SpriteAnimationLogic"/> (same pattern as RaylibGum / Skia).
+/// <see cref="AnimationChainLogic"/> (same pattern as RaylibGum / Skia).
 /// Assign <see cref="AnimationChains"/> + <see cref="CurrentChainName"/>
 /// and keep <see cref="Animate"/> = true; the <see cref="Renderer"/> calls
 /// <see cref="AnimateSelf"/> per frame and the shared playback machinery
@@ -48,12 +48,12 @@ public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordina
 
     /// <summary>
     /// Shared animation state machine. Exposed so consumers can subscribe
-    /// to <see cref="SpriteAnimationLogic.AnimationChainCycled"/> or tweak
+    /// to <see cref="AnimationChainLogic.AnimationChainCycled"/> or tweak
     /// playback (speed, looping) directly. The property shortcuts below
     /// (<see cref="AnimationChains"/>, <see cref="CurrentChainName"/>,
     /// <see cref="Animate"/>, <see cref="AnimationSpeed"/>) just forward.
     /// </summary>
-    public SpriteAnimationLogic AnimationLogic { get; } = new();
+    public AnimationChainLogic AnimationLogic { get; } = new();
 
     public AnimationChainList? AnimationChains
     {
@@ -88,7 +88,7 @@ public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordina
     /// <summary>
     /// IAnimatable entry point — called by <see cref="Renderer.Update"/>
     /// each frame with the elapsed seconds since the last tick. Delegates
-    /// to <see cref="SpriteAnimationLogic.AnimateSelf"/> which advances the
+    /// to <see cref="AnimationChainLogic.AnimateSelf"/> which advances the
     /// frame index and invokes <see cref="ApplyAnimationFrame"/> on change.
     /// </summary>
     public bool AnimateSelf(double secondDifference)
