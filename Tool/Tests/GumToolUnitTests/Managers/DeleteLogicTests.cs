@@ -191,6 +191,63 @@ public class DeleteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void PerformConfirmedSingleInstanceDelete_LiveSelectedElementIsNull_RestoresOwningElementBeforeFiringInstanceDelete()
+    {
+        // Reproduces the production NRE: the user has only the instance highlighted in the
+        // tree, something in the delete chain (e.g. a DeleteConfirmed handler) clears live
+        // SelectedElement before the InstanceDelete plugin event fires, and CodeOutputPlugin
+        // then NREs reading live SelectedElement in RefreshCodeDisplay.
+        ScreenSave screen = CreateScreenWithInstances("Inst");
+        InstanceSave instance = screen.Instances[0];
+
+        ElementSave? liveSelectedElement = null;
+        _selectedState.SetupGet(s => s.SelectedElement).Returns(() => liveSelectedElement);
+        _selectedState.SetupSet(s => s.SelectedElement = It.IsAny<ElementSave?>())
+            .Callback<ElementSave?>(e => liveSelectedElement = e);
+
+        ElementSave? selectedAtFireTime = null;
+        _pluginManager
+            .Setup(p => p.InstanceDelete(It.IsAny<ElementSave>(), instance))
+            .Callback(() => selectedAtFireTime = liveSelectedElement);
+
+        _deleteLogic.PerformConfirmedSingleInstanceDelete(
+            selectedInstance: instance,
+            selectedElement: screen,
+            selectedBehavior: null,
+            objectsDeleted: new[] { instance },
+            optionsWindow: null);
+
+        selectedAtFireTime.ShouldBe(screen);
+    }
+
+    [Fact]
+    public void RemoveInstance_FiresInstanceDelete_WithOwningElementSelected()
+    {
+        // Plugins handling InstanceDelete (e.g. CodeOutputPlugin) read
+        // _selectedState.SelectedElement to know which element to regenerate code for.
+        // If the owning element is not the live SelectedElement when the event fires,
+        // those plugins NRE (see MainCodeOutputPlugin.RefreshCodeDisplay) or silently
+        // misroute. Simulate the in-the-wild state where the owning element has been
+        // cleared from SelectedState before delete reaches RemoveInstance.
+        ScreenSave screen = CreateScreenWithInstances("Inst");
+        InstanceSave instance = screen.Instances[0];
+
+        ElementSave? liveSelectedElement = null;
+        _selectedState.SetupGet(s => s.SelectedElement).Returns(() => liveSelectedElement);
+        _selectedState.SetupSet(s => s.SelectedElement = It.IsAny<ElementSave?>())
+            .Callback<ElementSave?>(e => liveSelectedElement = e);
+
+        ElementSave? selectedAtFireTime = null;
+        _pluginManager
+            .Setup(p => p.InstanceDelete(screen, instance))
+            .Callback(() => selectedAtFireTime = liveSelectedElement);
+
+        _deleteLogic.RemoveInstance(instance, screen);
+
+        selectedAtFireTime.ShouldBe(screen);
+    }
+
+    [Fact]
     public void RemoveBehavior_RemovesBehaviorAndReferences()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "TestBehavior" };

@@ -305,12 +305,14 @@ public class MainCodeOutputPlugin : PluginBase
     private void HandleStateAdd(StateSave obj) => HandleRefreshAndExport();
     private void HandleStateDelete(StateSave obj) => HandleRefreshAndExport();
 
-    private void HandleInstanceDeleted(ElementSave arg1, InstanceSave arg2) => HandleRefreshAndExport();
+    private void HandleInstanceDeleted(ElementSave element, InstanceSave instance) =>
+        HandleRefreshAndExportForElement(element);
+
     private void HandleInstanceAdd(ElementSave element, InstanceSave instance)
     {
         _parentSetLogic.HandleNewCreatedInstance(element, instance, codeOutputProjectSettings);
 
-        HandleRefreshAndExport();
+        HandleRefreshAndExportForElement(element);
     }
     private void HandleInstanceReordered(InstanceSave obj) => HandleRefreshAndExport();
 
@@ -332,6 +334,26 @@ public class MainCodeOutputPlugin : PluginBase
             {
                 GenerateCodeForSelectedElement(showPopups: false);
             }
+        }
+    }
+
+    // Refresh + auto-regenerate for an explicit owning element rather than the live
+    // SelectedElement. Used by instance add/delete events because the affected instance
+    // may live in an element that is not currently selected (e.g. delete fired from a
+    // tree-view selection that doesn't match what the codegen tab is viewing), in
+    // which case regenerating for SelectedElement writes the wrong file or NREs.
+    private void HandleRefreshAndExportForElement(ElementSave element)
+    {
+        if (control != null)
+        {
+            RefreshCodeDisplay();
+        }
+
+        var elementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
+
+        if (elementSettings.AutoGenerateOnChange)
+        {
+            GenerateCodeForElement(showPopups: false, element, elementSettings);
         }
     }
 
@@ -371,6 +393,17 @@ public class MainCodeOutputPlugin : PluginBase
 
         if(control == null)
         {
+            return;
+        }
+
+        // SelectedElement can be null if the user has selected something other than
+        // a Screen/Component (e.g. a behavior, a folder, nothing), or if a delete just
+        // cleared the selection. Without an owning element, there is nothing to
+        // generate code for — the .Element-dereferences below (and inside the
+        // generator) would NRE.
+        if(_selectedState.SelectedElement == null)
+        {
+            viewModel.Code = "// Select a Screen, Component, or Standard to see generated code";
             return;
         }
 

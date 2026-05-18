@@ -125,51 +125,13 @@ public class DeleteLogic : IDeleteLogic
 
                 if (result == true)
                 {
-                    var siblings = selectedInstance.GetSiblingsIncludingThis();
-                    var parentInstance = selectedInstance.GetParentInstance();
-
-                    // Fire DeleteConfirmed before removal so plugins can still find
-                    // children via parent reference variables (e.g. "Child.Parent = thisInstance").
-                    // RemoveInstanceFromElement destroys those references, breaking GetChildrenOf.
-                    _pluginManager.DeleteConfirmed(optionsWindow, objectsDeleted);
+                    PerformConfirmedSingleInstanceDelete(
+                        selectedInstance,
+                        selectedElements.FirstOrDefault(),
+                        selectedBehavior,
+                        array,
+                        optionsWindow);
                     objectsDeleted = null; // prevent double-firing at the end of DoDeletingLogic
-
-                    var selectedElement = selectedElements.FirstOrDefault();
-                    if (selectedElement != null)
-                    {
-                        RemoveInstanceFromElement(selectedInstance, selectedElement);
-                    }
-                    else if (selectedBehavior != null && selectedInstance is BehaviorInstanceSave behaviorInstanceToDelete)
-                    {
-                        selectedBehavior.RequiredInstances.Remove(behaviorInstanceToDelete);
-                        _pluginManager.BehaviorInstanceDelete(selectedBehavior, behaviorInstanceToDelete);
-                    }
-
-
-
-                    _pluginManager.InstanceDelete(selectedElement, selectedInstance);
-
-                    var deletedSelection = _selectedState.SelectedInstance == selectedInstance;
-
-                    RefreshAndSaveAfterInstanceRemoval(selectedElement, selectedBehavior);
-
-                    if (deletedSelection)
-                    {
-                        var index = siblings.IndexOf(selectedInstance);
-                        if (index + 1 < siblings.Count)
-                        {
-                            _selectedState.SelectedInstance = siblings[index + 1];
-                        }
-                        else if (index > 0)
-                        {
-                            _selectedState.SelectedInstance = siblings[index - 1];
-                        }
-                        else
-                        {
-                            // no siblings so select the container or null if none exists:
-                            _selectedState.SelectedInstance = parentInstance;
-                        }
-                    }
                 }
                 else
                 {
@@ -252,6 +214,65 @@ public class DeleteLogic : IDeleteLogic
         if (shouldDelete)
         {
             _pluginManager.DeleteConfirmed(optionsWindow, objectsDeleted);
+        }
+    }
+
+    internal void PerformConfirmedSingleInstanceDelete(
+        InstanceSave selectedInstance,
+        ElementSave? selectedElement,
+        BehaviorSave? selectedBehavior,
+        Array objectsDeleted,
+        DeleteOptionsWindow? optionsWindow)
+    {
+        var siblings = selectedInstance.GetSiblingsIncludingThis();
+        var parentInstance = selectedInstance.GetParentInstance();
+
+        // Fire DeleteConfirmed before removal so plugins can still find
+        // children via parent reference variables (e.g. "Child.Parent = thisInstance").
+        // RemoveInstanceFromElement destroys those references, breaking GetChildrenOf.
+        _pluginManager.DeleteConfirmed(optionsWindow!, objectsDeleted);
+
+        if (selectedElement != null)
+        {
+            RemoveInstanceFromElement(selectedInstance, selectedElement);
+        }
+        else if (selectedBehavior != null && selectedInstance is BehaviorInstanceSave behaviorInstanceToDelete)
+        {
+            selectedBehavior.RequiredInstances.Remove(behaviorInstanceToDelete);
+            _pluginManager.BehaviorInstanceDelete(selectedBehavior, behaviorInstanceToDelete);
+        }
+
+        // Restore the owning element to live SelectedState before firing InstanceDelete.
+        // Earlier steps in the delete flow may have cleared it (e.g. when the user only
+        // had the instance highlighted in the tree), and plugins that read live
+        // SelectedElement (CodeOutputPlugin.RefreshCodeDisplay) would otherwise NRE.
+        if (selectedElement != null)
+        {
+            _selectedState.SelectedElement = selectedElement;
+        }
+
+        _pluginManager.InstanceDelete(selectedElement, selectedInstance);
+
+        var deletedSelection = _selectedState.SelectedInstance == selectedInstance;
+
+        RefreshAndSaveAfterInstanceRemoval(selectedElement, selectedBehavior);
+
+        if (deletedSelection)
+        {
+            var index = siblings.IndexOf(selectedInstance);
+            if (index + 1 < siblings.Count)
+            {
+                _selectedState.SelectedInstance = siblings[index + 1];
+            }
+            else if (index > 0)
+            {
+                _selectedState.SelectedInstance = siblings[index - 1];
+            }
+            else
+            {
+                // no siblings so select the container or null if none exists:
+                _selectedState.SelectedInstance = parentInstance;
+            }
         }
     }
 
@@ -775,6 +796,13 @@ public class DeleteLogic : IDeleteLogic
         }
 
         RemoveInstanceFromElement(instanceToRemove, elementToRemoveFrom);
+
+        // Plugins handling InstanceDelete (e.g. CodeOutputPlugin) read
+        // _selectedState.SelectedElement to decide what to regenerate. Earlier steps
+        // in the delete flow can leave SelectedElement null (e.g. when the user had
+        // only the instance selected), so restore the owning element before
+        // notifying plugins to avoid NREs and stale-state misroutes.
+        _selectedState.SelectedElement = elementToRemoveFrom;
 
         _pluginManager.InstanceDelete(elementToRemoveFrom, instanceToRemove);
 
