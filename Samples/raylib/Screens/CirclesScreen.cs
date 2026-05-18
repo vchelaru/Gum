@@ -9,15 +9,16 @@ using RenderingLibrary.Graphics;
 
 namespace Examples.Shapes;
 
-// Raylib mirror of SilkNetGum/Screens/CirclesScreen.cs (issue #2757). Structurally aligned
-// with the Skia/MG gallery so visual regressions in one backend are easy to spot against the
-// other — same section grouping, same parameter sweeps where features overlap.
+// Raylib mirror of SilkNetGum/Screens/CirclesScreen.cs (issue #2757). Section order, labels,
+// and parameter sweeps are kept aligned with the Skia gallery so visual regressions in one
+// backend are easy to spot against the other when both samples are run side-by-side. Skia is
+// the authoritative reference (Skia and MonoGame shape rendering already match), so any visual
+// divergence here points at a raylib renderer bug, not a sample drift.
 //
-// What's intentionally NOT mirrored on this pass: linear gradients, dashed strokes, per-shape
-// antialiasing toggle, and dropshadow — each requires renderer work that's tracked as a
-// #2757 follow-up. The runtime accepts the property values (round-trips) where wired, but the
-// raylib LineCircle's Render() doesn't honor them yet, so showing those sections would just
-// render the same as their non-decorated baselines and be misleading.
+// What's intentionally NOT mirrored: the Antialiasing section. raylib has no per-shape AA —
+// framebuffer MSAA via SetConfigFlags(Msaa4xHint) in Program.Main is the only AA path, so
+// toggling the runtime IsAntialiased flag would render identically. Tracked as a #2757
+// follow-up.
 internal class CirclesScreen : FrameworkElement
 {
     public CirclesScreen() : base(new ContainerRuntime())
@@ -38,17 +39,20 @@ internal class CirclesScreen : FrameworkElement
         root.Children.Add(left);
         root.Children.Add(right);
 
+        // Section order mirrors SilkNetGum/Screens/CirclesScreen.cs exactly, minus the one
+        // section raylib can't currently demo (Antialiasing). That keeps the remaining rows
+        // top-aligned across both windows when run side-by-side.
         left.Children.Add(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
         left.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
         left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
-        left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px) — thick strokes via DrawRing (#2757)", BuildStrokeWidthRow()));
+        left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
+        left.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+        left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
 
-        right.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
-        right.Children.Add(BuildSection("Gradients (linear H / V / diagonal / radial) — rlgl triangle fan (#2757)", BuildGradientRow()));
-        right.Children.Add(BuildSection("FillColor + StrokeColor on same instance — both layers render (#2790 parity)", BuildBothColorsRow()));
-        right.Children.Add(BuildSection("Inscribed in 64x64 frame — stroke stays inside the gray rectangle (#2790 visual contract)", BuildInscribedRow()));
-        right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — DrawRing arc loop (#2757)", BuildDashedStrokeRow()));
-        right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — concentric-ring blur approximation (#2757)", BuildDropshadowRow()));
+        right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — raylib approximates the blur via concentric rings (#2757)", BuildDropshadowRow()));
+        right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — raylib emits one DrawRing arc per dash (#2757)", BuildDashedStrokeRow()));
+        right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2757)", BuildBothColorsRow()));
+        right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2757)", BuildInscribedRow()));
     }
 
     static ContainerRuntime BuildColumn()
@@ -297,6 +301,7 @@ internal class CirclesScreen : FrameworkElement
         circle.FillColor = new Color(46, 139, 87, 255);
         circle.StrokeColor = new Color(255, 255, 0, 255);
         circle.StrokeWidth = strokeWidth;
+        circle.StrokeWidthUnits = DimensionUnitType.Absolute;
         frame.Children.Add(circle);
         return frame;
     }
