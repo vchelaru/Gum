@@ -84,6 +84,14 @@ public class SpriteRenderer
     }
 
     /// <summary>
+    /// The underlying MonoGame <see cref="SpriteBatch"/> used for all sprite and text
+    /// rendering. Exposed so consumers (e.g. <see cref="GumBatch"/> users mixing their
+    /// own draw calls with Gum's immediate-mode rendering) can issue draws into the
+    /// same batch between Begin/End without managing a second SpriteBatch.
+    /// </summary>
+    public SpriteBatch SpriteBatch => mSpriteBatch?.SpriteBatch;
+
+    /// <summary>
     /// The shared scissor-enabled RasterizerState used by Sprite clipping. Exposed so
     /// custom batches (Apos.Shapes ShapeBatch via RenderableShapeBase.StartBatch) can
     /// pass the same rasterizer state to their Begin call and produce identical scissor

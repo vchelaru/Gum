@@ -1059,6 +1059,16 @@ public class GumBatch
     GumBatchState State;
     SystemManagers systemManagers;
     Text internalTextForRendering;
+
+    /// <summary>
+    /// The underlying MonoGame <see cref="SpriteBatch"/> that this GumBatch wraps. Use this
+    /// to issue your own SpriteBatch draw calls between <see cref="Begin"/> and <see cref="End"/>
+    /// without having to manage a separate SpriteBatch. The instance is stable for the lifetime
+    /// of this GumBatch; Gum mutates its state (clip regions, blend, etc.) but never swaps the
+    /// instance mid-frame. Callers are responsible for any state interaction with Gum's own draws.
+    /// </summary>
+    public SpriteBatch SpriteBatch => systemManagers.Renderer.SpriteRenderer.SpriteBatch;
+
     public GumBatch()
     {
         if(SystemManagers .Default == null)
