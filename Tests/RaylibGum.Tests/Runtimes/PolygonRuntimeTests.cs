@@ -203,6 +203,17 @@ public class PolygonRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void StrokeWidth_ShouldPushImmediatelyToContainedRenderable()
+    {
+        // The setter must push without waiting for PreRender — see the rectangle PR (#2827)
+        // for the original symptom: gallery cells uniformly rendered at 1 px because PreRender
+        // hadn't run yet on first draw.
+        PolygonRuntime sut = new();
+        sut.StrokeWidth = 5f;
+        ((Gum.Renderables.LinePolygon)sut.RenderableComponent).LinePixelWidth.ShouldBe(5f);
+    }
+
+    [Fact]
     public void Red_ShouldRoundTrip()
     {
         PolygonRuntime sut = new();

@@ -237,6 +237,14 @@ public class PolygonRuntime : InteractiveGue
         set
         {
             _strokeWidth = value;
+#if RAYLIB
+            // Push immediately — PreRender does the same with ScreenPixel zoom scaling, but
+            // whatever code path the gallery hit pre-fix didn't run PreRender before the first
+            // draw, so the renderable stayed at its default 1 px. Same bug RectangleRuntime
+            // had (#2827); fix mirrors the one already on CircleRuntime / RectangleRuntime's
+            // RAYLIB setter.
+            ContainedPolygon.LinePixelWidth = value;
+#endif
             NotifyPropertyChanged();
         }
     }
