@@ -249,6 +249,94 @@ public class CircleRuntime : GraphicalUiElement
     }
 #endif
 
+#if RAYLIB
+    // Issue #2757 — surface the same property names the XNALIKE/SKIA branches expose so the
+    // cross-backend Circle gallery compiles against raylib too. Setters push to the contained
+    // LineCircle, whose Render() handles the fill/stroke/gradient composition. Visual support
+    // is intentionally a subset of MG/Skia in this pass — linear gradients, dashed strokes,
+    // dropshadow, per-shape AA, and StrokeWidthUnits scaling are not yet implemented on the
+    // raylib renderable (tracked as #2757 follow-ups). The runtime does not expose those
+    // properties at all yet; the raylib sample (CirclesScreen) renders only the supported
+    // sections.
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.FillColor"/>
+    public Color? FillColor
+    {
+        get => ContainedLineCircle.FillColor;
+        set
+        {
+            ContainedLineCircle.FillColor = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.StrokeColor"/>
+    public Color? StrokeColor
+    {
+        get => ContainedLineCircle.StrokeColor;
+        set
+        {
+            ContainedLineCircle.StrokeColor = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.IsFilled"/>
+    public bool IsFilled
+    {
+        get => ContainedLineCircle.IsFilled;
+        set
+        {
+            ContainedLineCircle.IsFilled = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.UseGradient"/>
+    public bool UseGradient
+    {
+        get => ContainedLineCircle.UseGradient;
+        set
+        {
+            ContainedLineCircle.UseGradient = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.GradientType"/>
+    public GradientType GradientType
+    {
+        get => ContainedLineCircle.GradientType;
+        set
+        {
+            ContainedLineCircle.GradientType = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.Color1"/>
+    public Color Color1
+    {
+        get => ContainedLineCircle.Color1;
+        set
+        {
+            ContainedLineCircle.Color1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.Color2"/>
+    public Color Color2
+    {
+        get => ContainedLineCircle.Color2;
+        set
+        {
+            ContainedLineCircle.Color2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+#endif
+
 #if XNALIKE
     Color? _fillColor;
 
@@ -995,11 +1083,11 @@ public class CircleRuntime : GraphicalUiElement
 
     /// <inheritdoc cref="CircleRuntime.StrokeWidth"/>
     /// <remarks>
-    /// Issue #2757 cross-backend API parity. On Raylib/Sokol the contained
-    /// <see cref="Gum.Renderables.LineCircle"/> renders via <c>DrawCircleLines</c> which is
-    /// hard-coded to a 1 px outline, so the backing field round-trips but the value is
-    /// visually inert until the renderable gains thick-stroke support — same forward-compat
-    /// pattern as MonoGameGum's <c>DefaultStrokedCircleRenderable</c> pre-Apos.Shapes.
+    /// Issue #2757 cross-backend API parity. On Raylib the value is pushed to the contained
+    /// <see cref="Gum.Renderables.LineCircle"/>, which routes thick strokes through raylib's
+    /// <c>DrawRing</c>. On Sokol the renderable has no thick-stroke support yet, so the value
+    /// round-trips but is visually inert (same forward-compat pattern as MonoGameGum's
+    /// <c>DefaultStrokedCircleRenderable</c> pre-Apos.Shapes).
     /// </remarks>
     public float StrokeWidth
     {
@@ -1007,6 +1095,9 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             _strokeWidth = value;
+#if RAYLIB
+            ContainedLineCircle.StrokeWidth = value;
+#endif
             NotifyPropertyChanged();
         }
     }
