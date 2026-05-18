@@ -164,6 +164,21 @@ public class LineRectangleTests
     }
 
     [Fact]
+    public void CornerRadius_DefaultsToZero_AndRoundTrips()
+    {
+        // #2757 follow-up — CornerRadius is in pixels (same unit as the rest of Gum), default
+        // 0 keeps the historical hard-cornered visual. Internal pixel→roundness conversion
+        // happens inside Render() — only the round-trip is observable here.
+        LineRectangle rectangle = new LineRectangle();
+
+        rectangle.CornerRadius.ShouldBe(0f);
+
+        rectangle.CornerRadius = 12f;
+
+        rectangle.CornerRadius.ShouldBe(12f);
+    }
+
+    [Fact]
     public void LegacyColorChannel_StillRoundTripsViaColor()
     {
         LineRectangle rectangle = new LineRectangle();

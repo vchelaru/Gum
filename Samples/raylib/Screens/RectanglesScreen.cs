@@ -42,6 +42,7 @@ internal class RectanglesScreen : FrameworkElement
         left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, Fill+Stroke, default", BuildModeRow()));
         left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px) — thick stroke via DrawRectangleLinesEx (#2757)", BuildStrokeWidthRow()));
         left.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
+        left.Children.Add(BuildSection("CornerRadius (0, 6, 16, 28 px) — DrawRectangleRounded (#2757)", BuildCornerRadiusRow()));
 
         right.Children.Add(BuildSection("Gradients (linear H / V / diagonal / radial) — rlgl mesh (#2757)", BuildGradientRow()));
         right.Children.Add(BuildSection("FillColor + StrokeColor on same instance — both layers render (#2790 parity)", BuildBothColorsRow()));
@@ -199,6 +200,26 @@ internal class RectanglesScreen : FrameworkElement
         };
         frame.Children.Add(rect);
         return frame;
+    }
+
+    // #2757 — uniform CornerRadius in pixels (same unit as Skia's RectangleRuntime.CornerRadius).
+    // The renderable converts to raylib's 0..1 roundness fraction at draw time. Per-corner
+    // overrides are tracked separately — DrawRectangleRounded only takes a single roundness.
+    static ContainerRuntime BuildCornerRadiusRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float cornerRadius in new[] { 0f, 6f, 16f, 28f })
+        {
+            RectangleRuntime rect = new();
+            rect.Width = 80;
+            rect.Height = 60;
+            rect.FillColor = new Color(40, 40, 80, 255);
+            rect.StrokeColor = new Color(255, 165, 0, 255);
+            rect.StrokeWidth = 2;
+            rect.CornerRadius = cornerRadius;
+            row.Children.Add(rect);
+        }
+        return row;
     }
 
     // Mirrors SilkNet's BuildGradientRow — same four cells, same gradient axis coordinates.

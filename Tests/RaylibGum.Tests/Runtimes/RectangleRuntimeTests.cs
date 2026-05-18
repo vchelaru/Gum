@@ -214,6 +214,20 @@ public class RectangleRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void CornerRadius_RoundTrips_AndPushesToContainedRenderable()
+    {
+        // #2757 follow-up — uniform CornerRadius in pixels, matching Skia's RectangleRuntime
+        // surface. raylib renderable handles the pixel→roundness conversion that DrawRectangleRounded
+        // requires at draw time.
+        RectangleRuntime sut = new();
+
+        sut.CornerRadius = 8f;
+
+        sut.CornerRadius.ShouldBe(8f);
+        ((LineRectangle)sut.RenderableComponent!).CornerRadius.ShouldBe(8f);
+    }
+
+    [Fact]
     public void GradientAxis_RoundTrips_AndPushesToContainedRenderable()
     {
         RectangleRuntime sut = new();

@@ -52,6 +52,19 @@ public class LineRectangle : InvisibleRenderable
     public bool IsFilled { get; set; }
 
     /// <summary>
+    /// Uniform corner radius in world-space pixels — same unit as the rest of Gum (Skia's
+    /// <c>RectangleRuntime.CornerRadius</c>, MG's Apos.Shapes <c>RoundedRectangle</c>). A
+    /// value of 0 (the default) draws hard corners via the existing
+    /// <c>DrawRectangle*</c> paths. When &gt; 0, fill and stroke route through raylib's
+    /// <c>DrawRectangleRounded</c> / <c>DrawRectangleRoundedLinesEx</c>. raylib's API takes
+    /// roundness as a 0..1 fraction of <c>min(Width, Height) / 2</c>, so <see cref="Render"/>
+    /// converts pixels → fraction at draw time. Rounded corners are skipped on the rotated and
+    /// dashed paths (raylib's rounded primitives don't accept either) — those paths fall back
+    /// to the hard-cornered render.
+    /// </summary>
+    public float CornerRadius { get; set; }
+
+    /// <summary>
     /// Explicit fill-pass color. When set, the fill pass runs regardless of <see cref="IsFilled"/>
     /// — the raylib analog of Skia's two-slot composition (#2790). When <c>null</c> the fill
     /// pass only runs if <see cref="IsFilled"/> is <c>true</c>, in which case <see cref="Color"/>
@@ -225,6 +238,29 @@ public class LineRectangle : InvisibleRenderable
 
         float rotDeg = this.GetAbsoluteRotation();
         bool rotated = MathF.Abs(rotDeg) > 0.0001f;
+
+        // Raylib's DrawRectangleRounded takes "roundness" as a 0..1 fraction of min(w,h)/2;
+        // Gum exposes CornerRadius in pixels. Convert here so callers stay in the same unit
+        // system as Skia / Apos.Shapes. min(w,h)/2 is the largest corner radius that fits
+        // without the four arcs overlapping — values past that clamp to 1.0 the same way
+        // raylib's own renderer would.
+        float roundness = 0f;
+        bool useRounded = false;
+        if (CornerRadius > 0f && w > 0f && h > 0f)
+        {
+            float halfMinDim = MathF.Min(w, h) * 0.5f;
+            if (halfMinDim > 0f)
+            {
+                roundness = MathF.Min(1f, CornerRadius / halfMinDim);
+                useRounded = true;
+            }
+        }
+        // Segment count for the corner arcs — 8 per quarter is raylib's default and stays
+        // smooth at the radii UI typically uses. Bumped proportionally with CornerRadius so
+        // large radii don't show faceting.
+        int roundedSegments = useRounded
+            ? Math.Max(8, (int)(CornerRadius * 0.75f))
+            : 0;
         float rotRad = rotDeg * MathF.PI / 180f;
         float cos = MathF.Cos(rotRad);
         float sin = MathF.Sin(rotRad);
@@ -249,7 +285,19 @@ public class LineRectangle : InvisibleRenderable
             float shadowY = oy + DropshadowOffsetY;
             float blur = MathF.Max(DropshadowBlurX, DropshadowBlurY);
 
-            DrawRectangleV(new Vector2(shadowX, shadowY), new Vector2(w, h), DropshadowColor);
+            // Solid core — rounded if CornerRadius > 0 so the shadow silhouette matches the
+            // rounded shape that draws over it. Skipped for rotated shapes (raylib's rounded
+            // primitives have no rotation parameter, matching the existing shadow's
+            // "no rotation" limitation).
+            if (useRounded && !rotated)
+            {
+                Rectangle shadowRect = new Rectangle(shadowX, shadowY, w, h);
+                DrawRectangleRounded(shadowRect, roundness, roundedSegments, DropshadowColor);
+            }
+            else
+            {
+                DrawRectangleV(new Vector2(shadowX, shadowY), new Vector2(w, h), DropshadowColor);
+            }
 
             if (blur > 0f)
             {
@@ -258,23 +306,33 @@ public class LineRectangle : InvisibleRenderable
                 {
                     float tOuter = (float)i / blurRings;
                     float bandOuter = tOuter * blur;
-                    // Raised-cosine alpha at the band's outer edge — smoother Gaussian-like
-                    // falloff than linear without doing any actual blur math.
                     float alphaScale = 0.5f * (1f + MathF.Cos(MathF.PI * tOuter));
                     byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
                     Color ringColor = new Color(DropshadowColor.R, DropshadowColor.G,
                         DropshadowColor.B, ringAlpha);
-                    // Inflated rectangle outline — width = bandOuter so the band fully overlaps
-                    // the previous, hiding any gap from the rasterizer. DrawRectangleLinesEx
-                    // centers stroke on the rectangle edge, so the inflated outer rect is
-                    // (bandOuter / 2) larger on each side.
                     float halfBand = bandOuter * 0.5f;
                     Rectangle outerRect = new Rectangle(
                         shadowX - halfBand,
                         shadowY - halfBand,
                         w + bandOuter,
                         h + bandOuter);
-                    DrawRectangleLinesEx(outerRect, bandOuter, ringColor);
+                    if (useRounded && !rotated)
+                    {
+                        // As the band inflates, the inflated rect's min-dim grows so the same
+                        // pixel CornerRadius corresponds to a smaller roundness fraction.
+                        // Recompute per band so the shadow's outer edge keeps the same
+                        // pixel-space corner radius as the inner core.
+                        float bandMinDim = MathF.Min(outerRect.Width, outerRect.Height);
+                        float bandRoundness = bandMinDim > 0f
+                            ? MathF.Min(1f, CornerRadius * 2f / bandMinDim)
+                            : 0f;
+                        DrawRectangleRoundedLinesEx(outerRect, bandRoundness, roundedSegments,
+                            bandOuter, ringColor);
+                    }
+                    else
+                    {
+                        DrawRectangleLinesEx(outerRect, bandOuter, ringColor);
+                    }
                 }
             }
         }
@@ -303,6 +361,11 @@ public class LineRectangle : InvisibleRenderable
                 {
                     DrawRadialGradientFan(R, w, h);
                 }
+            }
+            else if (useRounded && !rotated)
+            {
+                DrawRectangleRounded(new Rectangle(ox, oy, w, h), roundness, roundedSegments,
+                    fillColor);
             }
             else
             {
@@ -335,7 +398,12 @@ public class LineRectangle : InvisibleRenderable
             bool dashed =
                 (StrokeDashLength > 0f && StrokeGapLength > 0f) ||
                 IsDotted;
-            if (!rotated && !dashed)
+            if (!rotated && !dashed && useRounded)
+            {
+                DrawRectangleRoundedLinesEx(new Rectangle(ox, oy, w, h), roundness,
+                    roundedSegments, LinePixelWidth, strokeColor);
+            }
+            else if (!rotated && !dashed)
             {
                 // Hot path — single raylib call. DrawRectangleLinesEx centers the stroke on the
                 // edge by default; that's the historical Gum behavior so the existing samples

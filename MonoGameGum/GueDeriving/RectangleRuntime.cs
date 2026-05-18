@@ -268,6 +268,17 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 
+    /// <inheritdoc cref="Gum.Renderables.LineRectangle.CornerRadius"/>
+    public float CornerRadius
+    {
+        get => ContainedLineRectangle.CornerRadius;
+        set
+        {
+            ContainedLineRectangle.CornerRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
+
     /// <inheritdoc cref="Gum.Renderables.LineRectangle.UseGradient"/>
     public bool UseGradient
     {
