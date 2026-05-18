@@ -276,12 +276,13 @@ public class LineCircle : InvisibleRenderable
                 // sits on top of the band composite inside the shape's silhouette.
                 const int blurRings = 32;
                 // Tuning constants empirical from side-by-side gallery comparisons:
-                //   falloffExtent = blur * 0.45 — enough gradient region for the fade to be
-                //   visible at small blur values (blur=4 → 1.8 px). Too tight (0.25) crammed
-                //   the whole fade into 1 px which read as a sharp edge.
-                //   profile = (1 - t)^2 — drops faster than sqrt(1 - t), concentrates density
-                //   in the inner third of the gradient, reaches 0 at t = 1.
-                float falloffExtent = blur * 0.45f;
+                //   falloffExtent = blur * 1.0 — gradient region is wide enough to perceive
+                //   as a fade at typical viewing scales. Earlier attempts at 0.25-0.5 crammed
+                //   the whole fade into 1-2 px which the eye couldn't resolve as a gradient.
+                //   profile = (1 - t)^3 — concentrates density in the inner third (so visible
+                //   "weight" of the shadow stays close to the shape) and falls off fast
+                //   through the outer two thirds. Reaches 0 at t = 1.
+                float falloffExtent = blur * 1.0f;
                 float bandThickness = falloffExtent / blurRings;
                 Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
                 float prevP = 1f;
@@ -289,7 +290,7 @@ public class LineCircle : InvisibleRenderable
                 {
                     float tOuter = (j + 1f) / blurRings;
                     float oneMinusT = System.MathF.Max(0f, 1f - tOuter);
-                    float targetAlpha = oneMinusT * oneMinusT;
+                    float targetAlpha = oneMinusT * oneMinusT * oneMinusT;
                     float currP = 1f - targetAlpha;
                     float beta = prevP > 0f ? 1f - currP / prevP : 0f;
                     prevP = currP;
