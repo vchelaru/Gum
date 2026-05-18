@@ -1,4 +1,4 @@
-# Shapes (Apos.Shapes)
+# Shapes
 
 ## Introduction
 
@@ -62,7 +62,7 @@ No additional setup is required to use shapes in .NET MAUI
 {% endtab %}
 
 {% tab title="raylib" %}
-Shape visuals are not currently supported in raylib. Please create an issue on GitHub or chat with us on Discord to let us know you need this feature.
+No additional setup is required to use shapes on raylib. The equivalent fill, stroke, gradient, dashed-stroke, drop-shadow, and corner-radius features are built into `CircleRuntime`, `RectangleRuntime`, and `PolygonRuntime` natively — no extra NuGet package or initialization is needed. The `ArcRuntime` / `ColoredCircleRuntime` / `RoundedRectangleRuntime` classes described on this page do not exist on raylib; use the equivalent base runtime instead.
 {% endtab %}
 
 {% tab title="Silk.NET" %}
@@ -100,7 +100,7 @@ No additional setup is needed if you have already added SkiaSharp and Gum to you
 {% endtab %}
 
 {% tab title="raylib" %}
-Shape visuals are not currently supported in raylib. Please create an issue on GitHub or chat with us on Discord to let us know you need this feature.
+No additional setup is required. The equivalent shape features are built into `CircleRuntime`, `RectangleRuntime`, and `PolygonRuntime` — see those pages for their full property surface. The `ArcRuntime` / `ColoredCircleRuntime` / `RoundedRectangleRuntime` classes do not exist on raylib; use the equivalent base runtime instead.
 {% endtab %}
 
 {% tab title="Silk.NET" %}

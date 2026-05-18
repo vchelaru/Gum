@@ -285,7 +285,7 @@
   * [RectangleRuntime](code/standard-visuals/rectangleruntime.md)
   * [RoundedRectangleRuntime](code/standard-visuals/roundedrectangleruntime/README.md)
     * [CornerRadius](code/standard-visuals/roundedrectangleruntime/cornerradius.md)
-  * [Shapes (Apos.Shapes)](code/standard-visuals/shapes-apos.shapes.md)
+  * [Shapes](code/standard-visuals/shapes-apos.shapes.md)
   * [SpriteRuntime](code/standard-visuals/spriteruntime/README.md)
     * [RenderTargetTextureSource](code/standard-visuals/spriteruntime/rendertargettexturesource.md)
     * [TextureAddress](code/standard-visuals/spriteruntime/textureaddress.md)
