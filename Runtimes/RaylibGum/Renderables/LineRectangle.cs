@@ -301,37 +301,55 @@ public class LineRectangle : InvisibleRenderable
 
             if (blur > 0f)
             {
-                const int blurRings = 8;
-                for (int i = 1; i <= blurRings; i++)
+                // Approximate Skia's SKImageFilter.CreateDropShadow Gaussian blur. Skia treats
+                // BlurX/BlurY as Gaussian sigma — visible falloff extends to ~3σ — and raylib
+                // has no blur shader, so the band layout is:
+                //   - falloffExtent = 3 * blur (where blur = max(BlurX, BlurY)).
+                //   - blurRings non-overlapping outlines, each bandThickness px thick,
+                //     positioned at increasing distances outside the solid core.
+                //   - Gaussian-ish alpha profile exp(-t²*3) sampled at the band centerline.
+                //     exp(-3) ≈ 0.05 at the outer edge — soft tail without going invisible
+                //     so fast that the rings stairstep visibly.
+                // The old code drew overlapping bands all starting at the shape edge with
+                // thicknesses scaling i*bandThickness, which collapsed the visible fade onto
+                // a narrow ring near the shape silhouette and made the dropshadow read as
+                // hard with a thin halo.
+                const int blurRings = 32;
+                float falloffExtent = blur * 3f;
+                float bandThickness = falloffExtent / blurRings;
+                for (int i = 0; i < blurRings; i++)
                 {
-                    float tOuter = (float)i / blurRings;
-                    float bandOuter = tOuter * blur;
-                    float alphaScale = 0.5f * (1f + MathF.Cos(MathF.PI * tOuter));
+                    float bandCenter = (i + 0.5f) * bandThickness;
+                    float tCenter = bandCenter / falloffExtent;
+                    float alphaScale = MathF.Exp(-tCenter * tCenter * 3f);
                     byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
+                    if (ringAlpha == 0)
+                    {
+                        continue;
+                    }
                     Color ringColor = new Color(DropshadowColor.R, DropshadowColor.G,
                         DropshadowColor.B, ringAlpha);
-                    float halfBand = bandOuter * 0.5f;
                     Rectangle outerRect = new Rectangle(
-                        shadowX - halfBand,
-                        shadowY - halfBand,
-                        w + bandOuter,
-                        h + bandOuter);
+                        shadowX - bandCenter,
+                        shadowY - bandCenter,
+                        w + 2f * bandCenter,
+                        h + 2f * bandCenter);
                     if (useRounded && !rotated)
                     {
-                        // As the band inflates, the inflated rect's min-dim grows so the same
-                        // pixel CornerRadius corresponds to a smaller roundness fraction.
-                        // Recompute per band so the shadow's outer edge keeps the same
-                        // pixel-space corner radius as the inner core.
+                        // Outer corner radius grows by bandCenter so the rounded silhouette
+                        // tracks the shape outward — pixel-space corner radius at the band's
+                        // outer edge stays (CornerRadius + bandCenter) instead of shrinking
+                        // toward 0 as the rect inflates.
                         float bandMinDim = MathF.Min(outerRect.Width, outerRect.Height);
                         float bandRoundness = bandMinDim > 0f
-                            ? MathF.Min(1f, CornerRadius * 2f / bandMinDim)
+                            ? MathF.Min(1f, (CornerRadius + bandCenter) * 2f / bandMinDim)
                             : 0f;
                         DrawRectangleRoundedLinesEx(outerRect, bandRoundness, roundedSegments,
-                            bandOuter, ringColor);
+                            bandThickness, ringColor);
                     }
                     else
                     {
-                        DrawRectangleLinesEx(outerRect, bandOuter, ringColor);
+                        DrawRectangleLinesEx(outerRect, bandThickness, ringColor);
                     }
                 }
             }
@@ -571,19 +589,23 @@ public class LineRectangle : InvisibleRenderable
                 continue;
             }
 
-            // Vertex order: center → previous → current. CCW front-facing under raylib's
-            // default culling matches LineCircle's gradient fan rule.
+            // Vertex order: center → current → previous. The perimeter walk runs clockwise
+            // in screen-down coords (top-left → top-right → bottom-right → bottom-left), so
+            // center→prev→curr is CW, which raylib's default backface cull drops. Swapping
+            // the last two vertices flips winding to CCW (front-facing) and the radial fan
+            // renders. Same rule applied in LineCircle's DrawGradientFan
+            // ("center → later-angle → earlier-angle").
             EmitVertexColored(center, centerColor);
-            EmitVertexColored(prevWorld, prevColor);
             EmitVertexColored(worldP, cP);
+            EmitVertexColored(prevWorld, prevColor);
 
             prevWorld = worldP;
             prevColor = cP;
         }
         // Close the fan.
         EmitVertexColored(center, centerColor);
-        EmitVertexColored(prevWorld, prevColor);
         EmitVertexColored(firstWorld, firstColor);
+        EmitVertexColored(prevWorld, prevColor);
         Rlgl.End();
     }
 

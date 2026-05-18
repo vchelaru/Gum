@@ -135,17 +135,36 @@ public class RectangleRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void StrokeWidth_PushesToContainedRenderable_AfterPreRender()
+    public void StrokeWidth_RoundTrips_AndPushesToContainedRenderable()
     {
-        // StrokeWidth flows through PreRender so ScreenPixel scaling resolves against camera zoom.
-        // With default Absolute units, value reaches the renderable verbatim.
+        // #2757 follow-up — the setter must push immediately, not only via PreRender. The
+        // game loop's PreRender pass runs before draw, but the gallery sample's "StrokeWidth
+        // (1,2,4,8 px)" row read uniformly as 1 px on raylib because the runtime stashed
+        // _strokeWidth and never wrote through; whatever PreRender path the renderer
+        // expected wasn't engaging in time. Mirrors CircleRuntime's RAYLIB StrokeWidth
+        // setter (also pushes immediately).
         RectangleRuntime sut = new();
-        sut.StrokeWidth = 5f;
 
-        sut.PreRender();
+        sut.StrokeWidth = 5f;
 
         sut.StrokeWidth.ShouldBe(5f);
         ((LineRectangle)sut.RenderableComponent!).LinePixelWidth.ShouldBe(5f);
+    }
+
+    [Fact]
+    public void StrokeColor_DefaultsToWhite_MatchingSkia()
+    {
+        // #2757 follow-up — Skia's RectangleRuntime ctor sets StrokeColor = SKColors.White
+        // so cells that set only FillColor still render with a visible 1 px white outline
+        // (e.g. the gallery's Modes row first cell). Raylib must match or fill-only cells
+        // render without the outline Skia draws.
+        RectangleRuntime sut = new();
+
+        sut.StrokeColor.ShouldNotBeNull();
+        sut.StrokeColor!.Value.R.ShouldBe((byte)255);
+        sut.StrokeColor!.Value.G.ShouldBe((byte)255);
+        sut.StrokeColor!.Value.B.ShouldBe((byte)255);
+        sut.StrokeColor!.Value.A.ShouldBe((byte)255);
     }
 
     [Fact]

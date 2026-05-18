@@ -152,6 +152,14 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             _strokeWidth = value;
+#if RAYLIB
+            // #2757: push immediately so the renderable reads the user's width on the very
+            // next frame, not just after PreRender. Mirrors CircleRuntime's RAYLIB setter.
+            // Without this the gallery's StrokeWidth row rendered uniformly at the renderable's
+            // default 1 px regardless of runtime value. PreRender still re-pushes each frame
+            // for ScreenPixel scaling, so both paths agree.
+            ContainedLineRectangle.LinePixelWidth = value;
+#endif
             NotifyPropertyChanged();
         }
     }
@@ -1531,6 +1539,17 @@ public class RectangleRuntime : GraphicalUiElement
             containedLineRectangle = rectangle;
 
             rectangle.Color = ColorExtensions.White;
+
+#if RAYLIB
+            // #2757 — match Skia's default: a fresh RectangleRuntime ships with an opaque
+            // 1 px white stroke so cells that only set FillColor still get a visible outline.
+            // Without this, the gallery's Modes / Alignment / CornerRadius rows lost their
+            // outlines on raylib but kept them on Skia. SOKOL renderable doesn't expose
+            // StrokeColor yet — leave it null there so the existing outline-via-Color path
+            // (LineRectangle.Render falls back to Color when StrokeColor is null and no fill
+            // is requested) keeps working unchanged.
+            rectangle.StrokeColor = ColorExtensions.White;
+#endif
 
             Width = 50;
             Height = 50;
