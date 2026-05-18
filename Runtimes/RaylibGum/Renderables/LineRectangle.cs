@@ -398,31 +398,59 @@ public class LineRectangle : InvisibleRenderable
             bool dashed =
                 (StrokeDashLength > 0f && StrokeGapLength > 0f) ||
                 IsDotted;
-            if (!rotated && !dashed && useRounded)
+
+            // Stroke is inset entirely inside the nominal bounds — outer edge sits at the
+            // (ox,oy,w,h) rectangle, inner edge sits halfStroke deep. raylib's DrawRectangle*Lines*
+            // primitives center the stroke on the edge by default, so we inset the rect passed
+            // in by halfStroke on each side and shrink width/height by a full stroke width.
+            // Mirrors Skia's RenderableShapeBase.IsOffsetAppliedForStroke contract (#2814) and
+            // the LineCircle inner/outer ring pattern from the #2757 circle PR. Without this the
+            // "Inscribed in 64x64" sample's thick strokes bleed outside the parent frame.
+            float halfStroke = LinePixelWidth * 0.5f;
+            float innerW = w - LinePixelWidth;
+            float innerH = h - LinePixelWidth;
+            bool innerFits = innerW > 0f && innerH > 0f;
+
+            if (!rotated && !dashed && useRounded && innerFits)
             {
-                DrawRectangleRoundedLinesEx(new Rectangle(ox, oy, w, h), roundness,
-                    roundedSegments, LinePixelWidth, strokeColor);
+                // Inset the rounded outline. CornerRadius shrinks too so the outer arc sits at
+                // the nominal CornerRadius — matches what Skia does when it strokes a
+                // RoundedRectangle: the rendered outer corner is at the user-set radius.
+                float innerCornerRadius = MathF.Max(0f, CornerRadius - halfStroke);
+                float innerMinHalf = MathF.Min(innerW, innerH) * 0.5f;
+                float innerRoundness = innerMinHalf > 0f
+                    ? MathF.Min(1f, innerCornerRadius / innerMinHalf)
+                    : 0f;
+                DrawRectangleRoundedLinesEx(
+                    new Rectangle(ox + halfStroke, oy + halfStroke, innerW, innerH),
+                    innerRoundness, roundedSegments, LinePixelWidth, strokeColor);
             }
-            else if (!rotated && !dashed)
+            else if (!rotated && !dashed && innerFits)
             {
-                // Hot path — single raylib call. DrawRectangleLinesEx centers the stroke on the
-                // edge by default; that's the historical Gum behavior so the existing samples
-                // visually match.
-                DrawRectangleLinesEx(new Rectangle(ox, oy, w, h), LinePixelWidth, strokeColor);
+                DrawRectangleLinesEx(
+                    new Rectangle(ox + halfStroke, oy + halfStroke, innerW, innerH),
+                    LinePixelWidth, strokeColor);
             }
-            else if (!dashed)
+            else if (!dashed && innerFits)
             {
-                DrawLineEx(tl, tr, LinePixelWidth, strokeColor);
-                DrawLineEx(tr, br, LinePixelWidth, strokeColor);
-                DrawLineEx(br, bl, LinePixelWidth, strokeColor);
-                DrawLineEx(bl, tl, LinePixelWidth, strokeColor);
+                // Rotated solid stroke — rotate the inset corners so the four edges form an
+                // inset rectangle in rotated space too.
+                Vector2 stl = R(halfStroke, halfStroke);
+                Vector2 str = R(w - halfStroke, halfStroke);
+                Vector2 sbr = R(w - halfStroke, h - halfStroke);
+                Vector2 sbl = R(halfStroke, h - halfStroke);
+                DrawLineEx(stl, str, LinePixelWidth, strokeColor);
+                DrawLineEx(str, sbr, LinePixelWidth, strokeColor);
+                DrawLineEx(sbr, sbl, LinePixelWidth, strokeColor);
+                DrawLineEx(sbl, stl, LinePixelWidth, strokeColor);
             }
-            else
+            else if (dashed && innerFits)
             {
                 // Dashed perimeter — translate pixel dash/gap lengths into segment lengths along
                 // each edge. The two new properties (StrokeDashLength + StrokeGapLength) take
                 // precedence over the legacy IsDotted flag, which collapses to a "DashLength /
-                // DashLength" pattern. Mirrors the dash arc loop in LineCircle.Render.
+                // DashLength" pattern. Mirrors the dash arc loop in LineCircle.Render. Uses the
+                // inset corners so dashed strokes stay inside the nominal bounds too.
                 float dashLen;
                 float gapLen;
                 if (StrokeDashLength > 0f && StrokeGapLength > 0f)
@@ -435,11 +463,18 @@ public class LineRectangle : InvisibleRenderable
                     dashLen = MathF.Max(DashLength, 1f);
                     gapLen = dashLen;
                 }
-                DrawDashedSegment(tl, tr, dashLen, gapLen, strokeColor);
-                DrawDashedSegment(tr, br, dashLen, gapLen, strokeColor);
-                DrawDashedSegment(br, bl, dashLen, gapLen, strokeColor);
-                DrawDashedSegment(bl, tl, dashLen, gapLen, strokeColor);
+                Vector2 stl = R(halfStroke, halfStroke);
+                Vector2 str = R(w - halfStroke, halfStroke);
+                Vector2 sbr = R(w - halfStroke, h - halfStroke);
+                Vector2 sbl = R(halfStroke, h - halfStroke);
+                DrawDashedSegment(stl, str, dashLen, gapLen, strokeColor);
+                DrawDashedSegment(str, sbr, dashLen, gapLen, strokeColor);
+                DrawDashedSegment(sbr, sbl, dashLen, gapLen, strokeColor);
+                DrawDashedSegment(sbl, stl, dashLen, gapLen, strokeColor);
             }
+            // If the stroke would consume the entire shape (innerFits == false), skip drawing —
+            // raylib's primitives draw nothing useful at that point and Skia's stroke-inset path
+            // clips similarly.
         }
     }
 

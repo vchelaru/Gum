@@ -10,15 +10,18 @@ using RenderingLibrary.Graphics;
 
 namespace Examples.Shapes;
 
-// Raylib mirror of SilkNetGum/Screens/RectanglesScreen.cs (issue #2757). Structurally aligned
-// with the Skia/MG gallery so visual regressions in one backend are easy to spot against the
-// other — same section grouping, same parameter sweeps where features overlap.
+// Raylib mirror of SilkNetGum/Screens/RectanglesScreen.cs (issue #2757). Section order, labels,
+// and parameter sweeps are kept aligned with the Skia/MG gallery so visual regressions in one
+// backend are easy to spot against the other when both samples are run side-by-side. Background
+// clear color matches too (Program.Main sets Color(51,76,204,255) — same as SilkNet's
+// ClearColor(0.2,0.3,0.8,1.0)).
 //
-// What's intentionally NOT mirrored on this pass: CornerRadius and per-corner radii sections.
-// Raylib has no rounded-rectangle renderable yet; the corresponding RoundedRectangleRuntime
-// only exists for Skia/Apos. Antialiasing toggle is also omitted — raylib relies on
-// framebuffer MSAA (set in Program.Main via SetConfigFlags(Msaa4xHint)) and has no per-shape
-// AA equivalent.
+// What's intentionally NOT mirrored: per-corner radii section (raylib's DrawRectangleRounded
+// only takes one uniform roundness; per-corner support requires writing an rlgl triangle mesh
+// that stitches four quarter-circle arcs onto the corners) and antialiasing section (raylib
+// has no per-shape AA — framebuffer MSAA via SetConfigFlags(Msaa4xHint) in Program.Main is the
+// only AA path, so toggling the runtime IsAntialiased flag would render identically). Both are
+// tracked as #2757 follow-ups.
 internal class RectanglesScreen : FrameworkElement
 {
     public RectanglesScreen() : base(new ContainerRuntime())
@@ -37,18 +40,21 @@ internal class RectanglesScreen : FrameworkElement
         root.Children.Add(left);
         root.Children.Add(right);
 
+        // Section order mirrors SilkNetGum/Screens/RectanglesScreen.cs exactly, minus the two
+        // sections raylib can't currently demo (per-corner radii, antialiasing). That keeps the
+        // remaining rows top-aligned across both windows when run side-by-side.
         left.Children.Add(BuildSection("Sizes (40, 60, 90, 130 wide) — default outline", BuildSizesRow()));
         left.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
         left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, Fill+Stroke, default", BuildModeRow()));
-        left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px) — thick stroke via DrawRectangleLinesEx (#2757)", BuildStrokeWidthRow()));
+        left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
         left.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
-        left.Children.Add(BuildSection("CornerRadius (0, 6, 16, 28 px) — DrawRectangleRounded (#2757)", BuildCornerRadiusRow()));
+        left.Children.Add(BuildSection("CornerRadius (0, 6, 16, 28) — raylib DrawRectangleRounded via RectangleRuntime (#2757)", BuildCornerRadiusRow()));
+        left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
 
-        right.Children.Add(BuildSection("Gradients (linear H / V / diagonal / radial) — rlgl mesh (#2757)", BuildGradientRow()));
-        right.Children.Add(BuildSection("FillColor + StrokeColor on same instance — both layers render (#2790 parity)", BuildBothColorsRow()));
-        right.Children.Add(BuildSection("Inscribed in 64x64 frame — stroke stays inside the gray rectangle (#2790 visual contract)", BuildInscribedRow()));
-        right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — perimeter walk (#2757)", BuildDashedStrokeRow()));
-        right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — concentric-rect blur approximation (#2757)", BuildDropshadowRow()));
+        right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — raylib approximates the blur via concentric rectangles (#2757)", BuildDropshadowRow()));
+        right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — raylib walks the perimeter, one DrawLineEx per dash (#2757)", BuildDashedStrokeRow()));
+        right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2757)", BuildBothColorsRow()));
+        right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2757)", BuildInscribedRow()));
     }
 
     static ContainerRuntime BuildColumn()
@@ -303,11 +309,11 @@ internal class RectanglesScreen : FrameworkElement
         return row;
     }
 
-    // DrawRectangleLinesEx centers stroke on the rectangle edge, so a thick stroke spreads
-    // half-inside / half-outside the nominal bounds. The inscribed test pins that the stroke
-    // stays within the parent gray frame even at 12 px — same visual contract Skia uses.
-    // (Note: raylib's center-on-edge behavior differs from Skia's inset-only behavior; visual
-    // parity here is "stays inside the frame within reason", not pixel-exact alignment.)
+    // Mirror of SilkNet's BuildInscribedRow. As of #2757, LineRectangle insets the rendered
+    // stroke entirely inside the nominal bounds (outer edge sits at the rect's nominal extent,
+    // not on it) — same contract as Skia's RenderableShapeBase.IsOffsetAppliedForStroke
+    // (#2814). With that in place, the 12px stroke cell stays inside its 64x64 gray frame here
+    // exactly like on Skia.
     static ContainerRuntime BuildInscribedRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
@@ -331,6 +337,7 @@ internal class RectanglesScreen : FrameworkElement
         rect.FillColor = new Color(46, 139, 87, 255);
         rect.StrokeColor = new Color(255, 255, 0, 255);
         rect.StrokeWidth = strokeWidth;
+        rect.StrokeWidthUnits = DimensionUnitType.Absolute;
         frame.Children.Add(rect);
         return frame;
     }
