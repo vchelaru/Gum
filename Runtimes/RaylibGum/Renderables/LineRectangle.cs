@@ -383,7 +383,18 @@ public class LineRectangle : InvisibleRenderable
                 }
                 else
                 {
-                    DrawRadialGradientFan(R, w, h);
+                    // Concentric-circles approach (not a fan) because a triangle fan from the
+                    // rectangle's centroid out to perimeter samples produces visible "X"-shaped
+                    // bright spokes from center to corners. The GPU interpolates fan triangle
+                    // colors linearly, which is correct for a planar gradient but wrong for a
+                    // radial — perimeter samples on a rectangle are at varying distances from
+                    // the gradient center (corners are sqrt(2)× farther than edge midpoints),
+                    // so the rays to those samples read brighter than the rest of the fan.
+                    // Concentric circles paint each annular band with the analytical radial
+                    // color sampled at the band's midpoint — no per-triangle interpolation
+                    // error. Circles don't have this problem because every fan-perimeter
+                    // sample sits at the same radius from center, so all rays read equal.
+                    DrawRadialGradientCircles(ox, oy, w, h, rotated);
                 }
             }
             else if (useRounded && !rotated)
@@ -562,82 +573,86 @@ public class LineRectangle : InvisibleRenderable
     }
 
     /// <summary>
-    /// Triangle fan from the rectangle's centroid out to many perimeter samples. Each fan
-    /// triangle gets per-vertex colors sampled from the radial gradient function — many small
-    /// triangles approximate the smooth color change a true shader would produce.
+    /// Renders the radial gradient as concentric filled circles, largest-to-smallest, with
+    /// each circle painted in the color sampled at the band's midpoint radius. The next
+    /// smaller circle overdraws the inside of the larger, leaving an annular ring of the
+    /// correct color. Many bands → smooth gradient, no per-triangle interpolation artifact.
     /// </summary>
-    private void DrawRadialGradientFan(Func<float, float, Vector2> R, float w, float h)
+    /// <remarks>
+    /// <para>raylib's scissor mode (axis-aligned only) clips the circles to the rectangle so
+    /// they don't bleed outside the shape. Rotated rectangles fall back to no-scissor + an
+    /// axis-aligned-bounds rendering — known limitation, not exercised by the gallery, tracked
+    /// as a #2757 follow-up if needed.</para>
+    /// <para>Pixels outside the gradient's outer radius (e.g. rectangle corners when
+    /// <see cref="GradientOuterRadius"/> is smaller than the rect's half-diagonal) get
+    /// <see cref="Color2"/> from the background-fill pre-pass before the bands draw.</para>
+    /// </remarks>
+    private void DrawRadialGradientCircles(float ox, float oy, float w, float h, bool rotated)
     {
-        // 64 samples around the perimeter is plenty for typical UI rectangle sizes — same
-        // smoothness budget as the circle's segment-count rule (~4° resolution at typical
-        // radii). The four corners are always included so the rectangle edges stay sharp.
-        const int perimeterSamples = 64;
-        Vector2 center = R(w * 0.5f, h * 0.5f);
-        Color centerColor = SampleRadialAt(w * 0.5f, h * 0.5f, w, h);
+        // Gradient center in rectangle-local coords → world coords.
+        // Note: we deliberately don't run this through R(). The gradient itself is rotation-
+        // invariant (it's circles around a center). What matters is that the gradient center
+        // sits at the correct world position; the circles around it look identical regardless
+        // of rectangle rotation. For unrotated rectangles, R(x, y) reduces to (ox+x, oy+y).
+        float gxLocal = GradientX1;
+        float gyLocal = GradientY1;
+        Vector2 centerWorld = new Vector2(ox + gxLocal, oy + gyLocal);
 
-        // Walk the perimeter clockwise in local space: top edge → right edge → bottom edge →
-        // left edge. Sample at evenly-spaced perimeter distances. Then close the fan by
-        // re-emitting the first perimeter point.
-        float perimeter = 2f * (w + h);
-        float step = perimeter / perimeterSamples;
+        float outer = GradientOuterRadius > 0f
+            ? GradientOuterRadius
+            : 0.5f * MathF.Sqrt(w * w + h * h);
+        float inner = GradientInnerRadius;
+        float span = outer - inner;
 
-        Vector2 firstWorld = default;
-        Color firstColor = default;
-        Vector2 prevWorld = default;
-        Color prevColor = default;
-        bool havePrev = false;
-
-        Rlgl.Begin((int)DrawMode.Triangles);
-        for (int i = 0; i < perimeterSamples; i++)
+        // Degenerate band (inner >= outer) → whole shape reads as Color2.
+        if (span <= 0f)
         {
-            float d = i * step;
-            (float lx, float ly) = PerimeterLocalCoord(d, w, h);
-            Vector2 worldP = R(lx, ly);
-            Color cP = SampleRadialAt(lx, ly, w, h);
-
-            if (!havePrev)
-            {
-                firstWorld = worldP;
-                firstColor = cP;
-                prevWorld = worldP;
-                prevColor = cP;
-                havePrev = true;
-                continue;
-            }
-
-            // Vertex order: center → current → previous. The perimeter walk runs clockwise
-            // in screen-down coords (top-left → top-right → bottom-right → bottom-left), so
-            // center→prev→curr is CW, which raylib's default backface cull drops. Swapping
-            // the last two vertices flips winding to CCW (front-facing) and the radial fan
-            // renders. Same rule applied in LineCircle's DrawGradientFan
-            // ("center → later-angle → earlier-angle").
-            EmitVertexColored(center, centerColor);
-            EmitVertexColored(worldP, cP);
-            EmitVertexColored(prevWorld, prevColor);
-
-            prevWorld = worldP;
-            prevColor = cP;
+            DrawRectangleV(new Vector2(ox, oy), new Vector2(w, h), Color2);
+            return;
         }
-        // Close the fan.
-        EmitVertexColored(center, centerColor);
-        EmitVertexColored(firstWorld, firstColor);
-        EmitVertexColored(prevWorld, prevColor);
-        Rlgl.End();
-    }
 
-    /// <summary>
-    /// Maps a clockwise perimeter distance to a rectangle-local coordinate. Used by the radial
-    /// fan to walk the rectangle's edge.
-    /// </summary>
-    private static (float x, float y) PerimeterLocalCoord(float d, float w, float h)
-    {
-        if (d < w) return (d, 0f);
-        d -= w;
-        if (d < h) return (w, d);
-        d -= h;
-        if (d < w) return (w - d, h);
-        d -= w;
-        return (0f, h - d);
+        // Background: paint the entire rect with Color2 so pixels outside the outer radius
+        // (rectangle corners when outer < half-diagonal) end up correct. The concentric circles
+        // overdraw everything inside the outer radius.
+        DrawRectangleV(new Vector2(ox, oy), new Vector2(w, h), Color2);
+
+        // Clip subsequent draws to the rectangle's AABB so circles can't bleed outside.
+        // Scissor is in framebuffer pixel coords and doesn't apply the current MVP transform,
+        // which is why this only works cleanly for axis-aligned rendering.
+        bool useScissor = !rotated;
+        if (useScissor)
+        {
+            BeginScissorMode((int)ox, (int)oy, (int)MathF.Ceiling(w), (int)MathF.Ceiling(h));
+        }
+
+        // Band count: 64 gives near-imperceptible stairstepping at typical UI sizes. Step in
+        // radius is span/64 px (~0.5 px at outer=35), well below visual threshold.
+        const int bands = 64;
+        float bandThickness = span / bands;
+        for (int i = 0; i < bands; i++)
+        {
+            float bandOuterR = outer - i * bandThickness;
+            float bandMidR = bandOuterR - bandThickness * 0.5f;
+            // Sample the gradient at the band's midpoint so the visible annular ring shows
+            // the correct interpolated color (not the color at the outer edge, which would
+            // bias the whole gradient toward Color2 by half a band).
+            float t = (bandMidR - inner) / span;
+            Color bandColor = LerpClamped(t);
+            DrawCircleV(centerWorld, bandOuterR, bandColor);
+        }
+
+        // Fill inside the inner radius with Color1 — the smallest band's outer radius is
+        // approximately inner + bandThickness, so pixels closer than that would otherwise
+        // show the Color2 background through the gap.
+        if (inner > 0f)
+        {
+            DrawCircleV(centerWorld, inner, Color1);
+        }
+
+        if (useScissor)
+        {
+            EndScissorMode();
+        }
     }
 
     private Color SampleLinearAt(float localX, float localY)
@@ -650,26 +665,6 @@ public class LineRectangle : InvisibleRenderable
             return Color1;
         }
         float t = ((localX - GradientX1) * dx + (localY - GradientY1) * dy) / lenSq;
-        return LerpClamped(t);
-    }
-
-    private Color SampleRadialAt(float localX, float localY, float w, float h)
-    {
-        float dx = localX - GradientX1;
-        float dy = localY - GradientY1;
-        float dist = MathF.Sqrt(dx * dx + dy * dy);
-        // OuterRadius = 0 (default) collapses to half-diagonal so a no-config radial covers
-        // the whole rectangle. Matches the spirit of the circle's "outer defaults to Radius"
-        // rule for the rectangle's shape.
-        float outer = GradientOuterRadius > 0f
-            ? GradientOuterRadius
-            : 0.5f * MathF.Sqrt(w * w + h * h);
-        float span = outer - GradientInnerRadius;
-        if (span <= 0f)
-        {
-            return Color2;
-        }
-        float t = (dist - GradientInnerRadius) / span;
         return LerpClamped(t);
     }
 
