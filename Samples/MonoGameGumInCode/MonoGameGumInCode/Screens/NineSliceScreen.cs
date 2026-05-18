@@ -1,7 +1,10 @@
 using Gum.Forms.Controls;
+using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using RenderingLibrary.Content;
 
 namespace MonoGameGumInCode.Screens;
 internal class NineSliceScreen : FrameworkElement
@@ -100,6 +103,35 @@ internal class NineSliceScreen : FrameworkElement
         rotScale8.Rotation = 25f;
         rotScale8.Y = 50f;
         borderRotRow.AddChild(rotScale8);
+
+        // AnimationChain-driven nine-slice. The chain is built in code (no .achx
+        // file) to keep the sample self-contained; in a real project you'd usually
+        // load an .achx via LoaderManager.Self.ContentLoader.LoadContent<AnimationChainList>.
+        // Each frame is a full-texture nine-slice — assigning AnimationChains +
+        // CurrentChainName + Animate=true drives the shared AnimationChainLogic,
+        // which swaps the texture across all 9 internal slices on every frame change.
+        AddLabel(container, "AnimationChain-driven nine-slice (swaps Frame.png <-> SquareFrame.png):");
+        var animated = new NineSliceRuntime();
+        animated.Width = 160;
+        animated.Height = 64;
+        animated.AnimationChains = BuildPulseChain();
+        animated.CurrentChainName = "Pulse";
+        animated.Animate = true;
+        container.AddChild(animated);
+    }
+
+    private static AnimationChainList BuildPulseChain()
+    {
+        Texture2D frameTexture = LoaderManager.Self.ContentLoader.LoadContent<Texture2D>("Frame.png");
+        Texture2D squareTexture = LoaderManager.Self.ContentLoader.LoadContent<Texture2D>("SquareFrame.png");
+
+        AnimationChain chain = new() { Name = "Pulse" };
+        chain.Add(new AnimationFrame(frameTexture, frameLength: 0.5f));
+        chain.Add(new AnimationFrame(squareTexture, frameLength: 0.5f));
+
+        AnimationChainList chains = new();
+        chains.Add(chain);
+        return chains;
     }
 
     private static void AddLabel(ContainerRuntime container, string text)
