@@ -166,7 +166,7 @@ public class PolygonRuntime : InteractiveGue
     /// backends — assigning either of the new properties to a positive value engages the
     /// same binary dot pattern that this property used to control.
     /// </summary>
-    [Obsolete("Renamed to StrokeDashLength + StrokeGapLength in #2757 for cross-backend parity with CircleRuntime/RectangleRuntime. On MG/Raylib the visual is still a fixed-pattern dotted texture (LinePolygon has no per-segment dash control); Skia uses the lengths verbatim. Set both new properties to non-zero values to engage dashing on either backend.")]
+    [Obsolete("Renamed to StrokeDashLength + StrokeGapLength in #2757 for cross-backend parity with CircleRuntime/RectangleRuntime. raylib (post-#2757) and Skia honor the lengths verbatim via a perimeter walk / SKPathEffect.CreateDash; MG still falls back to its fixed-pattern dotted texture (LinePolygon has no per-segment dash control). Set both new properties to non-zero values to engage dashing on any backend.")]
     public bool IsDotted
     {
         get => ContainedPolygon.IsDotted;
@@ -214,13 +214,18 @@ public class PolygonRuntime : InteractiveGue
         }
     }
 
-    // Drives the MG/Raylib LinePolygon's binary IsDotted from the unified dash/gap pair —
-    // both lengths must be positive for dashing to engage, matching the Skia engage rule in
-    // RenderableShapeBase (which guards CreateDash on `dash > 0 && gap > 0`). The legacy
-    // IsDotted setter is still honored for code paths that haven't migrated.
+    // Drives the contained LinePolygon's dash state from the unified dash/gap pair. On MG the
+    // renderable only exposes a binary IsDotted toggle (fixed-pattern texture), so dashing
+    // engages when both lengths are positive — same engage rule as Skia's RenderableShapeBase
+    // (`dash > 0 && gap > 0` guard on SKPathEffect.CreateDash). On raylib the renderable
+    // honors the actual lengths via a perimeter walk (#2757), so push them through directly.
     void ApplyDashState()
     {
         ContainedPolygon.IsDotted = _strokeDashLength > 0 && _strokeGapLength > 0;
+#if RAYLIB
+        ContainedPolygon.StrokeDashLength = _strokeDashLength;
+        ContainedPolygon.StrokeGapLength = _strokeGapLength;
+#endif
     }
 
     float _strokeWidth = 1;
@@ -248,6 +253,42 @@ public class PolygonRuntime : InteractiveGue
             NotifyPropertyChanged();
         }
     }
+
+#if RAYLIB
+    Color? _strokeColor;
+
+    /// <summary>
+    /// Explicit stroke-pass color. When <c>null</c> the renderable falls back to
+    /// <see cref="Color"/>. Mirrors the cross-backend API exposed by
+    /// <see cref="CircleRuntime"/> and <see cref="RectangleRuntime"/> (#2757) so the shared
+    /// PolygonsScreen sample sets <c>polygon.StrokeColor = ...</c> uniformly.
+    /// </summary>
+    public Color? StrokeColor
+    {
+        get => _strokeColor;
+        set
+        {
+            _strokeColor = value;
+            ContainedPolygon.StrokeColor = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// When <c>true</c>, draws an extra segment from the last point back to the first so the
+    /// polygon outline closes. Default <c>true</c> (matches Skia's <c>Polygon.IsClosed</c>);
+    /// set <c>false</c> for open polylines.
+    /// </summary>
+    public bool IsClosed
+    {
+        get => ContainedPolygon.IsClosed;
+        set
+        {
+            ContainedPolygon.IsClosed = value;
+            NotifyPropertyChanged();
+        }
+    }
+#endif
 
     /// <summary>
     /// Pushes the stroke width to the contained <c>LinePolygon</c> each frame, resolving
