@@ -203,13 +203,15 @@ public class PolygonRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void StrokeWidth_ShouldPushImmediatelyToContainedRenderable()
+    public void PreRender_ShouldPushStrokeWidthToContainedRenderable()
     {
-        // The setter must push without waiting for PreRender — see the rectangle PR (#2827)
-        // for the original symptom: gallery cells uniformly rendered at 1 px because PreRender
-        // hadn't run yet on first draw.
+        // Canonical resolve path for StrokeWidth is PreRender (handles StrokeWidthUnits
+        // ScreenPixel ↔ camera zoom). The setter intentionally does NOT push — raylib's
+        // Renderer.Draw walks the tree calling PreRender before render so this lands in time
+        // for the first frame.
         PolygonRuntime sut = new();
         sut.StrokeWidth = 5f;
+        sut.PreRender();
         ((Gum.Renderables.LinePolygon)sut.RenderableComponent).LinePixelWidth.ShouldBe(5f);
     }
 

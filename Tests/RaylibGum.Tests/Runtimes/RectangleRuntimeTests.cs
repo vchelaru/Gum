@@ -135,19 +135,19 @@ public class RectangleRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void StrokeWidth_RoundTrips_AndPushesToContainedRenderable()
+    public void PreRender_ShouldPushStrokeWidthToContainedRenderable()
     {
-        // #2757 follow-up — the setter must push immediately, not only via PreRender. The
-        // game loop's PreRender pass runs before draw, but the gallery sample's "StrokeWidth
-        // (1,2,4,8 px)" row read uniformly as 1 px on raylib because the runtime stashed
-        // _strokeWidth and never wrote through; whatever PreRender path the renderer
-        // expected wasn't engaging in time. Mirrors CircleRuntime's RAYLIB StrokeWidth
-        // setter (also pushes immediately).
+        // Canonical resolve path for StrokeWidth is PreRender (handles StrokeWidthUnits
+        // ScreenPixel ↔ camera zoom). The setter intentionally does NOT push immediately —
+        // raylib's Renderer.Draw walks the tree calling PreRender before render so this lands
+        // in time for the first frame. Symmetric across CircleRuntime, RectangleRuntime, and
+        // PolygonRuntime.
         RectangleRuntime sut = new();
 
         sut.StrokeWidth = 5f;
-
         sut.StrokeWidth.ShouldBe(5f);
+
+        sut.PreRender();
         ((LineRectangle)sut.RenderableComponent!).LinePixelWidth.ShouldBe(5f);
     }
 
