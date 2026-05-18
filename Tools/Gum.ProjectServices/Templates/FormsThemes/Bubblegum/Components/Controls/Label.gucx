@@ -29,6 +29,7 @@
       <Value xsi:type="xsd:int">61</Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="TextCategory" Name="TextCategoryState" SetsValue="false" />
     <Variable Type="float" Name="Width" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -51,6 +52,153 @@
       </Value>
     </VariableList>
   </State>
+  <Category>
+    <Name>TextCategory</Name>
+    <State>
+      <Name>Tiny</Name>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Tiny.Font</string>
+          <string>FontSize = Components/Styles.Tiny.FontSize</string>
+          <string>IsBold = Components/Styles.Tiny.IsBold</string>
+          <string>IsItalic = Components/Styles.Tiny.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Small</Name>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Small.Font</string>
+          <string>FontSize = Components/Styles.Small.FontSize</string>
+          <string>IsBold = Components/Styles.Small.IsBold</string>
+          <string>IsItalic = Components/Styles.Small.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Normal</Name>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Normal.Font</string>
+          <string>FontSize = Components/Styles.Normal.FontSize</string>
+          <string>IsBold = Components/Styles.Normal.IsBold</string>
+          <string>IsItalic = Components/Styles.Normal.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Emphasis</Name>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Emphasis.Font</string>
+          <string>FontSize = Components/Styles.Emphasis.FontSize</string>
+          <string>IsBold = Components/Styles.Emphasis.IsBold</string>
+          <string>IsItalic = Components/Styles.Emphasis.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Strong</Name>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Strong.Font</string>
+          <string>FontSize = Components/Styles.Strong.FontSize</string>
+          <string>IsBold = Components/Styles.Strong.IsBold</string>
+          <string>IsItalic = Components/Styles.Strong.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>H3</Name>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.H3.Font</string>
+          <string>FontSize = Components/Styles.H3.FontSize</string>
+          <string>IsBold = Components/Styles.H3.IsBold</string>
+          <string>IsItalic = Components/Styles.H3.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>H2</Name>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.H2.Font</string>
+          <string>FontSize = Components/Styles.H2.FontSize</string>
+          <string>IsBold = Components/Styles.H2.IsBold</string>
+          <string>IsItalic = Components/Styles.H2.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>H1</Name>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.H1.Font</string>
+          <string>FontSize = Components/Styles.H1.FontSize</string>
+          <string>IsBold = Components/Styles.H1.IsBold</string>
+          <string>IsItalic = Components/Styles.H1.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Title</Name>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Title.Font</string>
+          <string>FontSize = Components/Styles.Title.FontSize</string>
+          <string>IsBold = Components/Styles.Title.IsBold</string>
+          <string>IsItalic = Components/Styles.Title.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+  </Category>
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>LabelBehavior</BehaviorName>
