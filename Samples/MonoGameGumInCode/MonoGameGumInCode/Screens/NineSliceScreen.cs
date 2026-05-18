@@ -1,4 +1,6 @@
+using Gum.Content.AnimationChain;
 using Gum.Forms.Controls;
+using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
@@ -100,6 +102,32 @@ internal class NineSliceScreen : FrameworkElement
         rotScale8.Rotation = 25f;
         rotScale8.Y = 50f;
         borderRotRow.AddChild(rotScale8);
+
+        // AnimationChain-driven nine-slice. The .achx is loaded from disk via
+        // AnimationChainListSave.FromFile + ToAnimationChainList — the same
+        // pipeline a .gumx-loaded project uses internally. Assigning the
+        // resulting AnimationChainList + CurrentChainName + Animate=true drives
+        // the shared AnimationChainLogic, which swaps the texture across all 9
+        // internal slices on every frame change.
+        AddLabel(container, "AnimationChain-driven nine-slice (Kenney pixel-adventure AnimatedFrame1.achx):");
+        var animated = new NineSliceRuntime();
+        animated.Width = 160;
+        animated.Height = 64;
+        animated.AnimationChains = LoadAnimatedFrameChain();
+        animated.CurrentChainName = "Animation1";
+        animated.Animate = true;
+        container.AddChild(animated);
+    }
+
+    private static AnimationChainList LoadAnimatedFrameChain()
+    {
+        // Path is relative to FileManager.RelativeDirectory (set to "Content/" by the
+        // sample's initialization), matching the convention used by SourceFileName
+        // elsewhere on this screen. Inside ToAnimationChainList, FileRelativeTextures
+        // resolves the per-frame texture references (tile_0064.png / tile_0065.png)
+        // from the same directory as the .achx.
+        AnimationChainListSave save = AnimationChainListSave.FromFile("AnimatedFrame1.achx");
+        return save.ToAnimationChainList();
     }
 
     private static void AddLabel(ContainerRuntime container, string text)

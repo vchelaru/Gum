@@ -170,38 +170,47 @@ public class NineSliceRuntime : InteractiveGue
 #if XNALIKE || SOKOL
     #region Animation
 
+    /// <summary>
+    /// Whether the nine-slice should actively advance its animation chain.
+    /// </summary>
     public bool Animate
     {
-        get => ContainedNineSlice.Animate;
+        get => ContainedNineSlice.AnimationLogic.Animate;
         set
         {
-            ContainedNineSlice.Animate = value;
+            ContainedNineSlice.AnimationLogic.Animate = value;
 #if SOKOL
             NotifyPropertyChanged();
 #endif
         }
     }
 
+    /// <summary>
+    /// The name of the currently active animation chain.
+    /// </summary>
     public string CurrentChainName
     {
-        get => ContainedNineSlice.CurrentChainName;
+        get => ContainedNineSlice.AnimationLogic.CurrentChainName;
         set
         {
-            ContainedNineSlice.CurrentChainName = value;
+            ContainedNineSlice.AnimationLogic.CurrentChainName = value;
 #if SOKOL
             NotifyPropertyChanged();
 #endif
         }
     }
 
+    /// <summary>
+    /// The list of animation chains available to this nine-slice.
+    /// </summary>
     public AnimationChainList AnimationChains
     {
-        get => ContainedNineSlice.AnimationChains;
+        get => ContainedNineSlice.AnimationLogic.AnimationChains;
         set
         {
-            ContainedNineSlice.AnimationChains = value;
+            ContainedNineSlice.AnimationLogic.AnimationChains = value;
 #if XNALIKE
-            if (ContainedNineSlice.UpdateToCurrentAnimationFrame())
+            if (ContainedNineSlice.AnimationLogic.UpdateToCurrentAnimationFrame())
             {
                 UpdateTextureValuesFrom(ContainedNineSlice);
             }
@@ -211,17 +220,20 @@ public class NineSliceRuntime : InteractiveGue
         }
     }
 
-#if SOKOL
+    /// <summary>
+    /// The speed multiplier for animation playback (1.0 is normal speed).
+    /// </summary>
     public float AnimationSpeed
     {
-        get => ContainedNineSlice.AnimationSpeed;
+        get => ContainedNineSlice.AnimationLogic.AnimationSpeed;
         set
         {
-            ContainedNineSlice.AnimationSpeed = value;
+            ContainedNineSlice.AnimationLogic.AnimationSpeed = value;
+#if SOKOL
             NotifyPropertyChanged();
+#endif
         }
     }
-#endif
 
     #endregion
 #endif
@@ -263,7 +275,7 @@ public class NineSliceRuntime : InteractiveGue
         {
             base.SetProperty("SourceFile", value);
 #if XNALIKE
-            if (ContainedNineSlice.UpdateToCurrentAnimationFrame())
+            if (ContainedNineSlice.AnimationLogic.UpdateToCurrentAnimationFrame())
             {
                 UpdateTextureValuesFrom(ContainedNineSlice);
             }

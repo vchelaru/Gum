@@ -16,7 +16,7 @@ namespace Gum.Renderables;
 /// one axis, center stretched along both. Explicit border overrides are
 /// exposed via <see cref="CustomFrameTextureCoordinateWidth"/>.
 ///
-/// Animation chain playback is delegated to <see cref="SpriteAnimationLogic"/>
+/// Animation chain playback is delegated to <see cref="AnimationChainLogic"/>
 /// — same composition pattern as <see cref="Sprite"/>. SokolGum is currently
 /// the only backend that drives animation on NineSlice; RaylibGum/Skia
 /// expose <c>AnimationChains</c> on their SpriteRuntime but not their
@@ -58,7 +58,7 @@ public sealed class NineSlice : RenderableBase, ITextureCoordinate, IAnimatable,
 
     // Shared animation state — see Sprite for the composition pattern.
 
-    public SpriteAnimationLogic AnimationLogic { get; } = new();
+    public AnimationChainLogic AnimationLogic { get; } = new();
 
     public AnimationChainList? AnimationChains
     {

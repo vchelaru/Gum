@@ -35,7 +35,7 @@ public class Sprite : SpriteBatchRenderableBase,
         set {  mInvalidTexture = value; }
     }
 
-    public SpriteAnimationLogic AnimationLogic { get; } = new SpriteAnimationLogic();
+    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
 
     public int CurrentFrameIndex
     {
