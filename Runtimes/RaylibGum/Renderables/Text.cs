@@ -107,7 +107,16 @@ public class Text : IVisible, IRenderableIpso,
 
     bool IWrappedText.IsMidWordLineBreakEnabled => true;
 
-    //static Font defaultFont = Raylib.GetFontDefault();
+    /// <summary>
+    /// Project-wide default font for newly constructed <see cref="Text"/> renderables.
+    /// When unset (<c>BaseSize == 0</c>), the constructor falls back to raylib's built-in
+    /// pixel font via <see cref="GetFontDefault"/>. Set this once at startup — typically
+    /// after <c>LoadFontEx</c> — to make every <c>TextRuntime</c> created thereafter pick
+    /// up the chosen font, including instances that don't go through the Forms
+    /// <c>Styling</c> pipeline (e.g. raw <c>TextRuntime</c> headers in sample screens).
+    /// Issue #2757.
+    /// </summary>
+    public static Font DefaultFont { get; set; }
 
     public Vector2 Position;
     
@@ -588,7 +597,10 @@ public class Text : IVisible, IRenderableIpso,
 
     public Text(ISystemManagers? managers)
     {
-        Font = GetFontDefault();
+        // #2757 — consult the project-wide DefaultFont so non-Forms TextRuntime instances
+        // (e.g. raw section headers in sample screens) pick up the user-chosen font instead
+        // of raylib's tiny pixel default. BaseSize == 0 is the uninitialized-Font sentinel.
+        Font = DefaultFont.BaseSize > 0 ? DefaultFont : GetFontDefault();
         mChildren = new();
         Visible = true;
     }

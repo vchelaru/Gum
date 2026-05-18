@@ -1,5 +1,6 @@
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using System.Numerics;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
@@ -13,14 +14,150 @@ public enum CircleOrigin
     TopLeft,
 }
 
-/// <summary>Stroked circle outline rendered using Raylib's DrawCircleLines.</summary>
+/// <summary>
+/// Raylib circle renderable. Originally a 1 px stroke-only outline via <c>DrawCircleLines</c>;
+/// extended in issue #2757 to also paint a filled disk, a variable-width stroke ring via
+/// <c>DrawRing</c>, and a centered radial gradient via <c>DrawCircleGradient</c>. The legacy
+/// <see cref="Color"/> / <see cref="Red"/> / <see cref="Green"/> / <see cref="Blue"/> /
+/// <see cref="Alpha"/> surface is preserved so the shared <c>CircleRuntime</c>'s raylib branch
+/// keeps working unchanged — when <see cref="FillColor"/> and <see cref="StrokeColor"/> are
+/// both <c>null</c> the render path collapses to the original behavior.
+/// </summary>
 public class LineCircle : InvisibleRenderable
 {
+    /// <inheritdoc cref="CircleOrigin"/>
     public CircleOrigin CircleOrigin { get; set; }
+
+    /// <summary>Radius in world-space pixels.</summary>
     public float Radius { get; set; }
 
+    /// <summary>
+    /// Legacy single-color slot used as the stroke color when <see cref="StrokeColor"/> is
+    /// <c>null</c>. Defaults to white so the pre-#2757 outline path renders the same as before.
+    /// </summary>
     public Color Color { get; set; } = Color.White;
 
+    /// <summary>
+    /// When <c>true</c>, draws a filled disk using <see cref="Color"/> (or <see cref="FillColor"/>
+    /// when set). Independent of the stroke pass — both fill and stroke may render in the same
+    /// <see cref="Render"/> call.
+    /// </summary>
+    public bool IsFilled { get; set; }
+
+    /// <summary>
+    /// Width of the stroke ring in world-space pixels. A value of 1 (the default) uses the
+    /// crisp <c>DrawCircleLines</c> path; larger values draw a ring via <c>DrawRing</c>.
+    /// </summary>
+    public float StrokeWidth { get; set; } = 1f;
+
+    /// <summary>
+    /// Explicit fill-pass color. When set, the fill pass runs regardless of <see cref="IsFilled"/>
+    /// — this is the raylib analog of Skia's two-slot composition (#2790). When <c>null</c>
+    /// the fill pass only runs if <see cref="IsFilled"/> is <c>true</c>, in which case
+    /// <see cref="Color"/> is used.
+    /// </summary>
+    public Color? FillColor { get; set; }
+
+    /// <summary>
+    /// Explicit stroke-pass color. When <c>null</c>, the stroke pass uses <see cref="Color"/>
+    /// (legacy behavior) — but only if no fill is rendered. When non-<c>null</c>, the stroke
+    /// always renders regardless of fill, enabling a filled disk with a contrasting outline.
+    /// </summary>
+    public Color? StrokeColor { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, the fill pass paints a gradient from <see cref="Color1"/> to
+    /// <see cref="Color2"/> rather than a solid color. Both <see cref="GradientType.Linear"/>
+    /// and <see cref="GradientType.Radial"/> are supported (#2757 follow-ups #8 and #9);
+    /// rendering goes through an <c>rlgl</c> triangle fan with per-vertex colors computed
+    /// from <see cref="GradientX1"/>/<see cref="GradientY1"/>, <see cref="GradientX2"/>/<see cref="GradientY2"/>,
+    /// and (for radial) <see cref="GradientInnerRadius"/>/<see cref="GradientOuterRadius"/>.
+    /// </summary>
+    public bool UseGradient { get; set; }
+
+    /// <summary>
+    /// Gradient mode. <see cref="GradientType.Linear"/> uses (X1,Y1)→(X2,Y2) as the gradient
+    /// axis; <see cref="GradientType.Radial"/> uses (X1,Y1) as the center with InnerRadius/
+    /// OuterRadius as the falloff band.
+    /// </summary>
+    public GradientType GradientType { get; set; }
+
+    /// <summary>Start color (linear: at the axis start; radial: at the inner radius).</summary>
+    public Color Color1 { get; set; } = Color.White;
+
+    /// <summary>End color (linear: at the axis end; radial: at the outer radius).</summary>
+    public Color Color2 { get; set; } = Color.White;
+
+    /// <summary>
+    /// X coordinate of the gradient axis start (linear) or radial gradient center, in pixels
+    /// relative to the circle's bounding-box top-left. Default 0.
+    /// </summary>
+    public float GradientX1 { get; set; }
+
+    /// <summary>Y coordinate of <see cref="GradientX1"/>, same coord space.</summary>
+    public float GradientY1 { get; set; }
+
+    /// <summary>
+    /// X coordinate of the gradient axis end (linear only — ignored for radial).
+    /// </summary>
+    public float GradientX2 { get; set; }
+
+    /// <summary>Y coordinate of <see cref="GradientX2"/>.</summary>
+    public float GradientY2 { get; set; }
+
+    /// <summary>
+    /// Inner radius for a radial gradient — at this radius the color is <see cref="Color1"/>.
+    /// Default 0 (solid inner color at the gradient center).
+    /// </summary>
+    public float GradientInnerRadius { get; set; }
+
+    /// <summary>
+    /// Outer radius for a radial gradient — at this radius the color is <see cref="Color2"/>.
+    /// When 0 (the default), the circle's <see cref="Radius"/> is used so a default-configured
+    /// radial gradient covers the whole disk.
+    /// </summary>
+    public float GradientOuterRadius { get; set; }
+
+    /// <summary>
+    /// Length in world-space pixels of each dash segment around the ring's circumference.
+    /// A value of 0 (the default) draws a solid stroke. Both <see cref="StrokeDashLength"/>
+    /// and <see cref="StrokeGapLength"/> must be &gt; 0 for dashed rendering to engage.
+    /// Issue #2757 — implemented via a per-dash <c>DrawRing</c> arc loop.
+    /// </summary>
+    public float StrokeDashLength { get; set; }
+
+    /// <summary>
+    /// Length in world-space pixels of each gap between dashes. Ignored when
+    /// <see cref="StrokeDashLength"/> is 0.
+    /// </summary>
+    public float StrokeGapLength { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, a dropshadow pass renders behind the fill/stroke passes using
+    /// <see cref="DropshadowColor"/>, offset by <see cref="DropshadowOffsetX"/>/<see cref="DropshadowOffsetY"/>
+    /// with an isotropic blur radius of <c>max(DropshadowBlurX, DropshadowBlurY)</c>.
+    /// Issue #2757 — raylib has no shader-free blur primitive, so the blur is approximated
+    /// with concentric semi-transparent rings (raised-cosine falloff). Anisotropic blur
+    /// (BlurX ≠ BlurY) collapses to the larger of the two on raylib.
+    /// </summary>
+    public bool HasDropshadow { get; set; }
+
+    /// <summary>Color of the dropshadow disk (alpha channel scales the falloff).</summary>
+    public Color DropshadowColor { get; set; } = new Color((byte)0, (byte)0, (byte)0, (byte)255);
+
+    /// <summary>X offset of the dropshadow center in world-space pixels.</summary>
+    public float DropshadowOffsetX { get; set; }
+
+    /// <summary>Y offset of the dropshadow center in world-space pixels.</summary>
+    public float DropshadowOffsetY { get; set; }
+
+    /// <summary>Horizontal blur radius. Treated as isotropic with <see cref="DropshadowBlurY"/> on raylib.</summary>
+    public float DropshadowBlurX { get; set; }
+
+    /// <summary>Vertical blur radius. Treated as isotropic with <see cref="DropshadowBlurX"/> on raylib.</summary>
+    public float DropshadowBlurY { get; set; }
+
+    /// <inheritdoc/>
     public override int Alpha
     {
         get => Color.A;
@@ -33,6 +170,7 @@ public class LineCircle : InvisibleRenderable
         }
     }
 
+    /// <summary>Red channel of the legacy <see cref="Color"/> slot.</summary>
     public int Red
     {
         get => Color.R;
@@ -45,6 +183,7 @@ public class LineCircle : InvisibleRenderable
         }
     }
 
+    /// <summary>Green channel of the legacy <see cref="Color"/> slot.</summary>
     public int Green
     {
         get => Color.G;
@@ -57,6 +196,7 @@ public class LineCircle : InvisibleRenderable
         }
     }
 
+    /// <summary>Blue channel of the legacy <see cref="Color"/> slot.</summary>
     public int Blue
     {
         get => Color.B;
@@ -69,10 +209,13 @@ public class LineCircle : InvisibleRenderable
         }
     }
 
+    /// <inheritdoc cref="LineCircle"/>
     public LineCircle() : this(null) { }
 
+    /// <inheritdoc cref="LineCircle"/>
     public LineCircle(SystemManagers? _) { }
 
+    /// <inheritdoc/>
     public override void Render(ISystemManagers managers)
     {
         if (!Visible)
@@ -93,6 +236,206 @@ public class LineCircle : InvisibleRenderable
             cy = this.GetAbsoluteTop();
         }
 
-        DrawCircleLines((int)cx, (int)cy, Radius, Color);
+        // Dropshadow pre-pass — runs first so the shape draws over it. raylib has no
+        // SKImageFilter.CreateDropShadow equivalent and no shader-free blur primitive, so the
+        // blurred edge is approximated by N concentric rings of decreasing alpha around a
+        // solid core disk. Anisotropic blur collapses to max(BlurX, BlurY).
+        if (HasDropshadow && Radius > 0f)
+        {
+            float shadowCx = cx + DropshadowOffsetX;
+            float shadowCy = cy + DropshadowOffsetY;
+            float blur = System.MathF.Max(DropshadowBlurX, DropshadowBlurY);
+
+            DrawCircle((int)shadowCx, (int)shadowCy, Radius, DropshadowColor);
+
+            if (blur > 0f)
+            {
+                const int blurRings = 8;
+                Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
+                for (int i = 1; i <= blurRings; i++)
+                {
+                    float tInner = (float)(i - 1) / blurRings;
+                    float tOuter = (float)i / blurRings;
+                    float innerR = Radius + tInner * blur;
+                    float outerR = Radius + tOuter * blur;
+                    // Raised-cosine alpha at the band's outer edge — gives a smoother
+                    // Gaussian-like falloff than linear without doing any actual blur math.
+                    float alphaScale = 0.5f * (1f + System.MathF.Cos(System.MathF.PI * tOuter));
+                    byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
+                    Color ringColor = new Color(DropshadowColor.R, DropshadowColor.G,
+                        DropshadowColor.B, ringAlpha);
+                    int ringSegments = System.Math.Max(36, (int)(outerR * 2));
+                    DrawRing(shadowCenter, innerR, outerR,
+                        startAngle: 0f, endAngle: 360f, ringSegments, ringColor);
+                }
+            }
+        }
+
+        // Fill pass — runs when FillColor is set, or when IsFilled is true with no explicit
+        // FillColor (legacy Color slot supplies the fill color). Mirrors Skia's two-slot
+        // composition (#2790) where setting FillColor alone, StrokeColor alone, or both lights
+        // up the appropriate layers.
+        bool runFill = FillColor.HasValue || IsFilled;
+        if (runFill)
+        {
+            Color fillColor = FillColor ?? Color;
+            if (UseGradient)
+            {
+                // #2757 follow-ups #8 (linear) and #9 (offset/inner-radius radial). Both go
+                // through an rlgl triangle fan with per-vertex colors — raylib's public
+                // DrawCircleGradient handles only centered, inner=0, outer=Radius radial, so
+                // we drop to immediate-mode for full coverage. Centered radial would still
+                // render correctly through DrawCircleGradient, but unifying the path keeps
+                // one tested branch instead of a fragile "is this the centered default?"
+                // detector. The fan structure matches raylib's own DrawCircle implementation
+                // in rshapes.c — center vertex + N rim vertices fan into N triangles.
+                DrawGradientFan(cx, cy, Radius);
+            }
+            else
+            {
+                DrawCircle((int)cx, (int)cy, Radius, fillColor);
+            }
+        }
+
+        // Stroke pass — runs when StrokeColor is explicitly set (paired with fill), or when
+        // no fill ran (so the legacy outline path stays the default visible behavior). Stroke
+        // is inset entirely inside Radius (outer edge at Radius, inner edge at Radius -
+        // StrokeWidth) so the ring never bleeds past the nominal bounds — mirrors Skia's
+        // RenderableShapeBase.IsOffsetAppliedForStroke contract, which the #2790 gallery's
+        // "inscribed in 64x64 frame" row treats as the visual acceptance.
+        bool runStroke = StrokeColor.HasValue || !runFill;
+        if (runStroke)
+        {
+            Color strokeColor = StrokeColor ?? Color;
+            // Segment count scales with radius to keep the ring smooth at larger sizes; 36
+            // is the floor for small circles to avoid visible faceting. DrawRing is used for
+            // every stroke width (including 1 px) so the inset behavior stays uniform — the
+            // legacy DrawCircleLines path centered the line on Radius, which bled outward.
+            int segments = System.Math.Max(36, (int)(Radius * 2));
+            float innerRadius = System.Math.Max(0f, Radius - StrokeWidth);
+            Vector2 center = new Vector2(cx, cy);
+            bool dashed = StrokeDashLength > 0f && StrokeGapLength > 0f && Radius > 0f;
+            if (dashed)
+            {
+                // Translate user-space dash/gap pixel lengths into arc angles around the
+                // ring's circumference. raylib has no built-in dash path effect (Skia's
+                // SKPathEffect.CreateDash, MG/Apos's RenderDashed); we emit each dash as a
+                // separate DrawRing arc instead.
+                float circumference = 2f * System.MathF.PI * Radius;
+                float dashAngleDeg = (StrokeDashLength / circumference) * 360f;
+                float gapAngleDeg = (StrokeGapLength / circumference) * 360f;
+                float patternAngleDeg = dashAngleDeg + gapAngleDeg;
+                // Per-dash segment count proportional to the dash arc — ~4° per segment is
+                // smooth at typical radii. Floor at 1 so tiny dashes (e.g. 2 px dotted) still
+                // render as at least one triangle pair.
+                int segmentsPerDash = System.Math.Max(1, (int)(dashAngleDeg / 4f));
+                float currentAngle = 0f;
+                while (currentAngle < 360f)
+                {
+                    float dashEnd = System.MathF.Min(currentAngle + dashAngleDeg, 360f);
+                    DrawRing(center, innerRadius, Radius,
+                        currentAngle, dashEnd, segmentsPerDash, strokeColor);
+                    currentAngle += patternAngleDeg;
+                }
+            }
+            else
+            {
+                DrawRing(center, innerRadius, Radius,
+                    startAngle: 0f, endAngle: 360f, segments, strokeColor);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Emits a triangle fan around (<paramref name="cx"/>, <paramref name="cy"/>) with per-vertex
+    /// colors computed from the user's gradient configuration. Mirrors the immediate-mode
+    /// pattern raylib itself uses for <c>DrawCircleGradient</c> in <c>rshapes.c</c> — N
+    /// segments × 3 vertices per triangle, color set via <see cref="Rlgl.Color4ub"/> before
+    /// each <see cref="Rlgl.Vertex2f"/>. The GPU rasterizes the per-vertex colors via
+    /// barycentric interpolation, giving smooth gradients across each triangle.
+    /// </summary>
+    /// <remarks>
+    /// Quality note: the center vertex contributes a single t-value to every fan triangle,
+    /// so very high-contrast linear gradients can show a faint "star" near the center where
+    /// adjacent triangles meet. Same artifact <c>DrawCircleGradient</c> has on raylib itself.
+    /// 36+ segments at typical radii is enough that the effect is invisible.
+    /// </remarks>
+    private void DrawGradientFan(float cx, float cy, float radius)
+    {
+        int segments = System.Math.Max(36, (int)(radius * 2));
+        // Gradient coords are circle-local (origin = bbox top-left). Cache the world-space
+        // bbox origin once so per-vertex projection only has to subtract.
+        float bboxLeft = cx - radius;
+        float bboxTop = cy - radius;
+
+        Rlgl.Begin((int)DrawMode.Triangles);
+        for (int i = 0; i < segments; i++)
+        {
+            float a0 = (i / (float)segments) * System.MathF.PI * 2f;
+            float a1 = ((i + 1) / (float)segments) * System.MathF.PI * 2f;
+            float v1x = cx + System.MathF.Cos(a0) * radius;
+            float v1y = cy + System.MathF.Sin(a0) * radius;
+            float v2x = cx + System.MathF.Cos(a1) * radius;
+            float v2y = cy + System.MathF.Sin(a1) * radius;
+
+            // Vertex order: center → later-angle → earlier-angle. Matches raylib's own
+            // DrawCircleGradient winding (src/rshapes.c). Reversing the two rim vertices
+            // produces back-facing triangles for raylib's default front-face setting, which
+            // get culled and render as nothing.
+            EmitGradientVertex(cx, cy, bboxLeft, bboxTop);
+            EmitGradientVertex(v2x, v2y, bboxLeft, bboxTop);
+            EmitGradientVertex(v1x, v1y, bboxLeft, bboxTop);
+        }
+        Rlgl.End();
+    }
+
+    private void EmitGradientVertex(float worldX, float worldY, float bboxLeft, float bboxTop)
+    {
+        float localX = worldX - bboxLeft;
+        float localY = worldY - bboxTop;
+
+        float t;
+        if (GradientType == GradientType.Linear)
+        {
+            // Project the vertex onto the gradient axis. Degenerate (zero-length) axis
+            // collapses to a solid Color1 — same fallback Skia's CreateLinearGradient takes.
+            float dx = GradientX2 - GradientX1;
+            float dy = GradientY2 - GradientY1;
+            float lenSq = dx * dx + dy * dy;
+            if (lenSq <= 0f)
+            {
+                Rlgl.Color4ub(Color1.R, Color1.G, Color1.B, Color1.A);
+                Rlgl.Vertex2f(worldX, worldY);
+                return;
+            }
+            t = ((localX - GradientX1) * dx + (localY - GradientY1) * dy) / lenSq;
+        }
+        else
+        {
+            // Radial: distance from (GradientX1, GradientY1) normalized against the
+            // [InnerRadius, OuterRadius] band. OuterRadius = 0 (default) collapses to the
+            // full circle radius so a no-config radial covers the whole disk.
+            float dx = localX - GradientX1;
+            float dy = localY - GradientY1;
+            float dist = System.MathF.Sqrt(dx * dx + dy * dy);
+            float outer = GradientOuterRadius > 0f ? GradientOuterRadius : Radius;
+            float span = outer - GradientInnerRadius;
+            if (span <= 0f)
+            {
+                Rlgl.Color4ub(Color2.R, Color2.G, Color2.B, Color2.A);
+                Rlgl.Vertex2f(worldX, worldY);
+                return;
+            }
+            t = (dist - GradientInnerRadius) / span;
+        }
+        if (t < 0f) t = 0f;
+        else if (t > 1f) t = 1f;
+
+        byte r = (byte)(Color1.R + (Color2.R - Color1.R) * t);
+        byte g = (byte)(Color1.G + (Color2.G - Color1.G) * t);
+        byte b = (byte)(Color1.B + (Color2.B - Color1.B) * t);
+        byte a = (byte)(Color1.A + (Color2.A - Color1.A) * t);
+        Rlgl.Color4ub(r, g, b, a);
+        Rlgl.Vertex2f(worldX, worldY);
     }
 }

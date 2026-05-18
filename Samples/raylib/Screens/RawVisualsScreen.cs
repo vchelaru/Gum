@@ -24,23 +24,8 @@ internal class RawVisualsScreen : FrameworkElement
         BuildSpritesRow(page);
 
         BuildShapesRow(page);
-        
+
         BuildNineSliceRow(page);
-
-        AddSwitchHint();
-    }
-
-    private void AddSwitchHint()
-    {
-        var hint = new TextRuntime();
-        hint.Text = "Press SPACE to switch screens";
-        hint.XOrigin = HorizontalAlignment.Left;
-        hint.YOrigin = VerticalAlignment.Bottom;
-        hint.XUnits = GeneralUnitType.PixelsFromSmall;
-        hint.YUnits = GeneralUnitType.PixelsFromLarge;
-        hint.X = 8;
-        hint.Y = -8;
-        this.AddChild(hint);
     }
 
     private static ContainerRuntime NewSection(ChildrenLayout layout, int spacing)
