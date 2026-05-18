@@ -1,0 +1,14 @@
+<Project>
+
+  <!-- Suppress Apos.Shapes' Content.mgcb shader compile for platforms where we ship
+       pre-built XNBs. Must live in a .targets file (not .props) because Apos.Shapes'
+       buildTransitive .props is imported before ours: by the time our .props sets
+       $(SkipAposShapeContent), Apos.Shapes has already added the MonoGameContentReference.
+       .targets are imported after the consuming project, so items are fully collected
+       and we can Remove the offending entry by its identity. $(AposShapesPath) is
+       defined by Apos.Shapes.props as the path to its Content.mgcb. -->
+  <ItemGroup Condition="'$(MonoGamePlatform)' == 'DesktopGL' OR '$(MonoGamePlatform)' == 'WindowsDX'">
+    <MonoGameContentReference Remove="$(AposShapesPath)" />
+  </ItemGroup>
+
+</Project>

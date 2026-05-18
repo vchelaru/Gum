@@ -1,0 +1,11 @@
+<Project>
+
+  <!-- Suppress Apos.Shapes.KNI's Content.mgcb shader compile for platforms where we
+       ship pre-built XNBs. See Gum.Shapes.MonoGame.targets for why this lives in a
+       .targets rather than the .props. Apos.Shapes.KNI uses KniContentReference
+       (not MonoGameContentReference); $(AposShapesPath) is defined the same way. -->
+  <ItemGroup Condition="'$(KniPlatform)' == 'DesktopGL' OR '$(KniPlatform)' == 'Windows' OR '$(KniPlatform)' == 'BlazorGL'">
+    <KniContentReference Remove="$(AposShapesPath)" />
+  </ItemGroup>
+
+</Project>
