@@ -27,11 +27,11 @@ namespace MauiSkiaGum
             MainStack.WrapsChildren = true;
             MainStack.StackSpacing = 16;
 
-            var roundedRectangle = new RoundedRectangleRuntime();
+            var roundedRectangle = new RectangleRuntime();
             MainStack.AddChild(roundedRectangle);
             roundedRectangle.Width = 100;
             roundedRectangle.Height = 100;
-            roundedRectangle.Color = SKColors.Blue;
+            roundedRectangle.FillColor = SKColors.Blue;
 
             // This is the default radius:
             roundedRectangle.CornerRadius = 20;
@@ -86,12 +86,11 @@ namespace MauiSkiaGum
             // Solid red disc behind a thick black almost-full-sweep arc filling the same
             // bounding box. The black ring should obscure most of the red disc; if the stroke
             // value didn't make it through, the red disc shows through where the ring should be.
-            var disc = new ColoredCircleRuntime();
+            var disc = new CircleRuntime();
             container.AddChild(disc);
             disc.Width = diameter;
             disc.Height = diameter;
-            disc.Color = SKColors.Red;
-            disc.IsFilled = true;
+            disc.FillColor = SKColors.Red;
 
             var arc = new ArcRuntime();
             container.AddChild(arc);
@@ -133,9 +132,9 @@ namespace MauiSkiaGum
                 CounterBtn.Text = $"Clicked {count} times";
 
 
-            var circle = new ColoredCircleRuntime();
+            var circle = new CircleRuntime();
             MainStack.AddChild(circle);
-            circle.Color = SKColors.Red;
+            circle.FillColor = SKColors.Red;
             circle.Width = 30;
             circle.Height = 30;
 

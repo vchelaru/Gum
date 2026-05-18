@@ -15,9 +15,10 @@ namespace SilkNetGum.Screens;
 //     yet, so this screen derives from GraphicalUiElement and uses Children.Add directly.
 //   - Color type. XNA Microsoft.Xna.Framework.Color becomes SKColor; named colors come from
 //     SkiaSharp.SKColors instead of Color.X.
-//   - CornerRadius row uses RoundedRectangleRuntime here (the Skia two-slot rounded variant
-//     added in #2814). MG side reuses RectangleRuntime since the Apos package overrides the
-//     core rectangle slots with RoundedRectangle and CornerRadius routes through directly.
+//   - CornerRadius row uses RectangleRuntime with CornerRadius on both sides as of #2771
+//     (RoundedRectangleRuntime is now [Obsolete] pointing at the same replacement). The Skia
+//     RectangleRuntime contains a RoundedRectangle renderable internally (#2818) so radii
+//     render correctly without the Apos shapes package.
 //
 // Sections the MG side can't currently mirror (gated by missing API on MG RectangleRuntime
 // rather than a design difference): Gradients, Antialiasing, Dropshadow, DashedStrokes. The
@@ -46,7 +47,7 @@ internal class RectanglesScreen : GraphicalUiElement
         left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, Fill+Stroke, default", BuildModeRow()));
         left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
         left.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
-        left.Children.Add(BuildSection("CornerRadius (0, 6, 16, 28) — exercises RoundedRectangleRuntime (#2814)", BuildCornerRadiusRow()));
+        left.Children.Add(BuildSection("CornerRadius (0, 6, 16, 28) — RectangleRuntime + CornerRadius (#2814, #2771)", BuildCornerRadiusRow()));
         left.Children.Add(BuildSection("Per-corner radii on RectangleRuntime (TL=20, TR=2, BR=20, BL=2 — #2818)", BuildPerCornerRow()));
         left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
 
@@ -171,15 +172,16 @@ internal class RectanglesScreen : GraphicalUiElement
         return row;
     }
 
-    // CornerRadius row exercises RoundedRectangleRuntime — the Skia two-slot variant added in
-    // #2814 alongside the rectangle's two-slot rework. Same fill+stroke composition, just
-    // with rounded corners.
+    // CornerRadius row exercises RectangleRuntime with CornerRadius (#2771 migration target;
+    // previously RoundedRectangleRuntime). Same fill+stroke composition, just with rounded
+    // corners — RectangleRuntime on Skia contains a RoundedRectangle internally (#2818) so
+    // radii reach the renderer the same way.
     static ContainerRuntime BuildCornerRadiusRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
         foreach (float cornerRadius in new[] { 0f, 6f, 16f, 28f })
         {
-            RoundedRectangleRuntime rect = new();
+            RectangleRuntime rect = new();
             rect.Width = 80;
             rect.Height = 60;
             rect.FillColor = new SKColor(40, 40, 80);
@@ -305,12 +307,12 @@ internal class RectanglesScreen : GraphicalUiElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildInscribedCell(float strokeWidth)
+    static RectangleRuntime BuildInscribedCell(float strokeWidth)
     {
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = 64;
         frame.Height = 64;
-        frame.Color = new SKColor(60, 60, 80);
+        frame.FillColor = new SKColor(60, 60, 80);
 
         RectangleRuntime rect = new();
         rect.Width = 64;
@@ -463,14 +465,14 @@ internal class RectanglesScreen : GraphicalUiElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
+    static RectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
     {
-        // ColoredRectangle is used as a visible frame so the alignment is obvious. Children
+        // RectangleRuntime is used as a visible frame so the alignment is obvious. Children
         // are positioned relative to it via YOrigin + PixelsFromSmall/Middle/Large.
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = 128;
         frame.Height = 100;
-        frame.Color = new SKColor(50, 50, 70);
+        frame.FillColor = new SKColor(50, 50, 70);
 
         RectangleRuntime rect = new();
         rect.Width = 50;

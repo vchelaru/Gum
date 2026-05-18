@@ -82,12 +82,12 @@ internal class PolygonsScreen : FrameworkElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildCell(PolygonRuntime polygon)
+    static RectangleRuntime BuildCell(PolygonRuntime polygon)
     {
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = CellSize;
         frame.Height = CellSize;
-        frame.Color = new Color(50, 50, 70, 255);
+        frame.FillColor = new Color(50, 50, 70, 255);
         frame.Children.Add(polygon);
         return frame;
     }

@@ -1,6 +1,7 @@
 ﻿using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Gum.GueDeriving;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,10 +23,11 @@ internal class CodeOnlyScreen : GraphicalUiElement
 
         for (int i = 0; i < 5; i++)
         {
-            var rectangle = new RoundedRectangleRuntime();
-            rectangle.Red = 50 + random.Next(150);
-            rectangle.Green = 50 + random.Next(150);
-            rectangle.Blue = 50 + random.Next(150);
+            var rectangle = new RectangleRuntime();
+            rectangle.FillColor = new SKColor(
+                (byte)(50 + random.Next(150)),
+                (byte)(50 + random.Next(150)),
+                (byte)(50 + random.Next(150)));
 
             rectangle.Width = 50;
             rectangle.Height = 50;
