@@ -54,6 +54,9 @@ public class PolygonRuntimeTests : BaseTestClass
         sut.Green.ShouldBe(32);
     }
 
+    // IsDotted was obsoleted in #2757 (no cross-backend equivalent on Skia). Preserved on
+    // MG/Raylib for back-compat — these tests pin that the legacy property still round-trips.
+#pragma warning disable CS0618 // Type or member is obsolete
     [Fact]
     public void IsDotted_ShouldBeFalse_ByDefault()
     {
@@ -68,6 +71,7 @@ public class PolygonRuntimeTests : BaseTestClass
         sut.IsDotted = true;
         sut.IsDotted.ShouldBeTrue();
     }
+#pragma warning restore CS0618
 
     [Fact]
     public void IsPointInside_ShouldReturnFalse_WhenPointIsOutsideDefaultPolygon()
@@ -103,6 +107,9 @@ public class PolygonRuntimeTests : BaseTestClass
         sut.IsPointInside(16, -16).ShouldBeTrue();
     }
 
+    // LineWidth was obsoleted in #2757 in favor of StrokeWidth + StrokeWidthUnits, but the
+    // legacy property is preserved on MG/Raylib for back-compat.
+#pragma warning disable CS0618 // Type or member is obsolete
     [Fact]
     public void LineWidth_ShouldBe1_ByDefault()
     {
@@ -116,6 +123,22 @@ public class PolygonRuntimeTests : BaseTestClass
         PolygonRuntime sut = new();
         sut.LineWidth = 3f;
         sut.LineWidth.ShouldBe(3f);
+    }
+#pragma warning restore CS0618
+
+    [Fact]
+    public void StrokeWidth_ShouldBe1_ByDefault()
+    {
+        PolygonRuntime sut = new();
+        sut.StrokeWidth.ShouldBe(1);
+    }
+
+    [Fact]
+    public void StrokeWidth_ShouldRoundTrip()
+    {
+        PolygonRuntime sut = new();
+        sut.StrokeWidth = 4f;
+        sut.StrokeWidth.ShouldBe(4f);
     }
 
     [Fact]
