@@ -137,4 +137,24 @@ public class PolygonRuntimeTests
         PolygonRuntime sut = new();
         sut.StrokeWidth.ShouldBe(1);
     }
+
+    // StrokeDashLength + StrokeGapLength on Skia come from SkiaShapeRuntime (inherited);
+    // RenderableShapeBase's cached paint engages SKPathEffect.CreateDash when both lengths
+    // are positive. These tests pin the round-trip — the dashing visual is exercised by the
+    // gallery rather than asserted here.
+    [Fact]
+    public void StrokeDashLength_ShouldRoundTrip()
+    {
+        PolygonRuntime sut = new();
+        sut.StrokeDashLength = 4;
+        sut.StrokeDashLength.ShouldBe(4);
+    }
+
+    [Fact]
+    public void StrokeGapLength_ShouldRoundTrip()
+    {
+        PolygonRuntime sut = new();
+        sut.StrokeGapLength = 2;
+        sut.StrokeGapLength.ShouldBe(2);
+    }
 }

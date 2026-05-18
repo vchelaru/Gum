@@ -42,6 +42,7 @@ internal class PolygonsScreen : GraphicalUiElement
         root.Children.Add(BuildSection("Color (white, red, green, yellow) — pentagon outline", BuildColorRow()));
         root.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64) — hexagon outline", BuildAlphaRow()));
         root.Children.Add(BuildSection("Concave / complex shapes (5-point star, arrow, plus, chevron)", BuildConcaveRow()));
+        root.Children.Add(BuildSection("Dashed strokes (solid, 6/4, 2/2, 12/6) — Skia honors dash/gap verbatim via SKPathEffect.CreateDash; MG/Raylib show the binary dotted texture because LinePolygon has no per-segment dash control", BuildDashedRow()));
         root.Children.Add(BuildSection("Open polylines (zigzag, M, V, wave) — Skia sets IsClosed = false; MG omits closing point", BuildOpenRow()));
     }
 
@@ -220,6 +221,24 @@ internal class PolygonsScreen : GraphicalUiElement
         row.Children.Add(BuildCell(BuildPolygon(Arrow(),   SKColors.Cyan,       2)));
         row.Children.Add(BuildCell(BuildPolygon(Plus(),    SKColors.Magenta,    2)));
         row.Children.Add(BuildCell(BuildPolygon(Chevron(), SKColors.LightGreen, 2)));
+        return row;
+    }
+
+    static PolygonRuntime BuildDashedHexagon(float dash, float gap)
+    {
+        PolygonRuntime polygon = BuildPolygon(RegularPolygon(6, Radius), SKColors.White, 2);
+        polygon.StrokeDashLength = dash;
+        polygon.StrokeGapLength = gap;
+        return polygon;
+    }
+
+    static ContainerRuntime BuildDashedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        row.Children.Add(BuildCell(BuildDashedHexagon(0,  0)));
+        row.Children.Add(BuildCell(BuildDashedHexagon(6,  4)));
+        row.Children.Add(BuildCell(BuildDashedHexagon(2,  2)));
+        row.Children.Add(BuildCell(BuildDashedHexagon(12, 6)));
         return row;
     }
 

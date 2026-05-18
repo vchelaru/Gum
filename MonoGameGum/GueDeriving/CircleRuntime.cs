@@ -8,11 +8,13 @@ using Gum.Converters;
 #endif
 
 #if RAYLIB
+using Gum.DataTypes;
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
 using ColorExtensions = RaylibGum.Helpers.ColorExtensions;
 using ContainedCircleType = Gum.Renderables.LineCircle;
 #elif SOKOL
+using Gum.DataTypes;
 using Gum.Renderables;
 using Color = SokolGum.Color;
 using ContainedCircleType = Gum.Renderables.LineCircle;
@@ -985,6 +987,72 @@ public class CircleRuntime : GraphicalUiElement
         }
 
         return toReturn;
+    }
+#endif
+
+#if RAYLIB || SOKOL
+    float _strokeWidth = 1;
+
+    /// <inheritdoc cref="CircleRuntime.StrokeWidth"/>
+    /// <remarks>
+    /// Issue #2757 cross-backend API parity. On Raylib/Sokol the contained
+    /// <see cref="Gum.Renderables.LineCircle"/> renders via <c>DrawCircleLines</c> which is
+    /// hard-coded to a 1 px outline, so the backing field round-trips but the value is
+    /// visually inert until the renderable gains thick-stroke support — same forward-compat
+    /// pattern as MonoGameGum's <c>DefaultStrokedCircleRenderable</c> pre-Apos.Shapes.
+    /// </remarks>
+    public float StrokeWidth
+    {
+        get => _strokeWidth;
+        set
+        {
+            _strokeWidth = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    DimensionUnitType _strokeWidthUnits;
+
+    /// <inheritdoc cref="CircleRuntime.StrokeWidthUnits"/>
+    public DimensionUnitType StrokeWidthUnits
+    {
+        get => _strokeWidthUnits;
+        set
+        {
+            _strokeWidthUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _strokeDashLength;
+
+    /// <inheritdoc cref="PolygonRuntime.StrokeDashLength"/>
+    /// <remarks>
+    /// Round-trips on Raylib/Sokol but renders as a no-op — <c>LineCircle</c> has no dash
+    /// concept. Skia honors the lengths verbatim; XNALIKE with MonoGameGumShapes routes
+    /// through the Apos stroke slot.
+    /// </remarks>
+    public float StrokeDashLength
+    {
+        get => _strokeDashLength;
+        set
+        {
+            _strokeDashLength = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _strokeGapLength;
+
+    /// <inheritdoc cref="PolygonRuntime.StrokeGapLength"/>
+    public float StrokeGapLength
+    {
+        get => _strokeGapLength;
+        set
+        {
+            _strokeGapLength = value;
+            NotifyPropertyChanged();
+        }
     }
 #endif
 

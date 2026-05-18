@@ -44,6 +44,7 @@ internal class PolygonsScreen : FrameworkElement
         root.AddChild(BuildSection("Color (white, red, green, yellow) — pentagon outline", BuildColorRow()));
         root.AddChild(BuildSection("Alpha on Color (255, 192, 128, 64) — hexagon outline", BuildAlphaRow()));
         root.AddChild(BuildSection("Concave / complex shapes (5-point star, arrow, plus, chevron)", BuildConcaveRow()));
+        root.AddChild(BuildSection("Dashed strokes (solid, 6/4, 2/2, 12/6) — MG's LinePolygon only has a fixed-pattern dotted texture, so any dash+gap > 0 reads as the same binary dot pattern; Skia honors the lengths verbatim", BuildDashedRow()));
         root.AddChild(BuildSection("Open polylines (zigzag, M, V, wave) — MG omits closing point; Skia sets IsClosed = false", BuildOpenRow()));
     }
 
@@ -232,6 +233,24 @@ internal class PolygonsScreen : FrameworkElement
         row.AddChild(BuildCell(BuildPolygon(Arrow(),   Color.Cyan,       2)));
         row.AddChild(BuildCell(BuildPolygon(Plus(),    Color.Magenta,    2)));
         row.AddChild(BuildCell(BuildPolygon(Chevron(), Color.LightGreen, 2)));
+        return row;
+    }
+
+    static PolygonRuntime BuildDashedHexagon(float dash, float gap)
+    {
+        PolygonRuntime polygon = BuildPolygon(RegularPolygon(6, Radius), Color.White, 2);
+        polygon.StrokeDashLength = dash;
+        polygon.StrokeGapLength = gap;
+        return polygon;
+    }
+
+    static ContainerRuntime BuildDashedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        row.AddChild(BuildCell(BuildDashedHexagon(0,  0)));
+        row.AddChild(BuildCell(BuildDashedHexagon(6,  4)));
+        row.AddChild(BuildCell(BuildDashedHexagon(2,  2)));
+        row.AddChild(BuildCell(BuildDashedHexagon(12, 6)));
         return row;
     }
 

@@ -12,6 +12,16 @@
             return System.Drawing.Color.FromArgb(value.A, value.R, value.G, value.B);
         }
 
+        // Container/user color round-trip helpers (#2757). Same semantic pair as Raylib's
+        // identity overloads in RaylibGum.Helpers.ColorExtensions, so cross-backend runtime
+        // files (e.g. PolygonRuntime) can convert between the contained renderable's color
+        // type and the user-facing Color without #if-gating the conversion call.
+        public static Microsoft.Xna.Framework.Color ToUserColor(this System.Drawing.Color value) =>
+            value.ToXNA();
+
+        public static System.Drawing.Color ToContainerColor(this Microsoft.Xna.Framework.Color value) =>
+            value.ToSystemDrawing();
+
         public static Microsoft.Xna.Framework.Point ToXNA(this System.Drawing.Point value)
         {
             return new Microsoft.Xna.Framework.Point(value.X, value.Y);

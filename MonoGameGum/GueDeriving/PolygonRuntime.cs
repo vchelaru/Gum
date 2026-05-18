@@ -7,6 +7,7 @@ using System.Numerics;
 #if RAYLIB
 using Gum.DataTypes;
 using Gum.Renderables;
+using RaylibGum.Helpers;
 using Color = Raylib_cs.Color;
 using ColorExtensions = RaylibGum.Helpers.ColorExtensions;
 using ContainedPolygonType = Gum.Renderables.LinePolygon;
@@ -22,10 +23,11 @@ using SkiaSharp;
 using Color = SkiaSharp.SKColor;
 using ContainedPolygonType = SkiaGum.Renderables.Polygon;
 #else
+using global::RenderingLibrary.Graphics;
+using global::RenderingLibrary.Math.Geometry;
 using Color = Microsoft.Xna.Framework.Color;
 using ColorExtensions = ToolsUtilitiesStandard.Helpers.ColorExtensions;
 using ContainedPolygonType = global::RenderingLibrary.Math.Geometry.LinePolygon;
-using global::RenderingLibrary.Math.Geometry;
 using Gum.DataTypes;
 #endif
 
@@ -129,29 +131,22 @@ public class PolygonRuntime : InteractiveGue
     /// </summary>
     public Color Color
     {
-#if XNALIKE
-        get => global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedPolygon.Color);
+        get => ContainedPolygon.Color.ToUserColor();
         set
         {
-            ContainedPolygon.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            ContainedPolygon.Color = value.ToContainerColor();
             NotifyPropertyChanged();
         }
-#else
-        get => ContainedPolygon.Color;
-        set
-        {
-            ContainedPolygon.Color = value;
-            NotifyPropertyChanged();
-        }
-#endif
     }
 
     /// <summary>
-    /// Obsolete: use <see cref="StrokeWidth"/>. Legacy pre-#2757 setter that writes the
-    /// contained <c>LinePolygon</c>'s pixel width directly, bypassing
-    /// <see cref="StrokeWidthUnits"/>.
+    /// Obsolete: renamed to <see cref="StrokeWidth"/> in #2757 for cross-backend naming
+    /// parity with <see cref="CircleRuntime"/> and <see cref="RectangleRuntime"/>. Functional
+    /// behavior is identical (still writes the contained <c>LinePolygon</c>'s pixel width),
+    /// but <see cref="LineWidth"/> bypasses <see cref="StrokeWidthUnits"/> so ScreenPixel
+    /// scaling against the camera zoom does not engage.
     /// </summary>
-    [Obsolete("Use StrokeWidth instead. Bypasses unit handling — preserves pre-#2757 semantics.")]
+    [Obsolete("Renamed to StrokeWidth in #2757 for cross-backend naming parity. Functional behavior is unchanged; switch to StrokeWidth to also pick up StrokeWidthUnits scaling.")]
     public float LineWidth
     {
         get => ContainedPolygon.LinePixelWidth;
@@ -163,11 +158,15 @@ public class PolygonRuntime : InteractiveGue
     }
 
     /// <summary>
-    /// Obsolete: cross-backend dashed strokes are not currently supported on
-    /// <see cref="PolygonRuntime"/>. Preserved on MonoGame/Raylib for back-compat — writes
-    /// directly to the contained <c>LinePolygon</c>.
+    /// Obsolete: superseded in #2757 by the <see cref="StrokeDashLength"/> /
+    /// <see cref="StrokeGapLength"/> pair for cross-backend naming parity with
+    /// <see cref="CircleRuntime"/> and <see cref="RectangleRuntime"/>. The MG/Raylib
+    /// <c>LinePolygon</c> renderable only exposes a binary dotted toggle (a fixed-pattern
+    /// texture), so user-set dash/gap lengths cannot drive per-segment rendering on these
+    /// backends — assigning either of the new properties to a positive value engages the
+    /// same binary dot pattern that this property used to control.
     /// </summary>
-    [Obsolete("Dashed polygon strokes are not part of the unified Skia/MG/Raylib API surface in #2757. Preserved on MG/Raylib only.")]
+    [Obsolete("Renamed to StrokeDashLength + StrokeGapLength in #2757 for cross-backend parity with CircleRuntime/RectangleRuntime. On MG/Raylib the visual is still a fixed-pattern dotted texture (LinePolygon has no per-segment dash control); Skia uses the lengths verbatim. Set both new properties to non-zero values to engage dashing on either backend.")]
     public bool IsDotted
     {
         get => ContainedPolygon.IsDotted;
@@ -176,6 +175,52 @@ public class PolygonRuntime : InteractiveGue
             ContainedPolygon.IsDotted = value;
             NotifyPropertyChanged();
         }
+    }
+
+    float _strokeDashLength;
+
+    /// <summary>
+    /// Length of each dash segment, in pixels. Dashing engages when both this and
+    /// <see cref="StrokeGapLength"/> are greater than zero. On MG/Raylib the backing
+    /// <c>LinePolygon</c> only supports a fixed-pattern dotted texture, so the lengths drive
+    /// a binary on/off rather than true per-segment dashing; on Skia the lengths flow through
+    /// <see cref="SkiaShapeRuntime"/> to <c>SKPathEffect.CreateDash</c> verbatim.
+    /// </summary>
+    public float StrokeDashLength
+    {
+        get => _strokeDashLength;
+        set
+        {
+            _strokeDashLength = value;
+            ApplyDashState();
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _strokeGapLength;
+
+    /// <summary>
+    /// Length of the gap between dash segments, in pixels. See <see cref="StrokeDashLength"/>
+    /// for the engage condition and per-backend fidelity notes.
+    /// </summary>
+    public float StrokeGapLength
+    {
+        get => _strokeGapLength;
+        set
+        {
+            _strokeGapLength = value;
+            ApplyDashState();
+            NotifyPropertyChanged();
+        }
+    }
+
+    // Drives the MG/Raylib LinePolygon's binary IsDotted from the unified dash/gap pair —
+    // both lengths must be positive for dashing to engage, matching the Skia engage rule in
+    // RenderableShapeBase (which guards CreateDash on `dash > 0 && gap > 0`). The legacy
+    // IsDotted setter is still honored for code paths that haven't migrated.
+    void ApplyDashState()
+    {
+        ContainedPolygon.IsDotted = _strokeDashLength > 0 && _strokeGapLength > 0;
     }
 
     float _strokeWidth = 1;
@@ -266,15 +311,22 @@ public class PolygonRuntime : InteractiveGue
         get => ContainedPolygon.PointYUnits;
         set => ContainedPolygon.PointYUnits = value;
     }
+#endif
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Resets the cached <c>containedPolygon</c> reference so the clone re-resolves against
+    /// its own <c>RenderableComponent</c> on next access. <c>MemberwiseClone</c> shallow-copies
+    /// the field, leaving it pointing at the source's renderable; the base <see cref="GraphicalUiElement.Clone"/>
+    /// then deep-clones the renderable (via <see cref="System.ICloneable"/>) and stores it as
+    /// the clone's contained object, so the cached field is the only stale link to drop.
+    /// </remarks>
     public override GraphicalUiElement Clone()
     {
         var toReturn = (PolygonRuntime)base.Clone();
         toReturn.containedPolygon = null;
         return toReturn;
     }
-#endif
 
     public PolygonRuntime(bool fullInstantiation = true, SystemManagers? systemManagers = null)
     {
