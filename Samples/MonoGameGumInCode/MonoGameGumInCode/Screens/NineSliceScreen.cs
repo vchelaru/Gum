@@ -1,10 +1,9 @@
+using Gum.Content.AnimationChain;
 using Gum.Forms.Controls;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary.Content;
 
 namespace MonoGameGumInCode.Screens;
 internal class NineSliceScreen : FrameworkElement
@@ -104,34 +103,29 @@ internal class NineSliceScreen : FrameworkElement
         rotScale8.Y = 50f;
         borderRotRow.AddChild(rotScale8);
 
-        // AnimationChain-driven nine-slice. The chain is built in code (no .achx
-        // file) to keep the sample self-contained; in a real project you'd usually
-        // load an .achx via LoaderManager.Self.ContentLoader.LoadContent<AnimationChainList>.
-        // Each frame is a full-texture nine-slice — assigning AnimationChains +
-        // CurrentChainName + Animate=true drives the shared AnimationChainLogic,
-        // which swaps the texture across all 9 internal slices on every frame change.
-        AddLabel(container, "AnimationChain-driven nine-slice (swaps Frame.png <-> SquareFrame.png):");
+        // AnimationChain-driven nine-slice. The .achx is loaded from disk via
+        // AnimationChainListSave.FromFile + ToAnimationChainList — the same
+        // pipeline a .gumx-loaded project uses internally. Assigning the
+        // resulting AnimationChainList + CurrentChainName + Animate=true drives
+        // the shared AnimationChainLogic, which swaps the texture across all 9
+        // internal slices on every frame change.
+        AddLabel(container, "AnimationChain-driven nine-slice (Kenney pixel-adventure AnimatedFrame1.achx):");
         var animated = new NineSliceRuntime();
         animated.Width = 160;
         animated.Height = 64;
-        animated.AnimationChains = BuildPulseChain();
-        animated.CurrentChainName = "Pulse";
+        animated.AnimationChains = LoadAnimatedFrameChain();
+        animated.CurrentChainName = "Animation1";
         animated.Animate = true;
         container.AddChild(animated);
     }
 
-    private static AnimationChainList BuildPulseChain()
+    private static AnimationChainList LoadAnimatedFrameChain()
     {
-        Texture2D frameTexture = LoaderManager.Self.ContentLoader.LoadContent<Texture2D>("Frame.png");
-        Texture2D squareTexture = LoaderManager.Self.ContentLoader.LoadContent<Texture2D>("SquareFrame.png");
-
-        AnimationChain chain = new() { Name = "Pulse" };
-        chain.Add(new AnimationFrame(frameTexture, frameLength: 0.5f));
-        chain.Add(new AnimationFrame(squareTexture, frameLength: 0.5f));
-
-        AnimationChainList chains = new();
-        chains.Add(chain);
-        return chains;
+        // FromFile resolves the .achx's own directory and sets FileRelativeTextures,
+        // so the per-frame texture references (tile_0064.png / tile_0065.png) resolve
+        // alongside the .achx in the Content folder.
+        AnimationChainListSave save = AnimationChainListSave.FromFile("Content/AnimatedFrame1.achx");
+        return save.ToAnimationChainList();
     }
 
     private static void AddLabel(ContainerRuntime container, string text)
