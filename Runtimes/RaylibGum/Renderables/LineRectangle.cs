@@ -306,27 +306,26 @@ public class LineRectangle : InvisibleRenderable
             if (blur > 0f)
             {
                 // Approximate Skia's SKImageFilter.CreateDropShadow output. Tuning constants
-                // are empirical — side-by-side comparison against the Skia gallery shows
-                // Skia's rendered visible extent is roughly 2× the user-set blur value (not
-                // 1× as the BlurX/3 → "sigma" → "visible = 3σ" interpretation in
-                // RenderableShapeBase.cs lines 778-779 would suggest), so falloffExtent =
-                // blur * 2. The profile coefficient also softened from 3 to 1.5 — at t = 1
-                // (the visible outer edge) alpha is now exp(-1.5) ≈ 0.22 rather than
-                // exp(-3) ≈ 0.05, giving a more Skia-like density at intermediate distances.
+                // are empirical — side-by-side comparison against the Skia gallery showed
+                // raylib's shadow extending visibly further than Skia's even at falloffExtent
+                // = blur, so tightened to blur * 0.5 with a steeper exp(-t²*4.5) profile. At
+                // t = 1 (the visible outer edge) alpha is exp(-4.5) ≈ 0.011 — essentially
+                // invisible — so the visible-shadow boundary lands closer to the blur radius
+                // the user set rather than past it.
                 //
                 // Band layout:
-                //   - falloffExtent = blur * 2 (where blur = max(BlurX, BlurY)).
+                //   - falloffExtent = blur * 0.5 (where blur = max(BlurX, BlurY)).
                 //   - blurRings non-overlapping outlines, each bandThickness px thick,
                 //     positioned at increasing distances outside the solid core.
-                //   - Gaussian-ish alpha profile exp(-t²*1.5) sampled at the band centerline.
+                //   - Gaussian-ish alpha profile exp(-t²*4.5) sampled at the band centerline.
                 const int blurRings = 32;
-                float falloffExtent = blur * 2f;
+                float falloffExtent = blur * 0.5f;
                 float bandThickness = falloffExtent / blurRings;
                 for (int i = 0; i < blurRings; i++)
                 {
                     float bandCenter = (i + 0.5f) * bandThickness;
                     float tCenter = bandCenter / falloffExtent;
-                    float alphaScale = MathF.Exp(-tCenter * tCenter * 1.5f);
+                    float alphaScale = MathF.Exp(-tCenter * tCenter * 4.5f);
                     byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
                     if (ringAlpha == 0)
                     {
