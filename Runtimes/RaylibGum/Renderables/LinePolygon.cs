@@ -8,6 +8,24 @@ using static Raylib_cs.Raylib;
 namespace Gum.Renderables;
 
 /// <summary>
+/// Line-join style for <see cref="LinePolygon"/>. Controls how the renderer fills the corner
+/// gap where two adjacent thick-stroke segments meet — raylib's <c>DrawLineEx</c> produces a
+/// rectangle per segment, so without an explicit join the outside of every vertex shows a
+/// triangular wedge gap at thick stroke widths.
+/// </summary>
+public enum LineJoinStyle
+{
+    /// <summary>No join — segments end as raylib draws them (visible wedge gaps at thick strokes).</summary>
+    None,
+    /// <summary>
+    /// Round join — a filled circle of radius <c>StrokeWidth / 2</c> is drawn at each vertex,
+    /// closing the wedge gap regardless of bend angle. Handles convex, concave, and acute
+    /// corners uniformly with no miter-spike degenerate case. Default.
+    /// </summary>
+    Round,
+}
+
+/// <summary>
 /// Raylib polygon renderable. Originally a 1 px stroke-only polyline via per-segment
 /// <c>DrawLineEx</c> calls; extended in issue #2757 to honor an <see cref="IsClosed"/> flag
 /// (auto-draws the final edge back to the first point), an optional explicit
@@ -112,6 +130,12 @@ public class LinePolygon : InvisibleRenderable
     public float LinePixelWidth { get; set; } = 1f;
 
     /// <summary>
+    /// How vertices are filled where two adjacent thick-stroke segments meet. See
+    /// <see cref="LineJoinStyle"/>. Defaults to <see cref="LineJoinStyle.Round"/>.
+    /// </summary>
+    public LineJoinStyle JoinStyle { get; set; } = LineJoinStyle.Round;
+
+    /// <summary>
     /// When <c>true</c>, an extra segment is drawn from the last point back to the first so
     /// the polygon outline closes. Default <c>true</c> (matches Skia's <c>Polygon.IsClosed</c>);
     /// set <c>false</c> for open polylines. Callers do not need to repeat the first point at
@@ -209,6 +233,25 @@ public class LinePolygon : InvisibleRenderable
                 Vector2 a = T(_points[i]);
                 Vector2 b = T(_points[(i + 1) % _points.Count]);
                 DrawLineEx(a, b, LinePixelWidth, strokeColor);
+            }
+
+            // Round line-join: fill the wedge gap at each vertex where two adjacent
+            // DrawLineEx rectangles meet. Skipped for sub-pixel strokes (nothing to fill) and
+            // when the user explicitly opts out via JoinStyle.None. For an open polyline the
+            // two endpoints are not joined — that would visually be a round cap, which raylib
+            // doesn't render today (DrawLineEx is butt-capped). Inner vertices i in [1,
+            // _points.Count - 2] always need a join; the first/last vertex of a closed
+            // polygon is the join between the last segment (last → 0) and the first segment
+            // (0 → 1), so it's included only when IsClosed.
+            if (JoinStyle == LineJoinStyle.Round && LinePixelWidth > 1.5f)
+            {
+                float joinRadius = LinePixelWidth * 0.5f;
+                int joinStart = IsClosed ? 0 : 1;
+                int joinEnd = IsClosed ? _points.Count : _points.Count - 1;
+                for (int i = joinStart; i < joinEnd; i++)
+                {
+                    DrawCircleV(T(_points[i]), joinRadius, strokeColor);
+                }
             }
         }
         else if (perSegmentDash)

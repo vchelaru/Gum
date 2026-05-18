@@ -59,6 +59,25 @@ public class LinePolygonTests
     }
 
     [Fact]
+    public void JoinStyle_DefaultsToRound()
+    {
+        // Round line-joins close the wedge gap on the outside of each vertex where two
+        // adjacent DrawLineEx rectangles otherwise leave a triangular notch (visible at thick
+        // strokes — see #2831 hexagon screenshot). Round is the default because it handles
+        // convex / concave / acute angles uniformly with no miter-spike degenerate case.
+        LinePolygon polygon = new LinePolygon();
+        polygon.JoinStyle.ShouldBe(LineJoinStyle.Round);
+    }
+
+    [Fact]
+    public void JoinStyle_RoundTrips()
+    {
+        LinePolygon polygon = new LinePolygon();
+        polygon.JoinStyle = LineJoinStyle.None;
+        polygon.JoinStyle.ShouldBe(LineJoinStyle.None);
+    }
+
+    [Fact]
     public void DashedStroke_PropertiesRoundTrip()
     {
         // Both lengths must be > 0 for the render path to engage; preferred over the binary
