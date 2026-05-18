@@ -256,11 +256,11 @@ public class LineCircle : InvisibleRenderable
             {
                 // Approximate Skia's SKImageFilter.CreateDropShadow output. Same algorithm
                 // LineRectangle uses. Tuning constants are empirical — side-by-side comparison
-                // against the Skia gallery showed raylib's shadow extending visibly further
-                // than Skia's even at falloffExtent = blur, so tightened to blur * 0.5 with
-                // a steeper exp(-t²*4.5) profile. At t = 1 (the visible outer edge) alpha is
-                // exp(-4.5) ≈ 0.011 — essentially invisible — so the visible-shadow boundary
-                // lands closer to the blur radius the user set rather than past it.
+                // against the Skia gallery: falloffExtent = blur * 0.5 produces a visible
+                // shadow boundary matching Skia, but a Gaussian profile collapses most of the
+                // density into the inner half (at t = 0.8 alpha is already 0.05), giving a
+                // hard-looking cutoff in the outer half. Linear (1 - t) spreads density evenly
+                // across the whole fade range so the gradient reads smoothly out to t = 1.
                 const int blurRings = 32;
                 float falloffExtent = blur * 0.5f;
                 float bandThickness = falloffExtent / blurRings;
@@ -271,7 +271,7 @@ public class LineCircle : InvisibleRenderable
                     float outerR = innerR + bandThickness;
                     float bandMidD = (i + 0.5f) * bandThickness;
                     float tCenter = bandMidD / falloffExtent;
-                    float alphaScale = System.MathF.Exp(-tCenter * tCenter * 4.5f);
+                    float alphaScale = 1f - tCenter;
                     byte ringAlpha = (byte)(DropshadowColor.A * alphaScale);
                     if (ringAlpha == 0)
                     {
