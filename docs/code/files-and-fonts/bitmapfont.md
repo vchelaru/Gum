@@ -6,6 +6,18 @@
 
 For information on loading and assigning fonts, see the [Fonts](fonts.md) page.
 
+## Construction Sources
+
+A `BitmapFont` can be built from several sources:
+
+* **A `.fnt` file path** — `new BitmapFont("path/to/font.fnt")` loads the descriptor from disk and resolves the page textures relative to it.
+* **A `Texture2D[]` plus an `.fnt` text string** — `new BitmapFont(textures, fntText)` skips disk I/O entirely. This is the constructor used when generating fonts via KernSmith, where the page textures and `.fnt` metadata both live in memory.
+* **Embedded resources, network responses, or custom pipelines** — load the bytes yourself, then feed the resulting textures and `.fnt` text into the in-memory constructor above.
+
+A single `BitmapFont` instance can be assigned to any number of `TextRuntime`s via `TextRuntime.BitmapFont`. The atlas textures are shared, so reuse costs nothing extra at draw time.
+
+For the full strategy comparison — when to assign a `BitmapFont` directly vs. drive fonts through `TextRuntime` properties — see [Font Strategies — Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment). For effects only available through direct construction (outline color, drop shadows, gradients, SDF, color fonts), see [Advanced Font Effects](advanced-font-effects.md).
+
 ## Measuring Text
 
 The BitmapFont class is ultimately responsible for measuring text. Although the TextRuntime instance does provide many functions for measurement and positioning, the BitmapFont class can give more detailed information if necessary.

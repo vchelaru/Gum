@@ -53,6 +53,10 @@ The Gum tool generates these atlases automatically while you edit your project. 
 * [Font Localization](font-localization.md) — current behavior, known limitations, and the per-locale design that's coming.
 * [Font Cache](font-cache.md) — the build-time `.fnt` atlas system, naming convention, and when to use it.
 
+## Need Outline Color, Shadows, or Gradients?
+
+The strategies above all drive fonts through `TextRuntime`'s property surface, which exposes only a subset of what KernSmith can actually generate. If you want outline color (not just thickness), drop shadows, gradient fills, SDF, color fonts, custom glyph subsets, or a non-default rasterizer backend, build a `BitmapFont` via KernSmith yourself and assign it directly. See [Advanced Font Effects](advanced-font-effects.md) for the per-effect catalog and [Font Strategies — Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment) for the construction walkthrough.
+
 ## Known Limitations
 
 The following items are not yet supported. None of them are dealbreakers for shipping a game, but they're worth knowing about so you can plan around them:

@@ -215,7 +215,18 @@ The easiest way to mark all content as "Copy to Output Directory" is to use wild
 
 ## Direct BitmapFont Assignment
 
-You can load a `BitmapFont` yourself and assign it directly, bypassing the font property system entirely:
+You can construct a `BitmapFont` yourself and assign it directly, bypassing the font property system entirely. Two sources for the `BitmapFont` are common:
+
+* [From a .fnt file on disk](#from-a-fnt-file-on-disk) — when you already have a baked atlas.
+* [From KernSmith with custom options](#from-kernsmith-with-custom-options) — when you want visual effects (outline color, shadows, gradients, SDF, color fonts, custom glyph subsets) or backend control that the `TextRuntime` property surface does not expose.
+
+{% hint style="warning" %}
+Once a `BitmapFont` is assigned directly, do not set font component properties (`Font`, `FontSize`, etc.) or `UseCustomFont` on the same `TextRuntime`. Those properties trigger the font loading system, which overwrites the directly assigned `BitmapFont`.
+{% endhint %}
+
+### From a .fnt File on Disk
+
+Load a `BitmapFont` from a `.fnt` file (and its companion `.png` page textures) and assign it:
 
 ```csharp
 // Initialize
@@ -226,14 +237,119 @@ text.Text = "Hello, I am using a directly assigned font";
 text.AddToRoot();
 ```
 
-{% hint style="warning" %}
-Once a `BitmapFont` is assigned directly, do not set font component properties (`Font`, `FontSize`, etc.) or `UseCustomFont` on the same `TextRuntime`. Those properties trigger the font loading system, which overwrites the directly assigned `BitmapFont`.
+### From KernSmith with Custom Options
+
+`TextRuntime` exposes only a subset of the options KernSmith actually supports (`Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `UseFontSmoothing`). To use effects like outline color, drop shadows, gradient fills, SDF, color fonts, custom glyph subsets, or a non-default rasterizer backend, build a `BitmapFont` yourself by calling KernSmith directly, then assign it.
+
+For the full catalog of effects available through this path, see [Advanced Font Effects](advanced-font-effects.md).
+
+{% hint style="info" %}
+This path requires the KernSmith package for your runtime (`KernSmith.MonoGameGum` or `KernSmith.KniGum`). The bridge type `GumFontGenerator` lives in `KernSmith.GumCommon`, which is a transitive dependency.
 {% endhint %}
+
+#### Flow 1: Start from a BmfcSave, mutate options, then generate
+
+This is the most common flow. `BmfcSave` carries the same font descriptor `TextRuntime` uses internally — start there so size, style, charset, and smoothing match your normal text, then layer in the extras KernSmith supports:
+
+```csharp
+// Initialize
+var bmfcSave = new BmfcSave
+{
+    FontName = "Arial",
+    FontSize = 32,
+    IsBold = true,
+};
+
+var options = KernSmith.Gum.GumFontGenerator.BuildOptions(bmfcSave);
+
+// Layer in effects not exposed via TextRuntime / BmfcSave:
+options.Outline = 2;
+options.OutlineR = 255;
+options.OutlineG = 64;
+options.OutlineB = 64;
+
+KernSmith.BmFontResult result = KernSmith.BmFont.GenerateFromSystem(
+    bmfcSave.FontName, options);
+
+BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
+
+var text = new TextRuntime();
+text.BitmapFont = bitmapFont;
+text.Text = "Outlined in red";
+text.AddToRoot();
+```
+
+The helper that wraps a `BmFontResult` into a `BitmapFont` is the same pattern `KernSmithFontCreator.TryCreateFont` uses internally — one `Texture2D` per atlas page, then the `BitmapFont(Texture2D[], string)` constructor:
+
+```csharp
+// Class scope
+static BitmapFont CreateBitmapFont(KernSmith.BmFontResult result,
+    Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice)
+{
+    var textures = new Microsoft.Xna.Framework.Graphics.Texture2D[result.Pages.Count];
+    for (int i = 0; i < result.Pages.Count; i++)
+    {
+        KernSmith.Atlas.AtlasPage page = result.Pages[i];
+        var texture = new Microsoft.Xna.Framework.Graphics.Texture2D(
+            graphicsDevice, page.Width, page.Height, false,
+            Microsoft.Xna.Framework.Graphics.SurfaceFormat.Color);
+        texture.SetData(page.PixelData);
+        textures[i] = texture;
+    }
+    return new BitmapFont(textures, result.FntText);
+}
+```
+
+#### Flow 2: Build FontGeneratorOptions from scratch
+
+If you don't have a `BmfcSave` to start from — for example you're constructing a one-off display font for a title screen — build the options directly:
+
+```csharp
+// Initialize
+var options = new KernSmith.FontGeneratorOptions
+{
+    Size = 48,
+    Bold = true,
+    Characters = KernSmith.Font.CharacterSet.Ascii,
+    // Match the channel layout Gum's renderer expects for unoutlined text:
+    Channels = new KernSmith.Output.ChannelConfig(
+        Alpha: KernSmith.Output.ChannelContent.Glyph,
+        Red:   KernSmith.Output.ChannelContent.One,
+        Green: KernSmith.Output.ChannelContent.One,
+        Blue:  KernSmith.Output.ChannelContent.One),
+};
+
+KernSmith.BmFontResult result =
+    KernSmith.BmFont.GenerateFromSystem("Arial", options);
+
+BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
+```
+
+{% hint style="info" %}
+The `Channels` setting matters. Gum's text renderer expects a specific channel layout: alpha = glyph (RGB = 1) when there is no outline, and alpha = outline (RGB = glyph) when there is one. `GumFontGenerator.BuildOptions` sets this for you — if you build options from scratch you must set it yourself or text will render incorrectly.
+{% endhint %}
+
+#### Sharing One BitmapFont Across Many TextRuntimes
+
+A single `BitmapFont` instance can be assigned to any number of `TextRuntime`s. Generate once, assign many times — there is no per-runtime regeneration cost and the underlying atlas textures are shared:
+
+```csharp
+// Initialize
+BitmapFont titleFont = CreateBitmapFont(result, GraphicsDevice);
+
+foreach (var label in titleLabels)
+{
+    label.BitmapFont = titleFont;
+}
+```
 
 ### When to Use This Strategy
 
 * You want a single `BitmapFont` instance shared across many `TextRuntime`s without each one re-loading from disk.
 * You're loading fonts from a non-standard source (embedded resource, network, custom pipeline) and want to keep the load step out of the property-driven path.
+* You need effects that `TextRuntime` does not expose — outline color, drop shadows, gradient fills, SDF, color fonts, or custom glyph subsets. See [Advanced Font Effects](advanced-font-effects.md).
+* You need a custom character set that doesn't match any `BmfcSave.Ranges` value you'd want to ship.
+* You need to override the rasterizer backend — for example forcing `RasterizerBackend.StbTrueType` on Blazor WASM where the native FreeType library isn't available.
 
 ## Build-Time Font Cache
 
