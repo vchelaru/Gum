@@ -41,6 +41,7 @@ internal class RectanglesScreen : FrameworkElement
         root.AddChild(right);
 
         left.AddChild(BuildSection("Sizes (40, 60, 90, 130 wide) — default outline", BuildSizesRow()));
+
         left.AddChild(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
         left.AddChild(BuildSection("Modes: FillColor, StrokeColor, Fill+Stroke, default", BuildModeRow()));
         left.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px on a filled card)", BuildStrokeWidthRow()));
@@ -97,7 +98,11 @@ internal class RectanglesScreen : FrameworkElement
             RectangleRuntime rect = new();
             rect.Width = width;
             rect.Height = 40;
+            rect.CornerRadius = 10;
+            rect.StrokeWidth = 1;
             rect.StrokeColor = Color.White;
+            rect.IsAntialiased = true;
+
             row.AddChild(rect);
         }
         return row;

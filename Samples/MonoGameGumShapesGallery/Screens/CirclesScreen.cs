@@ -98,6 +98,7 @@ internal class CirclesScreen : FrameworkElement
             CircleRuntime circle = new();
             circle.Radius = radius;
             circle.StrokeColor = Color.White;
+            circle.StrokeWidth = 1;
             row.AddChild(circle);
         }
         return row;

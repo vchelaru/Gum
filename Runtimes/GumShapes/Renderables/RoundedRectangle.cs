@@ -116,6 +116,18 @@ public class RoundedRectangle : RenderableShapeBase,
 
         bool hasCustomCorners = HasCustomCorners(out var corners);
 
+        // We do this so that shapes draw starting at the center of the pixel. This is most important
+        // when shapes have a stroke thickness of 1 at the Gum level with anti aliasing. This renders wiht
+        // an epsilon value of 0.01, with an anti-alias size of 1. By offsetting, the sampling of the antialias
+        // gradient in the shader happens right at the start of the gradient, making for solid beautiful lines.
+        if(antiAliasSize != 0)
+        {
+            position.X += .5f;
+            position.Y += .5f;
+            size.X -= 1f;
+            size.Y -= 1f;
+        }
+
         if (IsFilled)
         {
             if (UseGradient && forcedColor == null)
@@ -161,6 +173,7 @@ public class RoundedRectangle : RenderableShapeBase,
                     sb.DrawRectangle(position, size, transparentColor, color, strokeWidth, corners, rotationRadians, antiAliasSize);
                 else
                     sb.DrawRectangle(position, size, transparentColor, color, strokeWidth, CornerRadius, rotationRadians, antiAliasSize);
+
             }
         }
     }
