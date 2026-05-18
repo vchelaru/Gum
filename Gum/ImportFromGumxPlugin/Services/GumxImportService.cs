@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Commands;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
@@ -142,7 +143,7 @@ public class GumxImportService
 
         // 2. Transitive components — topological order (already sorted by GumxDependencyResolver)
         foreach (var component in selections.TransitiveComponents.Where(c => !skippedElements.Contains(c)))
-            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
+            ImportComponentInMemory(component, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
 
         // 3. Behaviors (no asset dependencies)
         foreach (var behavior in selections.Behaviors)
@@ -150,11 +151,11 @@ public class GumxImportService
 
         // 4. Direct components
         foreach (var component in selections.DirectComponents.Where(c => !skippedElements.Contains(c)))
-            await WriteAndImportComponentAsync(component, source, sourceBase, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
+            ImportComponentInMemory(component, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
 
         // 5. Screens
         foreach (var screen in selections.DirectScreens.Where(s => !skippedElements.Contains(s)))
-            await WriteAndImportScreenAsync(screen, source, sourceBase, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
+            ImportScreenInMemory(screen, projectDir, nameMap, qualifiedNameMap, conflictNameSet, conflictResolution);
 
         // 6. Write pre-fetched asset files to disk for imported elements
         var importedElements = allCandidateElements.Where(e => !skippedElements.Contains(e));
@@ -383,35 +384,178 @@ public class GumxImportService
         }
     }
 
-    private async Task WriteAndImportComponentAsync(
-        ComponentSave component,
-        GumProjectSave source,
-        string sourceBase,
+    /// <summary>
+    /// Component path (issue #2839 refactor): clone the source ComponentSave in memory,
+    /// mutate Name / BaseType / VariableReferences in-place on the clone, then hand it to
+    /// IImportLogic which writes it once to its canonical destination. Replaces the prior
+    /// fetch-XML-text → string-replace → write → deserialize → re-save dance, which raced
+    /// the in-memory model and silently lost VariableReferences rewrites.
+    /// </summary>
+    private void ImportComponentInMemory(
+        ComponentSave sourceComponent,
         string projectDir,
         Dictionary<string, string> nameMap,
         Dictionary<string, string> qualifiedNameMap,
         HashSet<string> conflictNameSet,
         ConflictResolution conflictResolution)
     {
-        string sourceName = component.Name;
+        string sourceName = sourceComponent.Name;
         string destName = nameMap.TryGetValue(sourceName, out var mapped) ? mapped : sourceName;
 
-        // Skip resolution: leave the existing destination file alone and don't register anything.
         bool isConflict = conflictNameSet.Contains(destName);
         if (isConflict && conflictResolution == ConflictResolution.Skip) { return; }
 
-        string relativeSrc = $"Components/{sourceName}.{GumProjectSave.ComponentExtension}";
-        string destPath = Path.Combine(projectDir, "Components", $"{destName}.{GumProjectSave.ComponentExtension}");
+        ComponentSave clone = CloneElement(sourceComponent);
+        clone.Name = destName;
+        RemapBaseTypes(clone, nameMap);
+        RemapVariableReferences(clone, qualifiedNameMap);
 
-        bool wrote = await CopyElementFileWithRemapAsync(
-            relativeSrc, sourceBase, destPath, sourceName, destName, nameMap, qualifiedNameMap);
-
-        // Overwrite resolution: the element is already in the in-memory project, so skip
-        // ImportLogic registration. The end-of-import save+reload picks up the new file content.
-        if (wrote && !isConflict)
+        if (isConflict && conflictResolution == ConflictResolution.Overwrite)
         {
-            _importLogic.ImportComponent(new FilePath(destPath), saveProject: false);
+            // Element is already in the destination project; bypass IImportLogic registration
+            // and write the file directly. The post-import save+reload picks up the new content.
+            string destPath = Path.Combine(projectDir, "Components", $"{destName}.{GumProjectSave.ComponentExtension}");
+            WriteElementToDisk(clone, destPath);
         }
+        else
+        {
+            _importLogic.ImportComponent(clone, saveProject: false);
+        }
+    }
+
+    /// <summary>
+    /// Screen analogue of <see cref="ImportComponentInMemory"/>. Same shape — clone, mutate,
+    /// hand to IImportLogic (or write directly on Overwrite-conflict).
+    /// </summary>
+    private void ImportScreenInMemory(
+        ScreenSave sourceScreen,
+        string projectDir,
+        Dictionary<string, string> nameMap,
+        Dictionary<string, string> qualifiedNameMap,
+        HashSet<string> conflictNameSet,
+        ConflictResolution conflictResolution)
+    {
+        string sourceName = sourceScreen.Name;
+        string destName = nameMap.TryGetValue(sourceName, out var mapped) ? mapped : sourceName;
+
+        bool isConflict = conflictNameSet.Contains(destName);
+        if (isConflict && conflictResolution == ConflictResolution.Skip) { return; }
+
+        ScreenSave clone = CloneElement(sourceScreen);
+        clone.Name = destName;
+        RemapBaseTypes(clone, nameMap);
+        RemapVariableReferences(clone, qualifiedNameMap);
+
+        if (isConflict && conflictResolution == ConflictResolution.Overwrite)
+        {
+            string destPath = Path.Combine(projectDir, "Screens", $"{destName}.{GumProjectSave.ScreenExtension}");
+            WriteElementToDisk(clone, destPath);
+        }
+        else
+        {
+            _importLogic.ImportScreen(clone, saveProject: false);
+        }
+    }
+
+    /// <summary>
+    /// Clones an ElementSave via a serializer round-trip. Round-tripping (rather than mutating
+    /// the source instance) protects the source GumProjectSave's in-memory copy, which may still
+    /// be visible to the import preview dialog. <see cref="StateSave.FixEnumerations"/> is called
+    /// after the round-trip for the same reason GumxSourceService applies it on load (issue #2810):
+    /// keep int-on-disk enum values typed in-memory before downstream comparers see them.
+    /// </summary>
+    private static T CloneElement<T>(T source) where T : ElementSave, new()
+    {
+        var serializer = GumFileSerializer.GetCompactSerializer(typeof(T));
+        using var writer = new StringWriter();
+        serializer.Serialize(writer, source);
+        using var reader = new StringReader(writer.ToString());
+        var clone = (T)serializer.Deserialize(reader)!;
+
+        foreach (var state in clone.AllStates)
+        {
+            state.FixEnumerations();
+        }
+        return clone;
+    }
+
+    /// <summary>
+    /// Mirrors the BaseType column of the prior string-replace logic, but on the in-memory model:
+    /// rewrites the element's own BaseType and every instance's BaseType when they point at
+    /// another simultaneously-imported element.
+    /// </summary>
+    private static void RemapBaseTypes(ElementSave element, Dictionary<string, string> nameMap)
+    {
+        if (nameMap.Count == 0) { return; }
+
+        if (element.BaseType != null && nameMap.TryGetValue(element.BaseType, out var newBase))
+        {
+            element.BaseType = newBase;
+        }
+
+        if (element.Instances != null)
+        {
+            foreach (var instance in element.Instances)
+            {
+                if (instance.BaseType != null && nameMap.TryGetValue(instance.BaseType, out var newInstanceBase))
+                {
+                    instance.BaseType = newInstanceBase;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Issue #2839: rewrite the right-hand side of every VariableReferences entry whose qualified
+    /// prefix (e.g. "Components/Styles") points at a simultaneously-imported element that is
+    /// gaining the destination subfolder. Pattern mirrors RenameLogic.ApplyElementReferences.
+    /// </summary>
+    private static void RemapVariableReferences(ElementSave element, Dictionary<string, string> qualifiedNameMap)
+    {
+        if (qualifiedNameMap.Count == 0) { return; }
+
+        foreach (var state in element.AllStates)
+        {
+            foreach (var variableList in state.VariableLists)
+            {
+                if (variableList.GetRootName() != "VariableReferences") { continue; }
+
+                var values = variableList.ValueAsIList;
+                for (int i = 0; i < values.Count; i++)
+                {
+                    if (values[i] is not string line) { continue; }
+
+                    int eqIndex = line.IndexOf('=');
+                    if (eqIndex < 0) { continue; }
+
+                    string left = line.Substring(0, eqIndex).TrimEnd();
+                    string right = line.Substring(eqIndex + 1).TrimStart();
+
+                    foreach (var (oldQualified, newQualified) in qualifiedNameMap)
+                    {
+                        if (right.StartsWith(oldQualified + ".", StringComparison.Ordinal))
+                        {
+                            right = newQualified + right.Substring(oldQualified.Length);
+                            break;
+                        }
+                    }
+
+                    values[i] = $"{left} = {right}";
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes a cloned element to a specific destination path (used for Overwrite conflicts
+    /// where IImportLogic registration is skipped because the element is already in the project).
+    /// </summary>
+    private void WriteElementToDisk(ElementSave element, string destPath)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+        bool useCompact = _projectState.GumProjectSave?.Version
+            >= (int)GumProjectSave.GumxVersions.AttributeVersion;
+        element.Save(destPath, useCompact);
     }
 
     private async Task WriteAndImportBehaviorAsync(
@@ -434,37 +578,9 @@ public class GumxImportService
         }
     }
 
-    private async Task WriteAndImportScreenAsync(
-        ScreenSave screen,
-        GumProjectSave source,
-        string sourceBase,
-        string projectDir,
-        Dictionary<string, string> nameMap,
-        Dictionary<string, string> qualifiedNameMap,
-        HashSet<string> conflictNameSet,
-        ConflictResolution conflictResolution)
-    {
-        string sourceName = screen.Name;
-        string destName = nameMap.TryGetValue(sourceName, out var mapped) ? mapped : sourceName;
-
-        bool isConflict = conflictNameSet.Contains(destName);
-        if (isConflict && conflictResolution == ConflictResolution.Skip) { return; }
-
-        string relativeSrc = $"Screens/{sourceName}.{GumProjectSave.ScreenExtension}";
-        string destPath = Path.Combine(projectDir, "Screens", $"{destName}.{GumProjectSave.ScreenExtension}");
-
-        bool wrote = await CopyElementFileWithRemapAsync(
-            relativeSrc, sourceBase, destPath, sourceName, destName, nameMap, qualifiedNameMap);
-
-        if (wrote && !isConflict)
-        {
-            _importLogic.ImportScreen(new FilePath(destPath), saveProject: false);
-        }
-    }
-
     /// <summary>
-    /// Copies an element file from source (local or URL) to the destination path.
-    /// Returns true if the file was successfully written.
+    /// Standards path: file-copy preserves the source XML byte-for-byte. Standards are not
+    /// renamed during import, so no in-memory mutation is required.
     /// </summary>
     private async Task<bool> CopyElementFileAsync(string relativeSourcePath, string sourceBase, string destPath)
     {
@@ -474,72 +590,5 @@ public class GumxImportService
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
         await File.WriteAllTextAsync(destPath, content);
         return true;
-    }
-
-    /// <summary>
-    /// Copies an element file, remapping the element's Name and any BaseType references that
-    /// point to other imported elements (from the name map). Returns true if file was written.
-    /// </summary>
-    private async Task<bool> CopyElementFileWithRemapAsync(
-        string relativeSourcePath,
-        string sourceBase,
-        string destPath,
-        string sourceName,
-        string destName,
-        Dictionary<string, string> nameMap,
-        Dictionary<string, string> qualifiedNameMap)
-    {
-        string? content = await _sourceService.FetchElementTextAsync(relativeSourcePath, sourceBase);
-        if (content == null) return false;
-
-        // If there are name remappings, apply them to the file content before writing
-        if (nameMap.Count > 0)
-        {
-            content = ApplyNameRemappings(content, sourceName, destName, nameMap, qualifiedNameMap);
-        }
-
-        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
-        await File.WriteAllTextAsync(destPath, content);
-        return true;
-    }
-
-    /// <summary>
-    /// Applies Name, BaseType, and VariableReferences remappings to the raw XML content of an
-    /// element file. Uses simple string replacement on the serialized XML to avoid full deserialization.
-    /// </summary>
-    private static string ApplyNameRemappings(
-        string content,
-        string sourceName,
-        string destName,
-        Dictionary<string, string> nameMap,
-        Dictionary<string, string> qualifiedNameMap)
-    {
-        // Remap the element's own name
-        if (sourceName != destName)
-        {
-            // Match the Name element/attribute in the XML
-            content = content.Replace($"<Name>{sourceName}</Name>", $"<Name>{destName}</Name>");
-            content = content.Replace($" Name=\"{sourceName}\"", $" Name=\"{destName}\"");
-        }
-
-        // Remap BaseType references to other imported components
-        foreach (var (oldName, newName) in nameMap)
-        {
-            if (oldName == sourceName) continue; // Already handled above
-
-            content = content.Replace($"<BaseType>{oldName}</BaseType>", $"<BaseType>{newName}</BaseType>");
-            content = content.Replace($" BaseType=\"{oldName}\"", $" BaseType=\"{newName}\"");
-        }
-
-        // Remap the right-hand side of VariableReferences entries. These are serialized as
-        // <string>LeftSide = QualifiedName.Member</string>. The qualified prefix points at
-        // another imported element (e.g. "Components/Styles") which gains the destination
-        // subfolder during this import (e.g. "Components/Theme/Styles"). Issue #2839.
-        foreach (var (oldQualified, newQualified) in qualifiedNameMap)
-        {
-            content = content.Replace($"= {oldQualified}.", $"= {newQualified}.");
-        }
-
-        return content;
     }
 }

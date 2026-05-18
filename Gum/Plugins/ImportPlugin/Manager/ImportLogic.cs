@@ -36,86 +36,65 @@ public class ImportLogic : IImportLogic
 
     public ScreenSave? ImportScreen(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
     {
-        string screensOrComponents = "Screens";
-        var elementReferences = _projectManager.GumProjectSave.ScreenReferences;
+        bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, "Screens");
+        if (!shouldAdd) { return null; }
 
-        bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, screensOrComponents);
-
-        ScreenSave? toReturn = null;
-        ScreenSave? screenSave = null;
-        if (shouldAdd)
-        {
-            screenSave = ElementReference.DeserializeElement<ScreenSave>(filePath.FullPath, GumProjectSave.NativeVersion);
-
-            var isDuplicate = ObjectFinder.Self.GetElementSave(screenSave.Name) != null;
-
-            if (isDuplicate)
-            {
-                _dialogService.ShowMessage($"This project already a screen named {screenSave.Name} in this project");
-                shouldAdd = false;
-            }
-        }
-
-        if(shouldAdd)
-        { 
-            elementReferences.Add(new ElementReference { Name = screenSave!.Name, ElementType = ElementType.Screen });
-            elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-            var screens = _projectManager.GumProjectSave.Screens;
-            screens.Add(screenSave);
-            screens.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-            screenSave.Initialize(null);
-
-            DoAfterImportLogic(saveProject, screenSave);
-
-            toReturn = screenSave;
-        }
-
-        return toReturn;
+        var screenSave = ElementReference.DeserializeElement<ScreenSave>(filePath.FullPath, GumProjectSave.NativeVersion);
+        return ImportScreen(screenSave, saveProject);
     }
 
+    public ScreenSave? ImportScreen(ScreenSave screenSave, bool saveProject = true)
+    {
+        if (ObjectFinder.Self.GetElementSave(screenSave.Name) != null)
+        {
+            _dialogService.ShowMessage($"This project already a screen named {screenSave.Name} in this project");
+            return null;
+        }
+
+        var elementReferences = _projectManager.GumProjectSave.ScreenReferences;
+        elementReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
+        elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+        var screens = _projectManager.GumProjectSave.Screens;
+        screens.Add(screenSave);
+        screens.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+        screenSave.Initialize(null);
+
+        DoAfterImportLogic(saveProject, screenSave);
+        return screenSave;
+    }
 
     public ComponentSave? ImportComponent(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
     {
-        string screensOrComponents = "Components";
+        bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, "Components");
+        if (!shouldAdd) { return null; }
+
+        var componentSave = ElementReference.DeserializeElement<ComponentSave>(filePath.FullPath, GumProjectSave.NativeVersion);
+        return ImportComponent(componentSave, saveProject);
+    }
+
+    public ComponentSave? ImportComponent(ComponentSave componentSave, bool saveProject = true)
+    {
+        if (ObjectFinder.Self.GetElementSave(componentSave.Name) != null)
+        {
+            _dialogService.ShowMessage($"This project already contains a component named {componentSave.Name}");
+            return null;
+        }
+
         var elementReferences = _projectManager.GumProjectSave.ComponentReferences;
+        elementReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
+        elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-        bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, screensOrComponents);
+        var components = _projectManager.GumProjectSave.Components;
+        components.Add(componentSave);
+        components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-        ComponentSave? toReturn = null;
-        ComponentSave? componentSave = null;
-        if (shouldAdd)
-        {
-            componentSave = ElementReference.DeserializeElement<ComponentSave>(filePath.FullPath, GumProjectSave.NativeVersion);
+        componentSave.InitializeDefaultAndComponentVariables();
+        _standardElementsManagerGumTool.FixCustomTypeConverters(componentSave);
 
-            var isDuplicate = ObjectFinder.Self.GetElementSave(componentSave.Name) != null;
-
-            if(isDuplicate)
-            {
-                _dialogService.ShowMessage($"This project already contains a component named {componentSave.Name}");
-                shouldAdd = false;
-            }
-        }
-
-        if(shouldAdd)
-        {
-            elementReferences.Add(new ElementReference { Name = componentSave!.Name, ElementType = ElementType.Component });
-            elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-            var components = _projectManager.GumProjectSave.Components;
-            components.Add(componentSave);
-            components.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-            componentSave.InitializeDefaultAndComponentVariables();
-            _standardElementsManagerGumTool.FixCustomTypeConverters(componentSave);
-
-            DoAfterImportLogic(saveProject, componentSave);
-
-            toReturn = componentSave;
-        }
-
-        return toReturn;
+        DoAfterImportLogic(saveProject, componentSave);
+        return componentSave;
     }
 
     private void DoAfterImportLogic(bool saveProject, ElementSave elementSave)

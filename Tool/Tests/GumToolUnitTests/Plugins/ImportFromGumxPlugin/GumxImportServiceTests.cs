@@ -28,7 +28,7 @@ public class GumxImportServiceTests : IDisposable
     private readonly string _sourceDir;
 
     // ── fakes ─────────────────────────────────────────────────────────────
-    private readonly FakeImportLogic _importLogic = new();
+    private readonly FakeImportLogic _importLogic;
     private readonly FakeFileCommands _fileCommands = new();
     private readonly FakeProjectState _projectState;
 
@@ -46,6 +46,7 @@ public class GumxImportServiceTests : IDisposable
 
         var gumProject = new GumProjectSave { FullFileName = Path.Combine(_projectDir, "Test.gumx") };
         _projectState  = new FakeProjectState(_projectDir, gumProject);
+        _importLogic   = new FakeImportLogic(_projectDir);
 
         _sut = new GumxImportService(_importLogic, _projectState, _fileCommands, _sourceService);
     }
@@ -86,6 +87,53 @@ public class GumxImportServiceTests : IDisposable
 
     private static ScreenSave ScreenNoAssets(string name) =>
         new ScreenSave { Name = name, States = new() { new StateSave { Name = "Default", Variables = new() } } };
+
+    /// <summary>
+    /// Builds a ComponentSave with a single VariableReferences line in its default state.
+    /// Mirrors how the live project model holds these — a VariableListSave whose root name is
+    /// "VariableReferences" with a List&lt;string&gt; of "LeftSide = RightSide" entries.
+    /// </summary>
+    private static ComponentSave ComponentWithVariableReference(string name, string variableReferenceLine)
+    {
+        VariableListSave<string> varList = new VariableListSave<string>
+        {
+            Type = "string",
+            Name = "VariableReferences"
+        };
+        varList.Value.Add(variableReferenceLine);
+        StateSave defaultState = new StateSave
+        {
+            Name = "Default",
+            Variables = new(),
+            VariableLists = new() { varList }
+        };
+        return new ComponentSave { Name = name, States = new() { defaultState } };
+    }
+
+    private static ScreenSave ScreenWithVariableReference(string name, string variableReferenceLine)
+    {
+        VariableListSave<string> varList = new VariableListSave<string>
+        {
+            Type = "string",
+            Name = "VariableReferences"
+        };
+        varList.Value.Add(variableReferenceLine);
+        StateSave defaultState = new StateSave
+        {
+            Name = "Default",
+            Variables = new(),
+            VariableLists = new() { varList }
+        };
+        return new ScreenSave { Name = name, States = new() { defaultState } };
+    }
+
+    private static ComponentSave ComponentWithBaseType(string name, string baseType) =>
+        new ComponentSave
+        {
+            Name = name,
+            BaseType = baseType,
+            States = new() { new StateSave { Name = "Default", Variables = new() } }
+        };
 
     private static GumProjectSave SourceProject() => new GumProjectSave();
 
@@ -407,21 +455,19 @@ public class GumxImportServiceTests : IDisposable
     [Fact]
     public async Task ImportAsync_OverwriteResolution_ConflictingComponent_FileReplaced()
     {
-        // Arrange
+        // On Overwrite the existing destination file is replaced with a serialization of the
+        // in-memory source ComponentSave. ImportLogic is NOT called because the element is
+        // already in the project — the post-import save+reload picks up the new content.
+        // We use BaseType as a sentinel: the source has BaseType "Sentinel", the pre-existing
+        // file does not, so we can confirm the source replaced the destination.
         string componentName = "Button";
 
         string destComponentDir = Path.Combine(_projectDir, "Components");
         Directory.CreateDirectory(destComponentDir);
         string destPath = Path.Combine(destComponentDir, $"{componentName}.{GumProjectSave.ComponentExtension}");
-        File.WriteAllText(destPath, "<ComponentSave><Name>Button</Name><Marker>original</Marker></ComponentSave>");
+        File.WriteAllText(destPath, "<ComponentSave><Name>Button</Name><BaseType>Original</BaseType></ComponentSave>");
 
-        // Source content has a different marker so we can verify the overwrite landed
-        string srcDir = Path.Combine(_sourceDir, "Components");
-        Directory.CreateDirectory(srcDir);
-        const string newContent = "<ComponentSave><Name>Button</Name><Marker>updated</Marker></ComponentSave>";
-        File.WriteAllText(Path.Combine(srcDir, $"{componentName}.{GumProjectSave.ComponentExtension}"), newContent);
-
-        ComponentSave component = ComponentNoAssets(componentName);
+        ComponentSave component = ComponentWithBaseType(componentName, baseType: "Sentinel");
         GumProjectSave source = SourceProject();
         source.Components.Add(component);
 
@@ -434,15 +480,14 @@ public class GumxImportServiceTests : IDisposable
             Standards = new(),
         };
 
-        // Act
         ImportResult result = await _sut.ImportAsync(
             selections, source, _sourceDir, destinationSubfolder: "",
             conflictResolution: ConflictResolution.Overwrite);
 
-        // Assert — file on disk replaced; ImportLogic NOT called for an already-registered element
-        // (the project save+reload at end of import picks up the new content).
         result.ConflictingElements.ShouldBeEmpty();
-        File.ReadAllText(destPath).ShouldBe(newContent);
+        string writtenContent = File.ReadAllText(destPath);
+        writtenContent.ShouldContain("Sentinel");
+        writtenContent.ShouldNotContain("Original");
         _importLogic.ImportedComponentPaths.ShouldBeEmpty();
     }
 
@@ -553,6 +598,11 @@ public class GumxImportServiceTests : IDisposable
     }
 
     // ── variable reference remapping (issue #2839) ────────────────────────
+    //
+    // Tests assert against the final on-disk file the real ImportLogic pipeline produces — the
+    // FakeImportLogic in this file serializes the in-memory ComponentSave through
+    // ElementSave.Save (same code path the production TryAutoSaveElement uses), so we exercise
+    // the deserialize-resave race that caused the original bug.
 
     [Fact]
     public async Task ImportAsync_WithSubfolder_RewritesVariableReferenceRightHandSideToRemappedName()
@@ -560,36 +610,10 @@ public class GumxImportServiceTests : IDisposable
         // Issue #2839: when importing components into a subfolder, the right-hand side of
         // VariableReferences entries that point at other simultaneously-imported components
         // must be updated to reflect the new subfolder location.
-
-        string aName = "A";
-        string stylesName = "Styles";
         string subfolder = "Theme";
 
-        // Source A.gucx contains a VariableReferences list pointing at Styles
-        string srcComponentsDir = Path.Combine(_sourceDir, "Components");
-        Directory.CreateDirectory(srcComponentsDir);
-        string aContent =
-            "<ComponentSave>" +
-              "<Name>A</Name>" +
-              "<States>" +
-                "<StateSave>" +
-                  "<Name>Default</Name>" +
-                  "<VariableLists>" +
-                    "<VariableListSave>" +
-                      "<Name>VariableReferences</Name>" +
-                      "<Value>" +
-                        "<string>Red = Components/Styles.Primary.Red</string>" +
-                      "</Value>" +
-                    "</VariableListSave>" +
-                  "</VariableLists>" +
-                "</StateSave>" +
-              "</States>" +
-            "</ComponentSave>";
-        File.WriteAllText(Path.Combine(srcComponentsDir, $"{aName}.{GumProjectSave.ComponentExtension}"), aContent);
-        WriteSourceComponent(stylesName);
-
-        ComponentSave a = ComponentNoAssets(aName);
-        ComponentSave styles = ComponentNoAssets(stylesName);
+        ComponentSave a = ComponentWithVariableReference("A", "Red = Components/Styles.Primary.Red");
+        ComponentSave styles = ComponentNoAssets("Styles");
         GumProjectSave source = SourceProject();
         source.Components.Add(a);
         source.Components.Add(styles);
@@ -603,14 +627,12 @@ public class GumxImportServiceTests : IDisposable
             Standards = new(),
         };
 
-        // Act
         ImportResult result = await _sut.ImportAsync(
             selections, source, _sourceDir, destinationSubfolder: subfolder);
 
-        // Assert — the written A file's VariableReferences right-hand side reflects the new subfolder.
         result.ConflictingElements.ShouldBeEmpty();
         string aDestPath = Path.Combine(
-            _projectDir, "Components", subfolder, $"{aName}.{GumProjectSave.ComponentExtension}");
+            _projectDir, "Components", subfolder, $"A.{GumProjectSave.ComponentExtension}");
         string writtenContent = File.ReadAllText(aDestPath);
         writtenContent.ShouldContain("Red = Components/Theme/Styles.Primary.Red");
         writtenContent.ShouldNotContain("Red = Components/Styles.Primary.Red");
@@ -619,46 +641,22 @@ public class GumxImportServiceTests : IDisposable
     [Fact]
     public async Task ImportAsync_WithSubfolder_RewritesScreenVariableReferenceToRemappedScreenName()
     {
-        // Screen-side mirror of the component case: a Screen with a VariableReferences entry
-        // pointing at another simultaneously-imported Screen must have its qualified prefix
-        // (Screens/Other → Screens/Subfolder/Other) rewritten on import.
-        string aName = "MainScreen";
-        string otherName = "OtherScreen";
+        // Screen analogue: a Screen with a VariableReferences entry pointing at another
+        // simultaneously-imported Screen must have its qualified prefix (Screens/Other →
+        // Screens/Subfolder/Other) rewritten on import.
         string subfolder = "Levels";
 
-        string srcScreensDir = Path.Combine(_sourceDir, "Screens");
-        Directory.CreateDirectory(srcScreensDir);
-        string aContent =
-            "<ScreenSave>" +
-              "<Name>MainScreen</Name>" +
-              "<States>" +
-                "<StateSave>" +
-                  "<Name>Default</Name>" +
-                  "<VariableLists>" +
-                    "<VariableListSave>" +
-                      "<Name>VariableReferences</Name>" +
-                      "<Value>" +
-                        "<string>Title = Screens/OtherScreen.HeaderText.Value</string>" +
-                      "</Value>" +
-                    "</VariableListSave>" +
-                  "</VariableLists>" +
-                "</StateSave>" +
-              "</States>" +
-            "</ScreenSave>";
-        File.WriteAllText(Path.Combine(srcScreensDir, $"{aName}.{GumProjectSave.ScreenExtension}"), aContent);
-        WriteSourceScreen(otherName);
-
-        ScreenSave a = ScreenNoAssets(aName);
-        ScreenSave other = ScreenNoAssets(otherName);
+        ScreenSave main = ScreenWithVariableReference("MainScreen", "Title = Screens/OtherScreen.HeaderText.Value");
+        ScreenSave other = ScreenNoAssets("OtherScreen");
         GumProjectSave source = SourceProject();
-        source.Screens.Add(a);
+        source.Screens.Add(main);
         source.Screens.Add(other);
 
         ImportSelections selections = new ImportSelections
         {
             DirectComponents = new(),
             TransitiveComponents = new(),
-            DirectScreens = new() { a, other },
+            DirectScreens = new() { main, other },
             Behaviors = new(),
             Standards = new(),
         };
@@ -667,9 +665,9 @@ public class GumxImportServiceTests : IDisposable
             selections, source, _sourceDir, destinationSubfolder: subfolder);
 
         result.ConflictingElements.ShouldBeEmpty();
-        string aDestPath = Path.Combine(
-            _projectDir, "Screens", subfolder, $"{aName}.{GumProjectSave.ScreenExtension}");
-        string writtenContent = File.ReadAllText(aDestPath);
+        string mainDestPath = Path.Combine(
+            _projectDir, "Screens", subfolder, $"MainScreen.{GumProjectSave.ScreenExtension}");
+        string writtenContent = File.ReadAllText(mainDestPath);
         writtenContent.ShouldContain("Title = Screens/Levels/OtherScreen.HeaderText.Value");
         writtenContent.ShouldNotContain("Title = Screens/OtherScreen.HeaderText.Value");
     }
@@ -677,26 +675,12 @@ public class GumxImportServiceTests : IDisposable
     [Fact]
     public async Task ImportAsync_WithSubfolder_RewritesBaseTypeReferenceToRemappedComponent()
     {
-        // ApplyNameRemappings rewrites <BaseType> entries that point at another imported
-        // component, so the BaseType chain stays intact after the subfolder relocation.
-        string derivedName = "RedButton";
-        string baseName = "Button";
+        // The element's BaseType points at another imported component; under subfolder import,
+        // the BaseType must be rewritten to the new qualified location.
         string subfolder = "Theme";
 
-        string srcComponentsDir = Path.Combine(_sourceDir, "Components");
-        Directory.CreateDirectory(srcComponentsDir);
-        string derivedContent =
-            "<ComponentSave>" +
-              "<Name>RedButton</Name>" +
-              "<BaseType>Button</BaseType>" +
-            "</ComponentSave>";
-        File.WriteAllText(
-            Path.Combine(srcComponentsDir, $"{derivedName}.{GumProjectSave.ComponentExtension}"),
-            derivedContent);
-        WriteSourceComponent(baseName);
-
-        ComponentSave derived = ComponentNoAssets(derivedName);
-        ComponentSave baseComponent = ComponentNoAssets(baseName);
+        ComponentSave derived = ComponentWithBaseType("RedButton", baseType: "Button");
+        ComponentSave baseComponent = ComponentNoAssets("Button");
         GumProjectSave source = SourceProject();
         source.Components.Add(derived);
         source.Components.Add(baseComponent);
@@ -714,11 +698,9 @@ public class GumxImportServiceTests : IDisposable
             selections, source, _sourceDir, destinationSubfolder: subfolder);
 
         result.ConflictingElements.ShouldBeEmpty();
-        string derivedDestPath = Path.Combine(
-            _projectDir, "Components", subfolder, $"{derivedName}.{GumProjectSave.ComponentExtension}");
-        string writtenContent = File.ReadAllText(derivedDestPath);
-        writtenContent.ShouldContain("<BaseType>Theme/Button</BaseType>");
-        writtenContent.ShouldNotContain("<BaseType>Button</BaseType>");
+        ComponentSave registered = _importLogic.RegisteredComponents
+            .Where(c => c.Name == $"{subfolder}/RedButton").ShouldHaveSingleItem();
+        registered.BaseType.ShouldBe($"{subfolder}/Button");
     }
 
     [Fact]
@@ -726,34 +708,10 @@ public class GumxImportServiceTests : IDisposable
     {
         // Regression guard: when destinationSubfolder is empty, qualifiedNameMap is empty
         // and the right-hand side of VariableReferences must pass through untouched.
-        string aName = "A";
-        string stylesName = "Styles";
-
-        string srcComponentsDir = Path.Combine(_sourceDir, "Components");
-        Directory.CreateDirectory(srcComponentsDir);
         const string originalReference = "Red = Components/Styles.Primary.Red";
-        string aContent =
-            "<ComponentSave>" +
-              "<Name>A</Name>" +
-              "<States>" +
-                "<StateSave>" +
-                  "<Name>Default</Name>" +
-                  "<VariableLists>" +
-                    "<VariableListSave>" +
-                      "<Name>VariableReferences</Name>" +
-                      "<Value>" +
-                        $"<string>{originalReference}</string>" +
-                      "</Value>" +
-                    "</VariableListSave>" +
-                  "</VariableLists>" +
-                "</StateSave>" +
-              "</States>" +
-            "</ComponentSave>";
-        File.WriteAllText(Path.Combine(srcComponentsDir, $"{aName}.{GumProjectSave.ComponentExtension}"), aContent);
-        WriteSourceComponent(stylesName);
 
-        ComponentSave a = ComponentNoAssets(aName);
-        ComponentSave styles = ComponentNoAssets(stylesName);
+        ComponentSave a = ComponentWithVariableReference("A", originalReference);
+        ComponentSave styles = ComponentNoAssets("Styles");
         GumProjectSave source = SourceProject();
         source.Components.Add(a);
         source.Components.Add(styles);
@@ -771,7 +729,7 @@ public class GumxImportServiceTests : IDisposable
             selections, source, _sourceDir, destinationSubfolder: "");
 
         result.ConflictingElements.ShouldBeEmpty();
-        string aDestPath = Path.Combine(_projectDir, "Components", $"{aName}.{GumProjectSave.ComponentExtension}");
+        string aDestPath = Path.Combine(_projectDir, "Components", $"A.{GumProjectSave.ComponentExtension}");
         string writtenContent = File.ReadAllText(aDestPath);
         writtenContent.ShouldContain(originalReference);
     }
@@ -781,32 +739,10 @@ public class GumxImportServiceTests : IDisposable
     {
         // If the right-hand side points at an element NOT being imported, the qualified prefix
         // must be preserved so it resolves against the destination project's existing element.
-        string aName = "A";
-        string subfolder = "Theme";
         const string externalReference = "Red = Components/ExternalStyles.Primary.Red";
+        string subfolder = "Theme";
 
-        string srcComponentsDir = Path.Combine(_sourceDir, "Components");
-        Directory.CreateDirectory(srcComponentsDir);
-        string aContent =
-            "<ComponentSave>" +
-              "<Name>A</Name>" +
-              "<States>" +
-                "<StateSave>" +
-                  "<Name>Default</Name>" +
-                  "<VariableLists>" +
-                    "<VariableListSave>" +
-                      "<Name>VariableReferences</Name>" +
-                      "<Value>" +
-                        $"<string>{externalReference}</string>" +
-                      "</Value>" +
-                    "</VariableListSave>" +
-                  "</VariableLists>" +
-                "</StateSave>" +
-              "</States>" +
-            "</ComponentSave>";
-        File.WriteAllText(Path.Combine(srcComponentsDir, $"{aName}.{GumProjectSave.ComponentExtension}"), aContent);
-
-        ComponentSave a = ComponentNoAssets(aName);
+        ComponentSave a = ComponentWithVariableReference("A", externalReference);
         GumProjectSave source = SourceProject();
         source.Components.Add(a);
 
@@ -824,18 +760,107 @@ public class GumxImportServiceTests : IDisposable
 
         result.ConflictingElements.ShouldBeEmpty();
         string aDestPath = Path.Combine(
-            _projectDir, "Components", subfolder, $"{aName}.{GumProjectSave.ComponentExtension}");
+            _projectDir, "Components", subfolder, $"A.{GumProjectSave.ComponentExtension}");
         string writtenContent = File.ReadAllText(aDestPath);
         writtenContent.ShouldContain(externalReference);
     }
 
+    [Fact]
+    public async Task ImportAsync_WithSubfolder_DoesNotMutateSourceComponent()
+    {
+        // The source ComponentSave in selections (which is the live model held by the source
+        // GumProjectSave) must NOT be mutated by the import — the import preview dialog may
+        // still reference it after the import completes. We achieve this by cloning the source
+        // before mutating; this test pins that invariant.
+        string subfolder = "Theme";
+        const string originalReference = "Red = Components/Styles.Primary.Red";
+
+        ComponentSave a = ComponentWithVariableReference("A", originalReference);
+        ComponentSave styles = ComponentNoAssets("Styles");
+        GumProjectSave source = SourceProject();
+        source.Components.Add(a);
+        source.Components.Add(styles);
+
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = new() { a, styles },
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new(),
+            Standards = new(),
+        };
+
+        await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: subfolder);
+
+        // Source side: name, reference, and reference target are all original.
+        a.Name.ShouldBe("A");
+        VariableListSave aRefs = a.DefaultState.VariableLists
+            .Where(l => l.GetRootName() == "VariableReferences").ShouldHaveSingleItem();
+        aRefs.ValueAsIList[0].ShouldBe(originalReference);
+    }
+
+    [Fact]
+    public async Task ImportAsync_WithSubfolder_WrittenFileRoundTripsToCorrectInMemoryReference()
+    {
+        // End-to-end protection: load the on-disk file back through the same serializer
+        // production uses (ElementReference.DeserializeElement) and assert the in-memory
+        // VariableReferences list carries the rewritten right-hand side. Defends against
+        // serializer quirks that could store the string differently than expected.
+        string subfolder = "Theme";
+
+        ComponentSave a = ComponentWithVariableReference("A", "Red = Components/Styles.Primary.Red");
+        ComponentSave styles = ComponentNoAssets("Styles");
+        GumProjectSave source = SourceProject();
+        source.Components.Add(a);
+        source.Components.Add(styles);
+
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = new() { a, styles },
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new(),
+            Standards = new(),
+        };
+
+        await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: subfolder);
+
+        string aDestPath = Path.Combine(
+            _projectDir, "Components", subfolder, $"A.{GumProjectSave.ComponentExtension}");
+        ComponentSave reloaded = ElementReference.DeserializeElement<ComponentSave>(
+            aDestPath, GumProjectSave.NativeVersion);
+
+        reloaded.Name.ShouldBe($"{subfolder}/A");
+        VariableListSave reloadedRefs = reloaded.DefaultState.VariableLists
+            .Where(l => l.GetRootName() == "VariableReferences").ShouldHaveSingleItem();
+        reloadedRefs.ValueAsIList[0].ShouldBe("Red = Components/Theme/Styles.Primary.Red");
+    }
+
     // ── test doubles ──────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Test double that mimics the real ImportLogic's serialize-to-disk behavior. The earlier
+    /// version of this fake just recorded the FilePath and returned an empty ComponentSave,
+    /// which hid the bug that motivated the GumxImportService refactor: real ImportLogic
+    /// deserializes the just-written file and TryAutoSaveElement immediately re-serializes
+    /// the in-memory model back to disk, so any XML-string rewrites done by GumxImportService
+    /// were silently overwritten. Tests must assert on the final on-disk file.
+    /// </summary>
     private class FakeImportLogic : IImportLogic
     {
+        private readonly string _projectDir;
+        private readonly List<ComponentSave> _registeredComponents = new();
+        private readonly List<ScreenSave> _registeredScreens = new();
+
+        public FakeImportLogic(string projectDir) { _projectDir = projectDir; }
+
         public List<string> ImportedComponentPaths { get; } = new();
         public List<string> ImportedScreenPaths    { get; } = new();
         public List<string> ImportedBehaviorPaths  { get; } = new();
+
+        /// <summary>Components registered via the in-memory overload, in import order.</summary>
+        public IReadOnlyList<ComponentSave> RegisteredComponents => _registeredComponents;
+        public IReadOnlyList<ScreenSave>    RegisteredScreens    => _registeredScreens;
 
         public ComponentSave? ImportComponent(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
         {
@@ -843,10 +868,32 @@ public class GumxImportServiceTests : IDisposable
             return new ComponentSave();
         }
 
+        public ComponentSave? ImportComponent(ComponentSave component, bool saveProject = true)
+        {
+            _registeredComponents.Add(component);
+            string destPath = Path.Combine(
+                _projectDir, "Components", $"{component.Name}.{GumProjectSave.ComponentExtension}");
+            Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+            component.Save(destPath, useCompactFormat: true);
+            ImportedComponentPaths.Add(destPath);
+            return component;
+        }
+
         public ScreenSave? ImportScreen(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
         {
             ImportedScreenPaths.Add(filePath.FullPath);
             return new ScreenSave();
+        }
+
+        public ScreenSave? ImportScreen(ScreenSave screen, bool saveProject = true)
+        {
+            _registeredScreens.Add(screen);
+            string destPath = Path.Combine(
+                _projectDir, "Screens", $"{screen.Name}.{GumProjectSave.ScreenExtension}");
+            Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+            screen.Save(destPath, useCompactFormat: true);
+            ImportedScreenPaths.Add(destPath);
+            return screen;
         }
 
         public BehaviorSave ImportBehavior(FilePath filePath, string? desiredDirectory = null, bool saveProject = false)

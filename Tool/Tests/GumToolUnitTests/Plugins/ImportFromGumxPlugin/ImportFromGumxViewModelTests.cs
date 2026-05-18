@@ -384,8 +384,12 @@ public class ImportFromGumxViewModelTests
     {
         public ComponentSave? ImportComponent(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
             => new ComponentSave();
+        public ComponentSave? ImportComponent(ComponentSave component, bool saveProject = true)
+            => component;
         public ScreenSave? ImportScreen(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
             => new ScreenSave();
+        public ScreenSave? ImportScreen(ScreenSave screen, bool saveProject = true)
+            => screen;
         public BehaviorSave ImportBehavior(FilePath filePath, string? desiredDirectory = null, bool saveProject = false)
             => new BehaviorSave();
     }
