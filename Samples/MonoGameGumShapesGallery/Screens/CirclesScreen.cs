@@ -420,12 +420,12 @@ internal class CirclesScreen : FrameworkElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildNonSquareCell(float width, float height)
+    static RectangleRuntime BuildNonSquareCell(float width, float height)
     {
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = width;
         frame.Height = height;
-        frame.Color = new Color(60, 60, 80);
+        frame.FillColor = new Color(60, 60, 80);
 
         CircleRuntime circle = new();
         circle.Width = width;
