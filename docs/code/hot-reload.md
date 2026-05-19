@@ -38,7 +38,9 @@ Hot reload monitors the following Gum file types:
 | `.gutx`   | Standard element definitions |
 | `.fnt`    | Bitmap font definitions      |
 
-When any of these files change, Gum reloads the entire project and reconstructs all children of the root element from the updated definitions. This means changes to layout, styling, states, variables, component structure, and fonts are all picked up.
+When any of these files change, Gum reloads the project in place: it diffs the new definitions against the live visual tree and updates only what changed. This covers variable edits (move, resize, color, state changes) as well as structural changes — instances added by copy/paste, instances deleted, instances whose `BaseType` was changed, and instance reorders.
+
+Children added at runtime by your game code are left untouched. Hot reload identifies "design-time" children by their `Tag` — when Gum creates a visual from an `InstanceSave`, it stores the `InstanceSave` in `Tag`. Anything without an `InstanceSave` `Tag` is treated as runtime-owned and skipped.
 
 When a reload is triggered, Gum automatically copies all `.fnt` and `.png` files from the source project's `FontCache/` directory to the bin-side `FontCache/` directory, and evicts cached fonts so they are reloaded from disk.
 
@@ -48,7 +50,11 @@ Hot reload is focused on Gum element definitions. The following are **not** auto
 
 * **Textures and images** — If you change a `.png` file, the cached texture is still used. Restart the game to pick up texture changes.
 * **Animation files** — `.ganx` animation definitions are not reloaded.
-* **Runtime state** — Any properties set programmatically at runtime (e.g., changing `Text` or `Width` in code) are lost when the element is recreated. Only values defined in the Gum project are restored. See [Preserving Runtime State](#preserving-runtime-state) below for the recommended pattern.
+* **Runtime state on existing instances** — Any properties set programmatically at runtime (e.g., changing `Text` or `Width` in code) are overwritten when the corresponding design-time variables are re-applied. Only values defined in the Gum project are restored. See [Preserving Runtime State](#preserving-runtime-state) below for the recommended pattern.
+
+### Known Limitation: Cleared Tags
+
+If your code clears (`= null`) or replaces the `Tag` on a visual that was created from an `InstanceSave`, hot reload can no longer recognize it as a design-time child. It is treated as runtime-owned: not removed, not retyped, and not duplicated when the corresponding `InstanceSave` is still present in the project. The parent's qualified-name variables (`MyInstance.X`, etc.) still flow through to it by `Name`, so visible variables continue to update.
 
 ## Platform Support
 
@@ -73,10 +79,10 @@ When `EnableHotReload` is called, Gum creates a `FileSystemWatcher` on the direc
 
 1. The change is detected and a 200ms debounce timer starts. Additional changes within that window reset the timer, so rapid saves (such as the Gum tool writing multiple files at once) are coalesced into a single reload.
 2. On the next `GumService.Update` call after the debounce window, Gum reloads the project from disk.
-3. All children of the root element are removed and recreated from the updated element definitions, preserving their order.
+3. Gum walks the live visual tree and, for each visual that matches a project element by name, reconciles its design-time children with the new `Instances` list (adding, removing, retyping, and reordering as needed) and re-applies the new default-state variables. Runtime-added children are left in place.
 
 {% hint style="warning" %}
-Because elements are fully recreated during hot reload, any runtime state set in code is lost. If your game sets properties on UI elements after creation (e.g., populating a label with a score, hiding a panel), that code needs to run again after a reload.
+Re-applying design-time variables overwrites values your code set on those same properties at runtime. If your game writes to UI elements after creation (e.g., populating a label with a score, hiding a panel), that code needs to run again after a reload.
 {% endhint %}
 
 ## Preserving Runtime State

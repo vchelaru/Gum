@@ -51,15 +51,33 @@ The 200 ms debounce coalesces the Gum tool's multi-file save burst into one relo
 1. `CopyAndUnloadChangedFonts()` — copies changed `.fnt` files plus matching `<basename>*.png` texture pages from source `FontCache/` to bin `FontCache/`, then `LoaderManager.Dispose`s both so they reload from disk.
 2. `GumProjectSave.Load` + `Initialize`; swap into `ObjectFinder.Self.GumProjectSave`.
 3. Temporarily point `FileManager.RelativeDirectory` at the source directory, call `GumService.TryLoadAnimation` for every element, restore.
-4. Snapshot `root.Children[*].ElementSave.Name`, call `RemoveFromManagers()` + null parent on each.
-5. Look up each snapshotted name in the new project and `ToGraphicalUiElement(..., addToManagers: false)` to rebuild in original order.
-6. Fire `ReloadCompleted`.
+4. `ApplyDiff(roots, newProject, SystemManagers.Default)` — applies the in-place reconciliation walk described below.
+5. Fire `ReloadCompleted`.
+
+## ApplyDiff — In-Place Reconciliation Walk
+
+Defined on `GumHotReloadManager` and exposed `public static` for direct test use. Walks every root and, at each visual whose `ElementSave.Name` matches an element in the new project:
+
+1. Re-point `element.ElementSave` to the new project's element.
+2. **Structural diff against the new `Instances` list** (`DiffDesignTimeChildren`):
+   - Partition the visual's children into **design-time** (those with `Tag is InstanceSave`) and **everything else** (runtime-added or Tag-cleared).
+   - For each existing design-time child not present in the new `Instances`: `Parent = null` + `RemoveFromManagers()`.
+   - For each new `InstanceSave`:
+     - If a matching design-time child exists, compare its visual's `ElementSave.Name` against the new `BaseType`. Mismatch → remove+recreate (retype). Match → refresh the `Tag` to point at the new `InstanceSave` instance.
+     - If a same-named non-design-time child exists, leave it alone (runtime owns that slot). Do not create a duplicate.
+     - Otherwise call `instance.ToGraphicalUiElement(systemManagers)` and attach via `Parent = parent` + `ElementGueContainingThis = parent`.
+   - `ReorderDesignTimeChildren` walks the design-time slots in `Children` and `Move`s items so the design-time subsequence matches `newEs.Instances` order. Non-design-time children keep their slots.
+3. `SetVariablesRecursively(newEs, newEs.DefaultState)` — re-applies the new default-state values. Qualified-name variables (`MyInstance.X`, `MyInstance.Parent`, etc.) flow into the children by `Name`, which also handles reparenting and animates new instances into position.
+4. Recurse into runtime-added children only. Design-time children are skipped — their variables were already set via the parent's qualified-name walk.
 
 ## Non-Obvious Behaviors / Gotchas
 
-- **Only `Root.Children` are rebuilt.** `PopupRoot` and `ModalRoot` are untouched. Anything the game attached elsewhere will not be refreshed.
-- **Runtime state is lost.** Every rebuilt element comes back with Gum-project values only — code-set properties (`Text`, `Width`, etc.) disappear. Games that populate UI in code must rerun that logic on `ReloadCompleted`.
-- **Children added with no `ElementSave`** (pure runtime instances with `name == null`) are silently dropped — the snapshot stores their name slot but the lookup fails.
+- **`Tag` is the design-time marker.** `InstanceSave.ToGraphicalUiElement` sets `Tag = instanceSave` (`GumRuntime/InstanceSaveExtensionMethods.GumRuntime.cs:39`). If user code nulls or replaces that `Tag`, the diff treats the visual as runtime-owned: not removed, not retyped, not duplicated. Variable application via `Name` still works. Documented limitation, see `docs/code/hot-reload.md`.
+- **Retype detection uses `ElementSave.Name`, not the old `Tag.BaseType`.** This is the visual's actual built-from type, which stays stable across diffs whether the caller passed a fresh project or mutated the existing one in place — important for tests.
+- **`Root.Children` and any roots passed to `Update(IEnumerable<GraphicalUiElement>)`** are the reload surface. `PopupRoot` / `ModalRoot` are untouched.
+- **Runtime state on design-time visuals is overwritten** by `SetVariablesRecursively`. Games that mutate UI in code need to rerun that logic on `ReloadCompleted`.
+- **Children added with no `Tag`** (or with a `Tag` that isn't an `InstanceSave`) are runtime-owned and preserved. This includes ItemsControl-generated rows and anything the user constructed programmatically.
+- **Reparenting flows through the qualified `<instance>.Parent` variable** — there is no explicit reparent step in the diff. The parent state's `Foo.Parent = "Bar"` line is what re-attaches `Foo` under `Bar` during `SetVariablesRecursively`. This is why both old and new parent visuals must exist before that step runs.
 - **Textures (non-font `.png`) and `.ganx` are watched but not reloaded** in the cache-eviction sense. `.ganx` is only re-read via `TryLoadAnimation` on the new project; `.png` edits require a restart.
 - **`_changedFontFiles` is mutated off the game thread** (watcher callback). It's protected by `_fontFileLock`; any new shared state added must be similarly synchronized.
 - **`Stop()` is idempotent-safe** but does not reset other state — `GumService.Uninitialize` just nulls the manager reference afterward.
