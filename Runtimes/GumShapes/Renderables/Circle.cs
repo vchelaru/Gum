@@ -42,8 +42,9 @@ public class Circle : RenderableShapeBase,
     // concrete Apos.Shapes Circle type.
     /// <inheritdoc/>
     /// <remarks>
-    /// Apos.Shapes draws the circle as <c>Width / 2</c> centered on the renderable's
-    /// position — the diameter, not a separate radius field. Setting <see cref="Radius"/>
+    /// Issue #2852 — when Width and Height differ, the rendered radius is
+    /// <c>min(Width, Height) / 2</c> so the circle fits inside its bounding box centered,
+    /// matching SkiaGum's behavior (the Gum tool/viewport). Setting <see cref="Radius"/>
     /// keeps Width and Height in lockstep so the shape is square. Implemented to satisfy
     /// both <see cref="Gum.GueDeriving.IFilledCircleRenderable"/> and
     /// <see cref="Gum.GueDeriving.IStrokedCircleRenderable"/>; which slot any given Circle
@@ -52,7 +53,7 @@ public class Circle : RenderableShapeBase,
     /// </remarks>
     public float Radius
     {
-        get => Width / 2f;
+        get => System.Math.Min(Width, Height) / 2f;
         set
         {
             Width = value * 2;
@@ -67,11 +68,13 @@ public class Circle : RenderableShapeBase,
         var absoluteLeft = this.GetAbsoluteLeft();
         var absoluteTop = this.GetAbsoluteTop();
 
+        // Issue #2852: center on the actual bounding box and use the smaller dimension as
+        // the radius so a non-square Circle fits within its box (matches SkiaGum).
         var center = new Microsoft.Xna.Framework.Vector2(
             absoluteLeft + Width / 2.0f,
-            absoluteTop + Width / 2.0f);
+            absoluteTop + Height / 2.0f);
 
-        var radius = Width / 2.0f;
+        var radius = System.Math.Min(Width, Height) / 2.0f;
 
         if(HasDropshadow)
         {
