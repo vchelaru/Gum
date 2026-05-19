@@ -1528,7 +1528,9 @@ public class CodeGenerator
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
-            var inheritsFromText = context.Element.BaseType == "Text";
+            var rootStandard = ObjectFinder.Self.GetRootStandardElementSave(context.Element);
+            var inheritsFromText = rootStandard?.Name == "Text"
+                || (rootStandard == null && context.Element.BaseType == "Text");
             if(inheritsFromText)
             {
                 // special case for label:
