@@ -81,7 +81,9 @@ public class DragDropManagerTests : BaseTestClass
                 It.IsAny<List<StateSave>>(),
                 It.IsAny<ElementSave>(),
                 It.IsAny<InstanceSave?>(),
-                It.IsAny<ISelectedState?>()))
+                It.IsAny<ISelectedState?>(),
+                It.IsAny<List<StateSave>?>(),
+                It.IsAny<HashSet<string>?>()))
             .Returns(new List<InstanceSave> { draggedInstance });
 
         // Act
@@ -241,7 +243,9 @@ public class DragDropManagerTests : BaseTestClass
                 It.IsAny<List<StateSave>>(),
                 It.IsAny<ElementSave>(),
                 It.IsAny<InstanceSave?>(),
-                It.IsAny<ISelectedState?>()))
+                It.IsAny<ISelectedState?>(),
+                It.IsAny<List<StateSave>?>(),
+                It.IsAny<HashSet<string>?>()))
             .Returns(new List<InstanceSave> { draggedInstance });
 
         // Act - should not throw even with folder nodes in the list

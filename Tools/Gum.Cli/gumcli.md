@@ -49,6 +49,21 @@ gumcli check MyProject.gumx --json
 - `--json` outputs a JSON array of `{ element, message, severity }` objects — all error types use this same format
 - Exit code `0` = no errors, `1` = errors found, `2` = project .gumx file could not be loaded
 
+### `gumcli check-references <project.gumx> [--json] [--fix]`
+
+Detects (and optionally fixes) `VariableReferences` rows whose left-hand-side scalars are not materialized into the owning state's `Variables`. This is the inconsistent shape commonly produced by AI agents and hand edits that write the references row without running the propagation Gum normally performs when references are authored interactively.
+
+```
+gumcli check-references MyProject.gumx
+gumcli check-references MyProject.gumx --json
+gumcli check-references MyProject.gumx --fix
+```
+
+- Scans `Screens` and `Components` only — `StandardElements` are skipped because their references commonly evaluate to default values (the save pipeline correctly elides default-valued scalars)
+- `--fix` runs the same propagation the Gum tool performs at author time and saves the affected element files
+- `--json` outputs `[{ element, states[] }]` (or for `--fix`: `{ fixedElements[], stillBroken[] }`)
+- Exit code `0` = clean (or all fixed), `1` = unpropagated references remain, `2` = project .gumx file could not be loaded
+
 ### `gumcli codegen-init <project.gumx> [--force]`
 
 Auto-configures code generation settings for a Gum project by walking up from the `.gumx` directory to find the nearest `.csproj`.

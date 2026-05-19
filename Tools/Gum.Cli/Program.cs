@@ -25,6 +25,7 @@ public class Program
 
         rootCommand.AddCommand(NewCommand.Create());
         rootCommand.AddCommand(CheckCommand.Create());
+        rootCommand.AddCommand(CheckReferencesCommand.Create());
         rootCommand.AddCommand(DiffStandardsCommand.Create());
         rootCommand.AddCommand(PackCommand.Create());
         rootCommand.AddCommand(CodegenCommand.Create());

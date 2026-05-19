@@ -2,6 +2,7 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using GumRuntime;
 using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins;
@@ -46,6 +47,24 @@ public class CopiedData
     /// </summary>
     public List<InstanceSave> CopiedInstancesRecursive = new List<InstanceSave>();
     public List<StateSave> CopiedStates = new List<StateSave>();
+    /// <summary>
+    /// Cloned default states of the source element's BaseType chain — kept separate
+    /// from <see cref="CopiedStates"/> (which holds the source's OWN selected state)
+    /// so paste can filter base-level variables that are owned by reachable
+    /// VariableReferences (same logic as the GUM0002 check). Directly-authored
+    /// variables on the source's own state pass through untouched.
+    /// </summary>
+    public List<StateSave> CopiedBaseElementDefaultStates = new List<StateSave>();
+    /// <summary>
+    /// Qualified item names (variable names like <c>"TextInstance.FontSize"</c> and/or
+    /// the list-marker <c>"TextInstance.VariableReferences"</c>) owned by reachable
+    /// categorized states on the source instance — covering refs, direct scalars on
+    /// those states, and the matched VariableReferences rows themselves. Used to drop
+    /// items from base-element captures at paste time so the new instance picks up
+    /// the active categorized state instead of the source's base-level orphans.
+    /// See <c>ElementSaveExtensions.GetItemNamesOwnedByReachableCategorizedStates</c>.
+    /// </summary>
+    public HashSet<string> CopiedNamesOwnedByReachableStates = new HashSet<string>(StringComparer.Ordinal);
     public ElementSave CopiedElement = null;
     public StateSaveCategory CopiedCategory = null;
 }
@@ -168,6 +187,8 @@ public class CopyPasteLogic : ICopyPasteLogic
         CopiedData.CopiedElement = null;
         CopiedData.CopiedInstancesRecursive.Clear();
         CopiedData.CopiedStates.Clear();
+        CopiedData.CopiedBaseElementDefaultStates.Clear();
+        CopiedData.CopiedNamesOwnedByReachableStates.Clear();
         CopiedData.CopiedCategory = null;
 
         if (copyType == CopyType.InstanceOrElement)
@@ -223,17 +244,29 @@ public class CopyPasteLogic : ICopyPasteLogic
             }
 
             CopiedData.CopiedStates.Clear();
+            CopiedData.CopiedBaseElementDefaultStates.Clear();
+            CopiedData.CopiedNamesOwnedByReachableStates.Clear();
 
+            // Base element default states go in their OWN list. Paste filters these
+            // by the ref-owned LHS set so the source's base-level orphans don't get
+            // materialized as explicit overrides on the new instance.
             var baseElementsDerivedFirst = element != null ? ObjectFinder.Self.GetBaseElements(element) : new List<ElementSave>();
-            // reverse loop:
             for (int i = baseElementsDerivedFirst.Count - 1; i > -1; i--)
             {
-                CopiedData.CopiedStates.Add(baseElementsDerivedFirst[i].DefaultState.Clone());
+                CopiedData.CopiedBaseElementDefaultStates.Add(baseElementsDerivedFirst[i].DefaultState.Clone());
             }
 
             if (state != null)
             {
                 CopiedData.CopiedStates.Add(state.Clone());
+
+                // Collect all LHSes owned by VariableReferences reachable from the source
+                // instance(s) in this state — used to filter the base captures during paste.
+                foreach (var sourceInstance in selectedState.SelectedInstances)
+                {
+                    CopiedData.CopiedNamesOwnedByReachableStates.UnionWith(
+                        state.GetItemNamesOwnedByReachableCategorizedStates(sourceInstance));
+                }
             }
 
             if (selectedState.SelectedStateCategorySave != null && selectedState.SelectedStateSave != null && element != null)
@@ -442,11 +475,15 @@ public class CopyPasteLogic : ICopyPasteLogic
         }
         else if (topOrRecursive == TopOrRecursive.Recursive)
         {
-            PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance);
+            PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance,
+                baseElementDefaultStates: CopiedData.CopiedBaseElementDefaultStates,
+                itemsOwnedByReachableStates: CopiedData.CopiedNamesOwnedByReachableStates);
         }
         else
         {
-            PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance);
+            PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance,
+                baseElementDefaultStates: CopiedData.CopiedBaseElementDefaultStates,
+                itemsOwnedByReachableStates: CopiedData.CopiedNamesOwnedByReachableStates);
         }
 
         if (selectedElement != null)
@@ -597,11 +634,13 @@ public class CopyPasteLogic : ICopyPasteLogic
     /// <param name="targetElement"></param>
     /// <param name="selectedInstance"></param>
     /// <returns>The newly-created instances</returns>
-    public List<InstanceSave> PasteInstanceSaves(List<InstanceSave> instancesToCopy, 
-        List<StateSave> copiedStates, 
-        ElementSave targetElement, 
+    public List<InstanceSave> PasteInstanceSaves(List<InstanceSave> instancesToCopy,
+        List<StateSave> copiedStates,
+        ElementSave targetElement,
         InstanceSave? selectedInstance,
-        ISelectedState? forcedSelectedState = null)
+        ISelectedState? forcedSelectedState = null,
+        List<StateSave>? baseElementDefaultStates = null,
+        HashSet<string>? itemsOwnedByReachableStates = null)
     {
         /////////////////////////Early Out///////////////////////
         if (targetElement is StandardElementSave)
@@ -802,6 +841,48 @@ public class CopyPasteLogic : ICopyPasteLogic
 
             if (targetElement != null)
             {
+                // First pass: apply base-element default state captures, FILTERED by
+                // refOwnedLhses. The source's own state has not been applied yet, so
+                // these go in as fallbacks; the per-state loop below will overwrite
+                // any of these that the source explicitly authored on its own state.
+                if (baseElementDefaultStates != null && baseElementDefaultStates.Count > 0)
+                {
+                    foreach (var baseStateSave in baseElementDefaultStates)
+                    {
+                        StateSave baseTargetState = targetElement != sourceElement
+                            ? targetElement.DefaultState
+                            : (selectedState.SelectedElement.AllStates.FirstOrDefault(item => item.Name == baseStateSave.Name)
+                                ?? selectedState.SelectedElement.DefaultState);
+
+                        var baseVariables = baseStateSave.Variables.Where(item =>
+                            item.SourceObject == sourceInstance.Name &&
+                            item.GetRootName() != "Parent" &&
+                            (itemsOwnedByReachableStates == null || !itemsOwnedByReachableStates.Contains(item.Name))).ToArray();
+                        for (int i = baseVariables.Length - 1; i > -1; i--)
+                        {
+                            VariableSave baseSourceVar = baseVariables[i];
+                            VariableSave copiedBase = baseSourceVar.Clone();
+                            copiedBase.Name = newInstance.Name + "." + copiedBase.GetRootName();
+                            copiedBase.ExposedAsName = null;
+                            baseTargetState.Variables.RemoveAll(item => item.Name == copiedBase.Name);
+                            baseTargetState.Variables.Add(copiedBase);
+                        }
+                        for (int i = baseStateSave.VariableLists.Count - 1; i > -1; i--)
+                        {
+                            VariableListSave baseSourceList = baseStateSave.VariableLists[i];
+                            if (baseSourceList.SourceObject != sourceInstance.Name) continue;
+                            // Drop base-snapshotted lists (e.g. the inherited VariableReferences row)
+                            // when a reachable categorized state would otherwise be shadowed by it.
+                            if (itemsOwnedByReachableStates != null &&
+                                itemsOwnedByReachableStates.Contains(baseSourceList.Name)) continue;
+                            VariableListSave copiedBaseList = baseSourceList.Clone();
+                            copiedBaseList.Name = newInstance.Name + "." + copiedBaseList.GetRootName();
+                            baseTargetState.VariableLists.RemoveAll(item => item.Name == copiedBaseList.Name);
+                            baseTargetState.VariableLists.Add(copiedBaseList);
+                        }
+                    }
+                }
+
                 foreach (var stateSave in copiedStates)
                 {
 

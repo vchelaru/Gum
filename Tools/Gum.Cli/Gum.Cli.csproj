@@ -25,6 +25,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+		<!-- GumExpressions wires Roslyn-based right-side evaluation for VariableReferences.
+		     Without it, only simple dot-path lookups work; literals (X = 100) and expressions
+		     (X = A + B) would silently fail to evaluate during `gumcli check-references` fix mode. -->
+		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
 		<!-- FUTURE: When a second rendering backend is added (e.g. Gum.ProjectServices.Skia), both
 		     backends compile copies of shared types (RenderingLibrary, SystemManagers, etc.) from
 		     GumCommon into their own assemblies, and both share static singletons (ObjectFinder.Self,

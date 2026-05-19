@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.ProjectServices;
+using GumRuntime;
 using Moq;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -541,6 +542,304 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
         errors.Count.ShouldBe(1);
         errors[0].Message.ShouldBe("Plugin error");
+    }
+
+    #endregion
+
+    #region GUM0002 — VariableReference value disagrees with explicit set
+
+    [Fact]
+    public void GetErrorsFor_ShouldPassLeftTypeToCustomEvaluateExpression_SoTypeAwareEvaluatorsResolve()
+    {
+        // Repro for the bug seen in the live Gum tool: GumExpressionService's
+        // EvaluateExpression returns null when desiredType is null (CastTo(null)
+        // returns false). The check must pass the LHS type so the Roslyn-based
+        // evaluator can resolve cross-element / literal RHSes.
+        bool sawNonNullDesiredType = false;
+        ElementSaveExtensions.CustomEvaluateExpression = (state, expr, desiredType) =>
+        {
+            if (desiredType == null)
+            {
+                return null;
+            }
+            sawNonNullDesiredType = true;
+            return 100f;
+        };
+        try
+        {
+            ComponentSave component = new ComponentSave { Name = "TypeAware", BaseType = "Container" };
+            StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+            component.States.Add(state);
+            state.Variables.Add(new VariableSave
+            {
+                Name = "X",
+                Type = "float",
+                Value = 14f,
+                SetsValue = true
+            });
+
+            VariableListSave<string> refs = new VariableListSave<string>
+            {
+                Name = "VariableReferences",
+                Type = "string"
+            };
+            refs.Value.Add("X = SomeOther.X");
+            state.VariableLists.Add(refs);
+
+            Project.Components.Add(component);
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            sawNonNullDesiredType.ShouldBeTrue(
+                "because the evaluator must receive the LHS type so type-coercion can succeed.");
+            errors.ShouldContain(e => e.Code == "GUM0002",
+                customMessage: "and the resulting non-null evaluated value must reach the conflict check.");
+        }
+        finally
+        {
+            ElementSaveExtensions.CustomEvaluateExpression = null;
+        }
+    }
+
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0002_WhenLocalVariableReferenceDisagreesWithMaterializedScalar()
+    {
+        // A state has BOTH a VariableReferences row that resolves X=100 AND an
+        // explicit scalar X=14. The local explicit value wins at lookup time, so the
+        // reference is silently ineffective — the author probably didn't realize.
+        ComponentSave component = new ComponentSave { Name = "BadComponent", BaseType = "Container" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+
+        state.Variables.Add(new VariableSave
+        {
+            Name = "SourceX",
+            Type = "float",
+            Value = 100f,
+            SetsValue = true
+        });
+        state.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Type = "float",
+            Value = 14f,
+            SetsValue = true
+        });
+
+        VariableListSave<string> refs = new VariableListSave<string>
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        refs.Value.Add("X = SourceX");
+        state.VariableLists.Add(refs);
+
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0002");
+        error.ElementName.ShouldBe("BadComponent");
+        error.Severity.ShouldBe(ErrorSeverity.Warning);
+        error.Message.ShouldContain("X");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0002_WhenScalarMatchesEvaluatedReference()
+    {
+        // Regression guard: when the materialized scalar matches the evaluated
+        // right side, the state is consistent — no warning.
+        ComponentSave component = new ComponentSave { Name = "GoodComponent", BaseType = "Container" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+
+        state.Variables.Add(new VariableSave
+        {
+            Name = "SourceX",
+            Type = "float",
+            Value = 100f,
+            SetsValue = true
+        });
+        state.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Type = "float",
+            Value = 100f,
+            SetsValue = true
+        });
+
+        VariableListSave<string> refs = new VariableListSave<string>
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        refs.Value.Add("X = SourceX");
+        state.VariableLists.Add(refs);
+
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldNotContain(e => e.Code == "GUM0002");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0002_WhenInheritedCategorizedStateReferenceDisagreesWithLocalScalar()
+    {
+        // The UpgradeButton repro:
+        // - Label (base) defines TextCategory.Title with TextInstance.VariableReferences
+        //   that resolves FontSize to 100 (via SourceFontSize on the same state).
+        //   (We use a variable-to-variable RHS so RecursiveVariableFinder can evaluate
+        //   without GumExpressionService wired.)
+        // - UpgradeButton derives, has an instance "TextInstance" that's DefinedByBase,
+        //   and sets BOTH TextInstance.TextCategoryState = "Title" (which implies
+        //   FontSize = 100 via the categorized state's reference) AND a local
+        //   TextInstance.FontSize = 14 that conflicts.
+        ComponentSave label = new ComponentSave { Name = "LabelForGum0002", BaseType = "Container" };
+        StateSave labelDefault = new StateSave { Name = "Default", ParentContainer = label };
+        label.States.Add(labelDefault);
+
+        StateSaveCategory textCategory = new StateSaveCategory { Name = "TextCategory" };
+        StateSave titleState = new StateSave { Name = "Title", ParentContainer = label };
+        titleState.Variables.Add(new VariableSave
+        {
+            Name = "SourceFontSize",
+            Type = "float",
+            Value = 100f,
+            SetsValue = true
+        });
+        VariableListSave<string> titleRefs = new VariableListSave<string>
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        titleRefs.Value.Add("FontSize = SourceFontSize");
+        titleState.VariableLists.Add(titleRefs);
+        textCategory.States.Add(titleState);
+        label.Categories.Add(textCategory);
+
+        Project.Components.Add(label);
+
+        ComponentSave button = new ComponentSave { Name = "UpgradeButtonForGum0002", BaseType = "Container" };
+        StateSave buttonDefault = new StateSave { Name = "Default", ParentContainer = button };
+        button.States.Add(buttonDefault);
+
+        InstanceSave textInstance = new InstanceSave
+        {
+            Name = "TextInstance",
+            BaseType = "LabelForGum0002",
+            ParentContainer = button
+        };
+        button.Instances.Add(textInstance);
+
+        // Activate the Title categorized state on the instance.
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.TextCategoryState",
+            Type = "TextCategory",
+            Value = "Title",
+            SetsValue = true
+        });
+        // Local explicit override that conflicts with what the active state would imply.
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.FontSize",
+            Type = "float",
+            Value = 14f,
+            SetsValue = true
+        });
+
+        Project.Components.Add(button);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(button, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0002");
+        error.ElementName.ShouldBe("UpgradeButtonForGum0002");
+        error.Severity.ShouldBe(ErrorSeverity.Warning);
+        error.Message.ShouldContain("TextInstance.FontSize");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0002_WhenLocalReferencesRowShadowsInheritedCategorizedRefs()
+    {
+        // User-reported false positive: Screen has LabelInstance1 with a local
+        // VariableReferences row that intentionally excludes FontSize (the user
+        // wants the explicit local FontSize=44 to apply). The instance also has
+        // TextCategoryState=Title set, and Title's refs row includes FontSize.
+        // Per GetVariableListRecursive's local-wins lookup, the local refs row
+        // entirely shadows the categorized state's refs — so Title's FontSize
+        // ref never fires at apply time. GUM0002 must NOT flag this as a
+        // conflict; the user's intent is for the local scalar to win.
+        ComponentSave label = new() { Name = "LabelForShadow", BaseType = "Container" };
+        StateSave labelDefault = new() { Name = "Default", ParentContainer = label };
+        label.States.Add(labelDefault);
+        StateSaveCategory textCategory = new() { Name = "TextCategory" };
+        StateSave titleState = new() { Name = "Title", ParentContainer = label };
+        titleState.Variables.Add(new VariableSave
+        {
+            Name = "SourceFontSize",
+            Type = "int",
+            Value = 28,
+            SetsValue = true
+        });
+        VariableListSave<string> titleRefs = new()
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        titleRefs.ValueAsIList.Add("FontSize = SourceFontSize");
+        titleState.VariableLists.Add(titleRefs);
+        textCategory.States.Add(titleState);
+        label.Categories.Add(textCategory);
+        Project.Components.Add(label);
+
+        ScreenSave screen = new() { Name = "ScreenForShadow" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        InstanceSave instance = new()
+        {
+            Name = "LabelInstance1",
+            BaseType = "LabelForShadow",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(instance);
+
+        // Local explicit override the user authored.
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "LabelInstance1.FontSize",
+            Type = "int",
+            Value = 44,
+            SetsValue = true
+        });
+        // Categorized state assignment that, by itself, would point at Title's refs.
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "LabelInstance1.TextCategoryState",
+            Type = "TextCategory",
+            Value = "Title",
+            SetsValue = true
+        });
+        // The user edited the local refs row to exclude FontSize on purpose — they
+        // want the explicit local FontSize to win without ref interference.
+        VariableListSave<string> localRefs = new()
+        {
+            Name = "LabelInstance1.VariableReferences",
+            Type = "string"
+        };
+        localRefs.ValueAsIList.Add("Red = SourceRed");
+        screenDefault.VariableLists.Add(localRefs);
+        Project.Screens.Add(screen);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(screen, Project);
+
+        errors.ShouldNotContain(
+            e => e.Code == "GUM0002" && e.Message.Contains("FontSize"),
+            customMessage: "the local LabelInstance1.VariableReferences row shadows Title's refs entirely; " +
+                "Title's FontSize ref is never going to fire, so flagging it as a conflict is a false positive.");
     }
 
     #endregion

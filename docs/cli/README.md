@@ -31,6 +31,7 @@ Once installed, invoke it as `gumcli` from any terminal.
 |---------|-------------|
 | `new` | Create a new Gum project |
 | `check` | Validate a project for errors |
+| `check-references` | Detect (and optionally fix) `VariableReferences` rows with un-materialized scalars |
 | `codegen-init` | Initialize code generation settings |
 | `codegen` | Generate C# code for project elements |
 | `fonts` | Generate missing bitmap font files |

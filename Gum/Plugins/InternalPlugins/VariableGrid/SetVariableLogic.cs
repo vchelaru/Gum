@@ -276,6 +276,27 @@ public class SetVariableLogic : ISetVariableLogic
                 _guiCommands.RefreshVariables(force: true);
             }
         }
+        else if (IsStateVariable(unqualifiedMember, parentElement, instance))
+        {
+            // Assigning a categorized state can re-route which sibling variables are
+            // reference-driven, change their IsDefault status, and update their subtext.
+            // Those are computed at category-build time, so a value-only refresh isn't enough.
+            _guiCommands.RefreshVariables(force: true);
+        }
+    }
+
+    internal static bool IsStateVariable(string unqualifiedMember, ElementSave parentElement, InstanceSave instance)
+    {
+        if (parentElement == null)
+        {
+            return false;
+        }
+
+        var synthetic = new VariableSave
+        {
+            Name = instance != null ? $"{instance.Name}.{unqualifiedMember}" : unqualifiedMember
+        };
+        return synthetic.IsState(parentElement);
     }
 
     private GeneralResponse ReactToChangedMember(string rootVariableName, object? oldValue, IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave)

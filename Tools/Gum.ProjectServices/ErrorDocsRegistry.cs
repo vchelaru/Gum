@@ -14,6 +14,7 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
         _docPaths = new Dictionary<string, string>
         {
             ["GUM0001"] = "gum-tool/gum-elements/behaviors#behavior-instance-requirements",
+            ["GUM0002"] = "gum-tool/gum-elements/states/categories#gum0002-variable-reference-conflicts-with-explicit-set",
         };
     }
 

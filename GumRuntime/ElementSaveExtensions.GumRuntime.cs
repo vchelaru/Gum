@@ -526,6 +526,163 @@ namespace GumRuntime
             return rightSide.Substring(0, firstDot);
         }
 
+        /// <summary>
+        /// Returns the list of states in this element (default + every categorized state)
+        /// that have one or more <c>VariableReferences</c> rows whose left-hand-side scalars
+        /// are not materialized into the state's <see cref="StateSave.Variables"/>. This
+        /// indicates the state was authored by something other than the Gum tool's normal
+        /// reference-edit path (AI agent, hand edit, programmatic creation, partial delete)
+        /// and that running <see cref="ApplyVariableReferences"/> on each returned state
+        /// would restore consistency. Commented-out (<c>//</c>) and unparseable lines are
+        /// skipped; they are not treated as missing materializations.
+        /// </summary>
+        public static List<StateSave> GetStatesWithUnpropagatedReferences(this ElementSave element)
+        {
+            var result = new List<StateSave>();
+
+            foreach (var state in element.AllStates)
+            {
+                if (StateHasUnpropagatedReferences(state))
+                {
+                    result.Add(state);
+                }
+            }
+
+            return result;
+        }
+
+        private static bool StateHasUnpropagatedReferences(StateSave state)
+        {
+            foreach (var variableList in state.VariableLists)
+            {
+                if (variableList.GetRootName() != "VariableReferences" || variableList.ValueAsIList.Count == 0)
+                {
+                    continue;
+                }
+
+                var sourceObject = variableList.SourceObject;
+
+                foreach (string referenceString in variableList.ValueAsIList)
+                {
+                    if (string.IsNullOrWhiteSpace(referenceString) || referenceString.StartsWith("//"))
+                    {
+                        continue;
+                    }
+
+                    var split = referenceString
+                        .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries);
+                    if (split.Length != 2)
+                    {
+                        continue;
+                    }
+
+                    var left = split[0].Trim();
+                    var effectiveLeft = string.IsNullOrEmpty(sourceObject)
+                        ? left
+                        : $"{sourceObject}.{left}";
+
+                    var hasMaterialized = state.Variables
+                        .Any(v => v.Name == effectiveLeft);
+                    if (!hasMaterialized)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns the set of qualified item names (e.g. <c>"TextInstance.FontSize"</c>
+        /// or <c>"TextInstance.VariableReferences"</c>) owned by reachable categorized
+        /// states on <paramref name="instance"/> in <paramref name="state"/>. "Owned"
+        /// covers three shapes:
+        ///   (a) Local <c>VariableReferences</c> rows on this state that target the instance
+        ///       (their LHSes are scalar names owned by those refs).
+        ///   (b) <c>VariableReferences</c> rows on the matched categorized state of the
+        ///       instance's BaseType — both the LHSes (scalar names) AND a marker for
+        ///       the list itself (<c>"&lt;instance&gt;.VariableReferences"</c>) so paste
+        ///       can drop a base-snapshotted ref row that would shadow the categorized walk.
+        ///   (c) Direct scalar variables on that matched categorized state — their names
+        ///       are owned even without a reference, because the state's direct set would
+        ///       otherwise be shadowed by a base-level scalar of the same name.
+        /// The instance type's BaseType chain is walked via <c>GetStateSaveRecursively</c>.
+        /// Used by copy/paste to filter base-element captures so the new instance picks
+        /// up the active categorized state instead of inheriting the source's base-level
+        /// orphans/overrides.
+        /// </summary>
+        public static HashSet<string> GetItemNamesOwnedByReachableCategorizedStates(this StateSave state, InstanceSave instance)
+        {
+            var result = new HashSet<string>(StringComparer.Ordinal);
+            if (state == null || instance == null) return result;
+
+            ElementSave element = state.ParentContainer;
+            if (element == null) return result;
+
+            // (a) Local refs on this state targeting the instance.
+            foreach (var variableList in state.VariableLists)
+            {
+                if (variableList.GetRootName() != "VariableReferences") continue;
+                if (variableList.SourceObject != instance.Name) continue;
+                AddReferenceLhses(variableList, instance.Name, result);
+            }
+
+            // (b) and (c): walk matched categorized states reached via state-variable assignments.
+            ElementSave? instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
+            if (instanceType == null) return result;
+
+            for (int i = 0; i < state.Variables.Count; i++)
+            {
+                var variable = state.Variables[i];
+                if (!variable.SetsValue || variable.SourceObject != instance.Name) continue;
+                if (!variable.IsState(element, out _, out StateSaveCategory category)) continue;
+                if (category == null) continue;
+
+                string? stateName = variable.Value as string;
+                if (string.IsNullOrEmpty(stateName)) continue;
+                StateSave matchedState = instanceType.GetStateSaveRecursively(stateName);
+                if (matchedState == null) continue;
+
+                // (b) refs on the matched state — LHSes + a marker for the row itself.
+                foreach (var variableList in matchedState.VariableLists)
+                {
+                    if (variableList.GetRootName() != "VariableReferences") continue;
+                    if (variableList.ValueAsIList.Count > 0)
+                    {
+                        // Marker: the matched state has a refs row, so a base-snapshotted
+                        // VariableReferences row would shadow it. Drop the base row at paste.
+                        result.Add($"{instance.Name}.VariableReferences");
+                    }
+                    AddReferenceLhses(variableList, instance.Name, result);
+                }
+
+                // (c) direct scalars on the matched state.
+                for (int vi = 0; vi < matchedState.Variables.Count; vi++)
+                {
+                    var stateVar = matchedState.Variables[vi];
+                    if (!stateVar.SetsValue) continue;
+                    result.Add($"{instance.Name}.{stateVar.GetRootName()}");
+                }
+            }
+
+            return result;
+        }
+
+        private static void AddReferenceLhses(VariableListSave variableList, string instanceName, HashSet<string> result)
+        {
+            foreach (var entry in variableList.ValueAsIList)
+            {
+                if (entry is not string referenceString) continue;
+                if (string.IsNullOrWhiteSpace(referenceString) || referenceString.StartsWith("//")) continue;
+                string[] split = referenceString.Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries);
+                if (split.Length != 2) continue;
+                string left = split[0].Trim();
+                if (string.IsNullOrEmpty(left)) continue;
+                result.Add($"{instanceName}.{left}");
+            }
+        }
+
         public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave)
         {
             foreach (var variableList in stateSave.VariableLists)

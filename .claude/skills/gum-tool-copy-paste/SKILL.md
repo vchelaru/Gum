@@ -37,6 +37,24 @@ During paste, this flag drives parent assignment:
 
 `PasteInstanceSaves()` creates fresh `InstanceSave` objects and assigns properties from the copied states. It does **not** simply clone the stored instances. Name uniqueness is enforced via `StringFunctions.MakeStringUnique()`, and an `oldNewNameDictionary` is built to remap parent references throughout the copied hierarchy.
 
+## Base-Element Capture is Filtered, Not Wholesale
+
+`StoreCopiedInstances` captures the source's own selected state into `CopiedStates` AND the default state of every base element in the source's BaseType chain into a **separate** `CopiedBaseElementDefaultStates` list. The base captures exist so the new instance keeps inherited effective values (e.g. `Text="Click Me"` from a base) even after renaming/relocation, where the regular inheritance walk would no longer reach them.
+
+At paste time, base captures are filtered by `CopiedNamesOwnedByReachableStates` — the set of qualified item names owned by any reachable categorized state on the source instance. "Owned" covers three shapes:
+
+1. Local `VariableReferences` rows on the source state targeting this instance — their LHSes are scalar names owned.
+2. The matched categorized state of the instance's BaseType (e.g. `TextCategoryState = "Title"` on a Label instance → `Label.Title`, with the BaseType chain walked via `GetStateSaveRecursively`):
+   - LHSes from its `VariableReferences` rows are owned scalars.
+   - Direct scalar variables on the state are owned (this is what catches the *broader* case where the state sets values directly without a ref — e.g. `Label.Title.Variables["FontSize"] = 28`).
+   - If the matched state has any `VariableReferences` row, the qualified list marker `"<instance>.VariableReferences"` is also added so paste drops the base-snapshotted reference row that would otherwise shadow the categorized walk.
+
+Anything in a base capture whose name matches the owned set is **dropped** rather than snapshotted. The new instance picks up the active categorized state's contribution via the normal `GetValueRecursive` / `GetVariableListRecursive` walks instead of carrying the source's base-level orphans.
+
+The walk is implemented in `ElementSaveExtensions.GetItemNamesOwnedByReachableCategorizedStates(StateSave, InstanceSave)`. The shape mirrors `HeadlessErrorChecker`'s `GUM0002` check, though GUM0002 currently only flags the reference-owned subset; broadening the error check to direct-scalar conflicts is a separate piece of work.
+
+Variables and lists on the source's **own** selected state are never filtered — directly-authored values pass through untouched even when they conflict with a reachable reference. `GUM0002` handles surfacing that conflict at the source; copy/paste preserves author intent.
+
 ## Undo Integration
 
 Only paste acquires an undo lock (`_undoManager.RequestLock()`). The entire paste — all instances, state variable copies, parent assignments — records as a single undo action. Cut's deletion goes through `IDeleteLogic.RemoveInstance()` which handles its own undo internally.
