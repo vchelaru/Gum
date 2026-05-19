@@ -210,6 +210,230 @@ public class StateSaveExtensionMethodsTests : BaseTestClass
     }
 
     [Fact]
+    public void GetVariableListRecursive_OnInstance_ShouldPreferCategorizedStateOverBaseTypeList()
+    {
+        // Repro for the H1 / TextCategoryState case:
+        // - Owner derives from Button. TextInstance is DefinedByBase=true.
+        // - Button.DefaultState defines TextInstance.VariableReferences (the
+        //   "base-default" references — what the lookup currently returns).
+        // - TextInstance's BaseType is Label. Label has a TextCategory state
+        //   category with an H1 state that has its own VariableReferences.
+        // - Owner.DefaultState sets TextInstance.TextCategoryState = "H1".
+        //
+        // Per the "most specific wins" principle, the lookup should return
+        // Label.H1's VariableReferences, not Button's.
+
+        ComponentSave label = new() { Name = "Label", BaseType = "Container" };
+        StateSave labelDefault = new() { Name = "Default", ParentContainer = label };
+        label.States.Add(labelDefault);
+
+        StateSaveCategory textCategory = new() { Name = "TextCategory" };
+        StateSave h1State = new() { Name = "H1", ParentContainer = label };
+        VariableListSave<string> h1Refs = new()
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        h1Refs.ValueAsIList.Add("Font = Styles.H1.Font");
+        h1Refs.ValueAsIList.Add("FontSize = Styles.H1.FontSize");
+        h1State.VariableLists.Add(h1Refs);
+        textCategory.States.Add(h1State);
+        label.Categories.Add(textCategory);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(label);
+
+        ComponentSave button = new() { Name = "Button", BaseType = "Container" };
+        StateSave buttonDefault = new() { Name = "Default", ParentContainer = button };
+        button.States.Add(buttonDefault);
+
+        InstanceSave textInButton = new()
+        {
+            Name = "TextInstance",
+            BaseType = "Label",
+            ParentContainer = button
+        };
+        button.Instances.Add(textInButton);
+
+        VariableListSave<string> buttonRefs = new()
+        {
+            Name = "TextInstance.VariableReferences",
+            Type = "string"
+        };
+        buttonRefs.ValueAsIList.Add("Red = Styles.Black.Red");
+        buttonRefs.ValueAsIList.Add("Font = Styles.Strong.Font");
+        buttonDefault.VariableLists.Add(buttonRefs);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(button);
+
+        ComponentSave owner = new() { Name = "Owner", BaseType = "Button" };
+        StateSave ownerDefault = new() { Name = "Default", ParentContainer = owner };
+        owner.States.Add(ownerDefault);
+
+        InstanceSave textInOwner = new()
+        {
+            Name = "TextInstance",
+            BaseType = "Label",
+            DefinedByBase = true,
+            ParentContainer = owner
+        };
+        owner.Instances.Add(textInOwner);
+
+        // Set the categorized state on the instance.
+        VariableSave categoryStateVar = new()
+        {
+            Name = "TextInstance.TextCategoryState",
+            Type = "TextCategory",
+            Value = "H1",
+            SetsValue = true
+        };
+        ownerDefault.Variables.Add(categoryStateVar);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(owner);
+
+        var foundList = ownerDefault.GetVariableListRecursive("TextInstance.VariableReferences");
+
+        foundList.ShouldNotBeNull();
+        foundList!.ValueAsIList.Count.ShouldBe(2);
+        foundList.ValueAsIList[0].ShouldBe("Font = Styles.H1.Font",
+            "because the H1 state's VariableReferences is more specific than Button's base " +
+            "TextInstance.VariableReferences and should win when TextCategoryState=H1.");
+        foundList.ValueAsIList[1].ShouldBe("FontSize = Styles.H1.FontSize");
+    }
+
+    [Fact]
+    public void GetVariableListRecursive_OnInstance_NoCategorizedStateSet_ShouldFallBackToBaseTypeList()
+    {
+        // Regression guard: when no categorized state is active on the
+        // instance, the lookup should still walk the containing element's
+        // BaseType chain and return Button's TextInstance.VariableReferences.
+
+        ComponentSave label = new() { Name = "LabelNoCat", BaseType = "Container" };
+        StateSave labelDefault = new() { Name = "Default", ParentContainer = label };
+        label.States.Add(labelDefault);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(label);
+
+        ComponentSave button = new() { Name = "ButtonNoCat", BaseType = "Container" };
+        StateSave buttonDefault = new() { Name = "Default", ParentContainer = button };
+        button.States.Add(buttonDefault);
+
+        InstanceSave textInButton = new()
+        {
+            Name = "TextInstance",
+            BaseType = "LabelNoCat",
+            ParentContainer = button
+        };
+        button.Instances.Add(textInButton);
+
+        VariableListSave<string> buttonRefs = new()
+        {
+            Name = "TextInstance.VariableReferences",
+            Type = "string"
+        };
+        buttonRefs.ValueAsIList.Add("Red = Styles.Black.Red");
+        buttonDefault.VariableLists.Add(buttonRefs);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(button);
+
+        ComponentSave owner = new() { Name = "OwnerNoCat", BaseType = "ButtonNoCat" };
+        StateSave ownerDefault = new() { Name = "Default", ParentContainer = owner };
+        owner.States.Add(ownerDefault);
+
+        InstanceSave textInOwner = new()
+        {
+            Name = "TextInstance",
+            BaseType = "LabelNoCat",
+            DefinedByBase = true,
+            ParentContainer = owner
+        };
+        owner.Instances.Add(textInOwner);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(owner);
+
+        var foundList = ownerDefault.GetVariableListRecursive("TextInstance.VariableReferences");
+
+        foundList.ShouldNotBeNull();
+        foundList!.ValueAsIList.Count.ShouldBe(1);
+        foundList.ValueAsIList[0].ShouldBe("Red = Styles.Black.Red",
+            "because no categorized state is set on TextInstance, so the lookup falls back to " +
+            "the base type's TextInstance.VariableReferences.");
+    }
+
+    [Fact]
+    public void GetVariableListRecursive_OnInstance_CategorizedStateWithoutList_ShouldFallBackToBaseTypeList()
+    {
+        // Regression guard: if a categorized state is active but that state
+        // doesn't have a VariableReferences list, the lookup should still
+        // fall back to the base type's list.
+
+        ComponentSave label = new() { Name = "LabelEmptyCat", BaseType = "Container" };
+        StateSave labelDefault = new() { Name = "Default", ParentContainer = label };
+        label.States.Add(labelDefault);
+
+        StateSaveCategory textCategory = new() { Name = "TextCategory" };
+        StateSave h1State = new() { Name = "H1", ParentContainer = label };
+        // Note: H1 does NOT have a VariableReferences list.
+        textCategory.States.Add(h1State);
+        label.Categories.Add(textCategory);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(label);
+
+        ComponentSave button = new() { Name = "ButtonEmptyCat", BaseType = "Container" };
+        StateSave buttonDefault = new() { Name = "Default", ParentContainer = button };
+        button.States.Add(buttonDefault);
+
+        InstanceSave textInButton = new()
+        {
+            Name = "TextInstance",
+            BaseType = "LabelEmptyCat",
+            ParentContainer = button
+        };
+        button.Instances.Add(textInButton);
+
+        VariableListSave<string> buttonRefs = new()
+        {
+            Name = "TextInstance.VariableReferences",
+            Type = "string"
+        };
+        buttonRefs.ValueAsIList.Add("Red = Styles.Black.Red");
+        buttonDefault.VariableLists.Add(buttonRefs);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(button);
+
+        ComponentSave owner = new() { Name = "OwnerEmptyCat", BaseType = "ButtonEmptyCat" };
+        StateSave ownerDefault = new() { Name = "Default", ParentContainer = owner };
+        owner.States.Add(ownerDefault);
+
+        InstanceSave textInOwner = new()
+        {
+            Name = "TextInstance",
+            BaseType = "LabelEmptyCat",
+            DefinedByBase = true,
+            ParentContainer = owner
+        };
+        owner.Instances.Add(textInOwner);
+
+        VariableSave categoryStateVar = new()
+        {
+            Name = "TextInstance.TextCategoryState",
+            Type = "TextCategory",
+            Value = "H1",
+            SetsValue = true
+        };
+        ownerDefault.Variables.Add(categoryStateVar);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(owner);
+
+        var foundList = ownerDefault.GetVariableListRecursive("TextInstance.VariableReferences");
+
+        foundList.ShouldNotBeNull();
+        foundList!.ValueAsIList.Count.ShouldBe(1);
+        foundList.ValueAsIList[0].ShouldBe("Red = Styles.Black.Red",
+            "because the categorized state H1 has no VariableReferences list, the lookup " +
+            "should fall back to the base type's list.");
+    }
+
+    [Fact]
     public void GetVariableListRecursive_OnDefaultState_ShouldFindInheritedList()
     {
         // Sanity check for the lower-level helper: confirms the
