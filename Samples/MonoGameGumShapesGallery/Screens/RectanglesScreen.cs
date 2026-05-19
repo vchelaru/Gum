@@ -420,12 +420,12 @@ internal class RectanglesScreen : FrameworkElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildInscribedCell(float strokeWidth)
+    static RectangleRuntime BuildInscribedCell(float strokeWidth)
     {
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = 64;
         frame.Height = 64;
-        frame.Color = new Color(60, 60, 80);
+        frame.FillColor = new Color(60, 60, 80);
 
         RectangleRuntime rect = new();
         rect.Width = 64;
@@ -450,15 +450,15 @@ internal class RectanglesScreen : FrameworkElement
         return row;
     }
 
-    static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
+    static RectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
     {
         // Frame size matches the Skia (SilkNetGum) RectanglesScreen sibling so the two
         // galleries lay out the same. The inner RectangleRuntime is positioned via
         // YOrigin + PixelsFromSmall/Middle/Large.
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = 128;
         frame.Height = 100;
-        frame.Color = new Color(50, 50, 70);
+        frame.FillColor = new Color(50, 50, 70);
 
         RectangleRuntime rect = new();
         rect.Width = 50;
