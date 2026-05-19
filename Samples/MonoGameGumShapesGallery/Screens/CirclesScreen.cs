@@ -439,12 +439,12 @@ internal class CirclesScreen : FrameworkElement
         return frame;
     }
 
-    static ColoredRectangleRuntime BuildInscribedCell(float strokeWidth)
+    static RectangleRuntime BuildInscribedCell(float strokeWidth)
     {
-        ColoredRectangleRuntime frame = new();
+        RectangleRuntime frame = new();
         frame.Width = 64;
         frame.Height = 64;
-        frame.Color = new Color(60, 60, 80);
+        frame.FillColor = new Color(60, 60, 80);
 
         CircleRuntime circle = new();
         circle.Radius = 32;
@@ -456,18 +456,18 @@ internal class CirclesScreen : FrameworkElement
         return frame;
     }
 
-    static ColoredRectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
+    static RectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)
     {
-        // ColoredRectangle is used as a visible frame so the alignment is obvious. Children
-        // are positioned relative to it via YOrigin + PixelsFromSmall/Middle/Large.
-        ColoredRectangleRuntime frame = new();
+        // Visible frame so the alignment is obvious. Children are positioned relative to it
+        // via YOrigin + PixelsFromSmall/Middle/Large.
+        RectangleRuntime frame = new();
         // Narrowed from 220 to 128 to keep the left column from forcing the page wider than
         // the right column needs (the long section labels in the right column would otherwise
         // get clipped or push the overall layout). 128 still gives 3 cells * 60 px clearance
         // for the three alignment circles plus row spacing.
         frame.Width = 128;
         frame.Height = 100;
-        frame.Color = new Color(50, 50, 70);
+        frame.FillColor = new Color(50, 50, 70);
 
         CircleRuntime circle = new();
         circle.Radius = 22;
