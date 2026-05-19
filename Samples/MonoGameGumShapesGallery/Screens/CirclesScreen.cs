@@ -413,7 +413,7 @@ internal class CirclesScreen : FrameworkElement
     static ContainerRuntime BuildNonSquareRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
-        foreach ((float w, float h) in new[] { (200f, 50f), (50f, 200f), (100f, 100f) })
+        foreach ((float w, float h) in new[] { (200f, 50f), (50f, 120f), (100f, 100f) })
         {
             row.AddChild(BuildNonSquareCell(w, h));
         }

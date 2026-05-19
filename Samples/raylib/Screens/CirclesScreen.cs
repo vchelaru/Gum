@@ -53,6 +53,7 @@ internal class CirclesScreen : FrameworkElement
         right.Children.Add(BuildSection("Dashed strokes", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("Fill + stroke", BuildBothColorsRow()));
         right.Children.Add(BuildSection("Inscribed", BuildInscribedRow()));
+        right.Children.Add(BuildSection("Non-square aspect", BuildNonSquareRow()));
     }
 
     static ContainerRuntime BuildColumn()
@@ -287,6 +288,38 @@ internal class CirclesScreen : FrameworkElement
             row.Children.Add(BuildInscribedCell(strokeWidth));
         }
         return row;
+    }
+
+    // Visual acceptance for non-square circles — wide, tall, and square cells. The gray frame
+    // is the circle's bounding box; the circle inside must use min(W,H) for its diameter and
+    // sit centered. Mirrors the matching row in MonoGameGumShapesGallery and SilkNetGum.
+    static ContainerRuntime BuildNonSquareRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach ((float w, float h) in new[] { (200f, 50f), (50f, 120f), (100f, 100f) })
+        {
+            row.Children.Add(BuildNonSquareCell(w, h));
+        }
+        return row;
+    }
+
+    static RectangleRuntime BuildNonSquareCell(float width, float height)
+    {
+        RectangleRuntime frame = new();
+        frame.Width = width;
+        frame.Height = height;
+        frame.FillColor = new Color(60, 60, 80, 255);
+
+        CircleRuntime circle = new();
+        circle.Width = width;
+        circle.Height = height;
+        circle.WidthUnits = DimensionUnitType.Absolute;
+        circle.HeightUnits = DimensionUnitType.Absolute;
+        circle.FillColor = new Color(46, 139, 87, 255);
+        circle.StrokeColor = Color.Yellow;
+        circle.StrokeWidth = 1;
+        frame.Children.Add(circle);
+        return frame;
     }
 
     static RectangleRuntime BuildInscribedCell(float strokeWidth)

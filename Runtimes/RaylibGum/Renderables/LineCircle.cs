@@ -28,8 +28,20 @@ public class LineCircle : InvisibleRenderable
     /// <inheritdoc cref="CircleOrigin"/>
     public CircleOrigin CircleOrigin { get; set; }
 
-    /// <summary>Radius in world-space pixels.</summary>
-    public float Radius { get; set; }
+    /// <summary>Radius in world-space pixels. Computed from <see cref="Width"/> and
+    /// <see cref="Height"/> as <c>min(Width, Height) / 2</c> so a non-square bounding box
+    /// renders a circle that fits inside the smaller dimension, centered (#2852). The setter
+    /// keeps Width and Height in lockstep so direct Radius assignments still yield a square
+    /// shape. Mirrors the Skia and Apos.Shapes renderables.</summary>
+    public float Radius
+    {
+        get => System.Math.Min(Width, Height) / 2f;
+        set
+        {
+            Width = value * 2;
+            Height = value * 2;
+        }
+    }
 
     /// <summary>
     /// Legacy single-color slot used as the stroke color when <see cref="StrokeColor"/> is

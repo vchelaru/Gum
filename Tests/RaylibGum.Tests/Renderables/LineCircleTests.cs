@@ -30,6 +30,37 @@ public class LineCircleTests
         circle.Color.A.ShouldBe((byte)255);
     }
 
+    // Issue #2852 — Radius is computed from min(Width, Height) / 2 so the raylib renderable
+    // renders a non-square bounding box as a circle that fits the smaller dimension, matching
+    // the Skia and Apos.Shapes renderables. The layout system sets Width/Height directly when
+    // a circle is sized by its parent, so Radius cannot be an independent field.
+    [Fact]
+    public void Radius_WhenWidthGreaterThanHeight_UsesSmallerDimension()
+    {
+        LineCircle circle = new() { Width = 200, Height = 50 };
+
+        circle.Radius.ShouldBe(25f);
+    }
+
+    [Fact]
+    public void Radius_WhenHeightGreaterThanWidth_UsesSmallerDimension()
+    {
+        LineCircle circle = new() { Width = 50, Height = 200 };
+
+        circle.Radius.ShouldBe(25f);
+    }
+
+    [Fact]
+    public void Radius_Setter_KeepsWidthAndHeightSquare()
+    {
+        LineCircle circle = new();
+
+        circle.Radius = 30;
+
+        circle.Width.ShouldBe(60f);
+        circle.Height.ShouldBe(60f);
+    }
+
     [Fact]
     public void IsFilled_RoundTrips()
     {
