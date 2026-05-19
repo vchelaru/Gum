@@ -72,15 +72,20 @@ public static class StateSaveExtensionMethods
                     value = foundVariable.Value;
                     wasFound = true;
                 }
+            }
 
-                if (!wasFound)
+            // VariableList inheritance walks for both default and non-default states.
+            // Without this, an inspector asking for, say, TextInstance.VariableReferences
+            // on a derived component's DefaultState short-circuits before reaching
+            // GetVariableListRecursive and silently returns null — even though the
+            // base component sets the list.
+            if (!wasFound && elementContainingState != null)
+            {
+                var foundVariableList = stateSave.GetVariableListRecursive(variableName);
+                if (foundVariableList?.ValueAsIList != null)
                 {
-                    var foundVariableList = stateSave.GetVariableListRecursive(variableName);
-                    if (foundVariableList?.ValueAsIList != null)
-                    {
-                        value = foundVariableList.ValueAsIList;
-                        wasFound = true;
-                    }
+                    value = foundVariableList.ValueAsIList;
+                    wasFound = true;
                 }
             }
 

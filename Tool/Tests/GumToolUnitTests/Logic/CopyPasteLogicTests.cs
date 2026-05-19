@@ -481,6 +481,19 @@ public class CopyPasteLogicTests : BaseTestClass
         _elementCommands.Verify(x => x.SortVariables(It.IsAny<ElementSave>()), Times.Once);
     }
 
+    // There's intentionally no test pinning "base-element VariableReferences
+    // must not be snapshotted onto the pasted instance." A naive fix for that
+    // (stripping base default-state clones in StoreCopiedInstances) also
+    // strips inherited scalars like Text/Font — see
+    // OnPaste_Instance_ShouldSnapshotBaseElementScalarVariables. The user's
+    // underlying intent ("derive a component and clear the base's
+    // VariableReferences") is not expressible today: VariableListSave has no
+    // SetsValue flag like VariableSave, so there is no way to persist an
+    // explicit-empty override of an inherited list. Once that representation
+    // is added, the existing snapshot-all-inherited paste behavior will be
+    // correct because an explicit-empty override on the source snapshots as
+    // empty on the copy.
+
     [Fact]
     public void OnPaste_Instance_ShouldPastaSibling_IfNoSelectionMade()
     {
@@ -498,7 +511,135 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.Instances[0].ShouldBe(firstInstance);
     }
 
-    [Fact] 
+    [Fact]
+    public void OnPaste_Instance_ShouldCopyDirectlySetVariablesOnInstance()
+    {
+        // Sanity check: variables set directly on the source element's
+        // selected state for the copied instance must be carried over to the
+        // pasted instance. This guards against an over-broad version of the
+        // base-state fix that would also strip legitimate local values.
+
+        ComponentSave component = new() { Name = "Component", BaseType = "Container" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = component };
+        component.States.Add(defaultState);
+
+        InstanceSave instance = new() { Name = "TextInstance", BaseType = "Text", ParentContainer = component };
+        component.Instances.Add(instance);
+
+        defaultState.SetValue("TextInstance.FontSize", 24, "int");
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(component);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(component);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { component });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(defaultState);
+
+        SelectInstances(instance);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        var pasted = component.Instances[1];
+        defaultState.GetValue($"{pasted.Name}.FontSize").ShouldBe(24);
+    }
+
+    [Fact]
+    public void OnPaste_Instance_ShouldCopyDirectlySetVariableReferencesOnInstance()
+    {
+        // Direct VariableReferences on the source instance must be carried
+        // over. Only inherited base-element VariableReferences should be
+        // skipped — locally-set ones are a real authored value.
+
+        ComponentSave component = new() { Name = "Component", BaseType = "Container" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = component };
+        component.States.Add(defaultState);
+
+        InstanceSave instance = new() { Name = "TextInstance", BaseType = "Text", ParentContainer = component };
+        component.Instances.Add(instance);
+
+        VariableListSave<string> directVarRefs = new()
+        {
+            Name = "TextInstance.VariableReferences",
+            Type = "string"
+        };
+        directVarRefs.ValueAsIList.Add("Red = SomeOtherInstance.Red");
+        defaultState.VariableLists.Add(directVarRefs);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(component);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(component);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { component });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(defaultState);
+
+        SelectInstances(instance);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        var pasted = component.Instances[1];
+        var pastedList = defaultState.VariableLists
+            .FirstOrDefault(v => v.Name == $"{pasted.Name}.VariableReferences");
+        pastedList.ShouldNotBeNull(
+            "because VariableReferences set directly on the source element should be carried " +
+            "over to the pasted instance.");
+        pastedList!.ValueAsIList.Count.ShouldBe(1);
+        pastedList.ValueAsIList[0].ShouldBe("Red = SomeOtherInstance.Red");
+    }
+
+    [Fact]
+    public void OnPaste_Instance_ShouldSnapshotBaseElementScalarVariables()
+    {
+        // Regression: an instance that gets its visible value via inheritance
+        // (e.g. UpgradeButton's TextInstance inherits Text="Click Me" from
+        // Button) must paste as a copy that ALSO shows that value. The new
+        // instance is DefinedByBase=false (a fresh BaseType instance), so it
+        // does not pick up the base's instance-variables via inheritance —
+        // they must be snapshotted onto the copy at paste time.
+
+        ComponentSave baseComponent = new() { Name = "BaseComponent", BaseType = "Container" };
+        StateSave baseDefaultState = new() { Name = "Default", ParentContainer = baseComponent };
+        baseComponent.States.Add(baseDefaultState);
+
+        InstanceSave textInBase = new() { Name = "TextInstance", BaseType = "Text", ParentContainer = baseComponent };
+        baseComponent.Instances.Add(textInBase);
+
+        baseDefaultState.SetValue("TextInstance.Text", "Click Me", "string");
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(baseComponent);
+
+        ComponentSave derivedComponent = new() { Name = "DerivedComponent", BaseType = "BaseComponent" };
+        StateSave derivedDefaultState = new() { Name = "Default", ParentContainer = derivedComponent };
+        derivedComponent.States.Add(derivedDefaultState);
+
+        InstanceSave textInDerived = new()
+        {
+            Name = "TextInstance",
+            BaseType = "Text",
+            DefinedByBase = true,
+            ParentContainer = derivedComponent
+        };
+        derivedComponent.Instances.Add(textInDerived);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(derivedComponent);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(derivedComponent);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { derivedComponent });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(derivedDefaultState);
+
+        SelectInstances(textInDerived);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        var pasted = derivedComponent.Instances[1];
+        derivedDefaultState.GetValue($"{pasted.Name}.Text")
+            .ShouldBe("Click Me",
+                "because the source instance inherited Text='Click Me' from the base; " +
+                "the pasted instance is DefinedByBase=false and so will not re-inherit, " +
+                "meaning the value must be snapshotted at paste time to preserve appearance.");
+    }
+
+    [Fact]
     public void OnPaste_Instance_ShouldPasteAtEnd_IfInElementWithSameNamedInstance()
     {
         /*
