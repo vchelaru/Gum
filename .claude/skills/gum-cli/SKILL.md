@@ -18,6 +18,7 @@ description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands
 |---------|---------|
 | `gumcli new <path> [--template]` | Create a new project. Templates: `forms` (default, includes all Forms UI controls) or `empty` (minimal). |
 | `gumcli check <project.gumx> [--json]` | Validate all elements (.gusx, .gutx, .gucx) that belong to the project. Human-readable or JSON output. Use this for post-write validation of any element file, not just the .gumx. |
+| `gumcli check-references <project.gumx> [--json] [--fix]` | Detect (and optionally fix) `VariableReferences` rows whose left-hand-side scalars are not materialized into the state's `Variables` — the inconsistent shape commonly produced by AI agents and hand edits that bypass the Gum tool's author-time propagation. `--fix` runs `ApplyVariableReferences` on affected states and saves the modified element files. Scans Screens and Components only (StandardElements have known default-evaluating refs whose missing scalars are correct on-disk state — see [gum-tool-variable-references](../gum-tool-variable-references/SKILL.md) for the model). Exits 1 if anything is unpropagated. |
 | `gumcli diff-standards <project.gumx> [--json]` | Compare the project's Standards against `StandardElementsManager.Self`'s programmatic defaults (the same source the Gum tool's File → New uses) and report variable-level drift. Exits 1 on drift, 0 on clean. Theme authors and CI use it to enforce the "Standards must match Default" invariant. |
 | `gumcli codegen <project.gumx> [--element <name>...]` | Generate C# code. Requires `ProjectCodeSettings.codsj`. Per-element error check gates generation. |
 | `gumcli codegen-init <project.gumx> [--force] [--csproj <path>]` | Auto-detect `.csproj`, derive namespace and output library, write `ProjectCodeSettings.codsj`. Use `--csproj` when the Gum project is not inside the MonoGame project directory. |
@@ -33,6 +34,7 @@ description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands
 Program.cs
   ├── NewCommand      → ProjectCreator / FormsTemplateCreator
   ├── CheckCommand    → ProjectLoader → HeadlessErrorChecker
+  ├── CheckReferencesCommand → ProjectLoader → ReferencePropagationService (Detect / PropagateReferences). Wires GumExpressionService so literal/expression RHSes evaluate; sets ObjectFinder.Self.GumProjectSave so cross-element refs resolve.
   ├── DiffStandardsCommand → ProjectLoader → DiffStandardsService (project Standards vs StandardElementsManager.Self defaults)
   ├── CodegenCommand  → ProjectLoader → HeadlessErrorChecker (gates) → HeadlessCodeGenerationService
   ├── CodegenInitCommand → CodeGenerationAutoSetupService
@@ -64,6 +66,7 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 | `CodeOutputProjectSettingsManager` | Loads/saves `ProjectCodeSettings.codsj` |
 | `ErrorResult` | POCO: `ElementName`, `Message`, `Severity` (`Warning`/`Error`) |
 | `DiffStandardsService` / `IDiffStandardsService` | Compares a loaded project's Standards against `StandardElementsManager.Self`'s programmatic defaults. Returns `DiffStandardsResult` with `Differences`, `MissingFromProject`, `ProjectOnlyStandards`. |
+| `ReferencePropagationService` / `IReferencePropagationService` | Detects states where a `VariableReferences` row exists without the corresponding materialized scalars in `Variables`, and propagates them on demand. `Detect` returns `DetectUnpropagatedReferencesResult`. `PropagateReferences` mutates the project (runs the static `ElementSaveExtensions.ApplyVariableReferences` per offending state) and returns the modified elements; the caller persists. Walks Screens + Components only; Standards are intentionally skipped (their default-evaluating refs would produce false positives). Expression evaluation depends on whoever wires `ElementSaveExtensions.CustomEvaluateExpression` — the CLI calls `GumExpressionService.Initialize()` before invoking. |
 
 **Non-obvious:** `HeadlessErrorChecker` is not a duplicate of the tool's `ErrorChecker` — the tool's `ErrorChecker` **delegates to** `HeadlessErrorChecker`. Zero duplication by design.
 

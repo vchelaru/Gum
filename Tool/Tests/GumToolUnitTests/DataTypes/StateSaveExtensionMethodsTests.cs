@@ -301,6 +301,139 @@ public class StateSaveExtensionMethodsTests : BaseTestClass
     }
 
     [Fact]
+    public void GetVariableListRecursive_OnInstance_ShouldFindCategorizedStateOnInstanceTypesBaseType()
+    {
+        // Repro from BubbleGum5: BaseComponent defines a category whose state
+        // has VariableReferences. DerivedComponent inherits from BaseComponent
+        // with no overrides. A screen has an instance of DerivedComponent and
+        // assigns DerivedComponentInstance.Category1State = "State1".
+        //
+        // The lookup must reach BaseComponent.Category1.State1.VariableReferences
+        // because Category1 lives on BaseComponent, not DerivedComponent.
+        // Previously this failed because the categorized-instance walk used
+        // instanceType.AllStates, which doesn't include states inherited via
+        // the instance type's own BaseType chain.
+
+        ComponentSave baseComponent = new() { Name = "BaseComponentDerivedCat", BaseType = "Container" };
+        StateSave baseDefault = new() { Name = "Default", ParentContainer = baseComponent };
+        baseComponent.States.Add(baseDefault);
+
+        StateSaveCategory category = new() { Name = "Category1" };
+        StateSave state1 = new() { Name = "State1", ParentContainer = baseComponent };
+        VariableListSave<string> state1Refs = new()
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        state1Refs.ValueAsIList.Add("X = SomeOtherInstance.X");
+        state1.VariableLists.Add(state1Refs);
+        category.States.Add(state1);
+        baseComponent.Categories.Add(category);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(baseComponent);
+
+        ComponentSave derivedComponent = new() { Name = "DerivedComponentDerivedCat", BaseType = "BaseComponentDerivedCat" };
+        StateSave derivedDefault = new() { Name = "Default", ParentContainer = derivedComponent };
+        derivedComponent.States.Add(derivedDefault);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(derivedComponent);
+
+        ScreenSave screen = new() { Name = "MyScreenForDerivedCat" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave derivedInstance = new()
+        {
+            Name = "DerivedComponentInstance",
+            BaseType = "DerivedComponentDerivedCat",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(derivedInstance);
+
+        VariableSave categoryStateVar = new()
+        {
+            Name = "DerivedComponentInstance.Category1State",
+            Type = "Category1",
+            Value = "State1",
+            SetsValue = true
+        };
+        screenDefault.Variables.Add(categoryStateVar);
+
+        ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
+
+        var foundList = screenDefault.GetVariableListRecursive("DerivedComponentInstance.VariableReferences");
+
+        foundList.ShouldNotBeNull(
+            "because Category1.State1 on BaseComponent has VariableReferences set, " +
+            "and the lookup must walk through DerivedComponent's BaseType chain to reach it.");
+        foundList!.ValueAsIList.Count.ShouldBe(1);
+        foundList.ValueAsIList[0].ShouldBe("X = SomeOtherInstance.X");
+    }
+
+    [Fact]
+    public void GetValueRecursive_OnInstance_ShouldFindCategorizedScalarOnInstanceTypesBaseType()
+    {
+        // Scalar analogue of GetVariableListRecursive_OnInstance_ShouldFindCategorizedStateOnInstanceTypesBaseType.
+        // BaseComponent defines Category1 with State1, which has a materialized X=100
+        // (e.g. propagated from a VariableReferences row by the tool).
+        // DerivedComponent inherits with no overrides. A screen has a
+        // DerivedComponentInstance and sets Category1State="State1". The scalar
+        // value for X must be 100, found by walking the instance type's BaseType chain.
+
+        ComponentSave baseComponent = new() { Name = "BaseComponentScalarCat", BaseType = "Container" };
+        StateSave baseDefault = new() { Name = "Default", ParentContainer = baseComponent };
+        baseComponent.States.Add(baseDefault);
+
+        StateSaveCategory category = new() { Name = "Category1" };
+        StateSave state1 = new() { Name = "State1", ParentContainer = baseComponent };
+        state1.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Type = "float",
+            Value = 100f,
+            SetsValue = true
+        });
+        category.States.Add(state1);
+        baseComponent.Categories.Add(category);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(baseComponent);
+
+        ComponentSave derivedComponent = new() { Name = "DerivedComponentScalarCat", BaseType = "BaseComponentScalarCat" };
+        StateSave derivedDefault = new() { Name = "Default", ParentContainer = derivedComponent };
+        derivedComponent.States.Add(derivedDefault);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(derivedComponent);
+
+        ScreenSave screen = new() { Name = "MyScreenForScalarCat" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave derivedInstance = new()
+        {
+            Name = "DerivedComponentInstance",
+            BaseType = "DerivedComponentScalarCat",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(derivedInstance);
+
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "DerivedComponentInstance.Category1State",
+            Type = "Category1",
+            Value = "State1",
+            SetsValue = true
+        });
+
+        ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
+
+        var value = screenDefault.GetValueRecursive("DerivedComponentInstance.X");
+
+        value.ShouldBe(100f,
+            "because Category1.State1 on BaseComponent sets X=100, and the lookup must walk " +
+            "through DerivedComponent's BaseType chain to reach it.");
+    }
+
+    [Fact]
     public void GetVariableListRecursive_OnInstance_NoCategorizedStateSet_ShouldFallBackToBaseTypeList()
     {
         // Regression guard: when no categorized state is active on the

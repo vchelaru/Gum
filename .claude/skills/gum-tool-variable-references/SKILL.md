@@ -70,6 +70,19 @@ SetVariableLogic (variable change entry point)
 - In the tool: `CustomEvaluateExpression` is set by `MainVariableGridPlugin` to use `EvaluatedSyntax` (Roslyn parsing with full expression support).
 - At runtime (no tool): Falls back to `RecursiveVariableFinder` with simple dot-path lookup — no expression support, just direct variable resolution.
 
+### Author-Time Materialization Is The Model
+
+When the tool resolves a `VariableReferences` row — interactive edit, Make Default, the handful of `ElementCommands` paths — `ApplyVariableReferences` writes the evaluated right-hand-side as a **hard scalar** into the same `StateSave`'s `Variables`. The references row and the materialized scalar are *both* persisted to disk. Lookup never re-evaluates the reference: scalar resolution finds the materialized value directly.
+
+This is the load-bearing fact for reasoning about VariableReferences. A few consequences fall out of it:
+
+- **Files written by paths that bypass `ApplyVariableReferences` are inconsistent.** AI-authored XML, hand edits, programmatic creation, and "delete the scalars to force a reapply" workflows all leave a state with a `VariableReferences` row but no materialized scalars. The Variables tab / scalar lookup then falls through to the default state instead of the reference's resolved value. Gum currently has no load-time repair for this; the only fix is to retrigger a path that runs `ApplyVariableReferences` (e.g. re-edit and re-save the reference).
+- **References are *snapshots*, not live bindings.** Once materialized, the scalar is what every reader sees. If the right-hand side changes elsewhere, the snapshot stays stale until propagation runs again. The cascade in `DoVariableReferenceReaction` (described above) is what keeps snapshots fresh when authoring; nothing keeps them fresh on its own.
+- **Precedence is decided at author time, not at lookup time.** The materialized scalar lives in `state.Variables` like any other authored value, so the normal "most specific wins" scalar walk decides who wins between a state-reference and a more-local explicit override. There is no separate evaluation pass that re-asserts the reference.
+- **Inheritance interacts naturally.** Materialization happens on the element that *authors* the reference. Derived components and instances find the materialized scalar via the existing recursive state walk; they do not need their own copy. (The walk going up the instance type's `BaseType` chain was previously broken in `StateSaveExtensionMethods.cs` — see fix history on `fix/variable-references-inheritance-display`.)
+
+When designing fixes in this area, the question is almost always "did `ApplyVariableReferences` run on the state that owns the reference?" — not "should the lookup do something smarter when it walks past a `VariableReferences` row?"
+
 ### Hard Values — Runtime Implications
 
 Variable references write **hard values** into the `StateSave`. This means at game runtime (where `ApplyVariableReferences` on the `GraphicalUiElement` runs once at load time), the referenced values are already baked into the save data. References are **not dynamically re-evaluated** at game runtime when the source value changes — they are a tool-time binding mechanism. The runtime `ApplyVariableReferences(GraphicalUiElement)` overload exists primarily for the tool's wireframe preview.

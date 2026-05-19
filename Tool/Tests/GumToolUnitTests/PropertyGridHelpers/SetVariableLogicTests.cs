@@ -1,3 +1,4 @@
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -298,6 +299,84 @@ public class SetVariableLogicTests : BaseTestClass
         response.Succeeded.ShouldBeTrue();
         mocker.GetMock<Gum.Undo.IUndoManager>()
             .Verify(x => x.RecordUndo(), Times.Once());
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldForceRefreshVariables_WhenAssigningStateOnInstance()
+    {
+        // Repro: BaseComponent has a category "Category1"; an instance of it is placed
+        // on a screen. Assigning the instance's "Category1State" should force a full
+        // grid rebuild because IsDefault / subtext on sibling variable rows
+        // depend on which categorized state is active.
+        ComponentSave baseComponent = new ComponentSave { Name = "BaseComponent" };
+        StateSave baseDefault = new StateSave { Name = "Default", ParentContainer = baseComponent };
+        baseComponent.States.Add(baseDefault);
+        StateSaveCategory category = new StateSaveCategory { Name = "Category1" };
+        category.States.Add(new StateSave { Name = "A", ParentContainer = baseComponent });
+        category.States.Add(new StateSave { Name = "B", ParentContainer = baseComponent });
+        baseComponent.Categories.Add(category);
+
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        InstanceSave instance = new InstanceSave { Name = "BaseComponentInstance", BaseType = "BaseComponent" };
+        screen.Instances.Add(instance);
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(baseComponent);
+        project.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        screenDefault.SetValue("BaseComponentInstance.Category1State", "A");
+
+        mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedElement).Returns(screen);
+        mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave).Returns(screenDefault);
+
+        _setVariableLogic.ReactToPropertyValueChanged(
+            "Category1State",
+            null,
+            screen,
+            instance,
+            screenDefault,
+            refresh: true,
+            recordUndo: false,
+            trySave: false);
+
+        mocker.GetMock<IGuiCommands>()
+            .Verify(x => x.RefreshVariables(true), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void IsStateVariable_ShouldReturnTrue_WhenCategoryIsInheritedFromBaseType()
+    {
+        // DerivedComponent inherits from BaseComponent which defines Category1.
+        // Assigning Category1State on an instance of DerivedComponent should still
+        // be detected as a state variable.
+        ComponentSave baseComponent = new ComponentSave { Name = "BaseComponent" };
+        baseComponent.States.Add(new StateSave { Name = "Default", ParentContainer = baseComponent });
+        StateSaveCategory category = new StateSaveCategory { Name = "Category1" };
+        category.States.Add(new StateSave { Name = "A", ParentContainer = baseComponent });
+        baseComponent.Categories.Add(category);
+
+        ComponentSave derivedComponent = new ComponentSave { Name = "DerivedComponent", BaseType = "BaseComponent" };
+        derivedComponent.States.Add(new StateSave { Name = "Default", ParentContainer = derivedComponent });
+
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        InstanceSave instance = new InstanceSave { Name = "DerivedComponentInstance", BaseType = "DerivedComponent" };
+        screen.Instances.Add(instance);
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(baseComponent);
+        project.Components.Add(derivedComponent);
+        project.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        bool result = SetVariableLogic.IsStateVariable("Category1State", screen, instance);
+
+        result.ShouldBeTrue();
     }
 
     [Fact(Skip = "ProjectManager.Self needs to be removed")]

@@ -107,6 +107,17 @@ InstanceMember.AfterSetByUi
   → DataUiGrid.Refresh()   (no structural rebuild needed)
 ```
 
+### Post-set Selective Refresh (`SetVariableLogic`)
+
+After a variable is set, `SetVariableLogic.RefreshInResponseToVariableChange` decides whether the grid needs a structural rebuild, a value-only refresh, or nothing. By default *nothing happens* — most variable edits only need the value-only refresh that already ran upstream. The decision rule is:
+
+1. **Hardcoded name in `VariablesRequiringRefresh` dictionary** (e.g. `Parent`, `BaseType`, `Font`, `TextureAddress`) — these change which other variables exist on the grid, so they trigger a `FullGridRefresh` (rebuild + tree view) or `FullGridValueRefresh` per the dictionary entry.
+2. **State variable on the element or an instance** (detected dynamically via `SetVariableLogic.IsStateVariable` → `VariableSave.IsState`) — assigning a categorized state doesn't add/remove variables, but it does change which rows are reference-driven, their `IsDefault` status, and their subtext. Those are computed at category-build time, so a value-only refresh isn't enough → `RefreshVariables(force: true)`.
+
+State variables can't be in the hardcoded dictionary because their names are dynamic (`<CategoryName>State`). Use `IsStateVariable(unqualifiedMember, parentElement, instance)` rather than string-matching.
+
+The trailing-else branch of the dictionary-handling block (`RefreshVariables(force: true)`) is the "rebuild grid, don't touch the tree" path. It's not named in the `VariableRefreshType` enum — it's the fallthrough behavior. Watch for it when reading the code.
+
 ---
 
 ## Common Patterns

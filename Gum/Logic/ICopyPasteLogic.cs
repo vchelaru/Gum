@@ -16,5 +16,7 @@ public interface ICopyPasteLogic
         List<StateSave> copiedStates,
         ElementSave targetElement,
         InstanceSave? selectedInstance,
-        ISelectedState? forcedSelectedState = null);
+        ISelectedState? forcedSelectedState = null,
+        List<StateSave>? baseElementDefaultStates = null,
+        HashSet<string>? itemsOwnedByReachableStates = null);
 }

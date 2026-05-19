@@ -11,6 +11,7 @@
     <Grid>
         <ListBox
             HorizontalContentAlignment="Stretch"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             ItemsSource="{Binding Errors}"
             SelectedItem="{Binding SelectedItem}">
             <ListBox.ItemTemplate>

@@ -481,18 +481,18 @@ public class CopyPasteLogicTests : BaseTestClass
         _elementCommands.Verify(x => x.SortVariables(It.IsAny<ElementSave>()), Times.Once);
     }
 
-    // There's intentionally no test pinning "base-element VariableReferences
-    // must not be snapshotted onto the pasted instance." A naive fix for that
-    // (stripping base default-state clones in StoreCopiedInstances) also
-    // strips inherited scalars like Text/Font — see
-    // OnPaste_Instance_ShouldSnapshotBaseElementScalarVariables. The user's
-    // underlying intent ("derive a component and clear the base's
-    // VariableReferences") is not expressible today: VariableListSave has no
-    // SetsValue flag like VariableSave, so there is no way to persist an
-    // explicit-empty override of an inherited list. Once that representation
-    // is added, the existing snapshot-all-inherited paste behavior will be
-    // correct because an explicit-empty override on the source snapshots as
-    // empty on the copy.
+    // Paste filters base-element default-state variables by the set of LHSes
+    // owned by reachable VariableReferences — the same "reachable" walk the
+    // GUM0002 error check uses. Inherited scalars NOT owned by a ref
+    // (Text="Click Me") are still snapshotted (see
+    // OnPaste_Instance_ShouldSnapshotBaseElementScalarVariables); inherited
+    // scalars that ARE ref-owned (the UpgradeButton orphan FontSize=14 case)
+    // are dropped so the new instance picks them up via inheritance / the ref
+    // (see OnPaste_Instance_ShouldSkipBaseElementVariable_WhenReachableReferenceOwnsIt).
+    // Directly-authored values on the source's own state pass through
+    // untouched even when conflicted (see
+    // OnPaste_Instance_ShouldCopySourceLevelVariable_EvenWhenReachableReferenceOwnsIt) —
+    // GUM0002 handles the conflict display separately.
 
     [Fact]
     public void OnPaste_Instance_ShouldPastaSibling_IfNoSelectionMade()
@@ -1809,6 +1809,385 @@ public class CopyPasteLogicTests : BaseTestClass
             });
     }
 
+
+    [Fact]
+    public void OnPaste_Instance_ShouldSkipBaseElementVariable_WhenReachableReferenceOwnsIt()
+    {
+        // UpgradeButton repro: Button.Default has the orphan TextInstance.FontSize=14.
+        // TextInstance.BaseType = Label; Label.TextCategory.Title has a VariableReferences
+        // row that assigns FontSize. DerivedButton sets TextInstance.TextCategoryState=Title
+        // on its own Default. When pasting TextInstance, the base capture's FontSize=14
+        // must be SKIPPED because FontSize is owned by a reachable reference (via the
+        // active categorized state on the instance's BaseType chain).
+        ComponentSave label = new() { Name = "LabelForCopy", BaseType = "Container" };
+        StateSave labelDefault = new() { Name = "Default", ParentContainer = label };
+        label.States.Add(labelDefault);
+
+        StateSaveCategory textCategory = new() { Name = "TextCategory" };
+        StateSave titleState = new() { Name = "Title", ParentContainer = label };
+        titleState.Variables.Add(new VariableSave
+        {
+            Name = "SourceFontSize",
+            Type = "int",
+            Value = 28,
+            SetsValue = true
+        });
+        VariableListSave<string> titleRefs = new()
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        titleRefs.ValueAsIList.Add("FontSize = SourceFontSize");
+        titleState.VariableLists.Add(titleRefs);
+        textCategory.States.Add(titleState);
+        label.Categories.Add(textCategory);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(label);
+
+        ComponentSave baseButton = new() { Name = "BaseButtonForCopy", BaseType = "Container" };
+        StateSave baseDefault = new() { Name = "Default", ParentContainer = baseButton };
+        baseButton.States.Add(baseDefault);
+        baseButton.Instances.Add(new InstanceSave
+        {
+            Name = "TextInstance",
+            BaseType = "LabelForCopy",
+            ParentContainer = baseButton
+        });
+        // The orphan: FontSize=14 explicitly set at the base level.
+        baseDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.FontSize",
+            Type = "int",
+            Value = 14,
+            SetsValue = true
+        });
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(baseButton);
+
+        ComponentSave derivedButton = new() { Name = "DerivedButtonForCopy", BaseType = "BaseButtonForCopy" };
+        StateSave derivedDefault = new() { Name = "Default", ParentContainer = derivedButton };
+        derivedButton.States.Add(derivedDefault);
+        InstanceSave textInDerived = new()
+        {
+            Name = "TextInstance",
+            BaseType = "LabelForCopy",
+            DefinedByBase = true,
+            ParentContainer = derivedButton
+        };
+        derivedButton.Instances.Add(textInDerived);
+        // Active categorized state on the instance — makes Label.Title's references reachable.
+        derivedDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.TextCategoryState",
+            Type = "TextCategory",
+            Value = "Title",
+            SetsValue = true
+        });
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(derivedButton);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(derivedButton);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { derivedButton });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(derivedDefault);
+        SelectInstances(textInDerived);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        derivedButton.Instances.Count.ShouldBe(2);
+        InstanceSave newInstance = derivedButton.Instances.First(i => i != textInDerived);
+
+        VariableSave? newFontSize = derivedDefault.Variables
+            .FirstOrDefault(v => v.Name == $"{newInstance.Name}.FontSize");
+        newFontSize.ShouldBeNull(
+            "because FontSize is owned by Label.Title's VariableReferences (reachable via the active " +
+            "TextCategoryState=Title), and the base orphan in BaseButton.Default should be dropped " +
+            "rather than snapshotted onto the new instance.");
+    }
+
+    [Fact]
+    public void OnPaste_Instance_ShouldCopySourceLevelVariable_EvenWhenReachableReferenceOwnsIt()
+    {
+        // Regression guard for the other side: if the source's OWN state has an
+        // explicit variable that's also owned by a reachable ref, the explicit
+        // value must still come through. (GUM0002 flags the conflict at runtime
+        // — but copy/paste must preserve author intent at the source level.)
+        ComponentSave label = new() { Name = "LabelForCopySource", BaseType = "Container" };
+        StateSave labelDefault = new() { Name = "Default", ParentContainer = label };
+        label.States.Add(labelDefault);
+
+        StateSaveCategory textCategory = new() { Name = "TextCategory" };
+        StateSave titleState = new() { Name = "Title", ParentContainer = label };
+        titleState.Variables.Add(new VariableSave
+        {
+            Name = "SourceFontSize",
+            Type = "int",
+            Value = 28,
+            SetsValue = true
+        });
+        VariableListSave<string> titleRefs = new()
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        titleRefs.ValueAsIList.Add("FontSize = SourceFontSize");
+        titleState.VariableLists.Add(titleRefs);
+        textCategory.States.Add(titleState);
+        label.Categories.Add(textCategory);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(label);
+
+        ComponentSave container = new() { Name = "ContainerForCopySource", BaseType = "Container" };
+        StateSave containerDefault = new() { Name = "Default", ParentContainer = container };
+        container.States.Add(containerDefault);
+        InstanceSave textInstance = new()
+        {
+            Name = "TextInstance",
+            BaseType = "LabelForCopySource",
+            ParentContainer = container
+        };
+        container.Instances.Add(textInstance);
+        // Both the categorized state assignment AND the explicit FontSize override authored
+        // directly on the source's OWN state. Copy/paste must preserve the explicit value.
+        containerDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.TextCategoryState",
+            Type = "TextCategory",
+            Value = "Title",
+            SetsValue = true
+        });
+        containerDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.FontSize",
+            Type = "int",
+            Value = 14,
+            SetsValue = true
+        });
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(container);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(container);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { container });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(containerDefault);
+        SelectInstances(textInstance);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        InstanceSave newInstance = container.Instances.First(i => i != textInstance);
+
+        VariableSave? newFontSize = containerDefault.Variables
+            .FirstOrDefault(v => v.Name == $"{newInstance.Name}.FontSize");
+        newFontSize.ShouldNotBeNull(
+            "because the explicit FontSize=14 was authored on the source's own state — " +
+            "the ref-owned filter should only drop base-element captures, not directly-authored values.");
+        newFontSize!.Value.ShouldBe(14);
+    }
+
+    [Fact]
+    public void OnPaste_Instance_ShouldSkipBaseElementVariableReferencesRow()
+    {
+        // UpgradeButton repro continued: Button has TextInstance with an authored
+        // VariableReferences row pointing at Strong styles. UpgradeButton derives
+        // and sets TextInstance.TextCategoryState="Title" which should drive refs
+        // via Label.Title.VariableReferences instead. Today, paste snapshots the
+        // base's Strong ref row onto the new instance as TextInstance1.VariableReferences;
+        // the snapshotted local row then SHADOWS the categorized-state walk because
+        // GetVariableListRecursive returns the local explicit row first. Result:
+        // pasted instance shows Strong, not Title. Fix: drop VariableReferences rows
+        // from base captures so the categorized walk wins for the new instance too.
+        ComponentSave label = new() { Name = "LabelForRefRow", BaseType = "Container" };
+        StateSave labelDefault = new() { Name = "Default", ParentContainer = label };
+        label.States.Add(labelDefault);
+        StateSaveCategory textCategory = new() { Name = "TextCategory" };
+        StateSave titleState = new() { Name = "Title", ParentContainer = label };
+        VariableListSave<string> titleRefs = new()
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        titleRefs.ValueAsIList.Add("Font = TitleFontMarker");
+        titleState.VariableLists.Add(titleRefs);
+        textCategory.States.Add(titleState);
+        label.Categories.Add(textCategory);
+        ObjectFinder.Self.GumProjectSave!.Components.Add(label);
+
+        ComponentSave baseButton = new() { Name = "BaseButtonForRefRow", BaseType = "Container" };
+        StateSave baseDefault = new() { Name = "Default", ParentContainer = baseButton };
+        baseButton.States.Add(baseDefault);
+        baseButton.Instances.Add(new InstanceSave
+        {
+            Name = "TextInstance",
+            BaseType = "LabelForRefRow",
+            ParentContainer = baseButton
+        });
+        // The base's authored ref row — should NOT be snapshotted onto the pasted instance.
+        VariableListSave<string> baseRefs = new()
+        {
+            Name = "TextInstance.VariableReferences",
+            Type = "string"
+        };
+        baseRefs.ValueAsIList.Add("Font = StrongFontMarker");
+        baseDefault.VariableLists.Add(baseRefs);
+        ObjectFinder.Self.GumProjectSave.Components.Add(baseButton);
+
+        ComponentSave derivedButton = new() { Name = "DerivedButtonForRefRow", BaseType = "BaseButtonForRefRow" };
+        StateSave derivedDefault = new() { Name = "Default", ParentContainer = derivedButton };
+        derivedButton.States.Add(derivedDefault);
+        InstanceSave textInDerived = new()
+        {
+            Name = "TextInstance",
+            BaseType = "LabelForRefRow",
+            DefinedByBase = true,
+            ParentContainer = derivedButton
+        };
+        derivedButton.Instances.Add(textInDerived);
+        derivedDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.TextCategoryState",
+            Type = "TextCategory",
+            Value = "Title",
+            SetsValue = true
+        });
+        ObjectFinder.Self.GumProjectSave.Components.Add(derivedButton);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(derivedButton);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { derivedButton });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(derivedDefault);
+        SelectInstances(textInDerived);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        InstanceSave newInstance = derivedButton.Instances.First(i => i != textInDerived);
+
+        VariableListSave? newRefRow = derivedDefault.VariableLists
+            .FirstOrDefault(v => v.Name == $"{newInstance.Name}.VariableReferences");
+        newRefRow.ShouldBeNull(
+            "because the base element's inherited VariableReferences row should not be snapshotted " +
+            "onto the new instance — otherwise it shadows the categorized state's reference walk.");
+    }
+
+    [Fact]
+    public void OnPaste_Instance_ShouldSkipBaseElementVariable_WhenCategorizedStateDirectlySetsIt()
+    {
+        // Broader version of the ref-owned scalar filter: the matched categorized
+        // state on the instance's BaseType can also set a scalar DIRECTLY (no
+        // intermediate VariableReferences row). The base orphan still needs to be
+        // dropped — otherwise the snapshotted base scalar shadows the categorized
+        // state's value, exactly the same shape as the ref case.
+        ComponentSave label = new() { Name = "LabelDirectSet", BaseType = "Container" };
+        StateSave labelDefault = new() { Name = "Default", ParentContainer = label };
+        label.States.Add(labelDefault);
+        StateSaveCategory textCategory = new() { Name = "TextCategory" };
+        StateSave titleState = new() { Name = "Title", ParentContainer = label };
+        // Direct scalar set, NO VariableReferences row.
+        titleState.Variables.Add(new VariableSave
+        {
+            Name = "FontSize",
+            Type = "int",
+            Value = 28,
+            SetsValue = true
+        });
+        textCategory.States.Add(titleState);
+        label.Categories.Add(textCategory);
+        ObjectFinder.Self.GumProjectSave!.Components.Add(label);
+
+        ComponentSave baseButton = new() { Name = "BaseButtonDirectSet", BaseType = "Container" };
+        StateSave baseDefault = new() { Name = "Default", ParentContainer = baseButton };
+        baseButton.States.Add(baseDefault);
+        baseButton.Instances.Add(new InstanceSave
+        {
+            Name = "TextInstance",
+            BaseType = "LabelDirectSet",
+            ParentContainer = baseButton
+        });
+        // The orphan: FontSize=14 on the base, conflicting with Title's direct FontSize=28.
+        baseDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.FontSize",
+            Type = "int",
+            Value = 14,
+            SetsValue = true
+        });
+        ObjectFinder.Self.GumProjectSave.Components.Add(baseButton);
+
+        ComponentSave derivedButton = new() { Name = "DerivedButtonDirectSet", BaseType = "BaseButtonDirectSet" };
+        StateSave derivedDefault = new() { Name = "Default", ParentContainer = derivedButton };
+        derivedButton.States.Add(derivedDefault);
+        InstanceSave textInDerived = new()
+        {
+            Name = "TextInstance",
+            BaseType = "LabelDirectSet",
+            DefinedByBase = true,
+            ParentContainer = derivedButton
+        };
+        derivedButton.Instances.Add(textInDerived);
+        derivedDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.TextCategoryState",
+            Type = "TextCategory",
+            Value = "Title",
+            SetsValue = true
+        });
+        ObjectFinder.Self.GumProjectSave.Components.Add(derivedButton);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(derivedButton);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { derivedButton });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(derivedDefault);
+        SelectInstances(textInDerived);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        InstanceSave newInstance = derivedButton.Instances.First(i => i != textInDerived);
+
+        VariableSave? newFontSize = derivedDefault.Variables
+            .FirstOrDefault(v => v.Name == $"{newInstance.Name}.FontSize");
+        newFontSize.ShouldBeNull(
+            "because Label.Title directly sets FontSize=28; the base orphan should be dropped " +
+            "the same way it is when the categorized state assigns via a VariableReferences row.");
+    }
+
+    [Fact]
+    public void OnPaste_Instance_ShouldCopySourceLevelVariableReferencesRow()
+    {
+        // Regression guard: a VariableReferences row authored DIRECTLY on the source's
+        // own state must still come through. Only base-element captures are filtered.
+        ComponentSave component = new() { Name = "ComponentWithLocalRefs", BaseType = "Container" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = component };
+        component.States.Add(defaultState);
+
+        InstanceSave instance = new() { Name = "TextInstance", BaseType = "Text", ParentContainer = component };
+        component.Instances.Add(instance);
+
+        VariableListSave<string> localRefs = new()
+        {
+            Name = "TextInstance.VariableReferences",
+            Type = "string"
+        };
+        localRefs.ValueAsIList.Add("Red = SomeOtherInstance.Red");
+        defaultState.VariableLists.Add(localRefs);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(component);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(component);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { component });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(defaultState);
+        SelectInstances(instance);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        InstanceSave newInstance = component.Instances.First(i => i != instance);
+
+        VariableListSave? newRefRow = defaultState.VariableLists
+            .FirstOrDefault(v => v.Name == $"{newInstance.Name}.VariableReferences");
+        newRefRow.ShouldNotBeNull(
+            "because the VariableReferences row was authored on the source's own state.");
+        newRefRow!.ValueAsIList.Count.ShouldBe(1);
+        newRefRow.ValueAsIList[0].ShouldBe("Red = SomeOtherInstance.Red");
+    }
 
     private ScreenSave CreateDefaultScreen()
     {

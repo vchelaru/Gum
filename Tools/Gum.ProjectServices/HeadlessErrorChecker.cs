@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using GumRuntime;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -47,34 +48,16 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     /// <inheritdoc/>
     public IReadOnlyList<ErrorResult> GetErrorsFor(ElementSave element, GumProjectSave project)
     {
-        var errors = new List<ErrorResult>();
-
         ObjectFinder.Self.GumProjectSave = project;
         ObjectFinder.Self.EnableCache();
         try
         {
-            var asComponent = element as ComponentSave;
-            if (asComponent != null)
-            {
-                errors.AddRange(GetBehaviorErrorsFor(asComponent, project));
-            }
-            errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
-            errors.AddRange(GetMissingBaseTypeErrorsFor(element));
-            errors.AddRange(GetParentErrorsFor(element));
-            errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
-            errors.AddRange(GetAchxOriginErrorsFor(element, project));
-
-            foreach (var source in _additionalErrorSources)
-            {
-                errors.AddRange(source.GetErrors(element, project));
-            }
+            return GetErrorsForInternal(element, project);
         }
         finally
         {
             ObjectFinder.Self.DisableCache();
         }
-
-        return errors;
     }
 
     /// <inheritdoc/>
@@ -124,6 +107,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetParentErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
+        errors.AddRange(GetVariableReferenceConflictErrorsFor(element));
 
         foreach (var source in _additionalErrorSources)
         {
@@ -132,6 +116,168 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
         return errors;
     }
+
+    #region GUM0002 — VariableReference value disagrees with explicit set
+
+    private List<ErrorResult> GetVariableReferenceConflictErrorsFor(ElementSave element)
+    {
+        var errors = new List<ErrorResult>();
+        foreach (var state in element.AllStates)
+        {
+            CheckLocalReferenceConflicts(element, state, errors);
+            CheckInheritedCategorizedReferenceConflicts(element, state, errors);
+        }
+        return errors;
+    }
+
+    private static void CheckLocalReferenceConflicts(ElementSave element, StateSave state, List<ErrorResult> errors)
+    {
+        foreach (var variableList in state.VariableLists)
+        {
+            if (variableList.GetRootName() != "VariableReferences" || variableList.ValueAsIList.Count == 0)
+            {
+                continue;
+            }
+            string? sourceObject = variableList.SourceObject;
+            foreach (string referenceString in variableList.ValueAsIList)
+            {
+                if (TryParseReference(referenceString, sourceObject, out string qualifiedLeft, out string right))
+                {
+                    EmitConflictIfPresent(element, state, state, qualifiedLeft, right, errors);
+                }
+            }
+        }
+    }
+
+    private static void CheckInheritedCategorizedReferenceConflicts(ElementSave element, StateSave state, List<ErrorResult> errors)
+    {
+        // For each instance state assignment in this state (e.g. TextInstance.TextCategoryState = "Title"),
+        // walk the matched state on the instance's type (via inheritance) and check its VariableReferences
+        // rows against the local explicit overrides on this state.
+        for (int i = 0; i < state.Variables.Count; i++)
+        {
+            var variable = state.Variables[i];
+            if (!variable.SetsValue || string.IsNullOrEmpty(variable.SourceObject)) continue;
+            if (!variable.IsState(element, out _, out StateSaveCategory category)) continue;
+            if (category == null) continue; // only categorized states own references
+
+            InstanceSave? instance = element.GetInstance(variable.SourceObject);
+            if (instance == null) continue;
+            ElementSave? instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
+            if (instanceType == null) continue;
+
+            string? stateName = variable.Value as string;
+            if (string.IsNullOrEmpty(stateName)) continue;
+            StateSave matchedState = instanceType.GetStateSaveRecursively(stateName);
+            if (matchedState == null) continue;
+
+            // If the source state already has a local VariableReferences row for this instance,
+            // GetVariableListRecursive returns the local row immediately and the categorized
+            // state's refs row never fires at apply time. Don't flag conflicts that won't happen.
+            bool hasLocalRefsRow = state.VariableLists.Any(vl =>
+                vl.GetRootName() == "VariableReferences" &&
+                vl.SourceObject == variable.SourceObject);
+            if (hasLocalRefsRow) continue;
+
+            foreach (var variableList in matchedState.VariableLists)
+            {
+                if (variableList.GetRootName() != "VariableReferences" || variableList.ValueAsIList.Count == 0)
+                {
+                    continue;
+                }
+                foreach (string referenceString in variableList.ValueAsIList)
+                {
+                    if (TryParseReference(referenceString, sourceObject: null, out string leftOnInstance, out string right))
+                    {
+                        string qualifiedLeft = $"{variable.SourceObject}.{leftOnInstance}";
+                        EmitConflictIfPresent(element, state, matchedState, qualifiedLeft, right, errors);
+                    }
+                }
+            }
+        }
+    }
+
+    private static bool TryParseReference(string referenceString, string? sourceObject, out string qualifiedLeft, out string right)
+    {
+        qualifiedLeft = string.Empty;
+        right = string.Empty;
+        if (string.IsNullOrWhiteSpace(referenceString) || referenceString.StartsWith("//")) return false;
+        string[] split = referenceString.Split(new[] { '=' }, 2, StringSplitOptions.RemoveEmptyEntries);
+        if (split.Length != 2) return false;
+        string left = split[0].Trim();
+        right = split[1].Trim();
+        qualifiedLeft = string.IsNullOrEmpty(sourceObject) ? left : $"{sourceObject}.{left}";
+        return true;
+    }
+
+    private static void EmitConflictIfPresent(
+        ElementSave element,
+        StateSave localState,
+        StateSave referenceOwnerState,
+        string qualifiedLeft,
+        string right,
+        List<ErrorResult> errors)
+    {
+        VariableSave? materialized = localState.Variables.FirstOrDefault(v => v.Name == qualifiedLeft && v.SetsValue);
+        if (materialized == null) return;
+
+        // The Roslyn evaluator (GumExpressionService) returns null when desiredType is null
+        // because its CastTo(null) returns false. Pass the materialized scalar's type so
+        // type-aware evaluation succeeds for cross-element refs and literal RHSes.
+        object? evaluated = EvaluateRightSide(referenceOwnerState, right, materialized.Type);
+        if (evaluated == null) return;
+
+        if (ValuesEqual(materialized.Value, evaluated)) return;
+
+        errors.Add(new ErrorResult
+        {
+            ElementName = element.Name,
+            Code = "GUM0002",
+            Severity = ErrorSeverity.Warning,
+            Message = $"{localState.Name}: \"{qualifiedLeft}\" is set explicitly to {FormatValue(materialized.Value)}, " +
+                $"but the active VariableReference would set it to {FormatValue(evaluated)}. " +
+                "The explicit value will win; remove the local override or change the reference to resolve the conflict."
+        });
+    }
+
+    private static object? EvaluateRightSide(StateSave ownerState, string right, string? leftType)
+    {
+        // Mirror ElementSaveExtensions.GetRightSideValue: use the Roslyn-based
+        // evaluator if it's wired (tool + CLI both initialize it via
+        // GumExpressionService.Initialize), otherwise fall back to dot-path lookup.
+        if (ElementSaveExtensions.CustomEvaluateExpression != null)
+        {
+            try
+            {
+                return ElementSaveExtensions.CustomEvaluateExpression(ownerState, right, leftType);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        var rfv = new RecursiveVariableFinder(ownerState);
+        return rfv.GetValue(right);
+    }
+
+    private static bool ValuesEqual(object? a, object? b)
+    {
+        if (ReferenceEquals(a, b)) return true;
+        if (a == null || b == null) return false;
+        // Coerce numeric types so a materialized 14f compares equal to an evaluated 14.0.
+        if (IsNumeric(a) && IsNumeric(b))
+        {
+            return Math.Abs(Convert.ToDouble(a) - Convert.ToDouble(b)) < 1e-6;
+        }
+        return a.Equals(b);
+    }
+
+    private static bool IsNumeric(object value) =>
+        value is float || value is double || value is int || value is long || value is decimal;
+
+    private static string FormatValue(object? value) => value?.ToString() ?? "(null)";
+
+    #endregion
 
     #region Behavior Errors
 

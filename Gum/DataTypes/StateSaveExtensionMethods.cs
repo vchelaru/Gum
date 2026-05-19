@@ -129,7 +129,9 @@ public static class StateSaveExtensionMethods
                                 // check this last since it's the slowest:
                                 instanceStateVariable.IsState(elementContainingState))
                             {
-                                var matchingState = instanceType.AllStates.FirstOrDefault(item => item.Name == (string)instanceStateVariable.Value);
+                                // GetStateSaveRecursively walks the instance type's BaseType
+                                // chain so categories inherited from a base component are found.
+                                var matchingState = instanceType.GetStateSaveRecursively((string)instanceStateVariable.Value);
 
                                 if (matchingState != null)
                                 {
@@ -153,7 +155,9 @@ public static class StateSaveExtensionMethods
                                     // check this last since it's the slowest:
                                     instanceStateVariable.IsState(elementContainingState))
                                 {
-                                    var matchingState = instanceType.AllStates.FirstOrDefault(item => item.Name == (string)instanceStateVariable.Value);
+                                    // GetStateSaveRecursively walks the instance type's BaseType
+                                // chain so categories inherited from a base component are found.
+                                var matchingState = instanceType.GetStateSaveRecursively((string)instanceStateVariable.Value);
 
                                     if (matchingState != null)
                                     {
@@ -418,8 +422,10 @@ public static class StateSaveExtensionMethods
                                 // check this last since it's the slowest:
                                 instanceStateVariable.IsState(elementContainingState))
                             {
-                                var matchingState = instanceType.AllStates
-                                    .FirstOrDefault(s => s.Name == (string)instanceStateVariable.Value);
+                                // GetStateSaveRecursively walks the instance type's BaseType
+                                // chain so categories inherited from a base component are found.
+                                var matchingState = instanceType.GetStateSaveRecursively(
+                                    (string)instanceStateVariable.Value);
                                 if (matchingState != null)
                                 {
                                     variableListSave = matchingState.GetVariableListRecursive(nameInBase);
@@ -529,7 +535,8 @@ public static class StateSaveExtensionMethods
                                 // check this last since it's the slowest:
                                 instanceStateVariable.IsState(elementContainingState))
                             {
-                                var matchingState = instanceType.AllStates.FirstOrDefault(item => item.Name == (string)instanceStateVariable.Value);
+                                var matchingState = instanceType.GetStateSaveRecursively(
+                                    (string)instanceStateVariable.Value);
 
                                 if (matchingState != null)
                                 {

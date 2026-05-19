@@ -37,9 +37,9 @@ The tree icon refresh and the Errors tab refresh are independent. Both call `Err
 
 ## Adding New Error Checks
 
-**Core check** (missing references, structural problems): Add a private method to `ErrorChecker` and call it from `GetErrorsFor`. Pattern: iterate states/instances, add `new ErrorViewModel { Message = "..." }`.
+**Core check** (missing references, structural problems): Add it to `HeadlessErrorChecker.GetErrorsForInternal` in `Gum.ProjectServices`, **not** the tool's `Gum/Managers/ErrorChecker.cs`. The tool's checker delegates to the headless one (and converts `ErrorResult` → `ErrorViewModel`); putting checks in the headless layer means both the tool's Errors tab (per-selected-element refresh) and `gumcli check` (whole-project pass via `GetAllErrors`) surface them automatically. Pattern: iterate states/instances, emit `new ErrorResult { ElementName = ..., Message = ..., Code = "GUM00XX", Severity = ... }`. Register the code in `ErrorDocsRegistry` to get a help URL.
 
-**Plugin check** (feature-specific): Subscribe to `GetAllErrors` in your plugin's `StartUp()`, return `IEnumerable<ErrorViewModel>`, and set `item.OwnerPlugin = this` on each.
+**Plugin check** (feature-specific, tool-side only): Subscribe to `GetAllErrors` in your plugin's `StartUp()`, return `IEnumerable<ErrorViewModel>`, and set `item.OwnerPlugin = this` on each. Plugin checks only show in the tool — the CLI doesn't load plugins. If the check should fire in CI / pre-commit, use the headless path above instead.
 
 **Triggering refresh**: Send `RequestErrorRefreshMessage` via messenger to refresh the Errors tab list. Tree icon refresh is driven by existing plugin event subscriptions in `MainTreeViewPlugin`.
 
