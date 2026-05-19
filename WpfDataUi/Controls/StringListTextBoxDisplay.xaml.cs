@@ -185,6 +185,17 @@ namespace WpfDataUi.Controls
 
         private void TextBox_TextChanged(object? sender, TextChangedEventArgs e)
         {
+            // Refresh() sets TextBox.Text programmatically inside a
+            // SuppressSettingProperty window. WPF fires TextChanged synchronously
+            // during that assignment, so without this guard a programmatic refresh
+            // would flag HasUserChangedAnything = true and then on the next
+            // LostFocus the inherited value would be written back as a local
+            // override — observed when right-clicking "Make Default" on
+            // VariableReferences.
+            if (SuppressSettingProperty)
+            {
+                return;
+            }
             HasUserChangedAnything = true;
         }
 
