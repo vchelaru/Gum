@@ -1,9 +1,12 @@
 <Project>
 
-  <!-- Skip Apos.Shapes content compilation for platforms with pre-built XNBs -->
-  <PropertyGroup Condition="'$(KniPlatform)' == 'DesktopGL' OR '$(KniPlatform)' == 'Windows' OR '$(KniPlatform)' == 'BlazorGL'">
-    <SkipAposShapeContent>true</SkipAposShapeContent>
-  </PropertyGroup>
+  <!-- Ship the prebuilt Apos.Shapes shader XNB for platforms we cover. The upstream
+       Apos.Shapes.KNI content pipeline is blocked at the package boundary via PrivateAssets
+       on the Apos.Shapes.KNI PackageReference in KniGumShapes.csproj, so its
+       buildTransitive/.props never runs in our consumers — no SkipAposShapeContent setter
+       or follow-up Remove needed. Platforms not covered below (Android, iOS, etc.) get no
+       XNB from us; consumers there must reference Apos.Shapes.KNI directly (restoring its
+       content pipeline) or supply the XNB themselves. -->
 
   <!-- DesktopGL -->
   <ItemGroup Condition="'$(KniPlatform)' == 'DesktopGL'">

@@ -38,7 +38,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.9-alpha" />
+		<!--
+			PrivateAssets blocks Apos.Shapes.KNI's buildTransitive/Apos.Shapes.KNI.props from
+			flowing to consumers of Gum.Shapes.KNI. That .props registers a KniContentReference
+			for the upstream shader source, which we replace with prebuilt XNBs (NuGet path:
+			buildTransitive/Gum.Shapes.KNI.props ships the platform-correct XNB;
+			ProjectReference path: see the Content item below). 'compile' and 'runtime' are
+			deliberately NOT in the list, so the Apos.Shapes.KNI DLL still flows to consumers.
+		-->
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.9-alpha"
+		                  PrivateAssets="contentfiles;analyzers;build;buildTransitive" />
 		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />
@@ -73,10 +82,25 @@
 
 	<ItemGroup>
 		<None Include="buildTransitive\Gum.Shapes.KNI.props" Pack="true" PackagePath="buildTransitive\" />
-		<None Include="buildTransitive\Gum.Shapes.KNI.targets" Pack="true" PackagePath="buildTransitive\" />
 		<None Include="buildTransitive\Content\DesktopGL\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\Content\DesktopGL\" />
 		<None Include="buildTransitive\Content\Windows\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\Content\Windows\" />
 		<None Include="buildTransitive\Content\BlazorGL\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\Content\BlazorGL\" />
+	</ItemGroup>
+
+	<!--
+		ProjectReference consumers (developers building against Gum source) do not get our
+		buildTransitive/.props, so they do not get a platform-conditional Content XNB.
+		Ship the DesktopGL XNB unconditionally so the common local-dev scenario just works.
+		Pack="false" keeps this Content item out of the .nupkg — NuGet consumers already get
+		platform-correct XNBs via buildTransitive/Gum.Shapes.KNI.props. Windows/BlazorGL
+		ProjectReference users should override by adding their own Content item targeting the
+		appropriate XNB under buildTransitive/Content/.
+	-->
+	<ItemGroup>
+		<Content Include="buildTransitive\Content\DesktopGL\apos-shapes.xnb"
+		         Link="Content\apos-shapes.xnb"
+		         CopyToOutputDirectory="PreserveNewest"
+		         Pack="false" />
 	</ItemGroup>
 
 </Project>
