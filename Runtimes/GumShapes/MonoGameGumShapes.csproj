@@ -38,8 +38,33 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Apos.Shapes" Version="0.6.9-alpha" />
+		<!--
+			PrivateAssets blocks Apos.Shapes' buildTransitive/Apos.Shapes.props from flowing
+			to consumers of Gum.Shapes.MonoGame. That .props registers a MonoGameContentReference
+			for the upstream shader source, which we replace with prebuilt XNBs (NuGet path:
+			buildTransitive/Gum.Shapes.MonoGame.props ships the platform-correct XNB;
+			ProjectReference path: see the Content item below). 'compile' and 'runtime' are
+			deliberately NOT in the list, so the Apos.Shapes DLL still flows to consumers.
+		-->
+		<PackageReference Include="Apos.Shapes" Version="0.6.9-alpha"
+		                  PrivateAssets="contentfiles;analyzers;build;buildTransitive" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" PrivateAssets="All" />
+	</ItemGroup>
+
+	<!--
+		ProjectReference consumers (developers building against Gum source) do not get our
+		buildTransitive/.props, so they do not get a platform-conditional Content XNB.
+		Ship the DesktopGL XNB unconditionally so the common local-dev scenario just works.
+		Pack="false" keeps this Content item out of the .nupkg — NuGet consumers already get
+		platform-correct XNBs via buildTransitive/Gum.Shapes.MonoGame.props. WindowsDX
+		ProjectReference users should override by adding their own Content item targeting
+		buildTransitive/MonoGame/Content/WindowsDX/apos-shapes.xnb to their consuming csproj.
+	-->
+	<ItemGroup>
+		<Content Include="buildTransitive\MonoGame\Content\DesktopGL\apos-shapes.xnb"
+		         Link="Content\apos-shapes.xnb"
+		         CopyToOutputDirectory="PreserveNewest"
+		         Pack="false" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -63,7 +88,6 @@
 
 	<ItemGroup>
 		<None Include="buildTransitive\Gum.Shapes.MonoGame.props" Pack="true" PackagePath="buildTransitive\" />
-		<None Include="buildTransitive\Gum.Shapes.MonoGame.targets" Pack="true" PackagePath="buildTransitive\" />
 		<None Include="buildTransitive\MonoGame\Content\DesktopGL\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\MonoGame\Content\DesktopGL\" />
 		<None Include="buildTransitive\MonoGame\Content\WindowsDX\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\MonoGame\Content\WindowsDX\" />
 	</ItemGroup>

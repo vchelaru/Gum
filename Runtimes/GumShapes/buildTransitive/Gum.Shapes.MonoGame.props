@@ -1,11 +1,12 @@
 <Project>
 
-  <!-- Skip Apos.Shapes content compilation for platforms with pre-built XNBs.
-       Other MonoGamePlatform values (Android, iOS, MacOS Metal, etc.) fall through
-       and Apos.Shapes' content pipeline runs as today. -->
-  <PropertyGroup Condition="'$(MonoGamePlatform)' == 'DesktopGL' OR '$(MonoGamePlatform)' == 'WindowsDX'">
-    <SkipAposShapeContent>true</SkipAposShapeContent>
-  </PropertyGroup>
+  <!-- Ship the prebuilt Apos.Shapes shader XNB for platforms we cover. The upstream
+       Apos.Shapes content pipeline is blocked at the package boundary via PrivateAssets
+       on the Apos.Shapes PackageReference in MonoGameGumShapes.csproj, so its
+       buildTransitive/.props never runs in our consumers — no SkipAposShapeContent setter
+       or follow-up Remove needed. Other MonoGamePlatform values (Android, iOS, MacOS
+       Metal, etc.) get no XNB from us; consumers on those platforms must reference
+       Apos.Shapes directly (restoring its content pipeline) or supply the XNB themselves. -->
 
   <!-- DesktopGL (OpenGL) -->
   <ItemGroup Condition="'$(MonoGamePlatform)' == 'DesktopGL'">
