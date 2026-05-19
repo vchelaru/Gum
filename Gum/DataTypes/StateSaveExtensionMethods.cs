@@ -392,6 +392,50 @@ public static class StateSaveExtensionMethods
         {
             ElementSave elementContainingState = stateSave.ParentContainer;
 
+            // Most-specific-wins: if the variable is on an instance and the
+            // instance has a categorized state set in this state (e.g.
+            // TextInstance.TextCategoryState = "H1"), and that state on the
+            // instance's BaseType has the list, prefer it over the containing
+            // element's BaseType chain. This mirrors the precedence
+            // GetValueRecursive already applies for scalar Variables and lets
+            // VariableReferences cascade through categorized states.
+            if (elementContainingState != null && variableName.Contains('.'))
+            {
+                var sourceObjectName = VariableSave.GetSourceObject(variableName);
+                var instanceForStateWalk = elementContainingState.Instances
+                    .FirstOrDefault(item => item.Name == sourceObjectName);
+                if (instanceForStateWalk != null)
+                {
+                    var instanceType = ObjectFinder.Self.GetElementSave(instanceForStateWalk);
+                    if (instanceType != null)
+                    {
+                        var nameInBase = VariableSave.GetRootName(variableName);
+                        for (int i = 0; i < stateSave.Variables.Count; i++)
+                        {
+                            var instanceStateVariable = stateSave.Variables[i];
+                            if (instanceStateVariable.SourceObject == sourceObjectName &&
+                                instanceStateVariable.SetsValue &&
+                                // check this last since it's the slowest:
+                                instanceStateVariable.IsState(elementContainingState))
+                            {
+                                var matchingState = instanceType.AllStates
+                                    .FirstOrDefault(s => s.Name == (string)instanceStateVariable.Value);
+                                if (matchingState != null)
+                                {
+                                    variableListSave = matchingState.GetVariableListRecursive(nameInBase);
+                                    if (variableListSave != null) break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (variableListSave != null)
+                {
+                    return variableListSave;
+                }
+            }
+
             // 1. Go to the default state if it's not a default
             bool shouldGoToDefaultState = false;
             // 2. Go to the base type if the variable is on the container itself, or if the instance is DefinedByBase
