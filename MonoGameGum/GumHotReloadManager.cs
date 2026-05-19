@@ -8,6 +8,7 @@ using GumRuntime;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 
@@ -265,62 +266,61 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         ToolsUtilities.FileManager.RelativeDirectory = savedRelativeDirectory;
 
-        var byName = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
-        foreach (var element in newProject.AllElements)
-        {
-            byName[element.Name] = element;
-        }
-
         System.Diagnostics.Debug.WriteLine(
             $"[HotReload] rootList.Count = {rootList.Count}");
 
-        int reappliedCount = 0;
-        int visitedCount = 0;
-        foreach (var root in rootList)
-        {
-            ReapplyRecursively(root, byName, ref reappliedCount, ref visitedCount);
-        }
+        ApplyDiff(rootList, newProject, SystemManagers.Default);
 
-        System.Diagnostics.Debug.WriteLine(
-            $"[HotReload] DONE visited={visitedCount} reapplied={reappliedCount}");
+        System.Diagnostics.Debug.WriteLine("[HotReload] DONE");
 
         ReloadCompleted?.Invoke();
     }
 
     /// <summary>
-    /// Walks the visual tree under <paramref name="element"/> and re-applies the new project's
-    /// default-state variables in place on each visual whose ElementSave matches a project element.
-    /// Preserves runtime-added children and runtime-set state — only the design-time variables are reset.
-    /// When re-applying at level N, descent skips children that came from N's design-time InstanceSaves
-    /// (those values were already covered by N's qualified-name variables like "BackInnerBorder.Width").
+    /// Applies a structural + variable diff from <paramref name="newProject"/> onto the live
+    /// visual trees in <paramref name="roots"/>. For every visual whose ElementSave name matches
+    /// an element in the project, design-time children (those whose <c>Tag</c> is an
+    /// <see cref="InstanceSave"/>) are added, removed, retyped, and reordered to match the
+    /// project's <c>Instances</c> list, and the new default-state variables are re-applied.
+    /// Runtime-added children (no <c>InstanceSave</c> tag) are left untouched. Primarily
+    /// called by <see cref="PerformReload"/>; exposed publicly for tests.
     /// </summary>
-    private void ReapplyRecursively(
+    public static void ApplyDiff(
+        IEnumerable<GraphicalUiElement> roots,
+        GumProjectSave newProject,
+        ISystemManagers systemManagers)
+    {
+        Dictionary<string, ElementSave> byName = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
+        foreach (ElementSave element in newProject.AllElements)
+        {
+            byName[element.Name] = element;
+        }
+
+        foreach (GraphicalUiElement root in roots.ToList())
+        {
+            ApplyDiffRecursive(root, byName, systemManagers);
+        }
+    }
+
+    private static void ApplyDiffRecursive(
         GraphicalUiElement element,
         Dictionary<string, ElementSave> byName,
-        ref int reappliedCount,
-        ref int visitedCount)
+        ISystemManagers systemManagers)
     {
-        visitedCount++;
-
-        var name = element.ElementSave?.Name;
+        string? name = element.ElementSave?.Name;
         HashSet<string>? designTimeChildNames = null;
 
-        if (name != null && byName.TryGetValue(name, out var newEs))
+        if (name != null && byName.TryGetValue(name, out ElementSave? newEs))
         {
-            // Re-point so the visual references the live project's ElementSave.
             element.ElementSave = newEs;
+
+            DiffDesignTimeChildren(element, newEs, systemManagers);
 
             if (newEs.DefaultState != null)
             {
                 element.SetVariablesRecursively(newEs, newEs.DefaultState);
-                reappliedCount++;
-                System.Diagnostics.Debug.WriteLine(
-                    $"[HotReload]   reapplied '{name}' on visual name={element.Name ?? "<null>"}");
             }
 
-            // After re-applying, do not re-enter design-time instance children — their values are
-            // owned by the parent's qualified-name variables we just set. Only descend into
-            // runtime-added children to find further matches.
             if (newEs.Instances != null)
             {
                 designTimeChildNames = new HashSet<string>(
@@ -329,7 +329,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             }
         }
 
-        foreach (var child in element.Children.ToList())
+        foreach (GraphicalUiElement child in element.Children.ToList())
         {
             if (designTimeChildNames != null
                 && child.Name != null
@@ -337,7 +337,195 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 continue;
             }
-            ReapplyRecursively(child, byName, ref reappliedCount, ref visitedCount);
+            ApplyDiffRecursive(child, byName, systemManagers);
+        }
+    }
+
+    /// <summary>
+    /// Brings <paramref name="parent"/>'s design-time children (those tagged with an
+    /// <see cref="InstanceSave"/>) into structural alignment with <paramref name="newEs"/>'s
+    /// <c>Instances</c> list: removes missing instances, creates added ones, replaces visuals
+    /// whose <c>BaseType</c> changed, and reorders the design-time slice to match the new
+    /// order. Runtime-added children (no <c>InstanceSave</c> tag) are left in place.
+    /// </summary>
+    private static void DiffDesignTimeChildren(
+        GraphicalUiElement parent,
+        ElementSave newEs,
+        ISystemManagers systemManagers)
+    {
+        // Two lookup tables: one for design-time children (Tag is InstanceSave) so we can do
+        // typed operations like retype/remove, and one keyed by Name across ALL children so
+        // we don't duplicate a runtime-claimed child (e.g. one whose Tag was nulled by user
+        // code — the documented limitation in issue #2848).
+        Dictionary<string, GraphicalUiElement> designTimeByName =
+            new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, GraphicalUiElement> anyByName =
+            new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
+        foreach (GraphicalUiElement child in parent.Children.ToList())
+        {
+            if (child.Tag is InstanceSave existingInstance && existingInstance.Name != null)
+            {
+                designTimeByName[existingInstance.Name] = child;
+            }
+            if (child.Name != null && !anyByName.ContainsKey(child.Name))
+            {
+                anyByName[child.Name] = child;
+            }
+        }
+
+        List<InstanceSave> newInstances = newEs.Instances ?? new List<InstanceSave>();
+        HashSet<string> newNames = new HashSet<string>(
+            newInstances.Where(i => i.Name != null).Select(i => i.Name!),
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (KeyValuePair<string, GraphicalUiElement> kvp in designTimeByName.ToList())
+        {
+            if (!newNames.Contains(kvp.Key))
+            {
+                DetachAndRemove(kvp.Value);
+                designTimeByName.Remove(kvp.Key);
+                anyByName.Remove(kvp.Key);
+            }
+        }
+
+        foreach (InstanceSave newInstance in newInstances)
+        {
+            if (newInstance.Name == null)
+            {
+                continue;
+            }
+
+            if (designTimeByName.TryGetValue(newInstance.Name, out GraphicalUiElement? existingChild))
+            {
+                // The existing visual's ElementSave reflects what it was actually built from;
+                // comparing the new BaseType against that catches retypes regardless of whether
+                // the caller passed a fresh project or mutated the existing one in place.
+                string? existingBaseTypeName = existingChild.ElementSave?.Name;
+                if (!string.Equals(existingBaseTypeName, newInstance.BaseType, StringComparison.Ordinal))
+                {
+                    DetachAndRemove(existingChild);
+                    designTimeByName.Remove(newInstance.Name);
+                    anyByName.Remove(newInstance.Name);
+                    GraphicalUiElement? created = CreateAndAttach(parent, newInstance, systemManagers);
+                    if (created != null)
+                    {
+                        designTimeByName[newInstance.Name] = created;
+                        anyByName[newInstance.Name] = created;
+                    }
+                }
+                else
+                {
+                    existingChild.Tag = newInstance;
+                }
+            }
+            else if (anyByName.ContainsKey(newInstance.Name))
+            {
+                // A non-design-time child already owns this name. User code is in control of
+                // that visual (or its Tag was nulled). Don't create a duplicate — the parent's
+                // qualified-name variable application will still hit it by Name during the
+                // subsequent SetVariablesRecursively call.
+                continue;
+            }
+            else
+            {
+                GraphicalUiElement? created = CreateAndAttach(parent, newInstance, systemManagers);
+                if (created != null)
+                {
+                    designTimeByName[newInstance.Name] = created;
+                    anyByName[newInstance.Name] = created;
+                }
+            }
+        }
+
+        ReorderDesignTimeChildren(parent, newInstances);
+    }
+
+    private static void DetachAndRemove(GraphicalUiElement child)
+    {
+        child.Parent = null;
+        child.RemoveFromManagers();
+    }
+
+    private static GraphicalUiElement? CreateAndAttach(
+        GraphicalUiElement parent,
+        InstanceSave newInstance,
+        ISystemManagers systemManagers)
+    {
+        GraphicalUiElement? newChild = newInstance.ToGraphicalUiElement(systemManagers);
+        if (newChild == null)
+        {
+            return null;
+        }
+
+        newChild.Parent = parent;
+        newChild.ElementGueContainingThis = parent;
+        return newChild;
+    }
+
+    /// <summary>
+    /// Reorders the design-time children of <paramref name="parent"/> so that they appear in the
+    /// same relative order as <paramref name="newInstances"/>. Runtime-added children keep their
+    /// existing slots — only the positions occupied by design-time children are reshuffled.
+    /// </summary>
+    private static void ReorderDesignTimeChildren(
+        GraphicalUiElement parent,
+        IList<InstanceSave> newInstances)
+    {
+        ObservableCollection<GraphicalUiElement> children = parent.Children;
+        if (children.Count == 0)
+        {
+            return;
+        }
+
+        List<int> designTimeSlots = new List<int>();
+        for (int i = 0; i < children.Count; i++)
+        {
+            if (children[i].Tag is InstanceSave)
+            {
+                designTimeSlots.Add(i);
+            }
+        }
+
+        if (designTimeSlots.Count == 0)
+        {
+            return;
+        }
+
+        Dictionary<string, GraphicalUiElement> designTimeByName =
+            new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
+        foreach (int slot in designTimeSlots)
+        {
+            InstanceSave inst = (InstanceSave)children[slot].Tag!;
+            if (inst.Name != null)
+            {
+                designTimeByName[inst.Name] = children[slot];
+            }
+        }
+
+        List<GraphicalUiElement> desired = new List<GraphicalUiElement>();
+        foreach (InstanceSave inst in newInstances)
+        {
+            if (inst.Name != null
+                && designTimeByName.TryGetValue(inst.Name, out GraphicalUiElement? c))
+            {
+                desired.Add(c);
+            }
+        }
+
+        for (int i = 0; i < designTimeSlots.Count && i < desired.Count; i++)
+        {
+            int slot = designTimeSlots[i];
+            GraphicalUiElement want = desired[i];
+            if (children[slot] == want)
+            {
+                continue;
+            }
+            int currentIndex = children.IndexOf(want);
+            if (currentIndex < 0)
+            {
+                continue;
+            }
+            children.Move(currentIndex, slot);
         }
     }
 }
