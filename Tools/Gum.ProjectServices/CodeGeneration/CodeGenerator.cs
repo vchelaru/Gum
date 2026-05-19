@@ -338,45 +338,85 @@ public class CodeGenerator
 
     private void GenerateUsingStatements(CodeGenerationContext context)
     {
+        IReadOnlyList<string> neededUsings = CollectUsingNamespaces(
+            context.Element,
+            context.ElementSettings,
+            context.CodeOutputProjectSettings,
+            context.ResolvedSyntaxVersion);
 
+        foreach (var neededUsing in neededUsings)
+        {
+            context.StringBuilder.AppendLine($"using {neededUsing};");
+        }
+    }
+
+    /// <summary>
+    /// Builds the sorted set of namespaces that <see cref="GenerateUsingStatements"/> emits
+    /// <c>using X;</c> lines for. Includes the runtime-library defaults, the namespaces of any
+    /// non-standard instances, the element's own non-standard BaseType namespace, animation
+    /// namespaces when applicable, and the user-supplied project/element using statements.
+    /// </summary>
+    internal IReadOnlyList<string> CollectUsingNamespaces(
+        ElementSave element,
+        CodeOutputElementSettings? elementSettings,
+        CodeOutputProjectSettings projectSettings,
+        int resolvedSyntaxVersion)
+    {
         // This code is used to automatially add needed using statements:
         // https://github.com/vchelaru/Gum/issues/598
         HashSet<string> neededUsings = new HashSet<string>();
         neededUsings.Add("GumRuntime");
         neededUsings.Add("System.Linq");
 
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame ||
-            context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        if (projectSettings.OutputLibrary == OutputLibrary.MonoGame ||
+            projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
         {
             neededUsings.Add("MonoGameGum");
-            neededUsings.Add(GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false));
+            neededUsings.Add(GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: false));
         }
 
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia)
+        if (projectSettings.OutputLibrary == OutputLibrary.Skia)
         {
             // https://github.com/vchelaru/Gum/issues/895
-            neededUsings.Add(GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: true));
+            neededUsings.Add(GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: true));
         }
 
-        foreach (var instance in context.Element.Instances)
+        foreach (var instance in element.Instances)
         {
-            var gumType = instance.BaseType;
-
             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
 
             if (instanceElement != null && instanceElement is not StandardElementSave)
             {
-                var elementNamespace = GetElementNamespace(instanceElement, context.ElementSettings, context.CodeOutputProjectSettings);
+                var elementNamespace = GetElementNamespace(instanceElement, elementSettings, projectSettings);
 
-                if (!string.IsNullOrEmpty(elementNamespace) && !neededUsings.Contains(elementNamespace))
+                if (!string.IsNullOrEmpty(elementNamespace))
                 {
                     neededUsings.Add(elementNamespace);
                 }
             }
         }
 
+        // The component's own BaseType may resolve to a non-standard element in a different
+        // namespace than any of its instances (or the component may have no instances at all).
+        // Without this, components that inherit from another user-defined component fail to
+        // compile because the base type is unresolved. See: BubbleGumTheme FloatingLabel : Label.
+        if (!string.IsNullOrEmpty(element.BaseType))
+        {
+            var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+
+            if (baseElement != null && baseElement is not StandardElementSave)
+            {
+                var baseNamespace = GetElementNamespace(baseElement, elementSettings, projectSettings);
+
+                if (!string.IsNullOrEmpty(baseNamespace))
+                {
+                    neededUsings.Add(baseNamespace);
+                }
+            }
+        }
+
         // Add using statements for AnimationRuntime and GetAnimation extension method if element has animations
-        if (GetElementAnimationsSave(context.Element) != null)
+        if (GetElementAnimationsSave(element) != null)
         {
             neededUsings.Add("Gum.StateAnimation.Runtime");
             neededUsings.Add("Gum.Wireframe");
@@ -384,9 +424,9 @@ public class CodeGenerator
 
         // The regex's here fix this bug:
         // https://github.com/vchelaru/Gum/issues/242
-        if (!string.IsNullOrWhiteSpace(context.CodeOutputProjectSettings?.CommonUsingStatements))
+        if (!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
         {
-            var originalString = context.CodeOutputProjectSettings.CommonUsingStatements;
+            var originalString = projectSettings.CommonUsingStatements;
 
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
 
@@ -395,9 +435,9 @@ public class CodeGenerator
             AddUsings(splitUsings);
         }
 
-        if (!string.IsNullOrEmpty(context.ElementSettings?.UsingStatements))
+        if (!string.IsNullOrEmpty(elementSettings?.UsingStatements))
         {
-            string originalString = context.ElementSettings!.UsingStatements;
+            string originalString = elementSettings!.UsingStatements;
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
 
             var splitUsings = result.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
@@ -423,11 +463,7 @@ public class CodeGenerator
             }
         }
 
-
-        foreach (var neededUsing in neededUsings.OrderBy(item => item))
-        {
-            context.StringBuilder.AppendLine($"using {neededUsing};");
-        }
+        return neededUsings.OrderBy(item => item).ToList();
     }
 
     #endregion
