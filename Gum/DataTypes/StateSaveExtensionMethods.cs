@@ -145,32 +145,15 @@ public static class StateSaveExtensionMethods
                             }
                         }
 
-                        // Now that we did non-recursive (top level only), then let's do recursive:
-                        if (!wasFound)
-                        {
-                            for (int i = 0; i < stateSave.Variables.Count; i++)
-                            {
-                                var instanceStateVariable = stateSave.Variables[i];
-                                if (instanceStateVariable.SourceObject == sourceObjectName && instanceStateVariable.SetsValue &&
-                                    // check this last since it's the slowest:
-                                    instanceStateVariable.IsState(elementContainingState))
-                                {
-                                    // GetStateSaveRecursively walks the instance type's BaseType
-                                // chain so categories inherited from a base component are found.
-                                var matchingState = instanceType.GetStateSaveRecursively((string)instanceStateVariable.Value);
-
-                                    if (matchingState != null)
-                                    {
-                                        value = matchingState.GetValueRecursive(nameInBase);
-                                        wasFound = value != null;
-                                        if (wasFound)
-                                        {
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        // The non-recursive pass already handled "categorized state sets
+                        // the variable directly." If none did, the right fallback is the
+                        // *instance type's* own default chain (e.g. BigButton → Button),
+                        // NOT matchingState.GetValueRecursive — that would walk the chain
+                        // of whichever element defines the state (often a base of the
+                        // instance type), silently bypassing overrides on the instance
+                        // type itself. The outer fallback at line ~216 already walks
+                        // instanceType.DefaultState via GetBaseElementFromVariable, so we
+                        // intentionally leave wasFound=false here and let that path run.
                     }
                 }
                 else
