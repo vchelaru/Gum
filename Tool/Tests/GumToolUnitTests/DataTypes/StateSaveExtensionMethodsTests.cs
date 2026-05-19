@@ -567,6 +567,339 @@ public class StateSaveExtensionMethodsTests : BaseTestClass
     }
 
     [Fact]
+    public void GetValueRecursive_OnInstance_CategorizedStateInheritedFromBase_ShouldFallBackToDerivedDefaults()
+    {
+        // Repro for the QuestToCompileGum BigButton bug:
+        // - Button defines ButtonCategory.Enabled (no Width override) and DefaultState Width=128.
+        // - BigButton inherits from Button and overrides Width=158 in its DefaultState.
+        // - Screen has BigButtonInstance (BaseType=BigButton) with no Width set, and sets
+        //   BigButtonInstance.ButtonCategoryState = "Enabled".
+        //
+        // The "Enabled" state's ParentContainer is Button (the state is inherited, not
+        // redefined on BigButton). The categorized-instance walk previously called
+        // matchingState.GetValueRecursive("Width"), which walked Button's defaults and
+        // returned 128 — silently bypassing BigButton.DefaultState's override of 158.
+        // The correct fallback chain is the instance type's own defaults (BigButton →
+        // Button), not the state-defining type's defaults.
+
+        ComponentSave button = new() { Name = "ButtonInheritedCat", BaseType = "Container" };
+        StateSave buttonDefault = new() { Name = "Default", ParentContainer = button };
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "Width",
+            Type = "float",
+            Value = 128f,
+            SetsValue = true
+        });
+        button.States.Add(buttonDefault);
+
+        StateSaveCategory buttonCategory = new() { Name = "ButtonCategory" };
+        StateSave enabledState = new() { Name = "Enabled", ParentContainer = button };
+        // Enabled deliberately does NOT set Width.
+        buttonCategory.States.Add(enabledState);
+        button.Categories.Add(buttonCategory);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(button);
+
+        ComponentSave bigButton = new() { Name = "BigButtonInheritedCat", BaseType = "ButtonInheritedCat" };
+        StateSave bigButtonDefault = new() { Name = "Default", ParentContainer = bigButton };
+        bigButtonDefault.Variables.Add(new VariableSave
+        {
+            Name = "Width",
+            Type = "float",
+            Value = 158f,
+            SetsValue = true
+        });
+        bigButton.States.Add(bigButtonDefault);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(bigButton);
+
+        ScreenSave screen = new() { Name = "MyScreenForBigButton" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave bigButtonInstance = new()
+        {
+            Name = "BigButtonInstance",
+            BaseType = "BigButtonInheritedCat",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(bigButtonInstance);
+
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "BigButtonInstance.ButtonCategoryState",
+            Type = "ButtonCategory",
+            Value = "Enabled",
+            SetsValue = true
+        });
+
+        ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
+
+        var value = screenDefault.GetValueRecursive("BigButtonInstance.Width");
+
+        value.ShouldBe(158f,
+            "because the Enabled categorized state does not set Width, so the fallback " +
+            "must walk the instance type's own defaults (BigButton.DefaultState Width=158), " +
+            "not the state-defining type's defaults (Button.DefaultState Width=128).");
+    }
+
+    [Fact]
+    public void GetValueRecursive_OnInstance_CategorizedStateSetsScalar_ShouldWinOverBaseDefaults()
+    {
+        // Scalar analogue of GetVariableListRecursive_OnInstance_ShouldPreferCategorizedStateOverBaseTypeList.
+        // When the categorized state itself sets the variable, that value wins over any
+        // default-chain value. Pins the non-recursive pass at line ~138 of
+        // GetValueRecursive — the path the fix relies on for "state actually sets X."
+
+        ComponentSave button = new() { Name = "ButtonMostSpecificScalar", BaseType = "Container" };
+        StateSave buttonDefault = new() { Name = "Default", ParentContainer = button };
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Type = "float",
+            Value = 128f,
+            SetsValue = true
+        });
+        button.States.Add(buttonDefault);
+
+        StateSaveCategory buttonCategory = new() { Name = "ButtonCategory" };
+        StateSave enabledState = new() { Name = "Enabled", ParentContainer = button };
+        enabledState.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Type = "float",
+            Value = 999f,
+            SetsValue = true
+        });
+        buttonCategory.States.Add(enabledState);
+        button.Categories.Add(buttonCategory);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(button);
+
+        ScreenSave screen = new() { Name = "MyScreenForMostSpecificScalar" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave buttonInstance = new()
+        {
+            Name = "ButtonInstance",
+            BaseType = "ButtonMostSpecificScalar",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(buttonInstance);
+
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "ButtonInstance.ButtonCategoryState",
+            Type = "ButtonCategory",
+            Value = "Enabled",
+            SetsValue = true
+        });
+
+        ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
+
+        var value = screenDefault.GetValueRecursive("ButtonInstance.X");
+
+        value.ShouldBe(999f,
+            "because the Enabled categorized state sets X=999, which is more specific than " +
+            "Button.DefaultState X=128.");
+    }
+
+    [Fact]
+    public void GetValueRecursive_OnInstance_NoCategorizedState_DerivedDefaultShouldWinOverBaseDefault()
+    {
+        // Scalar analogue of GetValueRecursive_OnDefaultState_LocallySetVariableList_ShouldWinOverInherited.
+        // BigButton overrides Button's X in its own DefaultState. With no categorized state
+        // active on the instance, the lookup must walk BigButton.DefaultState → Button.DefaultState
+        // and return BigButton's override. This is the fallback path the BigButton fix depends on.
+
+        ComponentSave button = new() { Name = "ButtonFallbackChain", BaseType = "Container" };
+        StateSave buttonDefault = new() { Name = "Default", ParentContainer = button };
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Type = "float",
+            Value = 128f,
+            SetsValue = true
+        });
+        button.States.Add(buttonDefault);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(button);
+
+        ComponentSave bigButton = new() { Name = "BigButtonFallbackChain", BaseType = "ButtonFallbackChain" };
+        StateSave bigButtonDefault = new() { Name = "Default", ParentContainer = bigButton };
+        bigButtonDefault.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Type = "float",
+            Value = 158f,
+            SetsValue = true
+        });
+        bigButton.States.Add(bigButtonDefault);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(bigButton);
+
+        ScreenSave screen = new() { Name = "MyScreenForFallbackChain" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave bigButtonInstance = new()
+        {
+            Name = "BigButtonInstance",
+            BaseType = "BigButtonFallbackChain",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(bigButtonInstance);
+
+        ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
+
+        var value = screenDefault.GetValueRecursive("BigButtonInstance.X");
+
+        value.ShouldBe(158f,
+            "because BigButton.DefaultState overrides X=158 over Button's X=128, and with no " +
+            "categorized state active the lookup must walk the instance type's own chain.");
+    }
+
+    [Fact]
+    public void GetValueRecursive_OnInstance_CategorizedStateRedefinedAtMultipleLevels_DerivedWins()
+    {
+        // BigButton redefines Button.ButtonCategory.Enabled with its own X value.
+        // GetStateSaveRecursively returns the derived element's match first (it walks
+        // AllStates on the derived element before recursing into BaseType), so the
+        // derived component's state wins. Pins that behavior — a regression would
+        // silently return Button's value through a BigButton instance.
+
+        ComponentSave button = new() { Name = "ButtonRedefinedState", BaseType = "Container" };
+        StateSave buttonDefault = new() { Name = "Default", ParentContainer = button };
+        button.States.Add(buttonDefault);
+
+        StateSaveCategory buttonCategory = new() { Name = "ButtonCategory" };
+        StateSave buttonEnabled = new() { Name = "Enabled", ParentContainer = button };
+        buttonEnabled.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Type = "float",
+            Value = 500f,
+            SetsValue = true
+        });
+        buttonCategory.States.Add(buttonEnabled);
+        button.Categories.Add(buttonCategory);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(button);
+
+        ComponentSave bigButton = new() { Name = "BigButtonRedefinedState", BaseType = "ButtonRedefinedState" };
+        StateSave bigButtonDefault = new() { Name = "Default", ParentContainer = bigButton };
+        bigButton.States.Add(bigButtonDefault);
+
+        StateSaveCategory bigButtonCategory = new() { Name = "ButtonCategory" };
+        StateSave bigButtonEnabled = new() { Name = "Enabled", ParentContainer = bigButton };
+        bigButtonEnabled.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Type = "float",
+            Value = 999f,
+            SetsValue = true
+        });
+        bigButtonCategory.States.Add(bigButtonEnabled);
+        bigButton.Categories.Add(bigButtonCategory);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(bigButton);
+
+        ScreenSave screen = new() { Name = "MyScreenForRedefinedState" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave bigButtonInstance = new()
+        {
+            Name = "BigButtonInstance",
+            BaseType = "BigButtonRedefinedState",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(bigButtonInstance);
+
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "BigButtonInstance.ButtonCategoryState",
+            Type = "ButtonCategory",
+            Value = "Enabled",
+            SetsValue = true
+        });
+
+        ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
+
+        var value = screenDefault.GetValueRecursive("BigButtonInstance.X");
+
+        value.ShouldBe(999f,
+            "because BigButton redefines ButtonCategory.Enabled with X=999, and the derived " +
+            "component's state must win over the base's X=500.");
+    }
+
+    [Fact]
+    public void GetValueRecursive_OnInstance_CategorizedStateInheritedFromBase_FallbackChainContinuesToBaseDefaults()
+    {
+        // Chain-continuation guard for the BigButton fix: when the categorized state is
+        // inherited and doesn't set X, AND BigButton.DefaultState also doesn't set X, the
+        // fallback must continue walking past BigButton to Button.DefaultState X=128.
+        // The earlier test only proves BigButton's override is seen; this proves the chain
+        // doesn't stop at BigButton.
+
+        ComponentSave button = new() { Name = "ButtonChainContinues", BaseType = "Container" };
+        StateSave buttonDefault = new() { Name = "Default", ParentContainer = button };
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Type = "float",
+            Value = 128f,
+            SetsValue = true
+        });
+        button.States.Add(buttonDefault);
+
+        StateSaveCategory buttonCategory = new() { Name = "ButtonCategory" };
+        StateSave enabledState = new() { Name = "Enabled", ParentContainer = button };
+        // Enabled deliberately does NOT set X.
+        buttonCategory.States.Add(enabledState);
+        button.Categories.Add(buttonCategory);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(button);
+
+        // BigButton has no X override and no redefined category state.
+        ComponentSave bigButton = new() { Name = "BigButtonChainContinues", BaseType = "ButtonChainContinues" };
+        StateSave bigButtonDefault = new() { Name = "Default", ParentContainer = bigButton };
+        bigButton.States.Add(bigButtonDefault);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(bigButton);
+
+        ScreenSave screen = new() { Name = "MyScreenForChainContinues" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave bigButtonInstance = new()
+        {
+            Name = "BigButtonInstance",
+            BaseType = "BigButtonChainContinues",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(bigButtonInstance);
+
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "BigButtonInstance.ButtonCategoryState",
+            Type = "ButtonCategory",
+            Value = "Enabled",
+            SetsValue = true
+        });
+
+        ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
+
+        var value = screenDefault.GetValueRecursive("BigButtonInstance.X");
+
+        value.ShouldBe(128f,
+            "because the Enabled state doesn't set X and BigButton has no override, so the " +
+            "fallback chain must continue past BigButton.DefaultState to Button.DefaultState X=128.");
+    }
+
+    [Fact]
     public void GetVariableListRecursive_OnDefaultState_ShouldFindInheritedList()
     {
         // Sanity check for the lower-level helper: confirms the
