@@ -44,18 +44,19 @@ internal class CirclesScreen : FrameworkElement
 
         // Column split mirrors SilkNetGum/Screens/CirclesScreen so visual regressions in one
         // backend are easy to spot against the other.
-        left.AddChild(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
-        left.AddChild(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
-        left.AddChild(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
-        left.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
-        left.AddChild(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
-        left.AddChild(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
+        left.AddChild(BuildSection("Sizes", BuildSizesRow()));
+        left.AddChild(BuildSection("Alpha", BuildAlphaRow()));
+        left.AddChild(BuildSection("Modes", BuildModeRow()));
+        left.AddChild(BuildSection("Stroke width", BuildStrokeWidthRow()));
+        left.AddChild(BuildSection("Alignment", BuildAlignmentRow()));
+        left.AddChild(BuildSection("Gradients", BuildGradientRow()));
 
-        right.AddChild(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
-        right.AddChild(BuildSection("Dropshadow (off / soft / hard offset / colored) — fill-only push avoids doubling (#2797)", BuildDropshadowRow()));
-        right.AddChild(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — stroke-only push (#2796)", BuildDashedStrokeRow()));
-        right.AddChild(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2790)", BuildBothColorsRow()));
-        right.AddChild(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract; mirrors SilkNetGum)", BuildInscribedRow()));
+        right.AddChild(BuildSection("Antialiasing", BuildAntialiasingRow()));
+        right.AddChild(BuildSection("Dropshadow", BuildDropshadowRow()));
+        right.AddChild(BuildSection("Dashed strokes", BuildDashedStrokeRow()));
+        right.AddChild(BuildSection("Fill + stroke", BuildBothColorsRow()));
+        right.AddChild(BuildSection("Inscribed", BuildInscribedRow()));
+        right.AddChild(BuildSection("Non-square aspect", BuildNonSquareRow()));
     }
 
     static ContainerRuntime BuildColumn()
@@ -403,6 +404,39 @@ internal class CirclesScreen : FrameworkElement
             row.AddChild(BuildInscribedCell(strokeWidth));
         }
         return row;
+    }
+
+    // Visual acceptance for #2852 — wide, tall, and square cells sharing the same render code.
+    // The gray frame is the circle's bounding box; the circle inside must use min(W,H) for its
+    // diameter and sit centered. Before the #2852 fix, the wide cell drew a Width/2 circle
+    // overflowing the short axis with the center pushed below the box.
+    static ContainerRuntime BuildNonSquareRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach ((float w, float h) in new[] { (200f, 50f), (50f, 200f), (100f, 100f) })
+        {
+            row.AddChild(BuildNonSquareCell(w, h));
+        }
+        return row;
+    }
+
+    static ColoredRectangleRuntime BuildNonSquareCell(float width, float height)
+    {
+        ColoredRectangleRuntime frame = new();
+        frame.Width = width;
+        frame.Height = height;
+        frame.Color = new Color(60, 60, 80);
+
+        CircleRuntime circle = new();
+        circle.Width = width;
+        circle.Height = height;
+        circle.WidthUnits = DimensionUnitType.Absolute;
+        circle.HeightUnits = DimensionUnitType.Absolute;
+        circle.FillColor = Color.SeaGreen;
+        circle.StrokeColor = Color.Yellow;
+        circle.StrokeWidth = 1;
+        frame.Children.Add(circle);
+        return frame;
     }
 
     static ColoredRectangleRuntime BuildInscribedCell(float strokeWidth)

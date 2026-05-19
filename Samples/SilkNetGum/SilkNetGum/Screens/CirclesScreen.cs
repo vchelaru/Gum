@@ -39,18 +39,19 @@ internal class CirclesScreen : GraphicalUiElement
         root.Children.Add(left);
         root.Children.Add(right);
 
-        left.Children.Add(BuildSection("Sizes (radius 16, 24, 32, 48) — default outline", BuildSizesRow()));
-        left.Children.Add(BuildSection("Alpha on StrokeColor (255, 192, 128, 64)", BuildAlphaRow()));
-        left.Children.Add(BuildSection("Modes: FillColor, StrokeColor, default", BuildModeRow()));
-        left.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px)", BuildStrokeWidthRow()));
-        left.Children.Add(BuildSection("Alignment inside a 128x100 frame (Top / Center / Bottom)", BuildAlignmentRow()));
-        left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
+        left.Children.Add(BuildSection("Sizes", BuildSizesRow()));
+        left.Children.Add(BuildSection("Alpha", BuildAlphaRow()));
+        left.Children.Add(BuildSection("Modes", BuildModeRow()));
+        left.Children.Add(BuildSection("Stroke width", BuildStrokeWidthRow()));
+        left.Children.Add(BuildSection("Alignment", BuildAlignmentRow()));
+        left.Children.Add(BuildSection("Gradients", BuildGradientRow()));
 
-        right.Children.Add(BuildSection("Antialiasing (default ON, then OFF) — 1 px stroke makes the bloom obvious (#2798)", BuildAntialiasingRow()));
-        right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — Skia draws the shadow on the single contained renderable (#2797)", BuildDropshadowRow()));
-        right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — Skia routes through SkiaShapeRuntime.StrokeDashLength (#2796)", BuildDashedStrokeRow()));
-        right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2790)", BuildBothColorsRow()));
-        right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2790 visual contract)", BuildInscribedRow()));
+        right.Children.Add(BuildSection("Antialiasing", BuildAntialiasingRow()));
+        right.Children.Add(BuildSection("Dropshadow", BuildDropshadowRow()));
+        right.Children.Add(BuildSection("Dashed strokes", BuildDashedStrokeRow()));
+        right.Children.Add(BuildSection("Fill + stroke", BuildBothColorsRow()));
+        right.Children.Add(BuildSection("Inscribed", BuildInscribedRow()));
+        right.Children.Add(BuildSection("Non-square aspect", BuildNonSquareRow()));
     }
 
     static ContainerRuntime BuildColumn()
@@ -250,6 +251,39 @@ internal class CirclesScreen : GraphicalUiElement
             row.Children.Add(BuildInscribedCell(strokeWidth));
         }
         return row;
+    }
+
+    // Visual acceptance for #2852 — wide, tall, and square cells sharing the same render code.
+    // Skia already exhibited the canonical behavior (radius = min(W,H)/2, centered); this row
+    // pairs with the matching row in MonoGameGumShapesGallery so the two backends can be
+    // compared side-by-side after the Apos.Shapes fix.
+    static ContainerRuntime BuildNonSquareRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach ((float w, float h) in new[] { (200f, 50f), (50f, 200f), (100f, 100f) })
+        {
+            row.Children.Add(BuildNonSquareCell(w, h));
+        }
+        return row;
+    }
+
+    static RectangleRuntime BuildNonSquareCell(float width, float height)
+    {
+        RectangleRuntime frame = new();
+        frame.Width = width;
+        frame.Height = height;
+        frame.FillColor = new SKColor(60, 60, 80);
+
+        CircleRuntime circle = new();
+        circle.Width = width;
+        circle.Height = height;
+        circle.WidthUnits = DimensionUnitType.Absolute;
+        circle.HeightUnits = DimensionUnitType.Absolute;
+        circle.FillColor = SKColors.SeaGreen;
+        circle.StrokeColor = SKColors.Yellow;
+        circle.StrokeWidth = 1;
+        frame.Children.Add(circle);
+        return frame;
     }
 
     static RectangleRuntime BuildInscribedCell(float strokeWidth)
