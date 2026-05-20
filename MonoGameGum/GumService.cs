@@ -90,6 +90,11 @@ public class GumService
     private IGumHotReloadManager? _hotReloadManager;
 #endif
 
+#if XNALIKE
+    private int? _zoomReferenceWidth;
+    private int? _zoomReferenceHeight;
+#endif
+
     /// <summary>
     /// Gets or sets the width of the canvas, which acts as the root-most coordiante space. This value
     /// represents the "internal coordinates" which can be adjusted by Camera zoom.
@@ -109,6 +114,83 @@ public class GumService
         get => GraphicalUiElement.CanvasHeight;
         set => GraphicalUiElement.CanvasHeight = value;
     }
+
+#if XNALIKE
+    /// <summary>
+    /// Zooms the camera so the Gum canvas scales with the current window size, using the
+    /// window dimensions at the first call as the 1:1 reference. Call this once at startup
+    /// and again from your window-resize handler (e.g. <c>Game.Window.ClientSizeChanged</c>).
+    /// </summary>
+    /// <param name="mode">
+    /// Whether window height or window width drives the zoom factor. The dominant axis
+    /// fully fills the window; the other axis gets extra space or is cropped depending on
+    /// the window's aspect ratio relative to the reference. Defaults to height-dominant.
+    /// </param>
+    /// <param name="defaultZoom">
+    /// A multiplier applied on top of the computed zoom — i.e., the zoom factor at the
+    /// reference resolution. Pass <c>2f</c> to make everything render at 2× the authored
+    /// size at the reference resolution, scaling proportionally as the window resizes.
+    /// </param>
+    /// <remarks>
+    /// The reference resolution is captured on the first call and persists for the
+    /// lifetime of this <see cref="GumService"/> instance. Pair with
+    /// <see cref="ExpandToWindow(float)"/> when you want the canvas to grow with the
+    /// window instead of zooming.
+    /// </remarks>
+    public void ZoomToWindow(WindowZoomMode mode = WindowZoomMode.HeightDominant, float defaultZoom = 1f)
+    {
+        var pp = Game.GraphicsDevice.PresentationParameters;
+        ZoomToWindow(pp.BackBufferWidth, pp.BackBufferHeight, mode, defaultZoom);
+    }
+
+    internal void ZoomToWindow(int windowWidth, int windowHeight, WindowZoomMode mode, float defaultZoom)
+    {
+        _zoomReferenceWidth ??= windowWidth;
+        _zoomReferenceHeight ??= windowHeight;
+
+        var (zoom, canvasWidth, canvasHeight) = WindowFitMath.ComputeZoom(
+            windowWidth, windowHeight,
+            _zoomReferenceWidth.Value, _zoomReferenceHeight.Value,
+            mode, defaultZoom);
+
+        SystemManagers.Renderer.Camera.Zoom = zoom;
+        CanvasWidth = canvasWidth;
+        CanvasHeight = canvasHeight;
+        Root.UpdateLayout();
+    }
+
+    /// <summary>
+    /// Resizes the Gum canvas to match the current window size so authored UI gets more
+    /// (or less) space rather than scaling. Call this once at startup and again from your
+    /// window-resize handler (e.g. <c>Game.Window.ClientSizeChanged</c>).
+    /// </summary>
+    /// <param name="defaultZoom">
+    /// A camera zoom multiplier. With <c>1f</c> the canvas matches the window pixel-for-pixel.
+    /// With <c>2f</c> the camera zooms in 2× and the canvas covers half as many internal
+    /// coordinate units — useful for authoring at a smaller virtual resolution while still
+    /// filling the window.
+    /// </param>
+    /// <remarks>
+    /// Pair with <see cref="ZoomToWindow(WindowZoomMode, float)"/> when you want UI to
+    /// scale with the window instead of expanding into the new space.
+    /// </remarks>
+    public void ExpandToWindow(float defaultZoom = 1f)
+    {
+        var pp = Game.GraphicsDevice.PresentationParameters;
+        ExpandToWindow(pp.BackBufferWidth, pp.BackBufferHeight, defaultZoom);
+    }
+
+    internal void ExpandToWindow(int windowWidth, int windowHeight, float defaultZoom)
+    {
+        var (zoom, canvasWidth, canvasHeight) = WindowFitMath.ComputeExpand(
+            windowWidth, windowHeight, defaultZoom);
+
+        SystemManagers.Renderer.Camera.Zoom = zoom;
+        CanvasWidth = canvasWidth;
+        CanvasHeight = canvasHeight;
+        Root.UpdateLayout();
+    }
+#endif
 
     public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
 
@@ -801,6 +883,11 @@ public class GumService
 
         GraphicalUiElement.CanvasWidth = 0;
         GraphicalUiElement.CanvasHeight = 0;
+
+#if XNALIKE
+        _zoomReferenceWidth = null;
+        _zoomReferenceHeight = null;
+#endif
 
         SystemManagers.Default = null;
         ISystemManagers.Default = null;

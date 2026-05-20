@@ -81,6 +81,26 @@ By default resizing your Game does not adjust Gum. The following animation shows
 
 <figure><img src="../../.gitbook/assets/20_06 44 11.gif" alt=""><figcaption></figcaption></figure>
 
+## One-Line Resize Helpers
+
+`GumService` provides two convenience methods that wrap the most common resize patterns. Call each one once at startup and again from your `Window.ClientSizeChanged` handler:
+
+```csharp
+// Expand: canvas grows to match the window. Authored UI gets more (or less) space.
+GumUi.ExpandToWindow();
+
+// Zoom: canvas stays the same size but everything is scaled up/down so the window
+// always shows the same content. The window size at the first call is treated as the
+// 1:1 reference; resizing zooms proportionally.
+GumUi.ZoomToWindow();
+```
+
+Both methods accept an optional `defaultZoom` parameter — a multiplier applied at the reference resolution. Passing `defaultZoom: 2f` to `ZoomToWindow` makes everything render at 2× the authored size at the reference resolution and scales proportionally as the window resizes.
+
+`ZoomToWindow` also accepts a `WindowZoomMode` enum. The default is `HeightDominant` (window height drives the zoom factor); pass `WindowZoomMode.WidthDominant` if window width should drive zoom instead.
+
+The remainder of this page describes the manual equivalents these helpers replace.
+
 ## Handling Resizing with No Zoom
 
 This section discusses how react to the window resizing by adjusting the canvas sizes and performing a layout. The Screen contains a Container which is sized to the entire screen with a small border around the edges. The Container has a ColoredRectangle which fills the entire Container. Each Text object is docked as indicated by its displayed string.
