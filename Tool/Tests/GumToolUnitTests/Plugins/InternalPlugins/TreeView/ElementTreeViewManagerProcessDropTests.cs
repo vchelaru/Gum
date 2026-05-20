@@ -72,6 +72,39 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
     }
 
     [Fact]
+    public void ProcessDrop_IntoInstanceSave_ReturnsParentContainerInstancesCount_SoCallerAppends()
+    {
+        // Issue #2864 follow-up: dropping a Container onto another Container
+        // (target Tag is an InstanceSave) landed the new instance in the
+        // middle of MainScreen.Instances. The destination flat list is the
+        // ParentContainer's Instances; the index for an "into this instance"
+        // drop must be that list's count so callers append and the new visual
+        // renders on top.
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "MainScreen";
+        InstanceSave leftContainer = new InstanceSave { Name = "LeftContainer", ParentContainer = screen };
+        screen.Instances.Add(leftContainer);
+        for (int i = 0; i < 14; i++)
+        {
+            screen.Instances.Add(new InstanceSave { Name = $"Other{i}", ParentContainer = screen });
+        }
+
+        TreeNode target = new TreeNode { Tag = leftContainer };
+        // Simulate that LeftContainer has 4 children visible in the tree view —
+        // this is what GetNodeCount(false) would have returned in the buggy path.
+        target.Nodes.Add("Child1");
+        target.Nodes.Add("Child2");
+        target.Nodes.Add("Child3");
+        target.Nodes.Add("Child4");
+
+        var result = ElementTreeViewManager.ProcessDrop(target, MultiSelectTreeView.DropKind.Into);
+
+        result.ShouldNotBeNull();
+        result.Value.target.ShouldBe(target);
+        result.Value.index.ShouldBe(screen.Instances.Count);
+    }
+
+    [Fact]
     public void ProcessDrop_BeforeSibling_ReturnsSiblingIndexOnParent()
     {
         TreeNode parent = new TreeNode();

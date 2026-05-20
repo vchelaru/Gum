@@ -785,18 +785,28 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
         // Issue #2864: a drop whose visual adornment is "rectangle around the
         // row" (Into and IntoFirst both draw the same box) must append to the
-        // target's children — never insert at a stale tree-child index that
-        // disagrees with the Instances list, and never silently insert at 0
-        // (which puts the new visual behind existing siblings). The user-facing
-        // distinction is "box vs. line": box = append, line = insert at
-        // sibling position. Inserting at index 0 is still reachable as
-        // DropKind.Before on the parent's first child, which draws a line.
+        // flat Instances list the new visual will be added to — never insert
+        // at a stale tree-child index. The user-facing distinction is
+        // "box vs. line": box = append, line = insert at sibling position.
+        // Inserting at index 0 is still reachable as DropKind.Before on the
+        // parent's first child, which draws a line.
+        //
+        // For an InstanceSave-tagged target (dropping onto another instance to
+        // parent under it), the destination list is the ParentContainer's
+        // Instances — NOT the target's tree children, which only represent the
+        // subset already parented under it. Without this, dropping a Container
+        // onto another Container lands the new instance partway through the
+        // screen's flat Instances list, behind later siblings.
         int? index = kind switch
         {
             MultiSelectTreeView.DropKind.Into or MultiSelectTreeView.DropKind.IntoFirst =>
-                originalTarget.Tag is ElementSave element
-                    ? element.Instances.Count
-                    : originalTarget.GetNodeCount(false),
+                originalTarget.Tag switch
+                {
+                    ElementSave element => element.Instances.Count,
+                    InstanceSave instance when instance.ParentContainer != null
+                        => instance.ParentContainer.Instances.Count,
+                    _ => originalTarget.GetNodeCount(false)
+                },
             MultiSelectTreeView.DropKind.After => originalTarget.Index + 1,
             MultiSelectTreeView.DropKind.Before => originalTarget.Index,
             _ => null
