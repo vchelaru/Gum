@@ -55,6 +55,11 @@ public class AlignmentViewModel : ViewModel
         DockMarginText = "0";
     }
 
+    // When DockMargin is 0, the expression `NormalizeNegativeZero(-DockMargin * 2)` evaluates to IEEE 754
+    // negative zero, which serializes as "-0" in the project file. Route every
+    // dock-size computation through this helper so future handlers can't reintroduce it.
+    internal static float NormalizeNegativeZero(float value) => value == 0f ? 0f : value;
+
     #region Anchor Actions
 
     public void TopLeftButton_Click()
@@ -246,7 +251,7 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop, DockMargin);
 
-            _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("Width", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
 
 
@@ -277,7 +282,7 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft, DockMargin);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-            _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("Height", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
 
             _commonControlLogic.RefreshAndSave();
@@ -294,10 +299,10 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-            _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("Width", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
 
-            _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("Height", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
 
             _commonControlLogic.RefreshAndSave();
@@ -314,7 +319,7 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight, -DockMargin);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-            _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("Height", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
 
             _commonControlLogic.RefreshAndSave();
@@ -330,7 +335,7 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom, -DockMargin);
 
-            _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("Width", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
 
             _commonControlLogic.RefreshAndSave();
@@ -346,7 +351,7 @@ public class AlignmentViewModel : ViewModel
 
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-            _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("Height", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
 
             _commonControlLogic.RefreshAndSave();
@@ -362,7 +367,7 @@ public class AlignmentViewModel : ViewModel
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
 
-            _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("Width", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
 
             _commonControlLogic.RefreshAndSave();
