@@ -31,6 +31,7 @@ namespace MonoGameGum;
 using Gum.GueDeriving;
 using Gum.Input;
 using GameTime = double;
+using Raylib_cs;
 using RaylibGum.Renderables;
 namespace RaylibGum;
 #endif
@@ -90,10 +91,8 @@ public class GumService
     private IGumHotReloadManager? _hotReloadManager;
 #endif
 
-#if XNALIKE
     private int? _zoomReferenceWidth;
     private int? _zoomReferenceHeight;
-#endif
 
     /// <summary>
     /// Gets or sets the width of the canvas, which acts as the root-most coordiante space. This value
@@ -115,11 +114,11 @@ public class GumService
         set => GraphicalUiElement.CanvasHeight = value;
     }
 
-#if XNALIKE
     /// <summary>
     /// Zooms the camera so the Gum canvas scales with the current window size, using the
     /// window dimensions at the first call as the 1:1 reference. Call this once at startup
-    /// and again from your window-resize handler (e.g. <c>Game.Window.ClientSizeChanged</c>).
+    /// and again from your platform's window-resize event (e.g. MonoGame's
+    /// <c>Game.Window.ClientSizeChanged</c> or after raylib's <c>IsWindowResized()</c>).
     /// </summary>
     /// <param name="mode">
     /// Whether window height or window width drives the zoom factor. The dominant axis
@@ -139,8 +138,8 @@ public class GumService
     /// </remarks>
     public void ZoomToWindow(WindowZoomMode mode = WindowZoomMode.HeightDominant, float defaultZoom = 1f)
     {
-        var pp = Game.GraphicsDevice.PresentationParameters;
-        ZoomToWindow(pp.BackBufferWidth, pp.BackBufferHeight, mode, defaultZoom);
+        var (windowWidth, windowHeight) = GetWindowSize();
+        ZoomToWindow(windowWidth, windowHeight, mode, defaultZoom);
     }
 
     internal void ZoomToWindow(int windowWidth, int windowHeight, WindowZoomMode mode, float defaultZoom)
@@ -176,8 +175,8 @@ public class GumService
     /// </remarks>
     public void ExpandToWindow(float defaultZoom = 1f)
     {
-        var pp = Game.GraphicsDevice.PresentationParameters;
-        ExpandToWindow(pp.BackBufferWidth, pp.BackBufferHeight, defaultZoom);
+        var (windowWidth, windowHeight) = GetWindowSize();
+        ExpandToWindow(windowWidth, windowHeight, defaultZoom);
     }
 
     internal void ExpandToWindow(int windowWidth, int windowHeight, float defaultZoom)
@@ -190,7 +189,16 @@ public class GumService
         CanvasHeight = canvasHeight;
         Root.UpdateLayout();
     }
+
+    private (int width, int height) GetWindowSize()
+    {
+#if XNALIKE
+        var pp = Game.GraphicsDevice.PresentationParameters;
+        return (pp.BackBufferWidth, pp.BackBufferHeight);
+#elif RAYLIB
+        return (Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
 #endif
+    }
 
     public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
 
@@ -884,10 +892,8 @@ public class GumService
         GraphicalUiElement.CanvasWidth = 0;
         GraphicalUiElement.CanvasHeight = 0;
 
-#if XNALIKE
         _zoomReferenceWidth = null;
         _zoomReferenceHeight = null;
-#endif
 
         SystemManagers.Default = null;
         ISystemManagers.Default = null;

@@ -83,7 +83,7 @@ By default resizing your Game does not adjust Gum. The following animation shows
 
 ## One-Line Resize Helpers
 
-`GumService` provides two convenience methods that wrap the most common resize patterns. Call each one once at startup and again from your `Window.ClientSizeChanged` handler:
+`GumService` provides two convenience methods that wrap the most common resize patterns. Call each one once at startup and again from your platform's window-resize event — MonoGame's `Window.ClientSizeChanged`, or whenever `Raylib.IsWindowResized()` returns `true` in your raylib game loop:
 
 ```csharp
 // Expand: canvas grows to match the window. Authored UI gets more (or less) space.
