@@ -97,6 +97,112 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void OnNodeSortingDropped_BeforeSibling_MultipleInstances_AscendingSortPreservesSourceOrder()
+    {
+        // Issue #2869 pin: BeforeSibling anchors at a sibling whose flat-list
+        // index shifts down every time an earlier item is inserted before it.
+        // Processing items in DESCENDING source-index order (the natural
+        // "stack at a fixed position" sort) would invert drag order — the
+        // higher-source-index item lands at the original anchor, then the
+        // lower-source-index item lands in front of it. ASCENDING order is
+        // required to preserve drag order. This test guards against a
+        // "simplify OnNodeSortingDropped to always-descending" regression.
+        //
+        // Scenario: [A, B, C, D, E]; drag B(src=1) and D(src=3); drop BeforeSibling(A).
+        // Ascending: B → [B, A, C, D, E]; D → [B, D, A, C, E]. B at 0, D at 1.
+        // Descending: D → [D, A, B, C, E]; B → [D, B, A, C, E]. D at 0, B at 1. WRONG.
+        ComponentSave element = new ComponentSave();
+        element.States.Add(new StateSave());
+
+        InstanceSave instanceA = new InstanceSave { Name = "A", ParentContainer = element };
+        InstanceSave instanceB = new InstanceSave { Name = "B", ParentContainer = element };
+        InstanceSave instanceC = new InstanceSave { Name = "C", ParentContainer = element };
+        InstanceSave instanceD = new InstanceSave { Name = "D", ParentContainer = element };
+        InstanceSave instanceE = new InstanceSave { Name = "E", ParentContainer = element };
+        element.Instances.Add(instanceA);
+        element.Instances.Add(instanceB);
+        element.Instances.Add(instanceC);
+        element.Instances.Add(instanceD);
+        element.Instances.Add(instanceE);
+
+        // Arrival order is intentionally NOT source order — sort direction
+        // must be derived from source index, not arrival order.
+        Mock<ITreeNode> nodeDraggedD = new Mock<ITreeNode>();
+        nodeDraggedD.Setup(x => x.Tag).Returns(instanceD);
+        Mock<ITreeNode> nodeDraggedB = new Mock<ITreeNode>();
+        nodeDraggedB.Setup(x => x.Tag).Returns(instanceB);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(element);
+
+        List<ITreeNode> draggedNodes = new() { nodeDraggedD.Object, nodeDraggedB.Object };
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        DropTarget dropTarget = new DropTarget(element, null, new DropPosition.BeforeSibling(instanceA));
+
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
+
+        element.Instances.IndexOf(instanceB).ShouldBe(0,
+            "B (lower source index) must precede D in the result — ascending sort is required for BeforeSibling.");
+        element.Instances.IndexOf(instanceD).ShouldBe(1);
+    }
+
+    [Fact]
+    public void OnNodeSortingDropped_AfterSibling_MultipleInstances_DescendingSortPreservesSourceOrder()
+    {
+        // Issue #2869 pin: AfterSibling anchors at a sibling whose flat-list
+        // index does NOT shift when a later item is inserted after it.
+        // Processing items in DESCENDING source-index order preserves drag
+        // order — each item stacks at IndexOf(sibling)+1, and the second
+        // item displaces the first one further down the list. ASCENDING
+        // would invert drag order. This test guards against a "simplify
+        // OnNodeSortingDropped to always-ascending" regression.
+        //
+        // Scenario: [A, B, C, D, E]; drag B(src=1) and D(src=3); drop AfterSibling(C).
+        // Descending: D → [A, B, C, D, E]; B → [A, C, B, D, E]. B at 2, D at 3.
+        // Ascending: B → [A, C, B, D, E]; D → [A, C, D, B, E]. D at 2, B at 3. WRONG.
+        ComponentSave element = new ComponentSave();
+        element.States.Add(new StateSave());
+
+        InstanceSave instanceA = new InstanceSave { Name = "A", ParentContainer = element };
+        InstanceSave instanceB = new InstanceSave { Name = "B", ParentContainer = element };
+        InstanceSave instanceC = new InstanceSave { Name = "C", ParentContainer = element };
+        InstanceSave instanceD = new InstanceSave { Name = "D", ParentContainer = element };
+        InstanceSave instanceE = new InstanceSave { Name = "E", ParentContainer = element };
+        element.Instances.Add(instanceA);
+        element.Instances.Add(instanceB);
+        element.Instances.Add(instanceC);
+        element.Instances.Add(instanceD);
+        element.Instances.Add(instanceE);
+
+        Mock<ITreeNode> nodeDraggedD = new Mock<ITreeNode>();
+        nodeDraggedD.Setup(x => x.Tag).Returns(instanceD);
+        Mock<ITreeNode> nodeDraggedB = new Mock<ITreeNode>();
+        nodeDraggedB.Setup(x => x.Tag).Returns(instanceB);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(element);
+
+        // Arrival order is intentionally NOT source order.
+        List<ITreeNode> draggedNodes = new() { nodeDraggedB.Object, nodeDraggedD.Object };
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        DropTarget dropTarget = new DropTarget(element, null, new DropPosition.AfterSibling(instanceC));
+
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
+
+        element.Instances.IndexOf(instanceB).ShouldBe(2,
+            "B (lower source index) must precede D in the result — descending sort is required for AfterSibling.");
+        element.Instances.IndexOf(instanceD).ShouldBe(3);
+    }
+
+    [Fact]
     public void OnNodeSortingDropped_MultipleInstances_PreservesRelativeOrder_WhenDroppedAtBeginning()
     {
         // Arrange
