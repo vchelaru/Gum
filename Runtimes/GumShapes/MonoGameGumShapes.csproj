@@ -52,19 +52,27 @@
 	</ItemGroup>
 
 	<!--
-		ProjectReference consumers (developers building against Gum source) do not get our
-		buildTransitive/.props, so they do not get a platform-conditional Content XNB.
-		Ship the DesktopGL XNB unconditionally so the common local-dev scenario just works.
-		Pack="false" keeps this Content item out of the .nupkg — NuGet consumers already get
-		platform-correct XNBs via buildTransitive/Gum.Shapes.MonoGame.props. WindowsDX
-		ProjectReference users should override by adding their own Content item targeting
-		buildTransitive/MonoGame/Content/WindowsDX/apos-shapes.xnb to their consuming csproj.
+		DesktopGL XNB: SINGLE item that does BOTH jobs.
+		- ProjectReference consumers get it copied to their output via CopyToOutputDirectory
+		  (they do not see our buildTransitive/.props, so they need the unconditional copy).
+		- NuGet consumers get it packed into the .nupkg under buildTransitive/MonoGame/Content/DesktopGL/
+		  where buildTransitive/Gum.Shapes.MonoGame.props references it platform-conditionally.
+
+		DO NOT add a separate <None Include="...DesktopGL\apos-shapes.xnb" Pack="true"> item alongside
+		this. When the same file path appears as both <Content> and <None>, NuGet pack honors one
+		entry's Pack metadata and the file silently drops out of the package. That regression already
+		shipped once — Gum.Shapes.MonoGame 2026.5.20.1-preview.3 (issue #2873). The post-pack
+		VerifyShapesNupkg target below exists so it cannot ship again.
+
+		WindowsDX ProjectReference users still need to override locally — the WindowsDX XNB is
+		packed for NuGet consumers only (see the <None> entry further down).
 	-->
 	<ItemGroup>
 		<Content Include="buildTransitive\MonoGame\Content\DesktopGL\apos-shapes.xnb"
 		         Link="Content\apos-shapes.xnb"
 		         CopyToOutputDirectory="PreserveNewest"
-		         Pack="false" />
+		         Pack="true"
+		         PackagePath="buildTransitive\MonoGame\Content\DesktopGL\" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -88,8 +96,57 @@
 
 	<ItemGroup>
 		<None Include="buildTransitive\Gum.Shapes.MonoGame.props" Pack="true" PackagePath="buildTransitive\" />
-		<None Include="buildTransitive\MonoGame\Content\DesktopGL\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\MonoGame\Content\DesktopGL\" />
+		<!-- DesktopGL XNB is packed via the single <Content> item above, not here. See the long comment up top. -->
 		<None Include="buildTransitive\MonoGame\Content\WindowsDX\apos-shapes.xnb" Pack="true" PackagePath="buildTransitive\MonoGame\Content\WindowsDX\" />
 	</ItemGroup>
+
+	<!--
+		Post-pack regression guard. Opens the produced .nupkg and asserts that each expected
+		entry is present. Fails the build if any is missing. Exists because
+		Gum.Shapes.MonoGame 2026.5.20.1-preview.3 shipped without the DesktopGL XNB (issue #2873)
+		due to a silent <Content>/<None> identity collision. If this target fails, do NOT publish.
+	-->
+	<UsingTask TaskName="VerifyShapesNupkgEntries"
+	           TaskFactory="RoslynCodeTaskFactory"
+	           AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<NupkgPath ParameterType="System.String" Required="true" />
+			<ExpectedEntries ParameterType="System.String[]" Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Using Namespace="System" />
+			<Using Namespace="System.IO" />
+			<Using Namespace="System.IO.Compression" />
+			<Using Namespace="System.Linq" />
+			<Code Type="Fragment" Language="cs"><![CDATA[
+				if (!File.Exists(NupkgPath))
+				{
+					Log.LogError($"VerifyShapesNupkgEntries: nupkg not found at '{NupkgPath}'.");
+					return false;
+				}
+				using (var archive = ZipFile.OpenRead(NupkgPath))
+				{
+					var entries = archive.Entries.Select(e => e.FullName.Replace('\\', '/')).ToList();
+					foreach (var expected in ExpectedEntries)
+					{
+						var normalized = expected.Replace('\\', '/');
+						if (!entries.Any(e => string.Equals(e, normalized, StringComparison.OrdinalIgnoreCase)))
+						{
+							Log.LogError($"VerifyShapesNupkgEntries: required entry '{normalized}' is MISSING from {Path.GetFileName(NupkgPath)}. Do not publish this package. See issue #2873.");
+						}
+					}
+				}
+			]]></Code>
+		</Task>
+	</UsingTask>
+
+	<Target Name="VerifyShapesNupkg" AfterTargets="Pack">
+		<PropertyGroup>
+			<_ShapesNupkgPath>$([MSBuild]::EnsureTrailingSlash($(PackageOutputAbsolutePath)))$(PackageId).$(PackageVersion).nupkg</_ShapesNupkgPath>
+		</PropertyGroup>
+		<VerifyShapesNupkgEntries
+			NupkgPath="$(_ShapesNupkgPath)"
+			ExpectedEntries="buildTransitive/Gum.Shapes.MonoGame.props;buildTransitive/MonoGame/Content/DesktopGL/apos-shapes.xnb;buildTransitive/MonoGame/Content/WindowsDX/apos-shapes.xnb" />
+	</Target>
 
 </Project>
