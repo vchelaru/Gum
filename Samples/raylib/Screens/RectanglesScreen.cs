@@ -52,8 +52,6 @@ internal class RectanglesScreen : FrameworkElement
         left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
 
         right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — raylib approximates the blur via concentric rectangles (#2757)", BuildDropshadowRow()));
-        right.Children.Add(BuildSection("Diagnostic A (#2851): opaque body, hard-edged shadow, DropshadowAlpha sweep 32/64/96/128/160/192/255 — REFERENCE", BuildDiagnosticShadowAlphaSweepRow()));
-        right.Children.Add(BuildSection("Diagnostic B (#2851): hard-edged shadow at alpha 255, FillColor.A sweep 32/64/96/128/160/192/255 — should match row A above if body→shadow multiply works", BuildDiagnosticBodyAlphaSweepRow()));
         right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — raylib walks the perimeter, one DrawLineEx per dash (#2757)", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2757)", BuildBothColorsRow()));
         right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2757)", BuildInscribedRow()));
@@ -458,55 +456,4 @@ internal class RectanglesScreen : FrameworkElement
         return row;
     }
 
-    // Diagnostic A for #2851 — reference row. Opaque goldenrod body, hard-edged (blur=0)
-    // black shadow at varying DropshadowAlpha. The shadow alpha is the dependent variable;
-    // body alpha stays 255 so nothing multiplies. Linear math = visible alpha steps.
-    static ContainerRuntime BuildDiagnosticShadowAlphaSweepRow()
-    {
-        ContainerRuntime row = BuildHorizontalRow();
-        Color goldenrod = new Color((byte)218, (byte)165, (byte)32, (byte)255);
-
-        foreach (byte shadowAlpha in new byte[] { 32, 64, 96, 128, 160, 192, 255 })
-        {
-            RectangleRuntime rect = new();
-            rect.Width = 60; rect.Height = 50;
-            rect.FillColor = goldenrod;
-            rect.HasDropshadow = true;
-            rect.DropshadowRed = 0; rect.DropshadowGreen = 0; rect.DropshadowBlue = 0;
-            rect.DropshadowAlpha = shadowAlpha;
-            rect.DropshadowOffsetX = 15;
-            rect.DropshadowOffsetY = 15;
-            rect.DropshadowBlurX = 0;
-            rect.DropshadowBlurY = 0;
-            row.Children.Add(rect);
-        }
-
-        return row;
-    }
-
-    // Diagnostic B for #2851 — the test. Body FillColor.A varies, DropshadowAlpha pinned at
-    // 255. If the body→shadow alpha multiply works, the rendered shadow alpha in cell N
-    // should equal cell N of Diagnostic A (effective = 255 * bodyA / 255 = bodyA). Mismatch
-    // = the multiply is broken or the body alpha doesn't reach the shadow path at all.
-    static ContainerRuntime BuildDiagnosticBodyAlphaSweepRow()
-    {
-        ContainerRuntime row = BuildHorizontalRow();
-
-        foreach (byte bodyAlpha in new byte[] { 32, 64, 96, 128, 160, 192, 255 })
-        {
-            RectangleRuntime rect = new();
-            rect.Width = 60; rect.Height = 50;
-            rect.FillColor = new Color((byte)218, (byte)165, (byte)32, bodyAlpha);
-            rect.HasDropshadow = true;
-            rect.DropshadowRed = 0; rect.DropshadowGreen = 0; rect.DropshadowBlue = 0;
-            rect.DropshadowAlpha = 255;
-            rect.DropshadowOffsetX = 15;
-            rect.DropshadowOffsetY = 15;
-            rect.DropshadowBlurX = 0;
-            rect.DropshadowBlurY = 0;
-            row.Children.Add(rect);
-        }
-
-        return row;
-    }
 }
