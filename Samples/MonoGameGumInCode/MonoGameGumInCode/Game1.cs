@@ -24,11 +24,16 @@ namespace MonoGameGumInCode
             _graphics.PreferredBackBufferHeight = 768;
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+            Window.AllowUserResizing = true;
         }
 
         protected override void Initialize()
         {
             GumService.Default.Initialize(this);
+
+            // Demo the auto-fit helpers — flip via the Zoom/Expand buttons in the nav strip.
+            GumService.Default.EnableZoomToWindow();
 
             BuildNavStrip();
 
@@ -58,6 +63,19 @@ namespace MonoGameGumInCode
             AddNavButton("Mixed", () => ShowScreen<MixedScreen>());
             AddNavButton("Invisible", () => ShowScreen<InvisibleScreen>());
             AddNavButton("NineSlice", () => ShowScreen<NineSliceScreen>());
+
+            AddFitModeRadio("Zoom", isChecked: true, () => GumService.Default.EnableZoomToWindow());
+            AddFitModeRadio("Expand", isChecked: false, () => GumService.Default.EnableExpandToWindow());
+        }
+
+        private void AddFitModeRadio(string text, bool isChecked, System.Action onChecked)
+        {
+            var radio = new RadioButton();
+            radio.GroupName = "FitMode";
+            radio.Text = text;
+            radio.IsChecked = isChecked;
+            radio.Checked += (_, _) => onChecked();
+            _navStrip.AddChild(radio);
         }
 
         private void AddNavButton(string text, System.Action onClick)

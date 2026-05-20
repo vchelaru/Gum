@@ -31,6 +31,7 @@ namespace MonoGameGum;
 using Gum.GueDeriving;
 using Gum.Input;
 using GameTime = double;
+using Raylib_cs;
 using RaylibGum.Renderables;
 namespace RaylibGum;
 #endif
@@ -90,6 +91,24 @@ public class GumService
     private IGumHotReloadManager? _hotReloadManager;
 #endif
 
+    private int? _zoomReferenceWidth;
+    private int? _zoomReferenceHeight;
+
+    private enum FitPolicy
+    {
+        None,
+        Zoom,
+        Expand,
+    }
+
+    private FitPolicy _fitPolicy;
+    private WindowZoomMode _fitZoomMode;
+    private float _fitDefaultZoom;
+    // Update() polls these against the current window size each frame so resize
+    // detection is platform-agnostic — no resize-event subscription on either backend.
+    private int _lastSeenWindowWidth;
+    private int _lastSeenWindowHeight;
+
     /// <summary>
     /// Gets or sets the width of the canvas, which acts as the root-most coordiante space. This value
     /// represents the "internal coordinates" which can be adjusted by Camera zoom.
@@ -108,6 +127,129 @@ public class GumService
     {
         get => GraphicalUiElement.CanvasHeight;
         set => GraphicalUiElement.CanvasHeight = value;
+    }
+
+    /// <summary>
+    /// Enables a zoom-based fit policy: the camera scales so the Gum canvas tracks the
+    /// current window size, using the window dimensions at the first call as the 1:1
+    /// reference. The fit is applied immediately and then re-applied automatically inside
+    /// <see cref="Update(GameTime)"/> whenever the window size changes. Call once at
+    /// startup — no resize-handler boilerplate required.
+    /// </summary>
+    /// <param name="mode">
+    /// Whether window height or window width drives the zoom factor. The dominant axis
+    /// fully fills the window; the other axis gets extra space or is cropped depending on
+    /// the window's aspect ratio relative to the reference. Defaults to height-dominant.
+    /// </param>
+    /// <param name="defaultZoom">
+    /// A multiplier applied on top of the computed zoom — i.e., the zoom factor at the
+    /// reference resolution. Pass <c>2f</c> to make everything render at 2× the authored
+    /// size at the reference resolution, scaling proportionally as the window resizes.
+    /// </param>
+    /// <remarks>
+    /// Calling this replaces any previously enabled fit policy (including one set by
+    /// <see cref="EnableExpandToWindow(float)"/>). The reference resolution is captured on
+    /// the first call to <c>EnableZoomToWindow</c> and persists for the lifetime of this
+    /// instance.
+    /// </remarks>
+    public void EnableZoomToWindow(WindowZoomMode mode = WindowZoomMode.HeightDominant, float defaultZoom = 1f)
+    {
+        _fitPolicy = FitPolicy.Zoom;
+        _fitZoomMode = mode;
+        _fitDefaultZoom = defaultZoom;
+        ApplyCurrentFit();
+    }
+
+    /// <summary>
+    /// Enables an expand-based fit policy: the Gum canvas is resized to match the current
+    /// window so authored UI gets more (or less) space rather than scaling. The fit is
+    /// applied immediately and then re-applied automatically inside
+    /// <see cref="Update(GameTime)"/> whenever the window size changes. Call once at
+    /// startup — no resize-handler boilerplate required.
+    /// </summary>
+    /// <param name="defaultZoom">
+    /// A camera zoom multiplier. With <c>1f</c> the canvas matches the window pixel-for-pixel.
+    /// With <c>2f</c> the camera zooms in 2× and the canvas covers half as many internal
+    /// coordinate units — useful for authoring at a smaller virtual resolution while still
+    /// filling the window.
+    /// </param>
+    /// <remarks>
+    /// Calling this replaces any previously enabled fit policy (including one set by
+    /// <see cref="EnableZoomToWindow(WindowZoomMode, float)"/>).
+    /// </remarks>
+    public void EnableExpandToWindow(float defaultZoom = 1f)
+    {
+        _fitPolicy = FitPolicy.Expand;
+        _fitDefaultZoom = defaultZoom;
+        ApplyCurrentFit();
+    }
+
+    private void ApplyCurrentFit()
+    {
+        if (_fitPolicy == FitPolicy.None)
+        {
+            return;
+        }
+
+        var (windowWidth, windowHeight) = GetWindowSize();
+        _lastSeenWindowWidth = windowWidth;
+        _lastSeenWindowHeight = windowHeight;
+        ApplyFitForSize(windowWidth, windowHeight);
+    }
+
+    private void PollWindowSizeAndApplyFit()
+    {
+        if (_fitPolicy == FitPolicy.None)
+        {
+            return;
+        }
+
+        var (windowWidth, windowHeight) = GetWindowSize();
+        if (windowWidth == _lastSeenWindowWidth && windowHeight == _lastSeenWindowHeight)
+        {
+            return;
+        }
+
+        _lastSeenWindowWidth = windowWidth;
+        _lastSeenWindowHeight = windowHeight;
+        ApplyFitForSize(windowWidth, windowHeight);
+    }
+
+    internal void ApplyFitForSize(int windowWidth, int windowHeight)
+    {
+        switch (_fitPolicy)
+        {
+            case FitPolicy.Zoom:
+                _zoomReferenceWidth ??= windowWidth;
+                _zoomReferenceHeight ??= windowHeight;
+                var (zoom, zoomCanvasW, zoomCanvasH) = WindowFitMath.ComputeZoom(
+                    windowWidth, windowHeight,
+                    _zoomReferenceWidth.Value, _zoomReferenceHeight.Value,
+                    _fitZoomMode, _fitDefaultZoom);
+                SystemManagers.Renderer.Camera.Zoom = zoom;
+                CanvasWidth = zoomCanvasW;
+                CanvasHeight = zoomCanvasH;
+                Root.UpdateLayout();
+                break;
+            case FitPolicy.Expand:
+                var (expandZoom, expandCanvasW, expandCanvasH) = WindowFitMath.ComputeExpand(
+                    windowWidth, windowHeight, _fitDefaultZoom);
+                SystemManagers.Renderer.Camera.Zoom = expandZoom;
+                CanvasWidth = expandCanvasW;
+                CanvasHeight = expandCanvasH;
+                Root.UpdateLayout();
+                break;
+        }
+    }
+
+    private (int width, int height) GetWindowSize()
+    {
+#if XNALIKE
+        var pp = Game.GraphicsDevice.PresentationParameters;
+        return (pp.BackBufferWidth, pp.BackBufferHeight);
+#elif RAYLIB
+        return (Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+#endif
     }
 
     public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
@@ -802,6 +944,12 @@ public class GumService
         GraphicalUiElement.CanvasWidth = 0;
         GraphicalUiElement.CanvasHeight = 0;
 
+        _zoomReferenceWidth = null;
+        _zoomReferenceHeight = null;
+        _fitPolicy = FitPolicy.None;
+        _lastSeenWindowWidth = 0;
+        _lastSeenWindowHeight = 0;
+
         SystemManagers.Default = null;
         ISystemManagers.Default = null;
 
@@ -850,6 +998,8 @@ public class GumService
 #endif
     public void Update(GameTime gameTime)
     {
+        PollWindowSizeAndApplyFit();
+
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
 
         Update(gameTime, this.Root);

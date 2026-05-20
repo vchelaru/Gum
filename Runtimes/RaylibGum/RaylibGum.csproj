@@ -127,6 +127,8 @@
 		<Compile Include="..\..\MonoGameGum\GueDeriving\RectangleRuntime.cs" Link="GueDeriving\RectangleRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\PolygonRuntime.cs" Link="GueDeriving\PolygonRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GumService.cs" Link="GumService.cs" />
+		<Compile Include="..\..\MonoGameGum\WindowFitMath.cs" Link="WindowFitMath.cs" />
+		<Compile Include="..\..\MonoGameGum\WindowZoomMode.cs" Link="WindowZoomMode.cs" />
 		<Compile Include="..\..\MonoGameGum\Async\SingleThreadSynchronizationContext.cs" Link="Async\SingleThreadSynchronizationContext.cs" />
 		<Compile Include="..\..\MonoGameGum\GumHotReloadManager.cs" Link="GumHotReloadManager.cs" />
 		<Compile Include="..\..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />

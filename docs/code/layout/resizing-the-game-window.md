@@ -1,12 +1,42 @@
 # Resolution and Resizing the Game Window
 
-## Introduction
+This page covers how Gum reacts to the game window's resolution and how to handle window resizes.
 
-Gum provides a number of ways to react to game resolution changes. This page discusses how to react to resolution changes.
+## One-Line Resize Helpers
 
-## Default Behavior
+`GumService` provides two enable-once methods that handle the most common resize patterns automatically. Call once at startup — `GumService.Update` polls the window size each frame and re-applies the fit whenever it changes, so no resize-handler boilerplate is required:
 
-By default Gum uses `GraphicsDevice.Viewport` to set its internal resolution on initialization. This value can be assigned in the Game's constructor by assigning `_graphics.PreferredBackBufferWidth` and `_graphics.PreferredBackBufferWidth`. Most likely your game is already doing this to set the initial Window size. The following shows an example game with Gum.
+```csharp
+// Expand: canvas grows to match the window. Authored UI gets more (or less) space.
+GumUi.EnableExpandToWindow();
+
+// Zoom: canvas stays the same size but everything is scaled up/down so the window
+// always shows the same content. The window size at the first call is treated as the
+// 1:1 reference; resizing zooms proportionally.
+GumUi.EnableZoomToWindow();
+```
+
+Both methods are available on MonoGame, KNI, FNA, and raylib. Calling either replaces any previously enabled policy, so flipping at runtime (e.g. from a settings menu) is a single method call.
+
+### `defaultZoom`
+
+Both methods accept an optional `defaultZoom` parameter — a multiplier applied at the reference resolution. Passing `defaultZoom: 2f` to `EnableZoomToWindow` makes everything render at 2× the authored size at the reference resolution and scales proportionally as the window resizes.
+
+### `WindowZoomMode`
+
+`EnableZoomToWindow` also accepts a `WindowZoomMode` enum. The default is `HeightDominant` (window height drives the zoom factor); pass `WindowZoomMode.WidthDominant` if window width should drive zoom instead. The dominant axis fully fills the window; the other axis gets extra space or is cropped depending on the window's aspect ratio relative to the reference.
+
+### What Happens Without the Helpers
+
+If you don't call either method, resizing the window does not adjust Gum — the canvas stays at its initial size and authored UI keeps its original layout. The objects in the following animation are properly docked to the corners and center as indicated by the displayed text:
+
+<figure><img src="../../.gitbook/assets/20_06 44 11.gif" alt=""><figcaption></figcaption></figure>
+
+This is sometimes the behavior you want (e.g. if you draw Gum to a `RenderTarget2D` and scale that yourself). For most games, however, you'll want one of the helpers above.
+
+## Setting the Initial Resolution
+
+By default Gum uses `GraphicsDevice.Viewport` to set its internal resolution on initialization. This value can be assigned in the Game's constructor by assigning `_graphics.PreferredBackBufferWidth` and `_graphics.PreferredBackBufferHeight`. Most likely your game is already doing this to set the initial Window size. The following shows an example game with Gum:
 
 <pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
 {
@@ -34,56 +64,15 @@ By default Gum uses `GraphicsDevice.Viewport` to set its internal resolution on 
 </strong>        ...
 </code></pre>
 
-Keep in mind that the `Preferred` properties are not guaranteed, and MonoGame can choose to use these values internally. For example, if MonoGame runs on a Mac with UI scaling, then the actual resolution may not match the preferred values. This can be handled by subscribing to the `ClientSizeChanged` event in the constructor, as shown in the following code:
+Keep in mind that the `Preferred` properties are not guaranteed, and MonoGame can choose to use different values internally. For example, if MonoGame runs on a Mac with UI scaling, then the actual resolution may not match the preferred values. The one-line helpers above handle this automatically because they re-read the back-buffer dimensions every frame; if you write your own resize handler, you'll need to read `GraphicsDevice.PresentationParameters.BackBufferWidth/Height` rather than trusting `Preferred*`.
 
-<pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
-{
-    GraphicsDeviceManager _graphics;
+## Custom Resize Handling
 
-    GumService GumUi => GumService.Default;
+If the helpers above don't fit your case — for example you want a zoom multiplier that varies non-linearly with window size, or you want to cap zoom at a maximum factor — you can subscribe to MonoGame's `Window.ClientSizeChanged` event yourself and write the fit math you need. The helpers are built on top of this same pattern.
 
-    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    
-<strong>        Window.ClientSizeChanged += OnClientSizeChanged;
-</strong>    
-        // This sets the initial size:
-        // If not explicitly set, then size values
-        // default to 800x480 on desktop platforms
-        _graphics.PreferredBackBufferWidth = 800;
-        _graphics.PreferredBackBufferHeight = 600;
-    }
+### Manual Expand (No Zoom)
 
-<strong>    private void OnClientSizeChanged(object sender, EventArgs e)
-</strong><strong>    {
-</strong><strong>        // Updating the canvas width and height when client size changes.
-</strong><strong>        GumUi.CanvasWidth = 
-</strong><strong>            GraphicsDevice.PresentationParameters.BackBufferWidth;
-</strong><strong>        GumUi.CanvasHeight = 
-</strong><strong>            GraphicsDevice.PresentationParameters.BackBufferHeight;
-</strong><strong>    }
-</strong>
-    protected override void Initialize()
-    {
-        // Internally this will initialize using the viewport values
-        GumUi.Initialize(this);
-        ...
-</code></pre>
-
-Of course, this assumes that you would like the Gum canvas to occupy the entirety of the game window.
-
-## Default Resize Behavior
-
-By default resizing your Game does not adjust Gum. The following animation shows how Gum behaves by default. Note that the objects in the following animation are properly docked to the corners and center as indicated by the displayed text:
-
-<figure><img src="../../.gitbook/assets/20_06 44 11.gif" alt=""><figcaption></figcaption></figure>
-
-## Handling Resizing with No Zoom
-
-This section discusses how react to the window resizing by adjusting the canvas sizes and performing a layout. The Screen contains a Container which is sized to the entire screen with a small border around the edges. The Container has a ColoredRectangle which fills the entire Container. Each Text object is docked as indicated by its displayed string.
+The Screen contains a Container which is sized to the entire screen with a small border around the edges. The Container has a ColoredRectangle which fills the entire Container. Each Text object is docked as indicated by its displayed string.
 
 The following code shows how to handle a resize:
 
@@ -102,16 +91,14 @@ The following code shows how to handle a resize:
 </strong><strong>{
 </strong><strong>    GumUI.CanvasWidth = _graphics.GraphicsDevice.Viewport.Width;
 </strong><strong>    GumUI.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height;
-</strong><strong>
-</strong><strong>    // Update layout starting at the Root object. All contained objects
-</strong><strong>    // will update their layouts recursively:
-</strong><strong>    GumUI.Root.UpdateLayout();
 </strong><strong>}
 </strong></code></pre>
 
+You don't need to call `Root.UpdateLayout()` from a resize handler — `GumService.Update` picks up the new canvas size on the next frame and lays out automatically. Only call it explicitly if your game logic needs the new layout *immediately* during the same frame (e.g. you're about to read computed positions before the next `Update`).
+
 <figure><img src="../../.gitbook/assets/20_07 01 46.gif" alt=""><figcaption><p>Resizing the window resulting in Gum layout updates</p></figcaption></figure>
 
-## Handling Resizing with Zoom
+### Manual Zoom
 
 You may want to zoom your game rather than provide more visible space to the user when resizing. In this case you need to decide whether to use width or height when deciding how much to zoom your game. For this example we will use height since some users may have monitors with differing aspect ratios.
 
@@ -140,12 +127,10 @@ private void HandleClientSizeChanged(object sender, EventArgs e)
 
     GumUI.CanvasWidth = _graphics.GraphicsDevice.Viewport.Width/zoom;
     GumUI.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height/zoom;
-
-    // Update layout starting at the Root object. All contained objects
-    // will update their layouts recursively:
-    GumUI.Root.UpdateLayout();
 }
 ```
+
+As with the expand example, `Root.UpdateLayout()` is only needed if your game logic depends on the new layout in the same frame as the resize.
 
 <figure><img src="../../.gitbook/assets/20_07 03 01.gif" alt=""><figcaption><p>Gum responding to resizes by zooming and adjusting canvas sizes</p></figcaption></figure>
 
