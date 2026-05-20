@@ -770,36 +770,50 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         ObjectTreeView.AfterCollapse += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
 
         RefreshUi();
+    }
 
-        static (int index, TreeNode target)? ProcessDrop(TreeNode? originalTarget, MultiSelectTreeView.DropKind kind)
+    /// <summary>
+    /// Maps a tree drop (target node + kind) to the parent tree node it should
+    /// be inserted under and the index inside that parent's collection.
+    /// Internal so it can be unit-tested without instantiating the manager.
+    /// </summary>
+    internal static (int index, TreeNode target)? ProcessDrop(TreeNode? originalTarget, MultiSelectTreeView.DropKind kind)
+    {
+        if (originalTarget == null)
         {
-            if (originalTarget == null)
-            {
-                return null;
-            }
-            int? index = kind switch
-            {
-                MultiSelectTreeView.DropKind.Into => originalTarget.GetNodeCount(false),
-                MultiSelectTreeView.DropKind.After => originalTarget.Index + 1,
-                MultiSelectTreeView.DropKind.Before => originalTarget.Index,
-                MultiSelectTreeView.DropKind.IntoFirst => 0,
-                _ => null
-            };
-            TreeNode? target = kind switch
-            {
-                MultiSelectTreeView.DropKind.Into => originalTarget,
-                MultiSelectTreeView.DropKind.After => originalTarget.Parent,
-                MultiSelectTreeView.DropKind.Before => originalTarget.Parent,
-                MultiSelectTreeView.DropKind.IntoFirst => originalTarget,
-                _ => null
-            };
-            if (target != null && index != null)
-            {
-                return (index.Value, target);
-            }
-
             return null;
         }
+        // Issue #2864: a drop whose visual adornment is "rectangle around the
+        // row" (Into and IntoFirst both draw the same box) must append to the
+        // target's children — never insert at a stale tree-child index that
+        // disagrees with the Instances list, and never silently insert at 0
+        // (which puts the new visual behind existing siblings). The user-facing
+        // distinction is "box vs. line": box = append, line = insert at
+        // sibling position. Inserting at index 0 is still reachable as
+        // DropKind.Before on the parent's first child, which draws a line.
+        int? index = kind switch
+        {
+            MultiSelectTreeView.DropKind.Into or MultiSelectTreeView.DropKind.IntoFirst =>
+                originalTarget.Tag is ElementSave element
+                    ? element.Instances.Count
+                    : originalTarget.GetNodeCount(false),
+            MultiSelectTreeView.DropKind.After => originalTarget.Index + 1,
+            MultiSelectTreeView.DropKind.Before => originalTarget.Index,
+            _ => null
+        };
+        TreeNode? target = kind switch
+        {
+            MultiSelectTreeView.DropKind.Into or MultiSelectTreeView.DropKind.IntoFirst => originalTarget,
+            MultiSelectTreeView.DropKind.After => originalTarget.Parent,
+            MultiSelectTreeView.DropKind.Before => originalTarget.Parent,
+            _ => null
+        };
+        if (target != null && index != null)
+        {
+            return (index.Value, target);
+        }
+
+        return null;
     }
 
 
