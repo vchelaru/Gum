@@ -4,27 +4,78 @@ This page covers how Gum reacts to the game window's resolution and how to handl
 
 ## One-Line Resize Helpers
 
-`GumService` provides two enable-once methods that handle the most common resize patterns automatically. Call once at startup — `GumService.Update` polls the window size each frame and re-applies the fit whenever it changes, so no resize-handler boilerplate is required:
+`GumService` provides two enable-once methods that handle the most common resize patterns automatically. Call once at startup, right after `Initialize` — `GumService.Update` then polls the window size each frame and re-applies the fit whenever it changes, so no resize-handler boilerplate is required.
+
+### Zoom To Window
+
+`EnableZoomToWindow` keeps the canvas at its initial size and scales everything up or down so the window always shows the same content. The window size at the first call is treated as the 1:1 reference; resizing the window zooms proportionally.
 
 ```csharp
-// Expand: canvas grows to match the window. Authored UI gets more (or less) space.
-GumUi.EnableExpandToWindow();
+// Initialize
+protected override void Initialize()
+{
+    GumService.Default.Initialize(this);
 
-// Zoom: canvas stays the same size but everything is scaled up/down so the window
-// always shows the same content. The window size at the first call is treated as the
-// 1:1 reference; resizing zooms proportionally.
-GumUi.EnableZoomToWindow();
+    GumService.Default.EnableZoomToWindow();
+}
 ```
 
-Both methods are available on MonoGame, KNI, FNA, and raylib. Calling either replaces any previously enabled policy, so flipping at runtime (e.g. from a settings menu) is a single method call.
+### Expand To Window
+
+`EnableExpandToWindow` resizes the canvas to match the window pixel-for-pixel so authored UI gets more (or less) space rather than scaling.
+
+```csharp
+// Initialize
+protected override void Initialize()
+{
+    GumService.Default.Initialize(this);
+
+    GumService.Default.EnableExpandToWindow();
+}
+```
+
+Both methods are available on MonoGame, KNI, FNA, and raylib. (On raylib, replace `Initialize(this)` with the parameterless `Initialize()` overload.) Calling either method replaces any previously enabled policy, so flipping at runtime — for example from a settings menu — is a single method call.
 
 ### `defaultZoom`
 
-Both methods accept an optional `defaultZoom` parameter — a multiplier applied at the reference resolution. Passing `defaultZoom: 2f` to `EnableZoomToWindow` makes everything render at 2× the authored size at the reference resolution and scales proportionally as the window resizes.
+Both methods accept an optional `defaultZoom` multiplier applied at the reference resolution. With `defaultZoom: 2f`, `EnableZoomToWindow` renders everything at 2× the authored size when the window is at the reference resolution and continues scaling proportionally as the window resizes:
+
+```csharp
+// Initialize
+GumService.Default.EnableZoomToWindow(defaultZoom: 2f);
+```
+
+The same parameter works for `EnableExpandToWindow` — useful if you author UI at a smaller virtual resolution and want it drawn larger:
+
+```csharp
+// Initialize
+GumService.Default.EnableExpandToWindow(defaultZoom: 2f);
+```
 
 ### `WindowZoomMode`
 
-`EnableZoomToWindow` also accepts a `WindowZoomMode` enum. The default is `HeightDominant` (window height drives the zoom factor); pass `WindowZoomMode.WidthDominant` if window width should drive zoom instead. The dominant axis fully fills the window; the other axis gets extra space or is cropped depending on the window's aspect ratio relative to the reference.
+`EnableZoomToWindow` also accepts a `WindowZoomMode` enum that controls which window axis drives the zoom factor. The dominant axis fully fills the window; the other axis gets extra space or is cropped depending on the window's aspect ratio relative to the reference.
+
+The default is `HeightDominant` (window height drives the zoom):
+
+```csharp
+// Initialize
+GumService.Default.EnableZoomToWindow(WindowZoomMode.HeightDominant);
+```
+
+Pass `WidthDominant` to drive the zoom from window width instead:
+
+```csharp
+// Initialize
+GumService.Default.EnableZoomToWindow(WindowZoomMode.WidthDominant);
+```
+
+Both parameters can be combined:
+
+```csharp
+// Initialize
+GumService.Default.EnableZoomToWindow(WindowZoomMode.WidthDominant, defaultZoom: 1.5f);
+```
 
 ### What Happens Without the Helpers
 
