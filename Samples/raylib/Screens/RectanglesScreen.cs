@@ -433,13 +433,27 @@ internal class RectanglesScreen : FrameworkElement
         // Issue #2851 visual acceptance — body alpha multiplies into the shadow alpha.
         RectangleRuntime fadedBody = new();
         fadedBody.Width = 60; fadedBody.Height = 50;
-        fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)80);
+        // This seems wrong:
+        //fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)80);
+        fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)32);
         fadedBody.HasDropshadow = true;
         fadedBody.DropshadowOffsetX = 14;
         fadedBody.DropshadowOffsetY = 14;
         fadedBody.DropshadowBlurX = 4;
         fadedBody.DropshadowBlurY = 4;
         row.Children.Add(fadedBody);
+
+        RectangleRuntime shadowTest = new();
+        shadowTest.Width = 60; shadowTest.Height = 50;
+        // This seems wrong:
+        //fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)80);
+        shadowTest.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)32);
+        shadowTest.HasDropshadow = true;
+        shadowTest.DropshadowOffsetX = 14;
+        shadowTest.DropshadowOffsetY = 14;
+        shadowTest.DropshadowBlurX = 0;
+        shadowTest.DropshadowBlurY = 0;
+        row.Children.Add(shadowTest);
 
         return row;
     }

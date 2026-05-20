@@ -320,15 +320,21 @@ public class LineRectangle : InvisibleRenderable
                 float bandSpan = blur;
                 float totalExtent = 2f * bandSpan;
                 float bandThickness = totalExtent / blurRings;
+                // Issue #2851: the target cumulative alpha profile must be scaled by the
+                // effective shadow alpha BEFORE inverting source-over to per-band alphas.
+                // Scaling per-band alpha after the fact stacks non-linearly and overshoots
+                // (a blur≠0 shadow at effective alpha 80 ended up cumulative ~0.77, not 0.31).
+                float f = effectiveDropshadowColor.A / 255f;
                 float prevP = 1f;
                 for (int j = blurRings - 1; j >= 0; j--)
                 {
                     float tOuter = (j + 1f) / blurRings;
-                    float targetAlpha = MathF.Max(0f, 1f - tOuter);
+                    float profileAlpha = MathF.Max(0f, 1f - tOuter);
+                    float targetAlpha = f * profileAlpha;
                     float currP = 1f - targetAlpha;
                     float beta = prevP > 0f ? 1f - currP / prevP : 0f;
                     prevP = currP;
-                    byte bandAlpha = (byte)(effectiveDropshadowColor.A * beta);
+                    byte bandAlpha = (byte)(255f * beta + 0.5f);
                     if (bandAlpha == 0)
                     {
                         continue;
@@ -366,30 +372,40 @@ public class LineRectangle : InvisibleRenderable
                     }
                 }
 
-                // Solid inner core for pixels deeper than the innermost band so they read
-                // as full-alpha shadow.
+                // Solid inner core closes the remaining alpha gap between what the bands
+                // accumulated (prevP after the loop) and the target final alpha (1 - f).
+                // With the scaled target profile above, this is a small correction at low
+                // effective alphas (≈3/255 when f=0.31) and the original full-alpha plateau
+                // when f=1. Source-over inversion: prevP * (1 - α_core) = 1 - f.
                 float innerCoreW = w - 2f * bandSpan;
                 float innerCoreH = h - 2f * bandSpan;
-                if (innerCoreW > 0f && innerCoreH > 0f)
+                if (innerCoreW > 0f && innerCoreH > 0f && prevP > 1f - f)
                 {
-                    Rectangle innerCore = new Rectangle(
-                        shadowX + bandSpan,
-                        shadowY + bandSpan,
-                        innerCoreW,
-                        innerCoreH);
-                    if (useRounded && !rotated)
+                    float coreBeta = 1f - (1f - f) / prevP;
+                    byte coreAlpha = (byte)(255f * coreBeta + 0.5f);
+                    if (coreAlpha > 0)
                     {
-                        float innerCornerR = MathF.Max(0f, CornerRadius - bandSpan);
-                        float innerMinDim = MathF.Min(innerCoreW, innerCoreH);
-                        float innerRoundness = innerMinDim > 0f
-                            ? MathF.Min(1f, innerCornerR * 2f / innerMinDim)
-                            : 0f;
-                        DrawRectangleRounded(innerCore, innerRoundness, roundedSegments, effectiveDropshadowColor);
-                    }
-                    else
-                    {
-                        DrawRectangleV(new Vector2(innerCore.X, innerCore.Y),
-                            new Vector2(innerCoreW, innerCoreH), effectiveDropshadowColor);
+                        Color coreColor = new Color(effectiveDropshadowColor.R,
+                            effectiveDropshadowColor.G, effectiveDropshadowColor.B, coreAlpha);
+                        Rectangle innerCore = new Rectangle(
+                            shadowX + bandSpan,
+                            shadowY + bandSpan,
+                            innerCoreW,
+                            innerCoreH);
+                        if (useRounded && !rotated)
+                        {
+                            float innerCornerR = MathF.Max(0f, CornerRadius - bandSpan);
+                            float innerMinDim = MathF.Min(innerCoreW, innerCoreH);
+                            float innerRoundness = innerMinDim > 0f
+                                ? MathF.Min(1f, innerCornerR * 2f / innerMinDim)
+                                : 0f;
+                            DrawRectangleRounded(innerCore, innerRoundness, roundedSegments, coreColor);
+                        }
+                        else
+                        {
+                            DrawRectangleV(new Vector2(innerCore.X, innerCore.Y),
+                                new Vector2(innerCoreW, innerCoreH), coreColor);
+                        }
                     }
                 }
             }
