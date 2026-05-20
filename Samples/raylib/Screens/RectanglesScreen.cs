@@ -52,6 +52,7 @@ internal class RectanglesScreen : FrameworkElement
         left.Children.Add(BuildSection("Gradients (linear / radial / diagonal / centered)", BuildGradientRow()));
 
         right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — raylib approximates the blur via concentric rectangles (#2757)", BuildDropshadowRow()));
+        right.Children.Add(BuildSection("Diagnostic (#2851): opaque body, hard-edged shadow, DropshadowAlpha sweep 32/64/96/128/160/192/255", BuildDiagnosticAlphaRow()));
         right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — raylib walks the perimeter, one DrawLineEx per dash (#2757)", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2757)", BuildBothColorsRow()));
         right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2757)", BuildInscribedRow()));
@@ -438,6 +439,34 @@ internal class RectanglesScreen : FrameworkElement
         fadedBody.DropshadowBlurX = 4;
         fadedBody.DropshadowBlurY = 4;
         row.Children.Add(fadedBody);
+
+        return row;
+    }
+
+    // Diagnostic for #2851: opaque goldenrod body with a hard-edged (blur=0) black dropshadow.
+    // DropshadowAlpha sweeps 32 → 255 so the band-stacking math is probed directly. With blur=0
+    // the renderable should produce a single sharp black rectangle offset down-right; visible
+    // alpha steps between cells = math is linear. If low-alpha cells already look near-opaque,
+    // the band approximation is overshooting.
+    static ContainerRuntime BuildDiagnosticAlphaRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        Color goldenrod = new Color((byte)218, (byte)165, (byte)32, (byte)255);
+
+        foreach (byte shadowAlpha in new byte[] { 32, 64, 96, 128, 160, 192, 255 })
+        {
+            RectangleRuntime rect = new();
+            rect.Width = 60; rect.Height = 50;
+            rect.FillColor = goldenrod;
+            rect.HasDropshadow = true;
+            rect.DropshadowRed = 0; rect.DropshadowGreen = 0; rect.DropshadowBlue = 0;
+            rect.DropshadowAlpha = shadowAlpha;
+            rect.DropshadowOffsetX = 15;
+            rect.DropshadowOffsetY = 15;
+            rect.DropshadowBlurX = 0;
+            rect.DropshadowBlurY = 0;
+            row.Children.Add(rect);
+        }
 
         return row;
     }
