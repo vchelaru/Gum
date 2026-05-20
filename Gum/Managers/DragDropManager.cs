@@ -576,8 +576,19 @@ public class DragDropManager : IDragDropManager
                 }
             }
 
-            // in case there's some error here:
-            var siblingAfter = index > 0 && index - 1 < siblings.Count ? siblings[index - 1] : null;
+            // index here is the caller's "position among target's children"
+            // (0..siblings.Count). Issue #2864: ProcessDrop can pass the flat
+            // Instances.Count for the InstanceSave-tag append case, which
+            // exceeds siblings.Count. Clamp index-1 to the last sibling so an
+            // out-of-range index lands after the last child (append), rather
+            // than falling through to indexToAddAt=0 (the visible "snap to top"
+            // immediately after the new instance was correctly added at the end).
+            InstanceSave? siblingAfter = null;
+            if (index > 0 && siblings.Count > 0)
+            {
+                int siblingIndex = Math.Min(index - 1, siblings.Count - 1);
+                siblingAfter = siblings[siblingIndex];
+            }
 
             int indexToAddAt = 0;
 

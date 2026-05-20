@@ -373,6 +373,111 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void OnNodeSortingDropped_DropElementOnInstanceWithIndexPastSiblingCount_KeepsNewInstanceAtEnd()
+    {
+        // Issue #2864 (post-Instances.Count fix): when ProcessDrop returns a
+        // flat-list index for the InstanceSave-tag Into case, the index can
+        // exceed siblings.Count. The downstream HandleDroppingInstanceOnTarget
+        // interprets index as "position among target's children" and falls
+        // through to indexToAddAt = 0 when the index is past the end, which
+        // moves the just-inserted instance back to the front of the flat list
+        // (the user-visible "snap to top"). Out-of-range index must mean
+        // "append after the last existing sibling".
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "MainScreen";
+        screen.States.Add(new StateSave { Name = "Default" });
+
+        InstanceSave leftContainer = new InstanceSave { Name = "LeftContainer", ParentContainer = screen };
+        screen.Instances.Add(leftContainer);
+        for (int i = 0; i < 4; i++)
+        {
+            string childName = $"Child{i}";
+            InstanceSave child = new InstanceSave { Name = childName, ParentContainer = screen };
+            screen.Instances.Add(child);
+            screen.DefaultState.SetValue($"{childName}.Parent", "LeftContainer", "string");
+        }
+        // Top-level instances not parented under LeftContainer — required to
+        // reproduce the bug, which only triggers when screen.Instances.Count is
+        // strictly greater than (siblings of LeftContainer).Count by more than 1.
+        for (int i = 0; i < 10; i++)
+        {
+            screen.Instances.Add(new InstanceSave { Name = $"TopLevel{i}", ParentContainer = screen });
+        }
+
+        ComponentSave draggedComponent = new ComponentSave();
+        draggedComponent.Name = "DraggedComponent";
+        draggedComponent.States.Add(new StateSave { Name = "Default" });
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        _mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave).Returns(screen.DefaultState);
+
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.GetUniqueNameForNewInstance(It.IsAny<ElementSave>(), It.IsAny<ElementSave>()))
+            .Returns("DraggedComponent1");
+
+        // Stand in for ElementCommands.AddInstance — actually mutate the screen
+        // (insert at desiredIndex, set Parent variable) and return the new
+        // instance, so HandleDroppingInstanceOnTarget runs against the same
+        // state ElementCommands would produce.
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.AddInstance(
+                It.IsAny<ElementSave>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<int?>()))
+            .Returns((ElementSave element, string name, string? type, string? parentName, int? desiredIndex) =>
+            {
+                InstanceSave inst = new InstanceSave
+                {
+                    Name = name,
+                    BaseType = type ?? string.Empty,
+                    ParentContainer = element
+                };
+                if (desiredIndex.HasValue)
+                {
+                    element.Instances.Insert(desiredIndex.Value, inst);
+                }
+                else
+                {
+                    element.Instances.Add(inst);
+                }
+                if (!string.IsNullOrEmpty(parentName))
+                {
+                    element.DefaultState.SetValue($"{inst.Name}.Parent", parentName, "string");
+                }
+                return inst;
+            });
+
+        Mock<ITreeNode> draggedNode = new Mock<ITreeNode>();
+        draggedNode.Setup(x => x.Tag).Returns(draggedComponent);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(leftContainer);
+
+        List<ITreeNode> draggedNodes = new() { draggedNode.Object };
+
+        // ProcessDrop's Into-on-InstanceSave returns ParentContainer.Instances.Count
+        // — past the end of the siblings list. This is the index that triggers
+        // the "snap to top" before the fix.
+        int indexFromProcessDrop = screen.Instances.Count;
+
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, indexFromProcessDrop);
+
+        InstanceSave? newInstance = screen.Instances.FirstOrDefault(i => i.Name == "DraggedComponent1");
+        newInstance.ShouldNotBeNull();
+
+        int newIndex = screen.Instances.IndexOf(newInstance);
+        int lastExistingChildIndex = screen.Instances.IndexOf(screen.Instances.First(i => i.Name == "Child3"));
+        newIndex.ShouldBeGreaterThan(lastExistingChildIndex,
+            "the dropped instance must remain after the last existing child of the target container, not snap back to index 0");
+    }
+
+    [Fact]
     public void OnNodeSortingDropped_OnlyFolderNodes_DoesNotThrow()
     {
         // Arrange - only folder nodes (Tag=null), no tagged nodes
