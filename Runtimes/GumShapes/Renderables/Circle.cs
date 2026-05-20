@@ -85,10 +85,10 @@ public class Circle : RenderableShapeBase,
             dropshadowCenter.X += DropshadowOffsetX;
             dropshadowCenter.Y += DropshadowOffsetY;
 
-            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius - DropshadowBlurX / 2f, 
+            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius - DropshadowBlurX / 2f,
                 MathFunctions.RoundToInt(DropshadowBlurX),
                 StrokeWidth - DropshadowBlurX,
-                DropshadowColor);
+                EffectiveDropshadowColor);
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth);

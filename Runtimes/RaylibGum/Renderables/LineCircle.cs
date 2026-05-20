@@ -262,6 +262,20 @@ public class LineCircle : InvisibleRenderable
             float shadowCy = cy + DropshadowOffsetY;
             float blur = System.MathF.Max(DropshadowBlurX, DropshadowBlurY);
 
+            // Issue #2851: scale shadow alpha by the body's effective alpha so fading the
+            // circle to transparent also fades the shadow. Matches SkiaGum (the Gum
+            // tool/viewport) and Apos.Shapes (RenderableShapeBase.EffectiveDropshadowColor).
+            // In the two-slot model the user picks the body alpha via FillColor / StrokeColor
+            // / legacy Color; we read the same precedence the fill pass below uses
+            // (FillColor ?? Color), falling back to StrokeColor when no fill is set so an
+            // outline-only shape's shadow still fades with the outline.
+            byte bodyAlpha = FillColor?.A ?? StrokeColor?.A ?? Color.A;
+            Color effectiveDropshadowColor = new Color(
+                DropshadowColor.R,
+                DropshadowColor.G,
+                DropshadowColor.B,
+                (byte)(DropshadowColor.A * bodyAlpha / 255));
+
             if (blur > 0f)
             {
                 // Skia's Gaussian convolution of the shape silhouette makes the silhouette
@@ -286,21 +300,26 @@ public class LineCircle : InvisibleRenderable
                 float totalExtent = 2f * bandSpan;
                 float bandThickness = totalExtent / blurRings;
                 Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
+                // Issue #2851: scale the target cumulative alpha profile by the effective
+                // shadow alpha BEFORE inverting source-over to per-band alphas. Scaling
+                // per-band alpha after the fact stacks non-linearly and overshoots.
+                float f = effectiveDropshadowColor.A / 255f;
                 float prevP = 1f;
                 for (int j = blurRings - 1; j >= 0; j--)
                 {
                     float tOuter = (j + 1f) / blurRings;
-                    float targetAlpha = System.MathF.Max(0f, 1f - tOuter);
+                    float profileAlpha = System.MathF.Max(0f, 1f - tOuter);
+                    float targetAlpha = f * profileAlpha;
                     float currP = 1f - targetAlpha;
                     float beta = prevP > 0f ? 1f - currP / prevP : 0f;
                     prevP = currP;
-                    byte circleAlpha = (byte)(DropshadowColor.A * beta);
+                    byte circleAlpha = (byte)(255f * beta + 0.5f);
                     if (circleAlpha == 0)
                     {
                         continue;
                     }
-                    Color circleColor = new Color(DropshadowColor.R, DropshadowColor.G,
-                        DropshadowColor.B, circleAlpha);
+                    Color circleColor = new Color(effectiveDropshadowColor.R, effectiveDropshadowColor.G,
+                        effectiveDropshadowColor.B, circleAlpha);
                     float r = Radius - bandSpan + (j + 1) * bandThickness;
                     if (r > 0f)
                     {
@@ -308,19 +327,27 @@ public class LineCircle : InvisibleRenderable
                     }
                 }
 
-                // Solid inner core for pixels deeper than the innermost band so they read
-                // as full-alpha shadow. Outermost band already fades to 0 so no outer core
-                // is needed.
+                // Solid inner core closes the remaining alpha gap between what the bands
+                // accumulated (prevP) and the target final alpha (1 - f). Small correction
+                // at low effective alphas; reduces to the original full-alpha plateau when
+                // f = 1. Source-over inversion: prevP * (1 - α_core) = 1 - f.
                 float innerCoreR = Radius - bandSpan;
-                if (innerCoreR > 0f)
+                if (innerCoreR > 0f && prevP > 1f - f)
                 {
-                    DrawCircle((int)shadowCx, (int)shadowCy, innerCoreR, DropshadowColor);
+                    float coreBeta = 1f - (1f - f) / prevP;
+                    byte coreAlpha = (byte)(255f * coreBeta + 0.5f);
+                    if (coreAlpha > 0)
+                    {
+                        Color coreColor = new Color(effectiveDropshadowColor.R,
+                            effectiveDropshadowColor.G, effectiveDropshadowColor.B, coreAlpha);
+                        DrawCircle((int)shadowCx, (int)shadowCy, innerCoreR, coreColor);
+                    }
                 }
             }
             else
             {
                 // blur = 0: hard offset silhouette, no fade.
-                DrawCircle((int)shadowCx, (int)shadowCy, Radius, DropshadowColor);
+                DrawCircle((int)shadowCx, (int)shadowCy, Radius, effectiveDropshadowColor);
             }
         }
 

@@ -400,8 +400,8 @@ internal class RectanglesScreen : FrameworkElement
         soft.Width = 60; soft.Height = 50;
         soft.FillColor = goldenrod;
         soft.HasDropshadow = true;
-        soft.DropshadowOffsetX = 4;
-        soft.DropshadowOffsetY = 4;
+        soft.DropshadowOffsetX = 14;
+        soft.DropshadowOffsetY = 14;
         soft.DropshadowBlurX = 4;
         soft.DropshadowBlurY = 4;
         row.Children.Add(soft);
@@ -411,8 +411,8 @@ internal class RectanglesScreen : FrameworkElement
         hard.FillColor = goldenrod;
         hard.HasDropshadow = true;
         hard.DropshadowRed = 0; hard.DropshadowGreen = 0; hard.DropshadowBlue = 0; hard.DropshadowAlpha = 160;
-        hard.DropshadowOffsetX = 6;
-        hard.DropshadowOffsetY = 6;
+        hard.DropshadowOffsetX = 16;
+        hard.DropshadowOffsetY = 16;
         hard.DropshadowBlurX = 0;
         hard.DropshadowBlurY = 0;
         row.Children.Add(hard);
@@ -422,12 +422,38 @@ internal class RectanglesScreen : FrameworkElement
         colored.FillColor = goldenrod;
         colored.HasDropshadow = true;
         colored.DropshadowRed = 220; colored.DropshadowGreen = 40; colored.DropshadowBlue = 160; colored.DropshadowAlpha = 220;
-        colored.DropshadowOffsetX = 6;
-        colored.DropshadowOffsetY = 6;
+        colored.DropshadowOffsetX = 16;
+        colored.DropshadowOffsetY = 16;
         colored.DropshadowBlurX = 6;
         colored.DropshadowBlurY = 6;
         row.Children.Add(colored);
 
+        // Issue #2851 visual acceptance — body alpha multiplies into the shadow alpha.
+        RectangleRuntime fadedBody = new();
+        fadedBody.Width = 60; fadedBody.Height = 50;
+        // This seems wrong:
+        //fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)80);
+        fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)32);
+        fadedBody.HasDropshadow = true;
+        fadedBody.DropshadowOffsetX = 14;
+        fadedBody.DropshadowOffsetY = 14;
+        fadedBody.DropshadowBlurX = 4;
+        fadedBody.DropshadowBlurY = 4;
+        row.Children.Add(fadedBody);
+
+        RectangleRuntime shadowTest = new();
+        shadowTest.Width = 60; shadowTest.Height = 50;
+        // This seems wrong:
+        //fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)80);
+        shadowTest.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)32);
+        shadowTest.HasDropshadow = true;
+        shadowTest.DropshadowOffsetX = 14;
+        shadowTest.DropshadowOffsetY = 14;
+        shadowTest.DropshadowBlurX = 0;
+        shadowTest.DropshadowBlurY = 0;
+        row.Children.Add(shadowTest);
+
         return row;
     }
+
 }

@@ -404,8 +404,8 @@ internal class CirclesScreen : FrameworkElement
         soft.Radius = 28;
         soft.FillColor = goldenrod;
         soft.HasDropshadow = true;
-        soft.DropshadowOffsetX = 4;
-        soft.DropshadowOffsetY = 4;
+        soft.DropshadowOffsetX = 14;
+        soft.DropshadowOffsetY = 14;
         soft.DropshadowBlurX = 4;
         soft.DropshadowBlurY = 4;
         row.Children.Add(soft);
@@ -417,8 +417,8 @@ internal class CirclesScreen : FrameworkElement
         hard.FillColor = goldenrod;
         hard.HasDropshadow = true;
         hard.DropshadowRed = 0; hard.DropshadowGreen = 0; hard.DropshadowBlue = 0; hard.DropshadowAlpha = 160;
-        hard.DropshadowOffsetX = 6;
-        hard.DropshadowOffsetY = 6;
+        hard.DropshadowOffsetX = 16;
+        hard.DropshadowOffsetY = 16;
         hard.DropshadowBlurX = 0;
         hard.DropshadowBlurY = 0;
         row.Children.Add(hard);
@@ -430,11 +430,25 @@ internal class CirclesScreen : FrameworkElement
         colored.FillColor = goldenrod;
         colored.HasDropshadow = true;
         colored.DropshadowRed = 220; colored.DropshadowGreen = 40; colored.DropshadowBlue = 160; colored.DropshadowAlpha = 220;
-        colored.DropshadowOffsetX = 6;
-        colored.DropshadowOffsetY = 6;
+        colored.DropshadowOffsetX = 16;
+        colored.DropshadowOffsetY = 16;
         colored.DropshadowBlurX = 6;
         colored.DropshadowBlurY = 6;
         row.Children.Add(colored);
+
+        // Issue #2851 visual acceptance: same soft-shadow config as the second cell, but with
+        // the body's alpha cut to 80. The shadow must fade alongside the body — matches Skia
+        // (and therefore the Gum tool/viewport). Pre-fix the raylib LineCircle renderable
+        // emitted DropshadowColor straight through and left an opaque shadow ghost behind.
+        CircleRuntime fadedBody = new();
+        fadedBody.Radius = 28;
+        fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)80);
+        fadedBody.HasDropshadow = true;
+        fadedBody.DropshadowOffsetX = 14;
+        fadedBody.DropshadowOffsetY = 14;
+        fadedBody.DropshadowBlurX = 4;
+        fadedBody.DropshadowBlurY = 4;
+        row.Children.Add(fadedBody);
 
         return row;
     }
