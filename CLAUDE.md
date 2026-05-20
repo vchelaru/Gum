@@ -13,7 +13,7 @@ For every task, invoke the appropriate agent from `.claude/agents/` before proce
 
 **Re-read the agent file at the start of each new task — not once per session.** Long sessions drift; reloading the discipline keeps it active. Inline coding without re-reading the agent file first is not an option, even for "small" follow-ups in the same conversation.
 
-Also load any skill whose trigger matches the files you're about to edit, before making changes.
+Also load any skill whose trigger matches the area you're working in — before reading code, designing a fix, or making changes. "I'm only investigating, not editing yet" is not a reason to skip; the skill exists to inform the investigation, not just the keystrokes. The only time it's acceptable to skip is for a trivial single-file lookup that won't influence any recommendation or change.
 
 Available agents:
 - **coder** — Writing or modifying code and unit tests for new features or bugs
