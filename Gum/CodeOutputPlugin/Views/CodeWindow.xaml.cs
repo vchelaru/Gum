@@ -38,9 +38,27 @@ public partial class CodeWindow : UserControl
 
     CodeWindowViewModel ViewModel => (CodeWindowViewModel)DataContext!;
 
+    CodeOutputProjectSettings? codeOutputProjectSettings;
+
     public CodeOutputProjectSettings? CodeOutputProjectSettings
     {
-        get; set;
+        get => codeOutputProjectSettings;
+        set
+        {
+            // Setter triggers FullRefreshDataGrid because NeedsSetup (which
+            // toggles between the Auto/Manual prompt and the populated settings
+            // grid) is recomputed during the refresh. The plugin wires this
+            // property up after LoadCodeSettingsFile has already fired a
+            // refresh, so without this we'd evaluate NeedsSetup against a
+            // stale (null) CodeOutputProjectSettings and leave the prompt
+            // showing even when CodeProjectRoot is populated (#2875).
+            if (codeOutputProjectSettings == value)
+            {
+                return;
+            }
+            codeOutputProjectSettings = value;
+            FullRefreshDataGrid();
+        }
     }
 
     CodeOutputElementSettings? codeOutputElementSettings;
@@ -202,16 +220,7 @@ public partial class CodeWindow : UserControl
         // in the future this could have a property for selecting folder, but until then....
         //member.PreferredDisplayer = typeof(FileSelectionDisplay);
 
-        //var value = member.Value as string;
-        //if(string.IsNullOrEmpty(value))
-        //{
-        //    // let's see if we have a csproj:
-        var csproj = ViewModel.GetCsprojDirectoryAboveGumx();
-
-        ViewModel.NeedsSetup =
-            csproj != null &&
-            string.IsNullOrEmpty(CodeOutputProjectSettings?.CodeProjectRoot) &&
-            !HasClickedManualSetup;
+        ViewModel.NeedsSetup = ViewModel.ShouldShowSetup(CodeOutputProjectSettings, HasClickedManualSetup);
 
         return member;
     }

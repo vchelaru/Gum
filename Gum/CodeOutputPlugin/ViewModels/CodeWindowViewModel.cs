@@ -227,6 +227,27 @@ public class CodeWindowViewModel : ViewModel
         }
     }
 
+    /// <summary>
+    /// Returns whether the Code tab should display the "Manual / Auto" setup prompt
+    /// rather than the populated code-generation settings grid. True when the project
+    /// has a sibling/ancestor .csproj but the user has not yet picked a CodeProjectRoot
+    /// and has not explicitly chosen manual setup.
+    /// </summary>
+    public bool ShouldShowSetup(CodeOutputProjectSettings? settings, bool hasClickedManualSetup)
+    {
+        if (hasClickedManualSetup)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrEmpty(settings?.CodeProjectRoot))
+        {
+            return false;
+        }
+
+        return GetCsprojDirectoryAboveGumx() != null;
+    }
+
     public bool HandleAutoSetupClicked(CodeOutputProjectSettings codeOutputProjectSettings)
     {
         var projectFilePath = _projectState.GumProjectSave?.FullFileName;
