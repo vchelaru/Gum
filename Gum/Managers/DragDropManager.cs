@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using System.Windows.Navigation;
 using Gum.Extensions;
 using ToolsUtilities;
+using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Managers;
@@ -149,7 +150,7 @@ public class DragDropManager : IDragDropManager
 
     #region Drop Element (like components) on TreeView
 
-    private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode, int index)
+    private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode, DropTarget? dropTarget)
     {
         ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
 
@@ -158,7 +159,7 @@ public class DragDropManager : IDragDropManager
 
         if (targetTag is ElementSave)
         {
-            HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, null, index);
+            HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, null, dropTarget);
         }
         else if (targetTag is InstanceSave)
         {
@@ -170,12 +171,12 @@ public class DragDropManager : IDragDropManager
             // When a parent is set, we normally raise an event for that. This is a tricky situation because
             // we need to set the parent before adding the object.
 
-            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, targetInstance, index);
+            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, targetInstance, dropTarget);
 
-            if(newInstance != null)
+            if(newInstance != null && dropTarget != null)
             {
                 // Since the user dropped on another instance, let's try to parent it:
-                HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer, targetTreeNode, index);
+                HandleDroppingInstanceOnTarget(newInstance, targetTreeNode, dropTarget);
 
                 // HandleDroppingInstanceOnTarget internally calls
                 // _wireframeObjectManager.RefreshAll, but since
@@ -297,7 +298,7 @@ public class DragDropManager : IDragDropManager
         return newInstance;
     }
 
-    private InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, int index)
+    private InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, DropTarget? dropTarget)
     {
         InstanceSave newInstance = null;
 
@@ -324,10 +325,31 @@ public class DragDropManager : IDragDropManager
             // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
             _selectedState.SelectedElement = target;
 
-            newInstance = _elementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name, index);
+            int? desiredIndex = ResolveDesiredFlatIndex(dropTarget?.Position, target);
+
+            newInstance = _elementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name, desiredIndex);
         }
 
         return newInstance;
+    }
+
+    /// <summary>
+    /// Translate a <see cref="DropPosition"/> into a flat-list index inside
+    /// <paramref name="element"/>.<see cref="ElementSave.Instances"/>. Returns
+    /// null for <see cref="DropPosition.Append"/>, which lets callers like
+    /// <c>AddInstance</c> use their "append to end" default path.
+    /// </summary>
+    private static int? ResolveDesiredFlatIndex(DropPosition? position, ElementSave element)
+    {
+        return position switch
+        {
+            null => null,
+            DropPosition.Append => null,
+            DropPosition.InsertAt at => Math.Clamp(at.Index, 0, element.Instances.Count),
+            DropPosition.BeforeSibling before => Math.Max(0, element.Instances.IndexOf(before.Sibling)),
+            DropPosition.AfterSibling after => element.Instances.IndexOf(after.Sibling) + 1,
+            _ => null
+        };
     }
 
     private string? GetDropElementErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
@@ -420,7 +442,7 @@ public class DragDropManager : IDragDropManager
 
     #region Drop Instance on TreeNode
 
-    private void HandleDroppedInstance(object draggedObject, ITreeNode targetTreeNode, int index)
+    private void HandleDroppedInstance(object draggedObject, ITreeNode targetTreeNode, DropTarget? dropTarget)
     {
         object targetObject = targetTreeNode.Tag;
 
@@ -454,8 +476,10 @@ public class DragDropManager : IDragDropManager
 
             else if (isSameElement)
             {
-                HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave, targetTreeNode, index);
-
+                if (dropTarget != null)
+                {
+                    HandleDroppingInstanceOnTarget(draggedAsInstanceSave, targetTreeNode, dropTarget);
+                }
             }
             else
             {
@@ -497,10 +521,13 @@ public class DragDropManager : IDragDropManager
                 // long. The unit test for one case is here:
                 // DragDropManagerTests.OnNodeSortingDropped_DropInstance_ShouldInsertAtIndex_OnDifferentElement
                 var firstInstance = newInstances.FirstOrDefault();
-                if(firstInstance != null && targetElementSave.Instances.IndexOf(firstInstance) != index)
+                int desiredFlatIndex = ResolveDesiredFlatIndex(dropTarget?.Position, targetElementSave)
+                    ?? targetElementSave.Instances.Count;
+                if(firstInstance != null && targetElementSave.Instances.IndexOf(firstInstance) != desiredFlatIndex)
                 {
                     targetElementSave.Instances.Remove(firstInstance);
-                    targetElementSave.Instances.Insert(index, firstInstance);
+                    int safeIndex = Math.Min(desiredFlatIndex, targetElementSave.Instances.Count);
+                    targetElementSave.Instances.Insert(safeIndex, firstInstance);
 
                     _reorderLogic.RefreshInResponseToReorder(firstInstance);
                 }
@@ -524,107 +551,138 @@ public class DragDropManager : IDragDropManager
         _elementCommands.AddInstance(asBehaviorSave, draggedAsInstanceSave.Name, draggedAsInstanceSave.BaseType);
     }
 
-    private void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, ITreeNode targetTreeNode, int index)
+    private void HandleDroppingInstanceOnTarget(InstanceSave dragDroppedInstance, ITreeNode? targetTreeNode, DropTarget dropTarget)
     {
-        var instanceDefinedByBase = dragDroppedInstance.DefinedByBase;
-
-        if(instanceDefinedByBase)
+        if (dragDroppedInstance.DefinedByBase)
         {
-            _dialogService.ShowMessage($"{dragDroppedInstance.Name} cannot be added as a child of {targetObject} because it is defined in a base element");
+            object describedTarget = (object?)dropTarget.ParentInstance ?? dropTarget.ParentElement;
+            _dialogService.ShowMessage($"{dragDroppedInstance.Name} cannot be added as a child of {describedTarget} because it is defined in a base element");
+            return;
+        }
+
+        ElementSave targetElementSave = dropTarget.ParentElement;
+        InstanceSave? parentInstance = dropTarget.ParentInstance;
+        string variableName = dragDroppedInstance.Name + ".Parent";
+
+        string? parentName;
+        if (parentInstance != null)
+        {
+            parentName = parentInstance.Name;
+            string defaultChild = ObjectFinder.Self.GetDefaultChildName(parentInstance, _selectedState.SelectedStateSave);
+            if (!string.IsNullOrEmpty(defaultChild))
+            {
+                parentName += "." + defaultChild;
+            }
         }
         else
         {
-            string parentName;
-            string variableName = dragDroppedInstance.Name + ".Parent";
-
-            var siblings = new List<InstanceSave>();
-
-            if (targetObject is InstanceSave targetInstance)
-            {
-                // setting the parent:
-                parentName = targetInstance.Name;
-                string defaultChild = ObjectFinder.Self.GetDefaultChildName(targetInstance, _selectedState.SelectedStateSave);
-
-                if (!string.IsNullOrEmpty(defaultChild))
-                {
-                    parentName += "." + defaultChild;
-                }
-
-                foreach(var instance in targetElementSave.Instances)
-                {
-                    var instanceParent = targetElementSave.DefaultState.GetVariableRecursive(instance.Name + ".Parent")?.Value;
-
-                    if (instanceParent is string instanceParentAsString &&
-                        (instanceParentAsString == parentName || instanceParentAsString?.StartsWith($"{parentName}.") == true))
-                    {
-                        siblings.Add(instance);
-                    }
-                }
-            }
-            else
-            {
-                // drag+drop on the container, so detach:
-                parentName = null;
-                foreach (var instance in targetElementSave.Instances)
-                {
-                    var instanceParent = targetElementSave.DefaultState.GetVariableRecursive(instance.Name + ".Parent")?.Value;
-
-                    if (instanceParent == null || (instanceParent is string instanceParentAsString && string.IsNullOrWhiteSpace(instanceParentAsString)))
-                    {
-                        siblings.Add(instance);
-                    }
-                }
-            }
-
-            // index here is the caller's "position among target's children"
-            // (0..siblings.Count). Issue #2864: ProcessDrop can pass the flat
-            // Instances.Count for the InstanceSave-tag append case, which
-            // exceeds siblings.Count. Clamp index-1 to the last sibling so an
-            // out-of-range index lands after the last child (append), rather
-            // than falling through to indexToAddAt=0 (the visible "snap to top"
-            // immediately after the new instance was correctly added at the end).
-            InstanceSave? siblingAfter = null;
-            if (index > 0 && siblings.Count > 0)
-            {
-                int siblingIndex = Math.Min(index - 1, siblings.Count - 1);
-                siblingAfter = siblings[siblingIndex];
-            }
-
-            int indexToAddAt = 0;
-
-            if(siblingAfter != null)
-            {
-                indexToAddAt = targetElementSave.Instances.IndexOf(siblingAfter) + 1;
-            }
-
-            var droppedInstanceIndexBeforeMove = targetElementSave.Instances.IndexOf(dragDroppedInstance);
-
-            if(droppedInstanceIndexBeforeMove != -1 && droppedInstanceIndexBeforeMove != indexToAddAt)
-            {
-                if(indexToAddAt > droppedInstanceIndexBeforeMove)
-                {
-                    indexToAddAt -= 1;
-                }
-                targetElementSave.Instances.RemoveAt(droppedInstanceIndexBeforeMove);
-                targetElementSave.Instances.Insert(indexToAddAt, dragDroppedInstance);
-
-                _pluginManager.InstanceReordered(dragDroppedInstance);
-            }
-
-            // Since the Parent property can only be set in the default state, we will
-            // set the Parent variable on that instead of the _selectedState.SelectedStateSave
-            var stateToAssignOn = targetElementSave.DefaultState;
-
-            // todo - this needs to request the lock for the particular element
-            using var undoLock = _undoManager.RequestLock();
-
-            var oldValue = stateToAssignOn.GetValue(variableName) as string;
-            stateToAssignOn.SetValue(variableName, parentName, "string");
-
-
-            _setVariableLogic.PropertyValueChanged("Parent", oldValue, dragDroppedInstance, targetElementSave?.DefaultState);
-            targetTreeNode?.Expand();
+            // drag+drop on the container, so detach:
+            parentName = null;
         }
+
+        int flatListPosition = ResolveFlatListPositionForReorder(dropTarget, dragDroppedInstance);
+
+        int droppedInstanceIndexBeforeMove = targetElementSave.Instances.IndexOf(dragDroppedInstance);
+
+        if (droppedInstanceIndexBeforeMove != -1 && droppedInstanceIndexBeforeMove != flatListPosition)
+        {
+            targetElementSave.Instances.RemoveAt(droppedInstanceIndexBeforeMove);
+
+            if (flatListPosition > droppedInstanceIndexBeforeMove)
+            {
+                flatListPosition -= 1;
+            }
+            if (flatListPosition > targetElementSave.Instances.Count)
+            {
+                flatListPosition = targetElementSave.Instances.Count;
+            }
+            if (flatListPosition < 0)
+            {
+                flatListPosition = 0;
+            }
+
+            targetElementSave.Instances.Insert(flatListPosition, dragDroppedInstance);
+
+            _pluginManager.InstanceReordered(dragDroppedInstance);
+        }
+
+        // Since the Parent property can only be set in the default state, we will
+        // set the Parent variable on that instead of the _selectedState.SelectedStateSave
+        var stateToAssignOn = targetElementSave.DefaultState;
+
+        // todo - this needs to request the lock for the particular element
+        using var undoLock = _undoManager.RequestLock();
+
+        var oldValue = stateToAssignOn.GetValue(variableName) as string;
+        stateToAssignOn.SetValue(variableName, parentName, "string");
+
+        _setVariableLogic.PropertyValueChanged("Parent", oldValue, dragDroppedInstance, targetElementSave.DefaultState);
+        targetTreeNode?.Expand();
+    }
+
+    /// <summary>
+    /// Computes the flat-list index inside <c>dropTarget.ParentElement.Instances</c>
+    /// at which <paramref name="dragDroppedInstance"/> should land. For
+    /// <see cref="DropPosition.Append"/> on an instance-targeted drop, this
+    /// resolves to "after the last existing sibling-child"; for a direct
+    /// element drop it resolves to "end of list" (which is the same thing
+    /// since top-level instances are by definition the last in the flat list
+    /// when the invariant holds). Self-inclusion no longer needs special
+    /// handling because the caller's Remove/Insert math adjusts for the
+    /// dragged instance being in the list.
+    /// </summary>
+    private int ResolveFlatListPositionForReorder(DropTarget dropTarget, InstanceSave dragDroppedInstance)
+    {
+        ElementSave element = dropTarget.ParentElement;
+        switch (dropTarget.Position)
+        {
+            case DropPosition.Append:
+                if (dropTarget.ParentInstance == null)
+                {
+                    return element.Instances.Count;
+                }
+                // Append-onto-Instance: place after the last existing child of
+                // ParentInstance in the flat list. Excludes the dragged instance
+                // so reorder-onto-own-parent doesn't anchor on itself.
+                InstanceSave? lastSibling = FindLastSiblingOfParent(element, dropTarget.ParentInstance, dragDroppedInstance);
+                return lastSibling != null
+                    ? element.Instances.IndexOf(lastSibling) + 1
+                    : element.Instances.IndexOf(dropTarget.ParentInstance) + 1;
+            case DropPosition.InsertAt insertAt:
+                return Math.Clamp(insertAt.Index, 0, element.Instances.Count);
+            case DropPosition.BeforeSibling before:
+            {
+                int idx = element.Instances.IndexOf(before.Sibling);
+                return idx < 0 ? element.Instances.Count : idx;
+            }
+            case DropPosition.AfterSibling after:
+            {
+                int idx = element.Instances.IndexOf(after.Sibling);
+                return idx < 0 ? element.Instances.Count : idx + 1;
+            }
+            default:
+                return element.Instances.Count;
+        }
+    }
+
+    private static InstanceSave? FindLastSiblingOfParent(ElementSave element, InstanceSave parentInstance, InstanceSave excludeInstance)
+    {
+        string parentName = parentInstance.Name;
+        InstanceSave? last = null;
+        foreach (var instance in element.Instances)
+        {
+            if (instance == excludeInstance)
+            {
+                continue;
+            }
+            var parentValue = element.DefaultState.GetVariableRecursive(instance.Name + ".Parent")?.Value;
+            if (parentValue is string parentString &&
+                (parentString == parentName || parentString.StartsWith(parentName + ".")))
+            {
+                last = instance;
+            }
+        }
+        return last;
     }
 
     public void HandleKeyPress(KeyPressEventArgs e)
@@ -636,7 +694,7 @@ public class DragDropManager : IDragDropManager
 
     #region General Functions
 
-    public bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode? targetNode, int index)
+    public bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode? targetNode, DropTarget? dropTarget)
     {
         if (targetNode == null) return false;
 
@@ -804,24 +862,34 @@ public class DragDropManager : IDragDropManager
         return true;
     }
 
-    public void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
+    public void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, DropTarget? dropTarget)
     {
-        // Sort so that folders come first (they restructure the tree),
-        // then InstanceSaves by descending index (so insertion order is preserved).
-        var sortedNodes = draggedNodes
-            .OrderBy(n => n.Tag == null ? 0 : 1)
-            .ThenByDescending(n => n.Tag is InstanceSave instance
-                ? instance.ParentContainer?.Instances.IndexOf(instance) ?? int.MinValue
-                : int.MinValue)
+        // Sort so that folders come first (they restructure the tree), then
+        // InstanceSaves by source index. The direction depends on DropPosition:
+        // BeforeSibling places each item *before* the anchor sibling, so the
+        // first item processed ends up earlier in the list — process ascending
+        // to preserve drag-order. Append/AfterSibling/InsertAt stack each item
+        // *at* a fixed position, so processing descending preserves drag-order.
+        bool ascendingForSiblings = dropTarget?.Position is DropPosition.BeforeSibling;
+
+        var orderedByTag = draggedNodes.OrderBy(n => n.Tag == null ? 0 : 1);
+        var sortedNodes = (ascendingForSiblings
+            ? orderedByTag.ThenBy(InstanceSourceIndex)
+            : orderedByTag.ThenByDescending(InstanceSourceIndex))
             .ToList();
 
         using var undoLock = _undoManager.RequestLock();
 
         foreach (var node in sortedNodes)
         {
-            HandleDroppedItemOnTreeView(node, targetNode, index);
+            HandleDroppedItemOnTreeView(node, targetNode, dropTarget);
         }
     }
+
+    private static int InstanceSourceIndex(ITreeNode node) =>
+        node.Tag is InstanceSave instance
+            ? instance.ParentContainer?.Instances.IndexOf(instance) ?? int.MinValue
+            : int.MinValue;
 
     private void HandleDroppedFolder(ITreeNode draggedFolderNode, ITreeNode targetNode)
     {
@@ -918,7 +986,7 @@ public class DragDropManager : IDragDropManager
         }
     }
 
-    private void HandleDroppedItemOnTreeView(ITreeNode draggedNode, ITreeNode treeNodeDroppedOn, int index)
+    private void HandleDroppedItemOnTreeView(ITreeNode draggedNode, ITreeNode treeNodeDroppedOn, DropTarget? dropTarget)
     {
         var draggedObject = draggedNode.Tag;
         Console.WriteLine($"Dropping{draggedObject} on {treeNodeDroppedOn}");
@@ -932,11 +1000,11 @@ public class DragDropManager : IDragDropManager
             }
             else if (draggedObject is ElementSave)
             {
-                HandleDroppedElementSave(draggedObject, treeNodeDroppedOn, targetTag, treeNodeDroppedOn, index);
+                HandleDroppedElementSave(draggedObject, treeNodeDroppedOn, targetTag, treeNodeDroppedOn, dropTarget);
             }
             else if (draggedObject is InstanceSave)
             {
-                HandleDroppedInstance(draggedObject, treeNodeDroppedOn, index);
+                HandleDroppedInstance(draggedObject, treeNodeDroppedOn, dropTarget);
             }
             else if(draggedObject is BehaviorSave behaviorSave)
             {
@@ -960,8 +1028,8 @@ public class DragDropManager : IDragDropManager
             // into whatever edit comes next. (issue #2658)
             using var undoLock = _undoManager.RequestLock();
 
-            var index = target.Instances.Count;
-            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, index);
+            DropTarget appendTarget = new DropTarget(target, null, new DropPosition.Append());
+            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, appendTarget);
 
             float worldX, worldY;
 

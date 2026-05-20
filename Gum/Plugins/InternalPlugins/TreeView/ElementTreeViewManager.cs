@@ -720,9 +720,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 if (ProcessDrop(e.TargetNode, e.Kind) is { } drop)
                 {
                     IEnumerable<ITreeNode> wrappedNodes = e.DraggedNodes.Select(n => new TreeNodeWrapper(n));
-                    ITreeNode wrappedTarget = new TreeNodeWrapper(drop.target);
+                    ITreeNode wrappedTarget = new TreeNodeWrapper(drop.TreeTarget);
 
-                    e.Allow = _dragDropManager.ValidateNodeSorting(wrappedNodes, wrappedTarget, drop.index);
+                    e.Allow = _dragDropManager.ValidateNodeSorting(wrappedNodes, wrappedTarget, drop.Drop);
                 }
             },
             onNodeSortingDropped: (_, e) =>
@@ -730,13 +730,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 if (ProcessDrop(e.TargetNode, e.Kind) is { } drop)
                 {
                     IEnumerable<ITreeNode> wrappedNodes = e.DraggedNodes.Select(n => new TreeNodeWrapper(n));
-                    ITreeNode wrappedTarget = new TreeNodeWrapper(drop.target);
+                    ITreeNode wrappedTarget = new TreeNodeWrapper(drop.TreeTarget);
 
                     e.Kind = e.Kind == MultiSelectTreeView.DropKind.None
                         ? MultiSelectTreeView.DropKind.None
                         : MultiSelectTreeView.DropKind.Into;
 
-                    _dragDropManager.OnNodeSortingDropped(wrappedNodes, wrappedTarget, drop.index);
+                    _dragDropManager.OnNodeSortingDropped(wrappedNodes, wrappedTarget, drop.Drop);
                 }
                 e.PerformNativeReorder = false;
             },
@@ -773,16 +773,20 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
     /// <summary>
-    /// Maps a tree drop (target node + kind) to the parent tree node it should
-    /// be inserted under and the index inside that parent's collection.
+    /// Maps a tree drop (target node + kind) to the tree node that becomes the
+    /// drop's container and a typed <see cref="DropTarget"/> describing where
+    /// the dragged item lands inside that container's flat instances list.
+    /// Returns the tree node alone (with a null <see cref="DropTarget"/>) for
+    /// folder/behavior drops where flat-list semantics do not apply.
     /// Internal so it can be unit-tested without instantiating the manager.
     /// </summary>
-    internal static (int index, TreeNode target)? ProcessDrop(TreeNode? originalTarget, MultiSelectTreeView.DropKind kind)
+    internal static (TreeNode TreeTarget, DropTarget? Drop)? ProcessDrop(TreeNode? originalTarget, MultiSelectTreeView.DropKind kind)
     {
         if (originalTarget == null)
         {
             return null;
         }
+
         // Issue #2864: a drop whose visual adornment is "rectangle around the
         // row" (Into and IntoFirst both draw the same box) must append to the
         // flat Instances list the new visual will be added to — never insert
@@ -790,40 +794,44 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // "box vs. line": box = append, line = insert at sibling position.
         // Inserting at index 0 is still reachable as DropKind.Before on the
         // parent's first child, which draws a line.
-        //
-        // For an InstanceSave-tagged target (dropping onto another instance to
-        // parent under it), the destination list is the ParentContainer's
-        // Instances — NOT the target's tree children, which only represent the
-        // subset already parented under it. Without this, dropping a Container
-        // onto another Container lands the new instance partway through the
-        // screen's flat Instances list, behind later siblings.
-        int? index = kind switch
+        switch (kind)
         {
-            MultiSelectTreeView.DropKind.Into or MultiSelectTreeView.DropKind.IntoFirst =>
-                originalTarget.Tag switch
+            case MultiSelectTreeView.DropKind.Into:
+            case MultiSelectTreeView.DropKind.IntoFirst:
+                switch (originalTarget.Tag)
                 {
-                    ElementSave element => element.Instances.Count,
-                    InstanceSave instance when instance.ParentContainer != null
-                        => instance.ParentContainer.Instances.Count,
-                    _ => originalTarget.GetNodeCount(false)
-                },
-            MultiSelectTreeView.DropKind.After => originalTarget.Index + 1,
-            MultiSelectTreeView.DropKind.Before => originalTarget.Index,
-            _ => null
-        };
-        TreeNode? target = kind switch
-        {
-            MultiSelectTreeView.DropKind.Into or MultiSelectTreeView.DropKind.IntoFirst => originalTarget,
-            MultiSelectTreeView.DropKind.After => originalTarget.Parent,
-            MultiSelectTreeView.DropKind.Before => originalTarget.Parent,
-            _ => null
-        };
-        if (target != null && index != null)
-        {
-            return (index.Value, target);
+                    case ElementSave element:
+                        return (originalTarget, new DropTarget(element, null, new DropPosition.Append()));
+                    case InstanceSave instance when instance.ParentContainer != null:
+                        return (originalTarget, new DropTarget(instance.ParentContainer, instance, new DropPosition.Append()));
+                    default:
+                        // Folder/behavior drops: no flat-list semantics. The caller
+                        // routes by treeNode kind (IsTopComponentContainerTreeNode etc.).
+                        return (originalTarget, null);
+                }
+            case MultiSelectTreeView.DropKind.After:
+            case MultiSelectTreeView.DropKind.Before:
+            {
+                TreeNode? parent = originalTarget.Parent;
+                if (parent == null)
+                {
+                    return null;
+                }
+                if (originalTarget.Tag is InstanceSave sibling && sibling.ParentContainer != null)
+                {
+                    InstanceSave? parentInstance = parent.Tag as InstanceSave;
+                    DropPosition position = kind == MultiSelectTreeView.DropKind.Before
+                        ? new DropPosition.BeforeSibling(sibling)
+                        : new DropPosition.AfterSibling(sibling);
+                    return (parent, new DropTarget(sibling.ParentContainer, parentInstance, position));
+                }
+                // Reordering element/folder/behavior nodes does not feed an
+                // instances list — the downstream consumer reads the tree node.
+                return (parent, null);
+            }
+            default:
+                return null;
         }
-
-        return null;
     }
 
 
