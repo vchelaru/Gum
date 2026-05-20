@@ -83,21 +83,21 @@ By default resizing your Game does not adjust Gum. The following animation shows
 
 ## One-Line Resize Helpers
 
-`GumService` provides two convenience methods that wrap the most common resize patterns. Call each one once at startup and again from your platform's window-resize event — MonoGame's `Window.ClientSizeChanged`, or whenever `Raylib.IsWindowResized()` returns `true` in your raylib game loop:
+`GumService` provides two enable-once methods that handle the most common resize patterns automatically. Call once at startup — `GumService.Update` polls the window size each frame and re-applies the fit whenever it changes, so no resize-handler boilerplate is required:
 
 ```csharp
 // Expand: canvas grows to match the window. Authored UI gets more (or less) space.
-GumUi.ExpandToWindow();
+GumUi.EnableExpandToWindow();
 
 // Zoom: canvas stays the same size but everything is scaled up/down so the window
 // always shows the same content. The window size at the first call is treated as the
 // 1:1 reference; resizing zooms proportionally.
-GumUi.ZoomToWindow();
+GumUi.EnableZoomToWindow();
 ```
 
-Both methods accept an optional `defaultZoom` parameter — a multiplier applied at the reference resolution. Passing `defaultZoom: 2f` to `ZoomToWindow` makes everything render at 2× the authored size at the reference resolution and scales proportionally as the window resizes.
+Both methods accept an optional `defaultZoom` parameter — a multiplier applied at the reference resolution. Passing `defaultZoom: 2f` to `EnableZoomToWindow` makes everything render at 2× the authored size at the reference resolution and scales proportionally as the window resizes.
 
-`ZoomToWindow` also accepts a `WindowZoomMode` enum. The default is `HeightDominant` (window height drives the zoom factor); pass `WindowZoomMode.WidthDominant` if window width should drive zoom instead.
+`EnableZoomToWindow` also accepts a `WindowZoomMode` enum. The default is `HeightDominant` (window height drives the zoom factor); pass `WindowZoomMode.WidthDominant` if window width should drive zoom instead.
 
 The remainder of this page describes the manual equivalents these helpers replace.
 

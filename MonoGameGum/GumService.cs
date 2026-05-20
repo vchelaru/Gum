@@ -94,6 +94,21 @@ public class GumService
     private int? _zoomReferenceWidth;
     private int? _zoomReferenceHeight;
 
+    private enum FitPolicy
+    {
+        None,
+        Zoom,
+        Expand,
+    }
+
+    private FitPolicy _fitPolicy;
+    private WindowZoomMode _fitZoomMode;
+    private float _fitDefaultZoom;
+    // Update() polls these against the current window size each frame so resize
+    // detection is platform-agnostic — no resize-event subscription on either backend.
+    private int _lastSeenWindowWidth;
+    private int _lastSeenWindowHeight;
+
     /// <summary>
     /// Gets or sets the width of the canvas, which acts as the root-most coordiante space. This value
     /// represents the "internal coordinates" which can be adjusted by Camera zoom.
@@ -115,10 +130,11 @@ public class GumService
     }
 
     /// <summary>
-    /// Zooms the camera so the Gum canvas scales with the current window size, using the
-    /// window dimensions at the first call as the 1:1 reference. Call this once at startup
-    /// and again from your platform's window-resize event (e.g. MonoGame's
-    /// <c>Game.Window.ClientSizeChanged</c> or after raylib's <c>IsWindowResized()</c>).
+    /// Enables a zoom-based fit policy: the camera scales so the Gum canvas tracks the
+    /// current window size, using the window dimensions at the first call as the 1:1
+    /// reference. The fit is applied immediately and then re-applied automatically inside
+    /// <see cref="Update(GameTime)"/> whenever the window size changes. Call once at
+    /// startup — no resize-handler boilerplate required.
     /// </summary>
     /// <param name="mode">
     /// Whether window height or window width drives the zoom factor. The dominant axis
@@ -131,37 +147,25 @@ public class GumService
     /// size at the reference resolution, scaling proportionally as the window resizes.
     /// </param>
     /// <remarks>
-    /// The reference resolution is captured on the first call and persists for the
-    /// lifetime of this <see cref="GumService"/> instance. Pair with
-    /// <see cref="ExpandToWindow(float)"/> when you want the canvas to grow with the
-    /// window instead of zooming.
+    /// Calling this replaces any previously enabled fit policy (including one set by
+    /// <see cref="EnableExpandToWindow(float)"/>). The reference resolution is captured on
+    /// the first call to <c>EnableZoomToWindow</c> and persists for the lifetime of this
+    /// instance.
     /// </remarks>
-    public void ZoomToWindow(WindowZoomMode mode = WindowZoomMode.HeightDominant, float defaultZoom = 1f)
+    public void EnableZoomToWindow(WindowZoomMode mode = WindowZoomMode.HeightDominant, float defaultZoom = 1f)
     {
-        var (windowWidth, windowHeight) = GetWindowSize();
-        ZoomToWindow(windowWidth, windowHeight, mode, defaultZoom);
-    }
-
-    internal void ZoomToWindow(int windowWidth, int windowHeight, WindowZoomMode mode, float defaultZoom)
-    {
-        _zoomReferenceWidth ??= windowWidth;
-        _zoomReferenceHeight ??= windowHeight;
-
-        var (zoom, canvasWidth, canvasHeight) = WindowFitMath.ComputeZoom(
-            windowWidth, windowHeight,
-            _zoomReferenceWidth.Value, _zoomReferenceHeight.Value,
-            mode, defaultZoom);
-
-        SystemManagers.Renderer.Camera.Zoom = zoom;
-        CanvasWidth = canvasWidth;
-        CanvasHeight = canvasHeight;
-        Root.UpdateLayout();
+        _fitPolicy = FitPolicy.Zoom;
+        _fitZoomMode = mode;
+        _fitDefaultZoom = defaultZoom;
+        ApplyCurrentFit();
     }
 
     /// <summary>
-    /// Resizes the Gum canvas to match the current window size so authored UI gets more
-    /// (or less) space rather than scaling. Call this once at startup and again from your
-    /// window-resize handler (e.g. <c>Game.Window.ClientSizeChanged</c>).
+    /// Enables an expand-based fit policy: the Gum canvas is resized to match the current
+    /// window so authored UI gets more (or less) space rather than scaling. The fit is
+    /// applied immediately and then re-applied automatically inside
+    /// <see cref="Update(GameTime)"/> whenever the window size changes. Call once at
+    /// startup — no resize-handler boilerplate required.
     /// </summary>
     /// <param name="defaultZoom">
     /// A camera zoom multiplier. With <c>1f</c> the canvas matches the window pixel-for-pixel.
@@ -170,24 +174,72 @@ public class GumService
     /// filling the window.
     /// </param>
     /// <remarks>
-    /// Pair with <see cref="ZoomToWindow(WindowZoomMode, float)"/> when you want UI to
-    /// scale with the window instead of expanding into the new space.
+    /// Calling this replaces any previously enabled fit policy (including one set by
+    /// <see cref="EnableZoomToWindow(WindowZoomMode, float)"/>).
     /// </remarks>
-    public void ExpandToWindow(float defaultZoom = 1f)
+    public void EnableExpandToWindow(float defaultZoom = 1f)
     {
-        var (windowWidth, windowHeight) = GetWindowSize();
-        ExpandToWindow(windowWidth, windowHeight, defaultZoom);
+        _fitPolicy = FitPolicy.Expand;
+        _fitDefaultZoom = defaultZoom;
+        ApplyCurrentFit();
     }
 
-    internal void ExpandToWindow(int windowWidth, int windowHeight, float defaultZoom)
+    private void ApplyCurrentFit()
     {
-        var (zoom, canvasWidth, canvasHeight) = WindowFitMath.ComputeExpand(
-            windowWidth, windowHeight, defaultZoom);
+        if (_fitPolicy == FitPolicy.None)
+        {
+            return;
+        }
 
-        SystemManagers.Renderer.Camera.Zoom = zoom;
-        CanvasWidth = canvasWidth;
-        CanvasHeight = canvasHeight;
-        Root.UpdateLayout();
+        var (windowWidth, windowHeight) = GetWindowSize();
+        _lastSeenWindowWidth = windowWidth;
+        _lastSeenWindowHeight = windowHeight;
+        ApplyFitForSize(windowWidth, windowHeight);
+    }
+
+    private void PollWindowSizeAndApplyFit()
+    {
+        if (_fitPolicy == FitPolicy.None)
+        {
+            return;
+        }
+
+        var (windowWidth, windowHeight) = GetWindowSize();
+        if (windowWidth == _lastSeenWindowWidth && windowHeight == _lastSeenWindowHeight)
+        {
+            return;
+        }
+
+        _lastSeenWindowWidth = windowWidth;
+        _lastSeenWindowHeight = windowHeight;
+        ApplyFitForSize(windowWidth, windowHeight);
+    }
+
+    internal void ApplyFitForSize(int windowWidth, int windowHeight)
+    {
+        switch (_fitPolicy)
+        {
+            case FitPolicy.Zoom:
+                _zoomReferenceWidth ??= windowWidth;
+                _zoomReferenceHeight ??= windowHeight;
+                var (zoom, zoomCanvasW, zoomCanvasH) = WindowFitMath.ComputeZoom(
+                    windowWidth, windowHeight,
+                    _zoomReferenceWidth.Value, _zoomReferenceHeight.Value,
+                    _fitZoomMode, _fitDefaultZoom);
+                SystemManagers.Renderer.Camera.Zoom = zoom;
+                CanvasWidth = zoomCanvasW;
+                CanvasHeight = zoomCanvasH;
+                Root.UpdateLayout();
+                break;
+            case FitPolicy.Expand:
+                var (expandZoom, expandCanvasW, expandCanvasH) = WindowFitMath.ComputeExpand(
+                    windowWidth, windowHeight, _fitDefaultZoom);
+                SystemManagers.Renderer.Camera.Zoom = expandZoom;
+                CanvasWidth = expandCanvasW;
+                CanvasHeight = expandCanvasH;
+                Root.UpdateLayout();
+                break;
+        }
     }
 
     private (int width, int height) GetWindowSize()
@@ -894,6 +946,9 @@ public class GumService
 
         _zoomReferenceWidth = null;
         _zoomReferenceHeight = null;
+        _fitPolicy = FitPolicy.None;
+        _lastSeenWindowWidth = 0;
+        _lastSeenWindowHeight = 0;
 
         SystemManagers.Default = null;
         ISystemManagers.Default = null;
@@ -943,6 +998,8 @@ public class GumService
 #endif
     public void Update(GameTime gameTime)
     {
+        PollWindowSizeAndApplyFit();
+
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
 
         Update(gameTime, this.Root);
