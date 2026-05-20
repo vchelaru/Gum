@@ -34,10 +34,13 @@ public class BasicShapes
         // 4x MSAA enables framebuffer-level antialiasing — raylib has no per-shape AA, so
         // this is the only path to smooth circle/ring edges. Must be set BEFORE InitWindow
         // (raylib only consults config flags at GL context creation).
-        SetConfigFlags(ConfigFlags.Msaa4xHint);
+        SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
         InitWindow(screenWidth, screenHeight, "Gum raylib gallery");
 
         GumUI.Initialize();
+
+        // Demo the auto-fit helpers — flip via the Zoom/Expand radio buttons in the nav strip.
+        GumUI.EnableZoomToWindow();
         var standardTexture = SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png");
 
         InitializeStyling();
@@ -79,6 +82,19 @@ public class BasicShapes
         AddNavButton("Circles", () => new CirclesScreen());
         AddNavButton("Rectangles", () => new RectanglesScreen());
         AddNavButton("Polygons", () => new PolygonsScreen());
+
+        AddFitModeRadio("Zoom", isChecked: true, () => GumUI.EnableZoomToWindow());
+        AddFitModeRadio("Expand", isChecked: false, () => GumUI.EnableExpandToWindow());
+    }
+
+    private static void AddFitModeRadio(string text, bool isChecked, Action onChecked)
+    {
+        RadioButton radio = new RadioButton();
+        radio.GroupName = "FitMode";
+        radio.Text = text;
+        radio.IsChecked = isChecked;
+        radio.Checked += (_, _) => onChecked();
+        navStrip!.AddChild(radio);
     }
 
     private static void AddNavButton(string text, Func<FrameworkElement> factory)
