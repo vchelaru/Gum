@@ -262,16 +262,19 @@ public class LineCircle : InvisibleRenderable
             float shadowCy = cy + DropshadowOffsetY;
             float blur = System.MathF.Max(DropshadowBlurX, DropshadowBlurY);
 
-            // Issue #2851: scale shadow alpha by body Color.A so fading the circle to
-            // transparent also fades the shadow. Matches SkiaGum (the Gum tool/viewport),
-            // where the shadow is an image filter on the same paint that draws the body and
-            // therefore inherits its alpha. Apos.Shapes does the same scaling on its side via
-            // RenderableShapeBase.EffectiveDropshadowColor.
+            // Issue #2851: scale shadow alpha by the body's effective alpha so fading the
+            // circle to transparent also fades the shadow. Matches SkiaGum (the Gum
+            // tool/viewport) and Apos.Shapes (RenderableShapeBase.EffectiveDropshadowColor).
+            // In the two-slot model the user picks the body alpha via FillColor / StrokeColor
+            // / legacy Color; we read the same precedence the fill pass below uses
+            // (FillColor ?? Color), falling back to StrokeColor when no fill is set so an
+            // outline-only shape's shadow still fades with the outline.
+            byte bodyAlpha = FillColor?.A ?? StrokeColor?.A ?? Color.A;
             Color effectiveDropshadowColor = new Color(
                 DropshadowColor.R,
                 DropshadowColor.G,
                 DropshadowColor.B,
-                (byte)(DropshadowColor.A * Color.A / 255));
+                (byte)(DropshadowColor.A * bodyAlpha / 255));
 
             if (blur > 0f)
             {
