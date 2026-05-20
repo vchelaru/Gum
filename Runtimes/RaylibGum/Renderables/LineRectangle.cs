@@ -289,6 +289,17 @@ public class LineRectangle : InvisibleRenderable
             float shadowY = oy + DropshadowOffsetY;
             float blur = MathF.Max(DropshadowBlurX, DropshadowBlurY);
 
+            // Issue #2851: scale shadow alpha by body Color.A so fading the rectangle to
+            // transparent also fades the shadow. Matches SkiaGum (the Gum tool/viewport),
+            // where the shadow is an image filter on the same paint that draws the body and
+            // therefore inherits its alpha. Apos.Shapes does the same scaling on its side via
+            // RenderableShapeBase.EffectiveDropshadowColor.
+            Color effectiveDropshadowColor = new Color(
+                DropshadowColor.R,
+                DropshadowColor.G,
+                DropshadowColor.B,
+                (byte)(DropshadowColor.A * Color.A / 255));
+
             if (blur > 0f)
             {
                 // Bands span both sides of the silhouette boundary: from -blur to +blur
@@ -314,13 +325,13 @@ public class LineRectangle : InvisibleRenderable
                     float currP = 1f - targetAlpha;
                     float beta = prevP > 0f ? 1f - currP / prevP : 0f;
                     prevP = currP;
-                    byte bandAlpha = (byte)(DropshadowColor.A * beta);
+                    byte bandAlpha = (byte)(effectiveDropshadowColor.A * beta);
                     if (bandAlpha == 0)
                     {
                         continue;
                     }
-                    Color bandColor = new Color(DropshadowColor.R, DropshadowColor.G,
-                        DropshadowColor.B, bandAlpha);
+                    Color bandColor = new Color(effectiveDropshadowColor.R, effectiveDropshadowColor.G,
+                        effectiveDropshadowColor.B, bandAlpha);
                     float inflate = -bandSpan + (j + 1) * bandThickness;
                     float bandW = w + 2f * inflate;
                     float bandH = h + 2f * inflate;
@@ -370,12 +381,12 @@ public class LineRectangle : InvisibleRenderable
                         float innerRoundness = innerMinDim > 0f
                             ? MathF.Min(1f, innerCornerR * 2f / innerMinDim)
                             : 0f;
-                        DrawRectangleRounded(innerCore, innerRoundness, roundedSegments, DropshadowColor);
+                        DrawRectangleRounded(innerCore, innerRoundness, roundedSegments, effectiveDropshadowColor);
                     }
                     else
                     {
                         DrawRectangleV(new Vector2(innerCore.X, innerCore.Y),
-                            new Vector2(innerCoreW, innerCoreH), DropshadowColor);
+                            new Vector2(innerCoreW, innerCoreH), effectiveDropshadowColor);
                     }
                 }
             }
@@ -385,11 +396,11 @@ public class LineRectangle : InvisibleRenderable
                 if (useRounded && !rotated)
                 {
                     Rectangle shadowRect = new Rectangle(shadowX, shadowY, w, h);
-                    DrawRectangleRounded(shadowRect, roundness, roundedSegments, DropshadowColor);
+                    DrawRectangleRounded(shadowRect, roundness, roundedSegments, effectiveDropshadowColor);
                 }
                 else
                 {
-                    DrawRectangleV(new Vector2(shadowX, shadowY), new Vector2(w, h), DropshadowColor);
+                    DrawRectangleV(new Vector2(shadowX, shadowY), new Vector2(w, h), effectiveDropshadowColor);
                 }
             }
         }

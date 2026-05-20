@@ -328,6 +328,17 @@ internal class RectanglesScreen : FrameworkElement
         colored.DropshadowBlurY = 6;
         row.AddChild(colored);
 
+        // Issue #2851 visual acceptance — body alpha multiplies into the shadow alpha.
+        RectangleRuntime fadedBody = new();
+        fadedBody.Width = 60; fadedBody.Height = 50;
+        fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)80);
+        fadedBody.HasDropshadow = true;
+        fadedBody.DropshadowOffsetX = 4;
+        fadedBody.DropshadowOffsetY = 4;
+        fadedBody.DropshadowBlurX = 4;
+        fadedBody.DropshadowBlurY = 4;
+        row.AddChild(fadedBody);
+
         return row;
     }
 

@@ -262,6 +262,17 @@ public class LineCircle : InvisibleRenderable
             float shadowCy = cy + DropshadowOffsetY;
             float blur = System.MathF.Max(DropshadowBlurX, DropshadowBlurY);
 
+            // Issue #2851: scale shadow alpha by body Color.A so fading the circle to
+            // transparent also fades the shadow. Matches SkiaGum (the Gum tool/viewport),
+            // where the shadow is an image filter on the same paint that draws the body and
+            // therefore inherits its alpha. Apos.Shapes does the same scaling on its side via
+            // RenderableShapeBase.EffectiveDropshadowColor.
+            Color effectiveDropshadowColor = new Color(
+                DropshadowColor.R,
+                DropshadowColor.G,
+                DropshadowColor.B,
+                (byte)(DropshadowColor.A * Color.A / 255));
+
             if (blur > 0f)
             {
                 // Skia's Gaussian convolution of the shape silhouette makes the silhouette
@@ -294,13 +305,13 @@ public class LineCircle : InvisibleRenderable
                     float currP = 1f - targetAlpha;
                     float beta = prevP > 0f ? 1f - currP / prevP : 0f;
                     prevP = currP;
-                    byte circleAlpha = (byte)(DropshadowColor.A * beta);
+                    byte circleAlpha = (byte)(effectiveDropshadowColor.A * beta);
                     if (circleAlpha == 0)
                     {
                         continue;
                     }
-                    Color circleColor = new Color(DropshadowColor.R, DropshadowColor.G,
-                        DropshadowColor.B, circleAlpha);
+                    Color circleColor = new Color(effectiveDropshadowColor.R, effectiveDropshadowColor.G,
+                        effectiveDropshadowColor.B, circleAlpha);
                     float r = Radius - bandSpan + (j + 1) * bandThickness;
                     if (r > 0f)
                     {
@@ -314,13 +325,13 @@ public class LineCircle : InvisibleRenderable
                 float innerCoreR = Radius - bandSpan;
                 if (innerCoreR > 0f)
                 {
-                    DrawCircle((int)shadowCx, (int)shadowCy, innerCoreR, DropshadowColor);
+                    DrawCircle((int)shadowCx, (int)shadowCy, innerCoreR, effectiveDropshadowColor);
                 }
             }
             else
             {
                 // blur = 0: hard offset silhouette, no fade.
-                DrawCircle((int)shadowCx, (int)shadowCy, Radius, DropshadowColor);
+                DrawCircle((int)shadowCx, (int)shadowCy, Radius, effectiveDropshadowColor);
             }
         }
 

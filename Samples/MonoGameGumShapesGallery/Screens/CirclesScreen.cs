@@ -301,6 +301,20 @@ internal class CirclesScreen : FrameworkElement
         colored.DropshadowBlurY = 6;
         row.AddChild(colored);
 
+        // Issue #2851 visual acceptance: same soft-shadow config as the second cell, but with
+        // the body's alpha cut to 80. The shadow must fade alongside the body — matches Skia
+        // (and therefore the Gum tool/viewport). Pre-fix the Apos.Shapes side left an opaque
+        // shadow ghost behind a translucent disk.
+        CircleRuntime fadedBody = new();
+        fadedBody.Radius = 28;
+        fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)80);
+        fadedBody.HasDropshadow = true;
+        fadedBody.DropshadowOffsetX = 4;
+        fadedBody.DropshadowOffsetY = 4;
+        fadedBody.DropshadowBlurX = 4;
+        fadedBody.DropshadowBlurY = 4;
+        row.AddChild(fadedBody);
+
         return row;
     }
 

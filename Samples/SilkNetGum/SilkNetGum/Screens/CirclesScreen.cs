@@ -381,6 +381,20 @@ internal class CirclesScreen : GraphicalUiElement
         colored.DropshadowBlurY = 6;
         row.Children.Add(colored);
 
+        // Issue #2851 visual acceptance: same soft-shadow config as the second cell, but with
+        // the body's alpha cut to 80. SkiaGum has always faded the shadow with the body (this
+        // is the canonical behavior); the cell exists here so the gallery matches the
+        // post-#2851 MonoGameGumShapes side cell-for-cell.
+        CircleRuntime fadedBody = new();
+        fadedBody.Radius = 28;
+        fadedBody.FillColor = new SKColor(218, 165, 32, 80);
+        fadedBody.HasDropshadow = true;
+        fadedBody.DropshadowOffsetX = 4;
+        fadedBody.DropshadowOffsetY = 4;
+        fadedBody.DropshadowBlurX = 4;
+        fadedBody.DropshadowBlurY = 4;
+        row.Children.Add(fadedBody);
+
         return row;
     }
 
