@@ -82,7 +82,7 @@ public class RoundedRectangle : RenderableShapeBase,
                 MathFunctions.RoundToInt(DropshadowBlurX),
                 StrokeWidth - DropshadowBlurX,
                 rotationRadians,
-                forcedColor: DropshadowColor);
+                forcedColor: EffectiveDropshadowColor);
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, size, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians);

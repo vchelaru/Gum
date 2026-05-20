@@ -301,6 +301,21 @@ public abstract class RenderableShapeBase : RenderableBase
         }
     }
 
+    /// <summary>
+    /// Issue #2851 — the dropshadow color actually emitted by <see cref="Circle"/> and
+    /// <see cref="RoundedRectangle"/>, with its alpha multiplied by the body's
+    /// <see cref="Color"/> alpha. Matches SkiaGum (and therefore the Gum tool/viewport),
+    /// where the shadow is an image filter on the same paint that draws the body, so reducing
+    /// the shape's alpha fades the shadow with it. Without this scaling, an Apos.Shapes
+    /// shape fading to transparent would leave an opaque shadow ghost behind.
+    /// </summary>
+    public Color EffectiveDropshadowColor =>
+        new Color(
+            _dropshadowColor.R,
+            _dropshadowColor.G,
+            _dropshadowColor.B,
+            (byte)(_dropshadowColor.A * Color.A / 255));
+
     public int DropshadowAlpha
     {
         get => DropshadowColor.A;

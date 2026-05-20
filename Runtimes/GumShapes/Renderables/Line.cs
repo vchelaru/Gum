@@ -35,7 +35,7 @@ internal class Line : RenderableShapeBase
             RenderInternal(sb, absoluteLeft + DropshadowOffsetX, absoluteTop + DropshadowOffsetY,
                 shadowA, shadowB,
                 antiAliasSize: MathHelper.Max(1, DropshadowBlurX),
-                forcedColor: DropshadowColor);
+                forcedColor: EffectiveDropshadowColor);
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize: IsAntialiased ? 1 : 0);

@@ -90,7 +90,7 @@ internal class Arc : RenderableShapeBase
                 radius: radius,
                 antiAliasSize: MathFunctions.RoundToInt(DropshadowBlurX),
                 lineThickness: StrokeWidth - DropshadowBlurX,
-                forcedColor: DropshadowColor);
+                forcedColor: EffectiveDropshadowColor);
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth);
