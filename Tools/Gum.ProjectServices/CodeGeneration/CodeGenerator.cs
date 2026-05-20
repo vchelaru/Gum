@@ -1513,7 +1513,9 @@ public class CodeGenerator
             var builder = context.StringBuilder;
 
             builder.AppendLine(context.Tabs + "[System.Runtime.CompilerServices.ModuleInitializer]");
-            builder.AppendLine(context.Tabs + "public static void RegisterRuntimeType()");
+            var registerRuntimeTypeBase = ObjectFinder.Self.GetElementSave(context.Element.BaseType);
+            var registerRuntimeTypeNewModifier = registerRuntimeTypeBase is ComponentSave ? "new " : "";
+            builder.AppendLine(context.Tabs + $"public static {registerRuntimeTypeNewModifier}void RegisterRuntimeType()");
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
@@ -1612,7 +1614,9 @@ public class CodeGenerator
             var builder = context.StringBuilder;
 
             builder.AppendLine(context.Tabs + "[System.Runtime.CompilerServices.ModuleInitializer]");
-            builder.AppendLine(context.Tabs + "public static void RegisterRuntimeType()");
+            var registerRuntimeTypeBase = ObjectFinder.Self.GetElementSave(context.Element.BaseType);
+            var registerRuntimeTypeNewModifier = registerRuntimeTypeBase is ComponentSave ? "new " : "";
+            builder.AppendLine(context.Tabs + $"public static {registerRuntimeTypeNewModifier}void RegisterRuntimeType()");
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
