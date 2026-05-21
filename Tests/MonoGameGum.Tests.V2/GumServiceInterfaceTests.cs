@@ -60,6 +60,14 @@ public class GumServiceInterfaceTests
     }
 
     [Fact]
+    public void IGumService_InitializeWithProjectPath_OnXnaLikeRuntime_Throws()
+    {
+        IGumService service = GumService.Default;
+
+        Should.Throw<NotSupportedException>(() => service.Initialize("some.gumx"));
+    }
+
+    [Fact]
     public void IGumService_Default_CanBeSetAndCleared()
     {
         IGumService? original = IGumService.Default;

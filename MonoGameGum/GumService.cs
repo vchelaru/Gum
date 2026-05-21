@@ -51,6 +51,17 @@ public class GumService : IGumService
 #endif
     }
 
+    void IGumService.Initialize(string gumProjectFile)
+    {
+#if XNALIKE
+        throw new NotSupportedException(
+            "This runtime requires a Game instance. Call " +
+            "GumService.Default.Initialize(Game, gumProjectFile) on the concrete GumService instead.");
+#elif RAYLIB
+        Initialize(gumProjectFile);
+#endif
+    }
+
     #region Default
     static GumService _default = default!;
 

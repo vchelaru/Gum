@@ -28,6 +28,15 @@ namespace RenderingLibrary
         void Initialize();
 
         /// <summary>
+        /// Initializes the service and loads the Gum project at the given path. Runtime
+        /// support matches <see cref="Initialize()"/>: no-host runtimes (e.g. Raylib)
+        /// load the project; runtimes that need additional context (e.g. MonoGame)
+        /// throw <see cref="System.NotSupportedException"/>.
+        /// </summary>
+        /// <param name="gumProjectFile">Path to the .gumx project file to load.</param>
+        void Initialize(string gumProjectFile);
+
+        /// <summary>
         /// Gets whether the underlying GumService has been initialized.
         /// </summary>
         bool IsInitialized { get; }
