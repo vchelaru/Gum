@@ -25,7 +25,7 @@ public class Game1 : Game
 {
     private const int BackBufferWidth = 1280;
     private const int BackBufferHeight = 1000;
-    private const float NavStripHeight = 40;
+    private const float NavStripHeight = 80;
 
     private readonly GraphicsDeviceManager _graphics;
 
@@ -59,24 +59,20 @@ public class Game1 : Game
         base.Initialize();
     }
 
-    // Top-right overlay showing the count of SpriteBatch.Begin calls from the
-    // previous frame, sourced from SpriteRenderer.LastFrameDrawStates. Useful
-    // for spotting batch-break regressions and for A/B-ing alternate orderers
-    // (see issue #2879). Note: this count does NOT include Apos.Shapes
-    // StartBatch calls — those go through ShapeBatch, which is not visible to
+    // Overlay showing the count of SpriteBatch.Begin calls from the previous frame
+    // (sourced from SpriteRenderer.LastFrameDrawStates) and the active orderer. Lives
+    // as the last child of the nav strip so it flows alongside the buttons and wraps
+    // to a new row when there isn't horizontal room. Note: this count does NOT include
+    // Apos.Shapes StartBatch — those go through ShapeBatch, which is invisible to
     // LastFrameDrawStates.
     private void BuildDrawCountOverlay()
     {
         _drawCountOverlay = new TextRuntime();
-        _drawCountOverlay.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Right;
-        _drawCountOverlay.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
-        _drawCountOverlay.X = -8;
-        _drawCountOverlay.Y = 12;
         _drawCountOverlay.Red = 255;
         _drawCountOverlay.Green = 230;
         _drawCountOverlay.Blue = 120;
         _drawCountOverlay.Text = "SpriteBatch.Begin: 0";
-        _drawCountOverlay.AddToRoot();
+        _navStrip!.Visual.Children.Add(_drawCountOverlay);
     }
 
     private void BuildNavStrip()
@@ -86,6 +82,13 @@ public class Game1 : Game
         _navStrip.Spacing = 4;
         _navStrip.Visual.X = 4;
         _navStrip.Visual.Y = 4;
+        // Full-width wrap container so the draw-count overlay added after the buttons
+        // flows alongside them and reflows to a new row when there isn't horizontal room.
+        _navStrip.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        _navStrip.Visual.Width = -8;
+        _navStrip.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        _navStrip.Visual.Height = NavStripHeight - 8;
+        _navStrip.Visual.WrapsChildren = true;
         _navStrip.AddToRoot();
 
         AddNavButton("Shape survey", NewSurveyScreen);
@@ -162,7 +165,7 @@ public class Game1 : Game
         string ordererLabel = Renderer.SiblingOrdering == BatchKeyGroupedOrderer.Instance
             ? "Grouped"
             : "Hierarchical";
-        _drawCountOverlay.Text = $"SpriteBatch.Begin: {count}  |  Orderer (B to toggle): {ordererLabel}";
+        _drawCountOverlay.Text = $"SpriteBatch.Begin: {count}  |  Orderer (B): {ordererLabel}";
     }
 
     protected override void Draw(GameTime gameTime)

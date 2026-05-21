@@ -147,9 +147,34 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         window.Add(new Entry
         {
             Item = renderable,
-            Bounds = renderable.GetAbsoluteBounds(),
+            Bounds = GetEffectiveBounds(renderable),
             BatchKey = renderable.BatchKey ?? string.Empty,
         });
+    }
+
+    /// <summary>
+    /// Returns the renderable's absolute bounds, with a conservative fallback for cases
+    /// where the computed bounds don't reflect the visible footprint. The common offender
+    /// is a renderable with non-default <c>XOrigin/YOrigin/Rotation</c> (e.g. a sprite
+    /// centered on its parent with <c>XOrigin=Center, XUnits=PixelsFromMiddle, Rotation=90</c>):
+    /// the contained renderable's X/Y reflect a pre-rotation reference point that can sit
+    /// outside the parent, even though the visible draw lands inside it. If the computed
+    /// bounds don't intersect the parent's, fall back to the parent's bounds — it's a
+    /// safe over-estimate that keeps the overlap test honest.
+    /// </summary>
+    private static Rectangle GetEffectiveBounds(IRenderableIpso renderable)
+    {
+        Rectangle bounds = renderable.GetAbsoluteBounds();
+        IRenderableIpso? parent = renderable.Parent;
+        if (parent != null)
+        {
+            Rectangle parentBounds = parent.GetAbsoluteBounds();
+            if (parentBounds.Width > 0 && parentBounds.Height > 0 && !bounds.IntersectsWith(parentBounds))
+            {
+                return parentBounds;
+            }
+        }
+        return bounds;
     }
 
     private static void FlushWindow(List<Entry> window, List<DrawCommand> destination)

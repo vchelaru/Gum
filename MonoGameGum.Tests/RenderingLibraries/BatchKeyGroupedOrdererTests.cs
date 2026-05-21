@@ -327,6 +327,53 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
     }
 
     [Fact]
+    public void BuildDrawList_ChildBoundsOutsideParent_FallsBackToParentBoundsForOverlap()
+    {
+        // Reproduces the scrollbar arrow icon bug: a child renderable whose computed bounds
+        // sit outside its parent's bounds (because of rotation/origin/units the orderer
+        // can't model directly). Without the parent-fallback, the icon has no precedence
+        // edges to anything in its subtree — the topological sort's "stay on the current
+        // batch key" tiebreaker then pulls it forward, ahead of the background it should
+        // paint on top of. With the fallback, icon's effective bounds become the parent's,
+        // restoring painter's order.
+        //
+        // Setup mirrors the real-world shape:
+        //   - previousSpriteBatch establishes currentBucket=SpriteBatch.
+        //   - buttonContainer is an empty-key parent (mimicking a ButtonInstance whose own
+        //     visible draw is none — only its children paint).
+        //   - background is the button's SB-keyed painted background.
+        //   - icon's computed bounds sit far outside buttonContainer.
+        FakeRenderable previousSpriteBatch = new FakeRenderable("previous", "SpriteBatch")
+        {
+            X = 0, Y = 0, Width = 100, Height = 30,
+        };
+        FakeRenderable buttonContainer = new FakeRenderable("buttonContainer", "")
+        {
+            X = 0, Y = 100, Width = 50, Height = 50,
+        };
+        FakeRenderable background = AddChild(buttonContainer, "background", "SpriteBatch");
+        background.X = 0;
+        background.Y = 0;
+        background.Width = 50;
+        background.Height = 50;
+        FakeRenderable icon = AddChild(buttonContainer, "icon", "SpriteBatch");
+        icon.X = 500;
+        icon.Y = 500;
+        icon.Width = 32;
+        icon.Height = 32;
+
+        Layer layer = BuildLayer(previousSpriteBatch, buttonContainer);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        List<string> result = Describe(commands);
+        int backgroundIdx = result.IndexOf("DrawRenderable:background");
+        int iconIdx = result.IndexOf("DrawRenderable:icon");
+        backgroundIdx.ShouldBeLessThan(iconIdx);
+    }
+
+    [Fact]
     public void BuildDrawList_WithPreExistingCommands_ClearsDestinationFirst()
     {
         Layer layer = BuildLayer(new FakeRenderable("only"));
