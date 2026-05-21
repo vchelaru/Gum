@@ -19,6 +19,11 @@ public interface IGamePad
     bool ButtonPushed(GamepadButton button);
 
     /// <summary>
+    /// Returns whether the specified button was released this frame (down last frame, not down this frame).
+    /// </summary>
+    bool ButtonReleased(GamepadButton button);
+
+    /// <summary>
     /// Returns whether the specified button was pushed this frame, or has been held
     /// long enough to trigger key-repeat semantics.
     /// </summary>

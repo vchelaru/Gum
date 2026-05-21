@@ -27,7 +27,7 @@ namespace FlatRedBall.Forms.Controls;
 #elif XNALIKE
 using MonoGameGum.Input;
 using Gum.Input;
-using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+using GamepadButton = Gum.Input.GamepadButton;
 using Microsoft.Xna.Framework.Input;
 #else
 using Gum.Input;

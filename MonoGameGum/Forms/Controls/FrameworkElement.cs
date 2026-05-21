@@ -30,13 +30,14 @@ using FlatRedBall.Instructions;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using BindableGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
+using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif XNALIKE
 using Keys = Microsoft.Xna.Framework.Input.Keys;
-using GamePad = MonoGameGum.Input.GamePad;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 using Gum.Input;
+using GamepadButton = Gum.Input.GamepadButton;
 using Gum.Converters;
 #elif RAYLIB
 using RaylibGum;
@@ -112,7 +113,7 @@ public class FrameworkElement : INotifyPropertyChanged
     public Cursors? CustomCursor { get; set; }
 #endif
 
-    public static List<GamePad> GamePadsForUiControl { get; private set; } = new List<GamePad>();
+    public static List<IGamePad> GamePadsForUiControl { get; private set; } = new List<IGamePad>();
 
 #if !FRB
 
@@ -1098,20 +1099,20 @@ public class FrameworkElement : INotifyPropertyChanged
 #if FRB
     protected void HandleGamepadNavigation(Xbox360GamePad gamepad)
 #else
-    protected void HandleGamepadNavigation(GamePad gamepad)
+    protected void HandleGamepadNavigation(IGamePad gamepad)
 #endif
     {
         // todo for raylib...
 #if XNALIKE || FRB
-        if (gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
-            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadRight)) ||
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(GamepadButton.DPadRight)) ||
             gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right)))
         {
             this.HandleTab(TabDirection.Down, this, loop:true);
         }
-        else if (gamepad.ButtonRepeatRate(Buttons.DPadUp) ||
-            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadLeft)) ||
+        else if (gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(GamepadButton.DPadLeft)) ||
             gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left)))
         {
@@ -1734,7 +1735,7 @@ public class FrameworkElement : INotifyPropertyChanged
 #if XNALIKE || FRB
         for (int i = 0; i < GamePadsForUiControl.Count; i++)
         {
-            isPushInputHeldDown = isPushInputHeldDown || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
+            isPushInputHeldDown = isPushInputHeldDown || (GamePadsForUiControl[i].ButtonDown(GamepadButton.A));
         }
 #endif
 

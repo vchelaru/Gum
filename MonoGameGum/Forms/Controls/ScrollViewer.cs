@@ -18,7 +18,7 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif XNALIKE
-using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+using GamepadButton = Gum.Input.GamepadButton;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 #else

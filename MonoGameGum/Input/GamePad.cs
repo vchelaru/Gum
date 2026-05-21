@@ -530,6 +530,7 @@ public class GamePad : IGamePad
     // Buttons-typed methods that hold the real logic.
     bool IGamePad.ButtonDown(GamepadButton button) => ButtonDown((Buttons)(int)button);
     bool IGamePad.ButtonPushed(GamepadButton button) => ButtonPushed((Buttons)(int)button);
+    bool IGamePad.ButtonReleased(GamepadButton button) => ButtonReleased((Buttons)(int)button);
     bool IGamePad.ButtonRepeatRate(GamepadButton button) => ButtonRepeatRate((Buttons)(int)button);
     IAnalogStick IGamePad.LeftStick => mLeftStick;
 
