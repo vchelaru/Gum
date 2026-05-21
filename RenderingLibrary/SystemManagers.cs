@@ -18,11 +18,14 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 #if USE_GUMCOMMON
-#if FRB
+// Resolve runtime types via MonoGameGum.GueDeriving on both FRB and non-FRB builds so
+// RegisterComponentRuntimeInstantiations constructs the obsolete-shim subclasses
+// (e.g. MonoGameGum.GueDeriving.TextRuntime) rather than the new base types. Generated
+// user component code still casts instances to the shim namespace
+// (`... as global::MonoGameGum.GueDeriving.TextRuntime`) during the deprecation window;
+// constructing the base would null those casts and NRE the user's generated partials.
+// Drop the using once the MonoGameGum.GueDeriving shims are removed.
 using MonoGameGum.GueDeriving;
-#else
-using Gum.GueDeriving;
-#endif
 using Gum.Managers;
 using GumRuntime;
 
@@ -377,6 +380,11 @@ public partial class SystemManagers : ISystemManagers
 
     private void RegisterComponentRuntimeInstantiations()
     {
+        // Construct the MonoGameGum.GueDeriving shim subclasses (not the new Gum.GueDeriving
+        // base types). See the comment on the `using` directive at the top of the file —
+        // user code generated against the deprecated namespace casts to the shim type,
+        // and that cast only succeeds when the instance is the shim itself.
+#pragma warning disable CS0618 // Type or member is obsolete
         ElementSaveExtensions.RegisterGueInstantiation(
             "ColoredRectangle",
             () => new ColoredRectangleRuntime());
@@ -395,7 +403,7 @@ public partial class SystemManagers : ISystemManagers
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Rectangle",
-            () => new RectangleRuntime(systemManagers:this));
+            () => new RectangleRuntime(systemManagers: this));
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Sprite",
@@ -404,6 +412,7 @@ public partial class SystemManagers : ISystemManagers
         ElementSaveExtensions.RegisterGueInstantiation(
             "Text",
             () => new TextRuntime(systemManagers: this));
+#pragma warning restore CS0618
     }
 #endif
 
