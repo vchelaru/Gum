@@ -9,14 +9,24 @@ namespace RenderingLibrary
     /// each runtime implements this interface.
     /// </summary>
     /// <remarks>
-    /// Initialization is intentionally not part of this interface because each
-    /// runtime requires platform-specific arguments (e.g. MonoGame's <c>Game</c>
-    /// instance). Call the runtime-specific <c>Initialize</c> on the concrete
-    /// <c>GumService</c>, then consume <see cref="Default"/> through this
+    /// The no-arg <see cref="Initialize"/> works on runtimes that do not require
+    /// a host object (e.g. Raylib). On runtimes that do — currently MonoGame,
+    /// KNI, and FNA, which all need a <c>Game</c> instance — the call throws
+    /// <see cref="System.NotSupportedException"/>. Engine code targeting those
+    /// runtimes should call the concrete <c>GumService.Initialize(Game ...)</c>
+    /// overload first, then consume <see cref="Default"/> through this
     /// interface from platform-agnostic code.
     /// </remarks>
     public interface IGumService
     {
+        /// <summary>
+        /// Initializes the service on runtimes that do not require platform-specific
+        /// arguments. Throws <see cref="System.NotSupportedException"/> on runtimes
+        /// that need additional context (e.g. MonoGame's <c>Game</c> instance) — call
+        /// the concrete <c>GumService.Initialize(...)</c> overload on those platforms.
+        /// </summary>
+        void Initialize();
+
         /// <summary>
         /// Gets whether the underlying GumService has been initialized.
         /// </summary>

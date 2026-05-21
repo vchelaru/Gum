@@ -1,5 +1,6 @@
 using RenderingLibrary;
 using Shouldly;
+using System;
 
 namespace MonoGameGum.Tests.V2;
 
@@ -48,6 +49,14 @@ public class GumServiceInterfaceTests
         {
             service.CanvasHeight = original;
         }
+    }
+
+    [Fact]
+    public void IGumService_Initialize_OnXnaLikeRuntime_Throws()
+    {
+        IGumService service = GumService.Default;
+
+        Should.Throw<NotSupportedException>(() => service.Initialize());
     }
 
     [Fact]
