@@ -342,6 +342,7 @@
   * [Measuring Draw Calls](code/performance-and-optimization/lastframedrawstates.md)
   * [Measuring Layout Calls](code/performance-and-optimization/measuring-layout-calls.md)
   * [SinglePixelTexture](code/performance-and-optimization/singlepixeltexture.md)
+  * [Batch Key Grouped Orderer](code/performance-and-optimization/batchkeygroupedorderer.md)
 * [Gum Tool Code (Contributing and Plugins)](code/gum-tool-code-contributing-and-plugins/README.md)
   * [DataUiGrid](code/gum-tool-code-contributing-and-plugins/datauigrid/README.md)
     * [Reflection](code/gum-tool-code-contributing-and-plugins/datauigrid/reflection.md)
