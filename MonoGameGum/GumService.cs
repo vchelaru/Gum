@@ -39,6 +39,7 @@ namespace RaylibGum;
 public class GumService : IGumService
 {
     IRenderer IGumService.Renderer => this.SystemManagers.Renderer;
+    ICursor IGumService.Cursor => this.Cursor;
 
     void IGumService.Initialize()
     {

@@ -1,3 +1,4 @@
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 
 namespace RenderingLibrary
@@ -46,6 +47,12 @@ namespace RenderingLibrary
         /// <see cref="Camera"/> and layer collection.
         /// </summary>
         IRenderer Renderer { get; }
+
+        /// <summary>
+        /// Gets the default cursor for the active runtime — either mouse or touch
+        /// depending on the platform's input capabilities.
+        /// </summary>
+        ICursor Cursor { get; }
 
         /// <summary>
         /// Gets or sets the width of the canvas, which acts as the root-most

@@ -1,3 +1,4 @@
+using Gum.Wireframe;
 using RenderingLibrary;
 using Shouldly;
 using System;
@@ -65,6 +66,16 @@ public class GumServiceInterfaceTests
         IGumService service = GumService.Default;
 
         Should.Throw<NotSupportedException>(() => service.Initialize("some.gumx"));
+    }
+
+    [Fact]
+    public void IGumService_Cursor_ReturnsServiceCursor()
+    {
+        IGumService service = GumService.Default;
+
+        ICursor cursor = service.Cursor;
+
+        cursor.ShouldBeSameAs(GumService.Default.Cursor);
     }
 
     [Fact]
