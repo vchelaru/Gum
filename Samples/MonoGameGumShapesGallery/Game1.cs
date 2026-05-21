@@ -1,9 +1,12 @@
+using System.Linq;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using MonoGameAndGum.Renderables;
 using MonoGameGum;
 using MonoGameGumShapesGallery.Screens;
+using RenderingLibrary;
 
 namespace MonoGameGumShapesGallery;
 
@@ -26,6 +29,7 @@ public class Game1 : Game
 
     private StackPanel? _navStrip;
     private FrameworkElement? _currentScreen;
+    private TextRuntime? _drawCountOverlay;
 
     public Game1()
     {
@@ -46,9 +50,30 @@ public class Game1 : Game
         ShapeRenderer.Self.Initialize();
 
         BuildNavStrip();
+        BuildDrawCountOverlay();
         ShowScreen(NewSurveyScreen);
 
         base.Initialize();
+    }
+
+    // Top-right overlay showing the count of SpriteBatch.Begin calls from the
+    // previous frame, sourced from SpriteRenderer.LastFrameDrawStates. Useful
+    // for spotting batch-break regressions and for A/B-ing alternate orderers
+    // (see issue #2879). Note: this count does NOT include Apos.Shapes
+    // StartBatch calls — those go through ShapeBatch, which is not visible to
+    // LastFrameDrawStates.
+    private void BuildDrawCountOverlay()
+    {
+        _drawCountOverlay = new TextRuntime();
+        _drawCountOverlay.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Right;
+        _drawCountOverlay.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+        _drawCountOverlay.X = -8;
+        _drawCountOverlay.Y = 12;
+        _drawCountOverlay.Red = 255;
+        _drawCountOverlay.Green = 230;
+        _drawCountOverlay.Blue = 120;
+        _drawCountOverlay.Text = "SpriteBatch.Begin: 0";
+        _drawCountOverlay.AddToRoot();
     }
 
     private void BuildNavStrip()
@@ -67,6 +92,7 @@ public class Game1 : Game
         AddNavButton("Polygons", () => new PolygonsScreen());
         AddNavButton("Gradients", () => new GradientScreen());
         AddNavButton("Clipping", () => new ClippingScreen());
+        AddNavButton("Batch mix stress", () => new BatchMixStressScreen());
     }
 
     private ShapeSurveyScreen NewSurveyScreen() =>
@@ -101,7 +127,19 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         GumService.Default.Update(gameTime);
+        UpdateDrawCountOverlay();
         base.Update(gameTime);
+    }
+
+    private void UpdateDrawCountOverlay()
+    {
+        if (_drawCountOverlay == null)
+        {
+            return;
+        }
+
+        int count = SystemManagers.Default.Renderer.SpriteRenderer.LastFrameDrawStates.Count();
+        _drawCountOverlay.Text = $"SpriteBatch.Begin: {count}";
     }
 
     protected override void Draw(GameTime gameTime)
