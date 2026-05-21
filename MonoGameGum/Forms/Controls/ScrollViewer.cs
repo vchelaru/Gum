@@ -1032,7 +1032,7 @@ public class ScrollViewer :
         foreach(var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             // eventually we want to support combos but for now use esc:
-            if(keyboard.KeyPushed(Gum.Forms.Input.Keys.Escape))
+            if(keyboard.KeyPushed(Keys.Escape))
             {
                 DoItemsHaveFocus = false;
                 IsFocused = true;

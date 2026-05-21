@@ -699,17 +699,17 @@ public class ListBox : ItemsControl, IInputReceiver
 #if !FRB
         // Use the same pattern as KeyCombo and TextBox - check KeyboardsForUiControl.
         // If the list is empty, no modifiers are detected (consistent with the rest of Gum's keyboard input handling).
-        // KeyboardsForUiControl is typed List<IInputReceiverKeyboard> whose KeyDown takes
-        // Gum.Forms.Input.Keys. The modifier-key properties below are XNA Keys on MonoGame
-        // and Gum Keys on Raylib/Sokol — both align numerically, so an int cast is safe.
+        // KeyboardsForUiControl is typed List<IInputReceiverKeyboard>. The modifier-key properties
+        // below are XNA Keys on MonoGame; XnaKeyboardExtensions provides the overload that
+        // forwards to the underlying Gum.Forms.Input.Keys API.
         var keyboards = FrameworkElement.KeyboardsForUiControl;
         foreach (var keyboard in keyboards)
         {
-            if (keyboard.KeyDown((Gum.Forms.Input.Keys)(int)ToggleSelectionModifierKey) || keyboard.KeyDown((Gum.Forms.Input.Keys)(int)AlternateToggleSelectionModifierKey))
+            if (keyboard.KeyDown(ToggleSelectionModifierKey) || keyboard.KeyDown(AlternateToggleSelectionModifierKey))
             {
                 isCtrlDown = true;
             }
-            if (keyboard.KeyDown((Gum.Forms.Input.Keys)(int)RangeSelectionModifierKey) || keyboard.KeyDown((Gum.Forms.Input.Keys)(int)AlternateRangeSelectionModifierKey))
+            if (keyboard.KeyDown(RangeSelectionModifierKey) || keyboard.KeyDown(AlternateRangeSelectionModifierKey))
             {
                 isShiftDown = true;
             }
