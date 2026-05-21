@@ -19,6 +19,26 @@ namespace RaylibGum.Tests;
 public class GumServiceInitializeTests
 {
     [Fact]
+    public void IGumServiceInitialize_OnRaylib_InitializesService()
+    {
+        GumService.Default.Uninitialize();
+
+        try
+        {
+            IGumService service = GumService.Default;
+            service.Initialize();
+
+            service.IsInitialized.ShouldBeTrue();
+            IGumService.Default.ShouldBeSameAs(service);
+        }
+        finally
+        {
+            GumService.Default.Uninitialize();
+            TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
+
+    [Fact]
     public void Initialize_RegistersRootPopupRootAndModalRootInMainLayer()
     {
         // Tear down the assembly-wide state so we can observe a cold init.

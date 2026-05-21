@@ -36,8 +36,33 @@ using RaylibGum.Renderables;
 namespace RaylibGum;
 #endif
 
-public class GumService
+public class GumService : IGumService
 {
+    IRenderer IGumService.Renderer => this.SystemManagers.Renderer;
+    ICursor IGumService.Cursor => this.Cursor;
+
+    void IGumService.Initialize()
+    {
+#if XNALIKE
+        throw new NotSupportedException(
+            "This runtime requires a Game instance. Call " +
+            "GumService.Default.Initialize(Game) on the concrete GumService instead.");
+#elif RAYLIB
+        Initialize(DefaultVisualsVersion.Newest);
+#endif
+    }
+
+    void IGumService.Initialize(string gumProjectFile)
+    {
+#if XNALIKE
+        throw new NotSupportedException(
+            "This runtime requires a Game instance. Call " +
+            "GumService.Default.Initialize(Game, gumProjectFile) on the concrete GumService instead.");
+#elif RAYLIB
+        Initialize(gumProjectFile);
+#endif
+    }
+
     #region Default
     static GumService _default = default!;
 
@@ -628,6 +653,8 @@ public class GumService
             ISystemManagers.Default = this.SystemManagers;
         }
 
+        IGumService.Default = this;
+
 #if XNALIKE
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
 
@@ -952,6 +979,7 @@ public class GumService
 
         SystemManagers.Default = null;
         ISystemManagers.Default = null;
+        IGumService.Default = null;
 
         // Only reset RelativeDirectory if a project was loaded (it gets set to the project directory).
         // Reset to the default value expected before initialization.
