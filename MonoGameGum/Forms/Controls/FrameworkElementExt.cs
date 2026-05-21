@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Gum.Wireframe;
+using RenderingLibrary;
 using System;
 
 
@@ -66,6 +67,26 @@ public static class FrameworkElementExt
     }
 
 
+
+    /// <summary>
+    /// Adds this Forms control's underlying visual to the active runtime's root container,
+    /// making it a top-level element. Resolves the root via <see cref="IGumService.Default"/>
+    /// so this works from any runtime that wires the default (currently MonoGame; Sokol/Skia
+    /// have their own AddToRoot extensions).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if no <see cref="IGumService"/> has been initialized.
+    /// </exception>
+    public static void AddToRoot(this FrameworkElement element)
+    {
+        if (IGumService.Default?.IsInitialized != true)
+        {
+            throw new InvalidOperationException(
+                "Cannot call AddToRoot because IGumService.Default is not initialized — " +
+                "did you remember to initialize Gum first (GumService.Default.Initialize)?");
+        }
+        IGumService.Default.Root.Children.Add(element.Visual);
+    }
 
     public static void RemoveFromRoot(this FrameworkElement element)
     {
