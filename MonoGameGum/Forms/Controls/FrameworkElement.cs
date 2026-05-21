@@ -36,6 +36,7 @@ using Keys = Microsoft.Xna.Framework.Input.Keys;
 using GamePad = MonoGameGum.Input.GamePad;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
+using Gum.Input;
 using Gum.Converters;
 #elif RAYLIB
 using RaylibGum;

@@ -22,6 +22,7 @@ using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif XNALIKE
 using MonoGameGum.Input;
+using Gum.Input;
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 using Microsoft.Xna.Framework.Input;
 #else
