@@ -151,6 +151,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\IAnimation.cs" Link="Renderables\IAnimation.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\BatchKeyGroupedOrderer.cs" Link="RenderingLibrary\BatchKeyGroupedOrderer.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\BatchOrchestrator.cs" Link="RenderingLibrary\BatchOrchestrator.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\DrawCommand.cs" Link="RenderingLibrary\DrawCommand.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\HierarchicalOrderer.cs" Link="RenderingLibrary\HierarchicalOrderer.cs" />

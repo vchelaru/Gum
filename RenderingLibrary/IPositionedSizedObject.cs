@@ -127,6 +127,40 @@ namespace RenderingLibrary
             return ipso.GetAbsoluteTop() + ipso.Height / 2.0f;
         }
 
+        /// <summary>
+        /// Returns the axis-aligned absolute bounds of <paramref name="ipso"/> in pixel space.
+        /// Used by <see cref="Graphics.BatchKeyGroupedOrderer"/> for overlap testing when
+        /// deciding whether two draws may be reordered past each other. Rotation is ignored
+        /// (treated as an AABB of the unrotated rect); negative widths/heights are normalized.
+        /// </summary>
+        public static System.Drawing.Rectangle GetAbsoluteBounds(this IRenderableIpso ipso)
+        {
+            float x = ipso.GetAbsoluteX();
+            float y = ipso.GetAbsoluteY();
+            float right = x + ipso.Width;
+            float bottom = y + ipso.Height;
+
+            if (ipso.Width < 0)
+            {
+                float swap = x;
+                x = right;
+                right = swap;
+            }
+            if (ipso.Height < 0)
+            {
+                float swap = y;
+                y = bottom;
+                bottom = swap;
+            }
+
+            int ix = (int)System.MathF.Floor(x);
+            int iy = (int)System.MathF.Floor(y);
+            int iright = (int)System.MathF.Ceiling(right);
+            int ibottom = (int)System.MathF.Ceiling(bottom);
+
+            return new System.Drawing.Rectangle(ix, iy, iright - ix, ibottom - iy);
+        }
+
         public static bool HasCursorOver(this IRenderableIpso ipso, float x, float y)
         {
             float absoluteX = ipso.GetAbsoluteX();
