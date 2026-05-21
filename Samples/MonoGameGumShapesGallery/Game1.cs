@@ -3,10 +3,12 @@ using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using MonoGameAndGum.Renderables;
 using MonoGameGum;
 using MonoGameGumShapesGallery.Screens;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 
 namespace MonoGameGumShapesGallery;
 
@@ -30,6 +32,7 @@ public class Game1 : Game
     private StackPanel? _navStrip;
     private FrameworkElement? _currentScreen;
     private TextRuntime? _drawCountOverlay;
+    private KeyboardState _previousKeyboardState;
 
     public Game1()
     {
@@ -127,8 +130,25 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         GumService.Default.Update(gameTime);
+        UpdateOrdererToggle();
         UpdateDrawCountOverlay();
         base.Update(gameTime);
+    }
+
+    // Press B (for Batch) to toggle between HierarchicalOrderer (default) and
+    // BatchKeyGroupedOrderer. Both produce pixel-identical output when the safety
+    // constraints hold; the difference is visible in the overlay's SpriteBatch.Begin
+    // count and in the per-frame batch count on the Batch mix stress screen.
+    private void UpdateOrdererToggle()
+    {
+        KeyboardState current = Keyboard.GetState();
+        if (current.IsKeyDown(Keys.B) && _previousKeyboardState.IsKeyUp(Keys.B))
+        {
+            Renderer.SiblingOrdering = Renderer.SiblingOrdering == BatchKeyGroupedOrderer.Instance
+                ? (IRenderableOrderer)HierarchicalOrderer.Instance
+                : BatchKeyGroupedOrderer.Instance;
+        }
+        _previousKeyboardState = current;
     }
 
     private void UpdateDrawCountOverlay()
@@ -139,7 +159,10 @@ public class Game1 : Game
         }
 
         int count = SystemManagers.Default.Renderer.SpriteRenderer.LastFrameDrawStates.Count();
-        _drawCountOverlay.Text = $"SpriteBatch.Begin: {count}";
+        string ordererLabel = Renderer.SiblingOrdering == BatchKeyGroupedOrderer.Instance
+            ? "Grouped"
+            : "Hierarchical";
+        _drawCountOverlay.Text = $"SpriteBatch.Begin: {count}  |  Orderer (B to toggle): {ordererLabel}";
     }
 
     protected override void Draw(GameTime gameTime)
