@@ -18,7 +18,7 @@ public class BaseTestClass : IDisposable
         FrameworkElement.ClickCombos.Clear();
         FrameworkElement.ClickCombos.Add(new KeyCombo
         {
-            PushedKey = Microsoft.Xna.Framework.Input.Keys.Enter,
+            PushedKey = Gum.Forms.Input.Keys.Enter,
             HeldKey = null,
             IsTriggeredOnRepeat = false
         });
@@ -26,7 +26,7 @@ public class BaseTestClass : IDisposable
         FrameworkElement.TabKeyCombos.Clear();
         FrameworkElement.TabKeyCombos.Add(new KeyCombo
         {
-            PushedKey = Microsoft.Xna.Framework.Input.Keys.Tab,
+            PushedKey = Gum.Forms.Input.Keys.Tab,
             HeldKey = null,
             IsTriggeredOnRepeat = true
         });
@@ -34,14 +34,14 @@ public class BaseTestClass : IDisposable
         FrameworkElement.TabReverseKeyCombos.Clear();
         FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo
         {
-            PushedKey = Microsoft.Xna.Framework.Input.Keys.Tab,
-            HeldKey = Microsoft.Xna.Framework.Input.Keys.LeftShift,
+            PushedKey = Gum.Forms.Input.Keys.Tab,
+            HeldKey = Gum.Forms.Input.Keys.LeftShift,
             IsTriggeredOnRepeat = true
         });
         FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo
         {
-            PushedKey = Microsoft.Xna.Framework.Input.Keys.Tab,
-            HeldKey = Microsoft.Xna.Framework.Input.Keys.RightShift,
+            PushedKey = Gum.Forms.Input.Keys.Tab,
+            HeldKey = Gum.Forms.Input.Keys.RightShift,
             IsTriggeredOnRepeat = true
         });
 

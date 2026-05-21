@@ -572,7 +572,7 @@ public class Slider : RangeBase, IInputReceiver
     {
 #if !FRB
         var args = new KeyEventArgs();
-        args.Key = key;
+        args.Key = (Gum.Forms.Input.Keys)(int)key;
         base.RaiseKeyDown(args);
 #endif
     }

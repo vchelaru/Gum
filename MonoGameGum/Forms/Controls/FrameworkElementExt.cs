@@ -104,7 +104,6 @@ public static class FrameworkElementExt
     //    FrameworkElement.PopupRoot.AddChild(coloredRectangle);
     //}
 
-#if !XNALIKE
     public static void AddChild(this GraphicalUiElement element, FrameworkElement child)
     {
         element.Children.Add(child.Visual);
@@ -114,6 +113,5 @@ public static class FrameworkElementExt
     {
         element.Children.Remove(child.Visual);
     }
-#endif
 
 }

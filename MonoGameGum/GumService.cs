@@ -1115,13 +1115,6 @@ public static class GraphicalUiElementExtensionMethods
         element.Parent = null;
     }
 
-#if !RAYLIB
-    public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child)
-    {
-        element.Children.Add(child.Visual);
-    }
-#endif
-
     /// <summary>
     /// Adds this Forms control's underlying visual to the GumService root container, making it
     /// a top-level element. This is the Forms equivalent of

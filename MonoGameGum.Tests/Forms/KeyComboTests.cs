@@ -30,8 +30,8 @@ public class KeyComboTests : BaseTestClass
     public void IsComboDown_BothKeysDown_ReturnsTrue()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
-        sut.HeldKey = Microsoft.Xna.Framework.Input.Keys.LeftControl;
+        sut.PushedKey = Keys.Space;
+        sut.HeldKey = Keys.LeftControl;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyDown(Keys.Space)).Returns(true);
@@ -47,7 +47,7 @@ public class KeyComboTests : BaseTestClass
     public void IsComboDown_ShouldReturnTrue_IfHeld()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
+        sut.PushedKey = Keys.Space;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyDown(Keys.Space)).Returns(true);
@@ -62,8 +62,8 @@ public class KeyComboTests : BaseTestClass
     public void IsComboPushed_HeldKeyDownAndPushedKeyPressed_ReturnsTrue()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
-        sut.HeldKey = Microsoft.Xna.Framework.Input.Keys.LeftControl;
+        sut.PushedKey = Keys.Space;
+        sut.HeldKey = Keys.LeftControl;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
@@ -79,8 +79,8 @@ public class KeyComboTests : BaseTestClass
     public void IsComboPushed_HeldKeyUp_ReturnsFalse()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
-        sut.HeldKey = Microsoft.Xna.Framework.Input.Keys.LeftControl;
+        sut.PushedKey = Keys.Space;
+        sut.HeldKey = Keys.LeftControl;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyDown(Keys.LeftControl)).Returns(false);
@@ -96,7 +96,7 @@ public class KeyComboTests : BaseTestClass
     public void IsComboPushed_NoHeldKeyAndPushedKeyPressed_ReturnsTrue()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
+        sut.PushedKey = Keys.Space;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyPushed(Keys.Space)).Returns(true);
@@ -111,8 +111,8 @@ public class KeyComboTests : BaseTestClass
     public void IsComboPushed_ShouldReturnFalse_IfHeldKeyIsNotDown()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
-        sut.HeldKey = Microsoft.Xna.Framework.Input.Keys.LeftControl;
+        sut.PushedKey = Keys.Space;
+        sut.HeldKey = Keys.LeftControl;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyDown(Keys.LeftControl)).Returns(false);
@@ -128,7 +128,7 @@ public class KeyComboTests : BaseTestClass
     public void IsComboPushed_ShouldReturnFalse_IfKeyWasntPushedWithNoRepeat()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
+        sut.PushedKey = Keys.Space;
         sut.IsTriggeredOnRepeat = false;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
@@ -146,7 +146,7 @@ public class KeyComboTests : BaseTestClass
     public void IsComboPushed_ShouldReturnTrue_OnKeyRepeat()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
+        sut.PushedKey = Keys.Space;
         sut.IsTriggeredOnRepeat = true;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
@@ -162,7 +162,7 @@ public class KeyComboTests : BaseTestClass
     public void IsComboPushed_ShouldReturnTrue_OnPushed()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
+        sut.PushedKey = Keys.Space;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyPushed(Keys.Space)).Returns(true);
@@ -177,8 +177,8 @@ public class KeyComboTests : BaseTestClass
     public void IsComboReleased_HeldKeyReleasedWhilePushedKeyDown_ReturnsTrue()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
-        sut.HeldKey = Microsoft.Xna.Framework.Input.Keys.LeftControl;
+        sut.PushedKey = Keys.Space;
+        sut.HeldKey = Keys.LeftControl;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyReleased(Keys.LeftControl)).Returns(true);
@@ -194,8 +194,8 @@ public class KeyComboTests : BaseTestClass
     public void IsComboReleased_ShouldReturnTrue_IfHeldIsTrueAndReleasedMainKey()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
-        sut.HeldKey = Microsoft.Xna.Framework.Input.Keys.LeftControl;
+        sut.PushedKey = Keys.Space;
+        sut.HeldKey = Keys.LeftControl;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyReleased(Keys.Space)).Returns(true);
@@ -211,7 +211,7 @@ public class KeyComboTests : BaseTestClass
     public void IsComboReleased_ShouldReturnTrue_IfKeyIsReleased()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
+        sut.PushedKey = Keys.Space;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyReleased(Keys.Space)).Returns(true);
@@ -226,8 +226,8 @@ public class KeyComboTests : BaseTestClass
     public void IsComboReleased_ShouldReturnTrue_IfMainIsTrueAndReleasedHeld()
     {
         KeyCombo sut = new();
-        sut.PushedKey = Microsoft.Xna.Framework.Input.Keys.Space;
-        sut.HeldKey = Microsoft.Xna.Framework.Input.Keys.LeftControl;
+        sut.PushedKey = Keys.Space;
+        sut.HeldKey = Keys.LeftControl;
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
         mockKeyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyDown(Keys.Space)).Returns(true);

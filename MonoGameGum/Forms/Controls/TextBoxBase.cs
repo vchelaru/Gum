@@ -1022,7 +1022,7 @@ public abstract class TextBoxBase :
         }
 
         var keyEventArg = new KeyEventArgs();
-        keyEventArg.Key = key;
+        keyEventArg.Key = (Gum.Forms.Input.Keys)(int)key;
         KeyDown?.Invoke(this, keyEventArg);
     }
 

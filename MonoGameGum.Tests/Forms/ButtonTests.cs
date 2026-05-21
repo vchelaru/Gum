@@ -167,7 +167,7 @@ public class ButtonTests : BaseTestClass
 
         FrameworkElement.ClickCombos.Add(new KeyCombo
         {
-            PushedKey = Microsoft.Xna.Framework.Input.Keys.Space
+            PushedKey = Gum.Forms.Input.Keys.Space
         });
 
         FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
@@ -184,7 +184,7 @@ public class ButtonTests : BaseTestClass
         {
             new KeyCombo
             {
-                PushedKey = Microsoft.Xna.Framework.Input.Keys.Space
+                PushedKey = Gum.Forms.Input.Keys.Space
             }
         };
 

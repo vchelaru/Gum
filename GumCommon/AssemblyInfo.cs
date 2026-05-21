@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("MonoGameGum.Tests")]
+[assembly: InternalsVisibleTo("MonoGameGum.Tests.V2")]
 
 // MonoGameGum, KniGum, and FnaGum each link in CustomSetPropertyOnRenderable.cs,
 // which writes to internal members on GraphicalUiElement (e.g., IsFontDirty.set).
@@ -9,3 +10,9 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("MonoGameGum")]
 [assembly: InternalsVisibleTo("KniGum")]
 [assembly: InternalsVisibleTo("FnaGum")]
+
+// RaylibGum/SokolGum source-link MonoGameGum's Forms control files (Forms/Controls/**/*.cs)
+// and need internal access to FrameworkElement.PropertyRegistry from those file's
+// SetBinding/IsDataBound code paths.
+[assembly: InternalsVisibleTo("RaylibGum")]
+[assembly: InternalsVisibleTo("SokolGum")]

@@ -78,7 +78,7 @@ public class ScrollViewer :
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
         var args = new KeyEventArgs();
-        args.Key = key;
+        args.Key = (Gum.Forms.Input.Keys)(int)key;
         base.RaiseKeyDown(args);
     }
     public void HandleCharEntered(char character)
