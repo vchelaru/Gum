@@ -89,6 +89,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="Renderables\NineSliceExtensions.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderableCloneLogic.cs" Link="RenderingLibrary\RenderableCloneLogic.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\BatchKeyGroupedOrderer.cs" Link="RenderingLibrary\BatchKeyGroupedOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\BatchOrchestrator.cs" Link="RenderingLibrary\BatchOrchestrator.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\DrawCommand.cs" Link="RenderingLibrary\DrawCommand.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\HierarchicalOrderer.cs" Link="RenderingLibrary\HierarchicalOrderer.cs" />
