@@ -134,6 +134,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextureFlipAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\VerticalAlignment.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\XNAExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\IGumService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\IPositionedSizedObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\ISystemManagers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\FloatRectangle.cs" />

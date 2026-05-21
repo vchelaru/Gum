@@ -36,8 +36,10 @@ using RaylibGum.Renderables;
 namespace RaylibGum;
 #endif
 
-public class GumService
+public class GumService : IGumService
 {
+    IRenderer IGumService.Renderer => this.SystemManagers.Renderer;
+
     #region Default
     static GumService _default = default!;
 
@@ -628,6 +630,8 @@ public class GumService
             ISystemManagers.Default = this.SystemManagers;
         }
 
+        IGumService.Default = this;
+
 #if XNALIKE
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
 
@@ -952,6 +956,7 @@ public class GumService
 
         SystemManagers.Default = null;
         ISystemManagers.Default = null;
+        IGumService.Default = null;
 
         // Only reset RelativeDirectory if a project was loaded (it gets set to the project directory).
         // Reset to the default value expected before initialization.
