@@ -90,11 +90,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\AtlasedTexture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BatchOrchestrator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BitmapCharacterInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\DrawCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BitmapFont.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BmfcSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\IInMemoryFontCreator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\ParsedFontFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\GradientType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\HierarchicalOrderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IWrappedText.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableCloneLogic.cs" />
@@ -106,6 +108,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\InvisibleRenderable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IRenderable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IRenderableIpso.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IRenderableOrderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IRenderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ISetClipsChildren.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IText.cs" />

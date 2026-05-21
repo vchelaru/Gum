@@ -66,6 +66,7 @@ public class Game1 : Game
         AddNavButton("Arcs", () => new ArcsScreen());
         AddNavButton("Polygons", () => new PolygonsScreen());
         AddNavButton("Gradients", () => new GradientScreen());
+        AddNavButton("Clipping", () => new ClippingScreen());
     }
 
     private ShapeSurveyScreen NewSurveyScreen() =>

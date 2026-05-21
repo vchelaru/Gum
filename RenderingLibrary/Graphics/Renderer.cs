@@ -37,10 +37,19 @@ public class Renderer : IRenderer
 {
     /// <summary>
     /// Whether renderable objects should call Render
-    /// on contained children. This is true by default, 
+    /// on contained children. This is true by default,
     /// results in a hierarchical rendering order.
     /// </summary>
     public static bool RenderUsingHierarchy = true;
+
+    /// <summary>
+    /// Orderer used by the main render pass to flatten a layer's renderables into the
+    /// <see cref="DrawCommand"/> sequence consumed by the submit phase. Defaults to
+    /// <see cref="HierarchicalOrderer.Instance"/>, which preserves the legacy depth-first walk.
+    /// Swap in alternative implementations (e.g. batch-grouped) to change main-pass ordering
+    /// without touching the renderer.
+    /// </summary>
+    public static IRenderableOrderer SiblingOrdering { get; set; } = HierarchicalOrderer.Instance;
 
     #region Fields
 
@@ -499,7 +508,14 @@ public class Renderer : IRenderer
 
         layer.SortRenderables();
 
-        Render(layer.Renderables, managers, layer, prerender);
+        // Build phase: flatten the (already Z-sorted) layer into a sequence of DrawCommands.
+        // Submit phase: walk that sequence, issuing the actual SpriteBatch / orchestrator
+        // calls. Splitting these phases is what #2879's batch-grouped orderer needs — and
+        // by itself it produces byte-identical output via HierarchicalOrderer (the default).
+        // The recursive Render/Draw helpers below remain in use for the prerender path
+        // (RenderToRenderTarget) and the GumBatch immediate-mode path (Renderer.Draw).
+        SiblingOrdering.BuildDrawList(layer, _scratchCommands);
+        Submit(_scratchCommands, managers, layer);
 
         _batchOrchestrator.FlushAndReset(managers);
 
@@ -770,6 +786,15 @@ public class Renderer : IRenderer
 
     readonly BatchOrchestrator _batchOrchestrator = new();
 
+    // Reused across layers and frames so the build phase does not allocate per frame
+    // after warm-up. The renderer owns the buffer; the orderer writes into it.
+    readonly List<DrawCommand> _scratchCommands = new List<DrawCommand>();
+
+    // Tracks clip state during Submit so EndClip can restore the rect that BeginClip saw.
+    // Balanced by construction (the orderer always emits matched BeginClip/EndClip pairs),
+    // so this is empty at the end of every Submit call.
+    readonly Stack<Rectangle?> _clipScopeStack = new Stack<Rectangle?>();
+
     private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy, bool isPreRender)
     {
         if (renderable.Visible || ( renderable.IsRenderTarget && isPreRender))
@@ -829,6 +854,136 @@ public class Renderer : IRenderer
     // (CameraScissorExtensions.GetScissorRectangleFor) so Raylib/Sokol/Skia
     // backends can share the world->screen scissor math.
 
+
+    /// <summary>
+    /// Main-pass submit phase: walks the flat <see cref="DrawCommand"/> list produced by
+    /// <see cref="SiblingOrdering"/> and issues the corresponding SpriteBatch / orchestrator
+    /// calls. The orderer is responsible for visibility, ClipsChildren bracketing, and
+    /// hierarchy traversal; this method only translates commands into device calls.
+    /// </summary>
+    private void Submit(IReadOnlyList<DrawCommand> commands, SystemManagers managers, Layer layer)
+    {
+        int count = commands.Count;
+        for (int i = 0; i < count; i++)
+        {
+            DrawCommand command = commands[i];
+            switch (command.Kind)
+            {
+                case DrawCommandKind.BeginClip:
+                    BeginClipScope(layer, command.Target, managers);
+                    break;
+                case DrawCommandKind.DrawRenderable:
+                    SubmitDrawRenderable(command.Target, managers, layer);
+                    break;
+                case DrawCommandKind.EndClip:
+                    EndClipScope(layer, command.Target, managers);
+                    break;
+            }
+        }
+    }
+
+    private void SubmitDrawRenderable(IRenderableIpso renderable, SystemManagers managers, Layer layer)
+    {
+        // Non-clip state (blend / color / wrap) is reapplied here. Clip-scope handling is
+        // factored out into BeginClipScope/EndClipScope, which Submit invokes via the
+        // BeginClip / EndClip commands emitted by the orderer.
+        AdjustNonClipRenderStates(mRenderStateVariables, layer, renderable, managers);
+
+        if (renderable.IsRenderTarget)
+        {
+            // Main pass: draw the cached texture baked by the prerender phase. We never
+            // call SetRenderTarget here — that only happens in PreRender / RenderToRenderTarget.
+            var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
+
+            if (renderTarget != null)
+            {
+                var renderableAlpha = renderable.Alpha;
+                renderableAlpha = System.Math.Min(255, renderableAlpha);
+                renderableAlpha = System.Math.Max(0, renderableAlpha);
+
+                var color = System.Drawing.Color.FromArgb(renderableAlpha, Color.White);
+
+                renderTargetRenderableSprite.X = System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
+                renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
+                renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
+                renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
+
+                Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: renderable.Rotation, objectCausingRendering: renderable);
+            }
+        }
+        else
+        {
+            _batchOrchestrator.OnRenderable(renderable, managers);
+            renderable.Render(managers);
+        }
+    }
+
+    private void BeginClipScope(Layer layer, IRenderableIpso renderable, SystemManagers managers)
+    {
+        _clipScopeStack.Push(mRenderStateVariables.ClipRectangle);
+
+        var clipRectangle = Camera.GetScissorRectangleFor(layer, renderable);
+        var adjustedRectangle = mRenderStateVariables.ClipRectangle != null
+            ? Rectangle.Intersect(clipRectangle, mRenderStateVariables.ClipRectangle.Value)
+            : clipRectangle;
+
+        if (mRenderStateVariables.ClipRectangle == null || adjustedRectangle != mRenderStateVariables.ClipRectangle.Value)
+        {
+            mRenderStateVariables.ClipRectangle = adjustedRectangle;
+
+            // Mirror the clip-exit flush in EndClipScope: end any in-flight custom batch
+            // before restarting SpriteBatch with the new scissor. Without this, an
+            // Apos.Shapes batch opened by an earlier sibling stays open with stale scissor
+            // state. See .claude/skills/gum-monogame-rendering "Mid-Walk Scissor Change
+            // Must Flush the Open Custom Batch".
+            _batchOrchestrator.FlushAndReset(managers);
+
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable);
+        }
+    }
+
+    private void EndClipScope(Layer layer, IRenderableIpso renderable, SystemManagers managers)
+    {
+        var previousClip = _clipScopeStack.Pop();
+        if (previousClip != mRenderStateVariables.ClipRectangle)
+        {
+            mRenderStateVariables.ClipRectangle = previousClip;
+
+            _batchOrchestrator.FlushAndReset(managers);
+
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, $"Un-set {renderable} Clip");
+        }
+    }
+
+    private void AdjustNonClipRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
+    {
+        BlendState renderBlendState = renderable.BlendState ?? Renderer.NormalBlendState;
+        bool wrap = renderable.Wrap;
+        bool shouldResetStates = false;
+
+        if (renderState.BlendState != renderBlendState)
+        {
+            renderState.BlendState = renderBlendState;
+            shouldResetStates = true;
+        }
+
+        if (renderState.ColorOperation != renderable.ColorOperation)
+        {
+            renderState.ColorOperation = renderable.ColorOperation;
+            shouldResetStates = true;
+        }
+
+        if (renderState.Wrap != wrap)
+        {
+            renderState.Wrap = wrap;
+            shouldResetStates = true;
+        }
+
+        if (shouldResetStates)
+        {
+            spriteRenderer.BeginSpriteBatch(renderState, layer, BeginType.Begin, mCamera, renderable);
+        }
+    }
 
     private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
