@@ -580,6 +580,17 @@ public class DragDropManager : IDragDropManager
             parentName = null;
         }
 
+        // No-op when dropping an instance on a parent it already has. For
+        // Append (the kind=Into drop kind), the user's intent is "make this a
+        // child of parent" — already satisfied — so the flat-list reorder is
+        // a surprising side effect. Explicit BeforeSibling/AfterSibling drops
+        // still reorder because the user picked a specific new position.
+        if (dropTarget.Position is DropPosition.Append &&
+            ParentVariableAlreadyMatches(targetElementSave, dragDroppedInstance, parentName))
+        {
+            return;
+        }
+
         int flatListPosition = ResolveFlatListPositionForReorder(dropTarget, dragDroppedInstance);
 
         int droppedInstanceIndexBeforeMove = targetElementSave.Instances.IndexOf(dragDroppedInstance);
@@ -663,6 +674,20 @@ public class DragDropManager : IDragDropManager
             default:
                 return element.Instances.Count;
         }
+    }
+
+    private static bool ParentVariableAlreadyMatches(ElementSave element, InstanceSave instance, string? expectedParentName)
+    {
+        var currentParent = element.DefaultState.GetVariableRecursive(instance.Name + ".Parent")?.Value as string;
+        if (string.IsNullOrEmpty(expectedParentName))
+        {
+            return string.IsNullOrEmpty(currentParent);
+        }
+        // Allow the existing value to be either the parent name or a
+        // "parent.defaultChild" form (which resolves to the same parent).
+        return currentParent == expectedParentName
+            || (currentParent != null && expectedParentName.StartsWith(currentParent + "."))
+            || (currentParent != null && currentParent.StartsWith(expectedParentName + "."));
     }
 
     private static InstanceSave? FindLastSiblingOfParent(ElementSave element, InstanceSave parentInstance, InstanceSave excludeInstance)
