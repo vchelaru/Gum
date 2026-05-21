@@ -1,6 +1,7 @@
 using CommonFormsAndControls;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.TreeView;
 using Shouldly;
 using System.Windows.Forms;
 using Xunit;
@@ -44,18 +45,21 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
         var result = ElementTreeViewManager.ProcessDrop(target, MultiSelectTreeView.DropKind.IntoFirst);
 
         result.ShouldNotBeNull();
-        result.Value.target.ShouldBe(target);
-        result.Value.index.ShouldBe(component.Instances.Count);
+        result.Value.TreeTarget.ShouldBe(target);
+        result.Value.Drop.ShouldNotBeNull();
+        result.Value.Drop!.ParentElement.ShouldBe(component);
+        result.Value.Drop!.ParentInstance.ShouldBeNull();
+        result.Value.Drop!.Position.ShouldBeOfType<DropPosition.Append>();
     }
 
     [Fact]
-    public void ProcessDrop_IntoElementSave_ReturnsInstancesCount_SoCallerAppends()
+    public void ProcessDrop_IntoElementSave_ReturnsAppendOnElement()
     {
         // Issue #2864: dropping a component into a screen tree node landed at
         // index 0 because the index path returned a tree-child-derived value
-        // that did not line up with the element's Instances list. The correct
-        // index for an "into-this-element" drop is Instances.Count — i.e.
-        // append to the end so the new visual renders on top, not behind.
+        // that did not line up with the element's Instances list. Issue #2869:
+        // the typed result eliminates the int-index ambiguity entirely — the
+        // consumer receives an Append on the element.
         ScreenSave screen = new ScreenSave();
         screen.Name = "TargetScreen";
         screen.Instances.Add(new InstanceSave { Name = "Existing1" });
@@ -67,19 +71,21 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
         var result = ElementTreeViewManager.ProcessDrop(target, MultiSelectTreeView.DropKind.Into);
 
         result.ShouldNotBeNull();
-        result.Value.target.ShouldBe(target);
-        result.Value.index.ShouldBe(screen.Instances.Count);
+        result.Value.TreeTarget.ShouldBe(target);
+        result.Value.Drop.ShouldNotBeNull();
+        result.Value.Drop!.ParentElement.ShouldBe(screen);
+        result.Value.Drop!.ParentInstance.ShouldBeNull();
+        result.Value.Drop!.Position.ShouldBeOfType<DropPosition.Append>();
     }
 
     [Fact]
-    public void ProcessDrop_IntoInstanceSave_ReturnsParentContainerInstancesCount_SoCallerAppends()
+    public void ProcessDrop_IntoInstanceSave_ReturnsAppendWithParentInstance()
     {
         // Issue #2864 follow-up: dropping a Container onto another Container
         // (target Tag is an InstanceSave) landed the new instance in the
-        // middle of MainScreen.Instances. The destination flat list is the
-        // ParentContainer's Instances; the index for an "into this instance"
-        // drop must be that list's count so callers append and the new visual
-        // renders on top.
+        // middle of MainScreen.Instances. Issue #2869: the typed Append +
+        // ParentInstance carries the intent without an int-index that could
+        // be reinterpreted downstream.
         ScreenSave screen = new ScreenSave();
         screen.Name = "MainScreen";
         InstanceSave leftContainer = new InstanceSave { Name = "LeftContainer", ParentContainer = screen };
@@ -100,13 +106,73 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
         var result = ElementTreeViewManager.ProcessDrop(target, MultiSelectTreeView.DropKind.Into);
 
         result.ShouldNotBeNull();
-        result.Value.target.ShouldBe(target);
-        result.Value.index.ShouldBe(screen.Instances.Count);
+        result.Value.TreeTarget.ShouldBe(target);
+        result.Value.Drop.ShouldNotBeNull();
+        result.Value.Drop!.ParentElement.ShouldBe(screen);
+        result.Value.Drop!.ParentInstance.ShouldBe(leftContainer);
+        result.Value.Drop!.Position.ShouldBeOfType<DropPosition.Append>();
     }
 
     [Fact]
-    public void ProcessDrop_BeforeSibling_ReturnsSiblingIndexOnParent()
+    public void ProcessDrop_BeforeInstanceSibling_ReturnsBeforeSiblingOnParent()
     {
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "Screen";
+        InstanceSave first = new InstanceSave { Name = "First", ParentContainer = screen };
+        InstanceSave second = new InstanceSave { Name = "Second", ParentContainer = screen };
+        screen.Instances.Add(first);
+        screen.Instances.Add(second);
+
+        TreeNode parent = new TreeNode { Tag = screen };
+        TreeNode firstNode = parent.Nodes.Add("First");
+        firstNode.Tag = first;
+        TreeNode secondNode = parent.Nodes.Add("Second");
+        secondNode.Tag = second;
+
+        var result = ElementTreeViewManager.ProcessDrop(secondNode, MultiSelectTreeView.DropKind.Before);
+
+        result.ShouldNotBeNull();
+        result.Value.TreeTarget.ShouldBe(parent);
+        result.Value.Drop.ShouldNotBeNull();
+        result.Value.Drop!.ParentElement.ShouldBe(screen);
+        result.Value.Drop!.ParentInstance.ShouldBeNull();
+        DropPosition.BeforeSibling before = result.Value.Drop!.Position.ShouldBeOfType<DropPosition.BeforeSibling>();
+        before.Sibling.ShouldBe(second);
+    }
+
+    [Fact]
+    public void ProcessDrop_AfterInstanceSibling_ReturnsAfterSiblingOnParent()
+    {
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "Screen";
+        InstanceSave first = new InstanceSave { Name = "First", ParentContainer = screen };
+        InstanceSave second = new InstanceSave { Name = "Second", ParentContainer = screen };
+        screen.Instances.Add(first);
+        screen.Instances.Add(second);
+
+        TreeNode parent = new TreeNode { Tag = screen };
+        TreeNode firstNode = parent.Nodes.Add("First");
+        firstNode.Tag = first;
+        TreeNode secondNode = parent.Nodes.Add("Second");
+        secondNode.Tag = second;
+
+        var result = ElementTreeViewManager.ProcessDrop(firstNode, MultiSelectTreeView.DropKind.After);
+
+        result.ShouldNotBeNull();
+        result.Value.TreeTarget.ShouldBe(parent);
+        result.Value.Drop.ShouldNotBeNull();
+        result.Value.Drop!.ParentElement.ShouldBe(screen);
+        result.Value.Drop!.ParentInstance.ShouldBeNull();
+        DropPosition.AfterSibling after = result.Value.Drop!.Position.ShouldBeOfType<DropPosition.AfterSibling>();
+        after.Sibling.ShouldBe(first);
+    }
+
+    [Fact]
+    public void ProcessDrop_BeforeNonInstanceSibling_ReturnsNullDrop()
+    {
+        // Reordering element nodes (or other non-InstanceSave-tagged nodes)
+        // does not feed an instances list — the downstream consumer should
+        // route by tree node alone.
         TreeNode parent = new TreeNode();
         TreeNode first = parent.Nodes.Add("First");
         TreeNode second = parent.Nodes.Add("Second");
@@ -114,21 +180,7 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
         var result = ElementTreeViewManager.ProcessDrop(second, MultiSelectTreeView.DropKind.Before);
 
         result.ShouldNotBeNull();
-        result.Value.target.ShouldBe(parent);
-        result.Value.index.ShouldBe(1);
-    }
-
-    [Fact]
-    public void ProcessDrop_AfterSibling_ReturnsSiblingIndexPlusOneOnParent()
-    {
-        TreeNode parent = new TreeNode();
-        TreeNode first = parent.Nodes.Add("First");
-        TreeNode second = parent.Nodes.Add("Second");
-
-        var result = ElementTreeViewManager.ProcessDrop(first, MultiSelectTreeView.DropKind.After);
-
-        result.ShouldNotBeNull();
-        result.Value.target.ShouldBe(parent);
-        result.Value.index.ShouldBe(1);
+        result.Value.TreeTarget.ShouldBe(parent);
+        result.Value.Drop.ShouldBeNull();
     }
 }

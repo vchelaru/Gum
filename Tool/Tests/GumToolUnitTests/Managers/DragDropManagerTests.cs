@@ -4,6 +4,7 @@ using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Services;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -86,11 +87,119 @@ public class DragDropManagerTests : BaseTestClass
                 It.IsAny<HashSet<string>?>()))
             .Returns(new List<InstanceSave> { draggedInstance });
 
+        DropTarget dropTarget = new DropTarget(destinationComponent, null, new DropPosition.InsertAt(1));
+
         // Act
-        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, 1);
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
 
         // Assert
         destinationComponent.Instances[1].Name.ShouldBe("DraggedInstance");
+    }
+
+    [Fact]
+    public void OnNodeSortingDropped_BeforeSibling_MultipleInstances_AscendingSortPreservesSourceOrder()
+    {
+        // Issue #2869 pin: BeforeSibling anchors at a sibling whose flat-list
+        // index shifts down every time an earlier item is inserted before it.
+        // Processing items in DESCENDING source-index order (the natural
+        // "stack at a fixed position" sort) would invert drag order — the
+        // higher-source-index item lands at the original anchor, then the
+        // lower-source-index item lands in front of it. ASCENDING order is
+        // required to preserve drag order. This test guards against a
+        // "simplify OnNodeSortingDropped to always-descending" regression.
+        //
+        // Scenario: [A, B, C, D, E]; drag B(src=1) and D(src=3); drop BeforeSibling(A).
+        // Ascending: B → [B, A, C, D, E]; D → [B, D, A, C, E]. B at 0, D at 1.
+        // Descending: D → [D, A, B, C, E]; B → [D, B, A, C, E]. D at 0, B at 1. WRONG.
+        ComponentSave element = new ComponentSave();
+        element.States.Add(new StateSave());
+
+        InstanceSave instanceA = new InstanceSave { Name = "A", ParentContainer = element };
+        InstanceSave instanceB = new InstanceSave { Name = "B", ParentContainer = element };
+        InstanceSave instanceC = new InstanceSave { Name = "C", ParentContainer = element };
+        InstanceSave instanceD = new InstanceSave { Name = "D", ParentContainer = element };
+        InstanceSave instanceE = new InstanceSave { Name = "E", ParentContainer = element };
+        element.Instances.Add(instanceA);
+        element.Instances.Add(instanceB);
+        element.Instances.Add(instanceC);
+        element.Instances.Add(instanceD);
+        element.Instances.Add(instanceE);
+
+        // Arrival order is intentionally NOT source order — sort direction
+        // must be derived from source index, not arrival order.
+        Mock<ITreeNode> nodeDraggedD = new Mock<ITreeNode>();
+        nodeDraggedD.Setup(x => x.Tag).Returns(instanceD);
+        Mock<ITreeNode> nodeDraggedB = new Mock<ITreeNode>();
+        nodeDraggedB.Setup(x => x.Tag).Returns(instanceB);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(element);
+
+        List<ITreeNode> draggedNodes = new() { nodeDraggedD.Object, nodeDraggedB.Object };
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        DropTarget dropTarget = new DropTarget(element, null, new DropPosition.BeforeSibling(instanceA));
+
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
+
+        element.Instances.IndexOf(instanceB).ShouldBe(0,
+            "B (lower source index) must precede D in the result — ascending sort is required for BeforeSibling.");
+        element.Instances.IndexOf(instanceD).ShouldBe(1);
+    }
+
+    [Fact]
+    public void OnNodeSortingDropped_AfterSibling_MultipleInstances_DescendingSortPreservesSourceOrder()
+    {
+        // Issue #2869 pin: AfterSibling anchors at a sibling whose flat-list
+        // index does NOT shift when a later item is inserted after it.
+        // Processing items in DESCENDING source-index order preserves drag
+        // order — each item stacks at IndexOf(sibling)+1, and the second
+        // item displaces the first one further down the list. ASCENDING
+        // would invert drag order. This test guards against a "simplify
+        // OnNodeSortingDropped to always-ascending" regression.
+        //
+        // Scenario: [A, B, C, D, E]; drag B(src=1) and D(src=3); drop AfterSibling(C).
+        // Descending: D → [A, B, C, D, E]; B → [A, C, B, D, E]. B at 2, D at 3.
+        // Ascending: B → [A, C, B, D, E]; D → [A, C, D, B, E]. D at 2, B at 3. WRONG.
+        ComponentSave element = new ComponentSave();
+        element.States.Add(new StateSave());
+
+        InstanceSave instanceA = new InstanceSave { Name = "A", ParentContainer = element };
+        InstanceSave instanceB = new InstanceSave { Name = "B", ParentContainer = element };
+        InstanceSave instanceC = new InstanceSave { Name = "C", ParentContainer = element };
+        InstanceSave instanceD = new InstanceSave { Name = "D", ParentContainer = element };
+        InstanceSave instanceE = new InstanceSave { Name = "E", ParentContainer = element };
+        element.Instances.Add(instanceA);
+        element.Instances.Add(instanceB);
+        element.Instances.Add(instanceC);
+        element.Instances.Add(instanceD);
+        element.Instances.Add(instanceE);
+
+        Mock<ITreeNode> nodeDraggedD = new Mock<ITreeNode>();
+        nodeDraggedD.Setup(x => x.Tag).Returns(instanceD);
+        Mock<ITreeNode> nodeDraggedB = new Mock<ITreeNode>();
+        nodeDraggedB.Setup(x => x.Tag).Returns(instanceB);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(element);
+
+        // Arrival order is intentionally NOT source order.
+        List<ITreeNode> draggedNodes = new() { nodeDraggedB.Object, nodeDraggedD.Object };
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        DropTarget dropTarget = new DropTarget(element, null, new DropPosition.AfterSibling(instanceC));
+
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
+
+        element.Instances.IndexOf(instanceB).ShouldBe(2,
+            "B (lower source index) must precede D in the result — descending sort is required for AfterSibling.");
+        element.Instances.IndexOf(instanceD).ShouldBe(3);
     }
 
     [Fact]
@@ -134,8 +243,9 @@ public class DragDropManagerTests : BaseTestClass
             .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
             .Returns(true);
 
-        // Act — drop at index 0 (beginning, before A)
-        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, 0);
+        // Act — drop at beginning, i.e. before A.
+        DropTarget dropTarget = new DropTarget(element, null, new DropPosition.BeforeSibling(instanceA));
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
 
         // Assert — B should appear before D (relative order preserved), both at the beginning
         int indexOfB = element.Instances.IndexOf(instanceB);
@@ -187,8 +297,9 @@ public class DragDropManagerTests : BaseTestClass
             .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
             .Returns(true);
 
-        // Act — drop at index 3 (after C, which is siblings[2])
-        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, 3);
+        // Act — drop after C.
+        DropTarget dropTarget = new DropTarget(element, null, new DropPosition.AfterSibling(instanceC));
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
 
         // Assert — B should appear before D (relative order preserved), both after A and C
         int indexOfA = element.Instances.IndexOf(instanceA);
@@ -248,8 +359,10 @@ public class DragDropManagerTests : BaseTestClass
                 It.IsAny<HashSet<string>?>()))
             .Returns(new List<InstanceSave> { draggedInstance });
 
+        DropTarget dropTarget = new DropTarget(destinationComponent, null, new DropPosition.InsertAt(1));
+
         // Act - should not throw even with folder nodes in the list
-        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, 1);
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
 
         // Assert - the tagged instance was still processed correctly despite folder node presence
         destinationComponent.Instances[1].Name.ShouldBe(draggedInstanceName);
@@ -264,7 +377,7 @@ public class DragDropManagerTests : BaseTestClass
 
         // Act
         var result = _dragDropManager.ValidateNodeSorting(
-            new[] { draggedNode.Object }, null, 0);
+            new[] { draggedNode.Object }, null, dropTarget: null);
 
         // Assert
         result.ShouldBeFalse();
@@ -285,7 +398,7 @@ public class DragDropManagerTests : BaseTestClass
         // Act - should not throw; returns false because mocked ITreeNode
         // isn't recognized as a component/screen folder by extension methods
         var result = _dragDropManager.ValidateNodeSorting(
-            new[] { folderNode.Object }, targetNode.Object, 0);
+            new[] { folderNode.Object }, targetNode.Object, dropTarget: null);
 
         // Assert
         result.ShouldBeFalse();
@@ -461,12 +574,13 @@ public class DragDropManagerTests : BaseTestClass
 
         List<ITreeNode> draggedNodes = new() { draggedNode.Object };
 
-        // ProcessDrop's Into-on-InstanceSave returns ParentContainer.Instances.Count
-        // — past the end of the siblings list. This is the index that triggers
-        // the "snap to top" before the fix.
-        int indexFromProcessDrop = screen.Instances.Count;
+        // ProcessDrop's Into-on-InstanceSave returns DropTarget(screen, leftContainer, Append).
+        // Pre-#2869 the int-index path could send Instances.Count downstream and
+        // mis-trigger the "snap to top." With the typed DropTarget the consumer
+        // resolves position from ParentInstance directly.
+        DropTarget dropTarget = new DropTarget(screen, leftContainer, new DropPosition.Append());
 
-        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, indexFromProcessDrop);
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
 
         InstanceSave? newInstance = screen.Instances.FirstOrDefault(i => i.Name == "DraggedComponent1");
         newInstance.ShouldNotBeNull();
@@ -475,6 +589,249 @@ public class DragDropManagerTests : BaseTestClass
         int lastExistingChildIndex = screen.Instances.IndexOf(screen.Instances.First(i => i.Name == "Child3"));
         newIndex.ShouldBeGreaterThan(lastExistingChildIndex,
             "the dropped instance must remain after the last existing child of the target container, not snap back to index 0");
+    }
+
+    [Fact]
+    public void OnNodeSortingDropped_DropInstanceOnItsCurrentParent_IsNoOp()
+    {
+        // Dropping an instance onto its current parent must not reorder the
+        // flat list. The user's intent for "drop on parent" is "make this a
+        // child of parent" — already satisfied when the Parent variable
+        // already references that parent. Moving the instance to the end of
+        // its sibling group is a side effect of treating Append as
+        // "stack at end of siblings" unconditionally, which surprises the
+        // user (the visual jumps with no apparent reason).
+        //
+        // The reorder must still happen for explicit BeforeSibling/AfterSibling
+        // drops where the user actively chose a new position.
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "MainScreen";
+        screen.States.Add(new StateSave { Name = "Default" });
+
+        InstanceSave container = new InstanceSave { Name = "Container", ParentContainer = screen };
+        screen.Instances.Add(container);
+
+        InstanceSave childA = new InstanceSave { Name = "ChildA", ParentContainer = screen };
+        screen.Instances.Add(childA);
+        screen.DefaultState.SetValue("ChildA.Parent", "Container", "string");
+
+        InstanceSave childB = new InstanceSave { Name = "ChildB", ParentContainer = screen };
+        screen.Instances.Add(childB);
+        screen.DefaultState.SetValue("ChildB.Parent", "Container", "string");
+
+        InstanceSave childC = new InstanceSave { Name = "ChildC", ParentContainer = screen };
+        screen.Instances.Add(childC);
+        screen.DefaultState.SetValue("ChildC.Parent", "Container", "string");
+
+        int originalIndexOfChildA = screen.Instances.IndexOf(childA);
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        _mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave).Returns(screen.DefaultState);
+
+        Mock<ITreeNode> draggedNode = new Mock<ITreeNode>();
+        draggedNode.Setup(x => x.Tag).Returns(childA);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(container);
+
+        // Drop ChildA onto its current parent (Container).
+        DropTarget dropTarget = new DropTarget(screen, container, new DropPosition.Append());
+        _dragDropManager.OnNodeSortingDropped(new List<ITreeNode> { draggedNode.Object }, targetNode.Object, dropTarget);
+
+        screen.Instances.IndexOf(childA).ShouldBe(originalIndexOfChildA,
+            "ChildA was already a child of Container; dropping on the parent must not reposition.");
+    }
+
+    [Fact]
+    public void OnNodeSortingDropped_DropTopLevelInstanceOnContainingElement_IsNoOp()
+    {
+        // Mirror of the parent-reaffirmation case: a top-level instance dropped
+        // onto its containing Element (no parent change) must not be reordered.
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "MainScreen";
+        screen.States.Add(new StateSave { Name = "Default" });
+
+        InstanceSave first = new InstanceSave { Name = "First", ParentContainer = screen };
+        InstanceSave second = new InstanceSave { Name = "Second", ParentContainer = screen };
+        InstanceSave third = new InstanceSave { Name = "Third", ParentContainer = screen };
+        screen.Instances.Add(first);
+        screen.Instances.Add(second);
+        screen.Instances.Add(third);
+
+        int originalIndexOfFirst = screen.Instances.IndexOf(first);
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        _mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave).Returns(screen.DefaultState);
+
+        Mock<ITreeNode> draggedNode = new Mock<ITreeNode>();
+        draggedNode.Setup(x => x.Tag).Returns(first);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(screen);
+
+        DropTarget dropTarget = new DropTarget(screen, null, new DropPosition.Append());
+        _dragDropManager.OnNodeSortingDropped(new List<ITreeNode> { draggedNode.Object }, targetNode.Object, dropTarget);
+
+        screen.Instances.IndexOf(first).ShouldBe(originalIndexOfFirst,
+            "First was already a top-level instance; dropping on the element must not reposition.");
+    }
+
+    [Fact]
+    public void OnNodeSortingDropped_DropElementOnInstance_PreservesFlatListInvariant()
+    {
+        // Issue #2869: after any drop operation, the flat Instances list must
+        // satisfy the invariant "for every instance, all of its children come
+        // after it in the list." This drives render z-order — when violated,
+        // children render behind their parent (the #2864 user-visible bug).
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "MainScreen";
+        screen.States.Add(new StateSave { Name = "Default" });
+
+        InstanceSave leftContainer = new InstanceSave { Name = "LeftContainer", ParentContainer = screen };
+        screen.Instances.Add(leftContainer);
+        for (int i = 0; i < 3; i++)
+        {
+            string childName = $"Child{i}";
+            InstanceSave child = new InstanceSave { Name = childName, ParentContainer = screen };
+            screen.Instances.Add(child);
+            screen.DefaultState.SetValue($"{childName}.Parent", "LeftContainer", "string");
+        }
+        for (int i = 0; i < 5; i++)
+        {
+            screen.Instances.Add(new InstanceSave { Name = $"TopLevel{i}", ParentContainer = screen });
+        }
+
+        ComponentSave draggedComponent = new ComponentSave();
+        draggedComponent.Name = "DraggedComponent";
+        draggedComponent.States.Add(new StateSave { Name = "Default" });
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        _mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave).Returns(screen.DefaultState);
+
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.GetUniqueNameForNewInstance(It.IsAny<ElementSave>(), It.IsAny<ElementSave>()))
+            .Returns("DraggedComponent1");
+
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.AddInstance(
+                It.IsAny<ElementSave>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<int?>()))
+            .Returns((ElementSave element, string name, string? type, string? parentName, int? desiredIndex) =>
+            {
+                InstanceSave inst = new InstanceSave
+                {
+                    Name = name,
+                    BaseType = type ?? string.Empty,
+                    ParentContainer = element
+                };
+                if (desiredIndex.HasValue)
+                {
+                    element.Instances.Insert(desiredIndex.Value, inst);
+                }
+                else
+                {
+                    element.Instances.Add(inst);
+                }
+                if (!string.IsNullOrEmpty(parentName))
+                {
+                    element.DefaultState.SetValue($"{inst.Name}.Parent", parentName, "string");
+                }
+                return inst;
+            });
+
+        Mock<ITreeNode> draggedNode = new Mock<ITreeNode>();
+        draggedNode.Setup(x => x.Tag).Returns(draggedComponent);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(leftContainer);
+
+        List<ITreeNode> draggedNodes = new() { draggedNode.Object };
+
+        DropTarget dropTarget = new DropTarget(screen, leftContainer, new DropPosition.Append());
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
+
+        AssertFlatListChildAfterParentInvariant(screen);
+    }
+
+    [Fact]
+    public void OnNodeSortingDropped_ReorderInstanceWithinSameParent_PreservesFlatListInvariant()
+    {
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "MainScreen";
+        screen.States.Add(new StateSave { Name = "Default" });
+
+        InstanceSave container = new InstanceSave { Name = "Container", ParentContainer = screen };
+        screen.Instances.Add(container);
+        InstanceSave childA = new InstanceSave { Name = "ChildA", ParentContainer = screen };
+        screen.Instances.Add(childA);
+        screen.DefaultState.SetValue("ChildA.Parent", "Container", "string");
+        InstanceSave childB = new InstanceSave { Name = "ChildB", ParentContainer = screen };
+        screen.Instances.Add(childB);
+        screen.DefaultState.SetValue("ChildB.Parent", "Container", "string");
+        InstanceSave childC = new InstanceSave { Name = "ChildC", ParentContainer = screen };
+        screen.Instances.Add(childC);
+        screen.DefaultState.SetValue("ChildC.Parent", "Container", "string");
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        _mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave).Returns(screen.DefaultState);
+
+        // Reorder ChildC to be after ChildA (i.e. between A and B among the container's children).
+        Mock<ITreeNode> draggedNode = new Mock<ITreeNode>();
+        draggedNode.Setup(x => x.Tag).Returns(childC);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(container);
+
+        List<ITreeNode> draggedNodes = new() { draggedNode.Object };
+
+        // Place ChildC before ChildB (the second of the container's children).
+        DropTarget dropTarget = new DropTarget(screen, container, new DropPosition.BeforeSibling(childB));
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
+
+        AssertFlatListChildAfterParentInvariant(screen);
+    }
+
+    private static void AssertFlatListChildAfterParentInvariant(ElementSave element)
+    {
+        // For every instance I in element.Instances, every other instance whose
+        // Parent variable references I (or a default-child of I) must appear
+        // at a later flat-list index than I. Violating this swaps render order.
+        for (int i = 0; i < element.Instances.Count; i++)
+        {
+            InstanceSave parent = element.Instances[i];
+            for (int j = 0; j < element.Instances.Count; j++)
+            {
+                if (i == j) continue;
+                InstanceSave candidate = element.Instances[j];
+                object? parentValue = element.DefaultState.GetVariableRecursive(candidate.Name + ".Parent")?.Value;
+                if (parentValue is string parentString &&
+                    (parentString == parent.Name || parentString.StartsWith(parent.Name + ".")))
+                {
+                    j.ShouldBeGreaterThan(i,
+                        $"Flat-list invariant violated: {candidate.Name} (parented under {parent.Name}) " +
+                        $"appears at index {j}, before its parent at index {i}.");
+                }
+            }
+        }
     }
 
     [Fact]
@@ -491,7 +848,7 @@ public class DragDropManagerTests : BaseTestClass
 
         // Act - should not throw; folder processing gracefully skips
         // because mocked nodes don't pass IsComponentsFolderTreeNode check
-        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, 0);
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget: null);
 
         // Assert - no exception thrown is the success condition
     }
