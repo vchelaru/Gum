@@ -1119,6 +1119,22 @@ public static class GraphicalUiElementExtensionMethods
         element.Parent = null;
     }
 
+    /// <summary>
+    /// Convenience forwarder so MonoGame-side callers that import only the
+    /// <c>MonoGameGum</c> namespace (e.g., older generated code, hand-written
+    /// Game1.cs) can still resolve AddChild for FrameworkElement children.
+    /// The canonical definition lives on <see cref="Gum.Forms.Controls.FrameworkElementExt"/>.
+    /// </summary>
+    public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child) =>
+        Gum.Forms.Controls.FrameworkElementExt.AddChild(element, child);
+
+    /// <summary>
+    /// Convenience forwarder so MonoGame-side callers that import only the
+    /// <c>MonoGameGum</c> namespace can still call AddToRoot on Forms controls.
+    /// The canonical definition lives on <see cref="Gum.Forms.Controls.FrameworkElementExt"/>.
+    /// </summary>
+    public static void AddToRoot(this Gum.Forms.Controls.FrameworkElement element) =>
+        Gum.Forms.Controls.FrameworkElementExt.AddToRoot(element);
 }
 
 #endregion
