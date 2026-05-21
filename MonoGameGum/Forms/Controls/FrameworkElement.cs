@@ -115,12 +115,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
 #if !FRB
 
-#if XNALIKE
-    public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new ();
-#else
     public static List<IInputReceiverKeyboard> KeyboardsForUiControl { get; private set; } = new ();
-#endif
-
 
 #endif
 
