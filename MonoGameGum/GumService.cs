@@ -112,6 +112,9 @@ public class GumService : IGumService
 
     public DeferredActionQueue DeferredQueue { get; private set; }
 
+    /// <inheritdoc/>
+    public INativeTextInput? NativeTextInput { get; private set; }
+
 #if !IOS && !ANDROID
     private IGumHotReloadManager? _hotReloadManager;
 #endif
@@ -462,6 +465,9 @@ public class GumService : IGumService
         };
 
         DeferredQueue = new DeferredActionQueue();
+#if MONOGAME || KNI
+        NativeTextInput = new MonoGameNativeTextInput();
+#endif
 
         GraphicalUiElement.SaveFormsRuntimePropertiesAction = formsObject =>
         {

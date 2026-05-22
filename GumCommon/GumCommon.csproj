@@ -98,6 +98,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\RenderableBase.cs" Link="RenderingLibrary\RenderableBase.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\RendererSettings.cs" Link="RenderingLibrary\RendererSettings.cs" />
 		<Compile Include="..\RenderingLibrary\IGumService.cs" Link="RenderingLibrary\IGumService.cs" />
+		<Compile Include="..\RenderingLibrary\INativeTextInput.cs" Link="RenderingLibrary\INativeTextInput.cs" />
 		<Compile Include="..\RenderingLibrary\ISystemManagers.cs" Link="RenderingLibrary\ISystemManagers.cs" />
 		<Compile Include="..\Runtimes\SkiaGum\Content\LoaderManager.cs" Link="Content\LoaderManager.cs" />
 		<Compile Include="..\ToolsUtilities\**\*.cs" Link="Utilities\%(RecursiveDir)%(Filename)%(Extension)" />
@@ -260,6 +261,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\Tooltip.cs" Link="Forms\Controls\Tooltip.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ToolTipService.cs" Link="Forms\Controls\ToolTipService.cs" />
 		<Compile Include="..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\GraphicalUiElementFormsExtensions.cs" />
+		<Compile Include="..\MonoGameGum\Threading\DeferredActionQueue.cs" Link="Threading\DeferredActionQueue.cs" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="BrotliSharpLib" Version="0.3.3" />

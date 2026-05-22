@@ -231,7 +231,7 @@ public class MenuItem : ItemsControl
 #if FRB
             _=FlatRedBall.Instructions.InstructionManager.DoOnMainThreadAsync(() =>
 #else
-            global::MonoGameGum.GumService.Default.DeferredQueue.Enqueue(() =>
+            global::RenderingLibrary.IGumService.Default.DeferredQueue.Enqueue(() =>
 #endif
             {
                 foreach (var item in items)

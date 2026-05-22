@@ -241,7 +241,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 #elif SOKOL
         var root = global::SokolGum.GumService.Default?.Root;
 #else
-        global::Gum.Wireframe.GraphicalUiElement root = null;
+        var root = global::RenderingLibrary.IGumService.Default?.Root;
 #endif
         if (root != null && !root.Children.Contains(Visual))
         {

@@ -134,6 +134,7 @@
 		<Compile Remove="Forms\VisualTemplate.cs" />
 		<Compile Remove="Forms\Controls\FrameworkElement.cs" />
 		<Compile Remove="Forms\Controls\FrameworkElementExt.cs" />
+		<Compile Remove="Threading\DeferredActionQueue.cs" />
 		<Compile Remove="Forms\FrameworkElementTemplate.cs" />
 		<Compile Remove="Forms\FrameworkElementTreeExtensions.cs" />
 		<Compile Remove="Forms\Controls\Tooltip.cs" />
