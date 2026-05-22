@@ -173,7 +173,23 @@ using Gum.Forms.Controls;
 textBox.AddToRoot();
 ```
 
-**Note on `AddChild`:** The companion `AddChild(this GraphicalUiElement, FrameworkElement)` forwarder is **kept** in `MonoGameGum` because the MonoGameForms code generator emits `someRuntime.AddChild(someFormsControl)` patterns and the generated code does not (and cannot, without name-collision risk) import `Gum.Forms.Controls`. Hand-written code that imports both namespaces will still see this overload as ambiguous (`CS0121`) — drop `using MonoGameGum;` from the affected file or fully-qualify the call when it happens.
+**Note on `AddChild`:** The companion `AddChild(this GraphicalUiElement, FrameworkElement)` forwarder is **kept** in `MonoGameGum` because the MonoGameForms code generator emits `someRuntime.AddChild(someFormsControl)` patterns and the generated code does not (and cannot, without name-collision risk) import `Gum.Forms.Controls`.
+
+If hand-written code that imports both `MonoGameGum` and `Gum.Forms.Controls` calls `.AddChild()` on a `GraphicalUiElement` with a `FrameworkElement` child, the same CS0121 will fire on that line for the same reason — two identically-shaped extensions in scope:
+
+```
+error CS0121: The call is ambiguous between the following methods or properties:
+'MonoGameGum.GraphicalUiElementExtensionMethods.AddChild(...)' and
+'Gum.Forms.Controls.FrameworkElementExt.AddChild(...)'
+```
+
+The fix is the same: drop `using MonoGameGum;` from that file (use `MonoGameGum.GumService.Default` fully-qualified if needed), or fully-qualify the AddChild call:
+
+```csharp
+Gum.Forms.Controls.FrameworkElementExt.AddChild(topLevelContainer, textBox);
+```
+
+This case is rare in hand-written code — `AddChild` is mostly emitted by codegen, where it's resolved by the forwarder and never sees the canonical.
 
 ### Default visual changes from runtime unification
 
