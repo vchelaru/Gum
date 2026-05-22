@@ -157,11 +157,33 @@
 			FrameworkElement is owned by GumCommon. Exclude it from the Forms\Controls\**\*.cs
 			glob so it isn't compiled twice.
 		-->
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Button.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\CheckBox.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ColumnDefinition.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ComboBox.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Expander.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\FrameworkElement.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\FrameworkElementExt.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Grid.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\GridLength.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ItemsControl.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Label.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ListBox.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ListBoxItem.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Panel.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Primitives\RangeBase.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\RadioButton.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\RowDefinition.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ScrollBar.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ScrollViewer.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Slider.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Splitter.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\StackPanel.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ToggleButton.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Tooltip.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ToolTipService.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\UserControl.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

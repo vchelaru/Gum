@@ -1450,7 +1450,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     private static Layer GetLayerToAddTo(GraphicalUiElement listBoxParent)
     {
-        var managers = listBoxParent.Managers ?? SystemManagers.Default;
+        var managers = listBoxParent.Managers ?? ISystemManagers.Default;
 
         var layerToAddListBoxTo = managers.Renderer.MainLayer;
 
