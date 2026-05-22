@@ -291,3 +291,96 @@ rounded.CornerRadius = 8;
 An automated code fix is planned via the `Gum.Analyzers` package (`GUM002`) — once published, place the cursor on the warning, trigger the lightbulb (Ctrl+.), and choose the **Change to `RectangleRuntime`** / **Change to `CircleRuntime`** fix. **Fix all in solution** will migrate the entire project at once.
 
 The obsolete types will remain in place until at least the November 2026 release. After that window, they may be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
+
+### Forms controls moved to GumCommon — input types widened
+
+`FrameworkElement` and the rest of the Forms control infrastructure now live in `GumCommon` so any GumCommon consumer can use Forms directly, independent of the rendering backend. To make that compile cross-platform, a handful of Forms APIs that previously surfaced MonoGame-specific input types have been widened to platform-neutral abstractions in `Gum.Input` and `Gum.Forms.Input`.
+
+Most user code is unaffected. The common path — reading `GumService.Keyboard` / `GumService.GamePads` and calling members on them — keeps working unchanged, and a new `XnaKeyboardExtensions` lets XNA `Keys` keep flowing into `IInputReceiverKeyboard.KeyDown(...)` and friends without a cast. The breaking changes below only affect code that handles Forms control events, builds `KeyCombo` values, or stores the `FrameworkElement.KeyboardsForUiControl` / `GamePadsForUiControl` collections in strongly-typed local variables.
+
+| API | Before (MonoGame) | After |
+| --- | --- | --- |
+| `FrameworkElement.KeyboardsForUiControl` | `List<IInputReceiverKeyboardMonoGame>` | `List<IInputReceiverKeyboard>` |
+| `FrameworkElement.GamePadsForUiControl` | `List<MonoGameGum.Input.GamePad>` | `List<IGamePad>` |
+| `ComboBox.ControllerButtonPushed` event arg | XNA `Buttons` | `Gum.Input.GamepadButton` |
+| `ListBox.ControllerButtonPushed` event arg | XNA `Buttons` | `Gum.Input.GamepadButton` |
+| `KeyCombo.PushedKey` / `HeldKey` | XNA `Keys` | `Gum.Forms.Input.Keys` |
+| `KeyEventArgs.Key` | XNA `Keys` | `Gum.Forms.Input.Keys` |
+
+The `MonoGameGum.Input.GamePad` **class** itself is unchanged — `GumService.GamePads` still returns instances of it, and they still expose `XnaGamePad`, `Capabilities`, etc. Only the static type of the `FrameworkElement.GamePadsForUiControl` list element changed.
+
+#### `ControllerButtonPushed` event handlers
+
+Handlers attached to `ListBox.ControllerButtonPushed` or `ComboBox.ControllerButtonPushed` now receive `Gum.Input.GamepadButton`. The enum values are aligned with XNA `Buttons` (guarded by a unit test), so the migration is a type swap.
+
+❌ Old:
+
+```csharp
+listBox.ControllerButtonPushed += (sender, button) =>
+{
+    if (button == Microsoft.Xna.Framework.Input.Buttons.A)
+    {
+        // ...
+    }
+};
+```
+
+✅ New:
+
+```csharp
+listBox.ControllerButtonPushed += (sender, button) =>
+{
+    if (button == Gum.Input.GamepadButton.A)
+    {
+        // ...
+    }
+};
+```
+
+#### `KeyCombo` and `KeyEventArgs`
+
+`KeyCombo.PushedKey` / `HeldKey` and `KeyEventArgs.Key` are now typed `Gum.Forms.Input.Keys` instead of XNA `Keys`. The enum mirrors the XNA values, so any code that constructs combos or reads `KeyEventArgs.Key` needs the type swap.
+
+❌ Old:
+
+```csharp
+var combo = new KeyCombo { PushedKey = Microsoft.Xna.Framework.Input.Keys.Enter };
+textBox.KeyDown += (s, e) =>
+{
+    if (e.Key == Microsoft.Xna.Framework.Input.Keys.Escape) { /* ... */ }
+};
+```
+
+✅ New:
+
+```csharp
+var combo = new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Enter };
+textBox.KeyDown += (s, e) =>
+{
+    if (e.Key == Gum.Forms.Input.Keys.Escape) { /* ... */ }
+};
+```
+
+#### `DPadDirection` namespace
+
+The `MonoGameGum.Input.DPadDirection` enum has been deleted. The canonical copy in `Gum.Input.DPadDirection` (with identical values) is now the only one. Code that calls `gamepad.AsDPadPushed(DPadDirection.Up)` keeps working as long as `Gum.Input` is in scope — add `using Gum.Input;` and remove `using MonoGameGum.Input;` if you hit `CS0246: The type or namespace name 'DPadDirection' could not be found`.
+
+#### `KeyboardsForUiControl` / `GamePadsForUiControl` collections
+
+If you read these lists into a strongly-typed local variable, widen the type. Most code that just iterates and calls members through the interface keeps compiling.
+
+❌ Old:
+
+```csharp
+List<IInputReceiverKeyboardMonoGame> keyboards = FrameworkElement.KeyboardsForUiControl;
+List<MonoGameGum.Input.GamePad> gamepads = FrameworkElement.GamePadsForUiControl;
+```
+
+✅ New:
+
+```csharp
+List<IInputReceiverKeyboard> keyboards = FrameworkElement.KeyboardsForUiControl;
+List<IGamePad> gamepads = FrameworkElement.GamePadsForUiControl;
+```
+
+If you need to reach a MonoGame-specific member on a list element, cast back: `(MonoGameGum.Input.GamePad)FrameworkElement.GamePadsForUiControl[0]`.
