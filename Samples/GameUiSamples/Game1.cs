@@ -45,8 +45,8 @@ public class Game1 : Game
         var gumProject = GumUI.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
         // This allows the keyboard to control the game (tabbing)
         FrameworkElement.KeyboardsForUiControl.Add(GumUI.Keyboard);
-        FrameworkElement.TabKeyCombos.Add(new KeyCombo { PushedKey = Keys.Down });
-        FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Keys.Up });
+        FrameworkElement.TabKeyCombos.Add(new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Down });
+        FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Up });
 
         Services.AddService<InventoryService>(new InventoryService());
         Services.AddService<HyTaleInventoryService>(new HyTaleInventoryService());

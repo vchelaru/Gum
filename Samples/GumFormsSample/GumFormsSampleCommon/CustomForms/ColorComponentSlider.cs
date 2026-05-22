@@ -91,7 +91,10 @@ public class ColorComponentSlider : Slider
         // todo - set the thumb Sprite image
 
         var textBox = new TextBox();
-        topLevelContainer.AddChild(textBox);
+        // Fully-qualified — both MonoGameGum.GraphicalUiElementExtensionMethods.AddChild and
+        // Gum.Forms.Controls.FrameworkElementExt.AddChild are in scope (see 2026 May
+        // upgrade doc). This file needs `using MonoGameGum;` for GumService below.
+        Gum.Forms.Controls.FrameworkElementExt.AddChild(topLevelContainer, textBox);
         textBox.Dock(Gum.Wireframe.Dock.Right);
         textBox.Placeholder = string.Empty;
         textBox.Width = -201;
