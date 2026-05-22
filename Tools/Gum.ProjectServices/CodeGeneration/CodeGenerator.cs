@@ -375,15 +375,6 @@ public class CodeGenerator
             neededUsings.Add(GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: false));
         }
 
-        if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
-        {
-            // FrameworkElement-aware extension methods (AddChild for GraphicalUiElement→FrameworkElement,
-            // AddToRoot, etc.) now live in Gum.Forms.Controls.FrameworkElementExt under GumCommon.
-            // Generated code calls AddChild against children that derive from FrameworkElement, so it
-            // needs this namespace to resolve the extension.
-            neededUsings.Add("Gum.Forms.Controls");
-        }
-
         if (projectSettings.OutputLibrary == OutputLibrary.Skia)
         {
             // https://github.com/vchelaru/Gum/issues/895
