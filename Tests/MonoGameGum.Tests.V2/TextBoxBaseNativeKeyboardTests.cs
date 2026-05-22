@@ -115,6 +115,7 @@ public class TextBoxBaseNativeKeyboardTests
         public float CanvasHeight { get; set; }
         public InteractiveGue Root => null!;
         public DeferredActionQueue DeferredQueue { get; } = new DeferredActionQueue();
+        public float? GameTime => null;
         public INativeTextInput? NativeTextInput { get; set; }
 
         public void Initialize() { }

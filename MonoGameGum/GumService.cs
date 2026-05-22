@@ -80,6 +80,20 @@ public class GumService : IGumService
     /// </summary>
     public GameTime GameTime { get; private set; }
 
+    /// <inheritdoc/>
+    float? IGumService.GameTime =>
+#if XNALIKE
+        GameTime != null ? (float?)GameTime.TotalGameTime.TotalSeconds : null;
+#else
+        // On Raylib, GameTime is aliased to double and starts at 0; treat the pre-Update
+        // state as null by also returning null when nothing has run Update yet.
+        _hasReceivedUpdate ? (float?)GameTime : null;
+#endif
+
+#if !XNALIKE
+    private bool _hasReceivedUpdate;
+#endif
+
     /// <summary>
     /// Gets the default cursor, which represents either mouse or touch screen depending on hardware capabilities.
     /// </summary>
@@ -1068,6 +1082,9 @@ public class GumService : IGumService
         _hotReloadManager?.Update(roots);
 #endif
         GameTime = gameTime;
+#if !XNALIKE
+        _hasReceivedUpdate = true;
+#endif
 #if XNALIKE
         FormsUtilities.Update(_game, gameTime, roots);
 #else

@@ -90,6 +90,17 @@ namespace RenderingLibrary
         DeferredActionQueue DeferredQueue { get; }
 
         /// <summary>
+        /// Seconds since the start of the runtime, sampled at the most recent Update call,
+        /// or <c>null</c> if no Update has run yet. Callers in <c>GumCommon</c> use this
+        /// when they need a platform-agnostic frame-clock value — for example, debouncing
+        /// dialog-dismissal input against the elapsed game time. The underlying source
+        /// differs per runtime (MonoGame's <c>GameTime.TotalGameTime.TotalSeconds</c>,
+        /// Raylib's accumulated frame seconds, etc.) and is normalized to <c>float</c>
+        /// here.
+        /// </summary>
+        float? GameTime { get; }
+
+        /// <summary>
         /// The native (OS-provided) modal text-input dialog implementation for the
         /// active runtime, or <c>null</c> if the runtime does not have one. Forms
         /// controls in <c>GumCommon</c> — primarily <c>TextBoxBase</c> — consult

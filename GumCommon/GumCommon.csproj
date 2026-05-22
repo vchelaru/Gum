@@ -266,6 +266,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\ColumnDefinition.cs" Link="Forms\Controls\ColumnDefinition.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ComboBox.cs" Link="Forms\Controls\ComboBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Expander.cs" Link="Forms\Controls\Expander.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\Games\DialogBox.cs" Link="Forms\Controls\Games\DialogBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Grid.cs" Link="Forms\Controls\Grid.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\GridLength.cs" Link="Forms\Controls\GridLength.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ItemsControl.cs" Link="Forms\Controls\ItemsControl.cs" />

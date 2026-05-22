@@ -805,28 +805,12 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    // For some reason this crashes on web when uploading to itch:
-    //public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
-    // OrdinalIgnoreCase works fine:
-    public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
-        "alpha",
-        "red",
-        "blue",
-        "green",
-        "color",
-        "font",
-        "fontsize",
-        "outlinethickness",
-        "isitalic",
-        "isbold",
-        "usefontsmoothing",
-        "fontscale",
-        "lineheightmultiplier",
-        // Added Sept 30, 2025 to handle parsing custom blocks
-        "custom"
-
-    };
+    /// <summary>
+    /// The canonical set of recognized BbCode tag names. Forwarder to the GumCommon-side
+    /// <see cref="BbCodeParser.KnownTags"/> — kept here so existing callers that reference
+    /// <c>CustomSetPropertyOnRenderable.Tags</c> continue to compile.
+    /// </summary>
+    public static HashSet<string> Tags => BbCodeParser.KnownTags;
 
     static Stack<int> fontSizeStack = new Stack<int>();
     static Stack<string> fontNameStack = new Stack<string>();

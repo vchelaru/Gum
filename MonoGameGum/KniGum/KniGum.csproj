@@ -164,6 +164,7 @@
 		<Compile Remove="..\Forms\Controls\ColumnDefinition.cs" />
 		<Compile Remove="..\Forms\Controls\ComboBox.cs" />
 		<Compile Remove="..\Forms\Controls\Expander.cs" />
+		<Compile Remove="..\Forms\Controls\Games\DialogBox.cs" />
 		<Compile Remove="..\Forms\Controls\FrameworkElement.cs" />
 		<Compile Remove="..\Forms\Controls\FrameworkElementExt.cs" />
 		<Compile Remove="..\Forms\Controls\Grid.cs" />

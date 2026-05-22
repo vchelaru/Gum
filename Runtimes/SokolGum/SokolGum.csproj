@@ -162,6 +162,7 @@
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ColumnDefinition.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ComboBox.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Expander.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Games\DialogBox.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\FrameworkElement.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\FrameworkElementExt.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Grid.cs" />
