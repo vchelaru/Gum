@@ -72,6 +72,8 @@
 		<Compile Include="..\GumRuntime\ElementSaveExtensions.GumRuntime.cs" Link="Wireframe\ElementSaveExtensions.GumRuntime.cs" />
 		<Compile Include="..\GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs" Link="Wireframe\InstanceSaveExtensionMethods.GumRuntime.cs" />
 		<Compile Include="..\GumRuntime\Forms\Input\Keys.cs" Link="Forms\Input\Keys.cs" />
+		<Compile Include="..\GumRuntime\Input\GamePad.cs" Link="Input\GamePad.cs" />
+		<Compile Include="..\GumRuntime\Input\IGamePad.cs" Link="Input\IGamePad.cs" />
 		<Compile Include="..\GumRuntime\InteractiveGue.cs" Link="InteractiveGue.cs" />
 		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\AnimationChainListSave.cs" />
 		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\AnimationChainSave.cs" />
@@ -231,6 +233,33 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\Orientation.cs" Link="Forms\Controls\Orientation.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ResizeBehavior.cs" Link="Forms\Controls\ResizeBehavior.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ScrollBarVisibility.cs" Link="Forms\Controls\ScrollBarVisibility.cs" />
+
+		<!--
+			FrameworkElement and its mutually-coupled Forms/Data binding infrastructure live
+			under MonoGameGum/ on disk but are linked here so any GumCommon consumer (including
+			runtimes without their own Forms source-link) gets the Forms base class and
+			binding plumbing from one place. KeyCombo and VisualTemplate travel with this
+			bundle because FrameworkElement references them.
+			MonoGameGum/KniGum/FnaGum/RaylibGum/SokolGum compile-Remove (or refrain from
+			source-linking) these entries so the types aren't compiled twice.
+		-->
+		<Compile Include="..\MonoGameGum\Forms\Data\BinderHelpers.cs" Link="Forms\Data\BinderHelpers.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Data\Binding.cs" Link="Forms\Data\Binding.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Data\BindingExpressionBase.cs" Link="Forms\Data\BindingExpressionBase.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Data\BindingOperations.cs" Link="Forms\Data\BindingOperations.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Data\GumProperty.cs" Link="Forms\Data\GumProperty.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Data\NpcBindingExpression.cs" Link="Forms\Data\NpcBindingExpression.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Data\PropertyRegistry.cs" Link="Forms\Data\PropertyRegistry.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Data\UntypedBindingExpressionBase.cs" Link="Forms\Data\UntypedBindingExpressionBase.cs" />
+		<Compile Include="..\MonoGameGum\Input\KeyCombo.cs" Link="Input\KeyCombo.cs" />
+		<Compile Include="..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\FrameworkElement.cs" Link="Forms\Controls\FrameworkElement.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\FrameworkElementExt.cs" Link="Forms\Controls\FrameworkElementExt.cs" />
+		<Compile Include="..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
+		<Compile Include="..\MonoGameGum\Forms\FrameworkElementTreeExtensions.cs" Link="Forms\FrameworkElementTreeExtensions.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\Tooltip.cs" Link="Forms\Controls\Tooltip.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\ToolTipService.cs" Link="Forms\Controls\ToolTipService.cs" />
+		<Compile Include="..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\GraphicalUiElementFormsExtensions.cs" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="BrotliSharpLib" Version="0.3.3" />

@@ -490,6 +490,10 @@ public class GumService : IGumService
         {
             IsInitialized = true;
         }
+        // Wire the platform-agnostic default too. Extensions in GumCommon (e.g.
+        // FrameworkElementExt.AddToRoot) resolve the runtime via IGumService.Default,
+        // so tests that bypass the full Initialize(Game, ...) path still need this set.
+        IGumService.Default = this;
     }
 
 #if XNALIKE
@@ -1115,30 +1119,22 @@ public static class GraphicalUiElementExtensionMethods
         element.Parent = null;
     }
 
-#if !RAYLIB
-    public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child)
-    {
-        element.Children.Add(child.Visual);
-    }
-#endif
+    /// <summary>
+    /// Convenience forwarder so MonoGame-side callers that import only the
+    /// <c>MonoGameGum</c> namespace (e.g., older generated code, hand-written
+    /// Game1.cs) can still resolve AddChild for FrameworkElement children.
+    /// The canonical definition lives on <see cref="Gum.Forms.Controls.FrameworkElementExt"/>.
+    /// </summary>
+    public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child) =>
+        Gum.Forms.Controls.FrameworkElementExt.AddChild(element, child);
 
     /// <summary>
-    /// Adds this Forms control's underlying visual to the GumService root container, making it
-    /// a top-level element. This is the Forms equivalent of
-    /// <see cref="AddToRoot(GraphicalUiElement)"/>.
+    /// Convenience forwarder so MonoGame-side callers that import only the
+    /// <c>MonoGameGum</c> namespace can still call AddToRoot on Forms controls.
+    /// The canonical definition lives on <see cref="Gum.Forms.Controls.FrameworkElementExt"/>.
     /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if GumService has not been initialized.
-    /// </exception>
-    public static void AddToRoot(this FrameworkElement element)
-    {
-        if (GumService.Default.IsInitialized == false)
-        {
-            throw new InvalidOperationException("Cannot call AddToRoot because GumService.Default " +
-                "is not initialized - did you remember to initialize Gum first (GumUI.Initialize)?");
-        }
-        GumService.Default.Root.Children.Add(element.Visual);
-    }
+    public static void AddToRoot(this Gum.Forms.Controls.FrameworkElement element) =>
+        Gum.Forms.Controls.FrameworkElementExt.AddToRoot(element);
 }
 
 #endregion

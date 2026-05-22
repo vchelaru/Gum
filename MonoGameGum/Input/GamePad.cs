@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Input;
+using Gum.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,32 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Input;
 
-#region DPadDirection Enum
-/// <summary>
-/// Represents directional input for D-Pad and analog stick direction queries.
-/// </summary>
-public enum DPadDirection
-{
-    /// <summary>
-    /// Upward direction.
-    /// </summary>
-    Up,
-    /// <summary>
-    /// Downward direction.
-    /// </summary>
-    Down,
-    /// <summary>
-    /// Leftward direction.
-    /// </summary>
-    Left,
-    /// <summary>
-    /// Rightward direction.
-    /// </summary>
-    Right
-}
-#endregion
-
-public class GamePad
+public class GamePad : IGamePad
 {
     #region Fields/Properties
 
@@ -548,6 +524,15 @@ public class GamePad
 
         
     }
+
+    // IGamePad implementation. GamepadButton's numeric values mirror XNA Buttons,
+    // so the int round-trip is safe — these overloads forward to the existing
+    // Buttons-typed methods that hold the real logic.
+    bool IGamePad.ButtonDown(GamepadButton button) => ButtonDown((Buttons)(int)button);
+    bool IGamePad.ButtonPushed(GamepadButton button) => ButtonPushed((Buttons)(int)button);
+    bool IGamePad.ButtonReleased(GamepadButton button) => ButtonReleased((Buttons)(int)button);
+    bool IGamePad.ButtonRepeatRate(GamepadButton button) => ButtonRepeatRate((Buttons)(int)button);
+    IAnalogStick IGamePad.LeftStick => mLeftStick;
 
     private void UpdateLastButtonPushedValues(double currentTime)
     {

@@ -30,18 +30,26 @@ using FlatRedBall.Instructions;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using BindableGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
+using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif XNALIKE
 using Keys = Microsoft.Xna.Framework.Input.Keys;
-using GamePad = MonoGameGum.Input.GamePad;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
+using Gum.Input;
+using GamepadButton = Gum.Input.GamepadButton;
 using Gum.Converters;
 #elif RAYLIB
 using RaylibGum;
 using Gum.Input;
 using Keys = Gum.Forms.Input.Keys;
 #elif SOKOL
+using Gum.Input;
+using Keys = Gum.Forms.Input.Keys;
+#else
+// Default branch — used when this file is compiled into GumCommon, which defines
+// none of FRB/XNALIKE/RAYLIB/SOKOL. The Forms abstraction lives in Gum.Input /
+// Gum.Forms.Input, so the headless build picks up the same shared types Raylib/Sokol use.
 using Gum.Input;
 using Keys = Gum.Forms.Input.Keys;
 #endif
@@ -111,16 +119,11 @@ public class FrameworkElement : INotifyPropertyChanged
     public Cursors? CustomCursor { get; set; }
 #endif
 
-    public static List<GamePad> GamePadsForUiControl { get; private set; } = new List<GamePad>();
+    public static List<IGamePad> GamePadsForUiControl { get; private set; } = new List<IGamePad>();
 
 #if !FRB
 
-#if XNALIKE
-    public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new ();
-#else
     public static List<IInputReceiverKeyboard> KeyboardsForUiControl { get; private set; } = new ();
-#endif
-
 
 #endif
 
@@ -849,7 +852,7 @@ public class FrameworkElement : INotifyPropertyChanged
         else
 #endif
         {
-            Visual.AddToManagers(global::RenderingLibrary.SystemManagers.Default,
+            Visual.AddToManagers(global::RenderingLibrary.ISystemManagers.Default,
 #if FRB
                 gumLayer);
 #else
@@ -1102,26 +1105,23 @@ public class FrameworkElement : INotifyPropertyChanged
 #if FRB
     protected void HandleGamepadNavigation(Xbox360GamePad gamepad)
 #else
-    protected void HandleGamepadNavigation(GamePad gamepad)
+    protected void HandleGamepadNavigation(IGamePad gamepad)
 #endif
     {
-        // todo for raylib...
-#if XNALIKE || FRB
-        if (gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
-            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadRight)) ||
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(GamepadButton.DPadRight)) ||
             gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right)))
         {
             this.HandleTab(TabDirection.Down, this, loop:true);
         }
-        else if (gamepad.ButtonRepeatRate(Buttons.DPadUp) ||
-            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadLeft)) ||
+        else if (gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(GamepadButton.DPadLeft)) ||
             gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left)))
         {
             this.HandleTab(TabDirection.Up, this, loop: true);
         }
-#endif
     }
 
 #if FRB
@@ -1735,12 +1735,10 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         bool isPushInputHeldDown = false;
 
-#if XNALIKE || FRB
         for (int i = 0; i < GamePadsForUiControl.Count; i++)
         {
-            isPushInputHeldDown = isPushInputHeldDown || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
+            isPushInputHeldDown = isPushInputHeldDown || (GamePadsForUiControl[i].ButtonDown(GamepadButton.A));
         }
-#endif
 
 #if !FRB
         if (!isPushInputHeldDown)

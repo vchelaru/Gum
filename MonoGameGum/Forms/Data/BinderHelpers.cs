@@ -18,9 +18,6 @@ using FlatRedBall.Forms.Controls;
 using Gum.Forms.Controls;
 #endif
 
-[assembly: InternalsVisibleTo("MonoGameGum.Tests")]
-[assembly: InternalsVisibleTo("MonoGameGum.Tests.V2")]
-
 #if FRB
 namespace FlatRedBall.Forms.Data;
 #endif

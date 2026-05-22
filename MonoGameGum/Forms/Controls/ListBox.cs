@@ -26,7 +26,8 @@ using static FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls;
 #elif XNALIKE
 using MonoGameGum.Input;
-using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+using Gum.Input;
+using GamepadButton = Gum.Input.GamepadButton;
 using Microsoft.Xna.Framework.Input;
 #else
 using Gum.Input;
@@ -698,9 +699,9 @@ public class ListBox : ItemsControl, IInputReceiver
 #if !FRB
         // Use the same pattern as KeyCombo and TextBox - check KeyboardsForUiControl.
         // If the list is empty, no modifiers are detected (consistent with the rest of Gum's keyboard input handling).
-        // On MonoGame the keyboards list is typed IInputReceiverKeyboardMonoGame (XNA Keys);
-        // on Raylib it's IInputReceiverKeyboard (Gum Keys). Both expose `KeyDown(Keys)` where
-        // `Keys` matches the file-level alias, so the call resolves correctly on each platform.
+        // KeyboardsForUiControl is typed List<IInputReceiverKeyboard>. The modifier-key properties
+        // below are XNA Keys on MonoGame; XnaKeyboardExtensions provides the overload that
+        // forwards to the underlying Gum.Forms.Input.Keys API.
         var keyboards = FrameworkElement.KeyboardsForUiControl;
         foreach (var keyboard in keyboards)
         {

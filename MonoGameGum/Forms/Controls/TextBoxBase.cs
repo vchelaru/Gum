@@ -24,7 +24,7 @@ namespace FlatRedBall.Forms.Controls;
 using Microsoft.Xna.Framework.Input;
 using RenderingLibrary.Graphics;
 using MonoGameGum.Input;
-using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+using GamepadButton = Gum.Input.GamepadButton;
 #else
 using Gum.Input;
 using GamepadButton = Gum.Input.GamepadButton;
@@ -1022,7 +1022,7 @@ public abstract class TextBoxBase :
         }
 
         var keyEventArg = new KeyEventArgs();
-        keyEventArg.Key = key;
+        keyEventArg.Key = (Gum.Forms.Input.Keys)(int)key;
         KeyDown?.Invoke(this, keyEventArg);
     }
 

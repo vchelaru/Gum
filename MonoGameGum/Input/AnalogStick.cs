@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Gum.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +34,7 @@ public enum DeadzoneInterpolationType
 }
 
 
-public class AnalogStick
+public class AnalogStick : IAnalogStick
 {
     // The curren time, as of the last time Update was called
     double currentTime;

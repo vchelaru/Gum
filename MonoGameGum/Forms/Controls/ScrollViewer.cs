@@ -18,7 +18,7 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif XNALIKE
-using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+using GamepadButton = Gum.Input.GamepadButton;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 #else
@@ -78,7 +78,7 @@ public class ScrollViewer :
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
         var args = new KeyEventArgs();
-        args.Key = key;
+        args.Key = (Gum.Forms.Input.Keys)(int)key;
         base.RaiseKeyDown(args);
     }
     public void HandleCharEntered(char character)

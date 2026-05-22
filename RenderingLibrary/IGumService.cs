@@ -71,6 +71,13 @@ namespace RenderingLibrary
         /// </summary>
         void Draw();
 
+        /// <summary>
+        /// The root container that owns top-level elements. Extension methods like
+        /// <c>AddToRoot</c> dispatch through this so callers in <c>GumCommon</c> can
+        /// add elements without taking a runtime-specific reference.
+        /// </summary>
+        InteractiveGue Root { get; }
+
 #if NET6_0_OR_GREATER
         /// <summary>
         /// The current default <see cref="IGumService"/>. Assigned by the

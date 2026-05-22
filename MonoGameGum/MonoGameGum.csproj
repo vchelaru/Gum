@@ -117,6 +117,28 @@
 		<Compile Remove="Forms\Controls\Orientation.cs" />
 		<Compile Remove="Forms\Controls\ResizeBehavior.cs" />
 		<Compile Remove="Forms\Controls\ScrollBarVisibility.cs" />
+		<!--
+			FrameworkElement and its coupled Forms/Data binding infrastructure are owned by
+			GumCommon (linked via <Compile Include> in GumCommon.csproj). Exclude them here
+			so the types aren't compiled twice.
+		-->
+		<Compile Remove="Forms\Data\BinderHelpers.cs" />
+		<Compile Remove="Forms\Data\Binding.cs" />
+		<Compile Remove="Forms\Data\BindingExpressionBase.cs" />
+		<Compile Remove="Forms\Data\BindingOperations.cs" />
+		<Compile Remove="Forms\Data\GumProperty.cs" />
+		<Compile Remove="Forms\Data\NpcBindingExpression.cs" />
+		<Compile Remove="Forms\Data\PropertyRegistry.cs" />
+		<Compile Remove="Forms\Data\UntypedBindingExpressionBase.cs" />
+		<Compile Remove="Input\KeyCombo.cs" />
+		<Compile Remove="Forms\VisualTemplate.cs" />
+		<Compile Remove="Forms\Controls\FrameworkElement.cs" />
+		<Compile Remove="Forms\Controls\FrameworkElementExt.cs" />
+		<Compile Remove="Forms\FrameworkElementTemplate.cs" />
+		<Compile Remove="Forms\FrameworkElementTreeExtensions.cs" />
+		<Compile Remove="Forms\Controls\Tooltip.cs" />
+		<Compile Remove="Forms\Controls\ToolTipService.cs" />
+		<Compile Remove="Forms\GraphicalUiElementFormsExtensions.cs" />
 		<EmbeddedResource Remove="FnaGum\**" />
 		<EmbeddedResource Remove="KniGum\**" />
 		<None Remove="FnaGum\**" />

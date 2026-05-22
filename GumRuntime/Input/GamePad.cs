@@ -1,17 +1,19 @@
 namespace Gum.Input;
 
-public class GamePad
+public class GamePad : IGamePad
 {
     // todo - this is needed to be implemented
+    public bool ButtonDown(GamepadButton button) => false;
     public bool ButtonPushed(GamepadButton button) => false;
     public bool ButtonReleased(GamepadButton button) => false;
 
     public bool ButtonRepeatRate(GamepadButton button) => false;
 
+    IAnalogStick IGamePad.LeftStick => LeftStick;
     public AnalogStick LeftStick { get; private set; } = new();
 }
 
-public class AnalogStick
+public class AnalogStick : IAnalogStick
 {
     // todo - this is needed to be implemented
     public bool AsDPadPushed(DPadDirection direction) => false;

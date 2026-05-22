@@ -42,7 +42,7 @@ using GamepadButton = Gum.Input.GamepadButton;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum;
 using System.Security.Cryptography;
-using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+using GamepadButton = Gum.Input.GamepadButton;
 #else
 using Gum.Renderables;
 using Keys = Gum.Forms.Input.Keys;

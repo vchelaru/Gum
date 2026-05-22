@@ -18,7 +18,8 @@ namespace FlatRedBall.Forms.Controls.Primitives;
 #elif XNALIKE
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
-using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+using Gum.Input;
+using GamepadButton = Gum.Input.GamepadButton;
 #else
 using Gum.Input;
 using GamepadButton = Gum.Input.GamepadButton;
@@ -373,7 +374,7 @@ public class ButtonBase :
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
         var args = new KeyEventArgs();
-        args.Key = key;
+        args.Key = (Gum.Forms.Input.Keys)(int)key;
         base.RaiseKeyDown(args);
     }
 

@@ -113,7 +113,7 @@ public class ScrollViewerTests : BaseTestClass
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = new ();
         mockKeyboard
-            .Setup(m => m.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Escape))
+            .Setup(m => m.KeyPushed(Gum.Forms.Input.Keys.Escape))
             .Returns(true);
         mockKeyboard
             .Setup(m => m.KeysTyped)

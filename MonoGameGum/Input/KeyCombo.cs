@@ -37,12 +37,8 @@ public static class KeyComboExtensions
             var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value));
             if (isHeld)
             {
-                // Access KeysTyped via the base interface so we consistently get the
-                // Gum.Forms.Input.Keys overload. IInputReceiverKeyboardMonoGame hides this
-                // with an XNA-typed collection, which would not compare against GumKeys.
-                IEnumerable<Gum.Forms.Input.Keys>? keysTyped = ((IInputReceiverKeyboard)keyboard).KeysTyped;
                 return keyboard.KeyPushed(ToGumKey(keyCombo.PushedKey)) ||
-                    (keysTyped?.Contains(ToGumKey(keyCombo.PushedKey)) == true && keyCombo.IsTriggeredOnRepeat);
+                    (keyboard.KeysTyped?.Contains(ToGumKey(keyCombo.PushedKey)) == true && keyCombo.IsTriggeredOnRepeat);
             }
         }
         return false;

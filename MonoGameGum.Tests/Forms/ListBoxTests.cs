@@ -1291,7 +1291,7 @@ public class ListBoxTests : BaseTestClass
 
         // Setup a mock keyboard with Ctrl pressed
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        mockKeyboard.Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl))
+        mockKeyboard.Setup(k => k.KeyDown(Gum.Forms.Input.Keys.LeftControl))
             .Returns(true);
 
         FrameworkElement.KeyboardsForUiControl.Clear();
@@ -1306,7 +1306,7 @@ public class ListBoxTests : BaseTestClass
 
         // Setup a mock keyboard with Ctrl pressed
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        mockKeyboard.Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl))
+        mockKeyboard.Setup(k => k.KeyDown(Gum.Forms.Input.Keys.LeftControl))
             .Returns(true);
 
         FrameworkElement.KeyboardsForUiControl.Clear();
@@ -1321,7 +1321,7 @@ public class ListBoxTests : BaseTestClass
 
         // Setup a mock keyboard with Shift pressed
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        mockKeyboard.Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
+        mockKeyboard.Setup(k => k.KeyDown(Gum.Forms.Input.Keys.LeftShift))
             .Returns(true);
 
         FrameworkElement.KeyboardsForUiControl.Clear();
@@ -1336,7 +1336,7 @@ public class ListBoxTests : BaseTestClass
 
         // Setup a mock keyboard with Shift pressed
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        mockKeyboard.Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
+        mockKeyboard.Setup(k => k.KeyDown(Gum.Forms.Input.Keys.LeftShift))
             .Returns(true);
 
         FrameworkElement.KeyboardsForUiControl.Clear();
