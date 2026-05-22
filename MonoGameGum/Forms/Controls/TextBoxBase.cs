@@ -1021,9 +1021,11 @@ public abstract class TextBoxBase :
             CaretIndexChanged?.Invoke(this, EventArgs.Empty);
         }
 
+#if !FRB
         var keyEventArg = new KeyEventArgs();
         keyEventArg.Key = (Gum.Forms.Input.Keys)(int)key;
         KeyDown?.Invoke(this, keyEventArg);
+#endif
     }
 
     private void MoveCursorUpOneLine()

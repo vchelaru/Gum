@@ -77,9 +77,8 @@ public class ScrollViewer :
     public void LoseFocus() => OnLoseFocus();
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
-        var args = new KeyEventArgs();
-        args.Key = (Gum.Forms.Input.Keys)(int)key;
-        base.RaiseKeyDown(args);
+        // FRB-side IInputReceiver doesn't currently route through Gum.Forms.Input.Keys;
+        // leave this a no-op until the FRB keyboard pipeline adopts the unified type.
     }
     public void HandleCharEntered(char character)
     {
