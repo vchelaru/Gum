@@ -1,3 +1,5 @@
+using Gum.Forms.Controls;
+using Gum.Threading;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 
@@ -77,6 +79,52 @@ namespace RenderingLibrary
         /// add elements without taking a runtime-specific reference.
         /// </summary>
         InteractiveGue Root { get; }
+
+        /// <summary>
+        /// Queue used to defer actions onto the runtime's main loop (typically the
+        /// next <c>Update</c>). Callers in <c>GumCommon</c> consume this when they
+        /// need to marshal work back to the game thread without depending on a
+        /// specific runtime — for example, applying the result of a completed
+        /// async operation that may have finished on a worker thread.
+        /// </summary>
+        DeferredActionQueue DeferredQueue { get; }
+
+        /// <summary>
+        /// Seconds since the start of the runtime, sampled at the most recent Update call,
+        /// or <c>null</c> if no Update has run yet. Callers in <c>GumCommon</c> use this
+        /// when they need a platform-agnostic frame-clock value — for example, debouncing
+        /// dialog-dismissal input against the elapsed game time. The underlying source
+        /// differs per runtime (MonoGame's <c>GameTime.TotalGameTime.TotalSeconds</c>,
+        /// Raylib's accumulated frame seconds, etc.) and is normalized to <c>float</c>
+        /// here.
+        /// </summary>
+        float? GameTime { get; }
+
+        /// <summary>
+        /// The native (OS-provided) modal text-input dialog implementation for the
+        /// active runtime, or <c>null</c> if the runtime does not have one. Forms
+        /// controls in <c>GumCommon</c> — primarily <c>TextBoxBase</c> — consult
+        /// this when a control wants to bring up the platform's on-screen
+        /// keyboard. Null on runtimes without native text input (Raylib, FNA,
+        /// Sokol, browser, etc.); callers should treat null as a no-op.
+        /// </summary>
+        INativeTextInput? NativeTextInput { get; }
+
+        /// <summary>
+        /// The OS clipboard implementation for the active runtime, or <c>null</c> if the
+        /// runtime does not have one (iOS, headless tests, etc.). Forms controls in
+        /// <c>GumCommon</c> — primarily <c>TextBox</c> and <c>PasswordBox</c> — consult
+        /// this when handling copy / cut / paste. Callers should treat null as a no-op.
+        /// </summary>
+        IGumClipboard? Clipboard { get; }
+
+        /// <summary>
+        /// Creates an empty (no-texture) sprite renderable for the active runtime. Used by
+        /// Forms controls in <c>GumCommon</c> — primarily <c>Image</c> — that need to seed
+        /// a visual with a sprite renderable without taking a reference to a runtime-specific
+        /// Sprite type. Each runtime returns its own <c>Sprite</c> implementation.
+        /// </summary>
+        IRenderable CreateSpriteRenderable();
 
 #if NET6_0_OR_GREATER
         /// <summary>

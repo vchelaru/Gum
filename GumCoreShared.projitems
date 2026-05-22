@@ -102,6 +102,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableCloneLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\HorizontalAlignment.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\HorizontalMeasurementStyle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IAnimatable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IAspectRatio.cs" />
@@ -112,6 +113,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IRenderableOrderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IRenderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ISetClipsChildren.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IFormsText.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IText.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ITexturable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ITextureCoordinate.cs" />
@@ -134,7 +136,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextureFlipAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\VerticalAlignment.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\XNAExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\IGumService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\IPositionedSizedObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\ISystemManagers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\FloatRectangle.cs" />

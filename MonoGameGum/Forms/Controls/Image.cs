@@ -18,8 +18,6 @@ namespace Gum.Forms.Controls;
 #endif
 public class Image : Gum.Forms.Controls.FrameworkElement
 {
-    global::RenderingLibrary.Graphics.Sprite mContainedSprite;
-    
     public string Source
     {
         set
@@ -28,51 +26,10 @@ public class Image : Gum.Forms.Controls.FrameworkElement
         }
     }
 
-    public Microsoft.Xna.Framework.Graphics.Texture2D? Texture
-    {
-        get
-        {
-            return mContainedSprite.Texture;
-        }
-        set
-        {
-            var shouldUpdateLayout = false;
-            int widthBefore = -1;
-            int heightBefore = -1;
-            var isUsingPercentageWidthOrHeight = 
-                Visual?.WidthUnits == Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile ||
-                Visual?.HeightUnits == Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-            if (isUsingPercentageWidthOrHeight)
-            {
-                if (mContainedSprite.Texture != null)
-                {
-                    widthBefore = mContainedSprite.Texture.Width;
-                    heightBefore = mContainedSprite.Texture.Height;
-                }
-            }
-            mContainedSprite.Texture = value;
-            if (isUsingPercentageWidthOrHeight)
-            {
-                int widthAfter = -1;
-                int heightAfter = -1;
-                if (mContainedSprite.Texture != null)
-                {
-                    widthAfter = mContainedSprite.Texture.Width;
-                    heightAfter = mContainedSprite.Texture.Height;
-                }
-                shouldUpdateLayout = widthBefore != widthAfter || heightBefore != heightAfter;
-            }
-            if (shouldUpdateLayout)
-            {
-                Visual?.UpdateLayout();
-            }
-        }
-    }
-
     public Image() :
         // SpriteRuntime is not an InteractiveGue, so don't use that:
         //base(new SpriteRuntime(fullInstantiation:true, tryCreateFormsObject:false))
-        base(new Gum.Wireframe.InteractiveGue(new Sprite(texture:null)))
+        base(new Gum.Wireframe.InteractiveGue(CreateSpriteRenderable()))
     {
         Visual.Width = 100;
         Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
@@ -82,14 +39,13 @@ public class Image : Gum.Forms.Controls.FrameworkElement
         IsVisible = true;
     }
 
-    protected override void ReactToVisualChanged()
-    {
-        RefreshInternalVisualReferences();
-        base.ReactToVisualChanged();
-    }
-
-    protected override void RefreshInternalVisualReferences()
-    {
-        mContainedSprite = Visual?.RenderableComponent as Sprite;
-    }
+    // Resolved through IGumService so Image stays platform-agnostic — each runtime's
+    // GumService returns its own Sprite type. GumService.Initialize must have run before
+    // an Image is constructed; the InvalidOperationException replaces an obscure null-ref
+    // that used to surface from the InteractiveGue ctor.
+    private static IRenderable CreateSpriteRenderable() =>
+        global::RenderingLibrary.IGumService.Default?.CreateSpriteRenderable()
+        ?? throw new InvalidOperationException(
+            "GumService must be initialized before constructing an Image. " +
+            "Call GumService.Default.Initialize(...) first.");
 }

@@ -44,7 +44,6 @@ using MonoGameGum;
 using System.Security.Cryptography;
 using GamepadButton = Gum.Input.GamepadButton;
 #else
-using Gum.Renderables;
 using Keys = Gum.Forms.Input.Keys;
 #endif
 
@@ -74,7 +73,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     GraphicalUiElement textComponent;
     GraphicalUiElement continueIndicatorInstance;
-    Text coreTextObject;
+    IFormsText coreTextObject;
 
 
     public IInputReceiver? ParentInputReceiver =>
@@ -172,7 +171,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         // it's okay if this is null
         continueIndicatorInstance = base.Visual.GetGraphicalUiElementByName("ContinueIndicatorInstance");
 
-        coreTextObject = textComponent?.RenderableComponent as Text;
+        coreTextObject = textComponent?.RenderableComponent as IFormsText;
 
 #if FRB
         Visual.Click += this.HandleClick(this, EventArgs.Empty);
@@ -236,13 +235,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
     {
 #if !FRB
         if (Visual == null || Visual.Parent != null) return;
-#if XNALIKE
-        var root = global::MonoGameGum.GumService.Default?.Root;
-#elif SOKOL
-        var root = global::SokolGum.GumService.Default?.Root;
-#else
-        global::Gum.Wireframe.GraphicalUiElement root = null;
-#endif
+        var root = global::RenderingLibrary.IGumService.Default?.Root;
         if (root != null && !root.Children.Contains(Visual))
         {
             root.Children.Add(Visual);
@@ -395,10 +388,8 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 {
 #if FRB
                     LastTimeDismissed = TimeManager.CurrentTime;
-#elif XNALIKE
-                    LastTimeDismissed = GumService.Default.GameTime.TotalGameTime.TotalSeconds;
 #else
-                    LastTimeDismissed = GumService.Default.GameTime;
+                    LastTimeDismissed = global::RenderingLibrary.IGumService.Default?.GameTime ?? 0;
 #endif
                     PageAdvanced?.Invoke(this, null);
                     FinishedShowing?.Invoke(this, null);
@@ -450,7 +441,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         textComponent.SetProperty("Text", text);
 
 
-        var tags = BbCodeParser.Parse(text, CustomSetPropertyOnRenderable.Tags);
+        var tags = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
         var strippedLength = BbCodeParser.RemoveTags(text, tags).Length;
 
         var shouldPrintCharacterByCharacter = LettersPerSecond > 0 && !forceImmediatePrint;
@@ -549,10 +540,10 @@ public class DialogBox : FrameworkElement, IInputReceiver
         else
         {
             // To remove the tags, we must keep newlines in since since that's how the tags are removed...
-            var foundTagsWithNewlines = BbCodeParser.Parse(text, CustomSetPropertyOnRenderable.Tags);
+            var foundTagsWithNewlines = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
             // ...but when we add the tags back in, we do it without counting newlines, so we need to remove newlines for 
             // the tags that are added back in:
-            var foundTagsWithoutNewlines = BbCodeParser.Parse(text.Replace("\n", ""), CustomSetPropertyOnRenderable.Tags);
+            var foundTagsWithoutNewlines = BbCodeParser.Parse(text.Replace("\n", ""), BbCodeParser.KnownTags);
             var withRemovedTags = BbCodeParser.RemoveTags(text, foundTagsWithNewlines);
 
             var unlimitedLines = new List<string>();
@@ -694,10 +685,8 @@ public class DialogBox : FrameworkElement, IInputReceiver
         this.IsVisible = false;
 #if FRB
         LastTimeDismissed = TimeManager.CurrentTime;
-#elif XNALIKE
-        LastTimeDismissed = GumService.Default.GameTime.TotalGameTime.TotalSeconds;
 #else
-        LastTimeDismissed = GumService.Default.GameTime;
+        LastTimeDismissed = global::RenderingLibrary.IGumService.Default?.GameTime ?? 0;
 #endif
         PageAdvanced?.Invoke(this, null);
         FinishedShowing?.Invoke(this, null);

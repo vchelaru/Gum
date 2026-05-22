@@ -24,6 +24,7 @@ using MonoGameGum.Input;
 #else
 using Gum.Input;
 using GamepadButton = Gum.Input.GamepadButton;
+using Keys = Gum.Forms.Input.Keys;
 #endif
 
 #if !FRB
@@ -77,9 +78,8 @@ public class ScrollViewer :
     public void LoseFocus() => OnLoseFocus();
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
-        var args = new KeyEventArgs();
-        args.Key = (Gum.Forms.Input.Keys)(int)key;
-        base.RaiseKeyDown(args);
+        // FRB-side IInputReceiver doesn't currently route through Gum.Forms.Input.Keys;
+        // leave this a no-op until the FRB keyboard pipeline adopts the unified type.
     }
     public void HandleCharEntered(char character)
     {
@@ -488,12 +488,12 @@ public class ScrollViewer :
         if (MainCursor.PrimaryDown && MainCursor.LastInputDevice == InputDevice.TouchScreen)
         {
             verticalScrollBar.Value -= MainCursor.YChange /
-                global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
+                global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera.Zoom;
 
             if(horizontalScrollBar != null)
             {
                 horizontalScrollBar.Value -= MainCursor.XChange /
-                    global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
+                    global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera.Zoom;
             }
 
             args.Handled = true;
@@ -1028,7 +1028,7 @@ public class ScrollViewer :
     public void OnFocusUpdatePreview(RoutedEventArgs args)
     {
         // todo - check for ESC and return handled, steal focus from children
-#if XNALIKE && !FRB
+#if !FRB
         foreach(var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             // eventually we want to support combos but for now use esc:

@@ -641,7 +641,7 @@ public class TextBoxTests : BaseTestClass
         TextBox textBox = new();
         textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
         textBox.IsFocused = true;
-        textBox.HandleKeyDown(Microsoft.Xna.Framework.Input.Keys.V, false, false, isCtrlDown: true);
+        textBox.HandleKeyDown(Gum.Forms.Input.Keys.V, false, false, isCtrlDown: true);
         textBox.Text.ShouldBe("Line1\nLine2", "because TextBox expects a single-character newline for proper caret positioning");
     }
 

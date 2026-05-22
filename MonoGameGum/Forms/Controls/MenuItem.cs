@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.Wireframe;
-using MonoGameGum;
 using RenderingLibrary;
 
 #if FRB
@@ -60,7 +59,7 @@ public class MenuItem : ItemsControl
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
 
     GraphicalUiElement? text;
-    protected global::RenderingLibrary.Graphics.Text? coreText;
+    protected global::RenderingLibrary.Graphics.IText? coreText;
 
     GraphicalUiElement? SubmenuIndicatorInstance;
 
@@ -231,7 +230,7 @@ public class MenuItem : ItemsControl
 #if FRB
             _=FlatRedBall.Instructions.InstructionManager.DoOnMainThreadAsync(() =>
 #else
-            global::MonoGameGum.GumService.Default.DeferredQueue.Enqueue(() =>
+            global::RenderingLibrary.IGumService.Default.DeferredQueue.Enqueue(() =>
 #endif
             {
                 foreach (var item in items)
@@ -255,7 +254,7 @@ public class MenuItem : ItemsControl
 
         // optional
         text = Visual.GetGraphicalUiElementByName("TextInstance");
-        coreText = text?.RenderableComponent as global::RenderingLibrary.Graphics.Text;
+        coreText = text?.RenderableComponent as global::RenderingLibrary.Graphics.IText;
         SubmenuIndicatorInstance = Visual.GetGraphicalUiElementByName("SubmenuIndicatorInstance");
 
         Visual.Children.CollectionChanged += HandleVisualChildrenChanged;

@@ -5,7 +5,7 @@ using GumFormsSample.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using System;
 
 namespace GumFormsSample

@@ -80,6 +80,20 @@ public class GumService : IGumService
     /// </summary>
     public GameTime GameTime { get; private set; }
 
+    /// <inheritdoc/>
+    float? IGumService.GameTime =>
+#if XNALIKE
+        GameTime != null ? (float?)GameTime.TotalGameTime.TotalSeconds : null;
+#else
+        // On Raylib, GameTime is aliased to double and starts at 0; treat the pre-Update
+        // state as null by also returning null when nothing has run Update yet.
+        _hasReceivedUpdate ? (float?)GameTime : null;
+#endif
+
+#if !XNALIKE
+    private bool _hasReceivedUpdate;
+#endif
+
     /// <summary>
     /// Gets the default cursor, which represents either mouse or touch screen depending on hardware capabilities.
     /// </summary>
@@ -111,6 +125,22 @@ public class GumService : IGumService
     }
 
     public DeferredActionQueue DeferredQueue { get; private set; }
+
+    /// <inheritdoc/>
+    public INativeTextInput? NativeTextInput { get; private set; }
+
+    /// <inheritdoc/>
+    public IGumClipboard? Clipboard { get; private set; }
+
+    /// <inheritdoc/>
+    IRenderable IGumService.CreateSpriteRenderable() =>
+#if XNALIKE
+        new global::RenderingLibrary.Graphics.Sprite(texture: null);
+#elif RAYLIB
+        new global::Gum.Renderables.Sprite();
+#else
+        throw new NotSupportedException("This runtime does not have a sprite renderable implementation.");
+#endif
 
 #if !IOS && !ANDROID
     private IGumHotReloadManager? _hotReloadManager;
@@ -462,6 +492,10 @@ public class GumService : IGumService
         };
 
         DeferredQueue = new DeferredActionQueue();
+#if MONOGAME || KNI
+        NativeTextInput = new MonoGameNativeTextInput();
+#endif
+        Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
 
         GraphicalUiElement.SaveFormsRuntimePropertiesAction = formsObject =>
         {
@@ -1062,6 +1096,9 @@ public class GumService : IGumService
         _hotReloadManager?.Update(roots);
 #endif
         GameTime = gameTime;
+#if !XNALIKE
+        _hasReceivedUpdate = true;
+#endif
 #if XNALIKE
         FormsUtilities.Update(_game, gameTime, roots);
 #else
@@ -1120,21 +1157,22 @@ public static class GraphicalUiElementExtensionMethods
     }
 
     /// <summary>
-    /// Convenience forwarder so MonoGame-side callers that import only the
-    /// <c>MonoGameGum</c> namespace (e.g., older generated code, hand-written
-    /// Game1.cs) can still resolve AddChild for FrameworkElement children.
-    /// The canonical definition lives on <see cref="Gum.Forms.Controls.FrameworkElementExt"/>.
+    /// Parents the supplied Forms control under this <see cref="GraphicalUiElement"/>. Used by
+    /// MonoGameForms-output codegen — the generated <c>AssignParents()</c> body routinely calls
+    /// <c>someRuntime.AddChild(someFormsControl)</c> to attach a Forms child to a runtime visual,
+    /// and resolves it through this extension because the canonical
+    /// <see cref="Gum.Forms.Controls.FrameworkElementExt.AddChild"/> lives in <c>Gum.Forms.Controls</c>
+    /// — a namespace generated code does not import (to avoid name collisions with user-authored
+    /// components that share names with built-in Forms types: <c>Label</c>, <c>ListBox</c>, etc.).
     /// </summary>
+    /// <remarks>
+    /// Hand-written code that imports both <c>MonoGameGum</c> and <c>Gum.Forms.Controls</c> will
+    /// see this overload and the canonical <see cref="Gum.Forms.Controls.FrameworkElementExt.AddChild"/>
+    /// as ambiguous (CS0121) — drop <c>using MonoGameGum;</c> or fully-qualify the call site in
+    /// that situation. See the 2026 May upgrade doc.
+    /// </remarks>
     public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child) =>
         Gum.Forms.Controls.FrameworkElementExt.AddChild(element, child);
-
-    /// <summary>
-    /// Convenience forwarder so MonoGame-side callers that import only the
-    /// <c>MonoGameGum</c> namespace can still call AddToRoot on Forms controls.
-    /// The canonical definition lives on <see cref="Gum.Forms.Controls.FrameworkElementExt"/>.
-    /// </summary>
-    public static void AddToRoot(this Gum.Forms.Controls.FrameworkElement element) =>
-        Gum.Forms.Controls.FrameworkElementExt.AddToRoot(element);
 }
 
 #endregion

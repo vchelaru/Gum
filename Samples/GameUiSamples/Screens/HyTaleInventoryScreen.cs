@@ -31,7 +31,7 @@ namespace GameUiSamples.Screens
             {
                 GumService.Default.Root.Children.Clear();
                 var mainMenu = new MainMenu();
-                mainMenu.AddToRoot();
+                Gum.Forms.Controls.FrameworkElementExt.AddToRoot(mainMenu);
             };
 
             this.RandomButton.Click += (_, _) =>

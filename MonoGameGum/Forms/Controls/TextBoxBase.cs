@@ -29,7 +29,7 @@ using GamepadButton = Gum.Input.GamepadButton;
 using Gum.Input;
 using GamepadButton = Gum.Input.GamepadButton;
 using Keys = Gum.Forms.Input.Keys;
-using Gum.Renderables;
+using RenderingLibrary.Graphics;
 #endif
 
 #if !FRB
@@ -75,11 +75,11 @@ public abstract class TextBoxBase :
     }
 
     protected GraphicalUiElement textComponent;
-    protected Text coreTextObject;
+    protected IFormsText coreTextObject;
 
 
     protected GraphicalUiElement placeholderComponent;
-    protected Text placeholderTextObject;
+    protected IFormsText placeholderTextObject;
 
     protected GraphicalUiElement selectionInstance;
     float _selectionInstanceYOffset;
@@ -508,10 +508,8 @@ public abstract class TextBoxBase :
         if (caretComponent == null) throw new Exception("Gum object must have an object called \"CaretInstance\"");
 #endif
 
-        coreTextObject = textComponent.RenderableComponent as 
-            Text;
-        placeholderTextObject = placeholderComponent?.RenderableComponent as
-            Text;
+        coreTextObject = textComponent.RenderableComponent as IFormsText;
+        placeholderTextObject = placeholderComponent?.RenderableComponent as IFormsText;
 
 #if FULL_DIAGNOSTICS
         if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
@@ -657,7 +655,7 @@ public abstract class TextBoxBase :
         {
             if (MainCursor.WindowPushed == this.Visual && MainCursor.PrimaryDown)
             {
-                var xChange = MainCursor.XChange / global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
+                var xChange = MainCursor.XChange / global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera.Zoom;
 
                 var stringLength = MeasureStringScaled(DisplayedText, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
 
@@ -780,8 +778,11 @@ public abstract class TextBoxBase :
 
 #if XNALIKE
 
-        var bitmapFont = this.coreTextObject.BitmapFont ?? global::RenderingLibrary.Graphics.Text.DefaultBitmapFont;
-        var fontScale = ((IText)coreTextObject).FontScale;
+        // Cast to concrete Text inside this XNALIKE-only block to reach BitmapFont,
+        // which is a MonoGame-specific concrete-class member (not on IFormsText).
+        var concreteText = (global::RenderingLibrary.Graphics.Text)this.coreTextObject;
+        var bitmapFont = concreteText.BitmapFont ?? global::RenderingLibrary.Graphics.Text.DefaultBitmapFont;
+        var fontScale = coreTextObject.FontScale;
 
         for (int i = 0; i < (textToUse?.Length ?? 0); i++)
         {
@@ -1021,9 +1022,11 @@ public abstract class TextBoxBase :
             CaretIndexChanged?.Invoke(this, EventArgs.Empty);
         }
 
+#if !FRB
         var keyEventArg = new KeyEventArgs();
         keyEventArg.Key = (Gum.Forms.Input.Keys)(int)key;
         KeyDown?.Invoke(this, keyEventArg);
+#endif
     }
 
     private void MoveCursorUpOneLine()
@@ -1503,12 +1506,16 @@ public abstract class TextBoxBase :
     /// </summary>
     protected virtual bool UseNativeKeyboardPasswordMode => false;
 
-    private void TryShowNativeKeyboard()
+    /// <summary>
+    /// Brings up the platform's native text-input UI on behalf of this control, if one is
+    /// available. The Android path uses the inline soft keyboard via
+    /// <c>FrameworkElement.MainKeyboard</c>; everywhere else the call is delegated to the
+    /// <see cref="INativeTextInput"/> registered on <c>IGumService.Default.NativeTextInput</c>
+    /// — runtimes without a native dialog leave that property null and the call no-ops.
+    /// Internal so tests can drive the focus-show flow directly.
+    /// </summary>
+    internal void TryShowNativeKeyboard()
     {
-        // FNA does not ship Microsoft.Xna.Framework.Input.KeyboardInput, so the modal path
-        // (used on iOS and as the pre-inline fallback) won't compile against it. FNA's own
-        // native-keyboard story is different and out of scope here. FRB has its own path in
-        // UpdateToIsFocused; Raylib does not need any of this.
 #if !FRB && !RAYLIB && !FNA && !SOKOL
         if (!ShowNativeKeyboardOnFocus)
         {
@@ -1528,17 +1535,19 @@ public abstract class TextBoxBase :
             global::Gum.Forms.Controls.FrameworkElement.MainKeyboard?.ShowKeyboard();
         }
 #else
-        // iOS (and any future platform without an inline implementation) falls back to
-        // MonoGame's KeyboardInput.Show modal. Browser (Blazor) is explicitly skipped —
-        // KeyboardInput.Show is not implemented there and would throw or hang.
-        if (_isNativeKeyboardShowing || OperatingSystem.IsBrowser())
+        // iOS (and any future platform without an inline implementation) falls back to the
+        // runtime's INativeTextInput. Runtimes that don't register one (e.g. Raylib, FNA,
+        // browser) leave NativeTextInput null and we no-op here.
+        var service = global::RenderingLibrary.IGumService.Default;
+        var nativeInput = service?.NativeTextInput;
+        if (nativeInput == null || _isNativeKeyboardShowing)
         {
             return;
         }
 
         _isNativeKeyboardShowing = true;
 
-        var task = Microsoft.Xna.Framework.Input.KeyboardInput.Show(
+        var task = nativeInput.ShowAsync(
             NativeKeyboardTitle,
             NativeKeyboardDescription,
             DisplayedText ?? string.Empty,
@@ -1546,11 +1555,11 @@ public abstract class TextBoxBase :
 
         task.ContinueWith(t =>
         {
-            // The continuation runs on whichever thread KeyboardInput.Show completes on,
+            // The continuation runs on whichever thread the native dialog completes on,
             // which is not guaranteed to be the game loop thread. UI/layout mutation must
-            // happen on the game loop thread, so route the result through GumService's
+            // happen on the game loop thread, so route the result through the runtime's
             // DeferredQueue — it is thread-safe and drains on the next Update.
-            global::MonoGameGum.GumService.Default.DeferredQueue.Enqueue(() =>
+            service!.DeferredQueue.Enqueue(() =>
             {
                 _isNativeKeyboardShowing = false;
                 if (t.Status == System.Threading.Tasks.TaskStatus.RanToCompletion && t.Result != null)

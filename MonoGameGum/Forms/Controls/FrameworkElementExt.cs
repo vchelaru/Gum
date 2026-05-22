@@ -79,6 +79,7 @@ public static class FrameworkElementExt
     /// </exception>
     public static void AddToRoot(this FrameworkElement element)
     {
+#if !FRB
         if (IGumService.Default?.IsInitialized != true)
         {
             throw new InvalidOperationException(
@@ -86,6 +87,7 @@ public static class FrameworkElementExt
                 "did you remember to initialize Gum first (GumService.Default.Initialize)?");
         }
         IGumService.Default.Root.Children.Add(element.Visual);
+#endif
     }
 
     public static void RemoveFromRoot(this FrameworkElement element)

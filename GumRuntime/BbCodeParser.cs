@@ -52,6 +52,35 @@ public struct FoundTag
 
 public static class BbCodeParser
 {
+    /// <summary>
+    /// The canonical set of BbCode tag names this parser understands when applying values
+    /// onto a renderable (color/font/scale/etc.). Callers that want to use the default tag
+    /// set — instead of hand-rolling their own <c>HashSet&lt;string&gt;</c> — pass this to
+    /// <see cref="Parse"/>. Used by <c>DialogBox</c>'s typewriter logic so it can count
+    /// visible characters by stripping known tags from the source text.
+    /// </summary>
+    /// <remarks>
+    /// Uses <see cref="System.StringComparer.OrdinalIgnoreCase"/> — <c>InvariantCulture</c>
+    /// has been observed to crash when uploaded to itch from a Blazor build.
+    /// </remarks>
+    public static HashSet<string> KnownTags { get; } = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
+    {
+        "alpha",
+        "red",
+        "blue",
+        "green",
+        "color",
+        "font",
+        "fontsize",
+        "outlinethickness",
+        "isitalic",
+        "isbold",
+        "usefontsmoothing",
+        "fontscale",
+        "lineheightmultiplier",
+        "custom",
+    };
+
     private struct Tag
     {
         public bool IsOpening;

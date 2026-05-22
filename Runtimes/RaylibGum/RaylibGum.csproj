@@ -46,6 +46,7 @@
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\**\*.cs" Link="Forms\Controls\%(RecursiveDir)%(Filename)%(Extension)" />
 
 		<Compile Include="..\..\MonoGameGum\Clipboard\ClipboardImplementation.cs" Link="Clipboard\ClipboardImplementation.cs" />
+		<Compile Include="..\..\MonoGameGum\Clipboard\MonoGameGumClipboard.cs" Link="Clipboard\MonoGameGumClipboard.cs" />
 
 		<!--
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\Button.cs" Link="Forms\Controls\Button.cs" />
@@ -136,7 +137,6 @@
 		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
 		<Compile Include="..\..\MonoGameGum\Renderables\RenderableCreator.cs" Link="Renderables\RenderableCreator.cs" />
-		<Compile Include="..\..\MonoGameGum\Threading\DeferredActionQueue.cs" Link="Threading\DeferredActionQueue.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\TextExtensions.cs" Link="Renderables\TextExtensions.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs" Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
 	</ItemGroup>
@@ -150,6 +150,7 @@
 	    Forms enums are owned by GumCommon (referenced via ProjectReference). Exclude them
 	    from the Forms\Controls\**\*.cs glob so the types aren't compiled twice.
 	  -->
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\GridUnitType.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Orientation.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ResizeBehavior.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ScrollBarVisibility.cs" />
@@ -157,10 +158,36 @@
 	    FrameworkElement is owned by GumCommon. Exclude it from the Forms\Controls\**\*.cs
 	    glob so it isn't compiled twice.
 	  -->
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Button.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\CheckBox.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ColumnDefinition.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ComboBox.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Expander.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Games\DialogBox.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\FrameworkElement.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\FrameworkElementExt.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Grid.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\GridLength.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ItemsControl.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Label.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ListBox.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ListBoxItem.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Panel.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Primitives\RangeBase.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\RadioButton.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\RowDefinition.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ScrollBar.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ScrollViewer.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Slider.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Splitter.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\StackPanel.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBox.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBoxBase.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ToggleButton.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Tooltip.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ToolTipService.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\UserControl.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

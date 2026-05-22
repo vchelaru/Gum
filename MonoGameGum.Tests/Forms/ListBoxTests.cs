@@ -616,12 +616,12 @@ public class ListBoxTests : BaseTestClass
         var originalRange = ListBox.RangeSelectionModifierKey;
 
         // Act
-        ListBox.ToggleSelectionModifierKey = Microsoft.Xna.Framework.Input.Keys.LeftAlt;
-        ListBox.RangeSelectionModifierKey = Microsoft.Xna.Framework.Input.Keys.LeftControl;
+        ListBox.ToggleSelectionModifierKey = Gum.Forms.Input.Keys.LeftAlt;
+        ListBox.RangeSelectionModifierKey = Gum.Forms.Input.Keys.LeftControl;
 
         // Assert
-        ListBox.ToggleSelectionModifierKey.ShouldBe(Microsoft.Xna.Framework.Input.Keys.LeftAlt);
-        ListBox.RangeSelectionModifierKey.ShouldBe(Microsoft.Xna.Framework.Input.Keys.LeftControl);
+        ListBox.ToggleSelectionModifierKey.ShouldBe(Gum.Forms.Input.Keys.LeftAlt);
+        ListBox.RangeSelectionModifierKey.ShouldBe(Gum.Forms.Input.Keys.LeftControl);
 
         // Cleanup
         ListBox.ToggleSelectionModifierKey = originalToggle;

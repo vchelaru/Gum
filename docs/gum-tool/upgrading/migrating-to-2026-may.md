@@ -144,6 +144,53 @@ Button? cancel = screenRoot.FindFormsControl<Button>("CancelButton");
 
 For the full set of visual-to-Forms lookup methods, see [Finding Elements](../../code/visual-tree/finding-elements.md).
 
+### `MonoGameGum.AddToRoot(FrameworkElement)` forwarder removed — `CS0121` ambiguity fix
+
+The convenience extension method `MonoGameGum.GraphicalUiElementExtensionMethods.AddToRoot(this FrameworkElement)` has been removed. It was a thin forwarder to the canonical `Gum.Forms.Controls.FrameworkElementExt.AddToRoot(this FrameworkElement)`. Because `GumService` lives in the `MonoGameGum` namespace, every consumer needs `using MonoGameGum;`, and because Forms code references `FrameworkElement`, `TextBox`, `Button`, etc., it also needs `using Gum.Forms.Controls;`. With both `using` directives in scope, the forwarder and the canonical method had identical signatures and the compiler reported `CS0121` ("ambiguous call") on every call site:
+
+```
+error CS0121: The call is ambiguous between the following methods or properties:
+'MonoGameGum.GraphicalUiElementExtensionMethods.AddToRoot(...)' and
+'Gum.Forms.Controls.FrameworkElementExt.AddToRoot(...)'
+```
+
+If you see `CS0121` on a call like `textBox.AddToRoot();`, add `using Gum.Forms.Controls;` to the file if it isn't already there. No call-site changes are needed.
+
+❌ Old (compiles in April 2026, ambiguous in May 2026 once `Gum.Forms.Controls` is also in scope):
+
+```csharp
+using MonoGameGum;
+// ...
+textBox.AddToRoot(); // CS0121
+```
+
+✅ New (canonical extension method lives in `Gum.Forms.Controls`):
+
+```csharp
+using MonoGameGum;
+using Gum.Forms.Controls;
+// ...
+textBox.AddToRoot();
+```
+
+**Note on `AddChild`:** The companion `AddChild(this GraphicalUiElement, FrameworkElement)` forwarder is **kept** in `MonoGameGum` because the MonoGameForms code generator emits `someRuntime.AddChild(someFormsControl)` patterns and the generated code does not (and cannot, without name-collision risk) import `Gum.Forms.Controls`.
+
+If hand-written code that imports both `MonoGameGum` and `Gum.Forms.Controls` calls `.AddChild()` on a `GraphicalUiElement` with a `FrameworkElement` child, the same CS0121 will fire on that line for the same reason — two identically-shaped extensions in scope:
+
+```
+error CS0121: The call is ambiguous between the following methods or properties:
+'MonoGameGum.GraphicalUiElementExtensionMethods.AddChild(...)' and
+'Gum.Forms.Controls.FrameworkElementExt.AddChild(...)'
+```
+
+The fix is the same: drop `using MonoGameGum;` from that file (use `MonoGameGum.GumService.Default` fully-qualified if needed), or fully-qualify the AddChild call:
+
+```csharp
+Gum.Forms.Controls.FrameworkElementExt.AddChild(topLevelContainer, textBox);
+```
+
+This case is rare in hand-written code — `AddChild` is mostly emitted by codegen, where it's resolved by the forwarder and never sees the canonical.
+
 ### Default visual changes from runtime unification
 
 The ongoing runtime-unification work collapses per-backend runtime classes (MonoGame, FNA, KNI, Raylib, Skia, Apos.Shapes) into a single shared source file gated by `#if`. Where backends historically disagreed on constructor defaults, the unification picks one value and the others change to match — which means a freshly-constructed runtime can render visibly differently on the affected backends after upgrading.

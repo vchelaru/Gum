@@ -373,9 +373,11 @@ public class ButtonBase :
 
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
+#if !FRB
         var args = new KeyEventArgs();
         args.Key = (Gum.Forms.Input.Keys)(int)key;
         base.RaiseKeyDown(args);
+#endif
     }
 
     public void HandleCharEntered(char character)
