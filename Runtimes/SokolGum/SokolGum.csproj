@@ -149,6 +149,7 @@
 			Forms enums are owned by GumCommon (referenced via ProjectReference). Exclude them
 			from the Forms\Controls\**\*.cs glob so the types aren't compiled twice.
 		-->
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\GridUnitType.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Orientation.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ResizeBehavior.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ScrollBarVisibility.cs" />
@@ -158,6 +159,7 @@
 		-->
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\FrameworkElement.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\FrameworkElementExt.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Label.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Tooltip.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ToolTipService.cs" />
 	</ItemGroup>

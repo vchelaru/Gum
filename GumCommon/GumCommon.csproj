@@ -231,6 +231,7 @@
 		-->
 		<Compile Include="..\MonoGameGum\Forms\ResizeMode.cs" Link="Forms\ResizeMode.cs" />
 		<Compile Include="..\MonoGameGum\Forms\TextWrapping.cs" Link="Forms\TextWrapping.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\GridUnitType.cs" Link="Forms\Controls\GridUnitType.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Orientation.cs" Link="Forms\Controls\Orientation.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ResizeBehavior.cs" Link="Forms\Controls\ResizeBehavior.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ScrollBarVisibility.cs" Link="Forms\Controls\ScrollBarVisibility.cs" />
@@ -258,6 +259,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\FrameworkElementExt.cs" Link="Forms\Controls\FrameworkElementExt.cs" />
 		<Compile Include="..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
 		<Compile Include="..\MonoGameGum\Forms\FrameworkElementTreeExtensions.cs" Link="Forms\FrameworkElementTreeExtensions.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\Label.cs" Link="Forms\Controls\Label.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Tooltip.cs" Link="Forms\Controls\Tooltip.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ToolTipService.cs" Link="Forms\Controls\ToolTipService.cs" />
 		<Compile Include="..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\GraphicalUiElementFormsExtensions.cs" />

@@ -108,6 +108,7 @@
 		-->
 		<Compile Remove="..\Forms\ResizeMode.cs" />
 		<Compile Remove="..\Forms\TextWrapping.cs" />
+		<Compile Remove="..\Forms\Controls\GridUnitType.cs" />
 		<Compile Remove="..\Forms\Controls\Orientation.cs" />
 		<Compile Remove="..\Forms\Controls\ResizeBehavior.cs" />
 		<Compile Remove="..\Forms\Controls\ScrollBarVisibility.cs" />
@@ -127,6 +128,7 @@
 		<Compile Remove="..\Forms\VisualTemplate.cs" />
 		<Compile Remove="..\Forms\Controls\FrameworkElement.cs" />
 		<Compile Remove="..\Forms\Controls\FrameworkElementExt.cs" />
+		<Compile Remove="..\Forms\Controls\Label.cs" />
 		<Compile Remove="..\Forms\FrameworkElementTemplate.cs" />
 		<Compile Remove="..\Forms\FrameworkElementTreeExtensions.cs" />
 		<Compile Remove="..\Forms\Controls\Tooltip.cs" />
