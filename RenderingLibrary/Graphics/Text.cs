@@ -121,7 +121,7 @@ public class ParameterizedLetterCustomizationCall
 
 #endregion
 
-public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrappedText, ICloneable
+public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrappedText, IFormsText, ICloneable
 {
     #region Fields
 

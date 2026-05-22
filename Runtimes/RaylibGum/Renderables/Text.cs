@@ -68,7 +68,7 @@ public enum TextPositionRoundingMode
 
 
 public class Text : IVisible, IRenderableIpso,
-    IWrappedText, ICloneable
+    IWrappedText, IFormsText, ICloneable
 {
     public Text Clone()
     {

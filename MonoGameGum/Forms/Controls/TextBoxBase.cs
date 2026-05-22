@@ -29,7 +29,7 @@ using GamepadButton = Gum.Input.GamepadButton;
 using Gum.Input;
 using GamepadButton = Gum.Input.GamepadButton;
 using Keys = Gum.Forms.Input.Keys;
-using Gum.Renderables;
+using RenderingLibrary.Graphics;
 #endif
 
 #if !FRB
@@ -75,11 +75,11 @@ public abstract class TextBoxBase :
     }
 
     protected GraphicalUiElement textComponent;
-    protected Text coreTextObject;
+    protected IFormsText coreTextObject;
 
 
     protected GraphicalUiElement placeholderComponent;
-    protected Text placeholderTextObject;
+    protected IFormsText placeholderTextObject;
 
     protected GraphicalUiElement selectionInstance;
     float _selectionInstanceYOffset;
@@ -508,10 +508,8 @@ public abstract class TextBoxBase :
         if (caretComponent == null) throw new Exception("Gum object must have an object called \"CaretInstance\"");
 #endif
 
-        coreTextObject = textComponent.RenderableComponent as 
-            Text;
-        placeholderTextObject = placeholderComponent?.RenderableComponent as
-            Text;
+        coreTextObject = textComponent.RenderableComponent as IFormsText;
+        placeholderTextObject = placeholderComponent?.RenderableComponent as IFormsText;
 
 #if FULL_DIAGNOSTICS
         if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
@@ -657,7 +655,7 @@ public abstract class TextBoxBase :
         {
             if (MainCursor.WindowPushed == this.Visual && MainCursor.PrimaryDown)
             {
-                var xChange = MainCursor.XChange / global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
+                var xChange = MainCursor.XChange / global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera.Zoom;
 
                 var stringLength = MeasureStringScaled(DisplayedText, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
 
@@ -780,8 +778,11 @@ public abstract class TextBoxBase :
 
 #if XNALIKE
 
-        var bitmapFont = this.coreTextObject.BitmapFont ?? global::RenderingLibrary.Graphics.Text.DefaultBitmapFont;
-        var fontScale = ((IText)coreTextObject).FontScale;
+        // Cast to concrete Text inside this XNALIKE-only block to reach BitmapFont,
+        // which is a MonoGame-specific concrete-class member (not on IFormsText).
+        var concreteText = (global::RenderingLibrary.Graphics.Text)this.coreTextObject;
+        var bitmapFont = concreteText.BitmapFont ?? global::RenderingLibrary.Graphics.Text.DefaultBitmapFont;
+        var fontScale = coreTextObject.FontScale;
 
         for (int i = 0; i < (textToUse?.Length ?? 0); i++)
         {

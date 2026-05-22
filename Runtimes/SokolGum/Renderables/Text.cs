@@ -43,7 +43,7 @@ public enum TextPositionRoundingMode
 /// render callbacks emit into sokol_gp, so text batches alongside other
 /// renderables in scene-graph order.
 /// </summary>
-public sealed class Text : RenderableBase, IText, IWrappedText, ICloneable
+public sealed class Text : RenderableBase, IText, IWrappedText, IFormsText, ICloneable
 {
     public Text Clone()
     {

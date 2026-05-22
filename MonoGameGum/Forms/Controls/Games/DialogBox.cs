@@ -74,7 +74,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     GraphicalUiElement textComponent;
     GraphicalUiElement continueIndicatorInstance;
-    Text coreTextObject;
+    IFormsText coreTextObject;
 
 
     public IInputReceiver? ParentInputReceiver =>
@@ -172,7 +172,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         // it's okay if this is null
         continueIndicatorInstance = base.Visual.GetGraphicalUiElementByName("ContinueIndicatorInstance");
 
-        coreTextObject = textComponent?.RenderableComponent as Text;
+        coreTextObject = textComponent?.RenderableComponent as IFormsText;
 
 #if FRB
         Visual.Click += this.HandleClick(this, EventArgs.Empty);

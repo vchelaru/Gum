@@ -59,7 +59,7 @@ public class MenuItem : ItemsControl
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
 
     GraphicalUiElement? text;
-    protected global::RenderingLibrary.Graphics.Text? coreText;
+    protected global::RenderingLibrary.Graphics.IText? coreText;
 
     GraphicalUiElement? SubmenuIndicatorInstance;
 
@@ -254,7 +254,7 @@ public class MenuItem : ItemsControl
 
         // optional
         text = Visual.GetGraphicalUiElementByName("TextInstance");
-        coreText = text?.RenderableComponent as global::RenderingLibrary.Graphics.Text;
+        coreText = text?.RenderableComponent as global::RenderingLibrary.Graphics.IText;
         SubmenuIndicatorInstance = Visual.GetGraphicalUiElementByName("SubmenuIndicatorInstance");
 
         Visual.Children.CollectionChanged += HandleVisualChildrenChanged;

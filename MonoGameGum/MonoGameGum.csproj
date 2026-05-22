@@ -146,6 +146,8 @@
 		<Compile Remove="Forms\Controls\Label.cs" />
 		<Compile Remove="Forms\Controls\ListBox.cs" />
 		<Compile Remove="Forms\Controls\ListBoxItem.cs" />
+		<Compile Remove="Forms\Controls\Menu.cs" />
+		<Compile Remove="Forms\Controls\MenuItem.cs" />
 		<Compile Remove="Forms\Controls\Panel.cs" />
 		<Compile Remove="Forms\Controls\Primitives\ButtonBase.cs" />
 		<Compile Remove="Forms\Controls\Primitives\RangeBase.cs" />
@@ -156,6 +158,7 @@
 		<Compile Remove="Forms\Controls\Slider.cs" />
 		<Compile Remove="Forms\Controls\Splitter.cs" />
 		<Compile Remove="Forms\Controls\StackPanel.cs" />
+		<Compile Remove="Forms\Controls\TextBoxBase.cs" />
 		<Compile Remove="Forms\Controls\ToggleButton.cs" />
 		<Compile Remove="Forms\Controls\UserControl.cs" />
 		<Compile Remove="Threading\DeferredActionQueue.cs" />

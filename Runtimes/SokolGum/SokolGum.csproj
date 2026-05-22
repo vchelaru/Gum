@@ -180,6 +180,7 @@
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Slider.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Splitter.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\StackPanel.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBoxBase.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ToggleButton.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Tooltip.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ToolTipService.cs" />

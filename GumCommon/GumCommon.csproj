@@ -91,6 +91,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\IRenderable.cs" Link="RenderingLibrary\IRenderable.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IRenderer.cs" Link="RenderingLibrary\IRenderer.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ISetClipsChildren.cs" Link="RenderingLibrary\ISetClipsChildren.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\IFormsText.cs" Link="RenderingLibrary\IFormsText.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IText.cs" Link="RenderingLibrary\IText.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IWrappedText.cs" Link="RenderingLibrary\IWrappedText.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ITextureCoordinate.cs" Link="RenderingLibrary\ITextureCoordinate.cs" />
@@ -217,6 +218,7 @@
 			<Link>Graphics\VerticalAlignment.cs</Link>
 		</Compile>
 
+		<Compile Include="..\RenderingLibrary\Graphics\HorizontalMeasurementStyle.cs" Link="Graphics\HorizontalMeasurementStyle.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\HorizontalAlignment.cs">
 			<Link>Graphics\HorizontalAlignment.cs</Link>
 		</Compile>
@@ -270,6 +272,8 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\Label.cs" Link="Forms\Controls\Label.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ListBox.cs" Link="Forms\Controls\ListBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ListBoxItem.cs" Link="Forms\Controls\ListBoxItem.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\Menu.cs" Link="Forms\Controls\Menu.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\MenuItem.cs" Link="Forms\Controls\MenuItem.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Panel.cs" Link="Forms\Controls\Panel.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" Link="Forms\Controls\Primitives\ButtonBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\RangeBase.cs" Link="Forms\Controls\Primitives\RangeBase.cs" />
@@ -280,6 +284,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\Slider.cs" Link="Forms\Controls\Slider.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Splitter.cs" Link="Forms\Controls\Splitter.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\StackPanel.cs" Link="Forms\Controls\StackPanel.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\TextBoxBase.cs" Link="Forms\Controls\TextBoxBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ToggleButton.cs" Link="Forms\Controls\ToggleButton.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Tooltip.cs" Link="Forms\Controls\Tooltip.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ToolTipService.cs" Link="Forms\Controls\ToolTipService.cs" />
