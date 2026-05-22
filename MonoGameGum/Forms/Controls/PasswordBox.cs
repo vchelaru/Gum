@@ -277,7 +277,11 @@ public class PasswordBox : TextBoxBase
     protected override void HandlePaste()
     {
 
+#if FRB
+        var whatToPaste = ClipboardImplementation.GetText(HandlePaste);
+#else
         var whatToPaste = global::RenderingLibrary.IGumService.Default?.Clipboard?.GetText(HandlePaste);
+#endif
         if (!string.IsNullOrEmpty(whatToPaste))
         {
             if (selectionLength != 0)

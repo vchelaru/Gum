@@ -316,7 +316,11 @@ public class TextBox : TextBoxBase
         {
             var whatToCopy = DisplayedText.Substring(
                 selectionStart, selectionLength);
+#if FRB
+            ClipboardImplementation.PushStringToClipboard(whatToCopy);
+#else
             global::RenderingLibrary.IGumService.Default?.Clipboard?.SetText(whatToCopy);
+#endif
         }
     }
 
@@ -326,7 +330,11 @@ public class TextBox : TextBoxBase
         {
             var whatToCopy = DisplayedText.Substring(
                 selectionStart, selectionLength);
+#if FRB
+            ClipboardImplementation.PushStringToClipboard(whatToCopy);
+#else
             global::RenderingLibrary.IGumService.Default?.Clipboard?.SetText(whatToCopy);
+#endif
 
             DeleteSelection();
         }
@@ -334,7 +342,11 @@ public class TextBox : TextBoxBase
 
     protected override void HandlePaste()
     {
+#if FRB
+        var whatToPaste = ClipboardImplementation.GetText(HandlePaste);
+#else
         var whatToPaste = global::RenderingLibrary.IGumService.Default?.Clipboard?.GetText(HandlePaste);
+#endif
         //////////////////////Early Out////////////////////
         if (string.IsNullOrEmpty(whatToPaste)) return;
         ///////////////////End Early Out///////////////////
