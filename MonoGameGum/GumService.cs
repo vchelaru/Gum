@@ -129,6 +129,9 @@ public class GumService : IGumService
     /// <inheritdoc/>
     public INativeTextInput? NativeTextInput { get; private set; }
 
+    /// <inheritdoc/>
+    public IGumClipboard? Clipboard { get; private set; }
+
 #if !IOS && !ANDROID
     private IGumHotReloadManager? _hotReloadManager;
 #endif
@@ -482,6 +485,7 @@ public class GumService : IGumService
 #if MONOGAME || KNI
         NativeTextInput = new MonoGameNativeTextInput();
 #endif
+        Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
 
         GraphicalUiElement.SaveFormsRuntimePropertiesAction = formsObject =>
         {

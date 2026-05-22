@@ -110,6 +110,14 @@ namespace RenderingLibrary
         /// </summary>
         INativeTextInput? NativeTextInput { get; }
 
+        /// <summary>
+        /// The OS clipboard implementation for the active runtime, or <c>null</c> if the
+        /// runtime does not have one (iOS, headless tests, etc.). Forms controls in
+        /// <c>GumCommon</c> — primarily <c>TextBox</c> and <c>PasswordBox</c> — consult
+        /// this when handling copy / cut / paste. Callers should treat null as a no-op.
+        /// </summary>
+        IGumClipboard? Clipboard { get; }
+
 #if NET6_0_OR_GREATER
         /// <summary>
         /// The current default <see cref="IGumService"/>. Assigned by the

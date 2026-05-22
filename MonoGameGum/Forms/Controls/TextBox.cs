@@ -10,7 +10,6 @@ namespace FlatRedBall.Forms.Controls;
 #endif
 
 #if !FRB
-using Gum.Clipboard;
 namespace Gum.Forms.Controls;
 
 #endif
@@ -317,8 +316,7 @@ public class TextBox : TextBoxBase
         {
             var whatToCopy = DisplayedText.Substring(
                 selectionStart, selectionLength);
-            ClipboardImplementation.PushStringToClipboard(
-                whatToCopy);
+            global::RenderingLibrary.IGumService.Default?.Clipboard?.SetText(whatToCopy);
         }
     }
 
@@ -328,8 +326,7 @@ public class TextBox : TextBoxBase
         {
             var whatToCopy = DisplayedText.Substring(
                 selectionStart, selectionLength);
-            ClipboardImplementation.PushStringToClipboard(
-                whatToCopy);
+            global::RenderingLibrary.IGumService.Default?.Clipboard?.SetText(whatToCopy);
 
             DeleteSelection();
         }
@@ -337,7 +334,7 @@ public class TextBox : TextBoxBase
 
     protected override void HandlePaste()
     {
-        var whatToPaste = Clipboard.ClipboardImplementation.GetText(HandlePaste);
+        var whatToPaste = global::RenderingLibrary.IGumService.Default?.Clipboard?.GetText(HandlePaste);
         //////////////////////Early Out////////////////////
         if (string.IsNullOrEmpty(whatToPaste)) return;
         ///////////////////End Early Out///////////////////

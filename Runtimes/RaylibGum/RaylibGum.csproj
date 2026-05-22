@@ -46,6 +46,7 @@
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\**\*.cs" Link="Forms\Controls\%(RecursiveDir)%(Filename)%(Extension)" />
 
 		<Compile Include="..\..\MonoGameGum\Clipboard\ClipboardImplementation.cs" Link="Clipboard\ClipboardImplementation.cs" />
+		<Compile Include="..\..\MonoGameGum\Clipboard\MonoGameGumClipboard.cs" Link="Clipboard\MonoGameGumClipboard.cs" />
 
 		<!--
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\Button.cs" Link="Forms\Controls\Button.cs" />
@@ -181,6 +182,7 @@
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Slider.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Splitter.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\StackPanel.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBox.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBoxBase.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ToggleButton.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Tooltip.cs" />

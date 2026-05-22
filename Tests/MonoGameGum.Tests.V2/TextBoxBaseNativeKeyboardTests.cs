@@ -117,6 +117,7 @@ public class TextBoxBaseNativeKeyboardTests
         public DeferredActionQueue DeferredQueue { get; } = new DeferredActionQueue();
         public float? GameTime => null;
         public INativeTextInput? NativeTextInput { get; set; }
+        public IGumClipboard? Clipboard { get; set; }
 
         public void Initialize() { }
         public void Initialize(string gumProjectFile) { }

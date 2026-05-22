@@ -13,7 +13,6 @@ namespace FlatRedBall.Forms.Controls;
 
 #if !FRB
 namespace Gum.Forms.Controls;
-using Gum.Clipboard;
 
 #endif
 
@@ -278,7 +277,7 @@ public class PasswordBox : TextBoxBase
     protected override void HandlePaste()
     {
 
-        var whatToPaste = ClipboardImplementation.GetText(HandlePaste);
+        var whatToPaste = global::RenderingLibrary.IGumService.Default?.Clipboard?.GetText(HandlePaste);
         if (!string.IsNullOrEmpty(whatToPaste))
         {
             if (selectionLength != 0)

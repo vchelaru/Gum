@@ -98,6 +98,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="RenderingLibrary\NineSliceExtensions.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\RenderableBase.cs" Link="RenderingLibrary\RenderableBase.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\RendererSettings.cs" Link="RenderingLibrary\RendererSettings.cs" />
+		<Compile Include="..\RenderingLibrary\IGumClipboard.cs" Link="RenderingLibrary\IGumClipboard.cs" />
 		<Compile Include="..\RenderingLibrary\IGumService.cs" Link="RenderingLibrary\IGumService.cs" />
 		<Compile Include="..\RenderingLibrary\INativeTextInput.cs" Link="RenderingLibrary\INativeTextInput.cs" />
 		<Compile Include="..\RenderingLibrary\ISystemManagers.cs" Link="RenderingLibrary\ISystemManagers.cs" />
@@ -276,6 +277,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\Menu.cs" Link="Forms\Controls\Menu.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\MenuItem.cs" Link="Forms\Controls\MenuItem.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Panel.cs" Link="Forms\Controls\Panel.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\PasswordBox.cs" Link="Forms\Controls\PasswordBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" Link="Forms\Controls\Primitives\ButtonBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\RangeBase.cs" Link="Forms\Controls\Primitives\RangeBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\RadioButton.cs" Link="Forms\Controls\RadioButton.cs" />
@@ -285,6 +287,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\Slider.cs" Link="Forms\Controls\Slider.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Splitter.cs" Link="Forms\Controls\Splitter.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\StackPanel.cs" Link="Forms\Controls\StackPanel.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\TextBox.cs" Link="Forms\Controls\TextBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\TextBoxBase.cs" Link="Forms\Controls\TextBoxBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ToggleButton.cs" Link="Forms\Controls\ToggleButton.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Tooltip.cs" Link="Forms\Controls\Tooltip.cs" />
