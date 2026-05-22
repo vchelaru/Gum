@@ -132,6 +132,16 @@ public class GumService : IGumService
     /// <inheritdoc/>
     public IGumClipboard? Clipboard { get; private set; }
 
+    /// <inheritdoc/>
+    IRenderable IGumService.CreateSpriteRenderable() =>
+#if XNALIKE
+        new global::RenderingLibrary.Graphics.Sprite(texture: null);
+#elif RAYLIB
+        new global::Gum.Renderables.Sprite();
+#else
+        throw new NotSupportedException("This runtime does not have a sprite renderable implementation.");
+#endif
+
 #if !IOS && !ANDROID
     private IGumHotReloadManager? _hotReloadManager;
 #endif

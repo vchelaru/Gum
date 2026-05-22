@@ -118,6 +118,14 @@ namespace RenderingLibrary
         /// </summary>
         IGumClipboard? Clipboard { get; }
 
+        /// <summary>
+        /// Creates an empty (no-texture) sprite renderable for the active runtime. Used by
+        /// Forms controls in <c>GumCommon</c> — primarily <c>Image</c> — that need to seed
+        /// a visual with a sprite renderable without taking a reference to a runtime-specific
+        /// Sprite type. Each runtime returns its own <c>Sprite</c> implementation.
+        /// </summary>
+        IRenderable CreateSpriteRenderable();
+
 #if NET6_0_OR_GREATER
         /// <summary>
         /// The current default <see cref="IGumService"/>. Assigned by the

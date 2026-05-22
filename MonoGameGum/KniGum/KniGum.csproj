@@ -169,6 +169,7 @@
 		<Compile Remove="..\Forms\Controls\FrameworkElementExt.cs" />
 		<Compile Remove="..\Forms\Controls\Grid.cs" />
 		<Compile Remove="..\Forms\Controls\GridLength.cs" />
+		<Compile Remove="..\Forms\Controls\Image.cs" />
 		<Compile Remove="..\Forms\Controls\ItemsControl.cs" />
 		<Compile Remove="..\Forms\Controls\Label.cs" />
 		<Compile Remove="..\Forms\Controls\ListBox.cs" />

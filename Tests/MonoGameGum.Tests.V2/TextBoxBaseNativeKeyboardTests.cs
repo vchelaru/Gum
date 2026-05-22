@@ -122,5 +122,6 @@ public class TextBoxBaseNativeKeyboardTests
         public void Initialize() { }
         public void Initialize(string gumProjectFile) { }
         public void Draw() { }
+        public RenderingLibrary.Graphics.IRenderable CreateSpriteRenderable() => null!;
     }
 }

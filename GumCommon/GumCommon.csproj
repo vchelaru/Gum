@@ -270,6 +270,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\Games\DialogBox.cs" Link="Forms\Controls\Games\DialogBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Grid.cs" Link="Forms\Controls\Grid.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\GridLength.cs" Link="Forms\Controls\GridLength.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\Image.cs" Link="Forms\Controls\Image.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ItemsControl.cs" Link="Forms\Controls\ItemsControl.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Label.cs" Link="Forms\Controls\Label.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ListBox.cs" Link="Forms\Controls\ListBox.cs" />

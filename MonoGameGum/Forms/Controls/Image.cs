@@ -29,7 +29,7 @@ public class Image : Gum.Forms.Controls.FrameworkElement
     public Image() :
         // SpriteRuntime is not an InteractiveGue, so don't use that:
         //base(new SpriteRuntime(fullInstantiation:true, tryCreateFormsObject:false))
-        base(new Gum.Wireframe.InteractiveGue(new Sprite(texture:null)))
+        base(new Gum.Wireframe.InteractiveGue(CreateSpriteRenderable()))
     {
         Visual.Width = 100;
         Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
@@ -38,4 +38,14 @@ public class Image : Gum.Forms.Controls.FrameworkElement
 
         IsVisible = true;
     }
+
+    // Resolved through IGumService so Image stays platform-agnostic — each runtime's
+    // GumService returns its own Sprite type. GumService.Initialize must have run before
+    // an Image is constructed; the InvalidOperationException replaces an obscure null-ref
+    // that used to surface from the InteractiveGue ctor.
+    private static IRenderable CreateSpriteRenderable() =>
+        global::RenderingLibrary.IGumService.Default?.CreateSpriteRenderable()
+        ?? throw new InvalidOperationException(
+            "GumService must be initialized before constructing an Image. " +
+            "Call GumService.Default.Initialize(...) first.");
 }
