@@ -1156,6 +1156,23 @@ public static class GraphicalUiElementExtensionMethods
         element.Parent = null;
     }
 
+    /// <summary>
+    /// Parents the supplied Forms control under this <see cref="GraphicalUiElement"/>. Used by
+    /// MonoGameForms-output codegen — the generated <c>AssignParents()</c> body routinely calls
+    /// <c>someRuntime.AddChild(someFormsControl)</c> to attach a Forms child to a runtime visual,
+    /// and resolves it through this extension because the canonical
+    /// <see cref="Gum.Forms.Controls.FrameworkElementExt.AddChild"/> lives in <c>Gum.Forms.Controls</c>
+    /// — a namespace generated code does not import (to avoid name collisions with user-authored
+    /// components that share names with built-in Forms types: <c>Label</c>, <c>ListBox</c>, etc.).
+    /// </summary>
+    /// <remarks>
+    /// Hand-written code that imports both <c>MonoGameGum</c> and <c>Gum.Forms.Controls</c> will
+    /// see this overload and the canonical <see cref="Gum.Forms.Controls.FrameworkElementExt.AddChild"/>
+    /// as ambiguous (CS0121) — drop <c>using MonoGameGum;</c> or fully-qualify the call site in
+    /// that situation. See the 2026 May upgrade doc.
+    /// </remarks>
+    public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child) =>
+        Gum.Forms.Controls.FrameworkElementExt.AddChild(element, child);
 }
 
 #endregion

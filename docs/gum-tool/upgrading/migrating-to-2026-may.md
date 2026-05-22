@@ -144,38 +144,36 @@ Button? cancel = screenRoot.FindFormsControl<Button>("CancelButton");
 
 For the full set of visual-to-Forms lookup methods, see [Finding Elements](../../code/visual-tree/finding-elements.md).
 
-### `MonoGameGum.AddChild` / `AddToRoot` forwarders removed — `CS0121` ambiguity fix
+### `MonoGameGum.AddToRoot(FrameworkElement)` forwarder removed — `CS0121` ambiguity fix
 
-Two convenience extension methods on `MonoGameGum.GraphicalUiElementExtensionMethods` — `AddChild(GraphicalUiElement, FrameworkElement)` and `AddToRoot(FrameworkElement)` — have been removed. Both were thin forwarders that called the canonical implementations on `Gum.Forms.Controls.FrameworkElementExt`. Because `GumService` lives in the `MonoGameGum` namespace, every consumer needs `using MonoGameGum;`, and because Forms code references `FrameworkElement`, `TextBox`, `Button`, etc., it also needs `using Gum.Forms.Controls;`. With both `using` directives in scope, the forwarder and the canonical method had identical signatures and the compiler reported `CS0121` ("ambiguous call") on every call site:
+The convenience extension method `MonoGameGum.GraphicalUiElementExtensionMethods.AddToRoot(this FrameworkElement)` has been removed. It was a thin forwarder to the canonical `Gum.Forms.Controls.FrameworkElementExt.AddToRoot(this FrameworkElement)`. Because `GumService` lives in the `MonoGameGum` namespace, every consumer needs `using MonoGameGum;`, and because Forms code references `FrameworkElement`, `TextBox`, `Button`, etc., it also needs `using Gum.Forms.Controls;`. With both `using` directives in scope, the forwarder and the canonical method had identical signatures and the compiler reported `CS0121` ("ambiguous call") on every call site:
 
 ```
 error CS0121: The call is ambiguous between the following methods or properties:
-'MonoGameGum.GraphicalUiElementExtensionMethods.AddChild(...)' and
-'Gum.Forms.Controls.FrameworkElementExt.AddChild(...)'
+'MonoGameGum.GraphicalUiElementExtensionMethods.AddToRoot(...)' and
+'Gum.Forms.Controls.FrameworkElementExt.AddToRoot(...)'
 ```
 
-The canonical `RemoveChild` already had no forwarder, so removing these two restores symmetry across the `AddChild` / `AddToRoot` / `RemoveChild` triple.
-
-If you see `CS0121` on a call like `topLevelContainer.AddChild(textBox);` or `textBox.AddToRoot();`, add `using Gum.Forms.Controls;` to the file if it isn't already there. No call-site changes are needed.
+If you see `CS0121` on a call like `textBox.AddToRoot();`, add `using Gum.Forms.Controls;` to the file if it isn't already there. No call-site changes are needed.
 
 ❌ Old (compiles in April 2026, ambiguous in May 2026 once `Gum.Forms.Controls` is also in scope):
 
 ```csharp
 using MonoGameGum;
 // ...
-topLevelContainer.AddChild(textBox); // CS0121
-textBox.AddToRoot();                 // CS0121
+textBox.AddToRoot(); // CS0121
 ```
 
-✅ New (canonical extension methods live in `Gum.Forms.Controls`):
+✅ New (canonical extension method lives in `Gum.Forms.Controls`):
 
 ```csharp
 using MonoGameGum;
 using Gum.Forms.Controls;
 // ...
-topLevelContainer.AddChild(textBox);
 textBox.AddToRoot();
 ```
+
+**Note on `AddChild`:** The companion `AddChild(this GraphicalUiElement, FrameworkElement)` forwarder is **kept** in `MonoGameGum` because the MonoGameForms code generator emits `someRuntime.AddChild(someFormsControl)` patterns and the generated code does not (and cannot, without name-collision risk) import `Gum.Forms.Controls`. Hand-written code that imports both namespaces will still see this overload as ambiguous (`CS0121`) — drop `using MonoGameGum;` from the affected file or fully-qualify the call when it happens.
 
 ### Default visual changes from runtime unification
 
