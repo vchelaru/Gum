@@ -82,6 +82,7 @@ public class BasicShapes
         AddNavButton("Circles", () => new CirclesScreen());
         AddNavButton("Rectangles", () => new RectanglesScreen());
         AddNavButton("Polygons", () => new PolygonsScreen());
+        AddNavButton("Arcs", () => new ArcsScreen());
 
         AddFitModeRadio("Zoom", isChecked: true, () => GumUI.EnableZoomToWindow());
         AddFitModeRadio("Expand", isChecked: false, () => GumUI.EnableExpandToWindow());
