@@ -101,7 +101,9 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         ComboBox.IsEditable = false;
     }
 
+#pragma warning disable CS0067 // Required by INotifyPropertyChanged; reserved for derived classes.
     public event PropertyChangedEventHandler? PropertyChanged;
+#pragma warning restore CS0067
 
     public ComboBoxDisplay()
     {
@@ -439,7 +441,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         this.SuppressSettingProperty = false;
     }
 
-    public ApplyValueResult TryGetValueOnUi(out object value)
+    public ApplyValueResult TryGetValueOnUi(out object? value)
     {
         if(ComboBox.IsEditable)
         {

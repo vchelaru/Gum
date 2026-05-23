@@ -95,7 +95,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
         HintTextBlock.Text = InstanceMember?.DetailText;
 
-        this.Label.Text = InstanceMember.DisplayName;
+        this.Label.Text = InstanceMember?.DisplayName;
 
         RefreshAllContextMenus();
         RefreshViewInExplorerButton();
@@ -106,7 +106,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 
     private void RefreshViewInExplorerButton()
     {
-        ViewInExplorerButton.IsEnabled = !string.IsNullOrEmpty(InstanceMember.Value as string);
+        ViewInExplorerButton.IsEnabled = !string.IsNullOrEmpty(InstanceMember?.Value as string);
     }
 
     private void RefreshIsEnabled()
@@ -141,7 +141,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         return ApplyValueResult.Success;
     }
 
-    public ApplyValueResult TryGetValueOnUi(out object value)
+    public ApplyValueResult TryGetValueOnUi(out object? value)
     {
         return _textBoxLogic.TryGetValueOnUi(out value);
     }

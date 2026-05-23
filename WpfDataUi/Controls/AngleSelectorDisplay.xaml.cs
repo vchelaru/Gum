@@ -76,7 +76,7 @@ namespace WpfDataUi.Controls
             NotifyPropertyChange(nameof(NegativeAngle));
             UpdateUiToAngle();
 
-            var getValueResult = TryGetValueOnUi(out object valueOnUi);
+            var getValueResult = TryGetValueOnUi(out object? valueOnUi);
 
             if(getValueResult == ApplyValueResult.Success)
             {
@@ -314,7 +314,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public ApplyValueResult TryGetValueOnUi(out object result)
+        public ApplyValueResult TryGetValueOnUi(out object? result)
         {
             if (TypeToPushToInstance == AngleType.Radians)
             {
@@ -324,7 +324,7 @@ namespace WpfDataUi.Controls
                 }
                 else
                 {
-                    result = null!;
+                    result = null;
                 }
 
             }
@@ -336,7 +336,7 @@ namespace WpfDataUi.Controls
                 }
                 else
                 {
-                    result = null!;
+                    result = null;
                 }
 
             }

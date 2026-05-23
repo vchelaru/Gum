@@ -41,7 +41,7 @@ namespace Gum.Plugins.VariableGrid
             TextBlockInstance.Text = InstanceMember.Name;
         }
 
-        public ApplyValueResult TryGetValueOnUi(out object result)
+        public ApplyValueResult TryGetValueOnUi(out object? result)
         {
             result = null;
             return ApplyValueResult.Success;

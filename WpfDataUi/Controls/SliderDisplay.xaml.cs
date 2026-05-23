@@ -224,7 +224,7 @@ namespace WpfDataUi.Controls
             mTextBoxLogic.HasUserChangedAnything = false;
         }
 
-        public ApplyValueResult TryGetValueOnUi(out object value)
+        public ApplyValueResult TryGetValueOnUi(out object? value)
         {
             var result = mTextBoxLogic.TryGetValueOnUi(out value);
 

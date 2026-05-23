@@ -167,7 +167,7 @@ namespace WpfDataUi.Controls
             return ApplyValueResult.NotSupported;
         }
 
-        public ApplyValueResult TryGetValueOnUi(out object value)
+        public ApplyValueResult TryGetValueOnUi(out object? value)
         {
             value = CheckBox.IsChecked;
 

@@ -77,7 +77,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
 
             //mTextBoxLogic.RefreshDisplay();
 
-            this.Label.Text = InstanceMember.DisplayName;
+            this.Label.Text = InstanceMember?.DisplayName;
             this.RefreshContextMenu(ListBox.ContextMenu);
             //this.RefreshContextMenu(StackPanel.ContextMenu);
 
@@ -88,7 +88,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
                     return;
                 }
 
-                if (InstanceMember.IsDefault)
+                if (InstanceMember?.IsDefault == true)
                 {
                     this.ListBox.Background = DefaultValueBackground;
                 }
@@ -101,14 +101,14 @@ public partial class ListBoxDisplay : UserControl, IDataUi
 
             HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             HintTextBlock.Text = InstanceMember?.DetailText;
-            TrySetValueOnUi(InstanceMember?.Value);
+            TrySetValueOnUi(InstanceMember?.Value!);
             RefreshIsEnabled();
 
             SuppressSettingProperty = false;
         }
     }
 
-    public ApplyValueResult TryGetValueOnUi(out object result)
+    public ApplyValueResult TryGetValueOnUi(out object? result)
     {
         // todo - need to make this more flexible, but for now let's just support strings:
         var propertyType = InstanceMember?.PropertyType;
@@ -118,7 +118,11 @@ public partial class ListBoxDisplay : UserControl, IDataUi
 
             foreach(var item in ListBox.Items)
             {
-                value.Add(item?.ToString());
+                var asString = item?.ToString();
+                if (asString != null)
+                {
+                    value.Add(asString);
+                }
             }
 
             result = value;
@@ -163,7 +167,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
             {
                 if (TryParse(item?.ToString(), out Vector2? vectorResult))
                 {
-                    value.Add(vectorResult.Value);
+                    value.Add(vectorResult!.Value);
                 }
             }
             result = value;
@@ -222,15 +226,18 @@ public partial class ListBoxDisplay : UserControl, IDataUi
             var newList = new List<Vector2>();
             ListBox.ItemsSource = newList;
         }
-        else if(value is not null)
+        else if(value is IList valueAsGenericList)
         {
             var newList = Activator.CreateInstance(value.GetType()) as IList;
 
-            foreach(var item in value as IList)
+            if (newList != null)
             {
-                newList.Add(item);
+                foreach (var item in valueAsGenericList)
+                {
+                    newList.Add(item);
+                }
+                ListBox.ItemsSource = newList;
             }
-            ListBox.ItemsSource = newList;
         }
         else
         {
@@ -290,7 +297,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
             {
                 var listToRemoveFrom = ListBox.ItemsSource as IList;
 
-                if(ListBox.SelectedIndex < listToRemoveFrom.Count)
+                if(listToRemoveFrom != null && ListBox.SelectedIndex < listToRemoveFrom.Count)
                 {
                     listToRemoveFrom.RemoveAt(ListBox.SelectedIndex);
                 }
@@ -400,7 +407,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         TryDoManualRefresh();
     }
 
-    private static bool TryParse(string text, out Vector2? parsedValue)
+    private static bool TryParse(string? text, out Vector2? parsedValue)
     {
         parsedValue = null;
 
@@ -439,7 +446,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         if (needsManualRefresh)
         {
             ListBox.ItemsSource = null;
-            TrySetValueOnUi(InstanceMember?.Value);
+            TrySetValueOnUi(InstanceMember?.Value!);
         }
     }
 
@@ -485,7 +492,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         if (InstanceMember?.IsReadOnly == true)
             return;
 
-        IndexEditing = ((ListBox)sender).SelectedIndex;
+        IndexEditing = ((ListBox)sender!).SelectedIndex;
         if(IndexEditing < 0)
         {
             IndexEditing = null;

@@ -505,7 +505,7 @@ namespace WpfDataUi.DataTypes
             if (BeforeSetByUi != null)
             {
                 BeforePropertyChangedArgs args = new BeforePropertyChangedArgs();
-                object value;
+                object? value;
                 dataUi.TryGetValueOnUi(out value);
 
                 args.NewValue = value;
