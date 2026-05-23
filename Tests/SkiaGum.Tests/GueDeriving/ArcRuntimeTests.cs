@@ -43,10 +43,29 @@ public class ArcRuntimeTests
     // this before unification; Skia inherited the base default. The unified ctor seeds 10 on
     // both so a freshly-constructed ArcRuntime renders visibly without consumer setup.
     [Fact]
-    public void ArcRuntime_StrokeWidth_DefaultShouldBe10()
+    public void ArcRuntime_Thickness_DefaultShouldBe10()
     {
         ArcRuntime arcRuntime = new();
-        arcRuntime.StrokeWidth.ShouldBe(10);
+        arcRuntime.Thickness.ShouldBe(10);
+    }
+
+    // Regression for the silent gradient suppression introduced by #2790 (commit 5c34a77).
+    // Before #2790, SkiaShapeRuntime.UseGradient passed straight through to the contained
+    // renderable; after #2790, RefreshSlotGradients gated it on `_fillColor != null`, which
+    // turned off gradient for every single-slot shape (Arc, RoundedRectangle, Polygon, etc.)
+    // used via the legacy `Color` API. Two-slot runtimes (Circle, Rectangle) were unaffected
+    // because their gate is per-slot and they always set FillColor/StrokeColor explicitly.
+    [Fact]
+    public void ArcRuntime_UseGradient_ShouldEnableGradientOnSingleSlotWithoutFillColor()
+    {
+        ArcRuntime arcRuntime = new();
+        Arc containedArc = (Arc)arcRuntime.RenderableComponent;
+
+        arcRuntime.UseGradient = true;
+
+        containedArc.UseGradient.ShouldBeTrue(
+            "single-slot Skia shapes must honor UseGradient even when FillColor is null " +
+            "(legacy Color API path) — regression from #2790's per-slot gate.");
     }
 
     [Fact]
@@ -55,8 +74,8 @@ public class ArcRuntimeTests
         ArcRuntime arcRuntime = new();
 
         var containedArc = (Arc)arcRuntime.RenderableComponent;
-        arcRuntime.StrokeWidth = 10;
-        containedArc.StrokeWidth.ShouldNotBe(10, "because the stroke width isn't applied until PreRender where the units are also considered");
+        arcRuntime.Thickness = 10;
+        containedArc.StrokeWidth.ShouldNotBe(10, "because the thickness isn't applied until PreRender where the units are also considered");
 
         arcRuntime.PreRender();
 

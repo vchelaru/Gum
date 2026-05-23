@@ -136,10 +136,22 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     /// </summary>
     void RefreshSlotGradients()
     {
-        ContainedRenderable.UseGradient = _useGradient && _fillColor != null;
         if (StrokeRenderable != null)
         {
+            // Two-slot: each slot is gated independently so a gradient lights up only where the
+            // user lit up a color (issue #2790).
+            ContainedRenderable.UseGradient = _useGradient && _fillColor != null;
             StrokeRenderable.UseGradient = _useGradient && _strokeColor != null;
+        }
+        else
+        {
+            // Single-slot: the contained renderable IS the active slot regardless of whether
+            // the user routed through the legacy Color setter, FillColor, or StrokeColor.
+            // Gating here on _fillColor != null silently suppressed gradients on every
+            // single-slot shape used via the legacy Color API (Arc, RoundedRectangle, Polygon,
+            // ColoredCircle, Line, LineGrid) — that was a regression from #2790; this branch
+            // restores the pre-#2790 pass-through.
+            ContainedRenderable.UseGradient = _useGradient;
         }
     }
 

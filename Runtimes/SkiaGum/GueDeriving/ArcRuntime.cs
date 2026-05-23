@@ -1,4 +1,5 @@
 using Gum.Wireframe;
+using System;
 
 #if SKIA
 using SkiaGum.Renderables;
@@ -19,8 +20,10 @@ namespace Gum.GueDeriving;
 #endif
 
 /// <summary>
-/// Runtime that draws a circular arc inscribed in its Width x Height bounds.
-/// The arc is always stroked (it is never filled); use <see cref="Thickness"/> to control its weight.
+/// Runtime that draws a circular arc inscribed in its Width x Height bounds. Arcs are always
+/// stroked — there is no fill mode. Use <see cref="Thickness"/> to control how thick the band
+/// is; thickness ranges from "thin line tracing the curve" all the way up to "pie wedge filling
+/// the bounds" (see the <see cref="Thickness"/> docs for the wedge configuration).
 /// </summary>
 /// <remarks>
 /// Source-shared between SkiaGum and MonoGameGumShapes (and KniGumShapes) via a Compile/Link in
@@ -55,12 +58,62 @@ public class ArcRuntime
     #endregion
 
     /// <summary>
-    /// Gets or sets the thickness of the arc, in pixels. Façade for <c>StrokeWidth</c> on the
-    /// base shape runtime - the value is held on the runtime so <c>PreRender</c> can apply
-    /// <c>StrokeWidthUnits</c> (e.g. ScreenPixel zoom scaling) before pushing it to the renderable
-    /// each frame.
+    /// Width of the stroked band that traces the arc curve, in pixels. <c>Thickness</c> is the
+    /// canonical user-facing name for this value on arcs — it's the variable name the Gum tool
+    /// persists in <c>.gumx</c> projects and the one shown in the Variables grid. <see cref="StrokeWidth"/>
+    /// is an alias for cross-shape code consumers and is marked obsolete on <c>ArcRuntime</c> to
+    /// steer callers toward <c>Thickness</c>.
     /// </summary>
+    /// <remarks>
+    /// <para><b>Façade</b></para>
+    /// <para>
+    /// Routes to the same backing field as <see cref="StrokeWidth"/> on the base shape runtime.
+    /// There is no second storage location; setting either name is byte-for-byte identical. The
+    /// runtime holds the value (not the renderable) so <c>PreRender</c> can apply
+    /// <c>StrokeWidthUnits</c> (e.g. ScreenPixel zoom scaling) each frame before pushing the
+    /// resolved value to the renderable.
+    /// </para>
+    /// <para><b>Visual progression as Thickness grows</b></para>
+    /// <para>
+    /// Arcs render as a stroked band centered on a curve inscribed in the bounding box. The
+    /// stroke is inset by half its width (<see cref="RenderableShapeBase.IsOffsetAppliedForStroke"/>),
+    /// so the curve's radius shrinks as <c>Thickness</c> grows. For a square arc with
+    /// <c>Width = Height = W</c>:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><b>Thin (e.g. Thickness = 2)</b>: a fine line tracing the curve. Use for outlined rings.</item>
+    /// <item><b>Medium (e.g. Thickness = W / 8)</b>: the chunky band most progress-ring / dial UIs want.</item>
+    /// <item><b>Thickness = W / 2</b>: the band's inner edge collapses to a point at center and
+    /// the butt-end caps become radial edges — the arc renders as a true pie wedge (a circular
+    /// sector) filling the bounding box. This is the supported path to a "filled wedge" arc.
+    /// Set <see cref="IsEndRounded"/> = false (the default) for a clean wedge; rounded caps
+    /// distort the wedge corners.</item>
+    /// <item><b>Thickness &gt; W / 2</b>: undefined. The internal curve would have negative
+    /// radius; Skia/Apos behavior in that regime is not specified. Clamp at <c>W / 2</c>.</item>
+    /// </list>
+    /// <para><b>Gradient interaction</b></para>
+    /// <para>
+    /// Setting <see cref="SkiaShapeRuntime.UseGradient"/> = true (after seeding gradient colors
+    /// and endpoints) applies the gradient to the stroke band at any Thickness — including at
+    /// <c>Thickness = W / 2</c>, which produces a gradient-filled pie wedge.
+    /// </para>
+    /// </remarks>
     public float Thickness
+    {
+        get => base.StrokeWidth;
+        set => base.StrokeWidth = value;
+    }
+
+    /// <summary>
+    /// Obsolete on <c>ArcRuntime</c> — use <see cref="Thickness"/>. Both properties route to the
+    /// same backing field, so existing code using <c>StrokeWidth</c> still works; the obsolete
+    /// marker exists to point new callers at the canonical user-facing name. The Gum tool
+    /// persists this value as "Thickness" in <c>.gumx</c> projects and surfaces only that name
+    /// in the Variables grid; <c>StrokeWidth</c> is a cross-shape technical alias inherited
+    /// from the base shape runtime.
+    /// </summary>
+    [Obsolete("Use Thickness instead — it's the canonical user-facing name for arc stroke weight and the variable name the Gum tool persists. StrokeWidth still works (same backing field) but new code should prefer Thickness.")]
+    public new float StrokeWidth
     {
         get => base.StrokeWidth;
         set => base.StrokeWidth = value;
@@ -122,9 +175,10 @@ public class ArcRuntime
             Width = 100;
             Height = 100;
 
-            // Seed the runtime auto-property StrokeWidth so PreRender pushes the legacy Arc
-            // default (10) to the renderable instead of overwriting it with 0.
-            StrokeWidth = 10;
+            // Seed the runtime auto-property so PreRender pushes the legacy Arc default (10) to
+            // the renderable instead of overwriting it with 0. Thickness === StrokeWidth (same
+            // backing field); using Thickness here matches the canonical user-facing name.
+            Thickness = 10;
 
             // IsEndRounded intentionally left at the renderable's default of false. Locked in
             // unification (issue #2728) - this is a visible behavior change for Apos consumers
