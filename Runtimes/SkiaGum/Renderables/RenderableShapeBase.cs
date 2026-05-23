@@ -428,7 +428,12 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
 
     bool _isFilled = true;
-    public bool IsFilled
+    /// <summary>
+    /// Virtual so shape-specific renderables can clamp it. <see cref="Arc"/> overrides this to
+    /// always return false because Skia's <c>SKPath.AddArc</c> autocloses with a chord (a
+    /// circular-segment shape nobody wants) when filled.
+    /// </summary>
+    public virtual bool IsFilled
     {
         get => _isFilled;
         set

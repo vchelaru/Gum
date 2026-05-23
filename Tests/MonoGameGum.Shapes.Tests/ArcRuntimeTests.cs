@@ -35,17 +35,20 @@ public class ArcRuntimeTests
     // runtime auto-property. If somebody (a) breaks the façade so Thickness gets its own backing
     // field again, or (b) does a careless rename like replace-all "Thickness" -> "StrokeWidth"
     // and produces a self-recursive property, this catches it: the build either fails outright
-    // or the round-trip stops agreeing.
+    // or the round-trip stops agreeing. StrokeWidth on ArcRuntime is [Obsolete] (prefer
+    // Thickness) but the alias contract must still hold — that's exactly what this test pins.
     [Fact]
     public void Thickness_AndStrokeWidth_ShouldBeAliased_OnArcRuntime()
     {
         ArcRuntime sut = new ArcRuntime();
 
+#pragma warning disable CS0618 // Pinning the StrokeWidth alias is the whole point of this test.
         sut.Thickness = 7;
         sut.StrokeWidth.ShouldBe(7);
 
         sut.StrokeWidth = 12;
         sut.Thickness.ShouldBe(12);
+#pragma warning restore CS0618
     }
 
     // Regression for #2629 unification: the legacy default thickness of an Arc is 10. ArcRuntime
@@ -59,7 +62,9 @@ public class ArcRuntimeTests
         sut.StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
         sut.Thickness.ShouldBe(10);
+#pragma warning disable CS0618 // Pinning the StrokeWidth alias is intentional here.
         sut.StrokeWidth.ShouldBe(10);
+#pragma warning restore CS0618
 
         var renderable = (IRenderable)sut.RenderableComponent;
         var shape = (RenderableShapeBase)sut.RenderableComponent;
