@@ -225,7 +225,7 @@ namespace WpfDataUi.Controls
                 // couldn't parse it, so let's try to math operation it?
                 try
                 {
-                    Angle = TextBoxDisplayLogic.TryHandleMathOperation(text, InstanceMember.PropertyType) as float?;
+                    Angle = TextBoxDisplayLogic.TryHandleMathOperation(text, InstanceMember!.PropertyType) as float?;
                 }
                 catch
                 {
@@ -267,7 +267,7 @@ namespace WpfDataUi.Controls
                 }
             }
 
-            this.Label.Content = InstanceMember.DisplayName;
+            this.Label.Content = InstanceMember?.DisplayName;
 
             this.RefreshContextMenu(TopRowGrid.ContextMenu);
             this.RefreshContextMenu(TextBox.ContextMenu);
@@ -279,11 +279,11 @@ namespace WpfDataUi.Controls
             {
                 if (!DataUiGrid.GetOverridesIsDefaultStyling(this))
                 {
-                    if (InstanceMember.IsDefault)
+                    if (InstanceMember?.IsDefault == true)
                     {
                         TextBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
                     }
-                    else if (InstanceMember.IsIndeterminate)
+                    else if (InstanceMember?.IsIndeterminate == true)
                     {
                         TextBox.Background = TextBoxDisplayLogic.IndeterminateValueBackground;
                     }
@@ -324,7 +324,7 @@ namespace WpfDataUi.Controls
                 }
                 else
                 {
-                    result = null;
+                    result = null!;
                 }
 
             }
@@ -336,7 +336,7 @@ namespace WpfDataUi.Controls
                 }
                 else
                 {
-                    result = null;
+                    result = null!;
                 }
 
             }
@@ -447,7 +447,7 @@ namespace WpfDataUi.Controls
             Ellipse_MouseMove_1(null, null);
         }
 
-        private void Ellipse_MouseMove_1(object? sender, MouseEventArgs e)
+        private void Ellipse_MouseMove_1(object? sender, MouseEventArgs? e)
         {
             if (Mouse.LeftButton == MouseButtonState.Pressed)
             {
