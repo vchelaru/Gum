@@ -147,7 +147,7 @@ namespace Gum.Controls.DataUi
             return ApplyValueResult.NotSupported;
         }
 
-        public ApplyValueResult TryGetValueOnUi(out object value)
+        public ApplyValueResult TryGetValueOnUi(out object? value)
         {
             var result = ApplyValueResult.UnknownError;
             value = null;
@@ -249,7 +249,7 @@ namespace Gum.Controls.DataUi
         private void SetCurrentColorValueOnInstance(SetPropertyCommitType commitType)
         {
             isSetting = true;
-            var getValueResult = TryGetValueOnUi(out object valueOnUi);
+            var getValueResult = TryGetValueOnUi(out object? valueOnUi);
 
             if (getValueResult == ApplyValueResult.Success)
             {

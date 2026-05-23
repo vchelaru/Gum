@@ -105,7 +105,7 @@ public partial class MultiFileDisplay : UserControl, IDataUi
         HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
         HintTextBlock.Text = InstanceMember?.DetailText;
 
-        TrySetValueOnUi(InstanceMember?.Value);
+        TrySetValueOnUi(InstanceMember?.Value!);
         RefreshIsEnabled();
 
         Dispatcher.BeginInvoke(() =>
@@ -139,7 +139,7 @@ public partial class MultiFileDisplay : UserControl, IDataUi
         return ApplyValueResult.Success;
     }
 
-    public ApplyValueResult TryGetValueOnUi(out object result)
+    public ApplyValueResult TryGetValueOnUi(out object? result)
     {
         result = new List<string>(_entries);
         return ApplyValueResult.Success;

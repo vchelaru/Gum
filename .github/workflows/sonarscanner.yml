@@ -16,10 +16,14 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.17
+      # See build-and-test.yaml for why we init submodules manually
+      # instead of using actions/checkout's `submodules: recursive`.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-          submodules: recursive # allows us to download kni and fna linked submodules
+          submodules: false
+      - name: Init submodules (non-shallow)
+        run: git submodule update --init --recursive
 
       - name: Set up .NET 9
         uses: actions/setup-dotnet@v5

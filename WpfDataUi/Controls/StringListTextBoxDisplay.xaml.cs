@@ -102,7 +102,7 @@ namespace WpfDataUi.Controls
         }
 
 
-        public ApplyValueResult TryGetValueOnUi(out object result)
+        public ApplyValueResult TryGetValueOnUi(out object? result)
         {
             // todo - need to make this more flexible, but for now let's just support strings:
             if (InstanceMember?.PropertyType == typeof(List<string>))

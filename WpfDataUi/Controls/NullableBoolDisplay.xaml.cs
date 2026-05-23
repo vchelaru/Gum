@@ -53,7 +53,9 @@ namespace WpfDataUi.Controls
         }
         public bool SuppressSettingProperty { get; set; }
 
+#pragma warning disable CS0067 // Required by INotifyPropertyChanged; reserved for derived classes.
         public event PropertyChangedEventHandler? PropertyChanged;
+#pragma warning restore CS0067
 
         private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
         {
@@ -123,12 +125,12 @@ namespace WpfDataUi.Controls
                 case null:
                     NullRadioButton.IsChecked = true;
                     return ApplyValueResult.Success;
-                default:
-                    return ApplyValueResult.NotSupported;
+                //default:
+                //    return ApplyValueResult.NotSupported;
             }
         }
 
-        public ApplyValueResult TryGetValueOnUi(out object value)
+        public ApplyValueResult TryGetValueOnUi(out object? value)
         {
             if(TrueRadioButton.IsChecked == true)
             {

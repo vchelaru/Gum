@@ -6,10 +6,14 @@ jobs:
     Build-Samples:
         runs-on: windows-latest
         steps:
+            # See build-and-test.yaml for why we init submodules manually
+            # instead of using actions/checkout's `submodules: recursive`.
             - name: Clone Repository
               uses: actions/checkout@v4
               with:
-                submodules: recursive
+                submodules: false
+            - name: Init submodules (non-shallow)
+              run: git submodule update --init --recursive
 
             - name: Setup .NET SDKs
               uses: actions/setup-dotnet@v4

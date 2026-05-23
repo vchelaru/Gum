@@ -21,7 +21,7 @@ namespace WpfDataUi
 
         bool IsEnabled { get; set; }
 
-        ApplyValueResult TryGetValueOnUi(out object result);
+        ApplyValueResult TryGetValueOnUi(out object? result);
         ApplyValueResult TrySetValueOnUi(object value);
 
         /// <summary>

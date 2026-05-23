@@ -253,7 +253,7 @@ namespace WpfDataUi.Controls
             }
             else
             {
-                TryGetValueOnUi(out object valueOnInstance);
+                TryGetValueOnUi(out object? valueOnInstance);
                 if (valueOnInstance == null)
                 {
                     PlaceholderText.Visibility = Visibility.Visible;
@@ -267,7 +267,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public ApplyValueResult TryGetValueOnUi(out object value)
+        public ApplyValueResult TryGetValueOnUi(out object? value)
         {
             if(this.NullableCheckBox.Visibility == Visibility.Visible && this.NullableCheckBox.IsChecked == true)
             {
@@ -334,7 +334,7 @@ namespace WpfDataUi.Controls
                 lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
             }
 
-            TryGetValueOnUi(out object valueOnInstance);
+            TryGetValueOnUi(out object? valueOnInstance);
 
             RefreshIsEnabled(valueOnInstance, forceNullableEnable:false);
         }
@@ -397,7 +397,7 @@ namespace WpfDataUi.Controls
 
                 System.Windows.Input.Mouse.Capture(Label);
 
-                var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
+                var getValueStatus = TryGetValueOnUi(out object? valueOnInstance);
 
                 if (getValueStatus == ApplyValueResult.Success)
                 {
@@ -440,7 +440,7 @@ namespace WpfDataUi.Controls
                             }
                         }
 
-                        var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
+                        var getValueStatus = TryGetValueOnUi(out object? valueOnInstance);
 
                         if(getValueStatus == ApplyValueResult.Success)
                         {
@@ -506,7 +506,7 @@ namespace WpfDataUi.Controls
 
             lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
 
-            TryGetValueOnUi(out object newValue);
+            TryGetValueOnUi(out object? newValue);
 
             RefreshIsEnabled(newValue, forceNullableEnable: NullableCheckBox.IsChecked == false);
 

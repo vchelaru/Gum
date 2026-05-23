@@ -94,11 +94,15 @@ jobs:
     runs-on: windows-latest
     
     steps:
+    # See build-and-test.yaml for why we init submodules manually
+    # instead of using actions/checkout's `submodules: recursive`.
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0 # Fetch full history for version calculation
-        submodules: recursive # Fetch all submodules recursively
+        submodules: false
+    - name: Init submodules (non-shallow)
+      run: git submodule update --init --recursive
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4

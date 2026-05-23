@@ -84,7 +84,7 @@ public static class IDataUiExtensionMethods
         if (!hasErrorOccurred)
         {
 
-            object valueOnUi;
+            object? valueOnUi;
 
             result = dataUi.TryGetValueOnUi(out valueOnUi);
 

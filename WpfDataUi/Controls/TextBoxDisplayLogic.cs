@@ -135,7 +135,7 @@ namespace WpfDataUi.Controls
             try
             {
 
-                object newValue;
+                object? newValue;
 
                 if (HasUserChangedAnything || commitType == SetPropertyCommitType.Full)
                 {
@@ -276,7 +276,7 @@ namespace WpfDataUi.Controls
             return true;
         }
 
-        public ApplyValueResult TryGetValueOnUi(out object value)
+        public ApplyValueResult TryGetValueOnUi(out object? value)
         {
             var result = ApplyValueResult.UnknownError;
 

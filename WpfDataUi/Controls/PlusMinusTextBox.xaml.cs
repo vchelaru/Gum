@@ -127,7 +127,7 @@ public partial class PlusMinusTextBox : UserControl, IDataUi, ISetDefaultable
         //}
     }
 
-    public ApplyValueResult TryGetValueOnUi(out object value)
+    public ApplyValueResult TryGetValueOnUi(out object? value)
     {
         return mTextBoxLogic.TryGetValueOnUi(out value);
     }
@@ -179,7 +179,7 @@ public partial class PlusMinusTextBox : UserControl, IDataUi, ISetDefaultable
 
     private void MinusButtonClicked(object? sender, RoutedEventArgs e)
     {
-        if( TryGetValueOnUi(out object value) == ApplyValueResult.Success)
+        if( TryGetValueOnUi(out object? value) == ApplyValueResult.Success)
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
@@ -196,7 +196,7 @@ public partial class PlusMinusTextBox : UserControl, IDataUi, ISetDefaultable
 
     private void PlusButtonClicked(object? sender, RoutedEventArgs e)
     {
-        if (TryGetValueOnUi(out object value) == ApplyValueResult.Success)
+        if (TryGetValueOnUi(out object? value) == ApplyValueResult.Success)
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
@@ -209,7 +209,7 @@ public partial class PlusMinusTextBox : UserControl, IDataUi, ISetDefaultable
         }
     }
 
-    private void MoveInDirection(int direction, object value)
+    private void MoveInDirection(int direction, object? value)
     {
         var newValue = mTextBoxLogic.GetValueInDirection(direction, value);
         TrySetValueOnUi(newValue);

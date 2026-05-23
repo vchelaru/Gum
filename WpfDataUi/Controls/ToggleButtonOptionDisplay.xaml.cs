@@ -373,7 +373,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public ApplyValueResult TryGetValueOnUi(out object result)
+        public ApplyValueResult TryGetValueOnUi(out object? result)
         {
             var checkedButton = toggleButtons.FirstOrDefault(item => item.IsChecked == true);
 

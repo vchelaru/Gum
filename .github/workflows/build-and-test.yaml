@@ -15,9 +15,19 @@ jobs:
         os: [windows-latest, macos-15]
     runs-on: ${{ matrix.os }}
     steps:
+      # actions/checkout's `submodules: recursive` does shallow (--depth=1)
+      # submodule fetches. Sokol.NET's box2d submodule pins a SHA that lives
+      # on the `sokol-dev` branch and is not reachable from box2d's default
+      # branch (`main`), so a shallow fetch misses it. git then tries a
+      # direct-SHA fetch, falls back to credentialed cloning, and dies with
+      # "could not read Username" because GIT_TERMINAL_PROMPT=0 on runners.
+      # Doing `git submodule update --init --recursive` ourselves does full
+      # (non-shallow) clones, so the pinned SHA is always reachable.
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: false
+      - name: Init submodules (non-shallow)
+        run: git submodule update --init --recursive
 
       - name: Setup .NET SDKs
         uses: actions/setup-dotnet@v4

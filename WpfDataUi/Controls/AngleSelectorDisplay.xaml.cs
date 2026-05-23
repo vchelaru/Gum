@@ -30,6 +30,13 @@ namespace WpfDataUi.Controls
 
         decimal? mAngle;
         private bool needsToPushFullCommitOnMouseUp;
+
+        // Tracks unbounded angle accumulation during a dial drag. atan2 only
+        // returns (-180, 180]; the dial must keep winding past those bounds,
+        // so we accumulate deltas (unwrapped at the ±180 seam) onto the
+        // current value instead of assigning atan2 directly.
+        private double? _previousDialAtan2Degrees;
+        private decimal _unsnappedDialAngle;
         #endregion
 
         #region Properties
@@ -69,7 +76,7 @@ namespace WpfDataUi.Controls
             NotifyPropertyChange(nameof(NegativeAngle));
             UpdateUiToAngle();
 
-            var getValueResult = TryGetValueOnUi(out object valueOnUi);
+            var getValueResult = TryGetValueOnUi(out object? valueOnUi);
 
             if(getValueResult == ApplyValueResult.Success)
             {
@@ -218,7 +225,7 @@ namespace WpfDataUi.Controls
                 // couldn't parse it, so let's try to math operation it?
                 try
                 {
-                    Angle = TextBoxDisplayLogic.TryHandleMathOperation(text, InstanceMember.PropertyType) as float?;
+                    Angle = TextBoxDisplayLogic.TryHandleMathOperation(text, InstanceMember!.PropertyType) as float?;
                 }
                 catch
                 {
@@ -260,7 +267,7 @@ namespace WpfDataUi.Controls
                 }
             }
 
-            this.Label.Content = InstanceMember.DisplayName;
+            this.Label.Content = InstanceMember?.DisplayName;
 
             this.RefreshContextMenu(TopRowGrid.ContextMenu);
             this.RefreshContextMenu(TextBox.ContextMenu);
@@ -272,11 +279,11 @@ namespace WpfDataUi.Controls
             {
                 if (!DataUiGrid.GetOverridesIsDefaultStyling(this))
                 {
-                    if (InstanceMember.IsDefault)
+                    if (InstanceMember?.IsDefault == true)
                     {
                         TextBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
                     }
-                    else if (InstanceMember.IsIndeterminate)
+                    else if (InstanceMember?.IsIndeterminate == true)
                     {
                         TextBox.Background = TextBoxDisplayLogic.IndeterminateValueBackground;
                     }
@@ -307,7 +314,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public ApplyValueResult TryGetValueOnUi(out object result)
+        public ApplyValueResult TryGetValueOnUi(out object? result)
         {
             if (TypeToPushToInstance == AngleType.Radians)
             {
@@ -440,7 +447,7 @@ namespace WpfDataUi.Controls
             Ellipse_MouseMove_1(null, null);
         }
 
-        private void Ellipse_MouseMove_1(object? sender, MouseEventArgs e)
+        private void Ellipse_MouseMove_1(object? sender, MouseEventArgs? e)
         {
             if (Mouse.LeftButton == MouseButtonState.Pressed)
             {
@@ -450,30 +457,44 @@ namespace WpfDataUi.Controls
                 {
                     point.Y *= -1;
 
-                    var angleToSet = Math.Atan2(point.Y, point.X);
-                    angleToSet = 180 * (float)(angleToSet / Math.PI);
-                    //int angleAsInt = (int)(angleToSet + .5f);
+                    var currentAtan2Degrees = 180.0 * (Math.Atan2(point.Y, point.X) / Math.PI);
 
-                    decimal newAngle = (decimal)angleToSet;
+                    if (_previousDialAtan2Degrees == null)
+                    {
+                        // First sample of this drag: anchor to the clicked
+                        // position so a plain click still sets the absolute
+                        // angle the user clicked on.
+                        _unsnappedDialAngle = (decimal)currentAtan2Degrees;
+                    }
+                    else
+                    {
+                        var delta = currentAtan2Degrees - _previousDialAtan2Degrees.Value;
+                        // Unwrap the ±180 atan2 seam so a continuous drag
+                        // accumulates monotonically instead of snapping.
+                        if (delta > 180) delta -= 360;
+                        else if (delta < -180) delta += 360;
+                        _unsnappedDialAngle += (decimal)delta;
+                    }
+                    _previousDialAtan2Degrees = currentAtan2Degrees;
 
                     var effectiveSnappingInterval = SnappingInterval;
 
-                    if(Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+                    if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
                     {
                         // this will snap to 15 pixels:
-                        if(effectiveSnappingInterval == null || effectiveSnappingInterval < 15)
+                        if (effectiveSnappingInterval == null || effectiveSnappingInterval < 15)
                         {
                             effectiveSnappingInterval = 15;
                         }
                     }
 
-                    if(effectiveSnappingInterval != null)
+                    decimal newAngle = _unsnappedDialAngle;
+                    if (effectiveSnappingInterval != null)
                     {
-                        newAngle = RoundDecimal((decimal)angleToSet, effectiveSnappingInterval.Value);
+                        newAngle = RoundDecimal(_unsnappedDialAngle, effectiveSnappingInterval.Value);
                     }
 
-                    // We need snapping
-                    if(mAngle != newAngle)
+                    if (mAngle != newAngle)
                     {
                         // don't set the float property, this causes a cast to float and loses precision, resulting
                         // in the text box displaying things like 1.00001 instead of 1
@@ -504,6 +525,8 @@ namespace WpfDataUi.Controls
         {
             System.Windows.Input.Mouse.Capture(EllipseInstance);
 
+            _previousDialAtan2Degrees = null;
+            _unsnappedDialAngle = mAngle ?? 0;
         }
 
         private void Ellipse_MouseUp(object? sender, MouseButtonEventArgs e)
