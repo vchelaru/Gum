@@ -1,7 +1,13 @@
 using Gum.Wireframe;
 using System;
 
-#if SKIA
+#if RAYLIB
+using Gum.DataTypes;
+using Gum.Renderables;
+using RenderingLibrary;
+using Color = Raylib_cs.Color;
+using ColorExtensions = RaylibGum.Helpers.ColorExtensions;
+#elif SKIA
 using SkiaGum.Renderables;
 using SkiaSharp;
 using RenderingLibrary.Graphics;
@@ -19,6 +25,386 @@ namespace MonoGameGum.GueDeriving;
 namespace Gum.GueDeriving;
 #endif
 
+#if RAYLIB
+/// <summary>
+/// Raylib branch of <c>ArcRuntime</c>. Wraps the <see cref="LineArc"/> renderable added in
+/// issue #2866 and exposes the cross-backend arc surface (StartAngle, SweepAngle, Thickness,
+/// IsEndRounded, dashed strokes, dropshadow) so cross-platform sample code reads the same
+/// against Skia, Apos.Shapes, and raylib. Single-slot composition — arcs have no fill mode on
+/// any backend (sealed in PR #2891).
+/// </summary>
+/// <remarks>
+/// Gradients on arcs are intentionally not exposed in this pass (deferred follow-up to #2866)
+/// — see <see cref="LineArc"/> for the renderable-side rationale. <see cref="StrokeColor"/> is
+/// the single user-facing color slot, mirroring the post-PR-#2891 Skia <c>ArcRuntime</c>'s API.
+/// </remarks>
+public class ArcRuntime : GraphicalUiElement
+{
+    LineArc containedLineArc = null!;
+    LineArc ContainedLineArc
+    {
+        get
+        {
+            if (containedLineArc == null)
+            {
+                containedLineArc = (LineArc)this.RenderableComponent!;
+            }
+            return containedLineArc;
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.StartAngle"/>
+    public float StartAngle
+    {
+        get => ContainedLineArc.StartAngle;
+        set
+        {
+            ContainedLineArc.StartAngle = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.SweepAngle"/>
+    public float SweepAngle
+    {
+        get => ContainedLineArc.SweepAngle;
+        set
+        {
+            ContainedLineArc.SweepAngle = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.IsEndRounded"/>
+    /// <remarks>raylib does not natively support rounded end caps on <c>DrawRing</c>; the
+    /// setter round-trips and pushes through to the renderable, where it is currently a
+    /// visual no-op. Preserved for API parity with the Skia/Apos branches.</remarks>
+    public bool IsEndRounded
+    {
+        get => ContainedLineArc.IsEndRounded;
+        set
+        {
+            ContainedLineArc.IsEndRounded = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Legacy single-color slot. Routes to the renderable's <see cref="LineArc.Color"/>; used as
+    /// the stroke color when <see cref="StrokeColor"/> is <c>null</c>. Matches the cross-backend
+    /// "Color is the legacy slot, StrokeColor is the explicit modern slot" pattern that
+    /// <see cref="CircleRuntime"/> and <see cref="RectangleRuntime"/> use on raylib.
+    /// </summary>
+    public Color Color
+    {
+        get => ContainedLineArc.Color;
+        set
+        {
+            ContainedLineArc.Color = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.StrokeColor"/>
+    public Color? StrokeColor
+    {
+        get => ContainedLineArc.StrokeColor;
+        set
+        {
+            ContainedLineArc.StrokeColor = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Alpha channel of the legacy <see cref="Color"/> slot.</summary>
+    public int Alpha
+    {
+        get => ContainedLineArc.Color.A;
+        set
+        {
+            ContainedLineArc.Color = ColorExtensions.WithAlpha(ContainedLineArc.Color, (byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Red channel of the legacy <see cref="Color"/> slot.</summary>
+    public int Red
+    {
+        get => ContainedLineArc.Color.R;
+        set
+        {
+            ContainedLineArc.Color = ColorExtensions.WithRed(ContainedLineArc.Color, (byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Green channel of the legacy <see cref="Color"/> slot.</summary>
+    public int Green
+    {
+        get => ContainedLineArc.Color.G;
+        set
+        {
+            ContainedLineArc.Color = ColorExtensions.WithGreen(ContainedLineArc.Color, (byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Blue channel of the legacy <see cref="Color"/> slot.</summary>
+    public int Blue
+    {
+        get => ContainedLineArc.Color.B;
+        set
+        {
+            ContainedLineArc.Color = ColorExtensions.WithBlue(ContainedLineArc.Color, (byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _thickness;
+
+    /// <summary>
+    /// Width of the stroked band along the arc curve, in <see cref="StrokeWidthUnits"/>.
+    /// <c>Thickness</c> is the canonical user-facing name on arcs and the variable the Gum
+    /// tool persists in <c>.gumx</c>; see the Skia/Apos branch of this class for the full
+    /// visual-progression docs (thin → fat → wedge at <c>Width/2</c>).
+    /// </summary>
+    public float Thickness
+    {
+        get => _thickness;
+        set
+        {
+            _thickness = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="Thickness"/> on raylib too, matching the Skia/Apos branch.
+    /// Same backing field; the obsolete marker is purely a steering hint toward the canonical
+    /// user-facing name.
+    /// </summary>
+    [Obsolete("Use Thickness instead — it's the canonical user-facing name for arc stroke weight and the variable name the Gum tool persists. StrokeWidth still works (same backing field) but new code should prefer Thickness.")]
+    public float StrokeWidth
+    {
+        get => _thickness;
+        set
+        {
+            _thickness = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    DimensionUnitType _strokeWidthUnits;
+
+    /// <inheritdoc cref="CircleRuntime.StrokeWidthUnits"/>
+    public DimensionUnitType StrokeWidthUnits
+    {
+        get => _strokeWidthUnits;
+        set
+        {
+            _strokeWidthUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _strokeDashLength;
+
+    /// <inheritdoc cref="LineArc.StrokeDashLength"/>
+    public float StrokeDashLength
+    {
+        get => _strokeDashLength;
+        set
+        {
+            _strokeDashLength = value;
+            ContainedLineArc.StrokeDashLength = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _strokeGapLength;
+
+    /// <inheritdoc cref="LineArc.StrokeGapLength"/>
+    public float StrokeGapLength
+    {
+        get => _strokeGapLength;
+        set
+        {
+            _strokeGapLength = value;
+            ContainedLineArc.StrokeGapLength = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    bool _hasDropshadow;
+
+    /// <inheritdoc cref="LineArc.HasDropshadow"/>
+    public bool HasDropshadow
+    {
+        get => _hasDropshadow;
+        set
+        {
+            _hasDropshadow = value;
+            ContainedLineArc.HasDropshadow = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    Color _dropshadowColor = new Color((byte)0, (byte)0, (byte)0, (byte)255);
+
+    /// <inheritdoc cref="LineArc.DropshadowColor"/>
+    public Color DropshadowColor
+    {
+        get => _dropshadowColor;
+        set
+        {
+            _dropshadowColor = value;
+            ContainedLineArc.DropshadowColor = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Alpha channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowAlpha
+    {
+        get => _dropshadowColor.A;
+        set => DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, _dropshadowColor.B, (byte)value);
+    }
+
+    /// <summary>Red channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowRed
+    {
+        get => _dropshadowColor.R;
+        set => DropshadowColor = new Color((byte)value, _dropshadowColor.G, _dropshadowColor.B, _dropshadowColor.A);
+    }
+
+    /// <summary>Green channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowGreen
+    {
+        get => _dropshadowColor.G;
+        set => DropshadowColor = new Color(_dropshadowColor.R, (byte)value, _dropshadowColor.B, _dropshadowColor.A);
+    }
+
+    /// <summary>Blue channel of <see cref="DropshadowColor"/>.</summary>
+    public int DropshadowBlue
+    {
+        get => _dropshadowColor.B;
+        set => DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, (byte)value, _dropshadowColor.A);
+    }
+
+    float _dropshadowOffsetX;
+    /// <inheritdoc cref="LineArc.DropshadowOffsetX"/>
+    public float DropshadowOffsetX
+    {
+        get => _dropshadowOffsetX;
+        set
+        {
+            _dropshadowOffsetX = value;
+            ContainedLineArc.DropshadowOffsetX = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _dropshadowOffsetY;
+    /// <inheritdoc cref="LineArc.DropshadowOffsetY"/>
+    public float DropshadowOffsetY
+    {
+        get => _dropshadowOffsetY;
+        set
+        {
+            _dropshadowOffsetY = value;
+            ContainedLineArc.DropshadowOffsetY = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _dropshadowBlurX;
+    /// <inheritdoc cref="LineArc.DropshadowBlurX"/>
+    public float DropshadowBlurX
+    {
+        get => _dropshadowBlurX;
+        set
+        {
+            _dropshadowBlurX = value;
+            ContainedLineArc.DropshadowBlurX = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    float _dropshadowBlurY;
+    /// <inheritdoc cref="LineArc.DropshadowBlurY"/>
+    public float DropshadowBlurY
+    {
+        get => _dropshadowBlurY;
+        set
+        {
+            _dropshadowBlurY = value;
+            ContainedLineArc.DropshadowBlurY = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Initializes a new raylib <c>ArcRuntime</c>. Constructor defaults mirror the Skia/Apos
+    /// branch so cross-backend sample code starts from the same baseline (Width = Height = 100,
+    /// SweepAngle = 90, Thickness = 10, Color = White, dropshadow off but pre-seeded with a
+    /// 3 px Y offset/blur). Pass <c>fullInstantiation = false</c> only when constructing through
+    /// deserialization.
+    /// </summary>
+    public ArcRuntime(bool fullInstantiation = true)
+    {
+        if (fullInstantiation)
+        {
+            LineArc arc = new();
+            SetContainedObject(arc);
+            containedLineArc = arc;
+
+            Width = 100;
+            Height = 100;
+            Thickness = 10;
+            StartAngle = 0;
+            SweepAngle = 90;
+
+            // Pre-seed dropshadow offset/blur so toggling HasDropshadow = true at runtime
+            // produces a visible shadow without further setup — same default the Skia/Apos
+            // branch lands via the SkiaShapeRuntime/AposShapeRuntime constructor.
+            DropshadowOffsetX = 0;
+            DropshadowOffsetY = 3;
+            DropshadowBlurX = 0;
+            DropshadowBlurY = 3;
+        }
+    }
+
+    /// <summary>
+    /// Pushes the stroke thickness to the contained <see cref="LineArc"/> each frame, resolving
+    /// <see cref="StrokeWidthUnits"/> against the current camera zoom so a ScreenPixel-unit
+    /// thickness holds its on-screen pixel width regardless of zoom. Mirrors the raylib
+    /// <see cref="CircleRuntime.PreRender"/> pattern.
+    /// </summary>
+    public override void PreRender()
+    {
+        float thickness = _thickness;
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+        {
+            var camera = this.EffectiveManagers?.Renderer?.Camera;
+            if (camera != null)
+            {
+                thickness /= camera.Zoom;
+            }
+        }
+        ContainedLineArc.Thickness = thickness;
+    }
+
+    /// <inheritdoc/>
+    public override GraphicalUiElement Clone()
+    {
+        ArcRuntime toReturn = (ArcRuntime)base.Clone();
+        // Drop the cached renderable reference so the clone re-resolves it against its own
+        // RenderableComponent on next access. Same pattern as the Skia/Apos branch's Clone.
+        toReturn.containedLineArc = null!;
+        return toReturn;
+    }
+}
+#else
 /// <summary>
 /// Runtime that draws a circular arc inscribed in its Width x Height bounds. Arcs are always
 /// stroked — there is no fill mode. Use <see cref="Thickness"/> to control how thick the band
@@ -26,12 +412,14 @@ namespace Gum.GueDeriving;
 /// the bounds" (see the <see cref="Thickness"/> docs for the wedge configuration).
 /// </summary>
 /// <remarks>
-/// Source-shared between SkiaGum and MonoGameGumShapes (and KniGumShapes) via a Compile/Link in
-/// the Apos-side csprojs - see <c>RoundedRectangleRuntime</c> for the same pattern. Platform
-/// differences are gated behind <c>#if SKIA</c>; the cross-platform shape (constructor defaults,
-/// StartAngle/SweepAngle/IsEndRounded properties, base wiring) is shared. Dashed strokes are
-/// only rendered on Skia (Apos.Shapes' Arc primitive lacks dashing); the <c>StrokeDashLength</c>
-/// property is exposed on both backends via the base class for API parity but no-ops on Apos.
+/// Source-shared between SkiaGum, MonoGameGumShapes / KniGumShapes, and the raylib runtime via a
+/// Compile/Link in the consuming csprojs - see <c>RoundedRectangleRuntime</c> for the same
+/// pattern. Platform differences are gated behind <c>#if SKIA</c> / <c>#if RAYLIB</c>; the raylib
+/// branch is a separate class definition above this one because it inherits from a different
+/// base (<c>GraphicalUiElement</c> directly, not <c>SkiaShapeRuntime</c>/<c>AposShapeRuntime</c>),
+/// so the property surface differs. Dashed strokes are only rendered on Skia and raylib;
+/// Apos.Shapes' Arc primitive lacks dashing, so on that backend <c>StrokeDashLength</c> is
+/// exposed via the base class for API parity but no-ops.
 /// </remarks>
 public class ArcRuntime
 #if SKIA
@@ -222,3 +610,4 @@ public class ArcRuntime
         return toReturn;
     }
 }
+#endif

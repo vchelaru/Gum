@@ -121,6 +121,14 @@
 		<Compile Include="..\..\MonoGameGum\GueDeriving\SpriteRuntime.cs" Link="GueDeriving\SpriteRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\TextRuntime.cs" Link="GueDeriving\TextRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\CircleRuntime.cs" Link="GueDeriving\CircleRuntime.cs" />
+		<!--
+			ArcRuntime's canonical home is Runtimes/SkiaGum/GueDeriving/ (it's the
+			Skia <-> Apos.Shapes shape-runtime pair, not the MG/Raylib/Sokol axis - see
+			.claude/skills/gum-cross-platform-unification). Issue #2866 extended the
+			same file with a #if RAYLIB branch that wraps Gum.Renderables.LineArc, so
+			RaylibGum links the shared source in.
+		-->
+		<Compile Include="..\SkiaGum\GueDeriving\ArcRuntime.cs" Link="GueDeriving\ArcRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\NineSliceRuntime.cs" Link="GueDeriving\NineSliceRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\RectangleRuntime.cs" Link="GueDeriving\RectangleRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\PolygonRuntime.cs" Link="GueDeriving\PolygonRuntime.cs" />
