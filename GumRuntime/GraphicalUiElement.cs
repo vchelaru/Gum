@@ -3164,6 +3164,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var asIpso = this as IPositionedSizedObject;
             return asIpso.X + asIpso.Width;
         }
+        else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+        {
+            // The parent owns this child's X position via stacking, so the child's own
+            // XUnits/XOrigin must not feed back into the parent's width measure. Without
+            // this branch, a stacked child with XUnits = PixelsFromMiddle (or any other
+            // non-PixelsFromSmall unit) would inflate the parent's RelativeToChildren width
+            // through the GetDimensionFromEdges path below, which doubles centered widths
+            // and clamps right-anchored widths against the parent's right edge.
+            var asIpso = this as IPositionedSizedObject;
+            return asIpso.Width;
+        }
         else
         {
             float positionValue = mX;
@@ -3209,6 +3220,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             var asIpso = this as IPositionedSizedObject;
             return asIpso.Y + asIpso.Height;
+        }
+        else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+        {
+            // Symmetric to GetRequiredParentWidth's LeftToRightStack branch: the parent owns
+            // this child's Y position via stacking, so the child's own YUnits/YOrigin must
+            // not feed back into the parent's height measure.
+            var asIpso = this as IPositionedSizedObject;
+            return asIpso.Height;
         }
         else
         {

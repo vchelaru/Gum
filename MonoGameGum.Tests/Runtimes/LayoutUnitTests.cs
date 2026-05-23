@@ -2241,6 +2241,73 @@ public class LayoutUnitTests : BaseTestClass
     }
 
     [Fact]
+    public void WidthRelativeToChildren_LeftToRightStack_ShouldIgnoreChildXUnits()
+    {
+        // A child's XUnits (PixelsFromMiddle, PixelsFromLarge, etc.) should be IGNORED while
+        // a parent stacks LeftToRight - stack layout owns child positioning, so the per-child
+        // origin/anchor unit must not feed back into the parent's RelativeToChildren width
+        // calculation. Repro: parent with three 150x150 children, middle child has
+        // XUnits = PixelsFromMiddle (= PixelsFromCenterX in the .gusx save format).
+        // Expected: 3 * 150 = 450. Buggy actual: 600 (the middle child's centered position
+        // gets added on top of its stack-assigned position).
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+
+        ContainerRuntime child1 = new();
+        child1.Width = 150;
+        child1.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Width = 150;
+        child2.WidthUnits = DimensionUnitType.Absolute;
+        child2.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Width = 150;
+        child3.WidthUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        parent.GetAbsoluteWidth().ShouldBe(450);
+    }
+
+    [Fact]
+    public void HeightRelativeToChildren_TopToBottomStack_ShouldIgnoreChildYUnits()
+    {
+        // Symmetric to WidthRelativeToChildren_LeftToRightStack_ShouldIgnoreChildXUnits: a
+        // child's YUnits (PixelsFromMiddle, etc.) should be IGNORED when the parent stacks
+        // TopToBottom - stack layout owns child positioning, so the per-child origin/anchor
+        // unit must not feed back into the parent's RelativeToChildren height calculation.
+        // Same arithmetic as the X-axis repro: three 150-tall children, middle has
+        // YUnits = PixelsFromMiddle. Expected: 450. Buggy actual: 600.
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime child1 = new();
+        child1.Height = 150;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Height = 150;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        child2.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        parent.AddChild(child2);
+
+        ContainerRuntime child3 = new();
+        child3.Height = 150;
+        child3.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child3);
+
+        parent.GetAbsoluteHeight().ShouldBe(450);
+    }
+
+    [Fact]
     public void WidthRelativeToChildren_TopToBottomStack_ShouldUseWidestChild()
     {
         ContainerRuntime parent = new();
