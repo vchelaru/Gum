@@ -30,6 +30,13 @@ namespace WpfDataUi.Controls
 
         decimal? mAngle;
         private bool needsToPushFullCommitOnMouseUp;
+
+        // Tracks unbounded angle accumulation during a dial drag. atan2 only
+        // returns (-180, 180]; the dial must keep winding past those bounds,
+        // so we accumulate deltas (unwrapped at the ±180 seam) onto the
+        // current value instead of assigning atan2 directly.
+        private double? _previousDialAtan2Degrees;
+        private decimal _unsnappedDialAngle;
         #endregion
 
         #region Properties
@@ -450,30 +457,44 @@ namespace WpfDataUi.Controls
                 {
                     point.Y *= -1;
 
-                    var angleToSet = Math.Atan2(point.Y, point.X);
-                    angleToSet = 180 * (float)(angleToSet / Math.PI);
-                    //int angleAsInt = (int)(angleToSet + .5f);
+                    var currentAtan2Degrees = 180.0 * (Math.Atan2(point.Y, point.X) / Math.PI);
 
-                    decimal newAngle = (decimal)angleToSet;
+                    if (_previousDialAtan2Degrees == null)
+                    {
+                        // First sample of this drag: anchor to the clicked
+                        // position so a plain click still sets the absolute
+                        // angle the user clicked on.
+                        _unsnappedDialAngle = (decimal)currentAtan2Degrees;
+                    }
+                    else
+                    {
+                        var delta = currentAtan2Degrees - _previousDialAtan2Degrees.Value;
+                        // Unwrap the ±180 atan2 seam so a continuous drag
+                        // accumulates monotonically instead of snapping.
+                        if (delta > 180) delta -= 360;
+                        else if (delta < -180) delta += 360;
+                        _unsnappedDialAngle += (decimal)delta;
+                    }
+                    _previousDialAtan2Degrees = currentAtan2Degrees;
 
                     var effectiveSnappingInterval = SnappingInterval;
 
-                    if(Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+                    if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
                     {
                         // this will snap to 15 pixels:
-                        if(effectiveSnappingInterval == null || effectiveSnappingInterval < 15)
+                        if (effectiveSnappingInterval == null || effectiveSnappingInterval < 15)
                         {
                             effectiveSnappingInterval = 15;
                         }
                     }
 
-                    if(effectiveSnappingInterval != null)
+                    decimal newAngle = _unsnappedDialAngle;
+                    if (effectiveSnappingInterval != null)
                     {
-                        newAngle = RoundDecimal((decimal)angleToSet, effectiveSnappingInterval.Value);
+                        newAngle = RoundDecimal(_unsnappedDialAngle, effectiveSnappingInterval.Value);
                     }
 
-                    // We need snapping
-                    if(mAngle != newAngle)
+                    if (mAngle != newAngle)
                     {
                         // don't set the float property, this causes a cast to float and loses precision, resulting
                         // in the text box displaying things like 1.00001 instead of 1
@@ -504,6 +525,8 @@ namespace WpfDataUi.Controls
         {
             System.Windows.Input.Mouse.Capture(EllipseInstance);
 
+            _previousDialAtan2Degrees = null;
+            _unsnappedDialAngle = mAngle ?? 0;
         }
 
         private void Ellipse_MouseUp(object? sender, MouseButtonEventArgs e)
