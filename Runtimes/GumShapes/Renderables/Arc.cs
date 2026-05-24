@@ -1,3 +1,4 @@
+using Apos.Shapes;
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Math;
@@ -158,6 +159,19 @@ internal class Arc : RenderableShapeBase
             // confirmed visually by overlaying a thick Arc on a same-size filled Circle and seeing a
             // thin background-color ring around the outside of the Arc.
             var compensatedRadius = radius + 1f;
+
+            // Dashed strokes only flow through the butt-cap path. The rounded-cap branch above
+            // uses DrawArc which has no dash analog in Apos.Shapes 0.6.x; if dashed rendering is
+            // ever wanted for rounded caps it has to be synthesized by emitting per-dash arcs
+            // (issue #2892). When forcedColor is set we're rendering the dropshadow pass — the
+            // shadow renders as one continuous arc behind the dashes (Skia / SkiaSharp do the
+            // same), so skip the dash decomposition there.
+            if (forcedColor == null && StrokeDashLength > 0 && StrokeGapLength > 0 && lineThickness > 0 && radius > 0)
+            {
+                RenderDashed(sb, absoluteLeft, absoluteTop, center, radius, compensatedRadius, startAngleRadians, endAngleRadians, antiAliasSize, lineThickness);
+                return;
+            }
+
             if (UseGradient && forcedColor == null)
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop);
@@ -186,5 +200,53 @@ internal class Arc : RenderableShapeBase
             }
         }
 
+    }
+
+    // Mirrors Circle.RenderDashed, bounded by the arc's sweep. Walks dash starts along the
+    // arc from startAngleRadians to endAngleRadians and emits a partial DrawRing per dash.
+    // See Circle.RenderDashed for the full rationale on the AA-compensation math and the
+    // (centerline, totalThickness) abuse of DrawRing's (radius1, radius2) parameters.
+    private void RenderDashed(Apos.Shapes.ShapeBatch sb,
+        float absoluteLeft,
+        float absoluteTop,
+        Vector2 center,
+        float radius,
+        float compensatedRadius,
+        float startAngleRadians,
+        float endAngleRadians,
+        int antiAliasSize,
+        float lineThickness)
+    {
+        var sweepRadians = endAngleRadians - startAngleRadians;
+        var arcLength = sweepRadians * radius;
+
+        // Same AA compensation as Circle.RenderDashed: nudge into the gap, trim off each dash,
+        // floor the dash length so a tight 1-px-dash pattern doesn't push 0 (Apos won't render
+        // a zero-length dash).
+        var effectiveGapLen = StrokeGapLength + 1.5f * antiAliasSize;
+        var dashLen = MathHelper.Max(0.01f, StrokeDashLength - 0.5f * antiAliasSize);
+        var period = dashLen + effectiveGapLen;
+        if (period <= 0) return;
+
+        Gradient? gradient = UseGradient
+            ? base.GetGradient(absoluteLeft, absoluteTop)
+            : null;
+        var color = this.Color;
+
+        for (float t = 0; t < arcLength; t += period)
+        {
+            var dashEnd = MathHelper.Min(t + dashLen, arcLength);
+            var a1 = startAngleRadians + t / radius;
+            var a2 = startAngleRadians + dashEnd / radius;
+
+            if (gradient is Gradient g)
+            {
+                sb.DrawRing(center, a1, a2, compensatedRadius, lineThickness, g, g, 1, aaSize: antiAliasSize);
+            }
+            else
+            {
+                sb.DrawRing(center, a1, a2, compensatedRadius, lineThickness, color, color, 1, aaSize: antiAliasSize);
+            }
+        }
     }
 }
