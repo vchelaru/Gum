@@ -30,7 +30,8 @@ public sealed class ObsoleteShapeRuntimeAnalyzer : DiagnosticAnalyzer
         category: "Migration",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "ColoredCircleRuntime / ColoredRectangleRuntime / RoundedRectangleRuntime / SolidRectangleRuntime were collapsed into CircleRuntime / RectangleRuntime by the two-slot fill/stroke model. The code fix rewrites the type name and (where mechanically safe) the Color property to FillColor or StrokeColor.");
+        description: "ColoredCircleRuntime / ColoredRectangleRuntime / RoundedRectangleRuntime / SolidRectangleRuntime were collapsed into CircleRuntime / RectangleRuntime by the two-slot fill/stroke model. The code fix rewrites the type name and (where mechanically safe) the Color property to FillColor or StrokeColor.",
+        helpLinkUri: "https://docs.flatredball.com/gum/gum-tool/upgrading/migrating-to-2026-may");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(ObsoleteShapeRuntimeRule);
