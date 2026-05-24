@@ -55,6 +55,7 @@ internal class CirclesScreen : FrameworkElement
         right.AddChild(BuildSection("Dropshadow", BuildDropshadowRow()));
         right.AddChild(BuildSection("Dashed strokes", BuildDashedStrokeRow()));
         right.AddChild(BuildSection("Fill + stroke", BuildBothColorsRow()));
+        right.AddChild(BuildSection("Hairline bleed (#2834)", BuildHairlineBleedRow()));
         right.AddChild(BuildSection("Inscribed", BuildInscribedRow()));
         right.AddChild(BuildSection("Non-square aspect", BuildNonSquareRow()));
     }
@@ -401,6 +402,28 @@ internal class CirclesScreen : FrameworkElement
         fillLast.FillColor = Color.Gold;
         row.AddChild(fillLast);
 
+        return row;
+    }
+
+    // Visual repro for #2834 — hairline white stroke over a red fill. The two-slot
+    // composition draws the fill and stroke as separate antialiased renderables, so the
+    // AA pixels at the fill's outer edge overlap the AA pixels at the stroke's inner edge.
+    // 50%-white-over-50%-red composites to pink, leaving a visible halo on the inside of
+    // the ring. The artifact is ~1 px wide regardless of stroke width, so it's most
+    // obvious at 1–2 px and fades at 3–4 px. Run this row in MG, Skia, and raylib side by
+    // side to compare — Skia is the primary repro per the issue.
+    static ContainerRuntime BuildHairlineBleedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float strokeWidth in new[] { 1f, 2f, 3f, 4f })
+        {
+            CircleRuntime circle = new();
+            circle.Radius = 28;
+            circle.FillColor = Color.Red;
+            circle.StrokeColor = Color.White;
+            circle.StrokeWidth = strokeWidth;
+            row.AddChild(circle);
+        }
         return row;
     }
 

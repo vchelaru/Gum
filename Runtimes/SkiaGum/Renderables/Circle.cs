@@ -39,10 +39,26 @@ public class Circle : RenderableShapeBase, ICloneable
         }
     }
 
+    /// <summary>
+    /// Issue #2834 — pushed by <see cref="Gum.GueDeriving.CircleRuntime.PreRender"/> on the
+    /// fill slot when a visible stroke is paired with the fill. Subtracted from the rendered
+    /// radius so the fill's outer AA halo lands inside the stroke's opaque band, eliminating
+    /// the pink halo the two-slot model would otherwise produce on the inside of the stroke.
+    /// Applied at render time only; Width/Height stay layout-owned (the fill IS the runtime's
+    /// contained sizing object, so mutating its Width would feed back into layout). Ignored
+    /// when <see cref="RenderableShapeBase.IsFilled"/> is false — only the fill instance
+    /// honors the inset.
+    /// </summary>
+    public float FillRadiusInset { get; set; }
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
         var radius = System.Math.Min(boundingRect.Width, boundingRect.Height) / 2.0f;
+        if (IsFilled)
+        {
+            radius = System.Math.Max(0f, radius - FillRadiusInset);
+        }
         canvas.DrawCircle(boundingRect.MidX, boundingRect.MidY, radius, paint);
     }
 }

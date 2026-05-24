@@ -1095,6 +1095,40 @@ public class CircleRuntime : GraphicalUiElement
             strokeSized.Height = fillSized.Height;
         }
 
+        // Issue #2834 — when both slots are visible, push a radius inset to the fill so its
+        // rendered outer AA halo sits inside the stroke's opaque band. Two separate
+        // antialiased Apos draws at the same radius composite their AA pixels, producing a
+        // red fringe outside the white stroke (the Apos symptom; Skia shows a mirror-image
+        // pink halo on the inside).
+        //
+        // We can't mutate fillSized.Width/Height to do this — the fill IS the runtime's
+        // contained sizing object, so mutating its Width feeds back into layout and the
+        // shrink accumulates each frame until the circle vanishes. Inset is pushed via the
+        // dedicated FillRadiusInset property instead; Width/Height stay layout-owned, and
+        // the Apos Circle subtracts the inset from its computed radius at render time.
+        //
+        // Inset per side = max(renderableStrokeWidth, aposAaContribution when AA on).
+        // renderableStrokeWidth alone aligns fine for thick strokes, but hairline (1 px)
+        // strokes push a sub-pixel epsilon to Apos so the AA halo (still ~1 px) dominates
+        // and would re-create the overlap without the floor.
+        //
+        // Gated on stroke alpha > 0: a hidden stroke (StrokeColor = null sets alpha 0)
+        // shouldn't inset the fill, or fill-only mode would render a thin background ring
+        // where the stroke would have been.
+        if (_fill != null)
+        {
+            float fillRadiusInset = 0f;
+            if (_stroke.Color.A > 0)
+            {
+                fillRadiusInset = renderableStrokeWidth;
+                if (_isAntialiased && _stroke is IAntialiasedRenderable)
+                {
+                    fillRadiusInset = Math.Max(fillRadiusInset, aposAaContribution);
+                }
+            }
+            _fill.FillRadiusInset = fillRadiusInset;
+        }
+
         // Do NOT call base.PreRender() — same caveat as AposShapeRuntime.PreRender. Forwarding
         // to the contained renderable's PreRender would recurse via the OnPreRender hook the
         // MonoGameGumShapes factory wires up.
@@ -1374,6 +1408,28 @@ public class CircleRuntime : GraphicalUiElement
     /// to the contained <see cref="Circle"/>.
     /// </summary>
     protected override RenderableShapeBase ContainedRenderable => ContainedLineCircle;
+
+    /// <summary>
+    /// Pushes the issue #2834 fill radius inset after the base runs its stroke-width and
+    /// W/H mirror. Inset equals the post-ScreenPixel-scaled stroke width (matching what the
+    /// base just pushed onto the stroke slot); zero when the stroke is hidden so fill-only
+    /// mode renders at full radius. Skia fits AA within the stroke thickness so no AA-bloom
+    /// adjustment is needed — the user's StrokeWidth IS the rendered thickness.
+    /// </summary>
+    public override void PreRender()
+    {
+        base.PreRender();
+
+        if (StrokeRenderable != null && ContainedLineCircle != null)
+        {
+            float fillRadiusInset = 0f;
+            if (StrokeRenderable.Color.Alpha > 0)
+            {
+                fillRadiusInset = StrokeRenderable.StrokeWidth;
+            }
+            ContainedLineCircle.FillRadiusInset = fillRadiusInset;
+        }
+    }
 
     /// <inheritdoc/>
     public override GraphicalUiElement Clone()

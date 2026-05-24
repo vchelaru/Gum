@@ -52,6 +52,7 @@ internal class CirclesScreen : FrameworkElement
         right.Children.Add(BuildSection("Dropshadow", BuildDropshadowRow()));
         right.Children.Add(BuildSection("Dashed strokes", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("Fill + stroke", BuildBothColorsRow()));
+        right.Children.Add(BuildSection("Hairline bleed (#2834)", BuildHairlineBleedRow()));
         right.Children.Add(BuildSection("Inscribed", BuildInscribedRow()));
         right.Children.Add(BuildSection("Non-square aspect", BuildNonSquareRow()));
     }
@@ -277,6 +278,27 @@ internal class CirclesScreen : FrameworkElement
         fillLast.FillColor = new Color(255, 215, 0, 255);
         row.Children.Add(fillLast);
 
+        return row;
+    }
+
+    // Visual repro for #2834 — hairline white stroke over a red fill. raylib's LineCircle
+    // draws the fill (DrawCircleV) and the stroke (DrawRing arcs) as separate ops; whether
+    // the same AA-bleed shows up on raylib depends on the renderer details (framebuffer
+    // MSAA rather than per-shape AA). This row exists so the raylib output can be compared
+    // directly against the Skia and MG-shapes outputs to confirm the bleed's scope.
+    static ContainerRuntime BuildHairlineBleedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        Color red = new Color(255, 0, 0, 255);
+        foreach (float strokeWidth in new[] { 1f, 2f, 3f, 4f })
+        {
+            CircleRuntime circle = new();
+            circle.Radius = 28;
+            circle.FillColor = red;
+            circle.StrokeColor = Color.White;
+            circle.StrokeWidth = strokeWidth;
+            row.Children.Add(circle);
+        }
         return row;
     }
 

@@ -65,6 +65,104 @@ public class CircleRuntimeTests
         fill.Color.ShouldBe(Color.Red);
     }
 
+    // Issue #2834 — when both fill and stroke are visible, the fill is rendered with its
+    // radius inset by FillRadiusInset so its outer AA halo sits inside the stroke's opaque
+    // band. Without this inset, fill AA and stroke AA composite at the same boundary,
+    // producing a visible color bleed (red fringe outside a white stroke on Apos). Inset
+    // equals the AA-compensated stroke width: 4 - 1 (AA contribution) = 3 px per side.
+    //
+    // The inset is pushed via FillRadiusInset rather than mutating fill.Width because the
+    // fill renderable IS the runtime's contained sizing object — mutating Width would feed
+    // back into layout and accumulate frame-over-frame until the circle vanished.
+    [Fact]
+    public void FillRadiusInset_AaOn_WhenStrokeVisible_PushedAaCompensatedStrokeWidthInPreRender()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 56;
+        sut.Height = 56;
+        sut.FillColor = Color.Red;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 4f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        IRenderable asFillRenderable = fill;
+        asFillRenderable.PreRender();
+
+        fill.FillRadiusInset.ShouldBe(3f);
+    }
+
+    // At hairline strokes (StrokeWidth = 1, AA on) the AA-compensated stroke width is
+    // sub-pixel epsilon, but the AA halo itself is still 1 px. Inset must be at least the AA
+    // contribution (1 px) so the fill's outer AA halo doesn't overlap the stroke's AA range.
+    [Fact]
+    public void FillRadiusInset_AaOn_AtHairlineStroke_FlooredAtAaContribution()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 56;
+        sut.Height = 56;
+        sut.FillColor = Color.Red;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 1f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        IRenderable asFillRenderable = fill;
+        asFillRenderable.PreRender();
+
+        fill.FillRadiusInset.ShouldBe(1f);
+    }
+
+    // When the stroke is invisible (StrokeColor = null sets alpha 0) the fill should render
+    // at full radius — no inset, no background ring where the stroke would have been. This
+    // guards against fill-only mode rendering with an unwanted gap.
+    [Fact]
+    public void FillRadiusInset_WhenStrokeInvisible_StaysZero()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 56;
+        sut.Height = 56;
+        sut.FillColor = Color.Red;
+        sut.StrokeColor = null;
+        sut.StrokeWidth = 4f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        IRenderable asFillRenderable = fill;
+        asFillRenderable.PreRender();
+
+        fill.FillRadiusInset.ShouldBe(0f);
+    }
+
+    // Regression guard for the bug that triggered the FillRadiusInset approach: mutating
+    // fill.Width/Height in PreRender accumulated each frame (because the fill IS the
+    // runtime's contained sizing object) and the circle shrank to zero in ~5 frames. Calling
+    // PreRender repeatedly must leave fill.Width/Height untouched at the runtime's size.
+    [Fact]
+    public void PreRender_RepeatedCalls_DoesNotMutateFillWidthOrHeight()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 56;
+        sut.Height = 56;
+        sut.FillColor = Color.Red;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 4f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        IRenderable asFillRenderable = fill;
+        for (int i = 0; i < 10; i++)
+        {
+            asFillRenderable.PreRender();
+        }
+
+        fill.Width.ShouldBe(56f);
+        fill.Height.ShouldBe(56f);
+    }
+
     // Load-order contract guard for #2761 / #2768: if any of the four factory registrations
     // moves back inside the _registered guard in AposShapeRuntime, this catches the
     // regression. After Reset + re-call, a new CircleRuntime must still bind Apos Circles.

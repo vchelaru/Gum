@@ -25,5 +25,14 @@ public interface IFilledCircleRenderable : IRenderable
     /// its own Width/Height to <c>2 * value</c>.
     /// </summary>
     float Radius { get; set; }
+
+    /// <summary>
+    /// Pixels to subtract from the rendered radius (issue #2834). Pushed by
+    /// <see cref="CircleRuntime.PreRender"/> when the stroke slot is visible alongside the
+    /// fill — pulling the fill's outer AA halo inside the stroke's opaque band prevents
+    /// the two AA boundaries from compositing and producing a color bleed. Inset is
+    /// applied at render time only; Width/Height stay layout-owned.
+    /// </summary>
+    float FillRadiusInset { get; set; }
 }
 #endif
