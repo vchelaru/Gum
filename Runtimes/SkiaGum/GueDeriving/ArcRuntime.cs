@@ -76,9 +76,9 @@ public class ArcRuntime : GraphicalUiElement
     }
 
     /// <inheritdoc cref="LineArc.IsEndRounded"/>
-    /// <remarks>raylib does not natively support rounded end caps on <c>DrawRing</c>; the
-    /// setter round-trips and pushes through to the renderable, where it is currently a
-    /// visual no-op. Preserved for API parity with the Skia/Apos branches.</remarks>
+    /// <remarks>raylib has no native stroke-cap analog; <see cref="LineArc"/> synthesizes
+    /// rounded caps with <c>DrawCircleSector</c> half-disks at each band endpoint (issue #2895)
+    /// so this property is now visually live on raylib, on parity with Skia/Apos.</remarks>
     public bool IsEndRounded
     {
         get => ContainedLineArc.IsEndRounded;

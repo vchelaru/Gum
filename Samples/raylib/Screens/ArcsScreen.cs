@@ -14,12 +14,11 @@ namespace Examples.Shapes;
 // run side by side.
 //
 // What's intentionally NOT mirrored:
-//   * "End caps" - raylib's DrawRing only produces flat ends; rounded caps are no-ops on this
-//     backend (#2866 calls it out explicitly). A future pass could approximate rounded caps
-//     with DrawCircleSector half-disks.
 //   * "Gradients" - deferred to a follow-up; the issue comment lists it as a stretch goal.
 //   * "Antialiasing" - raylib has no per-shape AA. Framebuffer MSAA (Msaa4xHint in Program.cs)
 //     is the only AA path, so toggling IsAntialiased would render identically.
+// End caps DO render on raylib post-#2895 (DrawCircleSector half-disks synthesized in LineArc),
+// so the "End caps" row IS mirrored.
 internal class ArcsScreen : FrameworkElement
 {
     public ArcsScreen() : base(new ContainerRuntime())
@@ -40,9 +39,10 @@ internal class ArcsScreen : FrameworkElement
 
         left.Children.Add(BuildSection("Sweep angles (90, 180, 270, 360)", BuildSweepRow()));
         left.Children.Add(BuildSection("Thickness progression: thin -> fat -> wedge (W/2)", BuildThicknessProgressionRow()));
+        left.Children.Add(BuildSection("End caps: butt / rounded", BuildEndCapRow()));
 
         right.Children.Add(BuildSection("Dashed strokes", BuildDashedStrokeRow()));
-        right.Children.Add(BuildSection("Dropshadow (off / soft / hard / colored / faded body)", BuildDropshadowRow()));
+        right.Children.Add(BuildSection("Dropshadow (off / soft / hard / colored / faded body / rounded faded body)", BuildDropshadowRow()));
     }
 
     static ContainerRuntime BuildColumn()
@@ -120,6 +120,32 @@ internal class ArcsScreen : FrameworkElement
             arc.StrokeColor = new Color(144, 238, 144, 255);
             row.Children.Add(arc);
         }
+        return row;
+    }
+
+    // Issue #2895 - butt vs. rounded caps on raylib. Sweep < 360 so the caps are actually
+    // present. Mirrors the Skia gallery's BuildEndCapRow exactly so the two galleries read the
+    // same when audited side by side.
+    static ContainerRuntime BuildEndCapRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        ArcRuntime butt = new();
+        butt.Width = 60; butt.Height = 60;
+        butt.SweepAngle = 180;
+        butt.Thickness = 10;
+        butt.StrokeColor = Color.White;
+        butt.IsEndRounded = false;
+        row.Children.Add(butt);
+
+        ArcRuntime rounded = new();
+        rounded.Width = 60; rounded.Height = 60;
+        rounded.SweepAngle = 180;
+        rounded.Thickness = 10;
+        rounded.StrokeColor = Color.White;
+        rounded.IsEndRounded = true;
+        row.Children.Add(rounded);
+
         return row;
     }
 
@@ -232,6 +258,19 @@ internal class ArcsScreen : FrameworkElement
         fadedBody.DropshadowBlurX = 4;
         fadedBody.DropshadowBlurY = 4;
         row.Children.Add(fadedBody);
+
+        // Issue #2895 acceptance cell: rounded-cap arc at body alpha 80, NO dropshadow. Locks in
+        // the overdraw-free cap rule - if the cap were a full DrawCircle instead of a half-disk,
+        // the cap region would double-composite over the band's flat end and read as a darker
+        // crescent at the two endpoints. With the DrawCircleSector half-disk approach, endpoint
+        // alpha must match the alpha of the band's middle.
+        ArcRuntime roundedFaded = new();
+        roundedFaded.Width = 60; roundedFaded.Height = 60;
+        roundedFaded.SweepAngle = 180;
+        roundedFaded.Thickness = 14;
+        roundedFaded.StrokeColor = new Color((byte)255, (byte)255, (byte)255, (byte)80);
+        roundedFaded.IsEndRounded = true;
+        row.Children.Add(roundedFaded);
 
         return row;
     }
