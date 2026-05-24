@@ -335,7 +335,7 @@ rounded.FillColor = new Color(0, 128, 255);
 rounded.CornerRadius = 8;
 ```
 
-An automated code fix is planned via the `Gum.Analyzers` package (`GUM002`) — once published, place the cursor on the warning, trigger the lightbulb (Ctrl+.), and choose the **Change to `RectangleRuntime`** / **Change to `CircleRuntime`** fix. **Fix all in solution** will migrate the entire project at once.
+The `Gum.Analyzers` package ships an automated code fix (`GUM002`) — place the cursor on the warning, trigger the lightbulb (Ctrl+.), and choose **Replace '`ColoredCircleRuntime`' with '`CircleRuntime`'** (or the matching `RectangleRuntime` fix for the rectangle variants). The fix also renames `.Color` accesses on rewritten instances: `ColoredCircleRuntime.Color` → `CircleRuntime.StrokeColor` (matching the legacy outline-painting semantic), and `ColoredRectangleRuntime.Color` / `SolidRectangleRuntime.Color` → `RectangleRuntime.FillColor`. `RoundedRectangleRuntime` rewrites to `RectangleRuntime` with `CornerRadius` carried over unchanged. Use **Fix all in solution** to migrate the entire project at once.
 
 The obsolete types will remain in place until at least the November 2026 release. After that window, they may be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
 
