@@ -254,6 +254,7 @@
   * [Stacking](code/layout/stacking.md)
   * [Grid](code/layout/grid.md)
   * [Resolution and Resizing the Game Window](code/layout/resizing-the-game-window.md)
+  * [Drawing with a Custom Camera](code/layout/drawing-with-a-custom-camera.md)
   * [Layout Export](code/layout/layout-export.md)
 * [Events and Interactivity](code/events-and-interactivity/README.md)
   * [Common Control Events](code/events-and-interactivity/common-control-events.md)

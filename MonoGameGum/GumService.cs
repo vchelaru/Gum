@@ -1124,6 +1124,33 @@ public class GumService : IGumService
     {
         SystemManagers.Default.Draw();
     }
+
+#if RAYLIB
+    /// <summary>
+    /// Draws Gum's UI under the supplied raylib <see cref="Camera2D"/>. Copies the
+    /// camera's <c>Target</c> and <c>Zoom</c> onto Gum's internal camera before drawing,
+    /// so the UI renders with the same transform other content drawn under that
+    /// <c>Camera2D</c> uses. This overwrites any previously-configured
+    /// <c>SystemManagers.Default.Renderer.Camera.X/Y/Zoom</c> for the frame.
+    ///
+    /// Note: <c>Camera2D.Offset</c> and <c>Camera2D.Rotation</c> are intentionally NOT
+    /// copied. Gum's render path derives offset from <see cref="CameraCenterOnScreen"/>
+    /// on the camera; set that separately if you need non-center placement. Rotation is
+    /// not modeled by Gum's camera and is ignored.
+    ///
+    /// A MonoGame/XNA <c>Draw(Matrix)</c> equivalent is not yet exposed — that path
+    /// needs cross-platform validation work (see issue #2846 discussion). The underlying
+    /// <c>Camera.SetFromMatrix</c> primitive exists and is unit-tested for when we add it.
+    /// </summary>
+    public void Draw(Camera2D camera)
+    {
+        Camera renderCamera = SystemManagers.Default.Renderer.Camera;
+        renderCamera.X = camera.Target.X;
+        renderCamera.Y = camera.Target.Y;
+        renderCamera.Zoom = camera.Zoom;
+        Draw();
+    }
+#endif
 }
 
 #region GraphicalUiElementExtensionMethods Class
