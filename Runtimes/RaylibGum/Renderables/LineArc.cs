@@ -63,13 +63,22 @@ public class LineArc : InvisibleRenderable
     public float Thickness { get; set; } = 10f;
 
     /// <summary>
-    /// raylib has no per-shape stroke cap analog to Skia's <c>SKPaint.StrokeCap</c> — the
-    /// <c>DrawRing</c> primitive always produces flat (butt) radial ends. <c>IsEndRounded = true</c>
-    /// is therefore a visual no-op on raylib in this pass; the property is preserved for API
-    /// parity with the Skia/Apos branches so the shared <c>ArcRuntime</c> can push the value
-    /// uniformly. A future pass could approximate rounded caps with two <c>DrawCircleSector</c>
-    /// half-disks at each end, but the issue body does not call for it and the gallery's
-    /// end-cap row is omitted on raylib for the same reason.
+    /// When <c>true</c>, the band's two radial endpoints are capped with semicircular bulges so
+    /// the arc reads as a rounded-end stroke, matching Skia's <c>SKStrokeCap.Round</c> on
+    /// <c>Arc</c>. raylib has no per-shape stroke cap, so the effect is synthesized in
+    /// <see cref="Render(ISystemManagers)"/> by drawing one <c>DrawCircleSector</c> half-disk per
+    /// endpoint (issue #2895). Critically, only the *outer* half-disk is drawn — the half whose
+    /// flat diameter aligns with the band's flat radial end and whose bulge points opposite the
+    /// band's tangent. Drawing a full <c>DrawCircle</c> would overlap the band's flat end and
+    /// double-composite under non-opaque alpha, leaving a visible darker crescent at each cap.
+    /// MSAA in this project is post-resolve so the seam between the band's radial edge and the
+    /// cap's diameter resolves cleanly without overdraw stitching.
+    /// <para>
+    /// Skipped automatically when <c>|SweepAngle| &gt;= 360</c> (a full ring has no visible
+    /// endpoints) or when the geometry collapses (<c>Thickness &lt;= 0</c>). In the dashed
+    /// configuration each dash receives caps at both of its own ends, mirroring Skia's
+    /// per-dash rounding via <c>SKPathEffect.CreateDash</c> + <c>SKStrokeCap.Round</c>.
+    /// </para>
     /// </summary>
     public bool IsEndRounded { get; set; }
 
@@ -231,6 +240,11 @@ public class LineArc : InvisibleRenderable
         {
             DrawRing(new Vector2(cx, cy), innerRadius, outerRadius,
                 startAngleDeg, endAngleDeg, segments, strokeColor);
+            if (IsEndRounded && System.MathF.Abs(SweepAngle) < 360f && thickness > 0f)
+            {
+                DrawCaps(new Vector2(cx, cy), innerRadius, outerRadius,
+                    startAngleDeg, endAngleDeg, strokeColor);
+            }
         }
     }
 
@@ -281,8 +295,68 @@ public class LineArc : InvisibleRenderable
             float dashEndRl = -dashEndGum;
             DrawRing(center, innerRadius, outerRadius, dashStartRl, dashEndRl,
                 segmentsPerDash, strokeColor);
+            // Per-dash rounded caps — Skia parity: SKStrokeCap.Round + SKPathEffect.CreateDash
+            // rounds both ends of every dash, not just the overall stroke endpoints. Same guard
+            // as the solid path: skip when thickness collapses or the dash isn't actually a dash.
+            if (IsEndRounded && outerRadius > innerRadius && dashEnd > currentAngle)
+            {
+                DrawCaps(center, innerRadius, outerRadius, dashStartRl, dashEndRl, strokeColor);
+            }
             currentAngle += patternAngleDeg;
         }
+    }
+
+    /// <summary>
+    /// Issue #2895 — synthesizes rounded end caps for the stroked band by drawing one
+    /// <c>DrawCircleSector</c> half-disk per endpoint. The half-disk's flat diameter lies along
+    /// the band's radial endpoint and its bulge points opposite the band's tangent, so it lands
+    /// flush against the band's flat end without overlapping it. This is what keeps the cap
+    /// alpha-correct at non-opaque stroke colors — a full <c>DrawCircle</c> would composite
+    /// twice over the band's last few pixels and produce a darker crescent under the cap.
+    /// </summary>
+    /// <remarks>
+    /// Angles are in raylib's negated-CW space (the same space <see cref="Render(ISystemManagers)"/>
+    /// already converts to). Cap bulge direction derives from <c>sign(SweepAngle)</c>: at the
+    /// start endpoint the band's interior is at <c>startAngleRl + sweepSign*-90°</c> (raylib
+    /// y-down, so "up" is -90 etc.), so the cap bulges at <c>startAngleRl + sweepSign*90°</c>;
+    /// symmetric flip at the end endpoint. The 180° sector spans <c>[B-90°, B+90°]</c> in raylib
+    /// CW terms, which is identical to the radial axis at the endpoint.
+    /// </remarks>
+    private void DrawCaps(Vector2 center, float innerRadius, float outerRadius,
+        float startAngleRl, float endAngleRl, Color strokeColor)
+    {
+        float thickness = outerRadius - innerRadius;
+        if (thickness <= 0f)
+        {
+            return;
+        }
+        float capRadius = thickness * 0.5f;
+        float midRadius = (innerRadius + outerRadius) * 0.5f;
+        // sweepSign computed in Gum space (positive = CCW); the negated-angle conversion in
+        // Render flips it to raylib-space, but the bulge offset is symmetric so we can stay in
+        // Gum-sign terms and trust the +/- 90° to come out right against raylib-space angles.
+        float sweepSign = SweepAngle >= 0f ? 1f : -1f;
+
+        // ~4° per cap segment matches the smoothness floor ComputeSegments uses; bumped on fat
+        // caps so the half-disk silhouette doesn't read as a polygon at large thickness.
+        int capSegments = System.Math.Max(8, (int)(capRadius * 0.8f));
+
+        const float deg2rad = System.MathF.PI / 180f;
+
+        // Start endpoint cap.
+        float startCx = center.X + midRadius * System.MathF.Cos(startAngleRl * deg2rad);
+        float startCy = center.Y + midRadius * System.MathF.Sin(startAngleRl * deg2rad);
+        float startBulge = startAngleRl + sweepSign * 90f;
+        DrawCircleSector(new Vector2(startCx, startCy), capRadius,
+            startBulge - 90f, startBulge + 90f, capSegments, strokeColor);
+
+        // End endpoint cap — bulge flips because the band tangent at the end points the other
+        // way down the band relative to the start.
+        float endCx = center.X + midRadius * System.MathF.Cos(endAngleRl * deg2rad);
+        float endCy = center.Y + midRadius * System.MathF.Sin(endAngleRl * deg2rad);
+        float endBulge = endAngleRl - sweepSign * 90f;
+        DrawCircleSector(new Vector2(endCx, endCy), capRadius,
+            endBulge - 90f, endBulge + 90f, capSegments, strokeColor);
     }
 
     /// <summary>
