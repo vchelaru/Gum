@@ -360,12 +360,13 @@ public class LineArc : InvisibleRenderable
     }
 
     /// <summary>
-    /// Concentric band approximation of a blurred dropshadow silhouette. Mirrors the
-    /// <see cref="LineCircle"/> approach — same source-over inversion to land each band's
-    /// per-pixel alpha on a linear (1 - t) target profile, same #2851 body-alpha multiply, same
-    /// inheritance of the #2865 stacking overshoot. The shape difference is that the arc's
-    /// silhouette is a stroke band rather than a filled disk, so each "band" here is itself a
-    /// <c>DrawRing</c> whose width grows outward from the nominal thickness.
+    /// Issue #2865: render-to-texture + separable Gaussian replaces the band-stack approximation
+    /// (which inherited the same source-over inversion overshoot LineRectangle and LineCircle
+    /// did). Bounds are the conservative full-circle bbox — a tightly-fit arc bbox would save
+    /// some RT pixels on a thin sweep but needs more math; the conservative version is always
+    /// correct. The silhouette callback paints a white DrawRing matching the nominal stroke band.
+    /// Cap-in-shadow is not painted — matches the prior band approach (which didn't include
+    /// rounded caps in the shadow either), tracked as a follow-up for full Skia parity.
     /// </summary>
     private void DrawDropshadow(float cx, float cy, float innerRadius, float outerRadius,
         float startAngleDeg, float endAngleDeg, int segments, byte bodyAlpha)
@@ -382,68 +383,32 @@ public class LineArc : InvisibleRenderable
             DropshadowColor.B,
             (byte)(DropshadowColor.A * bodyAlpha / 255));
 
-        Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
-
         if (blur <= 0f)
         {
             // Hard offset silhouette — single DrawRing matching the nominal band.
-            DrawRing(shadowCenter, innerRadius, outerRadius, startAngleDeg, endAngleDeg,
-                segments, effectiveDropshadowColor);
+            DrawRing(new Vector2(shadowCx, shadowCy), innerRadius, outerRadius,
+                startAngleDeg, endAngleDeg, segments, effectiveDropshadowColor);
             return;
         }
 
-        // Match LineCircle's band layout: bands span [R - blur, R + blur] (total width 2*blur)
-        // outward from the nominal silhouette edge. For an arc band, "outward" is both
-        // directions — the outer edge expands outward, the inner edge expands inward. Each
-        // ring's width grows by 2 * (bandSpan - j*bandThickness) so the outermost (j=0) ring is
-        // the widest with the lowest alpha and the innermost (j=N-1) ring is barely wider than
-        // the nominal band with the highest alpha. The final solid-core DrawRing matches the
-        // nominal band exactly to close the alpha gap.
-        const int blurRings = 32;
-        float bandSpan = blur;
-        float totalExtent = 2f * bandSpan;
-        float bandThickness = totalExtent / blurRings;
-        float f = effectiveDropshadowColor.A / 255f;
-        float prevP = 1f;
-        for (int j = blurRings - 1; j >= 0; j--)
-        {
-            float tOuter = (j + 1f) / blurRings;
-            float profileAlpha = System.MathF.Max(0f, 1f - tOuter);
-            float targetAlpha = f * profileAlpha;
-            float currP = 1f - targetAlpha;
-            float beta = prevP > 0f ? 1f - currP / prevP : 0f;
-            prevP = currP;
-            byte bandAlpha = (byte)(255f * beta + 0.5f);
-            if (bandAlpha == 0)
+        float diameter = outerRadius * 2f;
+        Color silhouetteColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
+        global::RenderingLibrary.Graphics.Renderer.Self.ShadowBlur.Draw(
+            this,
+            shadowCx - outerRadius,
+            shadowCy - outerRadius,
+            diameter,
+            diameter,
+            blur,
+            effectiveDropshadowColor,
+            (px, py) =>
             {
-                continue;
-            }
-            Color bandColor = new Color(effectiveDropshadowColor.R, effectiveDropshadowColor.G,
-                effectiveDropshadowColor.B, bandAlpha);
-            float ringOuter = outerRadius + bandSpan - (j * bandThickness);
-            float ringInner = System.MathF.Max(0f, innerRadius - bandSpan + (j * bandThickness));
-            if (ringOuter > ringInner)
-            {
-                DrawRing(shadowCenter, ringInner, ringOuter, startAngleDeg, endAngleDeg,
-                    segments, bandColor);
-            }
-        }
-
-        // Solid core matching the nominal band closes the remaining alpha gap between the
-        // band stack's accumulated alpha (prevP) and the target final alpha (1 - f). Same
-        // source-over inversion LineCircle uses for its inner core.
-        if (prevP > 1f - f)
-        {
-            float coreBeta = 1f - (1f - f) / prevP;
-            byte coreAlpha = (byte)(255f * coreBeta + 0.5f);
-            if (coreAlpha > 0)
-            {
-                Color coreColor = new Color(effectiveDropshadowColor.R,
-                    effectiveDropshadowColor.G, effectiveDropshadowColor.B, coreAlpha);
-                DrawRing(shadowCenter, innerRadius, outerRadius, startAngleDeg, endAngleDeg,
-                    segments, coreColor);
-            }
-        }
+                DrawRing(
+                    new Vector2(px + outerRadius, py + outerRadius),
+                    innerRadius, outerRadius,
+                    startAngleDeg, endAngleDeg,
+                    segments, silhouetteColor);
+            });
     }
 
     /// <summary>

@@ -1103,51 +1103,35 @@ public class Renderer : IRenderer
 
 #region RenderTargetService
 
-class RenderTargetService
+class RenderTargetService : RenderTargetServiceBase<RenderTarget2D>
 {
-    HashSet<IRenderableIpso> itemsUsingRenderTargetsThisFrame = new HashSet<IRenderableIpso>();
-    Dictionary<IRenderableIpso, RenderTarget2D> RenderTargets = new Dictionary<IRenderableIpso, RenderTarget2D>();
-    List<IRenderableIpso> keysToRemove = new List<IRenderableIpso>();
+    private GraphicsDevice? _graphicsDeviceForCreate;
 
-    public void ClearUnusedRenderTargetsLastFrame()
+    protected override RenderTarget2D Create(int width, int height)
     {
-        keysToRemove.Clear();
-
-        foreach (var item in RenderTargets)
-        {
-            if(itemsUsingRenderTargetsThisFrame.Contains(item.Key) == false)
-            {
-                keysToRemove.Add(item.Key);
-            }
-        }
-
-        foreach(var item in keysToRemove)
-        {
-            RenderTargets[item].Dispose();
-            RenderTargets.Remove(item);
-        }
-
-        itemsUsingRenderTargetsThisFrame.Clear();
+        // _graphicsDeviceForCreate is staged by GetRenderTargetFor before delegating to the
+        // base — RenderTarget2D's ctor requires a GraphicsDevice that the generic base can't
+        // know about. Cleared after Create runs so a stale reference can't be reused.
+        var device = _graphicsDeviceForCreate
+            ?? throw new System.InvalidOperationException(
+                "GraphicsDevice was not staged before Create — use GetRenderTargetFor.");
+        return new RenderTarget2D(device, width, height);
     }
 
-    public RenderTarget2D GetExistingRenderTarget(IRenderableIpso renderable)
+    protected override void Destroy(RenderTarget2D renderTarget) => renderTarget.Dispose();
+
+    protected override int GetWidth(RenderTarget2D renderTarget) => renderTarget.Width;
+
+    protected override int GetHeight(RenderTarget2D renderTarget) => renderTarget.Height;
+
+    public RenderTarget2D? GetExistingRenderTarget(IRenderableIpso renderable)
     {
-        if(RenderTargets.ContainsKey(renderable))
-        {
-            var renderTarget = RenderTargets[renderable];
-            if(renderTarget.IsDisposed == false)
-            {
-                return RenderTargets[renderable];
-            }
-        }
-        
-        return null;
+        var renderTarget = TryGetExisting(renderable);
+        return renderTarget is { IsDisposed: false } ? renderTarget : null;
     }
 
     public RenderTarget2D? GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
     {
-        itemsUsingRenderTargetsThisFrame.Add(renderable);
-
         var left = renderable.GetAbsoluteLeft();
         var right = renderable.GetAbsoluteRight();
         var top = renderable.GetAbsoluteTop();
@@ -1158,42 +1142,17 @@ class RenderTargetService
         top = System.Math.Max(camera.AbsoluteTop, top);
         bottom = System.Math.Min(camera.AbsoluteBottom, bottom);
 
-        //System.Diagnostics.Debug.WriteLine($"L:{left} R:{right} T:{top} B:{bottom}");
+        var width = Math.MathFunctions.RoundToInt((right - left) * camera.Zoom);
+        var height = Math.MathFunctions.RoundToInt((bottom - top) * camera.Zoom);
 
-        var clientWidth = camera.ClientWidth;
-        var clientHeight = camera.ClientHeight;
-
-        var width = Math.MathFunctions.RoundToInt((right - left)* camera.Zoom);
-        var height = Math.MathFunctions.RoundToInt((bottom - top)* camera.Zoom);
-
-        if(width <= 0 || height <= 0)
+        _graphicsDeviceForCreate = graphicsDevice;
+        try
         {
-            return null;
+            return GetFor(renderable, width, height);
         }
-        else
+        finally
         {
-            if (RenderTargets.ContainsKey(renderable))
-            {
-                var existingRenderTarget = RenderTargets[renderable];
-                if (existingRenderTarget.Width != width || existingRenderTarget.Height != height)
-                {
-                    existingRenderTarget.Dispose();
-                    RenderTargets.Remove(renderable);
-                }
-            }
-
-
-            if (RenderTargets.ContainsKey(renderable) == false)
-            {
-                //var width = GraphicsDevice.Viewport.Width;
-                //var height = GraphicsDevice.Viewport.Height;
-                RenderTargets[renderable] = new RenderTarget2D(graphicsDevice, (int)width, (int)height);
-
-            }
-            var renderTarget = RenderTargets[renderable];
-
-            return renderTarget;
-
+            _graphicsDeviceForCreate = null;
         }
     }
 }

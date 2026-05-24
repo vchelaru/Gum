@@ -1,4 +1,5 @@
 ﻿using Gum;
+using Gum.Renderables;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -53,6 +54,14 @@ public class Renderer : IRenderer
     Camera _camera = new Camera();
     public Camera Camera => _camera;
 
+    /// <summary>
+    /// Per-renderable shadow-blur service. Owns the Gaussian shader and the per-renderable
+    /// render textures (issue #2865). Renderables call <c>Renderer.Self.ShadowBlur.Draw(this, ...)</c>
+    /// from their <c>Render</c> method; the renderer sweeps unused entries at the top of every
+    /// frame via <see cref="ClearUnusedRenderTargetsLastFrame"/>.
+    /// </summary>
+    public ShadowBlurRenderer ShadowBlur { get; }
+
     public static BlendState NormalBlendState
     {
         get;
@@ -68,7 +77,7 @@ public class Renderer : IRenderer
         _layers = new List<Layer>();
         _layersReadOnly = new ReadOnlyCollection<Layer>(_layers);
         _layers.Add(new Layer());
-
+        ShadowBlur = new ShadowBlurRenderer();
     }
 
 
@@ -86,6 +95,11 @@ public class Renderer : IRenderer
 
     private void Draw(SystemManagers managers, List<Layer> layers)
     {
+        // Frame-boundary RT sweep — release per-renderable shadow RTs whose owner wasn't drawn
+        // last frame (renderable removed, hidden, or resized). Mirrors the MonoGame RenderTargetService
+        // pattern in RenderingLibrary/Graphics/Renderer.cs.
+        ShadowBlur.ClearUnusedRenderTargetsLastFrame();
+
         _camera.ClientWidth = Raylib.GetScreenWidth();
         _camera.ClientHeight = Raylib.GetScreenHeight();
 
