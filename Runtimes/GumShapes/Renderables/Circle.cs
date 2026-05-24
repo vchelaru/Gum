@@ -61,6 +61,16 @@ public class Circle : RenderableShapeBase,
         }
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Issue #2834 — pushed by <see cref="Gum.GueDeriving.CircleRuntime.PreRender"/> on the
+    /// fill slot only when a visible stroke is present. Applied as a radius subtraction at
+    /// render time; Width/Height are left untouched so the layout system stays the sole
+    /// source of size truth (mutating Width here would feed back into layout because the
+    /// fill instance is the runtime's contained sizing object).
+    /// </remarks>
+    public float FillRadiusInset { get; set; }
+
     public override void Render(ISystemManagers managers)
     {
         var sb = ShapeRenderer.ShapeBatch;
@@ -130,13 +140,19 @@ public class Circle : RenderableShapeBase,
             // small positive epsilon (e.g. 0.01) instead of 0; the 1 px AA halo dominates and
             // the sub-pixel stroke is invisible.
 
+            // Issue #2834 — pull the fill's outer edge inside the companion stroke slot's
+            // opaque band so the two AA boundaries don't composite into a visible color
+            // bleed. Clamped at 0 so a runaway inset (larger than the radius) can't render an
+            // inverted disk. Only the fill branch consumes this; stroke ignores it.
+            float fillRadius = System.Math.Max(0f, radius - FillRadiusInset);
+
             if (UseGradient && forcedColor == null)
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop);
 
                 sb.DrawCircle(
                     center,
-                    radius,
+                    fillRadius,
                     gradient,
                     gradient,
                     1,
@@ -147,7 +163,7 @@ public class Circle : RenderableShapeBase,
                 var color = forcedColor ?? this.Color;
 
                 sb.DrawCircle(center,
-                    radius,
+                    fillRadius,
                     color,
                     color,
                     1,

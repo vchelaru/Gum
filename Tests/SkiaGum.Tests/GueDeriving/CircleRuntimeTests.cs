@@ -141,6 +141,78 @@ public class CircleRuntimeTests
         strokeSlot.IsOffsetAppliedForStroke.ShouldBeTrue();
     }
 
+    // Issue #2834 — when both fill and stroke are visible, the fill is rendered with its
+    // radius inset so its outer AA halo sits inside the stroke's opaque band. Skia's stroke
+    // is inscribed inside the runtime bounds (IsOffsetAppliedForStroke shifts the stroke
+    // inward by StrokeWidth/2 so the ring spans R-sw to R). Without the inset, the stroke's
+    // inner AA edge fades from opaque white to transparent atop the still-opaque fill at
+    // that radius, producing a visible pink halo on the inside of the stroke. Inset = full
+    // stroke width (Skia fits AA within the stroke thickness, so no AA-bloom adjustment).
+    //
+    // Pushed via FillRadiusInset rather than mutating fill.Width because the fill is the
+    // runtime's contained sizing object — mutating Width would feed back into layout and
+    // accumulate frame-over-frame until the circle vanished (same trap caught on Apos).
+    [Fact]
+    public void FillRadiusInset_WhenStrokeVisible_PushedStrokeWidthInPreRender()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 56;
+        sut.Height = 56;
+        sut.FillColor = SKColors.Red;
+        sut.StrokeColor = SKColors.White;
+        sut.StrokeWidth = 4;
+        sut.StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        fillSlot.FillRadiusInset.ShouldBe(4f);
+    }
+
+    // FillColor = null (default) leaves the fill slot invisible — no need to inset; the
+    // setter never had a visible fill to bleed against.
+    [Fact]
+    public void FillRadiusInset_WhenStrokeInvisible_StaysZero()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 56;
+        sut.Height = 56;
+        sut.FillColor = SKColors.Red;
+        sut.StrokeColor = null;
+        sut.StrokeWidth = 4;
+        sut.StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        fillSlot.FillRadiusInset.ShouldBe(0f);
+    }
+
+    // Regression guard matching the Apos-side test — repeated PreRender calls must not
+    // accumulate mutations on the fill slot's Width/Height. The Apos attempt that mutated
+    // Width directly shrank circles to zero in ~5 frames; the FillRadiusInset approach keeps
+    // Width layout-owned.
+    [Fact]
+    public void PreRender_RepeatedCalls_DoesNotMutateFillWidthOrHeight()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 56;
+        sut.Height = 56;
+        sut.FillColor = SKColors.Red;
+        sut.StrokeColor = SKColors.White;
+        sut.StrokeWidth = 4;
+        sut.StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        for (int i = 0; i < 10; i++)
+        {
+            sut.PreRender();
+        }
+
+        fillSlot.Width.ShouldBe(56f);
+        fillSlot.Height.ShouldBe(56f);
+    }
+
     [Fact]
     public void StrokeWidth_AfterPreRender_AppliesToStrokeSlotNotFillSlot()
     {
