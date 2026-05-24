@@ -216,6 +216,52 @@ namespace RenderingLibrary
         }
 
 
+        /// <summary>
+        /// Overwrites this camera's <see cref="X"/>, <see cref="Y"/>, and <see cref="Zoom"/> by
+        /// decomposing the supplied world-to-screen transform. This is the inverse of
+        /// <see cref="GetTransformationMatrix(bool)"/> and is used by
+        /// <c>GumService.Draw(Matrix)</c> so that callers can drive Gum's camera from a
+        /// platform-native transform (raylib's <c>Camera2D</c> via <c>GetCameraMatrix2D</c>,
+        /// MonoGame's view matrix, etc.). The current <see cref="CameraCenterOnScreen"/> mode
+        /// selects which decomposition formula is applied, so set it before calling this if you
+        /// are not using the default <see cref="CameraCenterOnScreen.Center"/>.
+        ///
+        /// Only translation and uniform scale are extracted. Rotation, shear, and non-uniform
+        /// scale in the matrix render correctly (BeginMode2D/SpriteBatch consume the matrix
+        /// verbatim), but Gum's layout, hit-testing, and <c>ScreenPixel</c> stroke resolution
+        /// do not see rotation. If you need rotated input compensation, set the cursor transform
+        /// separately.
+        /// </summary>
+        public void SetFromMatrix(Matrix matrix)
+        {
+            float zoom = matrix.M11;
+            if (zoom == 0)
+            {
+                zoom = 1;
+            }
+
+            // Mirror the conditional in GetTransformationMatrix: the center translation
+            // T(ClientWidth/2, ClientHeight/2) is only baked into the matrix in Center mode
+            // when RendererSettings.UsingEffect is false. Otherwise the matrix is just
+            // T(-x,-y) * S(zoom). Invert whichever form was produced.
+            bool matrixIncludesCenterTranslation =
+                CameraCenterOnScreen == CameraCenterOnScreen.Center &&
+                !RendererSettings.UsingEffect;
+
+            if (matrixIncludesCenterTranslation)
+            {
+                X = (ClientWidth * 0.5f - matrix.M41) / zoom;
+                Y = (ClientHeight * 0.5f - matrix.M42) / zoom;
+            }
+            else
+            {
+                X = -matrix.M41 / zoom;
+                Y = -matrix.M42 / zoom;
+            }
+
+            Zoom = zoom;
+        }
+
         public void ScreenToWorld(float screenX, float screenY, out float worldX, out float worldY)
         {
             Matrix.Invert(GetTransformationMatrix(), out var matrix);

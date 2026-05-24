@@ -7,6 +7,7 @@ using RaylibGum;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
+using System.Numerics;
 using System.Threading;
 using static Raylib_cs.Raylib;
 
@@ -20,6 +21,18 @@ public class BasicShapes
 
     static StackPanel? navStrip;
     static FrameworkElement? activeScreen;
+
+    // Manual-camera demo state. When _useManualCamera is true the render loop calls
+    // GumUI.Draw(_manualCamera) instead of GumUI.Draw(), exercising the new
+    // Draw(Camera2D) overload (#2846). Arrow keys pan; mouse wheel zooms.
+    static bool _useManualCamera;
+    static Camera2D _manualCamera = new Camera2D
+    {
+        Target = Vector2.Zero,
+        Offset = Vector2.Zero,
+        Rotation = 0,
+        Zoom = 1f,
+    };
 
     public static void Main()
     {
@@ -55,7 +68,16 @@ public class BasicShapes
             ClearBackground(new Color(51, 76, 204, 255));
 
             GumUI.Update(GetTime());
-            GumUI.Draw();
+
+            if (_useManualCamera)
+            {
+                UpdateManualCameraFromInput();
+                GumUI.Draw(_manualCamera);
+            }
+            else
+            {
+                GumUI.Draw();
+            }
 
             EndDrawing();
 
@@ -84,8 +106,55 @@ public class BasicShapes
         AddNavButton("Polygons", () => new PolygonsScreen());
         AddNavButton("Arcs", () => new ArcsScreen());
 
-        AddFitModeRadio("Zoom", isChecked: true, () => GumUI.EnableZoomToWindow());
-        AddFitModeRadio("Expand", isChecked: false, () => GumUI.EnableExpandToWindow());
+        AddFitModeRadio("Zoom", isChecked: true, () =>
+        {
+            _useManualCamera = false;
+            GumUI.EnableZoomToWindow();
+        });
+        AddFitModeRadio("Expand", isChecked: false, () =>
+        {
+            _useManualCamera = false;
+            GumUI.EnableExpandToWindow();
+        });
+        AddFitModeRadio("Manual camera", isChecked: false, () =>
+        {
+            // Enabling manual camera mode swaps the render loop to
+            // GumUI.Draw(_manualCamera) — see UpdateManualCameraFromInput for the
+            // arrow-key pan / mouse-wheel zoom controls.
+            _useManualCamera = true;
+        });
+    }
+
+    // Reads keyboard/mouse input and mutates _manualCamera. Pan with arrows, zoom with
+    // the mouse wheel. Kept in pixel-per-second / zoom-per-step terms (not per-frame) so
+    // the feel is reasonable regardless of the loop's 12 ms sleep.
+    private static void UpdateManualCameraFromInput()
+    {
+        float dt = GetFrameTime();
+        float panSpeed = 400f / Math.Max(_manualCamera.Zoom, 0.01f);
+
+        if (IsKeyDown(KeyboardKey.Left))
+        {
+            _manualCamera.Target.X -= panSpeed * dt;
+        }
+        if (IsKeyDown(KeyboardKey.Right))
+        {
+            _manualCamera.Target.X += panSpeed * dt;
+        }
+        if (IsKeyDown(KeyboardKey.Up))
+        {
+            _manualCamera.Target.Y -= panSpeed * dt;
+        }
+        if (IsKeyDown(KeyboardKey.Down))
+        {
+            _manualCamera.Target.Y += panSpeed * dt;
+        }
+
+        float wheel = GetMouseWheelMove();
+        if (wheel != 0)
+        {
+            _manualCamera.Zoom = Math.Clamp(_manualCamera.Zoom * (1 + wheel * 0.1f), 0.1f, 10f);
+        }
     }
 
     private static void AddFitModeRadio(string text, bool isChecked, Action onChecked)
