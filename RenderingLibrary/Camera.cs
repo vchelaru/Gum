@@ -305,7 +305,7 @@ namespace RenderingLibrary
         {
             if (ipso == null)
             {
-                return new System.Drawing.Rectangle(0, 0, camera.ClientWidth, camera.ClientHeight);
+                return new System.Drawing.Rectangle(camera.ClientLeft, camera.ClientTop, camera.ClientWidth, camera.ClientHeight);
             }
 
             float worldX = ipso.GetAbsoluteLeft();
@@ -321,6 +321,16 @@ namespace RenderingLibrary
                 camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
             }
 
+#if FRB
+            // Layer.WorldToScreen / Camera.WorldToScreen intentionally skip the ClientLeft/Top
+            // offset under FRB so FRB's own renderer doesn't double-apply it for sprite geometry.
+            // But GraphicsDevice.ScissorRectangle is backbuffer-relative, not viewport-local, so
+            // we have to add the offset back here or the scissor lands at backbuffer (0,0) when
+            // the FRB camera DestinationRectangle is letterboxed away from the origin.
+            screenX += camera.ClientLeft;
+            screenY += camera.ClientTop;
+#endif
+
             int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
             int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
 
@@ -335,19 +345,23 @@ namespace RenderingLibrary
                 camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
             }
 
+#if FRB
+            screenX += camera.ClientLeft;
+            screenY += camera.ClientTop;
+#endif
+
             int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
             int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
 
-            left = System.Math.Max(0, left);
-            top = System.Math.Max(0, top);
-            right = System.Math.Max(0, right);
-            bottom = System.Math.Max(0, bottom);
+            int minX = camera.ClientLeft;
+            int maxX = camera.ClientLeft + camera.ClientWidth;
+            int minY = camera.ClientTop;
+            int maxY = camera.ClientTop + camera.ClientHeight;
 
-            left = System.Math.Min(left, camera.ClientWidth);
-            right = System.Math.Min(right, camera.ClientWidth);
-
-            top = System.Math.Min(top, camera.ClientHeight);
-            bottom = System.Math.Min(bottom, camera.ClientHeight);
+            left = System.Math.Clamp(left, minX, maxX);
+            right = System.Math.Clamp(right, minX, maxX);
+            top = System.Math.Clamp(top, minY, maxY);
+            bottom = System.Math.Clamp(bottom, minY, maxY);
 
             int width = System.Math.Max(0, right - left);
             int height = System.Math.Max(0, bottom - top);
