@@ -50,6 +50,7 @@ internal class CirclesScreen : GraphicalUiElement
         right.Children.Add(BuildSection("Dropshadow", BuildDropshadowRow()));
         right.Children.Add(BuildSection("Dashed strokes", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("Fill + stroke", BuildBothColorsRow()));
+        right.Children.Add(BuildSection("Hairline bleed (#2834)", BuildHairlineBleedRow()));
         right.Children.Add(BuildSection("Inscribed", BuildInscribedRow()));
         right.Children.Add(BuildSection("Non-square aspect", BuildNonSquareRow()));
     }
@@ -235,6 +236,26 @@ internal class CirclesScreen : GraphicalUiElement
         fillLast.FillColor = SKColors.Gold;
         row.Children.Add(fillLast);
 
+        return row;
+    }
+
+    // Visual repro for #2834 — hairline white stroke over a red fill, the primary surface
+    // for the issue. The fill and stroke are separate SkPaint draws, each antialiased; the
+    // semi-transparent AA pixels at the fill's outer edge composite under the
+    // semi-transparent AA pixels at the stroke's inner edge, producing a ~1 px pink halo
+    // on the inside of the ring. Most visible at 1–2 px stroke; fades at 3–4 px.
+    static ContainerRuntime BuildHairlineBleedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float strokeWidth in new[] { 1f, 2f, 3f, 4f })
+        {
+            CircleRuntime circle = new();
+            circle.Radius = 28;
+            circle.FillColor = SKColors.Red;
+            circle.StrokeColor = SKColors.White;
+            circle.StrokeWidth = strokeWidth;
+            row.Children.Add(circle);
+        }
         return row;
     }
 
