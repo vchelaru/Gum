@@ -305,109 +305,37 @@ public class LineRectangle : InvisibleRenderable
 
             if (blur > 0f)
             {
-                // Bands span both sides of the silhouette boundary: from -blur to +blur
-                // measured perpendicular to each edge. The band at the exact silhouette
-                // boundary has linear profile midpoint alpha 0.5, matching how Skia's
-                // Gaussian convolution makes the shape silhouette boundary half-opaque.
-                // See LineCircle.Render's dropshadow comment for the full rationale —
-                // previous outer-only fade approach left the halo's inner edge sharp and
-                // the gradient compressed into a thin band; extending bands inward gives
-                // the soft inner edge Skia produces.
-                //
-                // Inner core covers pixels deeper than the innermost band so they read as
-                // full-alpha shadow.
-                const int blurRings = 32;
-                float bandSpan = blur;
-                float totalExtent = 2f * bandSpan;
-                float bandThickness = totalExtent / blurRings;
-                // Issue #2851: the target cumulative alpha profile must be scaled by the
-                // effective shadow alpha BEFORE inverting source-over to per-band alphas.
-                // Scaling per-band alpha after the fact stacks non-linearly and overshoots
-                // (a blur≠0 shadow at effective alpha 80 ended up cumulative ~0.77, not 0.31).
-                float f = effectiveDropshadowColor.A / 255f;
-                float prevP = 1f;
-                for (int j = blurRings - 1; j >= 0; j--)
-                {
-                    float tOuter = (j + 1f) / blurRings;
-                    float profileAlpha = MathF.Max(0f, 1f - tOuter);
-                    float targetAlpha = f * profileAlpha;
-                    float currP = 1f - targetAlpha;
-                    float beta = prevP > 0f ? 1f - currP / prevP : 0f;
-                    prevP = currP;
-                    byte bandAlpha = (byte)(255f * beta + 0.5f);
-                    if (bandAlpha == 0)
+                // Issue #2865: render-to-texture + separable Gaussian replaces the 32-concentric-
+                // band approximation. The old approach inverted source-over compositing to derive
+                // per-band alphas from a target profile, then scaled per-band by the user shadow
+                // alpha — but source-over is non-linear under that scale, so shadows at
+                // DropshadowAlpha < 255 came out ~2.5× too opaque. See ShadowBlurRenderer for
+                // the full rationale; the helper paints the silhouette into an offscreen RT,
+                // blurs it H+V with a Gaussian shader, and composites with the tint.
+                Color silhouetteColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
+                global::RenderingLibrary.Graphics.Renderer.Self.ShadowBlur.Draw(
+                    this,
+                    shadowX,
+                    shadowY,
+                    w,
+                    h,
+                    blur,
+                    effectiveDropshadowColor,
+                    (px, py) =>
                     {
-                        continue;
-                    }
-                    Color bandColor = new Color(effectiveDropshadowColor.R, effectiveDropshadowColor.G,
-                        effectiveDropshadowColor.B, bandAlpha);
-                    float inflate = -bandSpan + (j + 1) * bandThickness;
-                    float bandW = w + 2f * inflate;
-                    float bandH = h + 2f * inflate;
-                    if (bandW <= 0f || bandH <= 0f)
-                    {
-                        continue;
-                    }
-                    Rectangle bandRect = new Rectangle(
-                        shadowX - inflate,
-                        shadowY - inflate,
-                        bandW,
-                        bandH);
-                    if (useRounded && !rotated)
-                    {
-                        // Corner radius tracks the inflate: at the silhouette boundary
-                        // (inflate = 0) it's CornerRadius, expands outward, shrinks inward
-                        // clamped at 0.
-                        float bandCornerR = MathF.Max(0f, CornerRadius + inflate);
-                        float bandMinDim = MathF.Min(bandRect.Width, bandRect.Height);
-                        float bandRoundness = bandMinDim > 0f
-                            ? MathF.Min(1f, bandCornerR * 2f / bandMinDim)
-                            : 0f;
-                        DrawRectangleRounded(bandRect, bandRoundness, roundedSegments, bandColor);
-                    }
-                    else
-                    {
-                        DrawRectangleV(new Vector2(bandRect.X, bandRect.Y),
-                            new Vector2(bandRect.Width, bandRect.Height), bandColor);
-                    }
-                }
-
-                // Solid inner core closes the remaining alpha gap between what the bands
-                // accumulated (prevP after the loop) and the target final alpha (1 - f).
-                // With the scaled target profile above, this is a small correction at low
-                // effective alphas (≈3/255 when f=0.31) and the original full-alpha plateau
-                // when f=1. Source-over inversion: prevP * (1 - α_core) = 1 - f.
-                float innerCoreW = w - 2f * bandSpan;
-                float innerCoreH = h - 2f * bandSpan;
-                if (innerCoreW > 0f && innerCoreH > 0f && prevP > 1f - f)
-                {
-                    float coreBeta = 1f - (1f - f) / prevP;
-                    byte coreAlpha = (byte)(255f * coreBeta + 0.5f);
-                    if (coreAlpha > 0)
-                    {
-                        Color coreColor = new Color(effectiveDropshadowColor.R,
-                            effectiveDropshadowColor.G, effectiveDropshadowColor.B, coreAlpha);
-                        Rectangle innerCore = new Rectangle(
-                            shadowX + bandSpan,
-                            shadowY + bandSpan,
-                            innerCoreW,
-                            innerCoreH);
-                        if (useRounded && !rotated)
+                        if (useRounded)
                         {
-                            float innerCornerR = MathF.Max(0f, CornerRadius - bandSpan);
-                            float innerMinDim = MathF.Min(innerCoreW, innerCoreH);
-                            float innerRoundness = innerMinDim > 0f
-                                ? MathF.Min(1f, innerCornerR * 2f / innerMinDim)
-                                : 0f;
-                            DrawRectangleRounded(innerCore, innerRoundness, roundedSegments, coreColor);
+                            DrawRectangleRounded(
+                                new Rectangle(px, py, w, h),
+                                roundness,
+                                roundedSegments,
+                                silhouetteColor);
                         }
                         else
                         {
-                            DrawRectangleV(new Vector2(innerCore.X, innerCore.Y),
-                                new Vector2(innerCoreW, innerCoreH), coreColor);
+                            DrawRectangleV(new Vector2(px, py), new Vector2(w, h), silhouetteColor);
                         }
-                    }
-                }
+                    });
             }
             else
             {

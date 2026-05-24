@@ -278,71 +278,25 @@ public class LineCircle : InvisibleRenderable
 
             if (blur > 0f)
             {
-                // Skia's Gaussian convolution of the shape silhouette makes the silhouette
-                // BOUNDARY itself half-opaque (alpha 0.5), then fades both ways — inward to
-                // alpha 1 deep inside, outward to alpha 0 far outside. The visible halo
-                // around the offset shadow has a SOFT inner edge as a result. Previous
-                // approaches in this file drew a hard-alpha core at radius R and only faded
-                // outward, which made the visible halo's inner edge sharp and concentrated
-                // the gradient in a thin outer band — read as "gradient stops at the shape"
-                // when Skia's gradient extends through the boundary.
-                //
-                // Fix: bands span [R - blur, R + blur] (total width 2*blur), so the band at
-                // d = R has the linear profile midpoint alpha 0.5. Inner core covers only
-                // d < R - blur so deep interior stays fully opaque. Outer boundary stays at
-                // R + blur (matches user-confirmed correct edge size).
-                //
-                // Concentric filled circles drawn outside-in, per-circle alpha derived by
-                // inverting source-over blend so composite at each band lands on the target
-                // linear profile (1 - t) sampled at the band's outer edge.
-                const int blurRings = 32;
-                float bandSpan = blur;
-                float totalExtent = 2f * bandSpan;
-                float bandThickness = totalExtent / blurRings;
-                Vector2 shadowCenter = new Vector2(shadowCx, shadowCy);
-                // Issue #2851: scale the target cumulative alpha profile by the effective
-                // shadow alpha BEFORE inverting source-over to per-band alphas. Scaling
-                // per-band alpha after the fact stacks non-linearly and overshoots.
-                float f = effectiveDropshadowColor.A / 255f;
-                float prevP = 1f;
-                for (int j = blurRings - 1; j >= 0; j--)
-                {
-                    float tOuter = (j + 1f) / blurRings;
-                    float profileAlpha = System.MathF.Max(0f, 1f - tOuter);
-                    float targetAlpha = f * profileAlpha;
-                    float currP = 1f - targetAlpha;
-                    float beta = prevP > 0f ? 1f - currP / prevP : 0f;
-                    prevP = currP;
-                    byte circleAlpha = (byte)(255f * beta + 0.5f);
-                    if (circleAlpha == 0)
+                // Issue #2865: render-to-texture + separable Gaussian replaces the band stack.
+                // See LineRectangle / ShadowBlurRenderer for the full rationale — band approach
+                // overshot effective alpha by ~2.5× because per-band scaling broke the
+                // source-over inversion the band alphas were derived from.
+                float r = Radius;
+                float diameter = r * 2f;
+                Color silhouetteColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
+                global::RenderingLibrary.Graphics.Renderer.Self.ShadowBlur.Draw(
+                    this,
+                    shadowCx - r,
+                    shadowCy - r,
+                    diameter,
+                    diameter,
+                    blur,
+                    effectiveDropshadowColor,
+                    (px, py) =>
                     {
-                        continue;
-                    }
-                    Color circleColor = new Color(effectiveDropshadowColor.R, effectiveDropshadowColor.G,
-                        effectiveDropshadowColor.B, circleAlpha);
-                    float r = Radius - bandSpan + (j + 1) * bandThickness;
-                    if (r > 0f)
-                    {
-                        DrawCircleV(shadowCenter, r, circleColor);
-                    }
-                }
-
-                // Solid inner core closes the remaining alpha gap between what the bands
-                // accumulated (prevP) and the target final alpha (1 - f). Small correction
-                // at low effective alphas; reduces to the original full-alpha plateau when
-                // f = 1. Source-over inversion: prevP * (1 - α_core) = 1 - f.
-                float innerCoreR = Radius - bandSpan;
-                if (innerCoreR > 0f && prevP > 1f - f)
-                {
-                    float coreBeta = 1f - (1f - f) / prevP;
-                    byte coreAlpha = (byte)(255f * coreBeta + 0.5f);
-                    if (coreAlpha > 0)
-                    {
-                        Color coreColor = new Color(effectiveDropshadowColor.R,
-                            effectiveDropshadowColor.G, effectiveDropshadowColor.B, coreAlpha);
-                        DrawCircle((int)shadowCx, (int)shadowCy, innerCoreR, coreColor);
-                    }
-                }
+                        DrawCircleV(new Vector2(px + r, py + r), r, silhouetteColor);
+                    });
             }
             else
             {
