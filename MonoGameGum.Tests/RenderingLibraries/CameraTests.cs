@@ -1,7 +1,9 @@
 ﻿using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -12,6 +14,82 @@ namespace MonoGameGum.Tests.RenderingLibraries;
 
 public class CameraTests : BaseTestClass
 {
+    // Minimal IRenderableIpso whose GetAbsoluteLeft/Right/Top/Bottom (extension methods over
+    // X/Y/Width/Height) return predictable values. Used to drive GetScissorRectangleFor in
+    // isolation from any real Gum runtime element.
+    private sealed class StubRenderable : IRenderableIpso
+    {
+        public StubRenderable()
+        {
+            Children = new ObservableCollection<IRenderableIpso>();
+        }
+
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
+        public float Width { get; set; }
+        public float Height { get; set; }
+        public float Rotation { get; set; }
+        public bool FlipHorizontal { get; set; }
+        public string? Name { get; set; }
+        public object? Tag { get; set; }
+        public bool Visible { get; set; } = true;
+        public bool AbsoluteVisible => Visible;
+        public bool ClipsChildren { get; set; }
+        public bool IsRenderTarget => false;
+        public ObservableCollection<IRenderableIpso> Children { get; }
+        public IRenderableIpso? Parent { get; set; }
+        IVisible? IVisible.Parent => Parent;
+        public int Alpha => 255;
+        public ColorOperation ColorOperation => ColorOperation.Modulate;
+        public Gum.BlendState BlendState => Gum.BlendState.NonPremultiplied;
+        public bool Wrap => false;
+        public string BatchKey => "SpriteBatch";
+        public void SetParentDirect(IRenderableIpso? newParent) => Parent = newParent;
+        public void Render(ISystemManagers managers) { }
+        public void PreRender() { }
+        public void StartBatch(ISystemManagers managers) { }
+        public void EndBatch(ISystemManagers managers) { }
+    }
+
+    [Fact]
+    public void GetScissorRectangleFor_WithClientLeftTop_ShouldProduceBackbufferRelativeRectAndClampToViewportExtent()
+    {
+        // Regression test for the FRB letterbox-resize bug: when the camera has a non-zero
+        // ClientLeft/ClientTop (Viewport offset), the returned scissor must live in absolute
+        // backbuffer coordinates AND must clamp to [ClientLeft, ClientLeft + ClientWidth] —
+        // not [0, ClientWidth]. The old clamp would chop the right/bottom of any element
+        // that extended past the (still viewport-local) ClientWidth, making the scissor track
+        // the wrong region after a letterboxed resize. This test exercises the non-FRB
+        // codepath only; the FRB-specific offset-shift inside #if FRB is verified by
+        // running the real FRB integration (see KidDefense repro).
+        Camera _sut = new Camera();
+        _sut.ClientLeft = 100;
+        _sut.ClientTop = 50;
+        _sut.ClientWidth = 800;
+        _sut.ClientHeight = 600;
+        _sut.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
+        // Element spans world [50, 1000) x [25, 800) — past the right/bottom of the viewport.
+        StubRenderable ipso = new StubRenderable();
+        ipso.X = 50;
+        ipso.Y = 25;
+        ipso.Width = 950;
+        ipso.Height = 775;
+
+        System.Drawing.Rectangle scissor = _sut.GetScissorRectangleFor(layer: null!, ipso);
+
+        // Left/Top: WorldToScreen adds ClientLeft/Top under MonoGame, so 50 + 100 = 150 and
+        // 25 + 50 = 75 — already backbuffer-relative, inside the viewport, unclamped.
+        scissor.Left.ShouldBe(150);
+        scissor.Top.ShouldBe(75);
+
+        // Right/Bottom: world right = 1000, screen right = 1100. The new clamp caps at
+        // ClientLeft + ClientWidth = 900 (was 800 under the old [0, ClientWidth] clamp).
+        scissor.Right.ShouldBe(900);
+        scissor.Bottom.ShouldBe(650);
+    }
+
     [Fact]
     public void NoSetFromMatrixCall_ShouldPreserveExplicitlySetCameraValues()
     {
