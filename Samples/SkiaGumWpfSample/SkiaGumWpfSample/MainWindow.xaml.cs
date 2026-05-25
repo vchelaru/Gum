@@ -1,18 +1,7 @@
 ﻿using Gum.GueDeriving;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Gum.RenderingLibrary;
+using SkiaGum.Renderables;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SkiaGumWpfSample
 {
@@ -25,23 +14,43 @@ namespace SkiaGumWpfSample
         {
             InitializeComponent();
 
-            var container = new ContainerRuntime();
-            container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-            container.StackSpacing = 3;
-            SkiaElement.Children.Add(container);
+            // Issue #2922 smoke test: two overlapping rectangle pairs.
+            // Top row uses default (Normal/SrcOver) blending — the second rectangle covers the
+            // first. Bottom row sets Blend = Additive on the second rectangle — the overlapped
+            // area shows the channel-summed color (red+green = yellow) instead of just red.
+            //
+            // RectangleRuntime doesn't expose Blend on its cross-platform runtime API today
+            // (only SpriteRuntime / NineSliceRuntime do — PR #2920). Reach the Skia-side
+            // RoundedRectangle renderable directly to set Blend; this is sample-internal code,
+            // not the intended consumer pattern.
 
+            AddOverlappedPair(yOffset: 20, additive: false);
+            AddOverlappedPair(yOffset: 180, additive: true);
+        }
 
-            var rectangle = new RectangleRuntime();
+        private void AddOverlappedPair(float yOffset, bool additive)
+        {
+            var greenRect = new RectangleRuntime();
+            greenRect.X = 20;
+            greenRect.Y = yOffset;
+            greenRect.Width = 200;
+            greenRect.Height = 120;
+            greenRect.FillColor = new SkiaSharp.SKColor(0, 220, 0);
+            SkiaElement.Children.Add(greenRect);
 
-            rectangle.FillColor = new SkiaSharp.SKColor(50, 100, 0);
-            container.Children.Add(rectangle);
+            var redRect = new RectangleRuntime();
+            redRect.X = 120;
+            redRect.Y = yOffset + 30;
+            redRect.Width = 200;
+            redRect.Height = 120;
+            redRect.FillColor = new SkiaSharp.SKColor(220, 0, 0);
+            SkiaElement.Children.Add(redRect);
 
-            var rectangle2 = new RectangleRuntime();
-            rectangle2.FillColor = new SkiaSharp.SKColor(200, 0, 0);
-
-            container.Children.Add(rectangle2);
-
-
+            if (additive)
+            {
+                // Additive on Skia (#2922) maps to SKBlendMode.Plus.
+                ((RoundedRectangle)redRect.RenderableComponent!).Blend = Blend.Additive;
+            }
         }
     }
 }
