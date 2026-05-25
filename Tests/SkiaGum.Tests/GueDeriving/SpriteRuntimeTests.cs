@@ -108,6 +108,43 @@ public class SpriteRuntimeTests
         }
     }
 
+    // Regression for the IAnimatable duplication bug: IAnimatable.cs was being
+    // file-linked into BOTH GumCommon AND SkiaGum, producing two distinct
+    // IAnimatable types with the same FQN. GraphicalUiElement.AnimateSelf (in
+    // GumCommon) does `mContainedObjectAsIpso as IAnimatable` which resolves to
+    // GumCommon's IAnimatable, but Skia's Sprite implemented the local-copy
+    // IAnimatable — so the cast returned null and the per-frame tick silently
+    // no-op'd when invoked through the SpriteRuntime wrapper. Existing
+    // AnimationLogic-direct tests didn't catch it because they bypassed the
+    // GraphicalUiElement.AnimateSelf path.
+    [Fact]
+    public void AnimateSelfThroughSpriteRuntime_ShouldAdvanceFrameIndex_WhenAnimateIsTrue()
+    {
+        SKBitmap textureA = new SKBitmap(4, 4);
+        SKBitmap textureB = new SKBitmap(4, 4);
+
+        AnimationChain chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(new AnimationFrame { Texture = textureA, FrameLength = 0.1f, LeftCoordinate = 0f, RightCoordinate = 1f, TopCoordinate = 0f, BottomCoordinate = 1f });
+        chain.Add(new AnimationFrame { Texture = textureB, FrameLength = 0.1f, LeftCoordinate = 0f, RightCoordinate = 1f, TopCoordinate = 0f, BottomCoordinate = 1f });
+
+        AnimationChainList chains = new AnimationChainList();
+        chains.Add(chain);
+
+        SpriteRuntime sut = new SpriteRuntime();
+        sut.AnimationChains = chains;
+        sut.CurrentChainName = "TestChain";
+        sut.Animate = true;
+
+        sut.AnimationChainFrameIndex.ShouldBe(0);
+
+        // Tick through GraphicalUiElement.AnimateSelf — same path GumService.Update
+        // walks. If IAnimatable is duplicated across GumCommon and SkiaGum, the
+        // `as IAnimatable` cast returns null and this assertion fails.
+        sut.AnimateSelf(0.15);
+
+        sut.AnimationChainFrameIndex.ShouldBe(1);
+    }
+
     [Fact]
     public void AnimationProperties_ShouldForwardToAnimationLogic()
     {
