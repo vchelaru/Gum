@@ -188,10 +188,13 @@ internal class SpriteScreen : FrameworkElement
         }
 
         // AnimationChain-driven sprite — same .achx pipeline NineSliceScreen uses.
+        // 200% of source so the frame swaps are easy to see.
         AddLabel(container, "AnimationChain-driven sprite (AnimatedFrame1.achx):");
         var animated = new SpriteRuntime();
-        animated.Width = 64;
-        animated.Height = 64;
+        animated.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        animated.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        animated.Width = 200;
+        animated.Height = 200;
         animated.AnimationChains = LoadAnimatedFrameChain();
         animated.CurrentChainName = "Animation1";
         animated.Animate = true;

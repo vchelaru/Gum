@@ -130,8 +130,11 @@ internal class SpriteScreen : FrameworkElement
         // Sprite renderable so this row exercises the full chain on raylib.
         AddSectionLabel(page, "AnimationChain-driven sprite (AnimatedFrame1.achx):");
         var animated = new SpriteRuntime();
-        animated.Width = 64;
-        animated.Height = 64;
+        // 200% of source so the frame swaps are easy to see.
+        animated.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
+        animated.HeightUnits = DimensionUnitType.PercentageOfSourceFile;
+        animated.Width = 200;
+        animated.Height = 200;
         animated.AnimationChains = LoadAnimatedFrameChain();
         animated.CurrentChainName = "Animation1";
         animated.Animate = true;
