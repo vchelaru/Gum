@@ -104,6 +104,71 @@ public class RectangleRuntimeTests
         strokeSlot.CornerRadius.ShouldBe(8f);
     }
 
+    // Issue #2720: per-corner radii set via the string path (SetProperty) must land on the
+    // runtime, not on the renderable. The runtime's setter mirrors to fill+stroke, and PreRender
+    // pushes the runtime's stored value to the renderable each frame, so a string-path write
+    // that landed on the renderable directly would be silently clobbered.
+    [Fact]
+    public void CornerRadius_OnRectangleRuntime_ShouldLandOnRuntime_WhenSetThroughSetProperty()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("CornerRadius", 8f);
+
+        sut.CornerRadius.ShouldBe(8f);
+    }
+
+    [Fact]
+    public void CustomRadiusTopLeft_OnRectangleRuntime_ShouldLandOnRuntime_WhenSetThroughSetProperty()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("CustomRadiusTopLeft", (float?)9f);
+
+        sut.CustomRadiusTopLeft.ShouldBe(9f);
+    }
+
+    [Fact]
+    public void CustomRadiusTopRight_OnRectangleRuntime_ShouldLandOnRuntime_WhenSetThroughSetProperty()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("CustomRadiusTopRight", (float?)10f);
+
+        sut.CustomRadiusTopRight.ShouldBe(10f);
+    }
+
+    [Fact]
+    public void CustomRadiusBottomLeft_OnRectangleRuntime_ShouldLandOnRuntime_WhenSetThroughSetProperty()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("CustomRadiusBottomLeft", (float?)11f);
+
+        sut.CustomRadiusBottomLeft.ShouldBe(11f);
+    }
+
+    [Fact]
+    public void CustomRadiusBottomRight_OnRectangleRuntime_ShouldLandOnRuntime_WhenSetThroughSetProperty()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("CustomRadiusBottomRight", (float?)12f);
+
+        sut.CustomRadiusBottomRight.ShouldBe(12f);
+    }
+
+    [Fact]
+    public void CustomRadiusTopLeft_OnRectangleRuntime_ShouldAcceptNull_WhenSetThroughSetProperty()
+    {
+        RectangleRuntime sut = new();
+        sut.CustomRadiusTopLeft = 5f;
+
+        sut.SetProperty("CustomRadiusTopLeft", null);
+
+        sut.CustomRadiusTopLeft.ShouldBeNull();
+    }
+
     [Fact]
     public void PerCornerRadii_PushedToBothSlots_InPreRender()
     {

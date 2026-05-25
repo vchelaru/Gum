@@ -338,6 +338,48 @@ public class CustomSetPropertyOnRenderable
                     }
                     handled = true;
                     break;
+                // Issue #2720: route CornerRadius and per-corner radii to RectangleRuntime when
+                // that's the GUE. RectangleRuntime stores these on the runtime and mirrors to
+                // fill+stroke slots in its setter (plus Skia re-pushes them each frame in
+                // PreRender for ScreenPixel scaling). Writing them straight to the renderable
+                // would be clobbered the next time the runtime touched the property — or, on
+                // Skia, on the very next frame. RoundedRectangleRuntime is frozen and does not
+                // need its own arm (no new functionality lands on it).
+                case nameof(RectangleRuntime.CornerRadius):
+                    if (graphicalUiElement is RectangleRuntime rectCornerRuntime)
+                    {
+                        rectCornerRuntime.CornerRadius = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.CustomRadiusTopLeft):
+                    if (graphicalUiElement is RectangleRuntime rectTLRuntime)
+                    {
+                        rectTLRuntime.CustomRadiusTopLeft = (float?)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.CustomRadiusTopRight):
+                    if (graphicalUiElement is RectangleRuntime rectTRRuntime)
+                    {
+                        rectTRRuntime.CustomRadiusTopRight = (float?)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.CustomRadiusBottomLeft):
+                    if (graphicalUiElement is RectangleRuntime rectBLRuntime)
+                    {
+                        rectBLRuntime.CustomRadiusBottomLeft = (float?)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.CustomRadiusBottomRight):
+                    if (graphicalUiElement is RectangleRuntime rectBRRuntime)
+                    {
+                        rectBRRuntime.CustomRadiusBottomRight = (float?)value;
+                        handled = true;
+                    }
+                    break;
             }
             if (!handled)
             {
