@@ -160,6 +160,13 @@ internal class SpriteScreen : FrameworkElement
     {
         var label = new TextRuntime();
         label.Text = text;
+        // Explicit near-white so the labels read against the dark-blue background.
+        // RawVisualsScreen's identical helper leaves color at the TextRuntime default,
+        // which renders as dark gray on this background; matching RectanglesScreen's
+        // 220/220/220 keeps every gallery section header consistent.
+        label.Red = 220;
+        label.Green = 220;
+        label.Blue = 220;
         label.WidthUnits = DimensionUnitType.RelativeToChildren;
         label.HeightUnits = DimensionUnitType.RelativeToChildren;
         label.Width = 0;

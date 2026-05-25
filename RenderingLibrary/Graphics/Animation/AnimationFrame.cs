@@ -289,6 +289,24 @@ namespace Gum.Graphics.Animation
                     frame.Texture = null;
                 }
             }
+#elif RAYLIB
+            if (loadTexture && !string.IsNullOrEmpty(animationFrameSave.TextureName))
+            {
+                try
+                {
+                    var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + animationFrameSave.TextureName);
+                    frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Raylib_cs.Texture2D>(fileName);
+                }
+                catch (System.IO.FileNotFoundException)
+                {
+                    if (Wireframe.GraphicalUiElement.MissingFileBehavior == Wireframe.MissingFileBehavior.ThrowException)
+                    {
+                        string message = $"Error loading texture in animation :\n{animationFrameSave.TextureName}";
+                        throw new System.IO.FileNotFoundException(message);
+                    }
+                    frame.Texture = null;
+                }
+            }
 #endif
             frame.FlipHorizontal = animationFrameSave.FlipHorizontal;
             frame.FlipVertical = animationFrameSave.FlipVertical;
