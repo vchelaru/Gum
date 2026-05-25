@@ -15,7 +15,7 @@ namespace Gum.DataTypes;
 /// </para>
 /// <para>
 /// This attribute should be applied at the assembly level in each Gum runtime project
-/// (MonoGameGum, RaylibGum, SkiaGum).
+/// (GumCommon, MonoGameGum, RaylibGum, SkiaGum).
 /// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
@@ -24,6 +24,14 @@ public class GumSyntaxVersionAttribute : Attribute
     /// <summary>
     /// The syntax version number. Higher values indicate newer conventions.
     /// Version 0 is the baseline (no breaking changes from the pre-attribute era).
+    /// Version 1 introduced the unified <c>Gum.GueDeriving</c> namespace for runtime classes
+    /// (non-breaking; old namespaces remain via <c>[Obsolete]</c> shims).
+    /// Version 2 introduced the fill/stroke two-slot model on shape runtimes: the role
+    /// interface <c>ICircleRenderable</c> was removed and replaced by
+    /// <c>IFilledCircleRenderable</c> / <c>IStrokedCircleRenderable</c> (and matching
+    /// rectangle role interfaces), with shape runtimes now holding two renderables drawn
+    /// on the same frame. See <c>.claude/designs/runtime-unification/FillStrokeTwoSlotModel.md</c>
+    /// and PR #2769 / issue #2768.
     /// </summary>
     public int Version;
 }
