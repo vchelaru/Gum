@@ -102,21 +102,21 @@ internal class SpriteScreen : FrameworkElement
         // Rotation — center-pivot the sprites (YOrigin=Center, Y=row_height/2)
         // so they rotate around their own middle. With the default top-left
         // pivot, a 25-deg rotation drifts the visible body upward and overlaps
-        // the label above. A 48-sprite rotated 25 deg has a ~64 px bounding
-        // box (48 * (cos25 + sin25)), so 70 px absolute fits all angles with
-        // a few px of breathing room and stays close to the flip row's height.
+        // the label above. Row is fixed to 64 px to match the Flipping and Alpha
+        // rows above; 40-px sprites have a ~53 px rotated bounding box
+        // (40 * (cos25 + sin25)) so they fit with room to spare.
         AddLabel(container, "Rotation (0, 25, 90, 180 degrees):");
         var rotRow = AddRow(container);
         rotRow.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        rotRow.Height = 70;
+        rotRow.Height = 64;
         foreach (var angle in new[] { 0f, 25f, 90f, 180f })
         {
             var s = new SpriteRuntime();
             s.SourceFileName = "BearTexture.png";
-            s.Width = 48;
-            s.Height = 48;
+            s.Width = 40;
+            s.Height = 40;
             s.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
-            s.Y = 35;
+            s.Y = 32;
             s.Rotation = angle;
             rotRow.AddChild(s);
         }
@@ -151,6 +151,8 @@ internal class SpriteScreen : FrameworkElement
         // alpha-modified region is visible as a cutout / mask / replace.
         AddLabel(container, "Blend, alpha-only on render-target Container (SubtractAlpha, ReplaceAlpha, MinAlpha):");
         var renderTargetRow = AddRow(container);
+        renderTargetRow.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        renderTargetRow.Height = 64;
         foreach (var blend in new[]
         {
             Gum.RenderingLibrary.Blend.SubtractAlpha,
