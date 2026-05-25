@@ -1,12 +1,21 @@
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Animation;
+using RenderingLibrary.Math;
 using SkiaSharp;
 using System;
 using System.Drawing;
 
 namespace SkiaGum.Renderables;
 
-public class NineSlice : RenderableShapeBase, ICloneable, ITextureCoordinate
+public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureCoordinate
 {
+    /// <summary>
+    /// Shared AnimationChain playback state. The constructor wires
+    /// <see cref="AnimationChainLogic.ApplyFrame"/> to copy the active frame's
+    /// texture and (UV-derived) source rectangle onto this NineSlice.
+    /// </summary>
+    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+
     // Nearest-neighbour sampling. Linear filtering bleeds adjacent-section texels
     // across the boundary between two sections of the nine-slice source texture,
     // producing visible seams; nearest-neighbour samples a single texel per output
@@ -20,6 +29,42 @@ public class NineSlice : RenderableShapeBase, ICloneable, ITextureCoordinate
         // drawn nine-slice red once we route Color through a Modulate filter.
         // White is the no-tint identity for SKBlendMode.Modulate.
         Color = SKColors.White;
+
+        AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+    }
+
+    void ApplyAnimationFrame(Gum.Graphics.Animation.AnimationFrame frame)
+    {
+        Texture = frame.Texture;
+
+        if (frame.Texture != null)
+        {
+            SKBitmap tex = frame.Texture;
+            int left = MathFunctions.RoundToInt(frame.LeftCoordinate * tex.Width);
+            int right = MathFunctions.RoundToInt(frame.RightCoordinate * tex.Width);
+            int top = MathFunctions.RoundToInt(frame.TopCoordinate * tex.Height);
+            int bottom = MathFunctions.RoundToInt(frame.BottomCoordinate * tex.Height);
+
+            // NineSlice does not honour FlipHorizontal/FlipVertical per-slice at
+            // render time the way Sprite does — slices each draw with their own
+            // src rect math — so we always store the canonical (positive) rect.
+            // If flip support is added later, switch to Sprite's swap pattern.
+            SourceRectangle = new Rectangle(left, top, right - left, bottom - top);
+        }
+        else
+        {
+            SourceRectangle = null;
+        }
+    }
+
+    /// <inheritdoc/>
+    public bool AnimateSelf(double secondDifference)
+    {
+        if (!Visible)
+        {
+            return false;
+        }
+        return AnimationLogic.AnimateSelf(secondDifference);
     }
 
     public SKBitmap? Texture
