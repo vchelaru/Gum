@@ -105,6 +105,7 @@ public class BasicShapes
         AddNavButton("Rectangles", () => new RectanglesScreen());
         AddNavButton("Polygons", () => new PolygonsScreen());
         AddNavButton("Arcs", () => new ArcsScreen());
+        AddNavButton("Sprite", () => new SpriteScreen());
 
         AddFitModeRadio("Zoom", isChecked: true, () =>
         {

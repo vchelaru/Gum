@@ -100,15 +100,8 @@ internal class SpriteScreen : FrameworkElement
         }
 
         // Rotation — center-pivot the sprites (YOrigin=Center, Y=row_height/2)
-        // so they rotate around their own middle. With the default top-left
-        // pivot, a 25-deg rotation drifts the visible body upward and overlaps
-        // the label above. Row is fixed to 64 px to match the Flipping and Alpha
-        // rows above; 40-px sprites have a ~53 px rotated bounding box
-        // (40 * (cos25 + sin25)) so they fit with room to spare.
         AddLabel(container, "Rotation (0, 25, 90, 180 degrees):");
         var rotRow = AddRow(container);
-        rotRow.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        rotRow.Height = 64;
         foreach (var angle in new[] { 0f, 25f, 90f, 180f })
         {
             var s = new SpriteRuntime();
@@ -116,7 +109,7 @@ internal class SpriteScreen : FrameworkElement
             s.Width = 40;
             s.Height = 40;
             s.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
-            s.Y = 32;
+            s.Y = 14;
             s.Rotation = angle;
             rotRow.AddChild(s);
         }
@@ -143,16 +136,13 @@ internal class SpriteScreen : FrameworkElement
             blendRow.AddChild(s);
         }
 
-        // Alpha-only blends on a render-target Container. Each cell is a
-        // ContainerRuntime with IsRenderTarget=true holding two sprites: the
-        // bear renders normally as the underlying layer, then a smaller bear
-        // with the alpha-only Blend punches/replaces/mins the alpha of that
-        // layer. When the container composites onto the screen, the
-        // alpha-modified region is visible as a cutout / mask / replace.
+        // Alpha-only blends — each cell is a render-target Container holding a
+        // red rectangle as the underlying layer, then a bear sprite on top with
+        // the alpha-only Blend modifying that rectangle's alpha per pixel.
+        // SubtractAlpha punches a hole; ReplaceAlpha overwrites alpha with the
+        // bear's alpha; MinAlpha keeps whichever alpha is lower.
         AddLabel(container, "Blend, alpha-only on render-target Container (SubtractAlpha, ReplaceAlpha, MinAlpha):");
-        var renderTargetRow = AddRow(container);
-        renderTargetRow.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        renderTargetRow.Height = 64;
+        var alphaBlendRow = AddRow(container);
         foreach (var blend in new[]
         {
             Gum.RenderingLibrary.Blend.SubtractAlpha,
@@ -160,27 +150,41 @@ internal class SpriteScreen : FrameworkElement
             Gum.RenderingLibrary.Blend.MinAlpha,
         })
         {
-            var renderTarget = new ContainerRuntime();
-            renderTarget.IsRenderTarget = true;
-            renderTarget.Width = 64;
-            renderTarget.Height = 64;
+            var cell = new ContainerRuntime();
+            cell.IsRenderTarget = true;
+            cell.Width = 32;
+            cell.Height = 32;
 
-            var underlying = new SpriteRuntime();
-            underlying.SourceFileName = "BearTexture.png";
-            underlying.Width = 64;
-            underlying.Height = 64;
-            renderTarget.AddChild(underlying);
+            // TODO: switch to RectangleRuntime + FillColor once Apos.Shapes is
+            // linked into this sample (see #2811 / GUM002 migration). Until
+            // then, ColoredRectangleRuntime is the only built-in solid-color
+            // rect that ships without the shape runtime dependency.
+#pragma warning disable CS0618 // ColoredRectangleRuntime is obsolete
+            var redBackground = new ColoredRectangleRuntime();
+#pragma warning restore CS0618
+            redBackground.Width = 32;
+            redBackground.Height = 32;
+            redBackground.Color = Color.Red;
+            // MinAlpha cell only: drop the underlying alpha to 128 so the
+            // result is visibly distinct from ReplaceAlpha. ReplaceAlpha
+            // overwrites with the bear's alpha (opaque bear → 255), while
+            // MinAlpha keeps the lower of the two (min(128, 255) = 128, so
+            // the bear silhouette renders at half opacity instead of fully
+            // opaque). With alpha=255 underlying, the two cells look identical.
+            if (blend == Gum.RenderingLibrary.Blend.MinAlpha)
+            {
+                redBackground.Alpha = 128;
+            }
+            cell.AddChild(redBackground);
 
             var alphaMasker = new SpriteRuntime();
             alphaMasker.SourceFileName = "BearTexture.png";
-            alphaMasker.Width = 32;
-            alphaMasker.Height = 32;
-            alphaMasker.X = 16;
-            alphaMasker.Y = 16;
+            alphaMasker.Width = 64;
+            alphaMasker.Height = 64;
             alphaMasker.Blend = blend;
-            renderTarget.AddChild(alphaMasker);
+            cell.AddChild(alphaMasker);
 
-            renderTargetRow.AddChild(renderTarget);
+            alphaBlendRow.AddChild(cell);
         }
 
         // AnimationChain-driven sprite — same .achx pipeline NineSliceScreen uses.
