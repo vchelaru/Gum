@@ -30,9 +30,9 @@ internal class SpriteScreen : FrameworkElement
 
         // Default sprite at native size — PercentageOfSourceFile + Width/Height = 100
         // means "use the texture's own pixel dimensions".
-        AddSectionLabel(page, "Default sprite at native size (gum-logo-normal-64.png):");
+        AddSectionLabel(page, "Default sprite at native size (BearTexture.png):");
         var native = new SpriteRuntime();
-        native.SourceFileName = "resources\\gum-logo-normal-64.png";
+        native.SourceFileName = "resources\\BearTexture.png";
         native.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
         native.HeightUnits = DimensionUnitType.PercentageOfSourceFile;
         native.Width = 100;
@@ -46,7 +46,7 @@ internal class SpriteScreen : FrameworkElement
         foreach (var size in new[] { 32, 64, 128 })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "resources\\gum-logo-normal-64.png";
+            s.SourceFileName = "resources\\BearTexture.png";
             s.Width = size;
             s.Height = size;
             sizesRow.AddChild(s);
@@ -72,7 +72,7 @@ internal class SpriteScreen : FrameworkElement
         foreach (var tint in new[] { Color.White, Color.Red, Color.Lime, Color.SkyBlue })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "resources\\gum-logo-normal-64.png";
+            s.SourceFileName = "resources\\BearTexture.png";
             s.Width = 64;
             s.Height = 64;
             s.Color = tint;
@@ -86,7 +86,7 @@ internal class SpriteScreen : FrameworkElement
         foreach (var alpha in new[] { 64, 128, 192, 255 })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "resources\\gum-logo-normal-64.png";
+            s.SourceFileName = "resources\\BearTexture.png";
             s.Width = 64;
             s.Height = 64;
             s.Alpha = alpha;
@@ -100,7 +100,7 @@ internal class SpriteScreen : FrameworkElement
         foreach (var (h, v) in new[] { (false, false), (true, false), (false, true), (true, true) })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "resources\\gum-logo-normal-64.png";
+            s.SourceFileName = "resources\\BearTexture.png";
             s.Width = 64;
             s.Height = 64;
             s.FlipHorizontal = h;
@@ -115,7 +115,7 @@ internal class SpriteScreen : FrameworkElement
         foreach (var angle in new[] { 0f, 25f, 90f, 180f })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "resources\\gum-logo-normal-64.png";
+            s.SourceFileName = "resources\\BearTexture.png";
             s.Width = 40;
             s.Height = 40;
             s.YOrigin = VerticalAlignment.Center;
