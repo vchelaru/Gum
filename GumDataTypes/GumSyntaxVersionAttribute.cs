@@ -26,12 +26,9 @@ public class GumSyntaxVersionAttribute : Attribute
     /// Version 0 is the baseline (no breaking changes from the pre-attribute era).
     /// Version 1 introduced the unified <c>Gum.GueDeriving</c> namespace for runtime classes
     /// (non-breaking; old namespaces remain via <c>[Obsolete]</c> shims).
-    /// Version 2 introduced the fill/stroke two-slot model on shape runtimes: the role
-    /// interface <c>ICircleRenderable</c> was removed and replaced by
-    /// <c>IFilledCircleRenderable</c> / <c>IStrokedCircleRenderable</c> (and matching
-    /// rectangle role interfaces), with shape runtimes now holding two renderables drawn
-    /// on the same frame. See <c>.claude/designs/runtime-unification/FillStrokeTwoSlotModel.md</c>
-    /// and PR #2769 / issue #2768.
+    /// Version 2 collapses <c>ColoredCircleRuntime</c>/<c>ColoredRectangleRuntime</c>/<c>RoundedRectangleRuntime</c>
+    /// into <c>CircleRuntime</c>/<c>RectangleRuntime</c> and exposes <c>FillColor</c>,
+    /// <c>StrokeColor</c>, and <c>StrokeWidth</c> on them. See PR #2769 / issue #2768.
     /// </summary>
     public int Version;
 }
