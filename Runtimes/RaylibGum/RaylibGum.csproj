@@ -41,7 +41,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainLogic.cs" Link="Animation\AnimationChainLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" Link="Animation\SpriteAnimationLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\IAnimatable.cs" Link="Renderables\IAnimatable.cs" />
-		<Compile Include="..\..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="GueDeriving\RuntimeObjectCreator.cs" />
+		<Compile Include="..\..\Gum\Wireframe\FallbackRenderableFactory.cs" Link="GueDeriving\FallbackRenderableFactory.cs" />
 
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\**\*.cs" Link="Forms\Controls\%(RecursiveDir)%(Filename)%(Extension)" />
 

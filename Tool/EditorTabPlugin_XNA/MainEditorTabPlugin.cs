@@ -329,7 +329,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     private IRenderableIpso? HandleCreateRenderableForType(string type)
     {
-        return RuntimeObjectCreator.TryHandleAsBaseType(type, SystemManagers.Default) as IRenderableIpso;
+        return FallbackRenderableFactory.TryHandleAsBaseType(type, SystemManagers.Default) as IRenderableIpso;
     }
 
     private GraphicalUiElement? HandleCreateGraphicalUiElement(ElementSave elementSave)

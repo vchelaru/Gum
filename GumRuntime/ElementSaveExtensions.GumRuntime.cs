@@ -42,6 +42,20 @@ namespace GumRuntime
             }
         }
 
+        /// <summary>
+        /// Registers a factory that produces a strongly-typed <see cref="GraphicalUiElement"/>
+        /// wrapper (e.g. <c>ContainerRuntime</c>, <c>SpriteRuntime</c>, <c>CircleRuntime</c>)
+        /// for the given base-type name. This is the <b>primary</b> way Gum builds the visual
+        /// tree: the wrapper's constructor installs its own inner renderable via
+        /// <c>SetContainedObject</c>, so its rendering, layout, and behavior are fully its own.
+        /// </summary>
+        /// <remarks>
+        /// Prefer this over <see cref="CustomCreateGraphicalComponentFunc"/> for every new
+        /// base type. The custom-func path is a fallback for cases where no strongly-typed
+        /// wrapper has been registered; see <c>Gum.Wireframe.FallbackRenderableFactory</c>
+        /// and <see href="https://github.com/vchelaru/Gum/issues/2915">issue #2915</see> for
+        /// the architectural background.
+        /// </remarks>
         public static void RegisterGueInstantiation<T>(string elementName, Func<T> templateFunc) where T : GraphicalUiElement
         {
             mElementToGueTypeFuncs[elementName] = templateFunc;
@@ -230,6 +244,28 @@ namespace GumRuntime
             graphicalElement.AddStates(elementSave.States);
         }
 
+        /// <summary>
+        /// Backend-supplied fallback that produces the inner <see cref="IRenderable"/> for a
+        /// <see cref="GraphicalUiElement"/> when the primary registration path
+        /// (<see cref="RegisterGueInstantiation{T}"/>) did not already supply one. Runtime
+        /// backends typically wire this to <c>Gum.Wireframe.FallbackRenderableFactory</c>
+        /// (or a thin wrapper around it); the Gum tool wires its own plugin-aware
+        /// implementation for editor wireframe preview.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This is the <b>secondary</b> path. It only fires from
+        /// <see cref="CreateGraphicalComponent(GraphicalUiElement, ElementSave, ISystemManagers)"/>
+        /// when a wrapper's <c>RenderableComponent</c> is still null after construction —
+        /// rare for registered base types whose wrappers self-install their renderable.
+        /// </para>
+        /// <para>
+        /// New base types should be added via <see cref="RegisterGueInstantiation{T}"/>, not
+        /// by extending this delegate's backing factory. See <c>FallbackRenderableFactory</c>'s
+        /// remarks and <see href="https://github.com/vchelaru/Gum/issues/2915">issue #2915</see>
+        /// for why the two paths exist and the plan to collapse them.
+        /// </para>
+        /// </remarks>
         public static Func<string, ISystemManagers, IRenderable>? CustomCreateGraphicalComponentFunc { get; set; }
 
         public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, ElementSave elementSave, ISystemManagers systemManagers)
