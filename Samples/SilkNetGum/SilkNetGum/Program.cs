@@ -317,6 +317,12 @@ unsafe class Program
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
+            // GumService.Update wants total elapsed seconds since startup (on
+            // non-XNALIKE backends the engine computes the per-frame delta as
+            // `currentTotal - previousTotal`). `sw` above is reset every second
+            // for FPS reporting, so we keep a separate monotonic clock here.
+            Stopwatch totalTime = new Stopwatch();
+            totalTime.Start();
             while (running)
             {
 
@@ -373,6 +379,11 @@ unsafe class Program
                 // canvas.Clear(SKColors.Cyan);
                 //_renderer.Render(canvas);
 
+
+                // Per-frame Update drives AnimateSelf (and any other Forms
+                // input/activity pumps). Without this the .achx animation row
+                // on SpriteScreen shows the first frame and never advances.
+                GumService.Default.Update(totalTime.Elapsed.TotalSeconds);
 
                 Draw();
 

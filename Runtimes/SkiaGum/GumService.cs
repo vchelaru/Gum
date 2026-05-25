@@ -130,4 +130,23 @@ public class GumService
     {
         SystemManagers.Default.Draw();
     }
+
+    private double _previousTotalSeconds;
+    private bool _hasReceivedUpdate;
+
+    /// <summary>
+    /// Per-frame tick. Call once per frame, before <see cref="Draw"/>, with the total
+    /// number of seconds elapsed since the application started. Drives AnimateSelf on
+    /// the root and (via recursion) every descendant — without it, AnimationChain
+    /// playback won't advance.
+    /// </summary>
+    /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
+    public void Update(double totalSeconds)
+    {
+        double delta = _hasReceivedUpdate ? totalSeconds - _previousTotalSeconds : 0;
+        _previousTotalSeconds = totalSeconds;
+        _hasReceivedUpdate = true;
+
+        Root?.AnimateSelf(delta);
+    }
 }
