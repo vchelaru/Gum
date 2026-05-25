@@ -99,39 +99,40 @@ internal class SpriteScreen : FrameworkElement
             flipRow.AddChild(s);
         }
 
-        // Rotation — a 64-sprite rotated to 25 deg needs ~91 px of bounding box
-        // (64 * (cos25 + sin25)). 90 px absolute keeps the row only marginally
-        // taller than the flip row above and avoids the conspicuous gap that
-        // RelativeToChildren produced with rotated children.
+        // Rotation — center-pivot the sprites (YOrigin=Center, Y=row_height/2)
+        // so they rotate around their own middle. With the default top-left
+        // pivot, a 25-deg rotation drifts the visible body upward and overlaps
+        // the label above. A 48-sprite rotated 25 deg has a ~64 px bounding
+        // box (48 * (cos25 + sin25)), so 70 px absolute fits all angles with
+        // a few px of breathing room and stays close to the flip row's height.
         AddLabel(container, "Rotation (0, 25, 90, 180 degrees):");
         var rotRow = AddRow(container);
         rotRow.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        rotRow.Height = 90;
-        rotRow.StackSpacing = 40;
+        rotRow.Height = 70;
         foreach (var angle in new[] { 0f, 25f, 90f, 180f })
         {
             var s = new SpriteRuntime();
             s.SourceFileName = "BearTexture.png";
-            s.Width = 64;
-            s.Height = 64;
+            s.Width = 48;
+            s.Height = 48;
+            s.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+            s.Y = 35;
             s.Rotation = angle;
             rotRow.AddChild(s);
         }
 
-        // Blend modes — exercises the SpriteRuntime.Blend property across every
-        // value of the Gum.RenderingLibrary.Blend enum. Each cell uses the same
-        // semi-transparent sprite so the visual differences come from the blend
-        // mode alone, not from the source pixels.
-        AddLabel(container, "Blend (Normal, Additive, Replace, SubtractAlpha, ReplaceAlpha, MinAlpha):");
+        // Blend modes — Normal/Additive/Replace are the only blends safe in
+        // normal rendering. The three alpha-only blends (SubtractAlpha,
+        // ReplaceAlpha, MinAlpha) operate on the alpha of the underlying target
+        // and either draw as pure black or invisible outside a render target,
+        // so they are demoed below in their own row.
+        AddLabel(container, "Blend, normal rendering (Normal, Additive, Replace):");
         var blendRow = AddRow(container);
         foreach (var blend in new[]
         {
             Gum.RenderingLibrary.Blend.Normal,
             Gum.RenderingLibrary.Blend.Additive,
             Gum.RenderingLibrary.Blend.Replace,
-            Gum.RenderingLibrary.Blend.SubtractAlpha,
-            Gum.RenderingLibrary.Blend.ReplaceAlpha,
-            Gum.RenderingLibrary.Blend.MinAlpha,
         })
         {
             var s = new SpriteRuntime();
@@ -140,6 +141,44 @@ internal class SpriteScreen : FrameworkElement
             s.Height = 64;
             s.Blend = blend;
             blendRow.AddChild(s);
+        }
+
+        // Alpha-only blends on a render-target Container. Each cell is a
+        // ContainerRuntime with IsRenderTarget=true holding two sprites: the
+        // bear renders normally as the underlying layer, then a smaller bear
+        // with the alpha-only Blend punches/replaces/mins the alpha of that
+        // layer. When the container composites onto the screen, the
+        // alpha-modified region is visible as a cutout / mask / replace.
+        AddLabel(container, "Blend, alpha-only on render-target Container (SubtractAlpha, ReplaceAlpha, MinAlpha):");
+        var renderTargetRow = AddRow(container);
+        foreach (var blend in new[]
+        {
+            Gum.RenderingLibrary.Blend.SubtractAlpha,
+            Gum.RenderingLibrary.Blend.ReplaceAlpha,
+            Gum.RenderingLibrary.Blend.MinAlpha,
+        })
+        {
+            var renderTarget = new ContainerRuntime();
+            renderTarget.IsRenderTarget = true;
+            renderTarget.Width = 64;
+            renderTarget.Height = 64;
+
+            var underlying = new SpriteRuntime();
+            underlying.SourceFileName = "BearTexture.png";
+            underlying.Width = 64;
+            underlying.Height = 64;
+            renderTarget.AddChild(underlying);
+
+            var alphaMasker = new SpriteRuntime();
+            alphaMasker.SourceFileName = "BearTexture.png";
+            alphaMasker.Width = 32;
+            alphaMasker.Height = 32;
+            alphaMasker.X = 16;
+            alphaMasker.Y = 16;
+            alphaMasker.Blend = blend;
+            renderTarget.AddChild(alphaMasker);
+
+            renderTargetRow.AddChild(renderTarget);
         }
 
         // AnimationChain-driven sprite — same .achx pipeline NineSliceScreen uses.
