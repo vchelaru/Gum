@@ -38,6 +38,14 @@ public class CustomSetPropertyOnRenderable
             case nameof(RenderableShapeBase.Alpha):
                 renderableBase.Alpha = (int)value;
                 return true;
+            // .gumx stores Blend as the non-nullable Gum.RenderingLibrary.Blend enum, but the
+            // property is Blend?. SetPropertyThroughReflection's Convert.ChangeType fallback
+            // throws on enum -> Nullable<enum>, so the assignment has to land here. See the
+            // SilkNetGum sample crash that prompted this branch — every Standards/*.gutx with
+            // a default Blend variable hit the reflection path before this case was added.
+            case nameof(RenderableShapeBase.Blend):
+                renderableBase.Blend = (Blend)value;
+                return true;
             case nameof(RenderableShapeBase.Alpha1):
                 renderableBase.Alpha1 = (int)value;
                 return true;
@@ -485,7 +493,8 @@ public class CustomSetPropertyOnRenderable
         }
         else if(containedObjectAsIpso is VectorSprite asSvg)
         {
-            //handled = TrySetPropertiesOnRenderableBase(asSvg, graphicalUiElement, propertyName, value);
+            // VectorSprite is not a RenderableShapeBase, so it stays on its dedicated handler
+            // plus the reflection fallback. No shared shape-base properties (Blend, etc.) apply.
             if(!handled)
             {
                 handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
@@ -493,6 +502,14 @@ public class CustomSetPropertyOnRenderable
         }
         else if(containedObjectAsIpso is Sprite asSprite)
         {
+            // Route base-class properties (Blend, gradient/dropshadow channels, etc.) first.
+            // These branches historically skipped TrySetPropertiesOnRenderableBase and relied
+            // on the reflection fallback, which works for int/float properties but throws on
+            // enum -> Nullable<enum> (the Blend case).
+            if(!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asSprite, graphicalUiElement, propertyName, value);
+            }
             if(!handled)
             {
                 handled = TrySetPropertyOnSprite(asSprite, graphicalUiElement, propertyName, value);
@@ -502,11 +519,19 @@ public class CustomSetPropertyOnRenderable
         {
             if(!handled)
             {
+                handled = TrySetPropertiesOnRenderableBase(asNineSlice, graphicalUiElement, propertyName, value);
+            }
+            if(!handled)
+            {
                 handled = TrySetPropertyOnNineSlice(asNineSlice, graphicalUiElement, propertyName, value);
             }
         }
         else if(containedObjectAsIpso is Polygon asPolygon)
         {
+            if(!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asPolygon, graphicalUiElement, propertyName, value);
+            }
             if(!handled)
             {
                 handled = TrySetPropertyOnPolygon(asPolygon, graphicalUiElement, propertyName, value);

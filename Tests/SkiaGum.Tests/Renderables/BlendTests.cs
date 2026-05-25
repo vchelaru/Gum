@@ -1,5 +1,7 @@
 using Gum.RenderingLibrary;
+using Gum.Wireframe;
 using Shouldly;
+using SkiaGum;
 using SkiaGum.Renderables;
 using SkiaSharp;
 
@@ -123,6 +125,64 @@ public class BlendTests
         using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 100, 100), absoluteRotation: 0);
 
         paint.BlendMode.ShouldBe(SKBlendMode.Plus);
+    }
+
+    // Regression tests for the .gumx loading path that bit on first sample run:
+    // a Standards/RoundedRectangle.gutx (and friends) include a "Blend" default variable
+    // typed as the Gum.RenderingLibrary.Blend enum. The .gumx loader calls SetProperty with
+    // the unboxed non-nullable enum value, which falls through to CustomSetPropertyOnRenderable.
+    // Before this branch, that path landed on GraphicalUiElement.SetPropertyThroughReflection,
+    // which calls Convert.ChangeType(enumValue, typeof(Blend?)) and throws
+    // InvalidCastException because Convert.ChangeType doesn't support Nullable<T>.
+    // Direct-property unit tests didn't cover this because they bypass the reflection path.
+    [Fact]
+    public void SetPropertyOnRenderable_BlendOnSprite_AssignsAdditive()
+    {
+        Sprite renderable = new();
+        GraphicalUiElement gue = new(renderable);
+
+        CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
+            renderable, gue, nameof(RenderableShapeBase.Blend), Blend.Additive);
+
+        renderable.Blend.ShouldBe(Blend.Additive);
+    }
+
+    [Fact]
+    public void SetPropertyOnRenderable_BlendOnNineSlice_AssignsAdditive()
+    {
+        NineSlice renderable = new();
+        GraphicalUiElement gue = new(renderable);
+
+        CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
+            renderable, gue, nameof(RenderableShapeBase.Blend), Blend.Additive);
+
+        renderable.Blend.ShouldBe(Blend.Additive);
+    }
+
+    [Fact]
+    public void SetPropertyOnRenderable_BlendOnRoundedRectangle_AssignsNormal()
+    {
+        // Exact reproducer for the stack trace in #2922 follow-up: Standards/RoundedRectangle.gutx
+        // sets Blend = Normal as a default variable and crashed the SilkNetGum sample on load.
+        RoundedRectangle renderable = new();
+        GraphicalUiElement gue = new(renderable);
+
+        Should.NotThrow(() => CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
+            renderable, gue, nameof(RenderableShapeBase.Blend), Blend.Normal));
+
+        renderable.Blend.ShouldBe(Blend.Normal);
+    }
+
+    [Fact]
+    public void SetPropertyOnRenderable_BlendOnPolygon_AssignsAdditive()
+    {
+        Polygon renderable = new();
+        GraphicalUiElement gue = new(renderable);
+
+        CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
+            renderable, gue, nameof(RenderableShapeBase.Blend), Blend.Additive);
+
+        renderable.Blend.ShouldBe(Blend.Additive);
     }
 
     private sealed class TestableSprite : Sprite
