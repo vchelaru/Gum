@@ -5,7 +5,7 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 
-namespace MonoGameGumShapesGallery.Screens;
+namespace GumShapesGallery.Screens;
 
 // CircleRuntime survey on the shapes-package side (issue #2761 / PR #2767). This sample
 // references MonoGameGumShapes, so RenderableRegistry resolves ICircleRenderable to the

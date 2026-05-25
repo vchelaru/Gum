@@ -5,7 +5,7 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 
-namespace MonoGameGumShapesGallery.Screens;
+namespace GumShapesGallery.Screens;
 
 // RectangleRuntime survey on the shapes-package side (issues #2768 / #2814). MonoGameGumShapes
 // overrides both core rectangle slots with Apos RoundedRectangle — IsFilled=true for fill,

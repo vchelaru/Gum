@@ -6,11 +6,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MonoGameAndGum.Renderables;
 using MonoGameGum;
-using MonoGameGumShapesGallery.Screens;
+using GumShapesGallery.Screens;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 
-namespace MonoGameGumShapesGallery;
+namespace GumShapesGallery;
 
 // Visual smoke test + consumer-facing example for Gum.Shapes.MonoGame. The intent is that
 // the code in this file is exactly what a consumer would write to get Apos-shape runtimes
@@ -21,7 +21,7 @@ namespace MonoGameGumShapesGallery;
 // The sample is split into pages, each a FrameworkElement-derived screen under Screens/.
 // A horizontal nav strip of Forms Buttons across the top swaps the active page at
 // runtime. Add a page by creating a new Screen and registering it in BuildNavStrip.
-public class Game1 : Game
+public class GumShapesGalleryGame : Game
 {
     private const int BackBufferWidth = 1280;
     private const int BackBufferHeight = 1000;
@@ -34,7 +34,7 @@ public class Game1 : Game
     private TextRuntime? _drawCountOverlay;
     private KeyboardState _previousKeyboardState;
 
-    public Game1()
+    public GumShapesGalleryGame()
     {
         _graphics = new GraphicsDeviceManager(this);
         _graphics.PreferredBackBufferWidth = BackBufferWidth;

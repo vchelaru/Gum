@@ -4,7 +4,7 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 
-namespace MonoGameGumShapesGallery.Screens;
+namespace GumShapesGallery.Screens;
 
 // Stress screen for the cross-batch-type alternation pattern that the
 // BatchKeyGroupedOrderer (issue #2879) exists to fix. Each row contains:
