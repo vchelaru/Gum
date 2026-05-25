@@ -3,7 +3,7 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 
-namespace MonoGameGumShapesGallery.Screens;
+namespace GumShapesGallery.Screens;
 
 // Four rows of five cells each, all using runtime types (no raw Apos.Shapes API):
 //   1. ColoredCircleRuntime - solid / gradient / stroked variants.

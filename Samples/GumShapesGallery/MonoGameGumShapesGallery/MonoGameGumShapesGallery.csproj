@@ -20,15 +20,24 @@
     <!-- Source-reference the runtime projects so the sample exercises the in-repo code paths
          (raw Apos.Shapes for the gallery grid; Gum's RoundedRectangleRuntime wrapper for the
          per-corner radii rows). -->
-    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
-    <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+    <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shared sample sources live next to this host project as plain .cs files; wildcard
+         them in so each backend host compiles its own copy. Keeping it as a source folder
+         (rather than a Common csproj) avoids forcing the shared code to pick a single
+         engine package — each host gets the source compiled against its own KNI/MonoGame
+         references. -->
+    <Compile Include="..\GumShapesGalleryCommon\**\*.cs" LinkBase="Shared" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Mirror what the Gum.Shapes.MonoGame NuGet ships in buildTransitive for DesktopGL:
          copy the pre-built apos-shapes.xnb into the sample's Content/ output folder. -->
-    <Content Include="..\..\Runtimes\GumShapes\buildTransitive\MonoGame\Content\DesktopGL\apos-shapes.xnb"
+    <Content Include="..\..\..\Runtimes\GumShapes\buildTransitive\MonoGame\Content\DesktopGL\apos-shapes.xnb"
              Link="Content/apos-shapes.xnb"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
