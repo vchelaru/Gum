@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.Managers;
 using Gum.ProjectServices.CodeGeneration;
 using Newtonsoft.Json;
 using Shouldly;
@@ -132,5 +133,34 @@ public class CodeGeneratorGetInheritanceTests
         string? result = CodeGenerator.GetInheritance(screen, settings);
 
         result.ShouldBe("SomeOtherScreen");
+    }
+
+    [Fact]
+    public void GetInheritance_MonoGameForms_ComponentInheritingFromNonContainerStandard_ReturnsDescriptiveError()
+    {
+        StandardElementSave text = new StandardElementSave { Name = "Text" };
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(text);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        try
+        {
+            ComponentSave component = new ComponentSave();
+            component.Name = "Components/MyTextLabel";
+            component.BaseType = "Text";
+
+            CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+            {
+                OutputLibrary = OutputLibrary.MonoGameForms
+            };
+
+            string? result = CodeGenerator.GetInheritance(component, settings);
+
+            result.ShouldBe("Invalid inheritance - When using Forms codegen, Components/MyTextLabel must either inherit from Container, or must have Forms behaviors. It currently inherits from Text.");
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
     }
 }
