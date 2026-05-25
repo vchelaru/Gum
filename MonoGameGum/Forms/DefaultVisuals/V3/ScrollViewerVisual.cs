@@ -295,6 +295,22 @@ public class ScrollViewerVisual : InteractiveGue
             this.FormsControlAsObject = new ScrollViewer(this);
             RefreshMarginsFromScrollBarVisibility();
         }
+
+        OnAfterInitialize();
+    }
+
+    /// <summary>
+    /// Called once after the visual tree, states, and Forms control have been initialized.
+    /// Themes that subclass <see cref="ScrollViewerVisual"/> can override this to take final
+    /// ownership of layout properties (e.g. inset <see cref="ScrollAndClipContainer"/>,
+    /// reposition <see cref="VerticalScrollBarInstance"/>) without being blindsided by the
+    /// initial <see cref="RefreshMarginsFromScrollBarVisibility"/> call. Default implementation
+    /// is a no-op. Note that scroll-bar visibility state changes will still re-invoke
+    /// <see cref="RefreshClipContainerMargins"/> and <see cref="RefreshScrollBarLengths"/> later;
+    /// override those to control properties that V3 would otherwise overwrite.
+    /// </summary>
+    protected virtual void OnAfterInitialize()
+    {
     }
 
     private void CreateStates()
@@ -373,33 +389,61 @@ public class ScrollViewerVisual : InteractiveGue
 
     private void RefreshMarginsFromScrollBarVisibility()
     {
+        RefreshClipContainerMargins();
+        RefreshScrollBarLengths();
+    }
+
+    /// <summary>
+    /// Refreshes <see cref="ClipContainerContainer"/>'s Width and Height to account for the
+    /// space taken by each scroll bar. Themes can override this to take control of the clip
+    /// container's sizing independently of the scroll bars' lengths (see
+    /// <see cref="RefreshScrollBarLengths"/>).
+    /// </summary>
+    protected virtual void RefreshClipContainerMargins()
+    {
         if (VerticalScrollBarInstance.Parent == ScrollAndClipContainer)
         {
-            float margin = 0;
             // Check the parent to verify that the user hasn't removed the ScrollBar
-            if (VerticalScrollBarInstance.Visible)
-            {
-                margin = VerticalScrollBarInstance.GetAbsoluteWidth();
-            }
+            float margin = VerticalScrollBarInstance.Visible
+                ? VerticalScrollBarInstance.GetAbsoluteWidth()
+                : 0;
             ClipContainerContainer.Width = -margin;
-            if(HorizontalScrollBarInstance != null)
-            {
-                HorizontalScrollBarInstance.Width = -margin;
-            }
         }
 
         if (HorizontalScrollBarInstance.Parent == ScrollAndClipContainer)
         {
-            float margin = 0;
-            if (HorizontalScrollBarInstance.Visible)
-            {
-                margin = HorizontalScrollBarInstance.GetAbsoluteHeight();
-            }
+            float margin = HorizontalScrollBarInstance.Visible
+                ? HorizontalScrollBarInstance.GetAbsoluteHeight()
+                : 0;
             ClipContainerContainer.Height = -margin;
-            if(VerticalScrollBarInstance != null)
-            {
-                VerticalScrollBarInstance.Height = -margin;
-            }
+        }
+    }
+
+    /// <summary>
+    /// Refreshes each scroll bar's length so the two bars don't overlap in the corner —
+    /// the horizontal bar's Width is shortened by the vertical bar's width, and the
+    /// vertical bar's Height is shortened by the horizontal bar's height. Themes can
+    /// override this to take control of scroll-bar sizing independently of the clip
+    /// container's sizing (see <see cref="RefreshClipContainerMargins"/>).
+    /// </summary>
+    protected virtual void RefreshScrollBarLengths()
+    {
+        if (VerticalScrollBarInstance.Parent == ScrollAndClipContainer
+            && HorizontalScrollBarInstance != null)
+        {
+            float margin = VerticalScrollBarInstance.Visible
+                ? VerticalScrollBarInstance.GetAbsoluteWidth()
+                : 0;
+            HorizontalScrollBarInstance.Width = -margin;
+        }
+
+        if (HorizontalScrollBarInstance.Parent == ScrollAndClipContainer
+            && VerticalScrollBarInstance != null)
+        {
+            float margin = HorizontalScrollBarInstance.Visible
+                ? HorizontalScrollBarInstance.GetAbsoluteHeight()
+                : 0;
+            VerticalScrollBarInstance.Height = -margin;
         }
     }
 
