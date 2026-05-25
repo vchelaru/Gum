@@ -676,7 +676,7 @@ public class CodeGenerator
                     // else it is something like a NineSlice-inheriting object, so don't return a forms inheritance
                     else if (ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
                     {
-                        inheritance = "Invalid inheritance - Forms controls must either inherit from Container, or must have Forms behaviors";
+                        inheritance = $"Invalid inheritance - When using Forms codegen, {element.Name} must either inherit from Container, or must have Forms behaviors. It currently inherits from {element.BaseType}.";
                     }
                 }
 
