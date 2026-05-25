@@ -99,11 +99,14 @@ internal class SpriteScreen : FrameworkElement
             flipRow.AddChild(s);
         }
 
-        // Rotation — give the row some extra height so rotated sprites don't clip.
+        // Rotation — a 64-sprite rotated to 25 deg needs ~91 px of bounding box
+        // (64 * (cos25 + sin25)). 90 px absolute keeps the row only marginally
+        // taller than the flip row above and avoids the conspicuous gap that
+        // RelativeToChildren produced with rotated children.
         AddLabel(container, "Rotation (0, 25, 90, 180 degrees):");
         var rotRow = AddRow(container);
         rotRow.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        rotRow.Height = 100;
+        rotRow.Height = 90;
         rotRow.StackSpacing = 40;
         foreach (var angle in new[] { 0f, 25f, 90f, 180f })
         {
@@ -112,8 +115,31 @@ internal class SpriteScreen : FrameworkElement
             s.Width = 64;
             s.Height = 64;
             s.Rotation = angle;
-            s.Y = 20;
             rotRow.AddChild(s);
+        }
+
+        // Blend modes — exercises the SpriteRuntime.Blend property across every
+        // value of the Gum.RenderingLibrary.Blend enum. Each cell uses the same
+        // semi-transparent sprite so the visual differences come from the blend
+        // mode alone, not from the source pixels.
+        AddLabel(container, "Blend (Normal, Additive, Replace, SubtractAlpha, ReplaceAlpha, MinAlpha):");
+        var blendRow = AddRow(container);
+        foreach (var blend in new[]
+        {
+            Gum.RenderingLibrary.Blend.Normal,
+            Gum.RenderingLibrary.Blend.Additive,
+            Gum.RenderingLibrary.Blend.Replace,
+            Gum.RenderingLibrary.Blend.SubtractAlpha,
+            Gum.RenderingLibrary.Blend.ReplaceAlpha,
+            Gum.RenderingLibrary.Blend.MinAlpha,
+        })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "BearTexture.png";
+            s.Width = 64;
+            s.Height = 64;
+            s.Blend = blend;
+            blendRow.AddChild(s);
         }
 
         // AnimationChain-driven sprite — same .achx pipeline NineSliceScreen uses.
