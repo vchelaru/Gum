@@ -537,6 +537,15 @@ public class CustomSetPropertyOnRenderable
                 handled = TrySetPropertyOnPolygon(asPolygon, graphicalUiElement, propertyName, value);
             }
         }
+        // Catch-all for RenderableShapeBase derivatives that have no dedicated branch
+        // above (SolidRectangle, LineRectangle, LineGrid, etc.). Without this, those types
+        // skip TrySetPropertiesOnRenderableBase entirely and any RenderableShapeBase property
+        // — most notably Blend? — falls through to SetPropertyThroughReflection's
+        // Convert.ChangeType, which throws on enum -> Nullable<enum>.
+        if (!handled && containedObjectAsIpso is RenderableShapeBase asShapeBase)
+        {
+            handled = TrySetPropertiesOnRenderableBase(asShapeBase, graphicalUiElement, propertyName, value);
+        }
         if (!handled)
         {
             GraphicalUiElement.SetPropertyThroughReflection(containedObjectAsIpso, graphicalUiElement, propertyName, value);

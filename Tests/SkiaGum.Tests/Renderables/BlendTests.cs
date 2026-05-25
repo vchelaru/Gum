@@ -173,6 +173,37 @@ public class BlendTests
         renderable.Blend.ShouldBe(Blend.Normal);
     }
 
+    // SolidRectangle (internal), LineRectangle, and LineGrid have no per-type branch in
+    // CustomSetPropertyOnRenderable.SetPropertyOnRenderableFunc — they fell straight to the
+    // reflection fallback and hit the same enum -> Nullable<enum> InvalidCastException as
+    // the named-branch types. The user-reported crash was on SolidRectangle (the renderable
+    // for SolidRectangleRuntime / the "ColoredRectangle" standard mapping in SystemManagers).
+    // LineRectangle stands in for SolidRectangle in tests since SolidRectangle is internal;
+    // both exercise the same RenderableShapeBase catch-all path.
+    [Fact]
+    public void SetPropertyOnRenderable_BlendOnLineRectangle_AssignsNormal()
+    {
+        LineRectangle renderable = new();
+        GraphicalUiElement gue = new(renderable);
+
+        Should.NotThrow(() => CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
+            renderable, gue, nameof(RenderableShapeBase.Blend), Blend.Normal));
+
+        renderable.Blend.ShouldBe(Blend.Normal);
+    }
+
+    [Fact]
+    public void SetPropertyOnRenderable_BlendOnLineGrid_AssignsAdditive()
+    {
+        LineGrid renderable = new();
+        GraphicalUiElement gue = new(renderable);
+
+        CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
+            renderable, gue, nameof(RenderableShapeBase.Blend), Blend.Additive);
+
+        renderable.Blend.ShouldBe(Blend.Additive);
+    }
+
     [Fact]
     public void SetPropertyOnRenderable_BlendOnPolygon_AssignsAdditive()
     {
