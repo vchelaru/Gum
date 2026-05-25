@@ -53,6 +53,7 @@ unsafe class Program
     private static readonly Func<GraphicalUiElement>[] codeScreenFactories =
     {
         () => new SilkNetGum.Screens.NineSliceScreen(),
+        () => new SilkNetGum.Screens.SpriteScreen(),
         () => new SilkNetGum.Screens.CirclesScreen(),
         () => new SilkNetGum.Screens.RectanglesScreen(),
         () => new SilkNetGum.Screens.ArcsScreen(),
