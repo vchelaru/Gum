@@ -152,25 +152,35 @@ public class SpriteRuntime : GraphicalUiElement
             NotifyPropertyChanged(nameof(Blend));
         }
     }
+#endif
 
     /// <summary>
-    /// The Gum-specific Blend mode for the sprite.
+    /// The Gum-specific Blend mode for the sprite. Null means "use the renderer's current
+    /// blend mode" (typically alpha blending).
     /// </summary>
     public Gum.RenderingLibrary.Blend? Blend
     {
         get
         {
+#if XNALIKE
             return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedSprite.BlendState);
+#else
+            return ContainedSprite.Blend;
+#endif
         }
         set
         {
+#if XNALIKE
             if (value.HasValue)
             {
                 BlendState = value.Value.ToBlendState().ToXNA();
             }
+#else
+            ContainedSprite.Blend = value;
+            NotifyPropertyChanged();
+#endif
         }
     }
-#endif
 
     #endregion
 

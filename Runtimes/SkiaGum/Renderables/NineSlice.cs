@@ -16,6 +16,10 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
     /// </summary>
     public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
 
+    // Skia does not yet honor Blend at draw time; the property exists for API parity with the
+    // unified NineSliceRuntime, which routes its cross-platform Blend property here.
+    public Gum.RenderingLibrary.Blend? Blend { get; set; }
+
     // Nearest-neighbour sampling. Linear filtering bleeds adjacent-section texels
     // across the boundary between two sections of the nine-slice source texture,
     // producing visible seams; nearest-neighbour samples a single texel per output

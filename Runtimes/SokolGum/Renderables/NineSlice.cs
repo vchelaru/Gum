@@ -38,6 +38,10 @@ public sealed class NineSlice : RenderableBase, ITextureCoordinate, IAnimatable,
     public Rectangle? SourceRectangle { get; set; }
     public Color Color = Color.White;
 
+    // Sokol does not yet honor Blend at draw time; the property exists for API parity with the
+    // unified NineSliceRuntime, which routes its cross-platform Blend property here.
+    public Gum.RenderingLibrary.Blend? Blend { get; set; }
+
     public int Alpha { get => Color.A; set => Color.A = (byte)value; }
     public int Red   { get => Color.R; set => Color.R = (byte)value; }
     public int Green { get => Color.G; set => Color.G = (byte)value; }
