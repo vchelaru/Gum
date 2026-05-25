@@ -108,6 +108,41 @@ public class SpriteRuntimeTests
         }
     }
 
+    // Regression for AnimationFrame.ToAnimationFrame missing the SKIA texture-loading
+    // branch — texture stayed null for every animation frame on Skia, Sprite.Render
+    // early-returned, the .achx-driven animation row in the SilkNet sample rendered
+    // nothing. Fix collapses the per-backend #if branches into a single block that
+    // uses the Texture2D using-alias defined at the top of AnimationFrame.cs.
+    [Fact]
+    public void ToAnimationFrame_OnSkia_ShouldLoadTextureViaLoaderManager()
+    {
+        MockContentLoader mockLoader = new MockContentLoader();
+        IContentLoader originalLoader = LoaderManager.Self.ContentLoader;
+        LoaderManager.Self.ContentLoader = mockLoader;
+
+        try
+        {
+            Gum.Content.AnimationChain.AnimationFrameSave save = new Gum.Content.AnimationChain.AnimationFrameSave
+            {
+                TextureName = "fake_texture.png",
+                FrameLength = 0.1f,
+                LeftCoordinate = 0f,
+                RightCoordinate = 1f,
+                TopCoordinate = 0f,
+                BottomCoordinate = 1f,
+            };
+
+            AnimationFrame frame = save.ToAnimationFrame();
+
+            frame.Texture.ShouldNotBeNull();
+            mockLoader.LastLoadedName.ShouldEndWith("fake_texture.png");
+        }
+        finally
+        {
+            LoaderManager.Self.ContentLoader = originalLoader;
+        }
+    }
+
     // Regression for the IAnimatable duplication bug: IAnimatable.cs was being
     // file-linked into BOTH GumCommon AND SkiaGum, producing two distinct
     // IAnimatable types with the same FQN. GraphicalUiElement.AnimateSelf (in
