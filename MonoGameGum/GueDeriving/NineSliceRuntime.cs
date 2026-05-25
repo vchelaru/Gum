@@ -3,6 +3,7 @@ using RenderingLibrary;
 using System;
 
 #if RAYLIB
+using Gum.Graphics.Animation;
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
 using Texture2D = Raylib_cs.Texture2D;
@@ -14,6 +15,7 @@ using Color = SokolGum.Color;
 using Texture2D = SokolGum.Texture2D;
 using ContainedNineSliceType = Gum.Renderables.NineSlice;
 #elif SKIA
+using Gum.Graphics.Animation;
 using SkiaGum.Renderables;
 using Color = SkiaSharp.SKColor;
 using Texture2D = SkiaSharp.SKBitmap;
@@ -167,7 +169,6 @@ public class NineSliceRuntime : InteractiveGue
 
     #endregion
 
-#if XNALIKE || SOKOL
     #region Animation
 
     /// <summary>
@@ -209,12 +210,11 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.AnimationChains = value;
-#if XNALIKE
             if (ContainedNineSlice.AnimationLogic.UpdateToCurrentAnimationFrame())
             {
                 UpdateTextureValuesFrom(ContainedNineSlice);
             }
-#else
+#if SOKOL
             NotifyPropertyChanged();
 #endif
         }
@@ -236,7 +236,6 @@ public class NineSliceRuntime : InteractiveGue
     }
 
     #endregion
-#endif
 
     #region Source File / Texture
 
@@ -274,13 +273,10 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             base.SetProperty("SourceFile", value);
-#if XNALIKE
             if (ContainedNineSlice.AnimationLogic.UpdateToCurrentAnimationFrame())
             {
                 UpdateTextureValuesFrom(ContainedNineSlice);
             }
-            // todo - need to support .achx in raylib NineSlices
-#endif
         }
     }
 

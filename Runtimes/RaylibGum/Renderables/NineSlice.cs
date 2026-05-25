@@ -1,5 +1,7 @@
 ﻿using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Animation;
+using RenderingLibrary.Math;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +13,54 @@ using ToolsUtilitiesStandard.Helpers;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
-public class NineSlice : RenderableBase, ITextureCoordinate, ICloneable
+public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, ICloneable
 {
+    /// <summary>
+    /// Shared AnimationChain playback state. The constructor wires
+    /// <see cref="AnimationChainLogic.ApplyFrame"/> to copy the active frame's
+    /// texture and (UV-derived) source rectangle onto this NineSlice.
+    /// </summary>
+    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+
+    public NineSlice()
+    {
+        AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+    }
+
+    void ApplyAnimationFrame(Gum.Graphics.Animation.AnimationFrame frame)
+    {
+        Texture = frame.Texture;
+
+        if (frame.Texture.HasValue)
+        {
+            Texture2D tex = frame.Texture.Value;
+            int left = MathFunctions.RoundToInt(frame.LeftCoordinate * tex.Width);
+            int width = MathFunctions.RoundToInt(frame.RightCoordinate * tex.Width) - left;
+            int top = MathFunctions.RoundToInt(frame.TopCoordinate * tex.Height);
+            int height = MathFunctions.RoundToInt(frame.BottomCoordinate * tex.Height) - top;
+            SourceRectangle = new Raylib_cs.Rectangle(left, top, width, height);
+        }
+        else
+        {
+            SourceRectangle = null;
+        }
+
+        // Raylib NineSlice does not currently honour FlipHorizontal/Vertical
+        // (no FlipHorizontal field on this renderable, and DrawTextureNPatch
+        // does not support negative src rects). If/when flip support is added,
+        // copy frame.FlipHorizontal / frame.FlipVertical here.
+    }
+
+    /// <inheritdoc/>
+    public bool AnimateSelf(double secondDifference)
+    {
+        if (!Visible)
+        {
+            return false;
+        }
+        return AnimationLogic.AnimateSelf(secondDifference);
+    }
+
     public NineSlice Clone()
     {
         var newInstance = (NineSlice)this.MemberwiseClone();
