@@ -88,16 +88,20 @@ unsafe class Program
 
         currentScreenIndex = ((index % total) + total) % total;
 
-        Root?.RemoveFromManagers();
+        // Attach via AddToRoot (children of GumService.Default.Root) instead of
+        // AddToManagers — that way GumService.Default.Update walks the screen and
+        // its descendants, which is what advances AnimationChain playback on the
+        // SpriteScreen's animated bear row.
+        Root?.RemoveFromRoot();
         if (currentScreenIndex < gumxScreens.Count)
         {
-            Root = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+            Root = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
         }
         else
         {
             Root = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
-            Root.AddToManagers(SystemManagers.Default, layer: null);
         }
+        Root.AddToRoot();
 
         Root.Width = GraphicalUiElement.CanvasWidth;
         Root.Height = GraphicalUiElement.CanvasHeight;
