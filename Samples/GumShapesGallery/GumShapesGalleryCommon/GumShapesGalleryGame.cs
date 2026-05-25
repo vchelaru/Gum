@@ -3,6 +3,7 @@ using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameAndGum.Renderables;
 using MonoGameGum;
@@ -37,6 +38,13 @@ public class GumShapesGalleryGame : Game
     public GumShapesGalleryGame()
     {
         _graphics = new GraphicsDeviceManager(this);
+        // Apos.Shapes ships an SM4.0 effect. MonoGame's Reach default is lenient enough to load it,
+        // but KNI enforces profile capabilities strictly and needs an explicit FL10_0 declaration.
+#if KNI
+        _graphics.GraphicsProfile = GraphicsProfile.FL10_0;
+#else
+        _graphics.GraphicsProfile = GraphicsProfile.HiDef;
+#endif
         _graphics.PreferredBackBufferWidth = BackBufferWidth;
         _graphics.PreferredBackBufferHeight = BackBufferHeight;
         IsMouseVisible = true;

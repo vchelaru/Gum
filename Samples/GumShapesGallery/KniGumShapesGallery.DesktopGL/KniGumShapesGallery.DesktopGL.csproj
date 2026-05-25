@@ -11,7 +11,7 @@
     <RootNamespace>KniGumShapesGallery</RootNamespace>
     <AssemblyName>KniGumShapesGallery</AssemblyName>
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <DefineConstants>$(DefineConstants);DESKTOPGL</DefineConstants>
+    <DefineConstants>$(DefineConstants);KNI;DESKTOPGL</DefineConstants>
     <KniPlatform>DesktopGL</KniPlatform>
   </PropertyGroup>
 

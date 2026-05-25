@@ -7,7 +7,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>KniGumShapesGallery</RootNamespace>
     <AssemblyName>KniGumShapesGallery</AssemblyName>
-    <DefineConstants>$(DefineConstants);BLAZORGL</DefineConstants>
+    <DefineConstants>$(DefineConstants);KNI;BLAZORGL</DefineConstants>
     <KniPlatform>BlazorGL</KniPlatform>
   </PropertyGroup>
 
