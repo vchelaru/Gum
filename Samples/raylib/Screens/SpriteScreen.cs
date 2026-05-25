@@ -14,9 +14,9 @@ namespace Examples.Shapes;
 // Section order and parameter sweeps match the MG version so visual regressions in one backend are
 // easy to spot against the other when both samples are run side-by-side.
 //
-// What's intentionally NOT mirrored: the Blend and alpha-only render-target Blend rows. The Blend
-// property on SpriteRuntime is currently #if XNALIKE only — raylib has no Blend surface. Tracked
-// in #2907 (SpriteRuntime: unify remaining 3 #if XNALIKE blocks).
+// The alpha-only Blend row (SubtractAlpha/ReplaceAlpha/MinAlpha) from the MG screen is intentionally
+// skipped here: raylib's BlendMode enum has no alpha-stencil equivalents, so those values fall
+// through to BlendMode.Alpha and would render identically — no useful visual signal.
 internal class SpriteScreen : FrameworkElement
 {
     public SpriteScreen() : base(new ContainerRuntime())
@@ -122,6 +122,27 @@ internal class SpriteScreen : FrameworkElement
             s.Y = 14;
             s.Rotation = angle;
             rotRow.AddChild(s);
+        }
+
+        // Blend modes — Normal/Additive/Replace from the MG screen. On raylib, Normal and Replace
+        // both map to BlendMode.Alpha (raylib has no opaque/replace variant), so they render
+        // identically; Additive is the visually distinct cell.
+        AddSectionLabel(page, "Blend, normal rendering (Normal, Additive, Replace):");
+        var blendRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
+        page.AddChild(blendRow);
+        foreach (var blend in new[]
+        {
+            Gum.RenderingLibrary.Blend.Normal,
+            Gum.RenderingLibrary.Blend.Additive,
+            Gum.RenderingLibrary.Blend.Replace,
+        })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "resources\\BearTexture.png";
+            s.Width = 64;
+            s.Height = 64;
+            s.Blend = blend;
+            blendRow.AddChild(s);
         }
 
         // AnimationChain-driven sprite — same .achx pipeline the MG sample uses. .achx +

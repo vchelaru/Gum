@@ -100,23 +100,36 @@ public class NineSliceRuntime : InteractiveGue
             NotifyPropertyChanged(nameof(Blend));
         }
     }
+#endif
 
+    /// <summary>
+    /// The Gum-specific Blend mode for the nine-slice. Null means "use the renderer's current
+    /// blend mode" (typically alpha blending).
+    /// </summary>
     public Gum.RenderingLibrary.Blend? Blend
     {
         get
         {
+#if XNALIKE
             return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedNineSlice.BlendState);
+#else
+            return ContainedNineSlice.Blend;
+#endif
         }
         set
         {
+#if XNALIKE
             if (value.HasValue)
             {
                 BlendState = value.Value.ToBlendState().ToXNA();
             }
             // NotifyPropertyChanged handled by BlendState:
+#else
+            ContainedNineSlice.Blend = value;
+            NotifyPropertyChanged();
+#endif
         }
     }
-#endif
 
     public int Blue
     {

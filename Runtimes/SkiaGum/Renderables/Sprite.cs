@@ -33,6 +33,10 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
     public SKImage? Image { get; set; }
 
+    // Skia does not yet honor Blend at draw time; the property exists for API parity with the
+    // unified SpriteRuntime, which routes its cross-platform Blend property here.
+    public Gum.RenderingLibrary.Blend? Blend { get; set; }
+
     public float? TextureWidth => Texture?.Width;
     public float? TextureHeight => Texture?.Height;
 

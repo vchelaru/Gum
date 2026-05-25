@@ -196,6 +196,8 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
         get; set;
     } = Color.White;
 
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+
     public override void Render(ISystemManagers managers)
     {
         if (!Visible || Texture == null) return;
@@ -238,6 +240,11 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
 
         var absoluteRotation = this.GetAbsoluteRotation();
 
+        if (Blend.HasValue)
+        {
+            BeginBlendMode(Blend.Value.ToRaylibBlendMode());
+        }
+
         DrawTextureNPatch(
             nonNullText,
             nPatchInfo,
@@ -245,6 +252,11 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
             Vector2.Zero,
             -absoluteRotation,
             Color);
+
+        if (Blend.HasValue)
+        {
+            EndBlendMode();
+        }
     }
 
 

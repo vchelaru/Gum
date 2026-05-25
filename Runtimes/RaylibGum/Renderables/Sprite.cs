@@ -123,6 +123,8 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         get; set;
     } = Color.White;
 
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+
     public float? TextureWidth => Texture?.Width;
 
     public float? TextureHeight => Texture?.Height;
@@ -160,7 +162,17 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             srcRect.Height = -srcRect.Height;
         }
 
+        if (Blend.HasValue)
+        {
+            BeginBlendMode(Blend.Value.ToRaylibBlendMode());
+        }
+
         DrawTexturePro(Texture.Value, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
+
+        if (Blend.HasValue)
+        {
+            EndBlendMode();
+        }
     }
 
     public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
