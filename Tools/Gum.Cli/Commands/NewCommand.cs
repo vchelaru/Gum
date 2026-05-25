@@ -16,10 +16,14 @@ public static class NewCommand
     /// </summary>
     public static Command Create()
     {
-        var pathArgument = new Argument<string>(
+        var pathArgument = new Argument<string?>(
             "path",
             "Path for the new .gumx project file. If no .gumx extension is provided, " +
-            "a project folder and file are created using the given name.");
+            "a project folder and file are created using the given name. " +
+            "If omitted, a 'GumProject' subdirectory is created in the current directory.")
+        {
+            Arity = ArgumentArity.ZeroOrOne
+        };
 
         var templateOption = new Option<string>(
             aliases: new[] { "--template", "-t" },
@@ -36,7 +40,7 @@ public static class NewCommand
 
         command.SetHandler((InvocationContext context) =>
         {
-            string path = context.ParseResult.GetValueForArgument(pathArgument);
+            string? path = context.ParseResult.GetValueForArgument(pathArgument);
             string template = context.ParseResult.GetValueForOption(templateOption) ?? "forms";
             context.ExitCode = Execute(path, template);
         });
@@ -44,7 +48,9 @@ public static class NewCommand
         return command;
     }
 
-    private static int Execute(string path, string template)
+    private const string DefaultProjectName = "GumProject";
+
+    private static int Execute(string? path, string template)
     {
         if (!string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(template, "empty", StringComparison.OrdinalIgnoreCase))
@@ -55,7 +61,11 @@ public static class NewCommand
 
         string fullPath;
 
-        if (path.EndsWith(".gumx", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrEmpty(path))
+        {
+            fullPath = Path.GetFullPath(Path.Combine(DefaultProjectName, DefaultProjectName + ".gumx"));
+        }
+        else if (path.EndsWith(".gumx", StringComparison.OrdinalIgnoreCase))
         {
             fullPath = Path.GetFullPath(path);
         }

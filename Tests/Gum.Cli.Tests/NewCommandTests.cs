@@ -106,6 +106,47 @@ public class NewCommandTests : IDisposable
         Directory.Exists(Path.Combine(_tempDirectory, "Components", "Controls")).ShouldBeFalse();
     }
 
+    [Fact]
+    public void New_WithoutPath_ShouldCreateProjectInDefaultSubdirectoryUnderCurrentDirectory()
+    {
+        string originalCurrentDirectory = Directory.GetCurrentDirectory();
+        try
+        {
+            Directory.SetCurrentDirectory(_tempDirectory);
+
+            CliTestHelper result = CliTestHelper.Run("new");
+
+            result.ExitCode.ShouldBe(0);
+            string expectedGumx = Path.Combine(_tempDirectory, "GumProject", "GumProject.gumx");
+            File.Exists(expectedGumx).ShouldBeTrue();
+            result.StandardOutput.ShouldContain("Created project:");
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(originalCurrentDirectory);
+        }
+    }
+
+    [Fact]
+    public void New_WithoutPath_WhenDefaultSubdirectoryAlreadyExists_ShouldReturnExitCode2()
+    {
+        string originalCurrentDirectory = Directory.GetCurrentDirectory();
+        try
+        {
+            Directory.SetCurrentDirectory(_tempDirectory);
+
+            CliTestHelper.Run("new");
+            CliTestHelper result = CliTestHelper.Run("new");
+
+            result.ExitCode.ShouldBe(2);
+            result.StandardError.ShouldContain("already exists");
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(originalCurrentDirectory);
+        }
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))
