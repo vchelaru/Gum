@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if RAYLIB
+#if RAYLIB || SOKOL
 namespace Gum.Renderables;
 #else
 namespace MonoGameGum.Renderables;
@@ -19,7 +19,7 @@ public static class RenderableCreator
 
         IRenderable containedObject = null;
 
-        containedObject = RuntimeObjectCreator.TryHandleAsBaseType(type, systemManagers as SystemManagers);
+        containedObject = FallbackRenderableFactory.TryHandleAsBaseType(type, systemManagers as SystemManagers);
 
 
         // todo - have a custom method...

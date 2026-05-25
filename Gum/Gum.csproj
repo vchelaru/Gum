@@ -473,7 +473,7 @@
 		<Compile Remove="RenderingLibrary\BlendExtensions.cs" />
 		<Compile Remove="Wireframe\CustomSetPropertyOnRenderable.cs" />
 		<Compile Remove="Wireframe\ElementWithState.cs" />
-		<Compile Remove="Wireframe\RuntimeObjectCreator.cs" />
+		<Compile Remove="Wireframe\FallbackRenderableFactory.cs" />
 		<None Remove="Content\.gumfcs" />
 		<None Remove="Content\BmfcTemplate.bmfc" />
 		<None Remove="GumIcon.ico" />

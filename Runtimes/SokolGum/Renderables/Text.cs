@@ -45,6 +45,10 @@ public enum TextPositionRoundingMode
 /// </summary>
 public sealed class Text : RenderableBase, IText, IWrappedText, IFormsText, ICloneable
 {
+    public Text() { }
+
+    public Text(ISystemManagers? _) { }
+
     public Text Clone()
     {
         var newInstance = (Text)this.MemberwiseClone();
