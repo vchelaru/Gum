@@ -125,7 +125,7 @@ public sealed class SystemManagers : ISystemManagers, IDisposable
         // single-backend app and matches how MonoGameGum / RaylibGum
         // wire themselves up in their respective SystemManagers.
         StandardElementsManager.Self.Initialize();
-        ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
+        ElementSaveExtensions.CustomCreateGraphicalComponentFunc = Gum.Renderables.RenderableCreator.HandleCreateGraphicalComponent;
         RegisterComponentRuntimeInstantiations();
 
         // Route .gumx property assignments through our helper so "SourceFile"

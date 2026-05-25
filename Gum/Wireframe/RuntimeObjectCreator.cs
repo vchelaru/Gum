@@ -32,7 +32,7 @@ namespace Gum.Wireframe
             IRenderable? containedObject = null;
             switch (baseType)
             {
-#if MONOGAME || KNI || FNA || RAYLIB
+#if MONOGAME || KNI || FNA || RAYLIB || SOKOL
 
                 case "Container":
                 case "Component": // this should never be set in Gum, but there could be XML errors or someone could have used an old Gum...
