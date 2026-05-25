@@ -22,6 +22,18 @@ namespace MonoGameGumInCode
             _graphics = new GraphicsDeviceManager(this);
             _graphics.PreferredBackBufferWidth = 1024;
             _graphics.PreferredBackBufferHeight = 768;
+            // ContainerRuntime.IsRenderTarget=true cells (see SpriteScreen's
+            // alpha-blend row) switch the active render target mid-frame. With
+            // the default RenderTargetUsage.DiscardContents, everything drawn
+            // to the back buffer before the first RT switch is wiped, which
+            // shows up as earlier rows rendering as expected initially and
+            // then disappearing the moment any RT cell appears. PreserveContents
+            // keeps the back buffer intact across target switches.
+            _graphics.PreparingDeviceSettings += (_, e) =>
+            {
+                e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage =
+                    RenderTargetUsage.PreserveContents;
+            };
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
@@ -63,6 +75,7 @@ namespace MonoGameGumInCode
             AddNavButton("Mixed", () => ShowScreen<MixedScreen>());
             AddNavButton("Invisible", () => ShowScreen<InvisibleScreen>());
             AddNavButton("NineSlice", () => ShowScreen<NineSliceScreen>());
+            AddNavButton("Sprite", () => ShowScreen<SpriteScreen>());
             AddNavButton("Clip", () => ShowScreen<ClipScreen>());
 
             AddFitModeRadio("Zoom", isChecked: true, () => GumService.Default.EnableZoomToWindow());

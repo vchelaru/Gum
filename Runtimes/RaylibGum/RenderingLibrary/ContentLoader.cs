@@ -119,7 +119,13 @@ public class ContentLoader : IContentLoader
         }
         else
         {
-            toReturn = LoadTextureFromFile(fileName);
+            // Load via fileNameStandardized so a relative fileName is resolved against
+            // FileManager.RelativeDirectory — the same prefix the cache lookup above used.
+            // Previously this was just `fileName`, which meant callers relying on
+            // RelativeDirectory (e.g. AnimationChainList.ToAnimationChainList loading per-frame
+            // textures relative to the .achx's folder) silently got an empty Texture2D and
+            // Sprite.Render early-returned on null Texture.
+            toReturn = LoadTextureFromFile(fileNameStandardized);
         }
 
         if (LoaderManager.Self.CacheTextures && toReturn != null)

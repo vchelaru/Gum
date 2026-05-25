@@ -240,44 +240,19 @@ namespace Gum.Graphics.Animation
             frame.TextureName = animationFrameSave.TextureName;
             frame.FrameLength = animationFrameSave.FrameLength;
 
-#if MONOGAME || KNI || XNA4
-            if (loadTexture)
-            {
-                //if (animationFrameSave.mTextureInstance != null)
-                //{
-                //    frame.Texture = animationFrameSave.mTextureInstance;
-                //}
-                // I think we should tolerate frames with a null Texture
-                if (!string.IsNullOrEmpty(animationFrameSave.TextureName))
-                {
-                    //throw new NotImplementedException();
-                    //frame.Texture = FlatRedBallServices.Load<Texture2D>(TextureName, contentManagerName);
-                    try
-                    {
-                        var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + animationFrameSave.TextureName);
-                        frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(
-                            fileName);
-                    }
-                    catch (System.IO.FileNotFoundException)
-                    {
-                        if (Wireframe.GraphicalUiElement.MissingFileBehavior == Wireframe.MissingFileBehavior.ThrowException)
-                        {
-                            string message = $"Error loading texture in animation :\n{animationFrameSave.TextureName}";
-                            throw new System.IO.FileNotFoundException(message);
-                        }
-                        frame.Texture = null;
-                    }
-
-                }
-                //frame.Texture = FlatRedBallServices.Load<Texture2D>(TextureName, contentManagerName);
-            }
-#elif SOKOL
+#if MONOGAME || KNI || XNA4 || RAYLIB || SKIA || SOKOL
+            // Texture2D is a per-backend using alias (MG -> XNA Texture2D, Raylib ->
+            // Raylib_cs.Texture2D, Skia -> SkiaSharp.SKBitmap, Sokol -> SokolGum.Texture2D),
+            // declared at the top of this file. The load logic itself is identical across
+            // backends, so one branch driven by the alias replaces the per-backend #if/#elif
+            // ladder this used to be (which had no SKIA branch and silently dropped texture
+            // loads on Skia).
             if (loadTexture && !string.IsNullOrEmpty(animationFrameSave.TextureName))
             {
                 try
                 {
                     var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + animationFrameSave.TextureName);
-                    frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<SokolGum.Texture2D>(fileName);
+                    frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(fileName);
                 }
                 catch (System.IO.FileNotFoundException)
                 {

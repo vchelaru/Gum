@@ -53,6 +53,7 @@ unsafe class Program
     private static readonly Func<GraphicalUiElement>[] codeScreenFactories =
     {
         () => new SilkNetGum.Screens.NineSliceScreen(),
+        () => new SilkNetGum.Screens.SpriteScreen(),
         () => new SilkNetGum.Screens.CirclesScreen(),
         () => new SilkNetGum.Screens.RectanglesScreen(),
         () => new SilkNetGum.Screens.ArcsScreen(),
@@ -87,16 +88,20 @@ unsafe class Program
 
         currentScreenIndex = ((index % total) + total) % total;
 
-        Root?.RemoveFromManagers();
+        // Attach via AddToRoot (children of GumService.Default.Root) instead of
+        // AddToManagers — that way GumService.Default.Update walks the screen and
+        // its descendants, which is what advances AnimationChain playback on the
+        // SpriteScreen's animated bear row.
+        Root?.RemoveFromRoot();
         if (currentScreenIndex < gumxScreens.Count)
         {
-            Root = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+            Root = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
         }
         else
         {
             Root = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
-            Root.AddToManagers(SystemManagers.Default, layer: null);
         }
+        Root.AddToRoot();
 
         Root.Width = GraphicalUiElement.CanvasWidth;
         Root.Height = GraphicalUiElement.CanvasHeight;
@@ -316,6 +321,12 @@ unsafe class Program
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
+            // GumService.Update wants total elapsed seconds since startup (on
+            // non-XNALIKE backends the engine computes the per-frame delta as
+            // `currentTotal - previousTotal`). `sw` above is reset every second
+            // for FPS reporting, so we keep a separate monotonic clock here.
+            Stopwatch totalTime = new Stopwatch();
+            totalTime.Start();
             while (running)
             {
 
@@ -372,6 +383,11 @@ unsafe class Program
                 // canvas.Clear(SKColors.Cyan);
                 //_renderer.Render(canvas);
 
+
+                // Per-frame Update drives AnimateSelf (and any other Forms
+                // input/activity pumps). Without this the .achx animation row
+                // on SpriteScreen shows the first frame and never advances.
+                GumService.Default.Update(totalTime.Elapsed.TotalSeconds);
 
                 Draw();
 

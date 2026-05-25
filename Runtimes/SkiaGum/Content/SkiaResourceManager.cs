@@ -37,7 +37,11 @@ public static class SkiaResourceManager
 
     private static void CacheSvg(string resourceName)
     {
-        var absoluteFile = FileManager.RelativeDirectory + resourceName;
+        // See CacheSKImage for why this is guarded by IsRelative — callers that
+        // pass an already-absolute name would double-prefix and miss the file.
+        var absoluteFile = FileManager.IsRelative(resourceName)
+            ? FileManager.RelativeDirectory + resourceName
+            : resourceName;
         if(System.IO.File.Exists(absoluteFile))
         {
             using var fileStream = System.IO.File.OpenRead(absoluteFile);
@@ -157,7 +161,15 @@ public static class SkiaResourceManager
 
     private static void CacheSKImage(string resourceName)
     {
-        var absoluteFile = FileManager.RelativeDirectory + resourceName;
+        // Only prepend RelativeDirectory when the caller passed a relative name.
+        // AnimationFrame.ToAnimationFrame already pre-prefixes with RelativeDirectory
+        // before calling LoadContent, so unconditionally concatenating here used to
+        // produce a doubled path ("C:\...\dir\" + "C:\...\dir\file.png") that
+        // File.Exists couldn't find — the loader then silently fell through to the
+        // embedded-resource branch and threw on the mangled name.
+        var absoluteFile = FileManager.IsRelative(resourceName)
+            ? FileManager.RelativeDirectory + resourceName
+            : resourceName;
         if (System.IO.File.Exists(absoluteFile))
         {
             using var fileStream = System.IO.File.OpenRead(absoluteFile);
@@ -306,8 +318,21 @@ public static class SkiaResourceManager
                 message += "\nThis assembly contains no embedded resource files.";
             }
 
-            message += "\nIf you are trying to load an embedded resource from your assembly, you may need " +
-                "to set SkiaResourceManager.CustomResourceAssembly to your app's assembly";
+            // The disk-first branch (CacheSKImage / CacheSvg) already tried
+            // FileManager.RelativeDirectory + name (or the bare absolute name);
+            // landing here means that path also didn't exist on disk. Surface
+            // both possibilities so the caller can fix whichever fits their setup
+            // — earlier versions of this message only mentioned the embedded path.
+            message +=
+                $"\n\nCacheSKImage/CacheSvg also tried loading from disk before falling through to this assembly. " +
+                $"At this call, FileManager.RelativeDirectory was \"{FileManager.RelativeDirectory}\". " +
+                $"Two ways to fix it:" +
+                $"\n  - File-on-disk: confirm the file exists at FileManager.RelativeDirectory + name, " +
+                $"or at the absolute path if you passed one. Loose-file content is the typical setup " +
+                $"for the SilkNet / standalone Skia samples." +
+                $"\n  - Embedded resource: mark the file as <EmbeddedResource> in the assembly that " +
+                $"owns it and (if it isn't this assembly) set SkiaResourceManager.CustomResourceAssembly " +
+                $"to that assembly.";
 
 
             // See if it's still null
