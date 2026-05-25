@@ -1,3 +1,3 @@
 using Gum.DataTypes;
 
-[assembly: GumSyntaxVersion(Version = 1)]
+[assembly: GumSyntaxVersion(Version = 2)]

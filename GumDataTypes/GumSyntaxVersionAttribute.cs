@@ -15,7 +15,7 @@ namespace Gum.DataTypes;
 /// </para>
 /// <para>
 /// This attribute should be applied at the assembly level in each Gum runtime project
-/// (MonoGameGum, RaylibGum, SkiaGum).
+/// (GumCommon, MonoGameGum, RaylibGum, SkiaGum).
 /// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
@@ -24,6 +24,11 @@ public class GumSyntaxVersionAttribute : Attribute
     /// <summary>
     /// The syntax version number. Higher values indicate newer conventions.
     /// Version 0 is the baseline (no breaking changes from the pre-attribute era).
+    /// Version 1 introduced the unified <c>Gum.GueDeriving</c> namespace for runtime classes
+    /// (non-breaking; old namespaces remain via <c>[Obsolete]</c> shims).
+    /// Version 2 collapses <c>ColoredCircleRuntime</c>/<c>ColoredRectangleRuntime</c>/<c>RoundedRectangleRuntime</c>
+    /// into <c>CircleRuntime</c>/<c>RectangleRuntime</c> and exposes <c>FillColor</c>,
+    /// <c>StrokeColor</c>, and <c>StrokeWidth</c> on them. See PR #2769 / issue #2768.
     /// </summary>
     public int Version;
 }
