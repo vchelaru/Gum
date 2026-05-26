@@ -47,6 +47,82 @@ public class RectangleRuntimeTests
         stroke.CornerRadius.ShouldBe(8f);
     }
 
+    // Issue #2925 (Phase 0 parity) — under Absolute units the post-PreRender corner radii on both
+    // slots match the raw runtime values. Skia already does this (RoundedRectangleRuntime.cs
+    // PreRender SKIA branch); the Apos side previously pushed in the setter only and never
+    // re-resolved in PreRender, so this guards the new resolution path.
+    [Fact]
+    public void CornerRadiusUnits_Absolute_PreRender_PushesRawValueToBothSlots()
+    {
+        RectangleRuntime sut = new();
+        sut.CornerRadius = 8f;
+        sut.CustomRadiusTopLeft = 1f;
+        sut.CustomRadiusTopRight = 2f;
+        sut.CustomRadiusBottomLeft = 3f;
+        sut.CustomRadiusBottomRight = 4f;
+        sut.CornerRadiusUnits = DimensionUnitType.Absolute;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        IRenderable asFillRenderable = fill;
+        asFillRenderable.PreRender();
+
+        fill.CornerRadius.ShouldBe(8f);
+        stroke.CornerRadius.ShouldBe(8f);
+        fill.CustomRadiusTopLeft.ShouldBe(1f);
+        stroke.CustomRadiusTopLeft.ShouldBe(1f);
+        fill.CustomRadiusTopRight.ShouldBe(2f);
+        stroke.CustomRadiusTopRight.ShouldBe(2f);
+        fill.CustomRadiusBottomLeft.ShouldBe(3f);
+        stroke.CustomRadiusBottomLeft.ShouldBe(3f);
+        fill.CustomRadiusBottomRight.ShouldBe(4f);
+        stroke.CustomRadiusBottomRight.ShouldBe(4f);
+    }
+
+    // Issue #2925 (Phase 0 parity) — ScreenPixel was previously a Skia-only honor (Apos parity gap
+    // noted in RoundedRectangleRuntime.cs:80, 124). At Camera.Zoom = 2 the resolved radius is
+    // raw / zoom so the rounded corner holds a constant on-screen pixel size as the camera zooms,
+    // matching the existing StrokeWidthUnits.ScreenPixel behavior in AposShapeRuntime.PreRender.
+    // Skia's RoundedRectangleRuntime.PreRender already does this; bringing the Apos branch into
+    // parity is the whole of Phase 0's RectangleRuntime work.
+    [Fact]
+    public void CornerRadiusUnits_ScreenPixel_DividesByCameraZoom_OnBothSlots()
+    {
+        float originalZoom = RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
+        try
+        {
+            RectangleRuntime sut = new();
+            sut.AddToManagers(RenderingLibrary.SystemManagers.Default, null);
+            sut.CornerRadius = 8f;
+            sut.CustomRadiusTopLeft = 1f;
+            sut.CustomRadiusTopRight = 2f;
+            sut.CustomRadiusBottomLeft = 3f;
+            sut.CustomRadiusBottomRight = 4f;
+            sut.CornerRadiusUnits = DimensionUnitType.ScreenPixel;
+            RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = 2f;
+
+            RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+            RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+            IRenderable asFillRenderable = fill;
+            asFillRenderable.PreRender();
+
+            fill.CornerRadius.ShouldBe(4f);
+            stroke.CornerRadius.ShouldBe(4f);
+            fill.CustomRadiusTopLeft.ShouldBe(0.5f);
+            stroke.CustomRadiusTopLeft.ShouldBe(0.5f);
+            fill.CustomRadiusTopRight.ShouldBe(1f);
+            stroke.CustomRadiusTopRight.ShouldBe(1f);
+            fill.CustomRadiusBottomLeft.ShouldBe(1.5f);
+            stroke.CustomRadiusBottomLeft.ShouldBe(1.5f);
+            fill.CustomRadiusBottomRight.ShouldBe(2f);
+            stroke.CustomRadiusBottomRight.ShouldBe(2f);
+        }
+        finally
+        {
+            RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = originalZoom;
+        }
+    }
+
     [Fact]
     public void FillAndStroke_DrawSimultaneously_BothColorsRoundTrip()
     {
@@ -376,5 +452,35 @@ public class RectangleRuntimeTests
         RoundedRectangle sourceStroke = (RoundedRectangle)sourceFill.Children[0];
         sourceFill.Color.ShouldBe(Color.Red);
         sourceStroke.Color.ShouldBe(Color.Blue);
+    }
+
+    // Issue #2925 — same bug as CircleRuntime: constructor sets the fill renderable as
+    // mContainedObjectAsIpso, so the tool's variable-application path routes the legacy
+    // "Color" / "Alpha" variables to the FILL renderable instead of stroke. Result: a
+    // default Rectangle renders as a solid white box instead of a stroke-only outline.
+    [Fact]
+    public void SetProperty_Color_RoutesToStroke_NotFill()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("Color", System.Drawing.Color.FromArgb(255, 255, 0, 0));
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        stroke.Color.ShouldBe(new Color(255, 0, 0, 255));
+        fill.Color.ShouldBe(new Color(0, 0, 0, 0));
+    }
+
+    [Fact]
+    public void SetProperty_Alpha_RoutesToStroke_NotFill()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("Alpha", 128);
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        stroke.Color.A.ShouldBe((byte)128);
+        fill.Color.ShouldBe(new Color(0, 0, 0, 0));
     }
 }

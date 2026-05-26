@@ -173,9 +173,12 @@ namespace SkiaPlugin
         {
             switch (type)
             {
-                case "Arc": return new SkiaTexturedRenderable(new RenderableShapeAdapter(new Arc()));
+                // Arc is intentionally NOT handled here: issue #2925 hands the Arc standard
+                // type to the Apos.Shapes-backed ArcRuntime registered by AposShapeRuntime
+                // (Runtimes/GumShapes/GueDeriving/AposShapeRuntime.cs) so the tool and MonoGame
+                // runtime stay on a single rendering path. The Skia Arc renderable class remains
+                // compiled but unwired by design (option A).
                 case "Canvas": return new SkiaTexturedRenderable(new RenderableCanvas());
-
                 case "ColoredCircle": return new SkiaTexturedRenderable(new RenderableShapeAdapter(new Circle()));
                 case "Line": return new SkiaTexturedRenderable(new RenderableShapeAdapter(new Line()));
                 case "LottieAnimation": return new SkiaTexturedRenderable(new RenderableLottieAnimation());

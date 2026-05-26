@@ -120,13 +120,27 @@ public class CustomSetPropertyOnRenderable
     {
         bool handled = false;
 
-        // First try special-casing.  
+        // First try special-casing.
 
         if (renderableIpso is Text renderableText)
         {
             handled = TrySetPropertyOnText(renderableText, graphicalUiElement, propertyName, value);
         }
 #if XNALIKE
+        // Issue #2925 — dispatch by RUNTIME type for CircleRuntime / RectangleRuntime before
+        // falling through to the renderable-type tree. Both runtimes now own two renderable
+        // slots (fill + stroke) and their mContainedObjectAsIpso may be the fill slot, so a
+        // renderable-type-only dispatch lands legacy "Color" / "Alpha" / "Red" / etc. on the
+        // wrong slot. Routing through the runtime's typed property setters keeps each variable
+        // landing where its pre-two-slot equivalent did, independent of which slot is contained.
+        else if (graphicalUiElement is Gum.GueDeriving.CircleRuntime circleRuntime)
+        {
+            handled = TrySetPropertyOnCircleRuntime(circleRuntime, propertyName, value);
+        }
+        else if (graphicalUiElement is Gum.GueDeriving.RectangleRuntime rectangleRuntime)
+        {
+            handled = TrySetPropertyOnRectangleRuntime(rectangleRuntime, propertyName, value);
+        }
         else if (renderableIpso is LineCircle)
         {
             handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, value);
@@ -2164,4 +2178,102 @@ public class CustomSetPropertyOnRenderable
 
         return fontFilePath;
     }
+
+#if XNALIKE
+    // Issue #2925 — legacy variable routing for the two-slot CircleRuntime. The legacy
+    // properties (Color/Alpha/Red/Green/Blue) on the runtime are intentionally obsolete and
+    // already route to the stroke slot internally, preserving pre-two-slot behavior. Going
+    // through them here means the helper does not need to know which slot is the contained
+    // object or which backend produced the renderable.
+    private static bool TrySetPropertyOnCircleRuntime(Gum.GueDeriving.CircleRuntime circleRuntime, string propertyName, object value)
+    {
+#pragma warning disable CS0618 // legacy obsolete properties are the public surface this dispatch was written against
+        switch (propertyName)
+        {
+            case "Color":
+                if (value is System.Drawing.Color drawingColor)
+                {
+                    circleRuntime.Color = new Microsoft.Xna.Framework.Color(drawingColor.R, drawingColor.G, drawingColor.B, drawingColor.A);
+                }
+                else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                {
+                    circleRuntime.Color = xnaColor;
+                }
+                else
+                {
+                    return false;
+                }
+                return true;
+            case "Alpha":
+                circleRuntime.Alpha = (int)value;
+                return true;
+            case "Red":
+                circleRuntime.Red = (int)value;
+                return true;
+            case "Green":
+                circleRuntime.Green = (int)value;
+                return true;
+            case "Blue":
+                circleRuntime.Blue = (int)value;
+                return true;
+            case "Radius":
+                circleRuntime.Radius = (float)value;
+                return true;
+        }
+        return false;
+#pragma warning restore CS0618
+    }
+
+    // Issue #2925 — same pattern for RectangleRuntime.
+    private static bool TrySetPropertyOnRectangleRuntime(Gum.GueDeriving.RectangleRuntime rectangleRuntime, string propertyName, object value)
+    {
+#pragma warning disable CS0618
+        switch (propertyName)
+        {
+            case "Color":
+                if (value is System.Drawing.Color drawingColor)
+                {
+                    rectangleRuntime.Color = new Microsoft.Xna.Framework.Color(drawingColor.R, drawingColor.G, drawingColor.B, drawingColor.A);
+                }
+                else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                {
+                    rectangleRuntime.Color = xnaColor;
+                }
+                else
+                {
+                    return false;
+                }
+                return true;
+            case "Alpha":
+                rectangleRuntime.Alpha = (int)value;
+                return true;
+            case "Red":
+                rectangleRuntime.Red = (int)value;
+                return true;
+            case "Green":
+                rectangleRuntime.Green = (int)value;
+                return true;
+            case "Blue":
+                rectangleRuntime.Blue = (int)value;
+                return true;
+            case "CornerRadius":
+                rectangleRuntime.CornerRadius = (float)value;
+                return true;
+            case "CustomRadiusTopLeft":
+                rectangleRuntime.CustomRadiusTopLeft = (float?)value;
+                return true;
+            case "CustomRadiusTopRight":
+                rectangleRuntime.CustomRadiusTopRight = (float?)value;
+                return true;
+            case "CustomRadiusBottomLeft":
+                rectangleRuntime.CustomRadiusBottomLeft = (float?)value;
+                return true;
+            case "CustomRadiusBottomRight":
+                rectangleRuntime.CustomRadiusBottomRight = (float?)value;
+                return true;
+        }
+        return false;
+#pragma warning restore CS0618
+    }
+#endif
 }

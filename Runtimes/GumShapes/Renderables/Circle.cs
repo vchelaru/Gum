@@ -78,11 +78,14 @@ public class Circle : RenderableShapeBase,
         var absoluteLeft = this.GetAbsoluteLeft();
         var absoluteTop = this.GetAbsoluteTop();
 
-        // Issue #2852: center on the actual bounding box and use the smaller dimension as
-        // the radius so a non-square Circle fits within its box (matches SkiaGum).
-        var center = new Microsoft.Xna.Framework.Vector2(
-            absoluteLeft + Width / 2.0f,
-            absoluteTop + Height / 2.0f);
+        // Issue #2925 — rotation is around the GUE's top-left origin (Gum convention), so the
+        // (Width/2, Height/2) offset from top-left to circle center must be rotated by the
+        // absolute rotation. DrawCircle has no rotation parameter (a true circle is rotation-
+        // symmetric, so only the center position needs rotating). Issue #2852: also center on
+        // the actual bounding box and use the smaller dimension as the radius so a non-square
+        // Circle fits within its box (matches SkiaGum).
+        var rotationRadians = MathHelper.ToRadians(-this.GetAbsoluteRotation());
+        var center = GetRotatedCenter(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
 
         var radius = System.Math.Min(Width, Height) / 2.0f;
 

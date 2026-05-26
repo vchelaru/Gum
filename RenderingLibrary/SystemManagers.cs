@@ -386,6 +386,10 @@ public partial class SystemManagers : ISystemManagers
         // and that cast only succeeds when the instance is the shim itself.
 #pragma warning disable CS0618 // Type or member is obsolete
         ElementSaveExtensions.RegisterGueInstantiation(
+            "Circle",
+            () => new CircleRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
             "ColoredRectangle",
             () => new ColoredRectangleRuntime());
 

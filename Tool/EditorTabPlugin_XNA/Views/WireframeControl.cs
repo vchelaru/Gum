@@ -9,7 +9,9 @@ using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.Wireframe;
 using GumRuntime;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGameAndGum.Renderables;
 using Gum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Content;
@@ -157,6 +159,20 @@ public class WireframeControl : GraphicsDeviceControl
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(GraphicsDevice);
 
+            // Touching a type from KniGumShapes here forces the assembly to load, which fires its
+            // [ModuleInitializer] -> AposShapeRuntime.RegisterRuntimeTypes (registers Apos.Shapes-backed
+            // factories with RenderableRegistry). Then we initialize the ShapeBatch so those shapes
+            // actually have a renderer to draw into. Without this, Circle/Rectangle runtimes in the
+            // tool fall back to LineCircle/LineRectangle defaults. See issue #2925.
+            //
+            // ContentManager is rooted at "Content" because the apos-shapes.xnb ships at
+            // <tool-bin>\Content\apos-shapes.xnb (see EditorTabPlugin_XNA.csproj PostBuild).
+            if (!ShapeRenderer.Self.IsInitialized)
+            {
+                ContentManager shapesContentManager = new ContentManager(Services, "Content");
+                ShapeRenderer.Self.Initialize(GraphicsDevice, shapesContentManager);
+            }
+
             InitializeDefaultTypeInstantiation();
 
             ToolFontService.Self.Initialize();
@@ -226,14 +242,20 @@ public class WireframeControl : GraphicsDeviceControl
     private void InitializeDefaultTypeInstantiation()
     {
         ElementSaveExtensions.RegisterGueInstantiation(
+            "Circle",
+            () => new CircleRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
             "ColoredRectangle",
             () => new ColoredRectangleRuntime());
-
-
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Polygon",
             () => new PolygonRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Rectangle",
+            () => new RectangleRuntime(systemManagers: this.SystemManagers));
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Sprite",

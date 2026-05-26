@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows</TargetFramework>
 
@@ -39,19 +39,27 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
+		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
 		<ProjectReference Include="..\..\Gum\Gum.csproj" />
 		<ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
+		<!--
+			KniGumShapes brings the Apos.Shapes-backed Circle / RoundedRectangle / Arc / Line renderables
+			into the tool. Without this reference the assembly is never loaded, its [ModuleInitializer]
+			never fires, AposShapeRuntime.RegisterRuntimeTypes is never called, and the RenderableRegistry
+			hands back the LineCircle-based defaults when the wireframe constructs a Circle/Rectangle
+			runtime — i.e. Apos shapes never appear in the editor. See issue #2925.
+		-->
+		<ProjectReference Include="..\..\Runtimes\GumShapes\KniGumShapes.csproj" />
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
 
-		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001.1" />
-		
+		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+
 	</ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	  <Exec Command="&#xD;&#xA;echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)XnaAndWinforms.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)KniGum.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)Xna*.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
+	  <Exec Command="&#xD;&#xA;echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)XnaAndWinforms.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)KniGum.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)KniGumShapes.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)Apos.Shapes.KNI.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)FontStashSharp*.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)Xna*.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Content&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Content\&quot;&#xD;&#xA;copy &quot;$(SolutionDir)Runtimes\GumShapes\buildTransitive\Content\Windows\apos-shapes.xnb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Content\&quot;" />
 	</Target>
 </Project>
