@@ -99,13 +99,29 @@ public class GumProjectSave
         /// attribute instead of a child element, producing a more compact file format.
         /// </summary>
         AttributeVersion = 2,
+
+        /// <summary>
+        /// Reserves a version slot for the expanded Circle/Rectangle variable surface
+        /// (gradient, dropshadow, stroke-and-fill, antialiasing, etc.) introduced in
+        /// the #2925/#2927 follow-up PRs. Files saved at this version use the same XML
+        /// format as <see cref="AttributeVersion"/>; the bump exists so tool builds
+        /// without the new variable definitions refuse to load the file rather than
+        /// silently dropping the new variables on the next save.
+        /// </summary>
+        ShapeVariableExpansion = 3,
     }
 
     /// <summary>
     /// The highest <see cref="GumxVersions"/> value that this version of the Gum tool supports.
     /// When a new <see cref="GumxVersions"/> value is added, update this constant to match.
     /// </summary>
-    public const int NativeVersion = (int)GumxVersions.AttributeVersion;
+    /// <remarks>
+    /// New <see cref="GumProjectSave"/> instances do NOT default to this version — see the
+    /// constructor. New projects stay at <see cref="GumxVersions.AttributeVersion"/> until
+    /// a feature gated on a higher version is actually used, so files remain readable by
+    /// older tool builds whenever they technically could be.
+    /// </remarks>
+    public const int NativeVersion = (int)GumxVersions.ShapeVariableExpansion;
 
     #region Fields
 
