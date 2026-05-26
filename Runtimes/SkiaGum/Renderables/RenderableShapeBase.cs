@@ -722,6 +722,14 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
     public BlendState BlendState => BlendState.AlphaBlend;
 
+    /// <summary>
+    /// The Gum blend mode applied when constructing the SKPaint used to draw this renderable.
+    /// When null, the SkiaSharp default (SrcOver / standard alpha blending) is used. Values
+    /// without a clean SkiaSharp equivalent (ReplaceAlpha, MinAlpha) fall through to SrcOver
+    /// rather than approximating; see <see cref="BlendToSkBlendModeExtensions"/>.
+    /// </summary>
+    public Gum.RenderingLibrary.Blend? Blend { get; set; }
+
     public bool ClipsChildren { get; set; }
 
     SKRect _lastBoundingRect;
@@ -796,6 +804,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         {
             paint.PathEffect = SKPathEffect.CreateDash(
                 new[] { StrokeDashLength, StrokeGapLength }, phase: 0);
+        }
+
+        if (Blend.HasValue)
+        {
+            paint.BlendMode = Blend.Value.ToSKBlendMode();
         }
 
         // If you add new paint properties here, don't forget to also add them to

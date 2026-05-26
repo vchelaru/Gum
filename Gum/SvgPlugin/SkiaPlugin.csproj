@@ -62,6 +62,9 @@
 	
 	
   <ItemGroup>
+    <Compile Include="..\..\Runtimes\SkiaGum\Renderables\BlendToSkBlendModeExtensions.cs">
+      <Link>Renderables\BlendToSkBlendModeExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\..\Runtimes\SkiaGum\Renderables\IClipPath.cs">
       <Link>Renderables\IClipPath.cs</Link>
     </Compile>

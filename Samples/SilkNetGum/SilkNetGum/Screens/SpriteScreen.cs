@@ -13,9 +13,12 @@ namespace SilkNetGum.Screens;
 // other two so visual regressions in one backend are easy to spot against the others
 // when all three are opened side by side.
 //
-// Skia-specific: the Blend rows from the MG screen are absent here because
-// SpriteRuntime.Blend is #if XNALIKE only (see #2907). Otherwise the surface mirrors
-// the raylib version.
+// Skia blend coverage (#2920 unified the runtime surface, #2922 wired it through to
+// SKPaint.BlendMode):
+//   Normal -> SKBlendMode.SrcOver, Additive -> Plus, Replace -> Src,
+//   SubtractAlpha -> DstOut. ReplaceAlpha and MinAlpha have no clean SkiaSharp
+//   equivalent and fall through to SrcOver, so those two cells render identically
+//   to Normal — kept in the row anyway to mirror the MG layout 1:1.
 internal class SpriteScreen : GraphicalUiElement
 {
     public SpriteScreen() : base(new InvisibleRenderable())
@@ -125,6 +128,70 @@ internal class SpriteScreen : GraphicalUiElement
             s.Y = 14;
             s.Rotation = angle;
             rotRow.Children.Add(s);
+        }
+
+        // Blend modes — see the file header for the Gum.Blend -> SKBlendMode mapping.
+        // Normal/Additive/Replace are the visually-distinct cases on Skia; the alpha-only row
+        // below covers SubtractAlpha (DstOut on Skia) plus ReplaceAlpha/MinAlpha (which fall
+        // through to SrcOver and therefore look like Normal).
+        AddLabel(container, "Blend, normal rendering (Normal, Additive, Replace):");
+        ContainerRuntime blendRow = AddRow(container);
+        foreach (Gum.RenderingLibrary.Blend blend in new[]
+        {
+            Gum.RenderingLibrary.Blend.Normal,
+            Gum.RenderingLibrary.Blend.Additive,
+            Gum.RenderingLibrary.Blend.Replace,
+        })
+        {
+            SpriteRuntime s = new SpriteRuntime();
+            s.SourceFileName = "BearTexture.png";
+            s.Width = 64;
+            s.Height = 64;
+            s.Blend = blend;
+            blendRow.Children.Add(s);
+        }
+
+        // Alpha-only blends — mirrors the MG sample's render-target Container cells.
+        // SubtractAlpha (-> SKBlendMode.DstOut) actually punches a hole on Skia.
+        // ReplaceAlpha and MinAlpha currently fall through to SrcOver (#2922's mapping)
+        // because SkiaSharp has no clean equivalent — those two cells will look like Normal.
+        AddLabel(container, "Blend, alpha-only on render-target Container (SubtractAlpha, ReplaceAlpha, MinAlpha):");
+        ContainerRuntime alphaBlendRow = AddRow(container);
+        foreach (Gum.RenderingLibrary.Blend blend in new[]
+        {
+            Gum.RenderingLibrary.Blend.SubtractAlpha,
+            Gum.RenderingLibrary.Blend.ReplaceAlpha,
+            Gum.RenderingLibrary.Blend.MinAlpha,
+        })
+        {
+            ContainerRuntime cell = new ContainerRuntime();
+            cell.IsRenderTarget = true;
+            cell.Width = 32;
+            cell.Height = 32;
+
+#pragma warning disable CS0618 // ColoredRectangleRuntime is obsolete
+            ColoredRectangleRuntime redBackground = new ColoredRectangleRuntime();
+#pragma warning restore CS0618
+            redBackground.Width = 32;
+            redBackground.Height = 32;
+            redBackground.Color = SKColors.Red;
+            // MinAlpha cell only: drop the underlying alpha so the result is visibly
+            // distinct from ReplaceAlpha — matches the MG sample's setup. Has no
+            // visible effect on Skia today since both fall through to SrcOver.
+            if (blend == Gum.RenderingLibrary.Blend.MinAlpha)
+            {
+                redBackground.Alpha = 128;
+            }
+            cell.Children.Add(redBackground);
+
+            SpriteRuntime alphaMasker = new SpriteRuntime();
+            alphaMasker.SourceFileName = "BearTexture.png";
+            alphaMasker.Width = 64;
+            alphaMasker.Height = 64;
+            alphaMasker.Blend = blend;
+            cell.Children.Add(alphaMasker);
+
+            alphaBlendRow.Children.Add(cell);
         }
 
         // AnimationChain-driven sprite — same .achx pipeline the MG/raylib samples use.

@@ -38,6 +38,21 @@ public class CustomSetPropertyOnRenderable
             case nameof(RenderableShapeBase.Alpha):
                 renderableBase.Alpha = (int)value;
                 return true;
+#if SKIA
+            // .gumx stores Blend as the non-nullable Gum.RenderingLibrary.Blend enum, but the
+            // property is Blend?. SetPropertyThroughReflection's Convert.ChangeType fallback
+            // throws on enum -> Nullable<enum>, so the assignment has to land here. See the
+            // SilkNetGum sample crash that prompted this branch — every Standards/*.gutx with
+            // a default Blend variable hit the reflection path before this case was added.
+            //
+            // SKIA-gated because this file is also file-linked into MonoGameGumShapes /
+            // KniGumShapes (Apos.Shapes side) where RenderableShapeBase resolves to a
+            // different type that doesn't have a Blend property — see the type alias in the
+            // file header.
+            case nameof(RenderableShapeBase.Blend):
+                renderableBase.Blend = (Blend)value;
+                return true;
+#endif
             case nameof(RenderableShapeBase.Alpha1):
                 renderableBase.Alpha1 = (int)value;
                 return true;
@@ -485,7 +500,8 @@ public class CustomSetPropertyOnRenderable
         }
         else if(containedObjectAsIpso is VectorSprite asSvg)
         {
-            //handled = TrySetPropertiesOnRenderableBase(asSvg, graphicalUiElement, propertyName, value);
+            // VectorSprite is not a RenderableShapeBase, so it stays on its dedicated handler
+            // plus the reflection fallback. No shared shape-base properties (Blend, etc.) apply.
             if(!handled)
             {
                 handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
@@ -493,6 +509,14 @@ public class CustomSetPropertyOnRenderable
         }
         else if(containedObjectAsIpso is Sprite asSprite)
         {
+            // Route base-class properties (Blend, gradient/dropshadow channels, etc.) first.
+            // These branches historically skipped TrySetPropertiesOnRenderableBase and relied
+            // on the reflection fallback, which works for int/float properties but throws on
+            // enum -> Nullable<enum> (the Blend case).
+            if(!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asSprite, graphicalUiElement, propertyName, value);
+            }
             if(!handled)
             {
                 handled = TrySetPropertyOnSprite(asSprite, graphicalUiElement, propertyName, value);
@@ -502,6 +526,10 @@ public class CustomSetPropertyOnRenderable
         {
             if(!handled)
             {
+                handled = TrySetPropertiesOnRenderableBase(asNineSlice, graphicalUiElement, propertyName, value);
+            }
+            if(!handled)
+            {
                 handled = TrySetPropertyOnNineSlice(asNineSlice, graphicalUiElement, propertyName, value);
             }
         }
@@ -509,8 +537,21 @@ public class CustomSetPropertyOnRenderable
         {
             if(!handled)
             {
+                handled = TrySetPropertiesOnRenderableBase(asPolygon, graphicalUiElement, propertyName, value);
+            }
+            if(!handled)
+            {
                 handled = TrySetPropertyOnPolygon(asPolygon, graphicalUiElement, propertyName, value);
             }
+        }
+        // Catch-all for RenderableShapeBase derivatives that have no dedicated branch
+        // above (SolidRectangle, LineRectangle, LineGrid, etc.). Without this, those types
+        // skip TrySetPropertiesOnRenderableBase entirely and any RenderableShapeBase property
+        // — most notably Blend? — falls through to SetPropertyThroughReflection's
+        // Convert.ChangeType, which throws on enum -> Nullable<enum>.
+        if (!handled && containedObjectAsIpso is RenderableShapeBase asShapeBase)
+        {
+            handled = TrySetPropertiesOnRenderableBase(asShapeBase, graphicalUiElement, propertyName, value);
         }
         if (!handled)
         {
