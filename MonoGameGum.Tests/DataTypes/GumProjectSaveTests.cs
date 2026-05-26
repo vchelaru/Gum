@@ -348,6 +348,17 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
+    public void NativeVersion_MatchesShapeVariableExpansion()
+    {
+        // The v3 slot is reserved for the expanded Circle/Rectangle variable surface
+        // landing in #2925/#2927 follow-up PRs. Files saved at v3 use the same XML
+        // format as AttributeVersion; the bump only changes the rejection ceiling so
+        // tool builds without the new variable definitions refuse to silently drop them.
+        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.ShapeVariableExpansion);
+        ((int)GumProjectSave.GumxVersions.ShapeVariableExpansion).ShouldBe(3);
+    }
+
+    [Fact]
     public void V1GumxFormat_DeserializesScreenReferenceNamesCorrectly()
     {
         const string v1Xml = """
