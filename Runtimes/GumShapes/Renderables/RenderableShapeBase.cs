@@ -630,6 +630,31 @@ public abstract class RenderableShapeBase : RenderableBase
             topLeft.Y + rotatedCy - halfH);
     }
 
+    /// <summary>
+    /// Compute the absolute center of a shape whose top-left is at <paramref name="absoluteLeft"/>,
+    /// <paramref name="absoluteTop"/>, taking rotation around the top-left origin into account
+    /// (Gum's default rotation pivot). Issue #2925 — used by <see cref="Circle.Render"/> and
+    /// <see cref="Arc.Render"/>; <see cref="RoundedRectangle"/> handles its own rotation via
+    /// <c>ShapeBatch.DrawRectangle</c>'s rotation parameter and does not call this.
+    /// </summary>
+    /// <param name="rotationRadians">Already negated to match the rendering convention
+    /// (negative of the GUE's degrees-based Rotation).</param>
+    public static Vector2 GetRotatedCenter(float absoluteLeft, float absoluteTop, float width, float height, float rotationRadians)
+    {
+        if (rotationRadians == 0)
+        {
+            return new Vector2(absoluteLeft + width / 2.0f, absoluteTop + height / 2.0f);
+        }
+
+        var halfW = width / 2.0f;
+        var halfH = height / 2.0f;
+        var cos = (float)System.Math.Cos(rotationRadians);
+        var sin = (float)System.Math.Sin(rotationRadians);
+        return new Vector2(
+            absoluteLeft + halfW * cos - halfH * sin,
+            absoluteTop + halfW * sin + halfH * cos);
+    }
+
     public override string BatchKey => "Apos.Shapes";
 
     public override void StartBatch(ISystemManagers systemManagers)

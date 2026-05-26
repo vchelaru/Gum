@@ -24,9 +24,9 @@
 	  <LangVersion>12.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-	  <PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
-	  <PackageReference Include="nkast.Xna.Framework.Game" Version="4.1.9001" />
-	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001.1" />
+	  <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
+	  <PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" />
+	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="ImageRegionSelectionControl.cs">

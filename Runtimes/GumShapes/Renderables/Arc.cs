@@ -69,9 +69,13 @@ internal class Arc : RenderableShapeBase
         var absoluteLeft = this.GetAbsoluteLeft();
         var absoluteTop = this.GetAbsoluteTop();
 
-        var center = new Microsoft.Xna.Framework.Vector2(
-            absoluteLeft + Width / 2.0f,
-            absoluteTop + Width / 2.0f);
+        // Issue #2925 — same rotation handling as Circle.Render: rotate the (Width/2, Width/2)
+        // offset from the GUE's top-left origin to the arc center. The arc's StartAngle is also
+        // offset by the absolute rotation in RenderInternal so the swept arc orients correctly
+        // when the GUE is rotated. Preserves the original convention of using Width for both
+        // axes (arcs are drawn in a square box keyed off Width).
+        var rotationRadians = MathHelper.ToRadians(-this.GetAbsoluteRotation());
+        var center = GetRotatedCenter(absoluteLeft, absoluteTop, Width, Width, rotationRadians);
 
         var radius = Width / 2 - StrokeWidth / 2;
 
@@ -106,9 +110,12 @@ internal class Arc : RenderableShapeBase
         float lineThickness,
         Color? forcedColor = null)
     {
-        var startAngleRadians = MathHelper.ToRadians(-StartAngle);
+        // Issue #2925 — offset the swept arc by the GUE's absolute rotation so the arc tilts
+        // with its bounding box. Matches the negate-and-add convention StartAngle already uses.
+        var absoluteRotation = this.GetAbsoluteRotation();
+        var startAngleRadians = MathHelper.ToRadians(-StartAngle - absoluteRotation);
         float endAngleRadians = 0;
-        endAngleRadians = MathHelper.ToRadians(-StartAngle - SweepAngle);
+        endAngleRadians = MathHelper.ToRadians(-StartAngle - SweepAngle - absoluteRotation);
 
         if (startAngleRadians > endAngleRadians)
         {

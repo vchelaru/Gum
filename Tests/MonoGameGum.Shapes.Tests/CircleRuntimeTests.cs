@@ -469,4 +469,41 @@ public class CircleRuntimeTests
         stroke.StrokeDashLength.ShouldBe(6f);
         stroke.StrokeGapLength.ShouldBe(4f);
     }
+
+    // Issue #2925 — when MonoGameGumShapes is loaded, CircleRuntime's constructor sets
+    // the fill renderable (Apos Circle with IsFilled=true) as mContainedObjectAsIpso.
+    // The tool's variable-application path dispatches on the contained renderable via
+    // CustomSetPropertyOnRenderable, so the legacy "Color" variable (historically the
+    // stroke color on a LineCircle-backed Circle) now writes to the FILL renderable
+    // instead of the stroke renderable. Result: a freshly-loaded default Circle renders
+    // as a solid white disc instead of a stroke-only outline.
+    //
+    // The fix must keep "Color" reaching _stroke.Color (matching pre-Apos behavior) and
+    // leave _fill.Color at its transparent constructor default until FillColor is set
+    // explicitly.
+    [Fact]
+    public void SetProperty_Color_RoutesToStroke_NotFill()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("Color", System.Drawing.Color.FromArgb(255, 255, 0, 0));
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.Color.ShouldBe(new Color(255, 0, 0, 255));
+        fill.Color.ShouldBe(new Color(0, 0, 0, 0));
+    }
+
+    [Fact]
+    public void SetProperty_Alpha_RoutesToStroke_NotFill()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("Alpha", 128);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.Color.A.ShouldBe((byte)128);
+        fill.Color.ShouldBe(new Color(0, 0, 0, 0));
+    }
 }

@@ -645,11 +645,12 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 
-    Color? _strokeColor;
+    Color? _strokeColor = Color.White;
 
     /// <summary>
-    /// Color of the outline. <c>null</c> hides the stroke (alpha 0). The stroke slot is
-    /// always non-null on XNA-like backends — core ships
+    /// Color of the outline. Defaults to white so a freshly-constructed RectangleRuntime
+    /// renders the same visible outline as legacy code did. <c>null</c> hides the stroke
+    /// (alpha 0). The stroke slot is always non-null on XNA-like backends — core ships
     /// <see cref="DefaultStrokedRectangleRenderable"/> as the default.
     /// </summary>
     public Color? StrokeColor
@@ -725,9 +726,10 @@ public class RectangleRuntime : GraphicalUiElement
 
     /// <summary>
     /// Unit of measurement for <see cref="CornerRadius"/> and the per-corner overrides.
-    /// Reserved for future ScreenPixel parity with Skia — currently the value round-trips on
-    /// the runtime but Apos.Shapes' RoundedRectangle ignores it (the rendered radius is the
-    /// raw pixel value).
+    /// <c>Absolute</c> renders the raw pixel value; <c>ScreenPixel</c> divides each radius by
+    /// the camera zoom each frame in <see cref="PreRender"/> so corners hold a constant
+    /// on-screen size as the camera zooms — matching Skia and <see cref="StrokeWidthUnits"/>
+    /// (issue #2925 Phase 0 parity).
     /// </summary>
     public DimensionUnitType CornerRadiusUnits
     {
@@ -1325,6 +1327,45 @@ public class RectangleRuntime : GraphicalUiElement
             strokeSized.Width = fillSized.Width;
             strokeSized.Height = fillSized.Height;
         }
+
+        // Issue #2925 (Phase 0) — resolve unit-aware corner radii each frame so ScreenPixel
+        // holds a constant on-screen size at non-1 camera zoom. Mirrors the Skia branch in
+        // RoundedRectangleRuntime.PreRender / RectangleRuntime SKIA PreRender. The setters
+        // already pushed the raw values into both slots; this pass overwrites them with the
+        // resolved values when the camera is available. Under Absolute (or with no camera)
+        // the resolved values equal the raw values so the slot state is unchanged.
+        float cornerRadius = _cornerRadius;
+        float? topLeft = _customRadiusTopLeft;
+        float? topRight = _customRadiusTopRight;
+        float? bottomLeft = _customRadiusBottomLeft;
+        float? bottomRight = _customRadiusBottomRight;
+
+        if (_cornerRadiusUnits == DimensionUnitType.ScreenPixel)
+        {
+            var camera = this.EffectiveManagers?.Renderer?.Camera;
+            if (camera != null)
+            {
+                cornerRadius /= camera.Zoom;
+                topLeft /= camera.Zoom;
+                topRight /= camera.Zoom;
+                bottomLeft /= camera.Zoom;
+                bottomRight /= camera.Zoom;
+            }
+        }
+
+        if (_fill != null)
+        {
+            _fill.CornerRadius = cornerRadius;
+            _fill.CustomRadiusTopLeft = topLeft;
+            _fill.CustomRadiusTopRight = topRight;
+            _fill.CustomRadiusBottomLeft = bottomLeft;
+            _fill.CustomRadiusBottomRight = bottomRight;
+        }
+        _stroke.CornerRadius = cornerRadius;
+        _stroke.CustomRadiusTopLeft = topLeft;
+        _stroke.CustomRadiusTopRight = topRight;
+        _stroke.CustomRadiusBottomLeft = bottomLeft;
+        _stroke.CustomRadiusBottomRight = bottomRight;
     }
 
     /// <inheritdoc/>

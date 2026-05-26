@@ -431,12 +431,13 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 
-    Color? _strokeColor;
+    Color? _strokeColor = Color.White;
 
     /// <summary>
-    /// Color of the outline. <c>null</c> hides the stroke (alpha 0) so only the fill draws.
-    /// The stroke slot is always non-null on supported backends — core ships
-    /// <see cref="DefaultStrokedCircleRenderable"/> as the default.
+    /// Color of the outline. Defaults to white so a freshly-constructed CircleRuntime renders
+    /// the same visible outline as legacy code did. <c>null</c> hides the stroke (alpha 0) so
+    /// only the fill draws. The stroke slot is always non-null on supported backends — core
+    /// ships <see cref="DefaultStrokedCircleRenderable"/> as the default.
     /// </summary>
     public Color? StrokeColor
     {

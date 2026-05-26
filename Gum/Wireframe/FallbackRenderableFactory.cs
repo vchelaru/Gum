@@ -1,3 +1,4 @@
+using Gum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -127,11 +128,38 @@ namespace Gum.Wireframe
                     break;
 
                 case "Rectangle":
+#if MONOGAME || FNA || KNI
+                    // Issue #2925 — prefer a registry-supplied stroked rectangle (Apos.Shapes
+                    // RoundedRectangle when MonoGameGumShapes is loaded) over the legacy
+                    // LineRectangle. The IStrokedRectangleRenderable interface is XNALIKE-only
+                    // (registry is shared via GumCommon but the interface ships under #if XNALIKE
+                    // in MonoGameGum), so RAYLIB/SOKOL fall through to the unconditional legacy
+                    // path below. In XNALIKE builds the core default factory
+                    // (DefaultStrokedRectangleRenderable, a LineRectangle subclass) is registered
+                    // at module load; tests that call RenderableRegistry.Reset() will see null
+                    // here and fall through to the legacy path.
+                    if (RenderableRegistry.Create<IStrokedRectangleRenderable>() is IRenderable registryRectangle)
+                    {
+                        containedObject = registryRectangle;
+                        break;
+                    }
+#endif
                     LineRectangle rectangle = new LineRectangle(systemManagers);
                     rectangle.IsDotted = false;
                     containedObject = rectangle;
                     break;
                 case "Circle":
+#if MONOGAME || FNA || KNI
+                    // Issue #2925 — prefer a registry-supplied stroked circle (Apos.Shapes Circle
+                    // when MonoGameGumShapes is loaded) over the legacy LineCircle so the tool
+                    // and runtime render the same Apos-backed shape that the MonoGameGum
+                    // CircleRuntime constructor resolves. Same XNALIKE gating as Rectangle above.
+                    if (RenderableRegistry.Create<IStrokedCircleRenderable>() is IRenderable registryCircle)
+                    {
+                        containedObject = registryCircle;
+                        break;
+                    }
+#endif
                     LineCircle circle = new LineCircle(systemManagers);
                     circle.CircleOrigin = CircleOrigin.TopLeft;
                     containedObject = circle;
