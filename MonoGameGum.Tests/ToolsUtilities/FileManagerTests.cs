@@ -26,7 +26,11 @@ public class FileManagerTests : IDisposable
         var ex = Should.Throw<IOException>(() => FileManager.GetStreamForFile("anything.gumx"));
 
         ex.InnerException.ShouldBeOfType<FileNotFoundException>();
-        ((FileNotFoundException)ex.InnerException!).FileName.ShouldBe("anything.gumx");
+        // GetStreamForFile normalizes the path to absolute before invoking the hook so that
+        // it agrees with FileExists on what file is being asked for. The FileNotFoundException
+        // therefore carries the absolute path, not the original relative input.
+        ((FileNotFoundException)ex.InnerException!).FileName.ShouldEndWith("anything.gumx");
+        Path.IsPathRooted(((FileNotFoundException)ex.InnerException!).FileName).ShouldBeTrue();
     }
 
     [Fact]

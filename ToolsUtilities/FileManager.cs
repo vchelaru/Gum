@@ -776,6 +776,18 @@ namespace ToolsUtilities
                 fileName = TryRemoveLeadingDotSlash(fileName);
 			    return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
 #else
+                // Normalize to an absolute path BEFORE handing off — both for the host-installed
+                // CustomGetStreamFromFile hook and for the direct File.OpenRead fallback. FileExists
+                // already does this via Standardize(makeAbsolute: true); keeping the two APIs in
+                // lockstep is important because callers commonly do FileExists(p) then
+                // GetStreamForFile(p). If they disagreed on path shape, the hook would see two
+                // different strings for the same logical file — the exact bug that caused
+                // ".ganx FileExists succeeds, then XmlDeserialize 404s" on Blazor WASM.
+                if (IsRelative(fileName))
+                {
+                    fileName = FileManager.MakeAbsolute(fileName);
+                }
+
                 if (CustomGetStreamFromFile != null)
                 {
                     var customStream = CustomGetStreamFromFile(fileName);
@@ -787,11 +799,6 @@ namespace ToolsUtilities
                 }
                 else
                 {
-                    if (IsRelative(fileName))
-                    {
-                        fileName = FileManager.MakeAbsolute(fileName);
-                    }
-
                     fileName = fileName.Replace('\\', Path.DirectorySeparatorChar)
                         .Replace('/', Path.DirectorySeparatorChar);
 
