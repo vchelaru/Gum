@@ -88,13 +88,28 @@ public class StandardElementsManagerTests : BaseTestClass
     [Theory]
     [InlineData("Circle")]
     [InlineData("Rectangle")]
-    public void DefaultState_FillColorDefaultsTransparent_PreservingHistoricalStrokeOnlyAppearance(string standardElementName)
+    public void DefaultState_IsFilledDefaultsFalse_SoOutlineOnlyAppearanceMatchesCheckbox(string standardElementName)
     {
-        // The plain Circle/Rectangle runtimes default FillColor to transparent (alpha 0) and
-        // IsFilled to true, so the historical "outline only" visual is preserved without users
-        // having to toggle IsFilled = false. The default state must match.
+        // The runtime keeps its #2938 ctor defaults (IsFilled = true + transparent fill) so
+        // historical code-only constructions still render outline-only. The tool diverges
+        // intentionally: defaulting IsFilled = false here keeps the same visual but makes the
+        // checkbox honestly reflect what's drawn. Pairs with the visible fill defaults below so
+        // toggling IsFilled in the variable grid produces an immediate visual change.
         var state = StandardElementsManager.Self.DefaultStates[standardElementName];
 
-        state.Variables.First(v => v.Name == "FillAlpha").Value.ShouldBe(0);
+        state.Variables.First(v => v.Name == "IsFilled").Value.ShouldBe(false);
+    }
+
+    [Theory]
+    [InlineData("Circle")]
+    [InlineData("Rectangle")]
+    public void DefaultState_FillColorDefaultsOpaqueWhite_SoTogglingIsFilledShowsImmediateChange(string standardElementName)
+    {
+        var state = StandardElementsManager.Self.DefaultStates[standardElementName];
+
+        state.Variables.First(v => v.Name == "FillAlpha").Value.ShouldBe(255);
+        state.Variables.First(v => v.Name == "FillRed").Value.ShouldBe(255);
+        state.Variables.First(v => v.Name == "FillGreen").Value.ShouldBe(255);
+        state.Variables.First(v => v.Name == "FillBlue").Value.ShouldBe(255);
     }
 }

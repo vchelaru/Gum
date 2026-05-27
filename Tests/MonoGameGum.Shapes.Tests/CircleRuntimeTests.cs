@@ -599,4 +599,33 @@ public class CircleRuntimeTests
 
         sut.StrokeWidth.ShouldBe(7f);
     }
+
+    // Issue #2931 — IsFilled must route through the runtime's two-slot gate, not the
+    // fill renderable's own IsFilled (which would change the Apos shader mode of the fill
+    // Circle instead of toggling fill visibility). Reproduces the user-reported "IsFilled
+    // checkbox does nothing" symptom.
+    [Fact]
+    public void SetProperty_IsFilled_True_LightsUpFillSlotWithFillColor()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = Color.Red;
+        sut.IsFilled = false;
+
+        sut.SetProperty("IsFilled", true);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Color.ShouldBe(Color.Red);
+    }
+
+    [Fact]
+    public void SetProperty_IsFilled_False_HidesFillSlot()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = Color.Red;
+
+        sut.SetProperty("IsFilled", false);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Color.A.ShouldBe((byte)0);
+    }
 }

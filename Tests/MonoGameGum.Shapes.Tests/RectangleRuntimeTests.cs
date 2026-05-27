@@ -579,4 +579,29 @@ public class RectangleRuntimeTests
 
         sut.StrokeWidth.ShouldBe(7f);
     }
+
+    [Fact]
+    public void SetProperty_IsFilled_True_LightsUpFillSlotWithFillColor()
+    {
+        RectangleRuntime sut = new();
+        sut.FillColor = Color.Red;
+        sut.IsFilled = false;
+
+        sut.SetProperty("IsFilled", true);
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        fill.Color.ShouldBe(Color.Red);
+    }
+
+    [Fact]
+    public void SetProperty_IsFilled_False_HidesFillSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.FillColor = Color.Red;
+
+        sut.SetProperty("IsFilled", false);
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        fill.Color.A.ShouldBe((byte)0);
+    }
 }

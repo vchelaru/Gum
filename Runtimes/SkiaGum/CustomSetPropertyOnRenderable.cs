@@ -316,6 +316,17 @@ public class CustomSetPropertyOnRenderable
             // some properties have priority on the base shape itself:
             switch (propertyName)
             {
+                // #2931: same as the Circle branch — IsFilled gates two-slot fill visibility
+                // on the runtime; pushing to the renderable would flip Apos's shader mode on
+                // the fill RoundedRectangle without actually hiding/showing the fill.
+                case nameof(RectangleRuntime.IsFilled):
+                    if (graphicalUiElement is RectangleRuntime rectIsFilled)
+                    {
+                        rectIsFilled.IsFilled = (bool)value;
+                        handled = true;
+                        break;
+                    }
+                    break;
                 case nameof(RoundedRectangleRuntime.StrokeWidth):
                     if(graphicalUiElement is RoundedRectangleRuntime asRoundedRectangleRuntime)
                     {
@@ -487,6 +498,18 @@ public class CustomSetPropertyOnRenderable
             // dispatch on the actual GUE type rather than hard-casting.
             switch(propertyName)
             {
+                // #2931: IsFilled on plain CircleRuntime gates the runtime's two-slot fill
+                // visibility (fires the FillColor-or-transparent push). Setting the fill
+                // renderable's own IsFilled instead — what TrySetPropertiesOnRenderableBase
+                // does — flips Apos's shader mode on the fill Circle, which is a different
+                // axis and does NOT toggle fill visibility. Intercept here.
+                case nameof(CircleRuntime.IsFilled):
+                    if (graphicalUiElement is CircleRuntime cIsFilled)
+                    {
+                        cIsFilled.IsFilled = (bool)value;
+                        handled = true;
+                    }
+                    break;
                 case nameof(ColoredCircleRuntime.StrokeWidth):
                     if (graphicalUiElement is ColoredCircleRuntime ccStrokeWidth)
                     {
