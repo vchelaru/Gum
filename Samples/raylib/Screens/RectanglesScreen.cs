@@ -356,9 +356,6 @@ internal class RectanglesScreen : FrameworkElement
         rect.XUnits = GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = VerticalAlignment.Center;
         rect.YUnits = GeneralUnitType.PixelsFromMiddle;
-        // Issue #2956 — FillColor must be opaque to light up the fill slot; see the MG
-        // CirclesScreen for the contract rationale.
-        rect.FillColor = Color.White;
         rect.UseGradient = true;
         rect.GradientType = GradientType.Linear;
         rect.Color1 = Color.Black;

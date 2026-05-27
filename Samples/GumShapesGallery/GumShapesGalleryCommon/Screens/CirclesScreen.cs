@@ -520,11 +520,6 @@ internal class CirclesScreen : FrameworkElement
         circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = VerticalAlignment.Center;
         circle.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        // Issue #2956 — FillColor must be opaque to light up the fill slot; UseGradient is a
-        // pattern flag, not a visibility flag, so a transparent fill (the default) would suppress
-        // the gradient. RGB is irrelevant — the gradient overrides per-pixel color; only alpha
-        // gates whether the slot paints at all.
-        circle.FillColor = Color.White;
         circle.UseGradient = true;
         circle.GradientType = GradientType.Linear;
         circle.Color1 = Color.Black;

@@ -459,9 +459,6 @@ internal class RectanglesScreen : FrameworkElement
         rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = VerticalAlignment.Center;
         rect.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        // Issue #2956 — FillColor must be opaque to light up the fill slot; see CirclesScreen
-        // BuildRotatedGradientCircleCell for the contract rationale.
-        rect.FillColor = Color.White;
         rect.UseGradient = true;
         rect.GradientType = GradientType.Linear;
         rect.Color1 = Color.Black;
