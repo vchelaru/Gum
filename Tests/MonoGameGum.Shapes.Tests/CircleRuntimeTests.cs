@@ -817,4 +817,67 @@ public class CircleRuntimeTests
         stroke.StrokeWidth.ShouldBe(0f);
         stroke.HasVisibleOutput.ShouldBeFalse();
     }
+
+    // Issue #2936 — at high camera zoom with a thin ScreenPixel stroke the user saw a visible
+    // gap between fill and stroke. Root cause: the aposAaContribution = 1 constant is in
+    // SCREEN pixels (Apos's hardcoded 1 px AA halo) but the surrounding math operates in
+    // world units. At Zoom > 1, the inset (= aaContribution) was too large relative to the
+    // visible 1 px stroke, so the fill receded farther than the stroke extended, opening a
+    // ring of background between them. Fix: convert aaContribution to world units (divide by
+    // zoom) before using it in either the AA-compensation subtraction or the inset clamp.
+
+    [Fact]
+    public void PreRender_StrokeWidthOneScreenPixel_AtZoom4_PushesQuarterWorldInsetToFill()
+    {
+        float originalZoom = RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
+        try
+        {
+            CircleRuntime sut = new();
+            sut.AddToManagers(RenderingLibrary.SystemManagers.Default, null);
+            sut.IsFilled = true;
+            sut.StrokeColor = new Color(255, 0, 255, 255);
+            sut.StrokeWidth = 1f;
+            sut.StrokeWidthUnits = DimensionUnitType.ScreenPixel;
+            RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = 4f;
+
+            ((IRenderable)sut.RenderableComponent).PreRender();
+
+            // Visible stroke band = 1 screen pixel = 0.25 world units at Zoom=4. The fill inset
+            // must match that world extent — not the unscaled 1 world unit that the original
+            // math produced, which left a 3 px gap between fill and stroke at this zoom.
+            Circle fill = (Circle)sut.RenderableComponent;
+            fill.FillRadiusInset.ShouldBe(0.25f, tolerance: 0.001f);
+        }
+        finally
+        {
+            RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = originalZoom;
+        }
+    }
+
+    [Fact]
+    public void PreRender_StrokeWidthOneAbsolute_AtZoom1_PushesUnityWorldInsetToFill()
+    {
+        // Regression guard for the original #2834 behavior: at Zoom = 1 the fix should be a
+        // no-op (aaContribution / 1 = 1), so the original 1-world-unit inset is preserved.
+        float originalZoom = RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
+        try
+        {
+            CircleRuntime sut = new();
+            sut.AddToManagers(RenderingLibrary.SystemManagers.Default, null);
+            sut.IsFilled = true;
+            sut.StrokeColor = new Color(255, 0, 255, 255);
+            sut.StrokeWidth = 1f;
+            sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+            RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = 1f;
+
+            ((IRenderable)sut.RenderableComponent).PreRender();
+
+            Circle fill = (Circle)sut.RenderableComponent;
+            fill.FillRadiusInset.ShouldBe(1f, tolerance: 0.001f);
+        }
+        finally
+        {
+            RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = originalZoom;
+        }
+    }
 }

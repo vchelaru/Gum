@@ -1452,19 +1452,21 @@ public class RectangleRuntime : GraphicalUiElement
     /// <inheritdoc cref="CircleRuntime.PreRender"/>
     public override void PreRender()
     {
+        // Resolve the camera once up front — drives both the ScreenPixel → world conversion
+        // for StrokeWidth and the screen → world conversion for aposAaContribution (#2936).
+        // Mirrors CircleRuntime.PreRender.
+        var camera = this.EffectiveManagers?.Renderer?.Camera;
+        float cameraZoom = camera?.Zoom ?? 1f;
+
         float strokeWidth = _strokeWidth;
         float strokeDashLength = _strokeDashLength;
         float strokeGapLength = _strokeGapLength;
-        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel && camera != null)
         {
-            var camera = this.EffectiveManagers?.Renderer?.Camera;
-            if (camera != null)
-            {
-                // Mirror AposShapeRuntime.PreRender — dash and gap scale alongside stroke width.
-                strokeWidth /= camera.Zoom;
-                strokeDashLength /= camera.Zoom;
-                strokeGapLength /= camera.Zoom;
-            }
+            // Mirror AposShapeRuntime.PreRender — dash and gap scale alongside stroke width.
+            strokeWidth /= cameraZoom;
+            strokeDashLength /= cameraZoom;
+            strokeGapLength /= cameraZoom;
         }
         // Mirror of CircleRuntime.PreRender — same two-case structure (user-set <= 0 vs
         // positive thin stroke). See CircleRuntime.PreRender for the full rationale on why
@@ -1475,6 +1477,9 @@ public class RectangleRuntime : GraphicalUiElement
         //     a tiny positive epsilon so thin strokes still render (#2818).
         const float aposAaContribution = 1f;
         const float aposMinThicknessEpsilon = 0.01f;
+        // #2936 — aposAaContribution is in SCREEN pixels; convert to world units. See
+        // CircleRuntime.PreRender for the full rationale.
+        float aposAaContributionWorld = aposAaContribution / cameraZoom;
         float renderableStrokeWidth;
         if (strokeWidth <= 0)
         {
@@ -1482,7 +1487,7 @@ public class RectangleRuntime : GraphicalUiElement
         }
         else if (_isAntialiased && _stroke is IAntialiasedRenderable)
         {
-            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContribution);
+            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContributionWorld);
         }
         else
         {

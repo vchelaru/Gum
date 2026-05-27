@@ -1213,20 +1213,23 @@ public class CircleRuntime : GraphicalUiElement
     /// </summary>
     public override void PreRender()
     {
+        // Resolve the camera once up front. It drives two unit conversions below: the
+        // ScreenPixel → world division for StrokeWidth (and dash/gap), and the screen → world
+        // division for aposAaContribution (which represents Apos's hardcoded 1-pixel AA halo,
+        // see #2936). Falls back to zoom = 1 in unit tests / pre-mount.
+        var camera = this.EffectiveManagers?.Renderer?.Camera;
+        float cameraZoom = camera?.Zoom ?? 1f;
+
         float strokeWidth = _strokeWidth;
         float strokeDashLength = _strokeDashLength;
         float strokeGapLength = _strokeGapLength;
-        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel && camera != null)
         {
-            var camera = this.EffectiveManagers?.Renderer?.Camera;
-            if (camera != null)
-            {
-                // Mirrors AposShapeRuntime.PreRender — dash and gap scale alongside stroke
-                // width so a "1 px dotted" pattern stays 1 px on screen regardless of zoom.
-                strokeWidth /= camera.Zoom;
-                strokeDashLength /= camera.Zoom;
-                strokeGapLength /= camera.Zoom;
-            }
+            // Mirrors AposShapeRuntime.PreRender — dash and gap scale alongside stroke
+            // width so a "1 px dotted" pattern stays 1 px on screen regardless of zoom.
+            strokeWidth /= cameraZoom;
+            strokeDashLength /= cameraZoom;
+            strokeGapLength /= cameraZoom;
         }
         // Two distinct cases for what to push to the renderable's StrokeWidth — don't collapse
         // them, the difference is load-bearing:
@@ -1253,6 +1256,12 @@ public class CircleRuntime : GraphicalUiElement
         //    stroke default (LineCircle wrapper, no AA concept) still receives the raw value.
         const float aposAaContribution = 1f;
         const float aposMinThicknessEpsilon = 0.01f;
+        // Issue #2936 — aposAaContribution is in SCREEN pixels (Apos's hardcoded 1 px AA halo).
+        // Convert to world units before mixing with strokeWidth, which has already been
+        // resolved to world units above. At cameraZoom = 1 this is a no-op (original #2790
+        // behavior preserved); at cameraZoom > 1 the world value shrinks proportionally, which
+        // is what closes the gap below.
+        float aposAaContributionWorld = aposAaContribution / cameraZoom;
         float renderableStrokeWidth;
         if (strokeWidth <= 0)
         {
@@ -1260,7 +1269,7 @@ public class CircleRuntime : GraphicalUiElement
         }
         else if (_isAntialiased && _stroke is IAntialiasedRenderable)
         {
-            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContribution);
+            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContributionWorld);
         }
         else
         {
@@ -1326,7 +1335,10 @@ public class CircleRuntime : GraphicalUiElement
                 fillRadiusInset = renderableStrokeWidth;
                 if (_isAntialiased && _stroke is IAntialiasedRenderable)
                 {
-                    fillRadiusInset = Math.Max(fillRadiusInset, aposAaContribution);
+                    // #2936: aaContribution in WORLD units (= 1 screen px / zoom). At Zoom > 1
+                    // this is < 1 world unit, so the inset no longer over-shrinks the fill
+                    // relative to the visible stroke band's inward extent.
+                    fillRadiusInset = Math.Max(fillRadiusInset, aposAaContributionWorld);
                 }
             }
             _fill.FillRadiusInset = fillRadiusInset;
