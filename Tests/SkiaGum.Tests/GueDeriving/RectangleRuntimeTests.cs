@@ -23,6 +23,7 @@ public class RectangleRuntimeTests
     public void Clone_MutatingClone_DoesNotMutateSource()
     {
         RectangleRuntime source = new();
+        source.IsFilled = true;
         source.FillColor = SKColors.Red;
         source.StrokeColor = SKColors.Blue;
 
@@ -192,8 +193,11 @@ public class RectangleRuntimeTests
         strokeSlot.CustomRadiusBottomRight.ShouldBe(4f);
     }
 
+    // Issue #2938 — IsFilled gates dropshadow routing. RectangleRuntime defaults to
+    // IsFilled = false (stroke-only historical visual), so the shadow lands on the stroke slot
+    // by default.
     [Fact]
-    public void Dropshadow_FillColorNull_AppliesToStrokeSlot()
+    public void Dropshadow_IsFilledFalse_AppliesToStrokeSlot()
     {
         RectangleRuntime sut = new();
         sut.HasDropshadow = true;
@@ -207,9 +211,10 @@ public class RectangleRuntimeTests
     }
 
     [Fact]
-    public void Dropshadow_FillColorSet_AppliesToFillSlot()
+    public void Dropshadow_IsFilledTrue_AppliesToFillSlot()
     {
         RectangleRuntime sut = new();
+        sut.IsFilled = true;
         sut.FillColor = SKColors.Red;
         sut.HasDropshadow = true;
 
@@ -225,6 +230,7 @@ public class RectangleRuntimeTests
     public void Dropshadow_TargetSwitch_ClearsPreviousSlot()
     {
         RectangleRuntime sut = new();
+        sut.IsFilled = true;
         sut.FillColor = SKColors.Red;
         sut.HasDropshadow = true;
         sut.PreRender();
@@ -232,24 +238,55 @@ public class RectangleRuntimeTests
         RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.HasDropshadow.ShouldBeTrue();
 
-        sut.FillColor = null;
+        sut.IsFilled = false;
         sut.PreRender();
 
         fillSlot.HasDropshadow.ShouldBeFalse();
         strokeSlot.HasDropshadow.ShouldBeTrue();
     }
 
+    // Issue #2938 — RectangleRuntime mirrors the historical Skia default of an invisible fill
+    // (now expressed as IsFilled = false rather than FillColor = null).
     [Fact]
-    public void FillColor_ShouldBeNull_ByDefault()
+    public void IsFilled_ShouldBeFalse_ByDefault()
     {
         RectangleRuntime sut = new();
-        sut.FillColor.ShouldBeNull();
+        sut.IsFilled.ShouldBeFalse();
+    }
+
+    // Issue #2938 — per-channel ints compose into FillColor via the same setter pipeline
+    // that round-trips through the fill slot.
+    [Fact]
+    public void FillChannelSetters_ComposeFillColor()
+    {
+        RectangleRuntime sut = new();
+        sut.FillRed = 10;
+        sut.FillGreen = 20;
+        sut.FillBlue = 30;
+        sut.FillAlpha = 40;
+
+        sut.FillColor.ShouldBe(new SKColor(10, 20, 30, 40));
+    }
+
+    // Issue #2938 — per-channel ints compose into StrokeColor via the same setter pipeline
+    // that round-trips through the stroke slot.
+    [Fact]
+    public void StrokeChannelSetters_ComposeStrokeColor()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeRed = 11;
+        sut.StrokeGreen = 22;
+        sut.StrokeBlue = 33;
+        sut.StrokeAlpha = 44;
+
+        sut.StrokeColor.ShouldBe(new SKColor(11, 22, 33, 44));
     }
 
     [Fact]
     public void FillColorAndStrokeColor_BothSet_PaintsEachSlotIndependently()
     {
         RectangleRuntime sut = new();
+        sut.IsFilled = true;
         sut.FillColor = SKColors.Crimson;
         sut.StrokeColor = SKColors.Cyan;
 
@@ -266,6 +303,7 @@ public class RectangleRuntimeTests
     public void FillColorAndStrokeColor_SetInReverseOrder_StillPaintsBothSlots()
     {
         RectangleRuntime sut = new();
+        sut.IsFilled = true;
         sut.StrokeColor = SKColors.Magenta;
         sut.FillColor = SKColors.Gold;
 
@@ -315,15 +353,18 @@ public class RectangleRuntimeTests
         strokeSlot.IsOffsetAppliedForStroke.ShouldBeTrue();
     }
 
+    // Issue #2938 — IsFilled gates the fill-slot gradient. RectangleRuntime defaults to
+    // IsFilled = false so the fill-slot gradient starts off; toggling IsFilled = true lights
+    // it up.
     [Fact]
-    public void SettingFillColor_AfterUseGradientTrue_LightsUpFillSlotGradient()
+    public void SettingIsFilledTrue_AfterUseGradientTrue_LightsUpFillSlotGradient()
     {
         RectangleRuntime sut = new();
         sut.UseGradient = true;
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
         fillSlot.UseGradient.ShouldBeFalse();
 
-        sut.FillColor = SKColors.White;
+        sut.IsFilled = true;
 
         fillSlot.UseGradient.ShouldBeTrue();
     }
@@ -370,10 +411,10 @@ public class RectangleRuntimeTests
     }
 
     [Fact]
-    public void UseGradient_BothColorsSet_BothSlotsOn()
+    public void UseGradient_BothSlotsActive_BothSlotsOn()
     {
         RectangleRuntime sut = new();
-        sut.FillColor = SKColors.White;
+        sut.IsFilled = true;
         sut.UseGradient = true;
 
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
@@ -382,8 +423,11 @@ public class RectangleRuntimeTests
         strokeSlot.UseGradient.ShouldBeTrue();
     }
 
+    // Issue #2938 — IsFilled gates the fill-slot gradient. RectangleRuntime defaults to
+    // IsFilled = false so the fill slot stays off; the stroke slot lights up because the
+    // default StrokeWidth is 1.
     [Fact]
-    public void UseGradient_FillColorNull_FillSlotStaysOff()
+    public void UseGradient_IsFilledFalse_FillSlotStaysOff()
     {
         RectangleRuntime sut = new();
         sut.UseGradient = true;

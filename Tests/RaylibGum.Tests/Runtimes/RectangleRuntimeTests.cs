@@ -104,8 +104,7 @@ public class RectangleRuntimeTests : BaseTestClass
 
         sut.FillColor = expected;
 
-        sut.FillColor.ShouldNotBeNull();
-        sut.FillColor!.Value.R.ShouldBe((byte)10);
+        sut.FillColor.R.ShouldBe((byte)10);
         ((LineRectangle)sut.RenderableComponent!).FillColor.ShouldNotBeNull();
         ((LineRectangle)sut.RenderableComponent!).FillColor!.Value.R.ShouldBe((byte)10);
     }
@@ -118,7 +117,7 @@ public class RectangleRuntimeTests : BaseTestClass
 
         sut.StrokeColor = expected;
 
-        sut.StrokeColor.ShouldNotBeNull();
+        sut.StrokeColor.G.ShouldBe((byte)50);
         ((LineRectangle)sut.RenderableComponent!).StrokeColor.ShouldNotBeNull();
         ((LineRectangle)sut.RenderableComponent!).StrokeColor!.Value.G.ShouldBe((byte)50);
     }
@@ -158,13 +157,14 @@ public class RectangleRuntimeTests : BaseTestClass
         // so cells that set only FillColor still render with a visible 1 px white outline
         // (e.g. the gallery's Modes row first cell). Raylib must match or fill-only cells
         // render without the outline Skia draws.
+        // #2938 — runtime FillColor/StrokeColor are now non-nullable Color (defaulting to
+        // white) with IsFilled / StrokeWidth = 0 as the visibility gates.
         RectangleRuntime sut = new();
 
-        sut.StrokeColor.ShouldNotBeNull();
-        sut.StrokeColor!.Value.R.ShouldBe((byte)255);
-        sut.StrokeColor!.Value.G.ShouldBe((byte)255);
-        sut.StrokeColor!.Value.B.ShouldBe((byte)255);
-        sut.StrokeColor!.Value.A.ShouldBe((byte)255);
+        sut.StrokeColor.R.ShouldBe((byte)255);
+        sut.StrokeColor.G.ShouldBe((byte)255);
+        sut.StrokeColor.B.ShouldBe((byte)255);
+        sut.StrokeColor.A.ShouldBe((byte)255);
     }
 
     [Fact]

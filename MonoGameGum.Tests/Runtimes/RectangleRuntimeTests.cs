@@ -112,10 +112,78 @@ public class RectangleRuntimeTests : BaseTestClass
         sut.CornerRadius = 12f;
         sut.Width = 100;
         sut.Height = 60;
-        sut.FillColor = null;
-        sut.StrokeColor = null;
+        // Issue #2938 — FillColor/StrokeColor are non-nullable; visibility is gated via
+        // IsFilled (fill) and StrokeWidth = 0 (stroke).
+        sut.IsFilled = false;
+        sut.StrokeWidth = 0;
 
         sut.RenderableComponent.ShouldBeSameAs(original);
         ((DefaultFilledRectangleRenderable)sut.RenderableComponent).Children[0].ShouldBeSameAs(originalStroke);
+    }
+
+    // Issue #2938 — RectangleRuntime mirrors CircleRuntime's Pass 1 defaults: FillColor and
+    // StrokeColor are non-nullable (defaulting to white) and IsFilled defaults to true. Visual
+    // result: a freshly-constructed RectangleRuntime renders as a solid white block with a 1 px
+    // white outline.
+    [Fact]
+    public void FillColor_DefaultsToWhite()
+    {
+        RectangleRuntime sut = new();
+
+        sut.FillColor.ShouldBe(Color.White);
+    }
+
+    [Fact]
+    public void StrokeColor_DefaultsToWhite()
+    {
+        RectangleRuntime sut = new();
+
+        sut.StrokeColor.ShouldBe(Color.White);
+    }
+
+    [Fact]
+    public void IsFilled_DefaultsToTrue()
+    {
+        RectangleRuntime sut = new();
+
+        sut.IsFilled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsFilled_RoundTripsBackingField()
+    {
+        RectangleRuntime sut = new();
+
+        sut.IsFilled = false;
+        sut.IsFilled.ShouldBeFalse();
+
+        sut.IsFilled = true;
+        sut.IsFilled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FillChannelSetters_ComposeFillColor()
+    {
+        RectangleRuntime sut = new();
+
+        sut.FillRed = 11;
+        sut.FillGreen = 22;
+        sut.FillBlue = 33;
+        sut.FillAlpha = 44;
+
+        sut.FillColor.ShouldBe(new Color(11, 22, 33, 44));
+    }
+
+    [Fact]
+    public void StrokeChannelSetters_ComposeStrokeColor()
+    {
+        RectangleRuntime sut = new();
+
+        sut.StrokeRed = 11;
+        sut.StrokeGreen = 22;
+        sut.StrokeBlue = 33;
+        sut.StrokeAlpha = 44;
+
+        sut.StrokeColor.ShouldBe(new Color(11, 22, 33, 44));
     }
 }

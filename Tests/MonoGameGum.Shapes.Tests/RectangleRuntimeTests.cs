@@ -468,7 +468,9 @@ public class RectangleRuntimeTests
         RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
         stroke.Color.ShouldBe(new Color(255, 0, 0, 255));
-        fill.Color.ShouldBe(new Color(0, 0, 0, 0));
+        // Issue #2938 — fill defaults to white (IsFilled = true); the legacy Color setter only
+        // touches stroke, so fill stays at its default rather than being recolored.
+        fill.Color.ShouldBe(Color.White);
     }
 
     [Fact]
@@ -481,6 +483,64 @@ public class RectangleRuntimeTests
         RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
         stroke.Color.A.ShouldBe((byte)128);
-        fill.Color.ShouldBe(new Color(0, 0, 0, 0));
+        // Issue #2938 — fill defaults to white (IsFilled = true); the legacy Alpha setter only
+        // touches stroke, so fill stays at its default rather than being recolored.
+        fill.Color.ShouldBe(Color.White);
+    }
+
+    // Issue #2938 — IsFilled now gates fill visibility (mirror of CircleRuntime Pass 1).
+    // Setting IsFilled = false pushes a transparent color into the fill slot so only the
+    // stroke draws; toggling back to true restores the runtime's FillColor.
+    [Fact]
+    public void IsFilled_False_HidesFillSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.FillColor = Color.Red;
+
+        sut.IsFilled = false;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        fill.Color.A.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void IsFilled_True_AfterFalse_RestoresFillColor()
+    {
+        RectangleRuntime sut = new();
+        sut.FillColor = Color.Red;
+        sut.IsFilled = false;
+
+        sut.IsFilled = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        fill.Color.ShouldBe(Color.Red);
+    }
+
+    [Fact]
+    public void FillChannelSetters_PushToFillSlot()
+    {
+        RectangleRuntime sut = new();
+
+        sut.FillRed = 10;
+        sut.FillGreen = 20;
+        sut.FillBlue = 30;
+        sut.FillAlpha = 200;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        fill.Color.ShouldBe(new Color(10, 20, 30, 200));
+    }
+
+    [Fact]
+    public void StrokeChannelSetters_PushToStrokeSlot()
+    {
+        RectangleRuntime sut = new();
+
+        sut.StrokeRed = 10;
+        sut.StrokeGreen = 20;
+        sut.StrokeBlue = 30;
+        sut.StrokeAlpha = 200;
+
+        RoundedRectangle stroke = (RoundedRectangle)((RoundedRectangle)sut.RenderableComponent).Children[0];
+        stroke.Color.ShouldBe(new Color(10, 20, 30, 200));
     }
 }

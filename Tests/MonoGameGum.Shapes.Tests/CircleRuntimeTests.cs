@@ -115,9 +115,9 @@ public class CircleRuntimeTests
         fill.FillRadiusInset.ShouldBe(1f);
     }
 
-    // When the stroke is invisible (StrokeColor = null sets alpha 0) the fill should render
-    // at full radius — no inset, no background ring where the stroke would have been. This
-    // guards against fill-only mode rendering with an unwanted gap.
+    // When the stroke is invisible (StrokeWidth == 0) the fill should render at full radius —
+    // no inset, no background ring where the stroke would have been. This guards against
+    // fill-only mode rendering with an unwanted gap.
     [Fact]
     public void FillRadiusInset_WhenStrokeInvisible_StaysZero()
     {
@@ -125,8 +125,8 @@ public class CircleRuntimeTests
         sut.Width = 56;
         sut.Height = 56;
         sut.FillColor = Color.Red;
-        sut.StrokeColor = null;
-        sut.StrokeWidth = 4f;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 0f;
         sut.StrokeWidthUnits = DimensionUnitType.Absolute;
 
         Circle fill = (Circle)sut.RenderableComponent;
@@ -302,8 +302,8 @@ public class CircleRuntimeTests
         sut.Color = Color.Lime;
 #pragma warning restore CS0618
         sut.Radius = 25f;
-        sut.FillColor = null;
-        sut.StrokeColor = null;
+        sut.IsFilled = false;
+        sut.StrokeWidth = 0;
 
         sut.RenderableComponent.ShouldBeSameAs(originalFill);
         ((Circle)sut.RenderableComponent).Children[0].ShouldBeSameAs(originalStroke);
@@ -478,9 +478,10 @@ public class CircleRuntimeTests
     // instead of the stroke renderable. Result: a freshly-loaded default Circle renders
     // as a solid white disc instead of a stroke-only outline.
     //
-    // The fix must keep "Color" reaching _stroke.Color (matching pre-Apos behavior) and
-    // leave _fill.Color at its transparent constructor default until FillColor is set
-    // explicitly.
+    // The fix must keep "Color" reaching _stroke.Color (matching pre-Apos behavior). After
+    // #2938 the fill defaults to opaque white instead of transparent — the IsFilled gate
+    // controls visibility — so we only assert the legacy routing target (stroke), not the
+    // fill's default color.
     [Fact]
     public void SetProperty_Color_RoutesToStroke_NotFill()
     {
@@ -491,7 +492,7 @@ public class CircleRuntimeTests
         Circle fill = (Circle)sut.RenderableComponent;
         Circle stroke = (Circle)fill.Children[0];
         stroke.Color.ShouldBe(new Color(255, 0, 0, 255));
-        fill.Color.ShouldBe(new Color(0, 0, 0, 0));
+        fill.Color.ShouldBe(Color.White);
     }
 
     [Fact]
@@ -504,6 +505,64 @@ public class CircleRuntimeTests
         Circle fill = (Circle)sut.RenderableComponent;
         Circle stroke = (Circle)fill.Children[0];
         stroke.Color.A.ShouldBe((byte)128);
-        fill.Color.ShouldBe(new Color(0, 0, 0, 0));
+        fill.Color.ShouldBe(Color.White);
+    }
+
+    // Issue #2938 — IsFilled now gates fill visibility. Setting IsFilled = false should push
+    // a transparent color into the fill slot so only the stroke draws.
+    [Fact]
+    public void IsFilled_False_HidesFillSlot()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = Color.Red;
+
+        sut.IsFilled = false;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Color.A.ShouldBe((byte)0);
+    }
+
+    // Setting IsFilled back to true after toggling it off should restore the fill slot's
+    // color to the runtime's FillColor (the backing field round-trips through IsFilled
+    // changes; the renderable color follows the gate).
+    [Fact]
+    public void IsFilled_True_AfterFalse_RestoresFillColor()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = Color.Red;
+        sut.IsFilled = false;
+
+        sut.IsFilled = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Color.ShouldBe(Color.Red);
+    }
+
+    [Fact]
+    public void FillChannelSetters_PushToFillSlot()
+    {
+        CircleRuntime sut = new();
+
+        sut.FillRed = 10;
+        sut.FillGreen = 20;
+        sut.FillBlue = 30;
+        sut.FillAlpha = 200;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Color.ShouldBe(new Color(10, 20, 30, 200));
+    }
+
+    [Fact]
+    public void StrokeChannelSetters_PushToStrokeSlot()
+    {
+        CircleRuntime sut = new();
+
+        sut.StrokeRed = 10;
+        sut.StrokeGreen = 20;
+        sut.StrokeBlue = 30;
+        sut.StrokeAlpha = 200;
+
+        Circle stroke = (Circle)((Circle)sut.RenderableComponent).Children[0];
+        stroke.Color.ShouldBe(new Color(10, 20, 30, 200));
     }
 }
