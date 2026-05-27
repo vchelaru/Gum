@@ -101,10 +101,11 @@ public class Circle : RenderableShapeBase,
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius - DropshadowBlurX / 2f,
                 MathFunctions.RoundToInt(DropshadowBlurX),
                 StrokeWidth - DropshadowBlurX,
+                rotationRadians,
                 EffectiveDropshadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth);
+        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians);
     }
 
     private void RenderInternal(ShapeBatch sb,
@@ -114,11 +115,12 @@ public class Circle : RenderableShapeBase,
         float radius,
         int antiAliasSize,
         float strokeWidth,
+        float rotationRadians,
         Color? forcedColor = null)
     {
         if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0 && strokeWidth > 0 && radius > 0)
         {
-            RenderDashed(sb, absoluteLeft, absoluteTop, center, radius, antiAliasSize, strokeWidth, forcedColor);
+            RenderDashed(sb, absoluteLeft, absoluteTop, center, radius, antiAliasSize, strokeWidth, rotationRadians, forcedColor);
             return;
         }
 
@@ -151,7 +153,7 @@ public class Circle : RenderableShapeBase,
 
             if (UseGradient && forcedColor == null)
             {
-                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+                var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
 
                 sb.DrawCircle(
                     center,
@@ -177,7 +179,7 @@ public class Circle : RenderableShapeBase,
         {
             if(UseGradient && forcedColor == null)
             {
-                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+                var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
 
                 var transparentGradient = gradient;
                 transparentGradient.AC = new Color((int)gradient.AC.R, gradient.AC.G, gradient.AC.B, 0);
@@ -222,6 +224,7 @@ public class Circle : RenderableShapeBase,
         float radius,
         int antiAliasSize,
         float strokeWidth,
+        float rotationRadians,
         Color? forcedColor)
     {
         // Apos.Shapes 0.6.x DrawRing parameter naming is misleading - despite being called
@@ -250,7 +253,7 @@ public class Circle : RenderableShapeBase,
         // space gradient rather than restarting per-segment). GetGradient already returns world
         // coords, mirroring how upstream's DrawDashedCircle calls GradientToWorld + IsLocal=false.
         Gradient? gradient = (UseGradient && forcedColor == null)
-            ? base.GetGradient(absoluteLeft, absoluteTop)
+            ? base.GetGradient(absoluteLeft, absoluteTop, rotationRadians)
             : null;
         var color = forcedColor ?? Color;
 

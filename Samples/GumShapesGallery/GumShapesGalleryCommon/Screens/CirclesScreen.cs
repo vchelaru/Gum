@@ -50,6 +50,7 @@ internal class CirclesScreen : FrameworkElement
         left.AddChild(BuildSection("Stroke width", BuildStrokeWidthRow()));
         left.AddChild(BuildSection("Alignment", BuildAlignmentRow()));
         left.AddChild(BuildSection("Gradients", BuildGradientRow()));
+        left.AddChild(BuildSection("Rotation", BuildRotationRow()));
 
         right.AddChild(BuildSection("Antialiasing", BuildAntialiasingRow()));
         right.AddChild(BuildSection("Dropshadow", BuildDropshadowRow()));
@@ -489,6 +490,47 @@ internal class CirclesScreen : FrameworkElement
         circle.StrokeColor = Color.Yellow;
         circle.StrokeWidth = strokeWidth;
         circle.StrokeWidthUnits = DimensionUnitType.Absolute;
+        frame.Children.Add(circle);
+        return frame;
+    }
+
+    // Rotation row — black→white horizontal gradient on circles, rotated in 60° steps
+    // (0/60/120/180). Plain circles are rotation-symmetric, so the gradient is what makes
+    // the rotation visible. Endpoints are 0→20 px (less than the 56 px diameter) so the
+    // transition is concentrated in a narrow band — the resulting hard light/dark edge
+    // makes the rotation angle obvious. Cells use a fixed-size frame because Rotation
+    // pushes content outside the natural bounding box, which breaks the
+    // RelativeToChildren row sizing. Mirrors the same row on the SilkNet and raylib sides.
+    static ContainerRuntime BuildRotationRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float rotation in new[] { 0f, 60f, 120f, 180f })
+        {
+            row.AddChild(BuildRotatedGradientCircleCell(rotation));
+        }
+        return row;
+    }
+
+    static RectangleRuntime BuildRotatedGradientCircleCell(float rotation)
+    {
+        RectangleRuntime frame = new();
+        frame.Width = 70;
+        frame.Height = 70;
+        frame.FillColor = new Color(60, 60, 80);
+
+        CircleRuntime circle = new();
+        circle.Radius = 28;
+        circle.XOrigin = HorizontalAlignment.Center;
+        circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        circle.YOrigin = VerticalAlignment.Center;
+        circle.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        circle.UseGradient = true;
+        circle.GradientType = GradientType.Linear;
+        circle.Color1 = Color.Black;
+        circle.Color2 = Color.White;
+        circle.GradientX1 = 0; circle.GradientY1 = 0;
+        circle.GradientX2 = 20; circle.GradientY2 = 0;
+        circle.Rotation = rotation;
         frame.Children.Add(circle);
         return frame;
     }

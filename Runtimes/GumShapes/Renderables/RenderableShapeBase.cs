@@ -479,7 +479,7 @@ public abstract class RenderableShapeBase : RenderableBase
         OnPreRender?.Invoke();
     }
 
-    protected Gradient GetGradient(float absoluteLeft, float absoluteTop)
+    protected Gradient GetGradient(float absoluteLeft, float absoluteTop, float rotationRadians = 0f)
     {
         var firstColor = new Microsoft.Xna.Framework.Color(
                 (byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
@@ -516,6 +516,14 @@ public abstract class RenderableShapeBase : RenderableBase
         }
 
 
+        // The gradient is object-space-anchored: endpoints are computed in unrotated
+        // bounding-box coordinates above, then rotated around the GUE rotation pivot
+        // (absoluteLeft, absoluteTop) so the gradient travels with the shape as it
+        // rotates. Apos.Shapes interprets the endpoints in world coords (IsLocal=false,
+        // the default) and does NOT itself rotate the gradient with the shape's rotation
+        // parameter, so the rotation has to be applied here before construction.
+        var pivot = new Vector2(absoluteLeft, absoluteTop);
+
         if(_gradientType == GradientType.Linear)
         {
             var effectiveGradientX2 = absoluteLeft + GradientX2;
@@ -545,11 +553,10 @@ public abstract class RenderableShapeBase : RenderableBase
                     break;
             }
 
-            return new Gradient(new Vector2(effectiveGradientX1, effectiveGradientY1),
-                firstColor,
-                new Vector2(effectiveGradientX2, effectiveGradientY2),
-                secondColor
-                );
+            var pointA = RotateAround(new Vector2(effectiveGradientX1, effectiveGradientY1), pivot, rotationRadians);
+            var pointB = RotateAround(new Vector2(effectiveGradientX2, effectiveGradientY2), pivot, rotationRadians);
+
+            return new Gradient(pointA, firstColor, pointB, secondColor);
         }
         else
         {
@@ -559,30 +566,16 @@ public abstract class RenderableShapeBase : RenderableBase
             var effectiveGradientX2 = effectiveGradientX1 + effectiveOuterRadius;
             var effectiveGradientY2 = effectiveGradientY1;
 
-            return new Gradient(new Vector2(effectiveGradientX1, effectiveGradientY1),
+            var pointA = RotateAround(new Vector2(effectiveGradientX1, effectiveGradientY1), pivot, rotationRadians);
+            var pointB = RotateAround(new Vector2(effectiveGradientX2, effectiveGradientY2), pivot, rotationRadians);
+
+            return new Gradient(pointA,
                 firstColor,
-                new Vector2(effectiveGradientX2, effectiveGradientY2),
+                pointB,
                 secondColor,
                 s:Gradient.Shape.Radial,
                 aOffset:effectiveInnerRadius);
         }
-
-        // todo - eventually support rotation
-        //var rectToUse = boundingRect;
-        //if (absoluteRotation != 0)
-        //{
-        //    rectToUse = Unrotate(boundingRect, absoluteRotation);
-        //}
-        //else
-        //{
-        //    // If we apply rotation, then the camera coordinates are adjusted such that the gradient coordiantes are relative to the object.
-        //    // Otherwise, they are not so we need to offset:
-        //    effectiveGradientX1 += rectToUse.Left;
-        //    effectiveGradientY1 += rectToUse.Top;
-        //    effectiveGradientX2 += rectToUse.Left;
-        //    effectiveGradientY2 += rectToUse.Top;
-        //}
-
     }
 
     internal static float ResolveRadius(float value, DimensionUnitType units, float width)
@@ -653,6 +646,28 @@ public abstract class RenderableShapeBase : RenderableBase
         return new Vector2(
             absoluteLeft + halfW * cos - halfH * sin,
             absoluteTop + halfW * sin + halfH * cos);
+    }
+
+    /// <summary>
+    /// Rotates <paramref name="point"/> around <paramref name="pivot"/> by
+    /// <paramref name="rotationRadians"/>. Shared math used by the dashed-stroke perimeter
+    /// walk (RoundedRectangle) and by <see cref="GetGradient"/> when rotating gradient
+    /// endpoints so the gradient stays anchored to object-local space instead of the
+    /// unrotated bounding box.
+    /// </summary>
+    public static Vector2 RotateAround(Vector2 point, Vector2 pivot, float rotationRadians)
+    {
+        if (rotationRadians == 0f)
+        {
+            return point;
+        }
+        var cos = (float)System.Math.Cos(rotationRadians);
+        var sin = (float)System.Math.Sin(rotationRadians);
+        var dx = point.X - pivot.X;
+        var dy = point.Y - pivot.Y;
+        return new Vector2(
+            pivot.X + dx * cos - dy * sin,
+            pivot.Y + dx * sin + dy * cos);
     }
 
     public override string BatchKey => "Apos.Shapes";
