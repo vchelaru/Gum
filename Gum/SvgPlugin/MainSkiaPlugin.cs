@@ -133,8 +133,10 @@ namespace SkiaPlugin
         {
             GetDefaultStateForType += HandleGetDefaultStateForType;
             CreateRenderableForType += HandleCreateRenderbleFor;
-            VariableExcluded += DefaultStateManager.GetIfVariableIsExcluded;
-            VariableSet += DefaultStateManager.HandleVariableSet;
+            // Gradient / dropshadow / stroke variable hiding moved to ExclusionsPlugin
+            // (#2929/#2933/#2931 promoted those vars to plain Circle/Rectangle, so the
+            // gating is no longer Skia-specific). The corresponding grid-refresh triggers
+            // moved to SetVariableLogic.VariablesRequiringRefresh.
             ReactToFileChanged += HandleFileChanged;
             IsExtensionValid += HandleIsExtensionValid;
         }

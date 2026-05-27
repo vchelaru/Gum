@@ -52,6 +52,14 @@ public class SetVariableLogic : ISetVariableLogic
         {"BaseType",                                               VariableRefreshType.FullGridRefresh   },
         {"IsRenderTarget",                                         VariableRefreshType.FullGridRefresh   },
         {"TextOverflowVerticalMode",                               VariableRefreshType.FullGridRefresh   },
+        // These four gate which gradient / dropshadow / stroke channels are visible on
+        // shape elements (Circle/Rectangle/ColoredCircle/RoundedRectangle/Arc/Line/etc.).
+        // Toggling them changes the set of visible variables, so the grid needs a full
+        // rebuild. The exclusion rules themselves live in ExclusionsPlugin.
+        {"UseGradient",                                            VariableRefreshType.FullGridRefresh   },
+        {"GradientType",                                           VariableRefreshType.FullGridRefresh   },
+        {"HasDropshadow",                                          VariableRefreshType.FullGridRefresh   },
+        {"IsFilled",                                               VariableRefreshType.FullGridRefresh   },
         // Refreshing on locked causes the grid to refresh. This is a way to update it when selecting Locked from right-click
         {"Locked",                                                  VariableRefreshType.FullGridRefresh   },
         // These are handled in the SubtextLogic

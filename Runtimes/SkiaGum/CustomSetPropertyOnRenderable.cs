@@ -316,11 +316,149 @@ public class CustomSetPropertyOnRenderable
             // some properties have priority on the base shape itself:
             switch (propertyName)
             {
+                // #2931: same as the Circle branch — IsFilled gates two-slot fill visibility
+                // on the runtime; pushing to the renderable would flip Apos's shader mode on
+                // the fill RoundedRectangle without actually hiding/showing the fill.
+                case nameof(RectangleRuntime.IsFilled):
+                    if (graphicalUiElement is RectangleRuntime rectIsFilled)
+                    {
+                        rectIsFilled.IsFilled = (bool)value;
+                        handled = true;
+                        break;
+                    }
+                    break;
+                // #2931: same rationale as the Circle branch above.
+                case nameof(RectangleRuntime.FillRed):
+                    if (graphicalUiElement is RectangleRuntime rectFillRed)
+                    {
+                        rectFillRed.FillRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.FillGreen):
+                    if (graphicalUiElement is RectangleRuntime rectFillGreen)
+                    {
+                        rectFillGreen.FillGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.FillBlue):
+                    if (graphicalUiElement is RectangleRuntime rectFillBlue)
+                    {
+                        rectFillBlue.FillBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.FillAlpha):
+                    if (graphicalUiElement is RectangleRuntime rectFillAlpha)
+                    {
+                        rectFillAlpha.FillAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.StrokeRed):
+                    if (graphicalUiElement is RectangleRuntime rectStrokeRed)
+                    {
+                        rectStrokeRed.StrokeRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.StrokeGreen):
+                    if (graphicalUiElement is RectangleRuntime rectStrokeGreen)
+                    {
+                        rectStrokeGreen.StrokeGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.StrokeBlue):
+                    if (graphicalUiElement is RectangleRuntime rectStrokeBlue)
+                    {
+                        rectStrokeBlue.StrokeBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.StrokeAlpha):
+                    if (graphicalUiElement is RectangleRuntime rectStrokeAlpha)
+                    {
+                        rectStrokeAlpha.StrokeAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                // Same rationale as the Circle branch above — see comment there.
+                case nameof(RectangleRuntime.HasDropshadow):
+                    if (graphicalUiElement is RectangleRuntime rectHasDs)
+                    {
+                        rectHasDs.HasDropshadow = (bool)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowOffsetX):
+                    if (graphicalUiElement is RectangleRuntime rectDsOffX)
+                    {
+                        rectDsOffX.DropshadowOffsetX = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowOffsetY):
+                    if (graphicalUiElement is RectangleRuntime rectDsOffY)
+                    {
+                        rectDsOffY.DropshadowOffsetY = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowBlurX):
+                    if (graphicalUiElement is RectangleRuntime rectDsBlurX)
+                    {
+                        rectDsBlurX.DropshadowBlurX = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowBlurY):
+                    if (graphicalUiElement is RectangleRuntime rectDsBlurY)
+                    {
+                        rectDsBlurY.DropshadowBlurY = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowAlpha):
+                    if (graphicalUiElement is RectangleRuntime rectDsA)
+                    {
+                        rectDsA.DropshadowAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowRed):
+                    if (graphicalUiElement is RectangleRuntime rectDsR)
+                    {
+                        rectDsR.DropshadowRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowGreen):
+                    if (graphicalUiElement is RectangleRuntime rectDsG)
+                    {
+                        rectDsG.DropshadowGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowBlue):
+                    if (graphicalUiElement is RectangleRuntime rectDsB)
+                    {
+                        rectDsB.DropshadowBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
                 case nameof(RoundedRectangleRuntime.StrokeWidth):
                     if(graphicalUiElement is RoundedRectangleRuntime asRoundedRectangleRuntime)
                     {
                         asRoundedRectangleRuntime.StrokeWidth = (float)value;
-
+                    }
+                    else if (graphicalUiElement is RectangleRuntime rectStrokeWidth)
+                    {
+                        // #2931: plain RectangleRuntime now owns StrokeWidth; route through the
+                        // runtime so PreRender's ScreenPixel-zoom scaling resolves against the
+                        // latest user value (matching the RoundedRectangleRuntime arm above).
+                        rectStrokeWidth.StrokeWidth = (float)value;
                     }
                     else
                     {
@@ -336,6 +474,10 @@ public class CustomSetPropertyOnRenderable
                     {
                         rrDashRuntime.StrokeDashLength = (float)value;
                     }
+                    else if (graphicalUiElement is RectangleRuntime rectDash)
+                    {
+                        rectDash.StrokeDashLength = (float)value;
+                    }
                     else
                     {
                         asRoundedRectangle.StrokeDashLength = (float)value;
@@ -346,6 +488,10 @@ public class CustomSetPropertyOnRenderable
                     if (graphicalUiElement is RoundedRectangleRuntime rrGapRuntime)
                     {
                         rrGapRuntime.StrokeGapLength = (float)value;
+                    }
+                    else if (graphicalUiElement is RectangleRuntime rectGap)
+                    {
+                        rectGap.StrokeGapLength = (float)value;
                     }
                     else
                     {
@@ -467,18 +613,196 @@ public class CustomSetPropertyOnRenderable
                 }
             }
 
+            // Stroke values must land on the runtime (not the renderable) so PreRender's
+            // ScreenPixel-zoom scaling resolves against the latest user value. Plain
+            // CircleRuntime joined ColoredCircleRuntime in exposing these in #2931, so
+            // dispatch on the actual GUE type rather than hard-casting.
             switch(propertyName)
             {
+                // #2931: IsFilled on plain CircleRuntime gates the runtime's two-slot fill
+                // visibility (fires the FillColor-or-transparent push). Setting the fill
+                // renderable's own IsFilled instead — what TrySetPropertiesOnRenderableBase
+                // does — flips Apos's shader mode on the fill Circle, which is a different
+                // axis and does NOT toggle fill visibility. Intercept here.
+                case nameof(CircleRuntime.IsFilled):
+                    if (graphicalUiElement is CircleRuntime cIsFilled)
+                    {
+                        cIsFilled.IsFilled = (bool)value;
+                        handled = true;
+                    }
+                    break;
+                // #2931: FillRed/Green/Blue/Alpha + StrokeRed/Green/Blue/Alpha live on the
+                // runtime, not on the Apos Circle renderable. Without these arms the dispatcher
+                // would fall through to SetPropertyThroughReflection on the renderable, find
+                // no matching property, and silently leave the fill at (0,0,0,0).
+                case nameof(CircleRuntime.FillRed):
+                    if (graphicalUiElement is CircleRuntime cFillRed)
+                    {
+                        cFillRed.FillRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.FillGreen):
+                    if (graphicalUiElement is CircleRuntime cFillGreen)
+                    {
+                        cFillGreen.FillGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.FillBlue):
+                    if (graphicalUiElement is CircleRuntime cFillBlue)
+                    {
+                        cFillBlue.FillBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.FillAlpha):
+                    if (graphicalUiElement is CircleRuntime cFillAlpha)
+                    {
+                        cFillAlpha.FillAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.StrokeRed):
+                    if (graphicalUiElement is CircleRuntime cStrokeRed)
+                    {
+                        cStrokeRed.StrokeRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.StrokeGreen):
+                    if (graphicalUiElement is CircleRuntime cStrokeGreen)
+                    {
+                        cStrokeGreen.StrokeGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.StrokeBlue):
+                    if (graphicalUiElement is CircleRuntime cStrokeBlue)
+                    {
+                        cStrokeBlue.StrokeBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.StrokeAlpha):
+                    if (graphicalUiElement is CircleRuntime cStrokeAlpha)
+                    {
+                        cStrokeAlpha.StrokeAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                // Dropshadow names must route through the runtime so SyncDropshadowToTarget
+                // can place the shadow on the active slot (fill when IsFilled = true, stroke
+                // otherwise). Without this routing, state-load writes straight to the fill
+                // renderable via TrySetPropertiesOnRenderableBase and the shadow is stranded
+                // on the gated-transparent fill slot — EffectiveDropshadowColor scales alpha
+                // by Color.A so a transparent fill produces an invisible shadow.
+                case nameof(CircleRuntime.HasDropshadow):
+                    if (graphicalUiElement is CircleRuntime cHasDs)
+                    {
+                        cHasDs.HasDropshadow = (bool)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowOffsetX):
+                    if (graphicalUiElement is CircleRuntime cDsOffX)
+                    {
+                        cDsOffX.DropshadowOffsetX = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowOffsetY):
+                    if (graphicalUiElement is CircleRuntime cDsOffY)
+                    {
+                        cDsOffY.DropshadowOffsetY = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowBlurX):
+                    if (graphicalUiElement is CircleRuntime cDsBlurX)
+                    {
+                        cDsBlurX.DropshadowBlurX = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowBlurY):
+                    if (graphicalUiElement is CircleRuntime cDsBlurY)
+                    {
+                        cDsBlurY.DropshadowBlurY = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowAlpha):
+                    if (graphicalUiElement is CircleRuntime cDsA)
+                    {
+                        cDsA.DropshadowAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowRed):
+                    if (graphicalUiElement is CircleRuntime cDsR)
+                    {
+                        cDsR.DropshadowRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowGreen):
+                    if (graphicalUiElement is CircleRuntime cDsG)
+                    {
+                        cDsG.DropshadowGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowBlue):
+                    if (graphicalUiElement is CircleRuntime cDsB)
+                    {
+                        cDsB.DropshadowBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
                 case nameof(ColoredCircleRuntime.StrokeWidth):
-                    ((ColoredCircleRuntime)graphicalUiElement).StrokeWidth = (float)value;
+                    if (graphicalUiElement is ColoredCircleRuntime ccStrokeWidth)
+                    {
+                        ccStrokeWidth.StrokeWidth = (float)value;
+                    }
+                    else if (graphicalUiElement is CircleRuntime cStrokeWidth)
+                    {
+                        cStrokeWidth.StrokeWidth = (float)value;
+                    }
+                    else
+                    {
+                        asCircle.StrokeWidth = (float)value;
+                    }
                     handled = true;
                     break;
                 case nameof(ColoredCircleRuntime.StrokeDashLength):
-                    ((ColoredCircleRuntime)graphicalUiElement).StrokeDashLength = (float)value;
+                    if (graphicalUiElement is ColoredCircleRuntime ccDash)
+                    {
+                        ccDash.StrokeDashLength = (float)value;
+                    }
+                    else if (graphicalUiElement is CircleRuntime cDash)
+                    {
+                        cDash.StrokeDashLength = (float)value;
+                    }
+                    else
+                    {
+                        asCircle.StrokeDashLength = (float)value;
+                    }
                     handled = true;
                     break;
                 case nameof(ColoredCircleRuntime.StrokeGapLength):
-                    ((ColoredCircleRuntime)graphicalUiElement).StrokeGapLength = (float)value;
+                    if (graphicalUiElement is ColoredCircleRuntime ccGap)
+                    {
+                        ccGap.StrokeGapLength = (float)value;
+                    }
+                    else if (graphicalUiElement is CircleRuntime cGap)
+                    {
+                        cGap.StrokeGapLength = (float)value;
+                    }
+                    else
+                    {
+                        asCircle.StrokeGapLength = (float)value;
+                    }
                     handled = true;
                     break;
             }

@@ -551,6 +551,10 @@ public class CircleRuntime : GraphicalUiElement
             {
                 _fill.Color = _isFilled ? _fillColor : new Color(0, 0, 0, 0);
             }
+            // Dropshadow routing depends on IsFilled — re-push so the active slot owns the
+            // shadow flag and the inactive slot releases it. Otherwise toggling IsFilled
+            // either ghosts the previous target or never wakes the new one up.
+            SyncDropshadowToTarget();
             NotifyPropertyChanged();
         }
     }
@@ -998,13 +1002,41 @@ public class CircleRuntime : GraphicalUiElement
     // = DefaultStrokedCircleRenderable, no fill). Unlike gradient (#2791) and AA (#2798),
     // which push to BOTH slots so a single setter covers fill and stroke, the shadow is
     // drawn once per renderable — pushing to both would render the shadow twice and
-    // visibly double up. Prefer the fill slot; fall back to stroke when fill is null
-    // (Apos can shadow a stroked ring too, so a stroke-only Apos circle still gets one).
-    // The push-target helper is shared across every setter so the routing rule lives in
-    // one place.
+    // visibly double up. So the routing picks one slot: the fill when IsFilled = true (the
+    // disc casts the shadow), the stroke when IsFilled = false (the disc is gated to
+    // transparent and can't cast a visible shadow). The push-target helper is shared across
+    // every setter so the rule lives in one place. SyncDropshadowToTarget below re-routes
+    // shadow state when IsFilled toggles — without that the previous target keeps its
+    // HasDropshadow flag set and the new target never receives it.
 
-    IDropshadowRenderable? DropshadowTarget =>
-        _fill as IDropshadowRenderable ?? _stroke as IDropshadowRenderable;
+    IDropshadowRenderable? DropshadowTarget
+    {
+        get
+        {
+            var fillDs = _fill as IDropshadowRenderable;
+            var strokeDs = _stroke as IDropshadowRenderable;
+            return _isFilled ? (fillDs ?? strokeDs) : (strokeDs ?? fillDs);
+        }
+    }
+
+    void SyncDropshadowToTarget()
+    {
+        var fillDs = _fill as IDropshadowRenderable;
+        var strokeDs = _stroke as IDropshadowRenderable;
+        var target = DropshadowTarget;
+        var other = ReferenceEquals(target, fillDs) ? strokeDs : fillDs;
+
+        if (other != null) other.HasDropshadow = false;
+        if (target != null)
+        {
+            target.HasDropshadow = _hasDropshadow;
+            target.DropshadowColor = _dropshadowColor;
+            target.DropshadowOffsetX = _dropshadowOffsetX;
+            target.DropshadowOffsetY = _dropshadowOffsetY;
+            target.DropshadowBlurX = _dropshadowBlurX;
+            target.DropshadowBlurY = _dropshadowBlurY;
+        }
+    }
 
     bool _hasDropshadow;
     /// <summary>

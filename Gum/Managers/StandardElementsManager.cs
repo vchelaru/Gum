@@ -369,12 +369,18 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height", IsHiddenInPropertyGrid = true });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-            AddColorVariables(stateSave, true);
 
-            // v3 (#2929): gradient / dropshadow / blend route through the same SetProperty path
-            // as on ColoredCircle, picked up by CircleRuntime's existing gradient/dropshadow
-            // pass-through. AddStrokeAndFilledVariables is intentionally excluded — IsFilled
-            // is not present on XNALIKE CircleRuntime yet (tracked as a #2931 follow-up).
+            // v3 (#2929 / #2931): AddColorVariables is intentionally NOT called on the plain
+            // Circle / Rectangle defaults. The legacy Color / Red / Green / Blue / Alpha route
+            // to stroke under #2938 (see SetProperty_Color_RoutesToStroke_NotFill), so
+            // surfacing them alongside StrokeRed/Green/Blue/Alpha would be redundant and
+            // confusing. The runtime keeps the [Obsolete] aliases so older projects still load.
+            // Gradient / dropshadow / blend route through the same SetProperty path as on
+            // ColoredCircle, picked up by CircleRuntime's existing pass-through. IsFilled
+            // exposure must precede UseGradient so users can scope a gradient to the outline
+            // only by flipping IsFilled = false (the fill slot's gradient is gated on _isFilled
+            // in SkiaShapeRuntime.RefreshSlotGradients).
+            AddFillAndStrokeVariables(stateSave, category: "Rendering");
             AddGradientVariables(stateSave);
             AddDropshadowVariables(stateSave);
             AddBlendVariable(stateSave);
@@ -407,9 +413,10 @@ public class StandardElementsManager
             AddDimensionsVariables(stateSave, 16, 16, DimensionVariableAction.ExcludeFileOptions);
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-            AddColorVariables(stateSave, true);
 
-            // v3 (#2929): mirror of the Circle block above — see comment there.
+            // v3 (#2929 / #2931): mirror of the Circle block above — see comment there for why
+            // AddColorVariables is intentionally omitted.
+            AddFillAndStrokeVariables(stateSave, category: "Rendering");
             AddGradientVariables(stateSave);
             AddDropshadowVariables(stateSave);
             AddBlendVariable(stateSave);
@@ -1279,6 +1286,38 @@ public class StandardElementsManager
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeDashLength", Category = "Stroke and Fill" });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeGapLength", Category = "Stroke and Fill" });
 
+    }
+
+    // v3 (#2931): fill + stroke variables for plain Circle / Rectangle, which expose fill and
+    // stroke as independent surfaces (unlike legacy ColoredCircle / RoundedRectangle / Arc,
+    // which share a single Color). Emitted in three logical sections so the grid reads as a
+    // sequence of self-contained groups — stroke (always visible, no enabling bool because
+    // StrokeWidth = 0 is the implicit gate), then fill (gated by IsFilled), and AddGradient-
+    // Variables continues the pattern after this helper returns (gated by UseGradient).
+    //
+    // Tool defaults intentionally diverge from the runtime ctor (IsFilled = true + transparent
+    // fill, which preserves stroke-only visuals for code-only constructions): IsFilled = false
+    // + opaque white fill, so the checkbox honestly says "no fill" and flipping it lights up a
+    // visible fill instead of being a no-op against alpha 0.
+    public static void AddFillAndStrokeVariables(StateSave stateSave, string category = "Rendering")
+    {
+        // Stroke section
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeDashLength", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeGapLength", Category = category });
+
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeAlpha", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeRed", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeGreen", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeBlue", Category = category });
+
+        // Fill section
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsFilled", Category = category });
+
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillAlpha", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillRed", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillGreen", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillBlue", Category = category });
     }
 
     public static void AddBlendVariable(StateSave stateSave)

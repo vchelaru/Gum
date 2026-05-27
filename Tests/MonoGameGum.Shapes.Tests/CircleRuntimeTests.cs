@@ -565,4 +565,221 @@ public class CircleRuntimeTests
         Circle stroke = (Circle)((Circle)sut.RenderableComponent).Children[0];
         stroke.Color.ShouldBe(new Color(10, 20, 30, 200));
     }
+
+    // Issue #2931 — plain CircleRuntime now exposes IsFilled / StrokeWidth /
+    // StrokeDashLength / StrokeGapLength in the tool's default state. The shape-side
+    // SetProperty dispatcher previously hard-cast to ColoredCircleRuntime for these
+    // names, which throws InvalidCastException when the GUE is a plain CircleRuntime.
+    [Fact]
+    public void SetProperty_StrokeDashLength_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeDashLength", 6f);
+
+        sut.StrokeDashLength.ShouldBe(6f);
+    }
+
+    [Fact]
+    public void SetProperty_StrokeGapLength_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeGapLength", 4f);
+
+        sut.StrokeGapLength.ShouldBe(4f);
+    }
+
+    [Fact]
+    public void SetProperty_StrokeWidth_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeWidth", 7f);
+
+        sut.StrokeWidth.ShouldBe(7f);
+    }
+
+    // Issue #2931 — IsFilled must route through the runtime's two-slot gate, not the
+    // fill renderable's own IsFilled (which would change the Apos shader mode of the fill
+    // Circle instead of toggling fill visibility). Reproduces the user-reported "IsFilled
+    // checkbox does nothing" symptom.
+    [Fact]
+    public void SetProperty_IsFilled_True_LightsUpFillSlotWithFillColor()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = Color.Red;
+        sut.IsFilled = false;
+
+        sut.SetProperty("IsFilled", true);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Color.ShouldBe(Color.Red);
+    }
+
+    [Fact]
+    public void SetProperty_IsFilled_False_HidesFillSlot()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = Color.Red;
+
+        sut.SetProperty("IsFilled", false);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Color.A.ShouldBe((byte)0);
+    }
+
+    // Issue #2931 — FillRed / FillGreen / FillBlue / FillAlpha (and the Stroke counterparts)
+    // live on the runtime, not on the Apos Circle renderable. Without an explicit route the
+    // SetProperty path falls through to SetPropertyThroughReflection on the renderable, finds
+    // no matching property, and silently does nothing — leaving the fill at the runtime's
+    // ctor default of (0,0,0,0) even though the variable grid shows 255s.
+    [Fact]
+    public void SetProperty_FillChannels_RouteToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("FillRed", 255);
+        sut.SetProperty("FillGreen", 255);
+        sut.SetProperty("FillBlue", 255);
+        sut.SetProperty("FillAlpha", 255);
+
+        sut.FillColor.ShouldBe(new Color(255, 255, 255, 255));
+    }
+
+    [Fact]
+    public void SetProperty_StrokeChannels_RouteToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeRed", 10);
+        sut.SetProperty("StrokeGreen", 20);
+        sut.SetProperty("StrokeBlue", 30);
+        sut.SetProperty("StrokeAlpha", 200);
+
+        sut.StrokeColor.ShouldBe(new Color(10, 20, 30, 200));
+    }
+
+    // Issue: with IsFilled = false, DropshadowTarget routed to the fill slot whose color is
+    // gated transparent — invisible silhouette can't cast a visible shadow, so no dropshadow
+    // appeared. ColoredCircleRuntime (single-slot) didn't hit this because its one shape
+    // carries the dropshadow regardless of fill/stroke mode. Fix: route to the stroke slot
+    // when IsFilled = false.
+    [Fact]
+    public void HasDropshadow_True_StrokeOnly_RoutesToStrokeSlot()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+
+        sut.HasDropshadow = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.HasDropshadow.ShouldBeTrue();
+        fill.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HasDropshadow_True_Filled_RoutesToFillSlot()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = true;
+
+        sut.HasDropshadow = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        fill.HasDropshadow.ShouldBeTrue();
+        stroke.HasDropshadow.ShouldBeFalse();
+    }
+
+    // When IsFilled toggles, the dropshadow has to follow the target — and the previous
+    // target needs to release its shadow flag, otherwise toggling produces ghost shadows on
+    // both slots simultaneously.
+    [Fact]
+    public void IsFilled_False_AfterHasDropshadow_MovesShadowFromFillToStroke()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.HasDropshadow = true;
+
+        sut.IsFilled = false;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.HasDropshadow.ShouldBeTrue();
+        fill.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsFilled_True_AfterHasDropshadow_MovesShadowFromStrokeToFill()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.HasDropshadow = true;
+
+        sut.IsFilled = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        fill.HasDropshadow.ShouldBeTrue();
+        stroke.HasDropshadow.ShouldBeFalse();
+    }
+
+    // Issue: state-load from .gusx routes every dropshadow variable through the SetProperty
+    // dispatcher. Until #2931's follow-up, that dispatcher's Circle branch had no case for any
+    // dropshadow name, so the names fell through to TrySetPropertiesOnRenderableBase which
+    // wrote them to the fill Apos Circle directly. The runtime's HasDropshadow setter (and
+    // therefore SyncDropshadowToTarget) never fired on .gusx load, leaving the shadow stranded
+    // on the fill slot with its gated-transparent color — invisible per EffectiveDropshadowColor.
+    [Fact]
+    public void SetProperty_HasDropshadow_StrokeOnly_RoutesToStrokeSlot()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+
+        sut.SetProperty("HasDropshadow", true);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.HasDropshadow.ShouldBeTrue();
+        fill.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SetProperty_DropshadowOffsetAndBlur_RouteToActiveSlot_WhenStrokeOnly()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.HasDropshadow = true;
+
+        sut.SetProperty("DropshadowOffsetX", 19f);
+        sut.SetProperty("DropshadowOffsetY", 11f);
+        sut.SetProperty("DropshadowBlurX", 3f);
+        sut.SetProperty("DropshadowBlurY", 0f);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.DropshadowOffsetX.ShouldBe(19f);
+        stroke.DropshadowOffsetY.ShouldBe(11f);
+        stroke.DropshadowBlurX.ShouldBe(3f);
+        stroke.DropshadowBlurY.ShouldBe(0f);
+    }
+
+    [Fact]
+    public void SetProperty_DropshadowChannels_RouteToActiveSlot_WhenStrokeOnly()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.HasDropshadow = true;
+
+        sut.SetProperty("DropshadowAlpha", 200);
+        sut.SetProperty("DropshadowRed", 50);
+        sut.SetProperty("DropshadowGreen", 100);
+        sut.SetProperty("DropshadowBlue", 150);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.DropshadowColor.ShouldBe(new Color(50, 100, 150, 200));
+    }
 }
