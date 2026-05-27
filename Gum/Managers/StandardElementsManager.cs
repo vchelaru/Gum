@@ -380,8 +380,8 @@ public class StandardElementsManager
             // exposure must precede UseGradient so users can scope a gradient to the outline
             // only by flipping IsFilled = false (the fill slot's gradient is gated on _isFilled
             // in SkiaShapeRuntime.RefreshSlotGradients).
-            AddStrokeAndFilledVariables(stateSave, isFilledDefault: false);
-            AddFillAndStrokeColorChannelVariables(stateSave);
+            AddStrokeAndFilledVariables(stateSave, isFilledDefault: false, category: "Rendering");
+            AddFillAndStrokeColorChannelVariables(stateSave, category: "Rendering");
             AddGradientVariables(stateSave);
             AddDropshadowVariables(stateSave);
             AddBlendVariable(stateSave);
@@ -417,8 +417,8 @@ public class StandardElementsManager
 
             // v3 (#2929 / #2931): mirror of the Circle block above — see comment there for why
             // AddColorVariables is intentionally omitted.
-            AddStrokeAndFilledVariables(stateSave, isFilledDefault: false);
-            AddFillAndStrokeColorChannelVariables(stateSave);
+            AddStrokeAndFilledVariables(stateSave, isFilledDefault: false, category: "Rendering");
+            AddFillAndStrokeColorChannelVariables(stateSave, category: "Rendering");
             AddGradientVariables(stateSave);
             AddDropshadowVariables(stateSave);
             AddBlendVariable(stateSave);
@@ -1281,12 +1281,12 @@ public class StandardElementsManager
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowBlue", Category = "Dropshadow" });
     }
 
-    public static void AddStrokeAndFilledVariables(StateSave stateSave, bool isFilledDefault = true)
+    public static void AddStrokeAndFilledVariables(StateSave stateSave, bool isFilledDefault = true, string category = "Stroke and Fill")
     {
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = isFilledDefault, Name = "IsFilled", Category = "Stroke and Fill" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = "Stroke and Fill" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeDashLength", Category = "Stroke and Fill" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeGapLength", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = isFilledDefault, Name = "IsFilled", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeDashLength", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeGapLength", Category = category });
 
     }
 
@@ -1297,17 +1297,17 @@ public class StandardElementsManager
     // opaque white. Net visual on drop is still outline-only — but the checkbox honestly says
     // "no fill," and flipping it to true immediately reveals a white fill instead of being a
     // no-op while FillAlpha is still 0.
-    public static void AddFillAndStrokeColorChannelVariables(StateSave stateSave)
+    public static void AddFillAndStrokeColorChannelVariables(StateSave stateSave, string category = "Rendering")
     {
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillAlpha", Category = "Stroke and Fill" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillRed", Category = "Stroke and Fill" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillGreen", Category = "Stroke and Fill" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillBlue", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillAlpha", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillRed", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillGreen", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillBlue", Category = category });
 
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeAlpha", Category = "Stroke and Fill" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeRed", Category = "Stroke and Fill" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeGreen", Category = "Stroke and Fill" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeBlue", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeAlpha", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeRed", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeGreen", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeBlue", Category = category });
     }
 
     public static void AddBlendVariable(StateSave stateSave)
