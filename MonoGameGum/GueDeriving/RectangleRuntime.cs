@@ -1466,22 +1466,18 @@ public class RectangleRuntime : GraphicalUiElement
                 strokeGapLength /= camera.Zoom;
             }
         }
-        // Issue #2818 (mirror of CircleRuntime #2790) — Apos.Shapes' DrawRectangle adds aaSize
-        // pixels of AA halo OUTSIDE the nominal thickness, same shape as DrawCircle. Skia fits
-        // its AA WITHIN the thickness, so without this compensation the same user-set
-        // StrokeWidth reads ~1 px wider on Apos. Subtract the 1 px AA contribution before
-        // pushing. Floored at a tiny positive epsilon (not 0) — Apos's shader treats
-        // thickness = 0 as "don't draw", and the 1 px halo dominates the visible width so the
-        // sub-pixel under-draw of the nominal stroke is invisible. Gated by
-        // IAntialiasedRenderable so the core stroke default (LineRectangle wrapper, no AA
-        // concept) still receives the raw value. Visible-thickness parity for axis-aligned
-        // straights is the headline — rounded corner arcs still get the AA they need.
+        // Mirror of CircleRuntime.PreRender — same two-case structure (user-set <= 0 vs
+        // positive thin stroke). See CircleRuntime.PreRender for the full rationale on why
+        // these two cases must stay separate. tl;dr:
+        //   - StrokeWidth <= 0 (user hide-stroke gate, #2950 follow-up) → push literal 0
+        //     so the renderable's HasVisibleOutput suppresses the draw.
+        //   - StrokeWidth > 0 with AA → subtract the 1 px Apos AA contribution and floor at
+        //     a tiny positive epsilon so thin strokes still render (#2818).
         const float aposAaContribution = 1f;
         const float aposMinThicknessEpsilon = 0.01f;
         float renderableStrokeWidth;
         if (strokeWidth <= 0)
         {
-            // Issue #2950 follow-up — see CircleRuntime.PreRender for the rationale.
             renderableStrokeWidth = 0f;
         }
         else if (_isAntialiased && _stroke is IAntialiasedRenderable)
