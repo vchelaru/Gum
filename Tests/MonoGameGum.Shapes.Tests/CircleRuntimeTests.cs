@@ -659,4 +659,70 @@ public class CircleRuntimeTests
 
         sut.StrokeColor.ShouldBe(new Color(10, 20, 30, 200));
     }
+
+    // Issue: with IsFilled = false, DropshadowTarget routed to the fill slot whose color is
+    // gated transparent — invisible silhouette can't cast a visible shadow, so no dropshadow
+    // appeared. ColoredCircleRuntime (single-slot) didn't hit this because its one shape
+    // carries the dropshadow regardless of fill/stroke mode. Fix: route to the stroke slot
+    // when IsFilled = false.
+    [Fact]
+    public void HasDropshadow_True_StrokeOnly_RoutesToStrokeSlot()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+
+        sut.HasDropshadow = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.HasDropshadow.ShouldBeTrue();
+        fill.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HasDropshadow_True_Filled_RoutesToFillSlot()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = true;
+
+        sut.HasDropshadow = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        fill.HasDropshadow.ShouldBeTrue();
+        stroke.HasDropshadow.ShouldBeFalse();
+    }
+
+    // When IsFilled toggles, the dropshadow has to follow the target — and the previous
+    // target needs to release its shadow flag, otherwise toggling produces ghost shadows on
+    // both slots simultaneously.
+    [Fact]
+    public void IsFilled_False_AfterHasDropshadow_MovesShadowFromFillToStroke()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.HasDropshadow = true;
+
+        sut.IsFilled = false;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.HasDropshadow.ShouldBeTrue();
+        fill.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsFilled_True_AfterHasDropshadow_MovesShadowFromStrokeToFill()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.HasDropshadow = true;
+
+        sut.IsFilled = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        fill.HasDropshadow.ShouldBeTrue();
+        stroke.HasDropshadow.ShouldBeFalse();
+    }
 }

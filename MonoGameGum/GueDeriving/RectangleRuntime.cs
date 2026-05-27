@@ -772,6 +772,8 @@ public class RectangleRuntime : GraphicalUiElement
             {
                 _fill.Color = _isFilled ? _fillColor : new Color(0, 0, 0, 0);
             }
+            // Dropshadow routing depends on IsFilled — see CircleRuntime for the rationale.
+            SyncDropshadowToTarget();
             NotifyPropertyChanged();
         }
     }
@@ -1282,10 +1284,39 @@ public class RectangleRuntime : GraphicalUiElement
     #region Dropshadow
 
     // Issue #2818 (mirror of CircleRuntime dropshadow region #2797): single-slot push via
-    // DropshadowTarget — pushing to both would double up the visible shadow.
+    // DropshadowTarget — pushing to both would double up the visible shadow. Target picks
+    // by IsFilled: fill when true (the rectangle casts the shadow), stroke when false
+    // (the fill is gated transparent and can't cast a visible shadow). SyncDropshadowToTarget
+    // re-routes on IsFilled toggle so the old target releases its flag.
 
-    IDropshadowRenderable? DropshadowTarget =>
-        _fill as IDropshadowRenderable ?? _stroke as IDropshadowRenderable;
+    IDropshadowRenderable? DropshadowTarget
+    {
+        get
+        {
+            var fillDs = _fill as IDropshadowRenderable;
+            var strokeDs = _stroke as IDropshadowRenderable;
+            return _isFilled ? (fillDs ?? strokeDs) : (strokeDs ?? fillDs);
+        }
+    }
+
+    void SyncDropshadowToTarget()
+    {
+        var fillDs = _fill as IDropshadowRenderable;
+        var strokeDs = _stroke as IDropshadowRenderable;
+        var target = DropshadowTarget;
+        var other = ReferenceEquals(target, fillDs) ? strokeDs : fillDs;
+
+        if (other != null) other.HasDropshadow = false;
+        if (target != null)
+        {
+            target.HasDropshadow = _hasDropshadow;
+            target.DropshadowColor = _dropshadowColor;
+            target.DropshadowOffsetX = _dropshadowOffsetX;
+            target.DropshadowOffsetY = _dropshadowOffsetY;
+            target.DropshadowBlurX = _dropshadowBlurX;
+            target.DropshadowBlurY = _dropshadowBlurY;
+        }
+    }
 
     bool _hasDropshadow;
     /// <inheritdoc cref="CircleRuntime.HasDropshadow"/>

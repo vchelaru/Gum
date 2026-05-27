@@ -630,4 +630,62 @@ public class RectangleRuntimeTests
 
         sut.StrokeColor.ShouldBe(new Color(10, 20, 30, 200));
     }
+
+    [Fact]
+    public void HasDropshadow_True_StrokeOnly_RoutesToStrokeSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = false;
+
+        sut.HasDropshadow = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        stroke.HasDropshadow.ShouldBeTrue();
+        fill.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HasDropshadow_True_Filled_RoutesToFillSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = true;
+
+        sut.HasDropshadow = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        fill.HasDropshadow.ShouldBeTrue();
+        stroke.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsFilled_False_AfterHasDropshadow_MovesShadowFromFillToStroke()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.HasDropshadow = true;
+
+        sut.IsFilled = false;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        stroke.HasDropshadow.ShouldBeTrue();
+        fill.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsFilled_True_AfterHasDropshadow_MovesShadowFromStrokeToFill()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.HasDropshadow = true;
+
+        sut.IsFilled = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        fill.HasDropshadow.ShouldBeTrue();
+        stroke.HasDropshadow.ShouldBeFalse();
+    }
 }
