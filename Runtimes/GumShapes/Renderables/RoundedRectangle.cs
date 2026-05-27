@@ -132,7 +132,7 @@ public class RoundedRectangle : RenderableShapeBase,
         {
             if (UseGradient && forcedColor == null)
             {
-                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+                var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
 
                 if (hasCustomCorners)
                     sb.DrawRectangle(position, size, gradient, gradient, thickness, corners, rotationRadians, antiAliasSize);
@@ -152,7 +152,7 @@ public class RoundedRectangle : RenderableShapeBase,
         {
             if(UseGradient && forcedColor == null)
             {
-                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+                var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
 
                 var transparentGradient = gradient;
                 transparentGradient.AC = new Color((int)gradient.AC.R, gradient.AC.G, gradient.AC.B, 0);
@@ -215,7 +215,7 @@ public class RoundedRectangle : RenderableShapeBase,
         // Apos.Shapes overloads accept either, so we forward whichever fits.
         var fallbackColor = forcedColor ?? Color;
         Gradient strokeGradient = (UseGradient && forcedColor == null)
-            ? base.GetGradient(absoluteLeft, absoluteTop)
+            ? base.GetGradient(absoluteLeft, absoluteTop, rotationRadians)
             : new Gradient(Vector2.Zero, fallbackColor, Vector2.Zero, fallbackColor, Gradient.Shape.None);
 
         var halfT = strokeWidth / 2f;

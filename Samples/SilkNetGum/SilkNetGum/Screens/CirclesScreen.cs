@@ -45,6 +45,7 @@ internal class CirclesScreen : GraphicalUiElement
         left.Children.Add(BuildSection("Stroke width", BuildStrokeWidthRow()));
         left.Children.Add(BuildSection("Alignment", BuildAlignmentRow()));
         left.Children.Add(BuildSection("Gradients", BuildGradientRow()));
+        left.Children.Add(BuildSection("Rotation", BuildRotationRow()));
 
         right.Children.Add(BuildSection("Antialiasing", BuildAntialiasingRow()));
         right.Children.Add(BuildSection("Dropshadow", BuildDropshadowRow()));
@@ -476,6 +477,47 @@ internal class CirclesScreen : GraphicalUiElement
         row.Width = 0;
         row.Height = 0;
         return row;
+    }
+
+    // Rotation row — black→white horizontal gradient on circles, rotated in 60° steps
+    // (0/60/120/180). Plain circles are rotation-symmetric, so the gradient is what makes
+    // the rotation visible. Endpoints are 0→20 px (less than the 56 px diameter) so the
+    // transition is concentrated in a narrow band — the resulting hard light/dark edge
+    // makes the rotation angle obvious. Cells use a fixed-size frame because Rotation
+    // pushes content outside the natural bounding box, which breaks the
+    // RelativeToChildren row sizing. Mirrors the same row on the MG and raylib sides.
+    static ContainerRuntime BuildRotationRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float rotation in new[] { 0f, 60f, 120f, 180f })
+        {
+            row.Children.Add(BuildRotatedGradientCircleCell(rotation));
+        }
+        return row;
+    }
+
+    static RectangleRuntime BuildRotatedGradientCircleCell(float rotation)
+    {
+        RectangleRuntime frame = new();
+        frame.Width = 70;
+        frame.Height = 70;
+        frame.FillColor = new SKColor(60, 60, 80);
+
+        CircleRuntime circle = new();
+        circle.Radius = 28;
+        circle.XOrigin = HorizontalAlignment.Center;
+        circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        circle.YOrigin = VerticalAlignment.Center;
+        circle.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        circle.UseGradient = true;
+        circle.GradientType = GradientType.Linear;
+        circle.Color1 = SKColors.Black;
+        circle.Color2 = SKColors.White;
+        circle.GradientX1 = 0; circle.GradientY1 = 0;
+        circle.GradientX2 = 20; circle.GradientY2 = 0;
+        circle.Rotation = rotation;
+        frame.Children.Add(circle);
+        return frame;
     }
 
     static RectangleRuntime BuildAlignmentCell(VerticalAlignment alignment)

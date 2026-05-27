@@ -56,6 +56,7 @@ internal class RectanglesScreen : GraphicalUiElement
         right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — Skia routes through SkiaShapeRuntime.StrokeDashLength (#2796)", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2814)", BuildBothColorsRow()));
         right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2814 visual contract)", BuildInscribedRow()));
+        right.Children.Add(BuildSection("Rotation (0 / 60 / 120 / 180 degrees) — black→white gradient rectangles", BuildRotationRow()));
     }
 
     static ContainerRuntime BuildColumn()
@@ -305,6 +306,48 @@ internal class RectanglesScreen : GraphicalUiElement
             row.Children.Add(BuildInscribedCell(strokeWidth));
         }
         return row;
+    }
+
+    // Rotation row — black→white horizontal gradient on rectangles, rotated in 60° steps
+    // (0/60/120/180). Gradient endpoints are 0→20 px (less than the 70 px width) so the
+    // transition is concentrated in a narrow band; the resulting hard light/dark edge
+    // makes the rotation angle obvious. Cells wrap each rotated rectangle in a fixed-size
+    // frame because Rotation pushes content outside the natural bounding box, which
+    // breaks RelativeToChildren row sizing. 100x100 frame is sized to contain a 70x50
+    // rectangle at any rotation. Mirrors the same row on the MG and raylib sides.
+    static ContainerRuntime BuildRotationRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        foreach (float rotation in new[] { 0f, 60f, 120f, 180f })
+        {
+            row.Children.Add(BuildRotatedGradientRectCell(rotation));
+        }
+        return row;
+    }
+
+    static RectangleRuntime BuildRotatedGradientRectCell(float rotation)
+    {
+        RectangleRuntime frame = new();
+        frame.Width = 100;
+        frame.Height = 100;
+        frame.FillColor = new SKColor(60, 60, 80);
+
+        RectangleRuntime rect = new();
+        rect.Width = 70;
+        rect.Height = 50;
+        rect.XOrigin = HorizontalAlignment.Center;
+        rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        rect.YOrigin = VerticalAlignment.Center;
+        rect.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        rect.UseGradient = true;
+        rect.GradientType = GradientType.Linear;
+        rect.Color1 = SKColors.Black;
+        rect.Color2 = SKColors.White;
+        rect.GradientX1 = 0; rect.GradientY1 = 0;
+        rect.GradientX2 = 20; rect.GradientY2 = 0;
+        rect.Rotation = rotation;
+        frame.Children.Add(rect);
+        return frame;
     }
 
     static RectangleRuntime BuildInscribedCell(float strokeWidth)
