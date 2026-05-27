@@ -369,13 +369,17 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height", IsHiddenInPropertyGrid = true });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-            AddColorVariables(stateSave, true);
 
-            // v3 (#2929 / #2931): gradient / dropshadow / blend route through the same SetProperty
-            // path as on ColoredCircle, picked up by CircleRuntime's existing pass-through.
-            // IsFilled exposure must precede UseGradient so users can scope a gradient to the
-            // outline only by flipping IsFilled = false (the fill slot's gradient is gated on
-            // _isFilled in SkiaShapeRuntime.RefreshSlotGradients).
+            // v3 (#2929 / #2931): AddColorVariables is intentionally NOT called on the two-slot
+            // Circle / Rectangle defaults. The legacy Color / Red / Green / Blue / Alpha route
+            // to the stroke slot under #2938 (see SetProperty_Color_RoutesToStroke_NotFill), so
+            // surfacing them alongside StrokeRed/Green/Blue/Alpha would be redundant and
+            // confusing. The runtime keeps the [Obsolete] aliases so older projects still load.
+            // Gradient / dropshadow / blend route through the same SetProperty path as on
+            // ColoredCircle, picked up by CircleRuntime's existing pass-through. IsFilled
+            // exposure must precede UseGradient so users can scope a gradient to the outline
+            // only by flipping IsFilled = false (the fill slot's gradient is gated on _isFilled
+            // in SkiaShapeRuntime.RefreshSlotGradients).
             AddStrokeAndFilledVariables(stateSave, isFilledDefault: false);
             AddFillAndStrokeColorChannelVariables(stateSave);
             AddGradientVariables(stateSave);
@@ -410,9 +414,9 @@ public class StandardElementsManager
             AddDimensionsVariables(stateSave, 16, 16, DimensionVariableAction.ExcludeFileOptions);
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-            AddColorVariables(stateSave, true);
 
-            // v3 (#2929 / #2931): mirror of the Circle block above — see comment there.
+            // v3 (#2929 / #2931): mirror of the Circle block above — see comment there for why
+            // AddColorVariables is intentionally omitted.
             AddStrokeAndFilledVariables(stateSave, isFilledDefault: false);
             AddFillAndStrokeColorChannelVariables(stateSave);
             AddGradientVariables(stateSave);

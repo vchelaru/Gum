@@ -184,8 +184,22 @@ public class ExclusionsPlugin : PriorityPlugin
         if (isTwoSlotShape &&
             (rootName == "FillRed" || rootName == "FillGreen" || rootName == "FillBlue" || rootName == "FillAlpha"))
         {
+            // Hidden when IsFilled = false (no fill drawn) or when UseGradient = true
+            // (gradient paints the fill slot, the solid fill channels are unused). Stroke
+            // channels stay visible regardless of UseGradient — gradient targets fill only.
             var isFilled = finder.GetValue(prefix + "IsFilled");
-            shouldExclude = isFilled is false;
+            if (isFilled is false)
+            {
+                shouldExclude = true;
+                return true;
+            }
+            var usesGradient = finder.GetValue(prefix + "UseGradient");
+            if (usesGradient is true)
+            {
+                shouldExclude = true;
+                return true;
+            }
+            shouldExclude = false;
             return true;
         }
 

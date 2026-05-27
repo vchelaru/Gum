@@ -112,4 +112,22 @@ public class StandardElementsManagerTests : BaseTestClass
         state.Variables.First(v => v.Name == "FillGreen").Value.ShouldBe(255);
         state.Variables.First(v => v.Name == "FillBlue").Value.ShouldBe(255);
     }
+
+    // The legacy Color / Red / Green / Blue / Alpha route to the stroke slot under #2938's
+    // two-slot model, so surfacing them on plain Circle / Rectangle alongside the explicit
+    // StrokeRed/Green/Blue/Alpha channels would be redundant and confusing. The runtime
+    // keeps the [Obsolete] aliases so older saved projects still load.
+    [Theory]
+    [InlineData("Circle")]
+    [InlineData("Rectangle")]
+    public void DefaultState_DoesNotExposeLegacyColorChannels(string standardElementName)
+    {
+        var state = StandardElementsManager.Self.DefaultStates[standardElementName];
+
+        state.Variables.Any(v => v.Name == "Red").ShouldBeFalse();
+        state.Variables.Any(v => v.Name == "Green").ShouldBeFalse();
+        state.Variables.Any(v => v.Name == "Blue").ShouldBeFalse();
+        state.Variables.Any(v => v.Name == "Alpha").ShouldBeFalse();
+        state.Variables.Any(v => v.Name == "Color").ShouldBeFalse();
+    }
 }
