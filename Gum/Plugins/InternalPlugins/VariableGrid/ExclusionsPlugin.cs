@@ -156,21 +156,21 @@ public class ExclusionsPlugin : PriorityPlugin
 
         // #2931 / #2938: stroke vs. fill model is type-specific.
         //
-        // Legacy single-slot shapes (ColoredCircle / RoundedRectangle / Arc) treat IsFilled
-        // as "fill OR stroke" — when IsFilled is true the stroke vars are meaningless and
-        // hidden. Two-slot shapes (plain Circle / Rectangle, #2938) render fill and stroke
-        // independently; stroke vars stay visible regardless of IsFilled, gated only by
+        // Legacy shapes (ColoredCircle / RoundedRectangle / Arc) treat IsFilled as
+        // "fill OR stroke" — when IsFilled is true the stroke vars are meaningless and
+        // hidden. Plain Circle / Rectangle (#2938) expose fill and stroke as independent
+        // surfaces; stroke vars stay visible regardless of IsFilled, gated only by
         // StrokeWidth = 0.
         //
         // Symmetric on the fill side: the channel-decomp FillRed/Green/Blue/Alpha exist
-        // only on two-slot Circle / Rectangle (#2931) and are meaningless when IsFilled is
+        // only on plain Circle / Rectangle (#2931) and are meaningless when IsFilled is
         // false.
         var rootStandardTypeName = GetCurrentRootStandardTypeName();
-        var isTwoSlotShape = rootStandardTypeName == "Circle" || rootStandardTypeName == "Rectangle";
+        var hasSeparateFillAndStroke = rootStandardTypeName == "Circle" || rootStandardTypeName == "Rectangle";
 
         if (rootName == "StrokeWidth" || rootName == "StrokeDashLength" || rootName == "StrokeGapLength")
         {
-            if (!isTwoSlotShape)
+            if (!hasSeparateFillAndStroke)
             {
                 var isFilled = finder.GetValue(prefix + "IsFilled");
                 if (isFilled is true)
@@ -181,7 +181,7 @@ public class ExclusionsPlugin : PriorityPlugin
             }
         }
 
-        if (isTwoSlotShape &&
+        if (hasSeparateFillAndStroke &&
             (rootName == "FillRed" || rootName == "FillGreen" || rootName == "FillBlue" || rootName == "FillAlpha"))
         {
             // Hidden when IsFilled = false (no fill drawn) or when UseGradient = true
