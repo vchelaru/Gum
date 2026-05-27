@@ -154,18 +154,59 @@ public class ExclusionsPlugin : PriorityPlugin
             return true;
         }
 
+        // #2931 / #2938: stroke vs. fill model is type-specific.
+        //
+        // Legacy single-slot shapes (ColoredCircle / RoundedRectangle / Arc) treat IsFilled
+        // as "fill OR stroke" — when IsFilled is true the stroke vars are meaningless and
+        // hidden. Two-slot shapes (plain Circle / Rectangle, #2938) render fill and stroke
+        // independently; stroke vars stay visible regardless of IsFilled, gated only by
+        // StrokeWidth = 0.
+        //
+        // Symmetric on the fill side: the channel-decomp FillRed/Green/Blue/Alpha exist
+        // only on two-slot Circle / Rectangle (#2931) and are meaningless when IsFilled is
+        // false.
+        var rootStandardTypeName = GetCurrentRootStandardTypeName();
+        var isTwoSlotShape = rootStandardTypeName == "Circle" || rootStandardTypeName == "Rectangle";
+
         if (rootName == "StrokeWidth" || rootName == "StrokeDashLength" || rootName == "StrokeGapLength")
         {
-            var isFilled = finder.GetValue(prefix + "IsFilled");
-            if (isFilled is true)
+            if (!isTwoSlotShape)
             {
-                shouldExclude = true;
-                return true;
+                var isFilled = finder.GetValue(prefix + "IsFilled");
+                if (isFilled is true)
+                {
+                    shouldExclude = true;
+                    return true;
+                }
             }
+        }
+
+        if (isTwoSlotShape &&
+            (rootName == "FillRed" || rootName == "FillGreen" || rootName == "FillBlue" || rootName == "FillAlpha"))
+        {
+            var isFilled = finder.GetValue(prefix + "IsFilled");
+            shouldExclude = isFilled is false;
+            return true;
         }
 
         shouldExclude = false;
         return false;
+    }
+
+    private string? GetCurrentRootStandardTypeName()
+    {
+        ElementSave element = _selectedState.SelectedElement;
+
+        if (element != null && _selectedState.SelectedInstance != null)
+        {
+            element = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance);
+        }
+
+        if (element != null)
+        {
+            return ObjectFinder.Self.GetRootStandardElementSave(element)?.Name;
+        }
+        return null;
     }
 
     #endregion
