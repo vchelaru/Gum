@@ -1725,11 +1725,17 @@ public class RectangleRuntime : GraphicalUiElement
 
             // Defaults: transparent fill, white stroke — RectangleRuntime's historical
             // outline-only visual, now expressed as IsFilled = true (base default) + FillColor
-            // alpha 0 (base field default after the #2938 regression fix). Symmetric with
-            // CircleRuntime's Skia branch: assigning FillColor to a visible color lights up the
-            // fill without flipping IsFilled. Pre-#2938 the Skia branch flipped IsFilled = false
-            // explicitly; that broke gallery code which does `frame.FillColor = darkGray;`
-            // without setting IsFilled.
+            // alpha 0. Symmetric with CircleRuntime's Skia branch: assigning FillColor to a
+            // visible color lights up the fill without flipping IsFilled. Pre-#2938 the Skia
+            // branch flipped IsFilled = false explicitly; that broke gallery code which does
+            // `frame.FillColor = darkGray;` without setting IsFilled.
+            //
+            // FillColor must be explicitly assigned here even though the field default is
+            // transparent: SkiaShapeRuntime.PushFillColorToSlot only runs from the FillColor /
+            // IsFilled property setters, never from field init. Without this line the Skia
+            // RoundedRectangle renderable retains its own constructor default (white) and the
+            // rectangle renders as a solid white block. Mirrors CircleRuntime's Skia ctor.
+            FillColor = new SKColor(0, 0, 0, 0);
             StrokeColor = SKColors.White;
             StrokeWidth = 1;
             StrokeWidthUnits = DimensionUnitType.ScreenPixel;

@@ -256,6 +256,22 @@ public class RectangleRuntimeTests
         sut.FillColor.ShouldBe(new SKColor(0, 0, 0, 0));
     }
 
+    // Regression guard for the gallery breakage caught after PR #2939's first fix attempt:
+    // SkiaShapeRuntime.PushFillColorToSlot only runs from the FillColor / IsFilled setters,
+    // never from field init. If the ctor relies on the field default and skips the explicit
+    // FillColor assignment, the Skia RoundedRectangle renderable retains its own
+    // constructor default (SKColors.White at RoundedRectangle.cs:23) and the rectangle
+    // renders as a solid white block. The runtime property reports the transparent default
+    // — so the existing default test passes — while the actual visual is wrong. This test
+    // asserts the renderable's Color directly so the bug can't reappear silently.
+    [Fact]
+    public void FillRenderableColor_ShouldBeTransparent_ByDefault()
+    {
+        RectangleRuntime sut = new();
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        fill.Color.ShouldBe(new SKColor(0, 0, 0, 0));
+    }
+
     [Fact]
     public void IsFilled_ShouldBeTrue_ByDefault()
     {
