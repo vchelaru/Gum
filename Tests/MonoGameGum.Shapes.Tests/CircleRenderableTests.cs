@@ -203,6 +203,49 @@ public class CircleRenderableTests
         color.B.ShouldBe((byte)70);
     }
 
+    // Issue (follow-up to #2950) — Apos.Shapes' aaSize is consumed by the shader in screen-pixel
+    // space (fwidth-based AA), so a fixed DropshadowBlurX rendered the same number of screen
+    // pixels regardless of camera zoom. As the camera zooms in, the object grew but the shadow
+    // halo did not, making the shadow appear to shrink and shift relative to its host. The fix
+    // multiplies the value by the current camera zoom before handing it to Apos, so the visible
+    // shadow halo holds a constant *world* extent — matching how the rest of Gum's wireframe
+    // anchors values to world space.
+
+    [Fact]
+    public void GetShadowAntiAliasSize_AtUnityZoom_ReturnsRoundedBlur()
+    {
+        Circle sut = new() { DropshadowBlurX = 5f };
+
+        sut.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(5);
+    }
+
+    [Fact]
+    public void GetShadowAntiAliasSize_ZoomedIn_ScalesBlurUp()
+    {
+        // At zoom = 2, a 5-world-unit blur should reach 10 screen pixels so the shadow halo
+        // remains 5 world units wide on screen.
+        Circle sut = new() { DropshadowBlurX = 5f };
+
+        sut.GetShadowAntiAliasSize(cameraZoom: 2f).ShouldBe(10);
+    }
+
+    [Fact]
+    public void GetShadowAntiAliasSize_ZoomedOut_ScalesBlurDown()
+    {
+        // At zoom = 0.5, a 4-world-unit blur is 2 screen pixels.
+        Circle sut = new() { DropshadowBlurX = 4f };
+
+        sut.GetShadowAntiAliasSize(cameraZoom: 0.5f).ShouldBe(2);
+    }
+
+    [Fact]
+    public void GetShadowAntiAliasSize_ZeroBlur_ReturnsZero()
+    {
+        Circle sut = new() { DropshadowBlurX = 0f };
+
+        sut.GetShadowAntiAliasSize(cameraZoom: 4f).ShouldBe(0);
+    }
+
     [Fact]
     public void ComputeStrokeShadowDrawParameters_ZeroStrokeWithBlur_ZeroAlpha()
     {

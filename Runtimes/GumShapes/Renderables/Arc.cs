@@ -88,14 +88,20 @@ internal class Arc : RenderableShapeBase
             dropshadowCenter.X += DropshadowOffsetX;
             dropshadowCenter.Y += DropshadowOffsetY;
 
+            // Issue #2950 — stroke-only fade + world-anchored aaSize scaling (mirrors Circle).
+            (float shadowLineThickness, Color shadowColor) =
+                ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
+            var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+            int shadowAaSize = GetShadowAntiAliasSize(cameraZoom);
+
             RenderInternal(sb,
                 absoluteLeft: shadowLeft,
                 absoluteTop: shadowTop,
                 center: dropshadowCenter,
                 radius: radius,
-                antiAliasSize: MathFunctions.RoundToInt(DropshadowBlurX),
-                lineThickness: StrokeWidth - DropshadowBlurX,
-                forcedColor: EffectiveDropshadowColor);
+                antiAliasSize: shadowAaSize,
+                lineThickness: shadowLineThickness,
+                forcedColor: shadowColor);
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth);

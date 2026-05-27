@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Math;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -460,6 +461,20 @@ public abstract class RenderableShapeBase : RenderableBase
         {
             _strokeGapLength = value;
         }
+    }
+
+    /// <summary>
+    /// World-anchored shadow halo size, scaled by the current camera zoom and rounded to the
+    /// nearest int for the Apos.Shapes <c>aaSize</c> parameter. Apos consumes <c>aaSize</c> in
+    /// screen-pixel space (its shader uses <c>fwidth</c>-style pixel-derivative AA), so a raw
+    /// <see cref="DropshadowBlurX"/> would render as a fixed screen-pixel count regardless of
+    /// zoom — making the shadow halo shrink and shift relative to its host as the camera zooms
+    /// in. Multiplying by zoom keeps the halo a constant <em>world</em> extent, matching the
+    /// rest of Gum's wireframe.
+    /// </summary>
+    public int GetShadowAntiAliasSize(float cameraZoom)
+    {
+        return MathFunctions.RoundToInt(_dropshadowBlurX * cameraZoom);
     }
 
     /// <summary>

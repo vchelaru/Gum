@@ -104,8 +104,14 @@ public class Circle : RenderableShapeBase,
             (float shadowStrokeWidth, Color shadowColor) =
                 ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
 
+            // Issue #2950 — Apos's aaSize is screen-pixel-space (fwidth-based AA). Scale by
+            // camera zoom so the shadow halo holds a constant *world* extent and stays
+            // anchored to its host as the camera zooms.
+            var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+            int shadowAaSize = GetShadowAntiAliasSize(cameraZoom);
+
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius - DropshadowBlurX / 2f,
-                MathFunctions.RoundToInt(DropshadowBlurX),
+                shadowAaSize,
                 shadowStrokeWidth,
                 rotationRadians,
                 shadowColor);

@@ -83,8 +83,13 @@ public class RoundedRectangle : RenderableShapeBase,
             (float shadowStrokeWidth, Color shadowColor) =
                 ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
 
+            // Issue #2950 — keep blur world-anchored by scaling Apos's screen-pixel-space
+            // aaSize by camera zoom (see RenderableShapeBase.GetShadowAntiAliasSize).
+            var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+            int shadowAaSize = GetShadowAntiAliasSize(cameraZoom);
+
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowSize,
-                MathFunctions.RoundToInt(DropshadowBlurX),
+                shadowAaSize,
                 shadowStrokeWidth,
                 rotationRadians,
                 forcedColor: shadowColor);
