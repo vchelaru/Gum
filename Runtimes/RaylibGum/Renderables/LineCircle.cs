@@ -238,6 +238,38 @@ public class LineCircle : InvisibleRenderable
     public bool ShouldPaintFillGradient =>
         UseGradient && (FillColor.HasValue || IsFilled) && (FillColor ?? Color).A > 0;
 
+    /// <summary>
+    /// Issue #2934 / #2956 — returns the linear gradient axis endpoints rotated around the
+    /// bbox center by <paramref name="rotationDegrees"/>. The disc itself is rotation-
+    /// symmetric so its position is unchanged by rotation, but the gradient axis is defined
+    /// in object-local bbox coords and must rotate with the shape — otherwise the gradient
+    /// pattern stays world-axis-aligned while the user rotates the circle. Mirrors the
+    /// approach Apos's <c>RenderableShapeBase.GetGradient</c> took in PR #2945. Rotation
+    /// convention matches <see cref="LineRectangle"/>'s R helper (visual CCW on screen, since
+    /// screen Y points down): <c>[cos sin; -sin cos]</c>.
+    /// </summary>
+    public (float x1, float y1, float x2, float y2) GetRotatedGradientEndpoints(float rotationDegrees)
+    {
+        if (rotationDegrees == 0f)
+        {
+            return (GradientX1, GradientY1, GradientX2, GradientY2);
+        }
+        float rotRad = rotationDegrees * System.MathF.PI / 180f;
+        float cos = System.MathF.Cos(rotRad);
+        float sin = System.MathF.Sin(rotRad);
+        float pivotX = Radius;
+        float pivotY = Radius;
+        float dx1 = GradientX1 - pivotX;
+        float dy1 = GradientY1 - pivotY;
+        float dx2 = GradientX2 - pivotX;
+        float dy2 = GradientY2 - pivotY;
+        return (
+            pivotX + dx1 * cos + dy1 * sin,
+            pivotY - dx1 * sin + dy1 * cos,
+            pivotX + dx2 * cos + dy2 * sin,
+            pivotY - dx2 * sin + dy2 * cos);
+    }
+
     /// <inheritdoc cref="LineCircle"/>
     public LineCircle() : this(null) { }
 
@@ -371,7 +403,14 @@ public class LineCircle : InvisibleRenderable
         // shows up as a visible outline that Skia doesn't draw. Suppressing the stroke here
         // matches Skia's rendered output without needing a separate gradient-stroke draw path.
         // Same gate landed on LineRectangle in commit 7f1e3b55b.
-        if (runStroke && UseGradient && runFill)
+        //
+        // Issue #2956 — gate on ShouldPaintFillGradient (which checks effective fill alpha)
+        // not on the looser `UseGradient && runFill`: with a transparent fill the gradient
+        // pass is suppressed, so the solid stroke is the only visible output and should NOT
+        // be suppressed. Before this tightening, IsFilled = false + UseGradient = true
+        // produced no fill (alpha 0) AND no stroke (suppressed by the old gate) — a
+        // completely invisible Circle. The outline gallery row exercises exactly this case.
+        if (runStroke && ShouldPaintFillGradient)
         {
             runStroke = false;
         }
@@ -439,6 +478,13 @@ public class LineCircle : InvisibleRenderable
         float bboxLeft = cx - radius;
         float bboxTop = cy - radius;
 
+        // Issue #2934 / #2956 — pre-rotate the gradient endpoints (linear) or center (radial)
+        // around the bbox center so the gradient axis tracks the shape under self-rotation.
+        // Same approach Apos's RenderableShapeBase.GetGradient takes (PR #2945). Computed
+        // once here rather than per-vertex.
+        float rotDeg = this.GetAbsoluteRotation();
+        (float gx1, float gy1, float gx2, float gy2) = GetRotatedGradientEndpoints(rotDeg);
+
         Rlgl.Begin((int)DrawMode.Triangles);
         for (int i = 0; i < segments; i++)
         {
@@ -453,14 +499,15 @@ public class LineCircle : InvisibleRenderable
             // DrawCircleGradient winding (src/rshapes.c). Reversing the two rim vertices
             // produces back-facing triangles for raylib's default front-face setting, which
             // get culled and render as nothing.
-            EmitGradientVertex(cx, cy, bboxLeft, bboxTop);
-            EmitGradientVertex(v2x, v2y, bboxLeft, bboxTop);
-            EmitGradientVertex(v1x, v1y, bboxLeft, bboxTop);
+            EmitGradientVertex(cx, cy, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+            EmitGradientVertex(v2x, v2y, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+            EmitGradientVertex(v1x, v1y, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
         }
         Rlgl.End();
     }
 
-    private void EmitGradientVertex(float worldX, float worldY, float bboxLeft, float bboxTop)
+    private void EmitGradientVertex(float worldX, float worldY, float bboxLeft, float bboxTop,
+        float gx1, float gy1, float gx2, float gy2)
     {
         float localX = worldX - bboxLeft;
         float localY = worldY - bboxTop;
@@ -468,10 +515,11 @@ public class LineCircle : InvisibleRenderable
         float t;
         if (GradientType == GradientType.Linear)
         {
-            // Project the vertex onto the gradient axis. Degenerate (zero-length) axis
-            // collapses to a solid Color1 — same fallback Skia's CreateLinearGradient takes.
-            float dx = GradientX2 - GradientX1;
-            float dy = GradientY2 - GradientY1;
+            // Project the vertex onto the (rotation-adjusted) gradient axis. Degenerate
+            // (zero-length) axis collapses to a solid Color1 — same fallback Skia's
+            // CreateLinearGradient takes.
+            float dx = gx2 - gx1;
+            float dy = gy2 - gy1;
             float lenSq = dx * dx + dy * dy;
             if (lenSq <= 0f)
             {
@@ -479,15 +527,16 @@ public class LineCircle : InvisibleRenderable
                 Rlgl.Vertex2f(worldX, worldY);
                 return;
             }
-            t = ((localX - GradientX1) * dx + (localY - GradientY1) * dy) / lenSq;
+            t = ((localX - gx1) * dx + (localY - gy1) * dy) / lenSq;
         }
         else
         {
-            // Radial: distance from (GradientX1, GradientY1) normalized against the
-            // [InnerRadius, OuterRadius] band. OuterRadius = 0 (default) collapses to the
-            // full circle radius so a no-config radial covers the whole disk.
-            float dx = localX - GradientX1;
-            float dy = localY - GradientY1;
+            // Radial: distance from (gx1, gy1) — the rotation-adjusted radial center —
+            // normalized against the [InnerRadius, OuterRadius] band. OuterRadius = 0
+            // (default) collapses to the full circle radius so a no-config radial covers
+            // the whole disk.
+            float dx = localX - gx1;
+            float dy = localY - gy1;
             float dist = System.MathF.Sqrt(dx * dx + dy * dy);
             float outer = GradientOuterRadius > 0f ? GradientOuterRadius : Radius;
             float span = outer - GradientInnerRadius;

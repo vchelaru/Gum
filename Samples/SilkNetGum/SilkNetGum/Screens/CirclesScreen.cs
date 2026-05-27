@@ -45,7 +45,8 @@ internal class CirclesScreen : GraphicalUiElement
         left.Children.Add(BuildSection("Stroke width", BuildStrokeWidthRow()));
         left.Children.Add(BuildSection("Alignment", BuildAlignmentRow()));
         left.Children.Add(BuildSection("Gradients", BuildGradientRow()));
-        left.Children.Add(BuildSection("Rotation", BuildRotationRow()));
+        left.Children.Add(BuildSection("Rotation (filled)", BuildRotationRow(filled: true)));
+        left.Children.Add(BuildSection("Rotation (outline)", BuildRotationRow(filled: false)));
 
         right.Children.Add(BuildSection("Antialiasing", BuildAntialiasingRow()));
         right.Children.Add(BuildSection("Dropshadow", BuildDropshadowRow()));
@@ -482,17 +483,18 @@ internal class CirclesScreen : GraphicalUiElement
     // makes the rotation angle obvious. Cells use a fixed-size frame because Rotation
     // pushes content outside the natural bounding box, which breaks the
     // RelativeToChildren row sizing. Mirrors the same row on the MG and raylib sides.
-    static ContainerRuntime BuildRotationRow()
+    // Two rows: see the MG CirclesScreen counterpart for the #2956 rationale.
+    static ContainerRuntime BuildRotationRow(bool filled)
     {
         ContainerRuntime row = BuildHorizontalRow();
         foreach (float rotation in new[] { 0f, 60f, 120f, 180f })
         {
-            row.Children.Add(BuildRotatedGradientCircleCell(rotation));
+            row.Children.Add(BuildRotatedGradientCircleCell(rotation, filled));
         }
         return row;
     }
 
-    static RectangleRuntime BuildRotatedGradientCircleCell(float rotation)
+    static RectangleRuntime BuildRotatedGradientCircleCell(float rotation, bool filled)
     {
         RectangleRuntime frame = new();
         frame.Width = 70;
@@ -505,6 +507,14 @@ internal class CirclesScreen : GraphicalUiElement
         circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = VerticalAlignment.Center;
         circle.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        if (filled)
+        {
+            circle.FillColor = SKColors.White;
+        }
+        else
+        {
+            circle.IsFilled = false;
+        }
         circle.UseGradient = true;
         circle.GradientType = GradientType.Linear;
         circle.Color1 = SKColors.Black;

@@ -449,7 +449,11 @@ public class LineRectangle : InvisibleRenderable
         // Corner case not yet implemented: UseGradient = true with only StrokeColor (no fill).
         // Skia paints a gradient outline; raylib would currently fall through to solid stroke.
         // Not exercised by the sample; tracked as a #2757 follow-up.
-        if (runStroke && UseGradient && runFill)
+        //
+        // Issue #2956 — see the matching block in LineCircle for the same tightening.
+        // ShouldPaintFillGradient gates on effective fill alpha, so an IsFilled = false +
+        // transparent-fill cell leaves the solid stroke visible instead of suppressing it.
+        if (runStroke && ShouldPaintFillGradient)
         {
             runStroke = false;
         }

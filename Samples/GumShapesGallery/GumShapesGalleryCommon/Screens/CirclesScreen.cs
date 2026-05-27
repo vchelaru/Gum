@@ -50,7 +50,8 @@ internal class CirclesScreen : FrameworkElement
         left.AddChild(BuildSection("Stroke width", BuildStrokeWidthRow()));
         left.AddChild(BuildSection("Alignment", BuildAlignmentRow()));
         left.AddChild(BuildSection("Gradients", BuildGradientRow()));
-        left.AddChild(BuildSection("Rotation", BuildRotationRow()));
+        left.AddChild(BuildSection("Rotation (filled)", BuildRotationRow(filled: true)));
+        left.AddChild(BuildSection("Rotation (outline)", BuildRotationRow(filled: false)));
 
         right.AddChild(BuildSection("Antialiasing", BuildAntialiasingRow()));
         right.AddChild(BuildSection("Dropshadow", BuildDropshadowRow()));
@@ -497,17 +498,24 @@ internal class CirclesScreen : FrameworkElement
     // makes the rotation angle obvious. Cells use a fixed-size frame because Rotation
     // pushes content outside the natural bounding box, which breaks the
     // RelativeToChildren row sizing. Mirrors the same row on the SilkNet and raylib sides.
-    static ContainerRuntime BuildRotationRow()
+    //
+    // Two rows: "filled" sets FillColor opaque so the gradient lights up the fill slot;
+    // "outline" sets IsFilled = false so the gradient lights up the stroke slot. Both rows
+    // exercise the same #2956 contract from opposite ends. raylib's CirclesScreen replaces
+    // the outline row with a "Not supported in raylib" label because raylib's LineCircle
+    // stroke pass is solid-color only and a solid outline on a rotation-symmetric circle
+    // has no rotation signal to show.
+    static ContainerRuntime BuildRotationRow(bool filled)
     {
         ContainerRuntime row = BuildHorizontalRow();
         foreach (float rotation in new[] { 0f, 60f, 120f, 180f })
         {
-            row.AddChild(BuildRotatedGradientCircleCell(rotation));
+            row.AddChild(BuildRotatedGradientCircleCell(rotation, filled));
         }
         return row;
     }
 
-    static RectangleRuntime BuildRotatedGradientCircleCell(float rotation)
+    static RectangleRuntime BuildRotatedGradientCircleCell(float rotation, bool filled)
     {
         RectangleRuntime frame = new();
         frame.Width = 70;
@@ -520,6 +528,14 @@ internal class CirclesScreen : FrameworkElement
         circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = VerticalAlignment.Center;
         circle.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        if (filled)
+        {
+            circle.FillColor = Color.White;
+        }
+        else
+        {
+            circle.IsFilled = false;
+        }
         circle.UseGradient = true;
         circle.GradientType = GradientType.Linear;
         circle.Color1 = Color.Black;

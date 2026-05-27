@@ -56,7 +56,8 @@ internal class RectanglesScreen : GraphicalUiElement
         right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — Skia routes through SkiaShapeRuntime.StrokeDashLength (#2796)", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2814)", BuildBothColorsRow()));
         right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2814 visual contract)", BuildInscribedRow()));
-        right.Children.Add(BuildSection("Rotation (0 / 60 / 120 / 180 degrees) — black→white gradient rectangles", BuildRotationRow()));
+        right.Children.Add(BuildSection("Rotation (filled)", BuildRotationRow(filled: true)));
+        right.Children.Add(BuildSection("Rotation (outline)", BuildRotationRow(filled: false)));
     }
 
     static ContainerRuntime BuildColumn()
@@ -315,17 +316,18 @@ internal class RectanglesScreen : GraphicalUiElement
     // frame because Rotation pushes content outside the natural bounding box, which
     // breaks RelativeToChildren row sizing. 100x100 frame is sized to contain a 70x50
     // rectangle at any rotation. Mirrors the same row on the MG and raylib sides.
-    static ContainerRuntime BuildRotationRow()
+    // Two rows: see the MG CirclesScreen counterpart for the #2956 rationale.
+    static ContainerRuntime BuildRotationRow(bool filled)
     {
         ContainerRuntime row = BuildHorizontalRow();
         foreach (float rotation in new[] { 0f, 60f, 120f, 180f })
         {
-            row.Children.Add(BuildRotatedGradientRectCell(rotation));
+            row.Children.Add(BuildRotatedGradientRectCell(rotation, filled));
         }
         return row;
     }
 
-    static RectangleRuntime BuildRotatedGradientRectCell(float rotation)
+    static RectangleRuntime BuildRotatedGradientRectCell(float rotation, bool filled)
     {
         RectangleRuntime frame = new();
         frame.Width = 100;
@@ -339,6 +341,14 @@ internal class RectanglesScreen : GraphicalUiElement
         rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = VerticalAlignment.Center;
         rect.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        if (filled)
+        {
+            rect.FillColor = SKColors.White;
+        }
+        else
+        {
+            rect.IsFilled = false;
+        }
         rect.UseGradient = true;
         rect.GradientType = GradientType.Linear;
         rect.Color1 = SKColors.Black;

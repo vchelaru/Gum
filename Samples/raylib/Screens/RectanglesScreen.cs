@@ -55,7 +55,8 @@ internal class RectanglesScreen : FrameworkElement
         right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — raylib walks the perimeter, one DrawLineEx per dash (#2757)", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2757)", BuildBothColorsRow()));
         right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2757)", BuildInscribedRow()));
-        right.Children.Add(BuildSection("Rotation (0 / 60 / 120 / 180 degrees) — black→white gradient rectangles", BuildRotationRow()));
+        right.Children.Add(BuildSection("Rotation (filled)", BuildRotationFilledRow()));
+        right.Children.Add(BuildSection("Rotation (outline)", BuildRotationOutlineUnsupportedRow()));
     }
 
     static ContainerRuntime BuildColumn()
@@ -332,13 +333,31 @@ internal class RectanglesScreen : FrameworkElement
     // frame because Rotation pushes content outside the natural bounding box, which
     // breaks RelativeToChildren row sizing. 100x100 frame is sized to contain a 70x50
     // rectangle at any rotation. Mirrors the same row on the MG and SilkNet sides.
-    static ContainerRuntime BuildRotationRow()
+    // Filled row only on raylib — see BuildRotationOutlineUnsupportedRow for why the outline
+    // row is replaced with a label.
+    static ContainerRuntime BuildRotationFilledRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
         foreach (float rotation in new[] { 0f, 60f, 120f, 180f })
         {
             row.Children.Add(BuildRotatedGradientRectCell(rotation));
         }
+        return row;
+    }
+
+    // Issue #2956 — raylib's LineRectangle stroke pass is solid-color only (no gradient-on-
+    // stroke support). The outline row's contract (gradient on stroke) can't be exercised
+    // there, so label the row to document the limitation instead of presenting a misleading
+    // visual. Kept consistent with the matching label on raylib's CirclesScreen.
+    static ContainerRuntime BuildRotationOutlineUnsupportedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        TextRuntime label = new();
+        label.Text = "Not supported in raylib (LineRectangle has no gradient-on-stroke path)";
+        label.Red = 220;
+        label.Green = 220;
+        label.Blue = 220;
+        row.Children.Add(label);
         return row;
     }
 
@@ -356,6 +375,9 @@ internal class RectanglesScreen : FrameworkElement
         rect.XUnits = GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = VerticalAlignment.Center;
         rect.YUnits = GeneralUnitType.PixelsFromMiddle;
+        // Filled cell — light up the fill slot so the gradient renders on the fill. raylib's
+        // outline-only case is handled by BuildRotationOutlineUnsupportedRow.
+        rect.FillColor = Color.White;
         rect.UseGradient = true;
         rect.GradientType = GradientType.Linear;
         rect.Color1 = Color.Black;

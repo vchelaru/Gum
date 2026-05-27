@@ -48,7 +48,8 @@ internal class CirclesScreen : FrameworkElement
         left.Children.Add(BuildSection("Stroke width", BuildStrokeWidthRow()));
         left.Children.Add(BuildSection("Alignment", BuildAlignmentRow()));
         left.Children.Add(BuildSection("Gradients", BuildGradientRow()));
-        left.Children.Add(BuildSection("Rotation", BuildRotationRow()));
+        left.Children.Add(BuildSection("Rotation (filled)", BuildRotationFilledRow()));
+        left.Children.Add(BuildSection("Rotation (outline)", BuildRotationOutlineUnsupportedRow()));
 
         right.Children.Add(BuildSection("Dropshadow", BuildDropshadowRow()));
         right.Children.Add(BuildSection("Dashed strokes", BuildDashedStrokeRow()));
@@ -181,13 +182,33 @@ internal class CirclesScreen : FrameworkElement
     // makes the rotation angle obvious. Cells use a fixed-size frame because Rotation
     // pushes content outside the natural bounding box, which breaks the
     // RelativeToChildren row sizing. Mirrors the same row on the MG and SilkNet sides.
-    static ContainerRuntime BuildRotationRow()
+    // Filled row only on raylib — see BuildRotationOutlineUnsupportedRow for why the outline
+    // row is replaced with a label. The filled row exercises the post-#2956 contract on the
+    // fill slot, plus the new LineCircle rotation handling added in the same PR.
+    static ContainerRuntime BuildRotationFilledRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
         foreach (float rotation in new[] { 0f, 60f, 120f, 180f })
         {
             row.Children.Add(BuildRotatedGradientCircleCell(rotation));
         }
+        return row;
+    }
+
+    // Issue #2956 — raylib's LineCircle stroke pass is solid-color only (no gradient-on-
+    // stroke support); combined with default-transparent fill, an outline + gradient cell
+    // would render either nothing (with the contract enforced) or a solid white outline on
+    // a rotation-symmetric circle (no rotation signal). Label the row instead so the gallery
+    // documents the limitation rather than presenting a misleading visual.
+    static ContainerRuntime BuildRotationOutlineUnsupportedRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        TextRuntime label = new();
+        label.Text = "Not supported in raylib (LineCircle has no gradient-on-stroke path)";
+        label.Red = 220;
+        label.Green = 220;
+        label.Blue = 220;
+        row.Children.Add(label);
         return row;
     }
 
@@ -204,6 +225,9 @@ internal class CirclesScreen : FrameworkElement
         circle.XUnits = GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = VerticalAlignment.Center;
         circle.YUnits = GeneralUnitType.PixelsFromMiddle;
+        // Filled cell — light up the fill slot with an opaque color so the gradient renders
+        // on the fill. raylib's outline-only case is handled by BuildRotationOutlineUnsupportedRow.
+        circle.FillColor = Color.White;
         circle.UseGradient = true;
         circle.GradientType = GradientType.Linear;
         circle.Color1 = Color.Black;
