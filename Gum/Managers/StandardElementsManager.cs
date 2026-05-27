@@ -1290,22 +1290,18 @@ public class StandardElementsManager
 
     // v3 (#2931): fill + stroke variables for plain Circle / Rectangle, which expose fill and
     // stroke as independent surfaces (unlike legacy ColoredCircle / RoundedRectangle / Arc,
-    // which share a single Color). Emitted in logical grouping order — IsFilled, then the Fill
-    // channels, then the stroke shape vars, then the Stroke channels — so the variable grid
-    // reads top-to-bottom as "fill side, then stroke side" instead of interleaving them. Tool
-    // defaults intentionally diverge from the runtime ctor (which defaults IsFilled = true +
-    // transparent fill so code-only constructions preserve the stroke-only visual):
-    // IsFilled = false + opaque white fill so the checkbox honestly says "no fill" and
-    // flipping it lights up a visible fill instead of being a no-op against alpha 0.
+    // which share a single Color). Emitted in three logical sections so the grid reads as a
+    // sequence of self-contained groups — stroke (always visible, no enabling bool because
+    // StrokeWidth = 0 is the implicit gate), then fill (gated by IsFilled), and AddGradient-
+    // Variables continues the pattern after this helper returns (gated by UseGradient).
+    //
+    // Tool defaults intentionally diverge from the runtime ctor (IsFilled = true + transparent
+    // fill, which preserves stroke-only visuals for code-only constructions): IsFilled = false
+    // + opaque white fill, so the checkbox honestly says "no fill" and flipping it lights up a
+    // visible fill instead of being a no-op against alpha 0.
     public static void AddFillAndStrokeVariables(StateSave stateSave, string category = "Rendering")
     {
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsFilled", Category = category });
-
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillAlpha", Category = category });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillRed", Category = category });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillGreen", Category = category });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillBlue", Category = category });
-
+        // Stroke section
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = category });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeDashLength", Category = category });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeGapLength", Category = category });
@@ -1314,6 +1310,14 @@ public class StandardElementsManager
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeRed", Category = category });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeGreen", Category = category });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeBlue", Category = category });
+
+        // Fill section
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsFilled", Category = category });
+
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillAlpha", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillRed", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillGreen", Category = category });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillBlue", Category = category });
     }
 
     public static void AddBlendVariable(StateSave stateSave)
