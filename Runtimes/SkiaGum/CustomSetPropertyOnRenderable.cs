@@ -384,6 +384,70 @@ public class CustomSetPropertyOnRenderable
                         handled = true;
                     }
                     break;
+                // Same rationale as the Circle branch above — see comment there.
+                case nameof(RectangleRuntime.HasDropshadow):
+                    if (graphicalUiElement is RectangleRuntime rectHasDs)
+                    {
+                        rectHasDs.HasDropshadow = (bool)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowOffsetX):
+                    if (graphicalUiElement is RectangleRuntime rectDsOffX)
+                    {
+                        rectDsOffX.DropshadowOffsetX = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowOffsetY):
+                    if (graphicalUiElement is RectangleRuntime rectDsOffY)
+                    {
+                        rectDsOffY.DropshadowOffsetY = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowBlurX):
+                    if (graphicalUiElement is RectangleRuntime rectDsBlurX)
+                    {
+                        rectDsBlurX.DropshadowBlurX = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowBlurY):
+                    if (graphicalUiElement is RectangleRuntime rectDsBlurY)
+                    {
+                        rectDsBlurY.DropshadowBlurY = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowAlpha):
+                    if (graphicalUiElement is RectangleRuntime rectDsA)
+                    {
+                        rectDsA.DropshadowAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowRed):
+                    if (graphicalUiElement is RectangleRuntime rectDsR)
+                    {
+                        rectDsR.DropshadowRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowGreen):
+                    if (graphicalUiElement is RectangleRuntime rectDsG)
+                    {
+                        rectDsG.DropshadowGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.DropshadowBlue):
+                    if (graphicalUiElement is RectangleRuntime rectDsB)
+                    {
+                        rectDsB.DropshadowBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
                 case nameof(RoundedRectangleRuntime.StrokeWidth):
                     if(graphicalUiElement is RoundedRectangleRuntime asRoundedRectangleRuntime)
                     {
@@ -624,6 +688,75 @@ public class CustomSetPropertyOnRenderable
                     if (graphicalUiElement is CircleRuntime cStrokeAlpha)
                     {
                         cStrokeAlpha.StrokeAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                // Dropshadow names must route through the runtime so SyncDropshadowToTarget
+                // can place the shadow on the active slot (fill when IsFilled = true, stroke
+                // otherwise). Without this routing, state-load writes straight to the fill
+                // renderable via TrySetPropertiesOnRenderableBase and the shadow is stranded
+                // on the gated-transparent fill slot — EffectiveDropshadowColor scales alpha
+                // by Color.A so a transparent fill produces an invisible shadow.
+                case nameof(CircleRuntime.HasDropshadow):
+                    if (graphicalUiElement is CircleRuntime cHasDs)
+                    {
+                        cHasDs.HasDropshadow = (bool)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowOffsetX):
+                    if (graphicalUiElement is CircleRuntime cDsOffX)
+                    {
+                        cDsOffX.DropshadowOffsetX = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowOffsetY):
+                    if (graphicalUiElement is CircleRuntime cDsOffY)
+                    {
+                        cDsOffY.DropshadowOffsetY = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowBlurX):
+                    if (graphicalUiElement is CircleRuntime cDsBlurX)
+                    {
+                        cDsBlurX.DropshadowBlurX = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowBlurY):
+                    if (graphicalUiElement is CircleRuntime cDsBlurY)
+                    {
+                        cDsBlurY.DropshadowBlurY = (float)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowAlpha):
+                    if (graphicalUiElement is CircleRuntime cDsA)
+                    {
+                        cDsA.DropshadowAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowRed):
+                    if (graphicalUiElement is CircleRuntime cDsR)
+                    {
+                        cDsR.DropshadowRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowGreen):
+                    if (graphicalUiElement is CircleRuntime cDsG)
+                    {
+                        cDsG.DropshadowGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.DropshadowBlue):
+                    if (graphicalUiElement is CircleRuntime cDsB)
+                    {
+                        cDsB.DropshadowBlue = (int)value;
                         handled = true;
                     }
                     break;

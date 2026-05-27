@@ -688,4 +688,55 @@ public class RectangleRuntimeTests
         fill.HasDropshadow.ShouldBeTrue();
         stroke.HasDropshadow.ShouldBeFalse();
     }
+
+    [Fact]
+    public void SetProperty_HasDropshadow_StrokeOnly_RoutesToStrokeSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = false;
+
+        sut.SetProperty("HasDropshadow", true);
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        stroke.HasDropshadow.ShouldBeTrue();
+        fill.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SetProperty_DropshadowOffsetAndBlur_RouteToActiveSlot_WhenStrokeOnly()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.HasDropshadow = true;
+
+        sut.SetProperty("DropshadowOffsetX", 19f);
+        sut.SetProperty("DropshadowOffsetY", 11f);
+        sut.SetProperty("DropshadowBlurX", 3f);
+        sut.SetProperty("DropshadowBlurY", 0f);
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        stroke.DropshadowOffsetX.ShouldBe(19f);
+        stroke.DropshadowOffsetY.ShouldBe(11f);
+        stroke.DropshadowBlurX.ShouldBe(3f);
+        stroke.DropshadowBlurY.ShouldBe(0f);
+    }
+
+    [Fact]
+    public void SetProperty_DropshadowChannels_RouteToActiveSlot_WhenStrokeOnly()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.HasDropshadow = true;
+
+        sut.SetProperty("DropshadowAlpha", 200);
+        sut.SetProperty("DropshadowRed", 50);
+        sut.SetProperty("DropshadowGreen", 100);
+        sut.SetProperty("DropshadowBlue", 150);
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        stroke.DropshadowColor.ShouldBe(new Color(50, 100, 150, 200));
+    }
 }

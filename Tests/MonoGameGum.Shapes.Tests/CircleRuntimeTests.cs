@@ -725,4 +725,61 @@ public class CircleRuntimeTests
         fill.HasDropshadow.ShouldBeTrue();
         stroke.HasDropshadow.ShouldBeFalse();
     }
+
+    // Issue: state-load from .gusx routes every dropshadow variable through the SetProperty
+    // dispatcher. Until #2931's follow-up, that dispatcher's Circle branch had no case for any
+    // dropshadow name, so the names fell through to TrySetPropertiesOnRenderableBase which
+    // wrote them to the fill Apos Circle directly. The runtime's HasDropshadow setter (and
+    // therefore SyncDropshadowToTarget) never fired on .gusx load, leaving the shadow stranded
+    // on the fill slot with its gated-transparent color — invisible per EffectiveDropshadowColor.
+    [Fact]
+    public void SetProperty_HasDropshadow_StrokeOnly_RoutesToStrokeSlot()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+
+        sut.SetProperty("HasDropshadow", true);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.HasDropshadow.ShouldBeTrue();
+        fill.HasDropshadow.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SetProperty_DropshadowOffsetAndBlur_RouteToActiveSlot_WhenStrokeOnly()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.HasDropshadow = true;
+
+        sut.SetProperty("DropshadowOffsetX", 19f);
+        sut.SetProperty("DropshadowOffsetY", 11f);
+        sut.SetProperty("DropshadowBlurX", 3f);
+        sut.SetProperty("DropshadowBlurY", 0f);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.DropshadowOffsetX.ShouldBe(19f);
+        stroke.DropshadowOffsetY.ShouldBe(11f);
+        stroke.DropshadowBlurX.ShouldBe(3f);
+        stroke.DropshadowBlurY.ShouldBe(0f);
+    }
+
+    [Fact]
+    public void SetProperty_DropshadowChannels_RouteToActiveSlot_WhenStrokeOnly()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.HasDropshadow = true;
+
+        sut.SetProperty("DropshadowAlpha", 200);
+        sut.SetProperty("DropshadowRed", 50);
+        sut.SetProperty("DropshadowGreen", 100);
+        sut.SetProperty("DropshadowBlue", 150);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.DropshadowColor.ShouldBe(new Color(50, 100, 150, 200));
+    }
 }
