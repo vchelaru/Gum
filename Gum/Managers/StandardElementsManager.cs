@@ -371,10 +371,13 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
             AddColorVariables(stateSave, true);
 
-            // v3 (#2929): gradient / dropshadow / blend route through the same SetProperty path
-            // as on ColoredCircle, picked up by CircleRuntime's existing gradient/dropshadow
-            // pass-through. AddStrokeAndFilledVariables is intentionally excluded — IsFilled
-            // is not present on XNALIKE CircleRuntime yet (tracked as a #2931 follow-up).
+            // v3 (#2929 / #2931): gradient / dropshadow / blend route through the same SetProperty
+            // path as on ColoredCircle, picked up by CircleRuntime's existing pass-through.
+            // IsFilled exposure must precede UseGradient so users can scope a gradient to the
+            // outline only by flipping IsFilled = false (the fill slot's gradient is gated on
+            // _isFilled in SkiaShapeRuntime.RefreshSlotGradients).
+            AddStrokeAndFilledVariables(stateSave);
+            AddFillAndStrokeColorChannelVariables(stateSave);
             AddGradientVariables(stateSave);
             AddDropshadowVariables(stateSave);
             AddBlendVariable(stateSave);
@@ -409,7 +412,9 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
             AddColorVariables(stateSave, true);
 
-            // v3 (#2929): mirror of the Circle block above — see comment there.
+            // v3 (#2929 / #2931): mirror of the Circle block above — see comment there.
+            AddStrokeAndFilledVariables(stateSave);
+            AddFillAndStrokeColorChannelVariables(stateSave);
             AddGradientVariables(stateSave);
             AddDropshadowVariables(stateSave);
             AddBlendVariable(stateSave);
@@ -1279,6 +1284,22 @@ public class StandardElementsManager
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeDashLength", Category = "Stroke and Fill" });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeGapLength", Category = "Stroke and Fill" });
 
+    }
+
+    // v3 (#2931): channel-decomp Fill/Stroke color variables for plain Circle/Rectangle.
+    // Defaults mirror the runtime: FillColor transparent (alpha 0) so the historical
+    // outline-only visual is preserved with IsFilled = true, StrokeColor opaque white.
+    public static void AddFillAndStrokeColorChannelVariables(StateSave stateSave)
+    {
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "FillAlpha", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "FillRed", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "FillGreen", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "FillBlue", Category = "Stroke and Fill" });
+
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeAlpha", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeRed", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeGreen", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeBlue", Category = "Stroke and Fill" });
     }
 
     public static void AddBlendVariable(StateSave stateSave)
