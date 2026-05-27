@@ -204,6 +204,9 @@ internal class CirclesScreen : FrameworkElement
         circle.XUnits = GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = VerticalAlignment.Center;
         circle.YUnits = GeneralUnitType.PixelsFromMiddle;
+        // Issue #2956 — FillColor must be opaque to light up the fill slot; see the MG
+        // CirclesScreen counterpart for the contract rationale.
+        circle.FillColor = Color.White;
         circle.UseGradient = true;
         circle.GradientType = GradientType.Linear;
         circle.Color1 = Color.Black;

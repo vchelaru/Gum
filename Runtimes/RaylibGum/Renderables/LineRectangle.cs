@@ -224,6 +224,14 @@ public class LineRectangle : InvisibleRenderable
         }
     }
 
+    /// <summary>
+    /// Issue #2956 — see <see cref="LineCircle.ShouldPaintFillGradient"/> for the full
+    /// contract. Same gate, same predicate, applied to <see cref="DrawLinearGradientQuad"/>
+    /// and <see cref="DrawRadialGradientCircles"/> on the fill pass.
+    /// </summary>
+    public bool ShouldPaintFillGradient =>
+        UseGradient && (FillColor.HasValue || IsFilled) && (FillColor ?? Color).A > 0;
+
     public LineRectangle() : this(null) { }
 
     public LineRectangle(SystemManagers? _) { }
@@ -368,7 +376,16 @@ public class LineRectangle : InvisibleRenderable
                 // falloff. Both paths read GradientX1/Y1/X2/Y2/InnerRadius/OuterRadius in
                 // rectangle-local coords (origin = top-left, +X right, +Y down). Rotation
                 // applied via the same R() helper used by the outline path.
-                if (GradientType == GradientType.Linear)
+                //
+                // Issue #2956 — suppress the gradient when the slot's effective fill alpha is
+                // 0; neither DrawLinearGradientQuad nor DrawRadialGradientCircles modulates
+                // by fillColor.A, so a default-transparent fill would otherwise paint an
+                // opaque gradient. See ShouldPaintFillGradient.
+                if (fillColor.A == 0)
+                {
+                    // Slot is invisible — skip both the gradient and the solid path.
+                }
+                else if (GradientType == GradientType.Linear)
                 {
                     DrawLinearGradientQuad(tl, tr, br, bl, w, h);
                 }

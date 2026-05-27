@@ -505,6 +505,12 @@ internal class CirclesScreen : GraphicalUiElement
         circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = VerticalAlignment.Center;
         circle.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        // Issue #2956 — FillColor must be opaque to light up the fill slot; see the MG
+        // CirclesScreen counterpart for the contract rationale. On Skia this is the
+        // design-correct behavior (paint.Color.alpha gates the shader natively), so before
+        // setting FillColor the gradient would render on the stroke only; with FillColor
+        // opaque it now paints on the fill and matches the other backends.
+        circle.FillColor = SKColors.White;
         circle.UseGradient = true;
         circle.GradientType = GradientType.Linear;
         circle.Color1 = SKColors.Black;

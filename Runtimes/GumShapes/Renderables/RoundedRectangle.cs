@@ -146,7 +146,7 @@ public class RoundedRectangle : RenderableShapeBase,
 
         if (IsFilled)
         {
-            if (UseGradient && forcedColor == null)
+            if (ShouldPaintGradient(forcedColor))
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
 
@@ -166,7 +166,7 @@ public class RoundedRectangle : RenderableShapeBase,
         }
         else
         {
-            if(UseGradient && forcedColor == null)
+            if(ShouldPaintGradient(forcedColor))
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
 
@@ -230,7 +230,7 @@ public class RoundedRectangle : RenderableShapeBase,
         // than restarting per-segment). Falls back to a solid Color when no gradient is configured.
         // Apos.Shapes overloads accept either, so we forward whichever fits.
         var fallbackColor = forcedColor ?? Color;
-        Gradient strokeGradient = (UseGradient && forcedColor == null)
+        Gradient strokeGradient = ShouldPaintGradient(forcedColor)
             ? base.GetGradient(absoluteLeft, absoluteTop, rotationRadians)
             : new Gradient(Vector2.Zero, fallbackColor, Vector2.Zero, fallbackColor, Gradient.Shape.None);
 

@@ -388,4 +388,44 @@ public class CircleRenderableTests
         strokeWidth.ShouldBeGreaterThan(0f);
         color.A.ShouldBe((byte)0);
     }
+
+    // Issue #2956 — UseGradient is a *pattern* flag, not a *visibility* flag. A slot whose
+    // solid color alpha is 0 (e.g. the default-transparent fill on a stroke-only plain Circle)
+    // must NOT paint its gradient — Apos.Shapes' gradient draw bypasses the slot's solid color
+    // and would otherwise paint an opaque gradient on a slot the user has explicitly hidden.
+    // SkPaint achieves this naturally (paint.Color.alpha modulates the shader output); Apos
+    // does not, so we gate the gradient draw explicitly at the call site. Sample cells in the
+    // gallery now set FillColor opaque to keep the gradient visible — see migration note.
+
+    [Fact]
+    public void ShouldPaintGradient_GradientOff_False()
+    {
+        Circle sut = new() { UseGradient = false, Color = new Color(255, 255, 255, 255) };
+
+        sut.ShouldPaintGradient(forcedColor: null).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintGradient_GradientOn_ForcedColor_False()
+    {
+        Circle sut = new() { UseGradient = true, Color = new Color(255, 255, 255, 255) };
+
+        sut.ShouldPaintGradient(forcedColor: new Color(0, 0, 0, 255)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintGradient_GradientOn_OpaqueSlot_True()
+    {
+        Circle sut = new() { UseGradient = true, Color = new Color(255, 255, 255, 255) };
+
+        sut.ShouldPaintGradient(forcedColor: null).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldPaintGradient_GradientOn_TransparentSlot_False()
+    {
+        Circle sut = new() { UseGradient = true, Color = new Color(255, 255, 255, 0) };
+
+        sut.ShouldPaintGradient(forcedColor: null).ShouldBeFalse();
+    }
 }

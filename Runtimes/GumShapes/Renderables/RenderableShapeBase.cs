@@ -582,6 +582,23 @@ public abstract class RenderableShapeBase : RenderableBase
     }
 
     /// <summary>
+    /// Issue #2956 — gates whether this renderable's gradient pass should actually draw.
+    /// <see cref="UseGradient"/> is a *pattern* flag, not a *visibility* flag — a slot whose
+    /// solid <see cref="Color"/> alpha is 0 (e.g. the default-transparent fill on a stroke-only
+    /// plain Circle) must NOT paint its gradient. Apos.Shapes' gradient draw bypasses the
+    /// slot's solid color, so without this gate it would paint an opaque gradient on a slot
+    /// the user explicitly hid. SkiaSharp gets this right naturally because
+    /// <c>SKPaint.Color.alpha</c> modulates the shader output; we replicate that contract
+    /// here. <paramref name="forcedColor"/> is the per-call dropshadow override every render
+    /// path already short-circuits on — when set, the slot is painting the shadow, not the
+    /// gradient, so the gate must return false.
+    /// </summary>
+    public bool ShouldPaintGradient(Color? forcedColor)
+    {
+        return UseGradient && forcedColor == null && Color.A > 0;
+    }
+
+    /// <summary>
     /// Invoked by <see cref="PreRender"/> each frame. The wrapping <see cref="MonoGameGum.GueDeriving.AposShapeRuntime"/>
     /// hooks this so it can resolve unit-bearing properties (notably StrokeWidth with ScreenPixel units,
     /// which depends on the current camera zoom) into the renderable's plain pixel values just before drawing.

@@ -225,6 +225,19 @@ public class LineCircle : InvisibleRenderable
         }
     }
 
+    /// <summary>
+    /// Issue #2956 — true when the fill pass should paint its gradient. Mirrors the SkPaint
+    /// contract enforced by SkiaGum: <see cref="UseGradient"/> is a *pattern* flag, not a
+    /// *visibility* flag, so a slot whose effective fill alpha is 0 (e.g. the default-
+    /// transparent fill on a stroke-only plain Circle) must NOT paint its gradient. Without
+    /// this gate <see cref="DrawGradientFan"/> would emit opaque triangles regardless of
+    /// <see cref="FillColor"/>'s alpha. The fill slot is enabled when an explicit
+    /// <see cref="FillColor"/> is set OR <see cref="IsFilled"/> is true (legacy
+    /// <see cref="Color"/> path); the effective fill color is then <c>FillColor ?? Color</c>.
+    /// </summary>
+    public bool ShouldPaintFillGradient =>
+        UseGradient && (FillColor.HasValue || IsFilled) && (FillColor ?? Color).A > 0;
+
     /// <inheritdoc cref="LineCircle"/>
     public LineCircle() : this(null) { }
 
@@ -323,7 +336,16 @@ public class LineCircle : InvisibleRenderable
                 // one tested branch instead of a fragile "is this the centered default?"
                 // detector. The fan structure matches raylib's own DrawCircle implementation
                 // in rshapes.c — center vertex + N rim vertices fan into N triangles.
-                DrawGradientFan(cx, cy, Radius);
+                //
+                // Issue #2956 — suppress the fan when the slot's effective fill alpha is 0.
+                // DrawGradientFan emits per-vertex Color1/Color2 directly with no modulation
+                // by fillColor.A, so without this gate a default-transparent fill would still
+                // paint an opaque gradient (Skia naturally avoids this via paint.Color.alpha
+                // modulating the shader; we replicate it explicitly). See ShouldPaintFillGradient.
+                if (fillColor.A > 0)
+                {
+                    DrawGradientFan(cx, cy, Radius);
+                }
             }
             else
             {

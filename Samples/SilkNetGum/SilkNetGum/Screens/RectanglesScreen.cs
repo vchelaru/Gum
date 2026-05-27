@@ -339,6 +339,9 @@ internal class RectanglesScreen : GraphicalUiElement
         rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = VerticalAlignment.Center;
         rect.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        // Issue #2956 — FillColor must be opaque to light up the fill slot; see the MG
+        // CirclesScreen for the contract rationale.
+        rect.FillColor = SKColors.White;
         rect.UseGradient = true;
         rect.GradientType = GradientType.Linear;
         rect.Color1 = SKColors.Black;

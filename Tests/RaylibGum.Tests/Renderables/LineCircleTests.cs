@@ -222,4 +222,61 @@ public class LineCircleTests
         circle.Color.B.ShouldBe((byte)56);
         circle.Color.A.ShouldBe((byte)78);
     }
+
+    // Issue #2956 — UseGradient is a *pattern* flag, not a *visibility* flag. The effective
+    // fill color is `FillColor ?? Color`; when its alpha is 0 the slot is invisible and the
+    // gradient must not paint over it. Mirrors the SkPaint contract (paint.Color.alpha
+    // modulates shader output) that the SkiaGum backend enforces naturally. Apos and raylib
+    // both used to leak — see fix in EmitGradientVertex / DrawGradientFan gating.
+
+    [Fact]
+    public void ShouldPaintFillGradient_FillColorOpaque_True()
+    {
+        LineCircle circle = new() { UseGradient = true, FillColor = new Color(10, 20, 30, 255) };
+
+        circle.ShouldPaintFillGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_FillColorTransparent_False()
+    {
+        LineCircle circle = new() { UseGradient = true, FillColor = new Color(10, 20, 30, 0) };
+
+        circle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_GradientOff_False()
+    {
+        LineCircle circle = new() { UseGradient = false, FillColor = new Color(10, 20, 30, 255) };
+
+        circle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_LegacyFillViaIsFilled_OpaqueColor_True()
+    {
+        LineCircle circle = new() { UseGradient = true, IsFilled = true };
+
+        // Default Color is opaque white, so the legacy fill path lights up.
+        circle.ShouldPaintFillGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_LegacyFillViaIsFilled_TransparentColor_False()
+    {
+        LineCircle circle = new() { UseGradient = true, IsFilled = true, Alpha = 0 };
+
+        circle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_NoFillSlotEnabled_False()
+    {
+        // Default LineCircle: IsFilled = false, FillColor = null → fill pass doesn't run at all,
+        // so the gradient cannot paint regardless of UseGradient.
+        LineCircle circle = new() { UseGradient = true };
+
+        circle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
 }

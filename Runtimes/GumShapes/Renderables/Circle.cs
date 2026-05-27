@@ -183,7 +183,7 @@ public class Circle : RenderableShapeBase,
             // inverted disk. Only the fill branch consumes this; stroke ignores it.
             float fillRadius = System.Math.Max(0f, radius - FillRadiusInset);
 
-            if (UseGradient && forcedColor == null)
+            if (ShouldPaintGradient(forcedColor))
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
 
@@ -209,7 +209,7 @@ public class Circle : RenderableShapeBase,
         }
         else
         {
-            if(UseGradient && forcedColor == null)
+            if(ShouldPaintGradient(forcedColor))
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
 
@@ -284,7 +284,7 @@ public class Circle : RenderableShapeBase,
         // gradient looks continuous across the dashed border (each dash samples the same world-
         // space gradient rather than restarting per-segment). GetGradient already returns world
         // coords, mirroring how upstream's DrawDashedCircle calls GradientToWorld + IsLocal=false.
-        Gradient? gradient = (UseGradient && forcedColor == null)
+        Gradient? gradient = ShouldPaintGradient(forcedColor)
             ? base.GetGradient(absoluteLeft, absoluteTop, rotationRadians)
             : null;
         var color = forcedColor ?? Color;

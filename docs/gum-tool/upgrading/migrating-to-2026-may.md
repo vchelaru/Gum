@@ -369,6 +369,37 @@ The `Gum.Analyzers` package ships an automated code fix (`GUM002`) — place the
 
 The obsolete types will remain in place until at least the November 2026 release. After that window, they may be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
 
+### Breaking: `UseGradient` no longer paints over a transparent fill slot
+
+Issue #2956 — `UseGradient` is a *pattern* flag, not a *visibility* flag. A slot whose effective color alpha is 0 (e.g. the default-transparent fill on a stroke-only plain `CircleRuntime` / `RectangleRuntime`) no longer paints its gradient. This brings the Apos.Shapes (MonoGame/FNA/KNI) and raylib backends in line with the SkiaGum backend, which has always enforced this naturally — `SKPaint.Color.alpha` modulates the shader output, so a transparent paint color suppresses the gradient.
+
+Before the fix, the same code rendered differently across backends: Apos and raylib painted an opaque gradient on a fill slot the user had explicitly hidden via the documented default; Skia correctly suppressed it. After the fix, all three backends agree.
+
+❌ Old (worked accidentally on Apos / raylib, silent no-op on Skia):
+
+```csharp
+var circle = new CircleRuntime();
+circle.Radius = 28;
+circle.UseGradient = true;
+circle.Color1 = Color.Black;
+circle.Color2 = Color.White;
+// Gradient appeared on the fill on Apos and raylib — even though FillColor
+// defaults to transparent, which is supposed to hide the fill.
+```
+
+✅ New (paints the same on every backend):
+
+```csharp
+var circle = new CircleRuntime();
+circle.Radius = 28;
+circle.FillColor = Color.White;   // light the fill slot up — opaque, RGB irrelevant
+circle.UseGradient = true;
+circle.Color1 = Color.Black;
+circle.Color2 = Color.White;
+```
+
+The RGB of `FillColor` doesn't matter — the gradient overrides the per-pixel color. Only the alpha gates whether the slot paints at all. `StrokeColor` works the same way for the stroke slot on backends that support gradient-on-stroke (Skia + Apos two-slot; raylib's stroke is solid only).
+
 ### Forms controls moved to GumCommon — input types widened
 
 `FrameworkElement` and the rest of the Forms control infrastructure now live in `GumCommon` so any GumCommon consumer can use Forms directly, independent of the rendering backend. To make that compile cross-platform, a handful of Forms APIs that previously surfaced MonoGame-specific input types have been widened to platform-neutral abstractions in `Gum.Input` and `Gum.Forms.Input`.
