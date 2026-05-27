@@ -284,12 +284,39 @@ public class LineCircle : InvisibleRenderable
             return;
         }
 
+        // Issue #2934 — derive the disc center from the half-size offset, rotated by the
+        // element's absolute rotation. GraphicalUiElement.AdjustOffsetsByOrigin pre-rotates
+        // the origin-compensation offset (see GumRuntime/GraphicalUiElement.cs around line
+        // 4178), so GetAbsoluteLeft() returns the *rotated* bbox top-left, not the unrotated
+        // one. Adding the unrotated half-size (the old `cx = AbsoluteLeft + Width/2` path)
+        // produces a point that orbits the geometric center as rotation grows, which is what
+        // produced the visible position drift in the rotation gallery cells. LineRectangle
+        // gets this right implicitly via its R(w/2, h/2) corner derivation; LineCircle needs
+        // the same rotation explicitly. The disc itself is rotation-symmetric so once the
+        // center is correct, the visible shape is too.
         float cx;
         float cy;
+        float rotDegForCenter = this.GetAbsoluteRotation();
         if (CircleOrigin == CircleOrigin.TopLeft)
         {
-            cx = this.GetAbsoluteLeft() + this.Width * 0.5f;
-            cy = this.GetAbsoluteTop() + this.Height * 0.5f;
+            float halfW = this.Width * 0.5f;
+            float halfH = this.Height * 0.5f;
+            if (rotDegForCenter == 0f)
+            {
+                cx = this.GetAbsoluteLeft() + halfW;
+                cy = this.GetAbsoluteTop() + halfH;
+            }
+            else
+            {
+                float rotRad = rotDegForCenter * System.MathF.PI / 180f;
+                float cosC = System.MathF.Cos(rotRad);
+                float sinC = System.MathF.Sin(rotRad);
+                // Same R helper convention LineRectangle uses (visual CCW on screen):
+                // [cos sin; -sin cos]. Rotates the (halfW, halfH) offset from rotated
+                // bbox top-left to the geometric center.
+                cx = this.GetAbsoluteLeft() + cosC * halfW + sinC * halfH;
+                cy = this.GetAbsoluteTop() - sinC * halfW + cosC * halfH;
+            }
         }
         else
         {
