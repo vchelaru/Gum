@@ -195,14 +195,19 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set => ContainedRenderable.Color = value;
     }
 
-    SKColor _fillColor = SKColors.White;
+    // Issue #2938 regression fix: defaults to transparent (alpha 0) so a freshly-constructed
+    // shape runtime renders as a stroke-only outline (matching pre-#2938 visual). IsFilled is
+    // true by default so the gate is open — assigning FillColor to a visible color lights up
+    // the fill without flipping IsFilled.
+    SKColor _fillColor = new SKColor(0, 0, 0, 0);
 
     /// <summary>
     /// Color of the filled disk/shape. Non-nullable since issue #2938 — use <see cref="IsFilled"/>
     /// to hide the fill rather than nulling the color. When <see cref="IsFilled"/> is <c>true</c>
     /// (the default) the fill slot renders with this color; when <c>false</c> the fill slot's
     /// alpha is forced to 0 while the backing color round-trips so toggling <see cref="IsFilled"/>
-    /// back on restores the previously-set color.
+    /// back on restores the previously-set color. Defaults to transparent (alpha 0) preserving
+    /// the historical stroke-only ctor visual.
     /// </summary>
     /// <remarks>
     /// When the runtime opts into two-slot composition (issue #2790) via

@@ -468,9 +468,10 @@ public class RectangleRuntimeTests
         RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
         stroke.Color.ShouldBe(new Color(255, 0, 0, 255));
-        // Issue #2938 — fill defaults to white (IsFilled = true); the legacy Color setter only
-        // touches stroke, so fill stays at its default rather than being recolored.
-        fill.Color.ShouldBe(Color.White);
+        // Issue #2938 (regression fix) — fill defaults to transparent (alpha 0); the legacy
+        // Color setter only touches stroke, so fill stays at its default rather than being
+        // recolored.
+        fill.Color.ShouldBe(new Color(0, 0, 0, 0));
     }
 
     [Fact]
@@ -483,9 +484,10 @@ public class RectangleRuntimeTests
         RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
         stroke.Color.A.ShouldBe((byte)128);
-        // Issue #2938 — fill defaults to white (IsFilled = true); the legacy Alpha setter only
-        // touches stroke, so fill stays at its default rather than being recolored.
-        fill.Color.ShouldBe(Color.White);
+        // Issue #2938 (regression fix) — fill defaults to transparent (alpha 0); the legacy
+        // Alpha setter only touches stroke, so fill stays at its default rather than being
+        // recolored.
+        fill.Color.ShouldBe(new Color(0, 0, 0, 0));
     }
 
     // Issue #2938 — IsFilled now gates fill visibility (mirror of CircleRuntime Pass 1).

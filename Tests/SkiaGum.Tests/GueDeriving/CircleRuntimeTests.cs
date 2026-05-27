@@ -38,10 +38,10 @@ public class CircleRuntimeTests
     // CircleRuntime. The fill-hidden gate is IsFilled (defaults to true); stroke-hidden gate
     // is StrokeWidth = 0.
     [Fact]
-    public void FillColor_ShouldBeWhite_ByDefault()
+    public void FillColor_ShouldBeTransparent_ByDefault()
     {
         CircleRuntime sut = new();
-        sut.FillColor.ShouldBe(SKColors.White);
+        sut.FillColor.ShouldBe(new SKColor(0, 0, 0, 0));
     }
 
     [Fact]

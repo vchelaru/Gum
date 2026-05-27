@@ -307,6 +307,8 @@ Earlier in this same unreleased cycle (issue #2790 / #2814) `CircleRuntime` and 
 - **Hide fill** — set `IsFilled = false` (mirrors the Skia renderable's existing `IsFilled` toggle and survives round-tripping the color value).
 - **Hide stroke** — set `StrokeWidth = 0` (a zero-width stroke is already a no-op in every backend, so this expresses intent without a separate flag).
 
+**Default visual is unchanged:** a freshly-constructed `CircleRuntime` / `RectangleRuntime` still renders as a stroke-only outline, preserving the pre-#2938 visual that existing sample code assumes ("construct + only set `StrokeColor`"). This is achieved by defaulting `FillColor` to transparent (alpha 0) while leaving `IsFilled = true`. Assigning `FillColor` to a visible color lights up the fill without flipping `IsFilled` — so existing code like `frame.FillColor = darkGray;` continues to work.
+
 The runtimes also gain channel-decomposition setters on both colors so animations and the Gum tool's variable system can drive each channel independently:
 
 - `FillRed` / `FillGreen` / `FillBlue` / `FillAlpha` — `int`, 0-255, compose into `FillColor`.

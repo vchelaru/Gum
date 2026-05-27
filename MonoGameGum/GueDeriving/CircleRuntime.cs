@@ -259,7 +259,9 @@ public class CircleRuntime : GraphicalUiElement
     // properties at all yet; the raylib sample (CirclesScreen) renders only the supported
     // sections.
 
-    Color _fillColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
+    // Issue #2938 regression fix — transparent default so a freshly-constructed CircleRuntime
+    // renders as a stroke-only outline (existing raylib gallery / cross-backend samples).
+    Color _fillColor = new Color((byte)0, (byte)0, (byte)0, (byte)0);
 
     /// <inheritdoc cref="Gum.Renderables.LineCircle.FillColor"/>
     public Color FillColor
@@ -466,12 +468,20 @@ public class CircleRuntime : GraphicalUiElement
 #endif
 
 #if XNALIKE
-    Color _fillColor = Color.White;
+    // Issue #2938 regression fix: FillColor defaults to transparent (alpha 0) so a freshly-
+    // constructed CircleRuntime renders as a stroke-only outline — matching the pre-#2938
+    // visual that all existing sample code assumes ("construct + only set StrokeColor").
+    // IsFilled is true by default; the gate semantics still work — explicitly setting
+    // FillColor to a visible color lights the fill up. Setting IsFilled = false zeros the
+    // fill slot's alpha regardless of FillColor.
+    Color _fillColor = new Color(0, 0, 0, 0);
 
     /// <summary>
     /// Color of the filled disk. Painted into the fill slot when <see cref="IsFilled"/> is
     /// <c>true</c>; ignored visually when <c>IsFilled</c> is <c>false</c> (the fill slot is
-    /// pushed a transparent color so only the stroke draws).
+    /// pushed a transparent color so only the stroke draws). Defaults to transparent so a
+    /// freshly-constructed runtime renders a stroke-only outline; assign a visible color to
+    /// light the fill up (IsFilled is already true by default).
     /// </summary>
     /// <remarks>
     /// Visual fill requires a fill-capable <see cref="IFilledCircleRenderable"/> implementation —
@@ -1635,11 +1645,12 @@ public class CircleRuntime : GraphicalUiElement
                 SetContainedObject(_stroke);
             }
 
-            // Initial defaults — stroke white, fill white (gated by IsFilled = true), radius
-            // 16, layout 32x32. Issue #2938: FillColor defaults to white and IsFilled defaults
-            // to true so a freshly-constructed CircleRuntime renders a solid white disc when
-            // backed by Apos.Shapes; without the package the fill slot is null and only the
-            // white stroke draws (the same visual as before).
+            // Initial defaults — stroke white, fill transparent (IsFilled = true so the gate
+            // is open, but the color is alpha-0 so nothing visible draws), radius 16, layout
+            // 32x32. Issue #2938 (regression fix): a freshly-constructed CircleRuntime renders
+            // as a stroke-only outline — matching the pre-#2938 visual that existing sample
+            // code (raylib gallery, GumShapesGallery, SilkNetGum) assumes. Setting FillColor to
+            // a visible color lights up the fill without needing to also flip IsFilled.
             _stroke.Color = _strokeColor;
             _stroke.Radius = 16;
             if (_fill != null)
@@ -1679,12 +1690,12 @@ public class CircleRuntime : GraphicalUiElement
             // single-slot legacy model (last-non-null-setter-wins).
             SetStrokeRenderable(new ContainedCircleType());
 
-            // Issue #2938 defaults: white fill + white stroke. Base IsFilled defaults to true,
-            // so a fresh CircleRuntime renders as a solid white disc with a white outline —
-            // matching the XNALIKE branch (Apos-backed solid + outline). Pre-#2938 the Skia
-            // default was an invisible fill + white stroke; that hide-the-fill semantic now
-            // lives on IsFilled, leaving FillColor itself round-tripping a canonical white.
-            FillColor = SKColors.White;
+            // Issue #2938 (regression fix): FillColor defaults to transparent (alpha 0) +
+            // white stroke. IsFilled defaults to true so the gate is open, but the transparent
+            // color means a freshly-constructed runtime renders as a stroke-only outline —
+            // matching the pre-#2938 visual that existing sample code assumes. Assigning
+            // FillColor to a visible color lights up the fill without flipping IsFilled.
+            FillColor = new SKColor(0, 0, 0, 0);
             StrokeColor = SKColors.White;
             StrokeWidth = 1;
             StrokeWidthUnits = DimensionUnitType.ScreenPixel;
@@ -1705,10 +1716,12 @@ public class CircleRuntime : GraphicalUiElement
             // it null there so the existing outline-via-Color path keeps working unchanged.
             // Same fix landed for RectangleRuntime earlier in this PR.
             //
-            // #2938 — push runtime-held FillColor / StrokeColor / IsFilled defaults onto the
-            // renderable so the runtime properties report consistent state at construction.
-            // FillColor defaults to white and IsFilled defaults to true → a fresh circle
-            // renders as a white disc with a white stroke (matching the XNALIKE branch).
+            // #2938 (regression fix) — push runtime-held FillColor / StrokeColor / IsFilled
+            // defaults onto the renderable so the runtime properties report consistent state at
+            // construction. FillColor defaults to transparent (alpha 0) and IsFilled defaults
+            // to true → a fresh circle renders as a stroke-only outline (matching the pre-#2938
+            // visual that the raylib gallery / cross-backend samples assume). Assigning
+            // FillColor to a visible color lights up the fill without flipping IsFilled.
             circle.StrokeColor = _strokeColor;
             circle.FillColor = _fillColor;
             circle.IsFilled = true;

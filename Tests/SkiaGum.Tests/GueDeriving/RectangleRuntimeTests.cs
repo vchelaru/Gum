@@ -193,13 +193,13 @@ public class RectangleRuntimeTests
         strokeSlot.CustomRadiusBottomRight.ShouldBe(4f);
     }
 
-    // Issue #2938 — IsFilled gates dropshadow routing. RectangleRuntime defaults to
-    // IsFilled = false (stroke-only historical visual), so the shadow lands on the stroke slot
-    // by default.
+    // Issue #2938 — IsFilled gates dropshadow routing. When IsFilled = false, the shadow lands
+    // on the stroke slot (a stroke-only ring still casts a shadow).
     [Fact]
     public void Dropshadow_IsFilledFalse_AppliesToStrokeSlot()
     {
         RectangleRuntime sut = new();
+        sut.IsFilled = false;
         sut.HasDropshadow = true;
 
         sut.PreRender();
@@ -245,13 +245,22 @@ public class RectangleRuntimeTests
         strokeSlot.HasDropshadow.ShouldBeTrue();
     }
 
-    // Issue #2938 — RectangleRuntime mirrors the historical Skia default of an invisible fill
-    // (now expressed as IsFilled = false rather than FillColor = null).
+    // Issue #2938 (regression fix) — RectangleRuntime preserves the historical Skia default of
+    // an invisible fill via FillColor = transparent (alpha 0). IsFilled is true by default
+    // (base behavior), so the gate is open — assigning FillColor to a visible color lights the
+    // fill up without needing to flip IsFilled.
     [Fact]
-    public void IsFilled_ShouldBeFalse_ByDefault()
+    public void FillColor_ShouldBeTransparent_ByDefault()
     {
         RectangleRuntime sut = new();
-        sut.IsFilled.ShouldBeFalse();
+        sut.FillColor.ShouldBe(new SKColor(0, 0, 0, 0));
+    }
+
+    [Fact]
+    public void IsFilled_ShouldBeTrue_ByDefault()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled.ShouldBeTrue();
     }
 
     // Issue #2938 — per-channel ints compose into FillColor via the same setter pipeline
@@ -353,13 +362,13 @@ public class RectangleRuntimeTests
         strokeSlot.IsOffsetAppliedForStroke.ShouldBeTrue();
     }
 
-    // Issue #2938 — IsFilled gates the fill-slot gradient. RectangleRuntime defaults to
-    // IsFilled = false so the fill-slot gradient starts off; toggling IsFilled = true lights
-    // it up.
+    // Issue #2938 — IsFilled gates the fill-slot gradient. With IsFilled = false the fill-slot
+    // gradient stays off even when UseGradient = true; toggling IsFilled = true lights it up.
     [Fact]
     public void SettingIsFilledTrue_AfterUseGradientTrue_LightsUpFillSlotGradient()
     {
         RectangleRuntime sut = new();
+        sut.IsFilled = false;
         sut.UseGradient = true;
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
         fillSlot.UseGradient.ShouldBeFalse();
@@ -423,13 +432,13 @@ public class RectangleRuntimeTests
         strokeSlot.UseGradient.ShouldBeTrue();
     }
 
-    // Issue #2938 — IsFilled gates the fill-slot gradient. RectangleRuntime defaults to
-    // IsFilled = false so the fill slot stays off; the stroke slot lights up because the
-    // default StrokeWidth is 1.
+    // Issue #2938 — IsFilled gates the fill-slot gradient. With IsFilled = false the fill slot
+    // stays off; the stroke slot lights up because the default StrokeWidth is 1.
     [Fact]
     public void UseGradient_IsFilledFalse_FillSlotStaysOff()
     {
         RectangleRuntime sut = new();
+        sut.IsFilled = false;
         sut.UseGradient = true;
 
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;

@@ -121,16 +121,15 @@ public class RectangleRuntimeTests : BaseTestClass
         ((DefaultFilledRectangleRenderable)sut.RenderableComponent).Children[0].ShouldBeSameAs(originalStroke);
     }
 
-    // Issue #2938 — RectangleRuntime mirrors CircleRuntime's Pass 1 defaults: FillColor and
-    // StrokeColor are non-nullable (defaulting to white) and IsFilled defaults to true. Visual
-    // result: a freshly-constructed RectangleRuntime renders as a solid white block with a 1 px
-    // white outline.
+    // Issue #2938 (regression fix) — FillColor defaults to transparent (alpha 0) so a
+    // freshly-constructed runtime renders as a stroke-only outline (pre-#2938 visual).
+    // IsFilled is true by default; assigning FillColor to a visible color lights the fill up.
     [Fact]
-    public void FillColor_DefaultsToWhite()
+    public void FillColor_DefaultsToTransparent()
     {
         RectangleRuntime sut = new();
 
-        sut.FillColor.ShouldBe(Color.White);
+        sut.FillColor.ShouldBe(new Color(0, 0, 0, 0));
     }
 
     [Fact]
