@@ -1593,6 +1593,14 @@ public class CustomEffectManager
         }
         else
         {
+            // On platforms where we can't probe the filesystem (Blazor WASM, console targets),
+            // we have to attempt the load to find out if a shader is present. If none is shipped
+            // (the common case), the load fails and the browser logs the underlying 404. Surface
+            // a heads-up so developers seeing that 404 in DevTools recognize it as benign.
+            Console.WriteLine(
+                "[Gum] Attempting to load optional 'Content/Shader.xnb'. If your project does " +
+                "not ship a custom shader, any 404 for this file is expected and benign.");
+
             try
             {
                 Effect = mContentManager.Load<Effect>("Content/Shader");

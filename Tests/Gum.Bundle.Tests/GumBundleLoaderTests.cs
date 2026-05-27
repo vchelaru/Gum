@@ -36,12 +36,11 @@ public class GumBundleLoaderTests : IDisposable
     }
 
     [Fact]
-    public void Resolve_installs_hook_that_serves_child_element_files_from_bundle()
+    public void Resolve_with_gumpkg_extension_installs_hook_that_serves_child_element_files_from_bundle()
     {
         const string gumxXml = "<GumProjectSave />";
         byte[] childBytes = Encoding.UTF8.GetBytes("<ScreenSave Name=\"MainScreen\" />");
 
-        string gumxPath = Path.Combine(_tempDir, "Project.gumx");
         string gumpkgPath = Path.Combine(_tempDir, "Project.gumpkg");
         WriteBundle(gumpkgPath, new (string, byte[])[]
         {
@@ -49,7 +48,7 @@ public class GumBundleLoaderTests : IDisposable
             ("Screens/MainScreen.gusx", childBytes),
         });
 
-        BundleResolution resolution = GumBundleLoader.Resolve(gumxPath);
+        BundleResolution resolution = GumBundleLoader.Resolve(gumpkgPath);
 
         resolution.UsedBundle.ShouldBeTrue();
         FileManager.CustomGetStreamFromFile.ShouldNotBeNull();
@@ -67,30 +66,32 @@ public class GumBundleLoaderTests : IDisposable
     }
 
     [Fact]
-    public void Resolve_installs_hook_that_serves_gumx_from_bundle_when_only_gumpkg_exists()
+    public void Resolve_with_gumpkg_extension_returns_sibling_gumx_path_for_GumProjectSave_Load()
     {
+        // The bundle stores its .gumx by name; the resolved path handed to GumProjectSave.Load
+        // is the sibling .gumx path so the installed hook can intercept the read.
         byte[] gumxBytes = Encoding.UTF8.GetBytes("<GumProjectSave />");
-        string gumxPath = Path.Combine(_tempDir, "Project.gumx");
         string gumpkgPath = Path.Combine(_tempDir, "Project.gumpkg");
+        string expectedGumxPath = Path.Combine(_tempDir, "Project.gumx");
         WriteBundle(gumpkgPath, new (string, byte[])[]
         {
             ("Project.gumx", gumxBytes),
         });
 
-        BundleResolution resolution = GumBundleLoader.Resolve(gumxPath);
+        BundleResolution resolution = GumBundleLoader.Resolve(gumpkgPath);
 
         resolution.UsedBundle.ShouldBeTrue();
-        resolution.ResolvedGumxPath.ShouldBe(gumxPath);
+        resolution.ResolvedGumxPath.ShouldBe(expectedGumxPath);
         FileManager.CustomGetStreamFromFile.ShouldNotBeNull();
 
-        using Stream stream = FileManager.CustomGetStreamFromFile!(gumxPath);
+        using Stream stream = FileManager.CustomGetStreamFromFile!(expectedGumxPath);
         using MemoryStream copy = new MemoryStream();
         stream.CopyTo(copy);
         copy.ToArray().ShouldBe(gumxBytes);
     }
 
     [Fact]
-    public void Resolve_leaves_hook_untouched_when_only_gumx_exists()
+    public void Resolve_with_gumx_extension_leaves_hook_untouched()
     {
         string gumxPath = Path.Combine(_tempDir, "Project.gumx");
         File.WriteAllText(gumxPath, "<GumProjectSave />");
@@ -103,8 +104,11 @@ public class GumBundleLoaderTests : IDisposable
     }
 
     [Fact]
-    public void Resolve_prefers_loose_over_bundle_when_both_exist()
+    public void Resolve_with_gumx_extension_does_not_probe_for_sibling_gumpkg_even_when_present()
     {
+        // Cross-platform consistency: a .gumx caller gets loose mode regardless of whether a
+        // .gumpkg happens to sit next to it. This avoids the "works on desktop but 404s in
+        // Blazor" surprise the previous sibling-probing behavior caused.
         string gumxPath = Path.Combine(_tempDir, "Project.gumx");
         string gumpkgPath = Path.Combine(_tempDir, "Project.gumpkg");
         File.WriteAllText(gumxPath, "<GumProjectSave />");
@@ -120,7 +124,7 @@ public class GumBundleLoaderTests : IDisposable
     }
 
     [Fact]
-    public void Resolve_preserves_existing_user_hook_as_fallback_when_installing_bundle_hook()
+    public void Resolve_with_gumpkg_extension_preserves_existing_user_hook_as_fallback()
     {
         // User has their own hook installed (e.g. they're loading other content from a zip).
         // Bundle resolution must compose, not clobber: bundle entries come first, falls back
@@ -128,8 +132,8 @@ public class GumBundleLoaderTests : IDisposable
         byte[] gumxBytes = Encoding.UTF8.GetBytes("<GumProjectSave />");
         byte[] userBytes = Encoding.UTF8.GetBytes("from-user");
 
-        string gumxPath = Path.Combine(_tempDir, "Project.gumx");
         string gumpkgPath = Path.Combine(_tempDir, "Project.gumpkg");
+        string expectedGumxPath = Path.Combine(_tempDir, "Project.gumx");
         WriteBundle(gumpkgPath, new (string, byte[])[]
         {
             ("Project.gumx", gumxBytes),
@@ -143,13 +147,13 @@ public class GumBundleLoaderTests : IDisposable
         };
         FileManager.CustomGetStreamFromFile = userHook;
 
-        BundleResolution resolution = GumBundleLoader.Resolve(gumxPath);
+        BundleResolution resolution = GumBundleLoader.Resolve(gumpkgPath);
 
         resolution.UsedBundle.ShouldBeTrue();
         FileManager.CustomGetStreamFromFile.ShouldNotBeSameAs(userHook);
 
         // Bundle hit: served from bundle, user hook NOT called.
-        using (Stream s = FileManager.CustomGetStreamFromFile!(gumxPath))
+        using (Stream s = FileManager.CustomGetStreamFromFile!(expectedGumxPath))
         {
             using MemoryStream copy = new MemoryStream();
             s.CopyTo(copy);
@@ -169,15 +173,19 @@ public class GumBundleLoaderTests : IDisposable
     }
 
     [Fact]
-    public void Resolve_returns_not_found_when_neither_gumx_nor_gumpkg_exists()
+    public void Resolve_with_gumpkg_extension_throws_FileNotFoundException_when_bundle_missing()
     {
-        string gumxPath = Path.Combine(_tempDir, "Missing.gumx");
+        string gumpkgPath = Path.Combine(_tempDir, "Missing.gumpkg");
 
-        BundleResolution resolution = GumBundleLoader.Resolve(gumxPath);
+        Should.Throw<FileNotFoundException>(() => GumBundleLoader.Resolve(gumpkgPath));
+    }
 
-        resolution.UsedBundle.ShouldBeFalse();
-        resolution.ResolvedGumxPath.ShouldBe(gumxPath);
-        FileManager.CustomGetStreamFromFile.ShouldBeNull();
+    [Fact]
+    public void Resolve_throws_ArgumentException_for_unrecognized_extension()
+    {
+        string badPath = Path.Combine(_tempDir, "Project.gum");
+
+        Should.Throw<ArgumentException>(() => GumBundleLoader.Resolve(badPath));
     }
 
     private static void WriteBundle(string path, IEnumerable<(string, byte[])> entries)

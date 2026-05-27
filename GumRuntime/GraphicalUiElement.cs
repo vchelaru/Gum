@@ -7179,7 +7179,7 @@ public static class GraphicalUiElementExtensions
         var animation = graphicalUiElement.GetAnimation(index);
         if (animation == null)
         {
-            throw new ArgumentException(nameof(index), $"Could not find an animation at index {index}");
+            throw new ArgumentException(BuildMissingAnimationMessage(graphicalUiElement, index), nameof(index));
         }
         graphicalUiElement.ApplyAnimation(animation, timeInSeconds);
     }
@@ -7195,7 +7195,7 @@ public static class GraphicalUiElementExtensions
         var animation = graphicalUiElement.GetAnimation(name);
         if (animation == null)
         {
-            throw new ArgumentException(nameof(name), $"Could not find an animation with the name {name}");
+            throw new ArgumentException(BuildMissingAnimationMessage(graphicalUiElement, name), nameof(name));
         }
         graphicalUiElement.ApplyAnimation(animation, timeInSeconds);
     }
@@ -7229,7 +7229,7 @@ public static class GraphicalUiElementExtensions
         var animation = graphicalUiElement.GetAnimation(index);
         if (animation == null)
         {
-            throw new ArgumentException(nameof(index), $"Could not find an animation at the index {index}");
+            throw new ArgumentException(BuildMissingAnimationMessage(graphicalUiElement, index), nameof(index));
         }
         graphicalUiElement.PlayAnimation(animation);
     }
@@ -7244,9 +7244,31 @@ public static class GraphicalUiElementExtensions
         var animation = graphicalUiElement.GetAnimation(name);
         if (animation == null)
         {
-            throw new ArgumentException(nameof(name), $"Could not find an animation with the name {name}");
+            throw new ArgumentException(BuildMissingAnimationMessage(graphicalUiElement, name), nameof(name));
         }
         graphicalUiElement.PlayAnimation(animation);
+    }
+
+    private static string BuildMissingAnimationMessage(GraphicalUiElement graphicalUiElement, object searchKey)
+    {
+        var elementName = (graphicalUiElement.Tag as ElementSave)?.Name;
+        var elementSuffix = elementName != null ? $" for element '{elementName}'" : "";
+        var searchedFor = searchKey is string s ? $"name '{s}'" : $"index {searchKey}";
+
+        if (graphicalUiElement.Animations == null)
+        {
+            return $"No animations have been loaded{elementSuffix}. Did you call GumService.LoadAnimations(), " +
+                   $"and is the animation file (e.g. '{elementName ?? "<elementName>"}Animations.ganx') present? " +
+                   $"Searched for {searchedFor}.";
+        }
+
+        if (graphicalUiElement.Animations.Count == 0)
+        {
+            return $"The animation list{elementSuffix} is empty. Searched for {searchedFor}.";
+        }
+
+        var available = string.Join(", ", graphicalUiElement.Animations.Select(a => $"'{a.Name}'"));
+        return $"Could not find an animation with {searchedFor}{elementSuffix}. Available animations: {available}.";
     }
 
 

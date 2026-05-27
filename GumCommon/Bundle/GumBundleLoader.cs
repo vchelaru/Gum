@@ -6,65 +6,74 @@ using ToolsUtilities;
 namespace Gum.Bundle;
 
 /// <summary>
-/// Resolves whether a Gum project should load from loose `.gumx` + sibling files on disk
-/// or from a sibling `.gumpkg` bundle, and installs the <see cref="FileManager.CustomGetStreamFromFile"/>
-/// hook to serve bundle entries when needed. Per the bundle plan §4: loose wins when both exist
-/// (dev convenience / hot reload). Production publishes only the bundle.
+/// Resolves a Gum project path to either loose-file or bundle-backed loading based on the
+/// extension of <c>projectPath</c>: <c>.gumx</c> means loose, <c>.gumpkg</c> means bundle.
+/// No sibling probing happens — the caller's chosen extension is the single source of truth,
+/// which keeps behavior identical across desktop and streaming-only platforms (Blazor WASM,
+/// Android, iOS) where a probe would otherwise issue a guaranteed-404 HTTP request.
+/// When bundle mode is selected, installs <see cref="FileManager.CustomGetStreamFromFile"/>
+/// to serve bundle entries (composing with any pre-existing user hook as a fallback).
 /// </summary>
 public static class GumBundleLoader
 {
     /// <summary>
-    /// Inspects the directory containing <paramref name="gumxPath"/> for a sibling `.gumpkg`
-    /// and returns a <see cref="BundleResolution"/> describing which source the loader should use.
-    /// When bundle mode is selected, installs <see cref="FileManager.CustomGetStreamFromFile"/>
-    /// to serve bundle entries (composing with any pre-existing user hook as a fallback).
+    /// Returns a <see cref="BundleResolution"/> describing how to load <paramref name="projectPath"/>.
+    /// The extension picks the mode: <c>.gumx</c> = loose, <c>.gumpkg</c> = bundle. Any other
+    /// extension throws.
     /// </summary>
-    public static BundleResolution Resolve(string gumxPath)
+    public static BundleResolution Resolve(string projectPath)
     {
-        if (string.IsNullOrEmpty(gumxPath))
+        if (string.IsNullOrEmpty(projectPath))
         {
-            throw new ArgumentException("Gumx path must be non-empty.", nameof(gumxPath));
+            throw new ArgumentException("Project path must be non-empty.", nameof(projectPath));
         }
 
         // Normalize through FileManager so a relative input ("GumProject/GumProject.gumx")
         // resolves against FileManager.RelativeDirectory the same way GumProjectSave.Load
-        // will resolve it. Without this, a desktop app launching from its bin/ folder
-        // would probe ./GumProject/... while the deployed files live at ./Content/GumProject/...
-        // and the loader would fall through to loose-mode and fail with "not found".
-        string resolvedGumxPath = FileManager.IsRelative(gumxPath)
-            ? FileManager.MakeAbsolute(gumxPath)
-            : gumxPath;
+        // will resolve it.
+        string resolvedPath = FileManager.IsRelative(projectPath)
+            ? FileManager.MakeAbsolute(projectPath)
+            : projectPath;
 
-        // Loose wins when both exist (plan §4.1 / §4.2). File.Exists returns false on
-        // platforms without a real filesystem (Blazor WASM); on those targets the
-        // convention is "ship the bundle" so falling through to bundle mode is correct.
-        // Probing through CustomGetStreamFromFile would be unreliable: a host hook may
-        // succeed for any input (e.g. a CDN catch-all) and falsely claim loose exists.
-        if (File.Exists(resolvedGumxPath))
+        string extension = Path.GetExtension(resolvedPath);
+
+        if (string.Equals(extension, ".gumx", StringComparison.OrdinalIgnoreCase))
         {
-            return new BundleResolution(usedBundle: false, resolvedGumxPath: resolvedGumxPath, previousHook: null);
+            // Loose mode: hand the path straight to GumProjectSave.Load. No probing for a
+            // sibling .gumpkg — if the caller wanted a bundle they would have said so.
+            return new BundleResolution(usedBundle: false, resolvedGumxPath: resolvedPath, previousHook: null);
         }
 
-        string? directory = Path.GetDirectoryName(resolvedGumxPath);
-        string nameWithoutExtension = Path.GetFileNameWithoutExtension(resolvedGumxPath);
-        string bundlePath = string.IsNullOrEmpty(directory)
-            ? nameWithoutExtension + ".gumpkg"
-            : Path.Combine(directory!, nameWithoutExtension + ".gumpkg");
+        if (!string.Equals(extension, ".gumpkg", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"Project path '{projectPath}' must end with '.gumx' (loose) or '.gumpkg' (bundle).",
+                nameof(projectPath));
+        }
 
 #if !NET7_0_OR_GREATER
-        // .gumpkg loading requires System.Formats.Tar (net7+). On older targets fall back to
-        // loose-file resolution; downstream Load will surface a clear "not found" for the .gumx.
-        return new BundleResolution(usedBundle: false, resolvedGumxPath: resolvedGumxPath, previousHook: null);
+        // .gumpkg loading requires System.Formats.Tar (net7+).
+        throw new NotSupportedException(".gumpkg loading requires net7.0 or greater.");
 #else
+        // The bundle stores its own .gumx by name; the path we hand to GumProjectSave.Load is
+        // the sibling .gumx path, and the hook below intercepts that read so it's served from
+        // the bundle stream. Callers never need to know the .gumx name themselves.
+        string? directory = Path.GetDirectoryName(resolvedPath);
+        string nameWithoutExtension = Path.GetFileNameWithoutExtension(resolvedPath);
+        string gumxPath = string.IsNullOrEmpty(directory)
+            ? nameWithoutExtension + ".gumx"
+            : Path.Combine(directory!, nameWithoutExtension + ".gumx");
+
         // Read the bundle through the same file seam as the rest of the loader. On desktop
         // this is File.OpenRead; on TitleContainer-backed platforms (Blazor WASM / Android /
         // iOS) the host-installed CustomGetStreamFromFile hook routes the read through
-        // TitleContainer.OpenStream. If neither resolves the file, we silently return loose
-        // mode so the downstream "not found" path produces a familiar error.
-        Stream? bundleStream = TryOpenBundle(bundlePath);
+        // TitleContainer.OpenStream.
+        Stream? bundleStream = TryOpenBundle(resolvedPath);
         if (bundleStream == null)
         {
-            return new BundleResolution(usedBundle: false, resolvedGumxPath: resolvedGumxPath, previousHook: null);
+            throw new FileNotFoundException(
+                $"The Gum bundle '{resolvedPath}' was not found.",
+                resolvedPath);
         }
 
         GumBundle bundle;
@@ -99,7 +108,7 @@ public static class GumBundleLoader
                 incomingPath);
         };
 
-        return new BundleResolution(usedBundle: true, resolvedGumxPath: resolvedGumxPath, previousHook: previousHook);
+        return new BundleResolution(usedBundle: true, resolvedGumxPath: gumxPath, previousHook: previousHook);
 #endif
     }
 
@@ -193,10 +202,14 @@ public static class GumBundleLoader
 /// </summary>
 public class BundleResolution
 {
-    /// <summary>True if a `.gumpkg` was found and the bundle hook was installed.</summary>
+    /// <summary>True if the caller passed a `.gumpkg` and the bundle hook was installed.</summary>
     public bool UsedBundle { get; }
 
-    /// <summary>The path to pass to <c>GumProjectSave.Load</c>. Always the original `.gumx` path.</summary>
+    /// <summary>
+    /// The path to pass to <c>GumProjectSave.Load</c>. For loose mode this is the original
+    /// `.gumx` path; for bundle mode this is the synthetic `.gumx` path inside the bundle that
+    /// the installed hook will intercept.
+    /// </summary>
     public string ResolvedGumxPath { get; }
 
     /// <summary>
