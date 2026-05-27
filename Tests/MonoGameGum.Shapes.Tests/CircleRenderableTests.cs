@@ -211,6 +211,47 @@ public class CircleRenderableTests
     // shadow halo holds a constant *world* extent — matching how the rest of Gum's wireframe
     // anchors values to world space.
 
+    // Issue (follow-up to #2950) — Apos.Shapes paints a 1-pixel AA fringe regardless of the
+    // strokeWidth argument, so a stroke-only shape with StrokeWidth = 0 still shows a hairline
+    // of stroke color (user repro: pink circle with the stroke supposedly "off"). Gate render
+    // on HasVisibleOutput so we skip the !IsFilled draw entirely when the user disabled stroke.
+
+    [Fact]
+    public void HasVisibleOutput_FilledMode_TrueRegardlessOfStrokeWidth()
+    {
+        Circle filledZeroStroke = new() { IsFilled = true, StrokeWidth = 0f };
+        filledZeroStroke.HasVisibleOutput.ShouldBeTrue();
+
+        Circle filledWithStroke = new() { IsFilled = true, StrokeWidth = 3f };
+        filledWithStroke.HasVisibleOutput.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HasVisibleOutput_StrokeOnly_PositiveWidth_True()
+    {
+        Circle sut = new() { IsFilled = false, StrokeWidth = 3f };
+
+        sut.HasVisibleOutput.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HasVisibleOutput_StrokeOnly_ZeroWidth_False()
+    {
+        Circle sut = new() { IsFilled = false, StrokeWidth = 0f };
+
+        sut.HasVisibleOutput.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HasVisibleOutput_StrokeOnly_NegativeWidth_False()
+    {
+        // Defensive — runtime should never push a negative width, but if it does the AA halo
+        // would still draw at width 0. Treat as suppressed.
+        Circle sut = new() { IsFilled = false, StrokeWidth = -1f };
+
+        sut.HasVisibleOutput.ShouldBeFalse();
+    }
+
     [Fact]
     public void GetShadowAntiAliasSize_AtUnityZoom_ReturnsRoundedBlur()
     {

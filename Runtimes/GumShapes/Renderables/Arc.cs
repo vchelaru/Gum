@@ -64,6 +64,12 @@ internal class Arc : RenderableShapeBase
     {
         if (SweepAngle == 0) return;
 
+        // Issue #2950 follow-up — see Circle.Render for the rationale on this gate.
+        if (!HasVisibleOutput)
+        {
+            return;
+        }
+
         var sb = ShapeRenderer.ShapeBatch;
 
         var absoluteLeft = this.GetAbsoluteLeft();

@@ -73,6 +73,15 @@ public class Circle : RenderableShapeBase,
 
     public override void Render(ISystemManagers managers)
     {
+        // Issue #2950 follow-up — stroke-only Circle with StrokeWidth = 0 would otherwise draw
+        // a hairline AA ring in the stroke color (Apos paints a 1 px AA fringe regardless of
+        // strokeWidth). Skip the entire render — the shadow alpha would already be 0 via the
+        // ComputeStrokeShadowDrawParameters fade, so no visual is lost.
+        if (!HasVisibleOutput)
+        {
+            return;
+        }
+
         var sb = ShapeRenderer.ShapeBatch;
 
         var absoluteLeft = this.GetAbsoluteLeft();

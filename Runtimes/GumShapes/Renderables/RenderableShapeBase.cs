@@ -464,6 +464,18 @@ public abstract class RenderableShapeBase : RenderableBase
     }
 
     /// <summary>
+    /// Whether this shape's current configuration would produce any visible pixels. Filled
+    /// shapes always render (even with alpha-zero color — the layout is the source of truth,
+    /// not visibility). Stroke-only shapes (<see cref="IsFilled"/> == <c>false</c>) need a
+    /// positive <see cref="StrokeWidth"/>; with stroke width = 0 the Apos.Shapes shader would
+    /// still paint a one-pixel AA fringe in the stroke color, producing a hairline ring the
+    /// user thought they had disabled. <see cref="Circle.Render"/>,
+    /// <see cref="RoundedRectangle.Render"/>, and <see cref="Arc.Render"/> early-return on
+    /// <c>!HasVisibleOutput</c> so neither the body nor the shadow draws in that case.
+    /// </summary>
+    public bool HasVisibleOutput => IsFilled || StrokeWidth > 0;
+
+    /// <summary>
     /// World-anchored shadow halo size, scaled by the current camera zoom and rounded to the
     /// nearest int for the Apos.Shapes <c>aaSize</c> parameter. Apos consumes <c>aaSize</c> in
     /// screen-pixel space (its shader uses <c>fwidth</c>-style pixel-derivative AA), so a raw
