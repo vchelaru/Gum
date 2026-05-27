@@ -287,6 +287,90 @@ public class CircleRenderableTests
         sut.GetShadowAntiAliasSize(cameraZoom: 4f).ShouldBe(0);
     }
 
+    // Issue #2950 follow-up — strict-anchor shadow geometry. The desired alpha profile is:
+    //   alpha = 1                          for r <= R - B/2
+    //   alpha smoothsteps from 1 to 0      for r in [R - B/2, R + B/2]
+    //   alpha = 0                          for r >= R + B/2
+    // So the 50% line sits exactly at the host radius R (matching CSS box-shadow / Figma /
+    // Photoshop). When B > 2R the inner ramp edge would be negative; Apos.Shapes clamps such
+    // a radius to 0, sliding the entire ramp outward. The helper truncates the inner ramp at
+    // rDisk = 0, widens aaSize so the outer edge still sits at R + B/2, and reduces base
+    // alpha so the (still-smoothstep) curve passes through (R, 0.5) and (R + B/2, 0).
+    //
+    // Apos's AA falloff is `3t^2 - 2t^3` (smoothstep), confirmed empirically. Because
+    // smoothstep is symmetric (smoothstep(0.5) = 0.5), the standard case math is identical
+    // to a linear ramp: 50% sits at the midpoint of the ramp regardless of curve shape.
+
+    [Fact]
+    public void ComputeShadowDrawGeometry_ZeroBlur_RendersDiskAtHostRadius()
+    {
+        Circle sut = new() { DropshadowBlurX = 0f };
+
+        (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 10f, cameraZoom: 1f);
+
+        effRadius.ShouldBe(10f);
+        effAaSize.ShouldBe(0);
+        alphaScale.ShouldBe(1f);
+    }
+
+    [Fact]
+    public void ComputeShadowDrawGeometry_BlurEqualHalfRadius_RendersSymmetricRamp()
+    {
+        // Standard case: B = R = 10, so B <= 2R. Ramp spans [R - B/2, R + B/2] = [5, 15],
+        // 50% line at R = 10.
+        Circle sut = new() { DropshadowBlurX = 10f };
+
+        (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 10f, cameraZoom: 1f);
+
+        effRadius.ShouldBe(5f);
+        effAaSize.ShouldBe(10);
+        alphaScale.ShouldBe(1f);
+    }
+
+    [Fact]
+    public void ComputeShadowDrawGeometry_BlurEqualTwiceRadius_BoundaryCase()
+    {
+        // Boundary: B = 2R, inner ramp edge sits exactly at r = 0. Still alphaScale = 1.
+        Circle sut = new() { DropshadowBlurX = 20f };
+
+        (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 10f, cameraZoom: 1f);
+
+        effRadius.ShouldBe(0f);
+        effAaSize.ShouldBe(20);
+        alphaScale.ShouldBe(1f);
+    }
+
+    [Fact]
+    public void ComputeShadowDrawGeometry_BlurGreaterThanTwoRadius_TruncatesAndScalesAlpha()
+    {
+        // User's repro: R = 36, B = 250. Expected from the math:
+        //   aaSize_world = R + B/2 = 161
+        //   t = R / aaSize = 36 / 161 = 0.2236
+        //   smoothstep = 3t^2 - 2t^3 = 0.1276
+        //   alphaScale = 0.5 / (1 - 0.1276) = 0.5731
+        Circle sut = new() { DropshadowBlurX = 250f };
+
+        (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 36f, cameraZoom: 1f);
+
+        effRadius.ShouldBe(0f);
+        effAaSize.ShouldBe(161);
+        alphaScale.ShouldBe(0.5731f, tolerance: 0.001f);
+    }
+
+    [Fact]
+    public void ComputeShadowDrawGeometry_AaSizeScalesByZoom()
+    {
+        // The aaSize return is in screen pixels (= world aaSize * zoom) so the visible halo
+        // holds a constant world extent under zoom (mirrors GetShadowAntiAliasSize).
+        Circle sut = new() { DropshadowBlurX = 10f };
+
+        (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 10f, cameraZoom: 2f);
+
+        effRadius.ShouldBe(5f);
+        effAaSize.ShouldBe(20);
+        alphaScale.ShouldBe(1f);
+    }
+
     [Fact]
     public void ComputeStrokeShadowDrawParameters_ZeroStrokeWithBlur_ZeroAlpha()
     {

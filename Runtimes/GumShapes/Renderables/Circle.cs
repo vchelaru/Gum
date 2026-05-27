@@ -113,13 +113,24 @@ public class Circle : RenderableShapeBase,
             (float shadowStrokeWidth, Color shadowColor) =
                 ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
 
-            // Issue #2950 — Apos's aaSize is screen-pixel-space (fwidth-based AA). Scale by
-            // camera zoom so the shadow halo holds a constant *world* extent and stays
-            // anchored to its host as the camera zooms.
+            // Issue #2950 — strict-anchor shadow geometry. Returns the (rDisk, aaSize,
+            // alphaScale) triple that puts the smoothstep falloff's 50% line exactly at the
+            // host radius. When blur exceeds 2R the inner ramp edge would be negative; the
+            // helper handles that by truncating to rDisk=0 and reducing base alpha so the
+            // curve still passes through (R, 0.5) and (R + B/2, 0) — center becomes
+            // translucent, which is correct for big-blur cases. Camera zoom is folded into
+            // aaSize so the visible halo holds a constant world extent under zoom.
             var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
-            int shadowAaSize = GetShadowAntiAliasSize(cameraZoom);
+            (float shadowRadius, int shadowAaSize, float shadowAlphaScale) =
+                ComputeShadowDrawGeometry(radius, cameraZoom);
+            if (shadowAlphaScale < 1f)
+            {
+                shadowColor = new Color(
+                    shadowColor.R, shadowColor.G, shadowColor.B,
+                    (byte)(shadowColor.A * shadowAlphaScale));
+            }
 
-            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius - DropshadowBlurX / 2f,
+            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, shadowRadius,
                 shadowAaSize,
                 shadowStrokeWidth,
                 rotationRadians,

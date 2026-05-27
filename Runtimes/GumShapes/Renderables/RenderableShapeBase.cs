@@ -476,6 +476,67 @@ public abstract class RenderableShapeBase : RenderableBase
     public bool HasVisibleOutput => IsFilled || StrokeWidth > 0;
 
     /// <summary>
+    /// Returns the (effectiveRadius_world, effectiveAaSize_screenPx, alphaScale) trio to hand
+    /// to Apos.Shapes' <c>DrawCircle</c> for a shadow centered on a circular shape of nominal
+    /// radius <paramref name="hostRadius"/>. Anchors the smoothstep falloff so α = 0.5 sits
+    /// exactly at <paramref name="hostRadius"/> and α = 0 sits at <c>hostRadius + DropshadowBlurX/2</c>
+    /// — matching CSS <c>box-shadow</c> / Figma / Photoshop convention where the original
+    /// disk edge is the 50% line.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Apos's AA falloff is <c>3t² − 2t³</c> (smoothstep), confirmed empirically. Because
+    /// smoothstep is symmetric (smoothstep(0.5) = 0.5), in the standard case (B ≤ 2R) we can
+    /// just pass <c>rDisk = R − B/2, aaSize = B</c> and the 50% line lands at R for free.
+    /// </para>
+    /// <para>
+    /// When <c>DropshadowBlurX</c> exceeds 2·hostRadius, the inner ramp edge would be at a
+    /// negative radius — which Apos clamps to 0, sliding the entire ramp outward and making
+    /// the 50% line drift far past R (giving the "way too big" shadow that #2950 reports).
+    /// In that case the helper truncates the inner ramp at <c>rDisk = 0</c>, widens aaSize
+    /// to <c>R + B/2</c> so the outer edge still sits where the desired curve says, and
+    /// returns an <paramref name="alphaScale"/> &lt; 1 so the (clamped) smoothstep still
+    /// passes through both anchors (R, 0.5) and (R + B/2, 0). The cost is that the center
+    /// of the shadow is no longer 100% opaque — which is *correct*: a circle whose blur
+    /// extends beyond its diameter genuinely should not have a solid black center.
+    /// </para>
+    /// <para>
+    /// <paramref name="cameraZoom"/> is folded into <c>effectiveAaSize</c> (which is returned
+    /// in screen pixels, since Apos's <c>aaSize</c> argument is screen-space) so the visible
+    /// halo holds a constant *world* extent under zoom. Mirrors <see cref="GetShadowAntiAliasSize"/>.
+    /// </para>
+    /// </remarks>
+    public (float effectiveRadius, int effectiveAaSize, float alphaScale)
+        ComputeShadowDrawGeometry(float hostRadius, float cameraZoom)
+    {
+        float blur = _dropshadowBlurX;
+        if (blur <= 0f)
+        {
+            return (hostRadius, 0, 1f);
+        }
+        if (blur <= 2f * hostRadius)
+        {
+            // Standard case: ramp fits inside the host disk. Hand Apos the symmetric
+            // geometry directly; smoothstep's symmetry around t=0.5 places α=0.5 at R for us.
+            return (
+                hostRadius - blur * 0.5f,
+                MathFunctions.RoundToInt(blur * cameraZoom),
+                1f);
+        }
+        // blur > 2R: truncate inner edge to rDisk = 0, widen aaSize to R + B/2, and scale
+        // base alpha so smoothstep(0,1, R/(R + B/2)) lands the curve at α = 0.5 at r = R.
+        // alphaScale = 0.5 / (1 - smoothstep(R / aaSizeWorld)).
+        float aaSizeWorld = hostRadius + blur * 0.5f;
+        float t = hostRadius / aaSizeWorld;
+        float smoothstep = 3f * t * t - 2f * t * t * t;
+        float alphaScale = 0.5f / (1f - smoothstep);
+        return (
+            0f,
+            MathFunctions.RoundToInt(aaSizeWorld * cameraZoom),
+            alphaScale);
+    }
+
+    /// <summary>
     /// World-anchored shadow halo size, scaled by the current camera zoom and rounded to the
     /// nearest int for the Apos.Shapes <c>aaSize</c> parameter. Apos consumes <c>aaSize</c> in
     /// screen-pixel space (its shader uses <c>fwidth</c>-style pixel-derivative AA), so a raw

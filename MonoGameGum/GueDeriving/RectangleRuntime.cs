@@ -1527,7 +1527,6 @@ public class RectangleRuntime : GraphicalUiElement
 
         if (_cornerRadiusUnits == DimensionUnitType.ScreenPixel)
         {
-            var camera = this.EffectiveManagers?.Renderer?.Camera;
             if (camera != null)
             {
                 cornerRadius /= camera.Zoom;
