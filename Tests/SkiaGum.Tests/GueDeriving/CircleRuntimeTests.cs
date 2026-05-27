@@ -34,11 +34,57 @@ public class CircleRuntimeTests
         sut.Height.ShouldBe(32);
     }
 
+    // Issue #2938 — FillColor / StrokeColor are non-nullable on Skia, mirroring the XNALIKE
+    // CircleRuntime. The fill-hidden gate is IsFilled (defaults to true); stroke-hidden gate
+    // is StrokeWidth = 0.
     [Fact]
-    public void FillColor_ShouldBeNull_ByDefault()
+    public void FillColor_ShouldBeTransparent_ByDefault()
     {
         CircleRuntime sut = new();
-        sut.FillColor.ShouldBeNull();
+        sut.FillColor.ShouldBe(new SKColor(0, 0, 0, 0));
+    }
+
+    [Fact]
+    public void IsFilled_ShouldBeTrue_ByDefault()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsFilled_False_ZeroesFillSlotAlpha()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = SKColors.Red;
+
+        sut.IsFilled = false;
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        fillSlot.Color.Alpha.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void FillChannelSetters_ComposeFillColor()
+    {
+        CircleRuntime sut = new();
+        sut.FillRed = 10;
+        sut.FillGreen = 20;
+        sut.FillBlue = 30;
+        sut.FillAlpha = 40;
+
+        sut.FillColor.ShouldBe(new SKColor(10, 20, 30, 40));
+    }
+
+    [Fact]
+    public void StrokeChannelSetters_ComposeStrokeColor()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeRed = 11;
+        sut.StrokeGreen = 22;
+        sut.StrokeBlue = 33;
+        sut.StrokeAlpha = 44;
+
+        sut.StrokeColor.ShouldBe(new SKColor(11, 22, 33, 44));
     }
 
     [Fact]
@@ -169,8 +215,8 @@ public class CircleRuntimeTests
         fillSlot.FillRadiusInset.ShouldBe(4f);
     }
 
-    // FillColor = null (default) leaves the fill slot invisible — no need to inset; the
-    // setter never had a visible fill to bleed against.
+    // Issue #2938 — stroke is hidden via StrokeWidth = 0 (StrokeColor is non-nullable now).
+    // No stroke means no halo overlap to inset against.
     [Fact]
     public void FillRadiusInset_WhenStrokeInvisible_StaysZero()
     {
@@ -178,8 +224,7 @@ public class CircleRuntimeTests
         sut.Width = 56;
         sut.Height = 56;
         sut.FillColor = SKColors.Red;
-        sut.StrokeColor = null;
-        sut.StrokeWidth = 4;
+        sut.StrokeWidth = 0;
         sut.StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
         sut.PreRender();
@@ -228,12 +273,14 @@ public class CircleRuntimeTests
     }
 
     // #2790: UseGradient is a single user knob that applies to whichever slots are active.
-    // FillColor null => fill slot stays gradient-off even when UseGradient = true; otherwise
-    // SKPaint.Shader would override the alpha-0 fill color and the gradient would render anyway.
+    // Issue #2938 — fill activity is gated by IsFilled (FillColor is non-nullable), stroke
+    // activity by StrokeWidth > 0; SKPaint.Shader otherwise overrides the alpha-0 fill color
+    // and the gradient would render anyway.
     [Fact]
-    public void UseGradient_FillColorNull_FillSlotStaysOff()
+    public void UseGradient_IsFilledFalse_FillSlotStaysOff()
     {
         CircleRuntime sut = new();
+        sut.IsFilled = false;
         sut.UseGradient = true;
 
         Circle fillSlot = (Circle)sut.RenderableComponent;
@@ -243,10 +290,22 @@ public class CircleRuntimeTests
     }
 
     [Fact]
-    public void UseGradient_BothColorsSet_BothSlotsOn()
+    public void UseGradient_StrokeWidthZero_StrokeSlotStaysOff()
     {
         CircleRuntime sut = new();
-        sut.FillColor = SKColors.White;
+        sut.StrokeWidth = 0;
+        sut.UseGradient = true;
+
+        Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
+        fillSlot.UseGradient.ShouldBeTrue();
+        strokeSlot.UseGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UseGradient_DefaultsBothSlotsOn()
+    {
+        CircleRuntime sut = new();
         sut.UseGradient = true;
 
         Circle fillSlot = (Circle)sut.RenderableComponent;
@@ -256,14 +315,15 @@ public class CircleRuntimeTests
     }
 
     [Fact]
-    public void SettingFillColor_AfterUseGradientTrue_LightsUpFillSlotGradient()
+    public void SettingIsFilledTrue_AfterUseGradientTrue_LightsUpFillSlotGradient()
     {
         CircleRuntime sut = new();
+        sut.IsFilled = false;
         sut.UseGradient = true;
         Circle fillSlot = (Circle)sut.RenderableComponent;
         fillSlot.UseGradient.ShouldBeFalse();
 
-        sut.FillColor = SKColors.White;
+        sut.IsFilled = true;
 
         fillSlot.UseGradient.ShouldBeTrue();
     }
@@ -299,11 +359,12 @@ public class CircleRuntimeTests
         strokeSlot.HasDropshadow.ShouldBeFalse();
     }
 
+    // Issue #2938 — when IsFilled = false, the shadow routes to the stroke slot.
     [Fact]
-    public void Dropshadow_FillColorNull_AppliesToStrokeSlot()
+    public void Dropshadow_IsFilledFalse_AppliesToStrokeSlot()
     {
         CircleRuntime sut = new();
-        // FillColor stays null by default; StrokeColor stays white by default.
+        sut.IsFilled = false;
         sut.HasDropshadow = true;
 
         sut.PreRender();
@@ -397,7 +458,7 @@ public class CircleRuntimeTests
         Circle strokeSlot = (Circle)fillSlot.Children.Single();
         fillSlot.HasDropshadow.ShouldBeTrue();
 
-        sut.FillColor = null;
+        sut.IsFilled = false;
         sut.PreRender();
 
         fillSlot.HasDropshadow.ShouldBeFalse();

@@ -139,15 +139,16 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         if (StrokeRenderable != null)
         {
             // Two-slot: each slot is gated independently so a gradient lights up only where the
-            // user lit up a color (issue #2790).
-            ContainedRenderable.UseGradient = _useGradient && _fillColor != null;
-            StrokeRenderable.UseGradient = _useGradient && _strokeColor != null;
+            // user lit up a color (issue #2790). Issue #2938: fill activity is now gated by
+            // IsFilled (FillColor is non-nullable), stroke activity by StrokeWidth > 0.
+            ContainedRenderable.UseGradient = _useGradient && _isFilled;
+            StrokeRenderable.UseGradient = _useGradient && StrokeWidth > 0;
         }
         else
         {
             // Single-slot: the contained renderable IS the active slot regardless of whether
             // the user routed through the legacy Color setter, FillColor, or StrokeColor.
-            // Gating here on _fillColor != null silently suppressed gradients on every
+            // Gating here on FillColor / IsFilled silently suppressed gradients on every
             // single-slot shape used via the legacy Color API (Arc, RoundedRectangle, Polygon,
             // ColoredCircle, Line, LineGrid) — that was a regression from #2790; this branch
             // restores the pre-#2790 pass-through.
@@ -194,61 +195,91 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         set => ContainedRenderable.Color = value;
     }
 
-    SKColor? _fillColor;
+    // Issue #2938 regression fix: defaults to transparent (alpha 0) so a freshly-constructed
+    // shape runtime renders as a stroke-only outline (matching pre-#2938 visual). IsFilled is
+    // true by default so the gate is open — assigning FillColor to a visible color lights up
+    // the fill without flipping IsFilled.
+    SKColor _fillColor = new SKColor(0, 0, 0, 0);
 
     /// <summary>
-    /// Color of the filled disk/shape. When set non-null, the contained renderable switches to
-    /// filled mode and renders with this color. When set null, the runtime falls back to stroke
-    /// (or, if <see cref="StrokeColor"/> is also null, alpha-0 / invisible).
+    /// Color of the filled disk/shape. Non-nullable since issue #2938 — use <see cref="IsFilled"/>
+    /// to hide the fill rather than nulling the color. When <see cref="IsFilled"/> is <c>true</c>
+    /// (the default) the fill slot renders with this color; when <c>false</c> the fill slot's
+    /// alpha is forced to 0 while the backing color round-trips so toggling <see cref="IsFilled"/>
+    /// back on restores the previously-set color. Defaults to transparent (alpha 0) preserving
+    /// the historical stroke-only ctor visual.
     /// </summary>
     /// <remarks>
     /// When the runtime opts into two-slot composition (issue #2790) via
     /// <see cref="SetStrokeRenderable"/>, <see cref="FillColor"/> writes only to the dedicated
     /// fill slot and renders simultaneously with <see cref="StrokeColor"/>. When the runtime
-    /// stays on the legacy single-slot model (no stroke renderable registered), fill and stroke
-    /// share the contained renderable's color + IsFilled toggle and the most-recently-set non-null
-    /// value wins.
+    /// stays on the legacy single-slot model, fill and stroke share the contained renderable's
+    /// color + IsFilled toggle.
     /// </remarks>
-    public SKColor? FillColor
+    public SKColor FillColor
     {
         get => _fillColor;
         set
         {
             _fillColor = value;
-            if (StrokeRenderable != null)
-            {
-                // Two-slot: fill slot is locked to IsFilled = true; null FillColor alpha-0s it
-                // while leaving the stroke slot untouched.
-                ContainedRenderable.IsFilled = true;
-                ContainedRenderable.Color = value ?? new SKColor(0, 0, 0, 0);
-            }
-            else if (value is SKColor fill)
-            {
-                ContainedRenderable.IsFilled = true;
-                ContainedRenderable.Color = fill;
-            }
-            else if (_strokeColor is SKColor stroke)
-            {
-                // Fill cleared but a stroke is still set — keep the stroke visible.
-                ContainedRenderable.IsFilled = false;
-                ContainedRenderable.Color = stroke;
-            }
-            else
-            {
-                // Neither set — hide via alpha 0 so the runtime is fully invisible without
-                // tearing down the renderable.
-                ContainedRenderable.Color = new SKColor(0, 0, 0, 0);
-            }
+            PushFillColorToSlot();
             RefreshSlotGradients();
         }
     }
 
-    SKColor? _strokeColor;
+    /// <summary>Red channel of <see cref="FillColor"/>.</summary>
+    public int FillRed
+    {
+        get => _fillColor.Red;
+        set => FillColor = new SKColor((byte)value, _fillColor.Green, _fillColor.Blue, _fillColor.Alpha);
+    }
+
+    /// <summary>Green channel of <see cref="FillColor"/>.</summary>
+    public int FillGreen
+    {
+        get => _fillColor.Green;
+        set => FillColor = new SKColor(_fillColor.Red, (byte)value, _fillColor.Blue, _fillColor.Alpha);
+    }
+
+    /// <summary>Blue channel of <see cref="FillColor"/>.</summary>
+    public int FillBlue
+    {
+        get => _fillColor.Blue;
+        set => FillColor = new SKColor(_fillColor.Red, _fillColor.Green, (byte)value, _fillColor.Alpha);
+    }
+
+    /// <summary>Alpha channel of <see cref="FillColor"/>.</summary>
+    public int FillAlpha
+    {
+        get => _fillColor.Alpha;
+        set => FillColor = new SKColor(_fillColor.Red, _fillColor.Green, _fillColor.Blue, (byte)value);
+    }
+
+    void PushFillColorToSlot()
+    {
+        SKColor pushed = _isFilled ? _fillColor : new SKColor(0, 0, 0, 0);
+        if (StrokeRenderable != null)
+        {
+            // Two-slot: fill slot is locked to IsFilled = true; IsFilled = false alpha-0s the
+            // fill slot while leaving the stroke slot untouched.
+            ContainedRenderable.IsFilled = true;
+            ContainedRenderable.Color = pushed;
+        }
+        else
+        {
+            // Single-slot legacy model: fill and stroke share the contained renderable.
+            ContainedRenderable.IsFilled = _isFilled;
+            ContainedRenderable.Color = pushed;
+        }
+    }
+
+    SKColor _strokeColor = SKColors.White;
 
     /// <summary>
-    /// Color of the stroked outline. When set non-null, the contained renderable switches to
-    /// stroke mode and renders with this color. When set null, the runtime falls back to fill
-    /// (or, if <see cref="FillColor"/> is also null, alpha-0 / invisible).
+    /// Color of the stroked outline. Non-nullable since issue #2938 — use <see cref="StrokeWidth"/>
+    /// set to 0 to hide the stroke rather than nulling the color. In two-slot mode the stroke
+    /// slot always renders this color; visibility is gated by <see cref="StrokeWidth"/> at draw
+    /// time.
     /// </summary>
     /// <remarks>
     /// When the runtime opts into two-slot composition (issue #2790) via
@@ -257,7 +288,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     /// stays on the legacy single-slot model, fill and stroke share the contained renderable's
     /// color + IsFilled toggle.
     /// </remarks>
-    public SKColor? StrokeColor
+    public SKColor StrokeColor
     {
         get => _strokeColor;
         set
@@ -265,26 +296,43 @@ public abstract class SkiaShapeRuntime : InteractiveGue
             _strokeColor = value;
             if (StrokeRenderable != null)
             {
-                // Two-slot: stroke slot is locked to IsFilled = false; null StrokeColor alpha-0s
-                // it while leaving the fill slot untouched.
-                StrokeRenderable.Color = value ?? new SKColor(0, 0, 0, 0);
-            }
-            else if (value is SKColor stroke)
-            {
-                ContainedRenderable.IsFilled = false;
-                ContainedRenderable.Color = stroke;
-            }
-            else if (_fillColor is SKColor fill)
-            {
-                ContainedRenderable.IsFilled = true;
-                ContainedRenderable.Color = fill;
+                StrokeRenderable.Color = value;
             }
             else
             {
-                ContainedRenderable.Color = new SKColor(0, 0, 0, 0);
+                ContainedRenderable.IsFilled = false;
+                ContainedRenderable.Color = value;
             }
             RefreshSlotGradients();
         }
+    }
+
+    /// <summary>Red channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeRed
+    {
+        get => _strokeColor.Red;
+        set => StrokeColor = new SKColor((byte)value, _strokeColor.Green, _strokeColor.Blue, _strokeColor.Alpha);
+    }
+
+    /// <summary>Green channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeGreen
+    {
+        get => _strokeColor.Green;
+        set => StrokeColor = new SKColor(_strokeColor.Red, (byte)value, _strokeColor.Blue, _strokeColor.Alpha);
+    }
+
+    /// <summary>Blue channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeBlue
+    {
+        get => _strokeColor.Blue;
+        set => StrokeColor = new SKColor(_strokeColor.Red, _strokeColor.Green, (byte)value, _strokeColor.Alpha);
+    }
+
+    /// <summary>Alpha channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeAlpha
+    {
+        get => _strokeColor.Alpha;
+        set => StrokeColor = new SKColor(_strokeColor.Red, _strokeColor.Green, _strokeColor.Blue, (byte)value);
     }
     #endregion
 
@@ -471,17 +519,23 @@ public abstract class SkiaShapeRuntime : InteractiveGue
 
     #region Filled/Stroke
 
+    bool _isFilled = true;
+
     /// <summary>
-    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
-    /// flips the contained renderable between filled and stroked modes. The new fill/stroke
-    /// split (issue #2785) supersedes this single-toggle by letting the caller specify the
-    /// color directly per slot.
+    /// Gates fill rendering. When <c>true</c> (the default since issue #2938) the fill slot is
+    /// painted with <see cref="FillColor"/>; when <c>false</c> the fill slot's alpha is forced
+    /// to 0 so only the stroke draws. Mirrors the XNALIKE <c>CircleRuntime.IsFilled</c> gate.
+    /// Stroke visibility is gated separately by <see cref="StrokeWidth"/> (0 hides stroke).
     /// </summary>
-    [Obsolete("Use FillColor or StrokeColor instead. See issue #2785; full fill+stroke composition arrives in #2790.")]
     public bool IsFilled
     {
-        get => ContainedRenderable.IsFilled;
-        set => ContainedRenderable.IsFilled = value;
+        get => _isFilled;
+        set
+        {
+            _isFilled = value;
+            PushFillColorToSlot();
+            RefreshSlotGradients();
+        }
     }
 
     // This should NOT modify the contained renderable stroke width directly.
@@ -634,7 +688,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     /// otherwise fall back to stroke. Single-slot runtimes always pick the contained renderable.
     /// </summary>
     RenderableShapeBase DropshadowTarget =>
-        StrokeRenderable == null || _fillColor != null
+        StrokeRenderable == null || _isFilled
             ? ContainedRenderable
             : StrokeRenderable;
 

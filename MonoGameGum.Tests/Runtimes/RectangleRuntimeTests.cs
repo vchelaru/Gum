@@ -112,10 +112,77 @@ public class RectangleRuntimeTests : BaseTestClass
         sut.CornerRadius = 12f;
         sut.Width = 100;
         sut.Height = 60;
-        sut.FillColor = null;
-        sut.StrokeColor = null;
+        // Issue #2938 — FillColor/StrokeColor are non-nullable; visibility is gated via
+        // IsFilled (fill) and StrokeWidth = 0 (stroke).
+        sut.IsFilled = false;
+        sut.StrokeWidth = 0;
 
         sut.RenderableComponent.ShouldBeSameAs(original);
         ((DefaultFilledRectangleRenderable)sut.RenderableComponent).Children[0].ShouldBeSameAs(originalStroke);
+    }
+
+    // Issue #2938 (regression fix) — FillColor defaults to transparent (alpha 0) so a
+    // freshly-constructed runtime renders as a stroke-only outline (pre-#2938 visual).
+    // IsFilled is true by default; assigning FillColor to a visible color lights the fill up.
+    [Fact]
+    public void FillColor_DefaultsToTransparent()
+    {
+        RectangleRuntime sut = new();
+
+        sut.FillColor.ShouldBe(new Color(0, 0, 0, 0));
+    }
+
+    [Fact]
+    public void StrokeColor_DefaultsToWhite()
+    {
+        RectangleRuntime sut = new();
+
+        sut.StrokeColor.ShouldBe(Color.White);
+    }
+
+    [Fact]
+    public void IsFilled_DefaultsToTrue()
+    {
+        RectangleRuntime sut = new();
+
+        sut.IsFilled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsFilled_RoundTripsBackingField()
+    {
+        RectangleRuntime sut = new();
+
+        sut.IsFilled = false;
+        sut.IsFilled.ShouldBeFalse();
+
+        sut.IsFilled = true;
+        sut.IsFilled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FillChannelSetters_ComposeFillColor()
+    {
+        RectangleRuntime sut = new();
+
+        sut.FillRed = 11;
+        sut.FillGreen = 22;
+        sut.FillBlue = 33;
+        sut.FillAlpha = 44;
+
+        sut.FillColor.ShouldBe(new Color(11, 22, 33, 44));
+    }
+
+    [Fact]
+    public void StrokeChannelSetters_ComposeStrokeColor()
+    {
+        RectangleRuntime sut = new();
+
+        sut.StrokeRed = 11;
+        sut.StrokeGreen = 22;
+        sut.StrokeBlue = 33;
+        sut.StrokeAlpha = 44;
+
+        sut.StrokeColor.ShouldBe(new Color(11, 22, 33, 44));
     }
 }

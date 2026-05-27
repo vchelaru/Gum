@@ -259,26 +259,90 @@ public class CircleRuntime : GraphicalUiElement
     // properties at all yet; the raylib sample (CirclesScreen) renders only the supported
     // sections.
 
+    // Issue #2938 regression fix — transparent default so a freshly-constructed CircleRuntime
+    // renders as a stroke-only outline (existing raylib gallery / cross-backend samples).
+    Color _fillColor = new Color((byte)0, (byte)0, (byte)0, (byte)0);
+
     /// <inheritdoc cref="Gum.Renderables.LineCircle.FillColor"/>
-    public Color? FillColor
+    public Color FillColor
     {
-        get => ContainedLineCircle.FillColor;
+        get => _fillColor;
         set
         {
+            _fillColor = value;
             ContainedLineCircle.FillColor = value;
             NotifyPropertyChanged();
         }
     }
 
-    /// <inheritdoc cref="Gum.Renderables.LineCircle.StrokeColor"/>
-    public Color? StrokeColor
+    /// <summary>Red channel of <see cref="FillColor"/>.</summary>
+    public int FillRed
     {
-        get => ContainedLineCircle.StrokeColor;
+        get => _fillColor.R;
+        set => FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
+    }
+
+    /// <summary>Green channel of <see cref="FillColor"/>.</summary>
+    public int FillGreen
+    {
+        get => _fillColor.G;
+        set => FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
+    }
+
+    /// <summary>Blue channel of <see cref="FillColor"/>.</summary>
+    public int FillBlue
+    {
+        get => _fillColor.B;
+        set => FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
+    }
+
+    /// <summary>Alpha channel of <see cref="FillColor"/>.</summary>
+    public int FillAlpha
+    {
+        get => _fillColor.A;
+        set => FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
+    }
+
+    Color _strokeColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
+
+    /// <inheritdoc cref="Gum.Renderables.LineCircle.StrokeColor"/>
+    public Color StrokeColor
+    {
+        get => _strokeColor;
         set
         {
+            _strokeColor = value;
             ContainedLineCircle.StrokeColor = value;
             NotifyPropertyChanged();
         }
+    }
+
+    /// <summary>Red channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeRed
+    {
+        get => _strokeColor.R;
+        set => StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
+    }
+
+    /// <summary>Green channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeGreen
+    {
+        get => _strokeColor.G;
+        set => StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+    }
+
+    /// <summary>Blue channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeBlue
+    {
+        get => _strokeColor.B;
+        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
+    }
+
+    /// <summary>Alpha channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeAlpha
+    {
+        get => _strokeColor.A;
+        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
     }
 
     /// <inheritdoc cref="Gum.Renderables.LineCircle.IsFilled"/>
@@ -404,11 +468,20 @@ public class CircleRuntime : GraphicalUiElement
 #endif
 
 #if XNALIKE
-    Color? _fillColor;
+    // Issue #2938 regression fix: FillColor defaults to transparent (alpha 0) so a freshly-
+    // constructed CircleRuntime renders as a stroke-only outline — matching the pre-#2938
+    // visual that all existing sample code assumes ("construct + only set StrokeColor").
+    // IsFilled is true by default; the gate semantics still work — explicitly setting
+    // FillColor to a visible color lights the fill up. Setting IsFilled = false zeros the
+    // fill slot's alpha regardless of FillColor.
+    Color _fillColor = new Color(0, 0, 0, 0);
 
     /// <summary>
-    /// Color of the filled disk. When set non-null, the fill slot is painted with this color.
-    /// When set null, the fill slot is hidden (alpha 0) so only the stroke draws.
+    /// Color of the filled disk. Painted into the fill slot when <see cref="IsFilled"/> is
+    /// <c>true</c>; ignored visually when <c>IsFilled</c> is <c>false</c> (the fill slot is
+    /// pushed a transparent color so only the stroke draws). Defaults to transparent so a
+    /// freshly-constructed runtime renders a stroke-only outline; assign a visible color to
+    /// light the fill up (IsFilled is already true by default).
     /// </summary>
     /// <remarks>
     /// Visual fill requires a fill-capable <see cref="IFilledCircleRenderable"/> implementation —
@@ -417,7 +490,7 @@ public class CircleRuntime : GraphicalUiElement
     /// round-trips so getter results are consistent and a later install of MonoGameGumShapes
     /// (re-creating the runtime) will honor the stored color.
     /// </remarks>
-    public Color? FillColor
+    public Color FillColor
     {
         get => _fillColor;
         set
@@ -425,29 +498,108 @@ public class CircleRuntime : GraphicalUiElement
             _fillColor = value;
             if (_fill != null)
             {
-                _fill.Color = value ?? new Color(0, 0, 0, 0);
+                _fill.Color = _isFilled ? _fillColor : new Color(0, 0, 0, 0);
             }
             NotifyPropertyChanged();
         }
     }
 
-    Color? _strokeColor = Color.White;
+    /// <summary>Red channel of <see cref="FillColor"/>.</summary>
+    public int FillRed
+    {
+        get => _fillColor.R;
+        set => FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
+    }
+
+    /// <summary>Green channel of <see cref="FillColor"/>.</summary>
+    public int FillGreen
+    {
+        get => _fillColor.G;
+        set => FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
+    }
+
+    /// <summary>Blue channel of <see cref="FillColor"/>.</summary>
+    public int FillBlue
+    {
+        get => _fillColor.B;
+        set => FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
+    }
+
+    /// <summary>Alpha channel of <see cref="FillColor"/>.</summary>
+    public int FillAlpha
+    {
+        get => _fillColor.A;
+        set => FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
+    }
+
+    bool _isFilled = true;
+
+    /// <summary>
+    /// Gates fill rendering. When <c>true</c> (the default) the fill slot is painted with
+    /// <see cref="FillColor"/>. When <c>false</c> the fill slot is pushed a transparent color
+    /// so only the stroke draws — used to render a stroke-only outline without dropping
+    /// <see cref="FillColor"/>. Stroke visibility is gated separately by
+    /// <see cref="StrokeWidth"/> (0 hides stroke).
+    /// </summary>
+    public bool IsFilled
+    {
+        get => _isFilled;
+        set
+        {
+            _isFilled = value;
+            if (_fill != null)
+            {
+                _fill.Color = _isFilled ? _fillColor : new Color(0, 0, 0, 0);
+            }
+            NotifyPropertyChanged();
+        }
+    }
+
+    Color _strokeColor = Color.White;
 
     /// <summary>
     /// Color of the outline. Defaults to white so a freshly-constructed CircleRuntime renders
-    /// the same visible outline as legacy code did. <c>null</c> hides the stroke (alpha 0) so
-    /// only the fill draws. The stroke slot is always non-null on supported backends — core
-    /// ships <see cref="DefaultStrokedCircleRenderable"/> as the default.
+    /// the same visible outline as legacy code did. Set <see cref="StrokeWidth"/> to 0 to hide
+    /// the stroke. The stroke slot is always non-null on supported backends — core ships
+    /// <see cref="DefaultStrokedCircleRenderable"/> as the default.
     /// </summary>
-    public Color? StrokeColor
+    public Color StrokeColor
     {
         get => _strokeColor;
         set
         {
             _strokeColor = value;
-            _stroke.Color = value ?? new Color(0, 0, 0, 0);
+            _stroke.Color = value;
             NotifyPropertyChanged();
         }
+    }
+
+    /// <summary>Red channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeRed
+    {
+        get => _strokeColor.R;
+        set => StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
+    }
+
+    /// <summary>Green channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeGreen
+    {
+        get => _strokeColor.G;
+        set => StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+    }
+
+    /// <summary>Blue channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeBlue
+    {
+        get => _strokeColor.B;
+        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
+    }
+
+    /// <summary>Alpha channel of <see cref="StrokeColor"/>.</summary>
+    public int StrokeAlpha
+    {
+        get => _strokeColor.A;
+        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
     }
 
     float _strokeWidth = 1;
@@ -1113,13 +1265,14 @@ public class CircleRuntime : GraphicalUiElement
         // strokes push a sub-pixel epsilon to Apos so the AA halo (still ~1 px) dominates
         // and would re-create the overlap without the floor.
         //
-        // Gated on stroke alpha > 0: a hidden stroke (StrokeColor = null sets alpha 0)
-        // shouldn't inset the fill, or fill-only mode would render a thin background ring
-        // where the stroke would have been.
+        // Gated on stroke visibility: alpha 0 OR StrokeWidth 0 means the stroke isn't drawn,
+        // and inset would render a thin background ring where the stroke would have been.
+        // Issue #2938 made StrokeWidth = 0 the canonical hide-stroke gate (StrokeColor is now
+        // non-nullable); the alpha guard stays as the pre-existing #2834 path.
         if (_fill != null)
         {
             float fillRadiusInset = 0f;
-            if (_stroke.Color.A > 0)
+            if (_stroke.Color.A > 0 && _strokeWidth > 0)
             {
                 fillRadiusInset = renderableStrokeWidth;
                 if (_isAntialiased && _stroke is IAntialiasedRenderable)
@@ -1172,6 +1325,11 @@ public class CircleRuntime : GraphicalUiElement
         }
 
         toReturn.StrokeColor = toReturn.StrokeColor;
+        // Issue #2938 — re-fire FillColor / IsFilled so the freshly-built fill slot picks up
+        // the user's values; MemberwiseClone copied the backing fields but the new slot was
+        // constructed in its default state.
+        toReturn.FillColor = toReturn.FillColor;
+        toReturn.IsFilled = toReturn.IsFilled;
         if (toReturn._fill != null)
         {
             toReturn._stroke.Radius = toReturn._fill.Radius;
@@ -1487,13 +1645,17 @@ public class CircleRuntime : GraphicalUiElement
                 SetContainedObject(_stroke);
             }
 
-            // Initial defaults — stroke white, no fill, radius 16, layout 32x32. Fill alpha 0
-            // until the user sets FillColor so it doesn't paint over the stroke at startup.
-            _stroke.Color = Color.White;
+            // Initial defaults — stroke white, fill transparent (IsFilled = true so the gate
+            // is open, but the color is alpha-0 so nothing visible draws), radius 16, layout
+            // 32x32. Issue #2938 (regression fix): a freshly-constructed CircleRuntime renders
+            // as a stroke-only outline — matching the pre-#2938 visual that existing sample
+            // code (raylib gallery, GumShapesGallery, SilkNetGum) assumes. Setting FillColor to
+            // a visible color lights up the fill without needing to also flip IsFilled.
+            _stroke.Color = _strokeColor;
             _stroke.Radius = 16;
             if (_fill != null)
             {
-                _fill.Color = new Color(0, 0, 0, 0);
+                _fill.Color = _isFilled ? _fillColor : new Color(0, 0, 0, 0);
                 _fill.Radius = 16;
             }
             Width = 32;
@@ -1528,9 +1690,12 @@ public class CircleRuntime : GraphicalUiElement
             // single-slot legacy model (last-non-null-setter-wins).
             SetStrokeRenderable(new ContainedCircleType());
 
-            // Defaults: invisible fill, white stroke — matches the pre-#2790 visual where the
-            // single Circle was set to StrokeColor = White (which forced IsFilled = false).
-            FillColor = null;
+            // Issue #2938 (regression fix): FillColor defaults to transparent (alpha 0) +
+            // white stroke. IsFilled defaults to true so the gate is open, but the transparent
+            // color means a freshly-constructed runtime renders as a stroke-only outline —
+            // matching the pre-#2938 visual that existing sample code assumes. Assigning
+            // FillColor to a visible color lights up the fill without flipping IsFilled.
+            FillColor = new SKColor(0, 0, 0, 0);
             StrokeColor = SKColors.White;
             StrokeWidth = 1;
             StrokeWidthUnits = DimensionUnitType.ScreenPixel;
@@ -1550,7 +1715,16 @@ public class CircleRuntime : GraphicalUiElement
             // but kept them on Skia. SOKOL renderable doesn't expose StrokeColor yet — leave
             // it null there so the existing outline-via-Color path keeps working unchanged.
             // Same fix landed for RectangleRuntime earlier in this PR.
-            circle.StrokeColor = ColorExtensions.White;
+            //
+            // #2938 (regression fix) — push runtime-held FillColor / StrokeColor / IsFilled
+            // defaults onto the renderable so the runtime properties report consistent state at
+            // construction. FillColor defaults to transparent (alpha 0) and IsFilled defaults
+            // to true → a fresh circle renders as a stroke-only outline (matching the pre-#2938
+            // visual that the raylib gallery / cross-backend samples assume). Assigning
+            // FillColor to a visible color lights up the fill without flipping IsFilled.
+            circle.StrokeColor = _strokeColor;
+            circle.FillColor = _fillColor;
+            circle.IsFilled = true;
 #endif
 #endif
             Width = 32;

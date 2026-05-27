@@ -88,13 +88,14 @@ public class CircleRuntimeTests : BaseTestClass
         // FillColor still render with a visible 1 px white outline (e.g. the gallery's Modes
         // and Alignment rows). Raylib must match or fill-only cells render without the outline
         // Skia draws. Same fix landed for RectangleRuntime in this PR.
+        // #2938 — runtime FillColor/StrokeColor are now non-nullable Color (defaulting to
+        // white) with IsFilled / StrokeWidth = 0 as the visibility gates.
         CircleRuntime sut = new();
 
-        sut.StrokeColor.ShouldNotBeNull();
-        sut.StrokeColor!.Value.R.ShouldBe((byte)255);
-        sut.StrokeColor!.Value.G.ShouldBe((byte)255);
-        sut.StrokeColor!.Value.B.ShouldBe((byte)255);
-        sut.StrokeColor!.Value.A.ShouldBe((byte)255);
+        sut.StrokeColor.R.ShouldBe((byte)255);
+        sut.StrokeColor.G.ShouldBe((byte)255);
+        sut.StrokeColor.B.ShouldBe((byte)255);
+        sut.StrokeColor.A.ShouldBe((byte)255);
     }
 
     [Fact]
@@ -105,8 +106,7 @@ public class CircleRuntimeTests : BaseTestClass
 
         sut.FillColor = expected;
 
-        sut.FillColor.ShouldNotBeNull();
-        sut.FillColor!.Value.R.ShouldBe((byte)10);
+        sut.FillColor.R.ShouldBe((byte)10);
         ((LineCircle)sut.RenderableComponent!).FillColor.ShouldNotBeNull();
         ((LineCircle)sut.RenderableComponent!).FillColor!.Value.R.ShouldBe((byte)10);
     }
@@ -119,7 +119,7 @@ public class CircleRuntimeTests : BaseTestClass
 
         sut.StrokeColor = expected;
 
-        sut.StrokeColor.ShouldNotBeNull();
+        sut.StrokeColor.G.ShouldBe((byte)50);
         ((LineCircle)sut.RenderableComponent!).StrokeColor.ShouldNotBeNull();
         ((LineCircle)sut.RenderableComponent!).StrokeColor!.Value.G.ShouldBe((byte)50);
     }

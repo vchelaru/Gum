@@ -45,6 +45,31 @@ public class CircleRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void FillChannelSetters_ComposeFillColor()
+    {
+        CircleRuntime sut = new();
+
+        sut.FillRed = 11;
+        sut.FillGreen = 22;
+        sut.FillBlue = 33;
+        sut.FillAlpha = 44;
+
+        sut.FillColor.ShouldBe(new Color(11, 22, 33, 44));
+    }
+
+    // Issue #2938 (regression fix) — FillColor defaults to transparent (alpha 0) so a
+    // freshly-constructed runtime renders as a stroke-only outline, preserving the pre-#2938
+    // ctor visual. IsFilled is true by default; assigning FillColor to a visible color lights
+    // the fill up without flipping IsFilled.
+    [Fact]
+    public void FillColor_DefaultsToTransparent()
+    {
+        CircleRuntime sut = new();
+
+        sut.FillColor.ShouldBe(new Color(0, 0, 0, 0));
+    }
+
+    [Fact]
     public void FillColor_RoundTripsBackingField_WhenFillSlotIsNull()
     {
         CircleRuntime sut = new();
@@ -55,6 +80,52 @@ public class CircleRuntimeTests : BaseTestClass
         // re-create the runtime) honors the user's color. Without the package, no visual
         // effect — see DefaultStrokedCircleRenderable remarks.
         sut.FillColor.ShouldBe(Color.Red);
+    }
+
+    [Fact]
+    public void IsFilled_DefaultsToTrue()
+    {
+        CircleRuntime sut = new();
+
+        sut.IsFilled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsFilled_RoundTripsBackingField_WhenFillSlotNull()
+    {
+        CircleRuntime sut = new();
+
+        sut.IsFilled = false;
+        sut.IsFilled.ShouldBeFalse();
+        // Renderable stays the stroke default — there's no fill slot to hide visually.
+        sut.RenderableComponent.ShouldBeOfType<DefaultStrokedCircleRenderable>();
+
+        sut.IsFilled = true;
+        sut.IsFilled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void StrokeChannelSetters_ComposeStrokeColor()
+    {
+        CircleRuntime sut = new();
+
+        sut.StrokeRed = 11;
+        sut.StrokeGreen = 22;
+        sut.StrokeBlue = 33;
+        sut.StrokeAlpha = 44;
+
+        sut.StrokeColor.ShouldBe(new Color(11, 22, 33, 44));
+    }
+
+    [Fact]
+    public void StrokeColor_DefaultsToWhite()
+    {
+        CircleRuntime sut = new();
+
+        sut.StrokeColor.ShouldBe(Color.White);
+
+        sut.StrokeColor = Color.Lime;
+        sut.StrokeColor.ShouldBe(Color.Lime);
     }
 
     // Issue #2791 graceful-degradation contract: with no MonoGameGumShapes package the stroke
@@ -213,8 +284,8 @@ public class CircleRuntimeTests : BaseTestClass
         sut.StrokeColor = Color.Blue;
         sut.Color = Color.Lime;
         sut.Radius = 25f;
-        sut.FillColor = null;
-        sut.StrokeColor = null;
+        sut.IsFilled = false;
+        sut.StrokeWidth = 0;
 
         sut.RenderableComponent.ShouldBeSameAs(original);
     }

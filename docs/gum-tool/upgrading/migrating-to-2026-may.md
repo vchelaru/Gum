@@ -294,11 +294,41 @@ The obsoleted types and their replacements:
 ```csharp
 CircleRuntime circle = new();
 circle.FillColor = Color.Red;
-circle.StrokeColor = null; // disable the default white outline
+circle.StrokeWidth = 0; // disable the default white outline
 ```
 
 The same caveat applies anywhere you migrate a fill-only `ColoredCircleRuntime` — including the Maui / Skia counter circles in the bundled samples, which add this line for the same reason.
 {% endhint %}
+
+### Breaking: `FillColor` / `StrokeColor` are now non-nullable
+
+Earlier in this same unreleased cycle (issue #2790 / #2814) `CircleRuntime` and `RectangleRuntime` briefly exposed `FillColor` and `StrokeColor` as nullable (`Color?` on XNA-likes / Raylib, `SKColor?` on Skia), with `null` meaning "hide this slot." Issue #2938 walks that back: the properties are non-nullable again, and visibility is gated by orthogonal knobs:
+
+- **Hide fill** — set `IsFilled = false` (mirrors the Skia renderable's existing `IsFilled` toggle and survives round-tripping the color value).
+- **Hide stroke** — set `StrokeWidth = 0` (a zero-width stroke is already a no-op in every backend, so this expresses intent without a separate flag).
+
+**Default visual is unchanged:** a freshly-constructed `CircleRuntime` / `RectangleRuntime` still renders as a stroke-only outline, preserving the pre-#2938 visual that existing sample code assumes ("construct + only set `StrokeColor`"). This is achieved by defaulting `FillColor` to transparent (alpha 0) while leaving `IsFilled = true`. Assigning `FillColor` to a visible color lights up the fill without flipping `IsFilled` — so existing code like `frame.FillColor = darkGray;` continues to work.
+
+The runtimes also gain channel-decomposition setters on both colors so animations and the Gum tool's variable system can drive each channel independently:
+
+- `FillRed` / `FillGreen` / `FillBlue` / `FillAlpha` — `int`, 0-255, compose into `FillColor`.
+- `StrokeRed` / `StrokeGreen` / `StrokeBlue` / `StrokeAlpha` — `int`, 0-255, compose into `StrokeColor`.
+
+❌ Old (the brief nullable API):
+
+```csharp
+circle.FillColor = null;    // hide the fill
+circle.StrokeColor = null;  // hide the stroke
+```
+
+✅ New:
+
+```csharp
+circle.IsFilled = false;    // hide the fill
+circle.StrokeWidth = 0;     // hide the stroke
+```
+
+This is a breaking change relative to the nullable form, but only against code written against an unreleased prerelease. Released callers were on the legacy single-slot `Color` API and are unaffected.
 
 ❌ Old:
 
