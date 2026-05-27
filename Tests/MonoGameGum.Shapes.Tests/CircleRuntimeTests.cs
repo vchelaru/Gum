@@ -778,4 +778,43 @@ public class CircleRuntimeTests
         Circle stroke = (Circle)fill.Children[0];
         stroke.DropshadowColor.ShouldBe(new Color(50, 100, 150, 200));
     }
+
+    // Issue #2950 follow-up — when the user sets StrokeWidth = 0 (or negative), the runtime's
+    // PreRender previously clamped to a 0.01 epsilon floor "to hedge against Apos treating
+    // thickness = 0 as don't draw." That hedge defeated the intent: StrokeColor is non-nullable
+    // now (#2938) and StrokeWidth = 0 is the canonical hide-stroke gate. With the epsilon push,
+    // the stroke renderable still had StrokeWidth > 0 and Apos painted its 1 px AA fringe,
+    // showing a hairline of stroke color the user thought they had disabled. Honor a non-
+    // positive user value as a literal 0 so the renderable's HasVisibleOutput gate suppresses
+    // it entirely.
+
+    [Fact]
+    public void PreRender_StrokeWidthZero_PushesZeroToStrokeRenderable()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.StrokeWidth = 0f;
+
+        ((IRenderable)sut.RenderableComponent).PreRender();
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.StrokeWidth.ShouldBe(0f);
+        stroke.HasVisibleOutput.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void PreRender_StrokeWidthNegative_PushesZeroToStrokeRenderable()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.StrokeWidth = -3f;
+
+        ((IRenderable)sut.RenderableComponent).PreRender();
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.StrokeWidth.ShouldBe(0f);
+        stroke.HasVisibleOutput.ShouldBeFalse();
+    }
 }

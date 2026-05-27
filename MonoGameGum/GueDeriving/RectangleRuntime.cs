@@ -1478,10 +1478,19 @@ public class RectangleRuntime : GraphicalUiElement
         // straights is the headline — rounded corner arcs still get the AA they need.
         const float aposAaContribution = 1f;
         const float aposMinThicknessEpsilon = 0.01f;
-        float renderableStrokeWidth = strokeWidth;
-        if (_isAntialiased && _stroke is IAntialiasedRenderable)
+        float renderableStrokeWidth;
+        if (strokeWidth <= 0)
+        {
+            // Issue #2950 follow-up — see CircleRuntime.PreRender for the rationale.
+            renderableStrokeWidth = 0f;
+        }
+        else if (_isAntialiased && _stroke is IAntialiasedRenderable)
         {
             renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContribution);
+        }
+        else
+        {
+            renderableStrokeWidth = strokeWidth;
         }
         _stroke.StrokeWidth = renderableStrokeWidth;
 

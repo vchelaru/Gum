@@ -1241,10 +1241,22 @@ public class CircleRuntime : GraphicalUiElement
         // default (LineCircle wrapper, no AA concept) still receives the raw value.
         const float aposAaContribution = 1f;
         const float aposMinThicknessEpsilon = 0.01f;
-        float renderableStrokeWidth = strokeWidth;
-        if (_isAntialiased && _stroke is IAntialiasedRenderable)
+        float renderableStrokeWidth;
+        if (strokeWidth <= 0)
+        {
+            // Issue #2950 follow-up — honor the user's explicit "no stroke" intent as a literal
+            // 0 push. The renderable's HasVisibleOutput gate then suppresses the draw entirely.
+            // Without this, the epsilon floor below would push 0.01 and Apos's 1 px AA fringe
+            // would render a hairline of stroke color the user thought they had disabled.
+            renderableStrokeWidth = 0f;
+        }
+        else if (_isAntialiased && _stroke is IAntialiasedRenderable)
         {
             renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContribution);
+        }
+        else
+        {
+            renderableStrokeWidth = strokeWidth;
         }
         _stroke.StrokeWidth = renderableStrokeWidth;
 
