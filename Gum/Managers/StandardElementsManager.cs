@@ -371,6 +371,14 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
             AddColorVariables(stateSave, true);
 
+            // v3 (#2929): gradient / dropshadow / blend route through the same SetProperty path
+            // as on ColoredCircle, picked up by CircleRuntime's existing gradient/dropshadow
+            // pass-through. AddStrokeAndFilledVariables is intentionally excluded — IsFilled
+            // is not present on XNALIKE CircleRuntime yet (tracked as a #2931 follow-up).
+            AddGradientVariables(stateSave);
+            AddDropshadowVariables(stateSave);
+            AddBlendVariable(stateSave);
+
             // Although rotating a circle about its center does nothing we add rotation because you can rotate it about a different origin
             AddRotationVariable(stateSave);
 
@@ -400,6 +408,11 @@ public class StandardElementsManager
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
             AddColorVariables(stateSave, true);
+
+            // v3 (#2929): mirror of the Circle block above — see comment there.
+            AddGradientVariables(stateSave);
+            AddDropshadowVariables(stateSave);
+            AddBlendVariable(stateSave);
 
             AddRotationVariable(stateSave);
 
