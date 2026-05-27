@@ -28,8 +28,7 @@ public class StandardElementsManagerTests : BaseTestClass
         state.Variables.Any(v => v.Name == "HasDropshadow").ShouldBeTrue();
         state.Variables.Any(v => v.Name == "DropshadowOffsetX").ShouldBeTrue();
         state.Variables.Any(v => v.Name == "DropshadowOffsetY").ShouldBeTrue();
-        state.Variables.Any(v => v.Name == "DropshadowBlurX").ShouldBeTrue();
-        state.Variables.Any(v => v.Name == "DropshadowBlurY").ShouldBeTrue();
+        state.Variables.Any(v => v.Name == "DropshadowBlur").ShouldBeTrue();
         state.Variables.Any(v => v.Name == "DropshadowAlpha").ShouldBeTrue();
         state.Variables.Any(v => v.Name == "DropshadowRed").ShouldBeTrue();
         state.Variables.Any(v => v.Name == "DropshadowGreen").ShouldBeTrue();

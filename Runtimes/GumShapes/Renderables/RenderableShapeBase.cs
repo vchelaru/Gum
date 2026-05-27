@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Math;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -460,6 +461,124 @@ public abstract class RenderableShapeBase : RenderableBase
         {
             _strokeGapLength = value;
         }
+    }
+
+    /// <summary>
+    /// Whether this shape's current configuration would produce any visible pixels. Filled
+    /// shapes always render (even with alpha-zero color — the layout is the source of truth,
+    /// not visibility). Stroke-only shapes (<see cref="IsFilled"/> == <c>false</c>) need a
+    /// positive <see cref="StrokeWidth"/>; with stroke width = 0 the Apos.Shapes shader would
+    /// still paint a one-pixel AA fringe in the stroke color, producing a hairline ring the
+    /// user thought they had disabled. <see cref="Circle.Render"/>,
+    /// <see cref="RoundedRectangle.Render"/>, and <see cref="Arc.Render"/> early-return on
+    /// <c>!HasVisibleOutput</c> so neither the body nor the shadow draws in that case.
+    /// </summary>
+    public bool HasVisibleOutput => IsFilled || StrokeWidth > 0;
+
+    /// <summary>
+    /// Returns the (effectiveRadius_world, effectiveAaSize_screenPx, alphaScale) trio to hand
+    /// to Apos.Shapes' <c>DrawCircle</c> for a shadow centered on a circular shape of nominal
+    /// radius <paramref name="hostRadius"/>. Anchors the smoothstep falloff so α = 0.5 sits
+    /// exactly at <paramref name="hostRadius"/> and α = 0 sits at <c>hostRadius + DropshadowBlurX/2</c>
+    /// — matching CSS <c>box-shadow</c> / Figma / Photoshop convention where the original
+    /// disk edge is the 50% line.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Apos's AA falloff is <c>3t² − 2t³</c> (smoothstep), confirmed empirically. Because
+    /// smoothstep is symmetric (smoothstep(0.5) = 0.5), in the standard case (B ≤ 2R) we can
+    /// just pass <c>rDisk = R − B/2, aaSize = B</c> and the 50% line lands at R for free.
+    /// </para>
+    /// <para>
+    /// When <c>DropshadowBlurX</c> exceeds 2·hostRadius, the inner ramp edge would be at a
+    /// negative radius — which Apos clamps to 0, sliding the entire ramp outward and making
+    /// the 50% line drift far past R (giving the "way too big" shadow that #2950 reports).
+    /// In that case the helper truncates the inner ramp at <c>rDisk = 0</c>, widens aaSize
+    /// to <c>R + B/2</c> so the outer edge still sits where the desired curve says, and
+    /// returns an <paramref name="alphaScale"/> &lt; 1 so the (clamped) smoothstep still
+    /// passes through both anchors (R, 0.5) and (R + B/2, 0). The cost is that the center
+    /// of the shadow is no longer 100% opaque — which is *correct*: a circle whose blur
+    /// extends beyond its diameter genuinely should not have a solid black center.
+    /// </para>
+    /// <para>
+    /// <paramref name="cameraZoom"/> is folded into <c>effectiveAaSize</c> (which is returned
+    /// in screen pixels, since Apos's <c>aaSize</c> argument is screen-space) so the visible
+    /// halo holds a constant *world* extent under zoom. Mirrors <see cref="GetShadowAntiAliasSize"/>.
+    /// </para>
+    /// </remarks>
+    public (float effectiveRadius, int effectiveAaSize, float alphaScale)
+        ComputeShadowDrawGeometry(float hostRadius, float cameraZoom)
+    {
+        float blur = _dropshadowBlurX;
+        if (blur <= 0f)
+        {
+            return (hostRadius, 0, 1f);
+        }
+        if (blur <= 2f * hostRadius)
+        {
+            // Standard case: ramp fits inside the host disk. Hand Apos the symmetric
+            // geometry directly; smoothstep's symmetry around t=0.5 places α=0.5 at R for us.
+            return (
+                hostRadius - blur * 0.5f,
+                MathFunctions.RoundToInt(blur * cameraZoom),
+                1f);
+        }
+        // blur > 2R: truncate inner edge to rDisk = 0, widen aaSize to R + B/2, and scale
+        // base alpha so smoothstep(0,1, R/(R + B/2)) lands the curve at α = 0.5 at r = R.
+        // alphaScale = 0.5 / (1 - smoothstep(R / aaSizeWorld)).
+        float aaSizeWorld = hostRadius + blur * 0.5f;
+        float t = hostRadius / aaSizeWorld;
+        float smoothstep = 3f * t * t - 2f * t * t * t;
+        float alphaScale = 0.5f / (1f - smoothstep);
+        return (
+            0f,
+            MathFunctions.RoundToInt(aaSizeWorld * cameraZoom),
+            alphaScale);
+    }
+
+    /// <summary>
+    /// World-anchored shadow halo size, scaled by the current camera zoom and rounded to the
+    /// nearest int for the Apos.Shapes <c>aaSize</c> parameter. Apos consumes <c>aaSize</c> in
+    /// screen-pixel space (its shader uses <c>fwidth</c>-style pixel-derivative AA), so a raw
+    /// <see cref="DropshadowBlurX"/> would render as a fixed screen-pixel count regardless of
+    /// zoom — making the shadow halo shrink and shift relative to its host as the camera zooms
+    /// in. Multiplying by zoom keeps the halo a constant <em>world</em> extent, matching the
+    /// rest of Gum's wireframe.
+    /// </summary>
+    public int GetShadowAntiAliasSize(float cameraZoom)
+    {
+        return MathFunctions.RoundToInt(_dropshadowBlurX * cameraZoom);
+    }
+
+    /// <summary>
+    /// Issue #2950 — when a stroke-only shape's dropshadow blur exceeds its stroke width, the
+    /// naive <c>lineThickness = StrokeWidth - DropshadowBlurX</c> goes ≤ 0 and the Apos.Shapes
+    /// shader refuses to draw, making the shadow disappear. Fix: clamp lineThickness to a small
+    /// positive epsilon so Apos still draws, and scale the shadow's starting alpha by
+    /// <c>StrokeWidth / DropshadowBlurX</c> so the visible band reads as the tail of the alpha
+    /// ramp — "start at a smaller alpha and advance to 0" — instead of vanishing. Filled mode,
+    /// blur = 0, and stroke &gt; blur all leave the values unchanged (existing behavior).
+    /// </summary>
+    /// <param name="baseColor">The pre-multiplied dropshadow color (typically
+    /// <see cref="EffectiveDropshadowColor"/>) that would otherwise be passed to the Apos draw
+    /// call before the stroke/blur fade is applied.</param>
+    public (float effectiveStrokeWidth, Color effectiveColor) ComputeStrokeShadowDrawParameters(Color baseColor)
+    {
+        float effectiveStrokeWidth = StrokeWidth - _dropshadowBlurX;
+        if (!IsFilled && effectiveStrokeWidth <= 0 && _dropshadowBlurX > 0)
+        {
+            float alphaScale = Microsoft.Xna.Framework.MathHelper.Clamp(StrokeWidth / _dropshadowBlurX, 0f, 1f);
+            baseColor = new Color(
+                baseColor.R,
+                baseColor.G,
+                baseColor.B,
+                (byte)(baseColor.A * alphaScale));
+            // Apos.Shapes treats lineThickness <= 0 as "don't draw." Push a small positive
+            // epsilon so the AA band still renders. The visible falloff is driven by aaSize
+            // (= DropshadowBlurX), not by this value.
+            effectiveStrokeWidth = 0.01f;
+        }
+        return (effectiveStrokeWidth, baseColor);
     }
 
     /// <summary>

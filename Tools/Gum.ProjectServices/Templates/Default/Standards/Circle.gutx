@@ -24,10 +24,7 @@
     <Variable Type="int" Name="DropshadowBlue" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="float" Name="DropshadowBlurX" Category="Dropshadow" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="float" Name="DropshadowBlurY" Category="Dropshadow" SetsValue="true">
+    <Variable Type="float" Name="DropshadowBlur" Category="Dropshadow" SetsValue="true">
       <Value xsi:type="xsd:float">3</Value>
     </Variable>
     <Variable Type="int" Name="DropshadowGreen" Category="Dropshadow" SetsValue="true">

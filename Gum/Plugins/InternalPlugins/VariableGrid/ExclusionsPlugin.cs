@@ -145,7 +145,7 @@ public class ExclusionsPlugin : PriorityPlugin
             return true;
         }
 
-        if (rootName == "DropshadowOffsetX" || rootName == "DropshadowOffsetY" || rootName == "DropshadowBlurX" || rootName == "DropshadowBlurY" ||
+        if (rootName == "DropshadowOffsetX" || rootName == "DropshadowOffsetY" || rootName == "DropshadowBlur" ||
             rootName == "DropshadowAlpha" || rootName == "DropshadowRed" || rootName == "DropshadowGreen" || rootName == "DropshadowBlue")
         {
             var hasDropshadow = finder.GetValue(prefix + "HasDropshadow");

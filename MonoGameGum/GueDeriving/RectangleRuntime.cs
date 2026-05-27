@@ -532,23 +532,17 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 
-    /// <inheritdoc cref="Gum.Renderables.LineRectangle.DropshadowBlurX"/>
-    public float DropshadowBlurX
+    /// <summary>
+    /// Isotropic blur radius in pixels for the dropshadow. The raylib renderable
+    /// approximates blur via concentric semi-transparent rings; pushing a single value
+    /// to both X and Y of the contained <see cref="Gum.Renderables.LineRectangle"/>.
+    /// </summary>
+    public float DropshadowBlur
     {
         get => ContainedLineRectangle.DropshadowBlurX;
         set
         {
             ContainedLineRectangle.DropshadowBlurX = value;
-            NotifyPropertyChanged();
-        }
-    }
-
-    /// <inheritdoc cref="Gum.Renderables.LineRectangle.DropshadowBlurY"/>
-    public float DropshadowBlurY
-    {
-        get => ContainedLineRectangle.DropshadowBlurY;
-        set
-        {
             ContainedLineRectangle.DropshadowBlurY = value;
             NotifyPropertyChanged();
         }
@@ -1313,8 +1307,8 @@ public class RectangleRuntime : GraphicalUiElement
             target.DropshadowColor = _dropshadowColor;
             target.DropshadowOffsetX = _dropshadowOffsetX;
             target.DropshadowOffsetY = _dropshadowOffsetY;
-            target.DropshadowBlurX = _dropshadowBlurX;
-            target.DropshadowBlurY = _dropshadowBlurY;
+            target.DropshadowBlurX = _dropshadowBlur;
+            target.DropshadowBlurY = _dropshadowBlur;
         }
     }
 
@@ -1403,28 +1397,19 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 
-    float _dropshadowBlurX;
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
-    public float DropshadowBlurX
+    float _dropshadowBlur;
+    /// <inheritdoc cref="CircleRuntime.DropshadowBlur"/>
+    public float DropshadowBlur
     {
-        get => _dropshadowBlurX;
+        get => _dropshadowBlur;
         set
         {
-            _dropshadowBlurX = value;
-            if (DropshadowTarget is { } target) target.DropshadowBlurX = value;
-            NotifyPropertyChanged();
-        }
-    }
-
-    float _dropshadowBlurY;
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
-    public float DropshadowBlurY
-    {
-        get => _dropshadowBlurY;
-        set
-        {
-            _dropshadowBlurY = value;
-            if (DropshadowTarget is { } target) target.DropshadowBlurY = value;
+            _dropshadowBlur = value;
+            if (DropshadowTarget is { } target)
+            {
+                target.DropshadowBlurX = value;
+                target.DropshadowBlurY = value;
+            }
             NotifyPropertyChanged();
         }
     }
@@ -1467,36 +1452,46 @@ public class RectangleRuntime : GraphicalUiElement
     /// <inheritdoc cref="CircleRuntime.PreRender"/>
     public override void PreRender()
     {
+        // Resolve the camera once up front — drives both the ScreenPixel → world conversion
+        // for StrokeWidth and the screen → world conversion for aposAaContribution (#2936).
+        // Mirrors CircleRuntime.PreRender.
+        var camera = this.EffectiveManagers?.Renderer?.Camera;
+        float cameraZoom = camera?.Zoom ?? 1f;
+
         float strokeWidth = _strokeWidth;
         float strokeDashLength = _strokeDashLength;
         float strokeGapLength = _strokeGapLength;
-        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel && camera != null)
         {
-            var camera = this.EffectiveManagers?.Renderer?.Camera;
-            if (camera != null)
-            {
-                // Mirror AposShapeRuntime.PreRender — dash and gap scale alongside stroke width.
-                strokeWidth /= camera.Zoom;
-                strokeDashLength /= camera.Zoom;
-                strokeGapLength /= camera.Zoom;
-            }
+            // Mirror AposShapeRuntime.PreRender — dash and gap scale alongside stroke width.
+            strokeWidth /= cameraZoom;
+            strokeDashLength /= cameraZoom;
+            strokeGapLength /= cameraZoom;
         }
-        // Issue #2818 (mirror of CircleRuntime #2790) — Apos.Shapes' DrawRectangle adds aaSize
-        // pixels of AA halo OUTSIDE the nominal thickness, same shape as DrawCircle. Skia fits
-        // its AA WITHIN the thickness, so without this compensation the same user-set
-        // StrokeWidth reads ~1 px wider on Apos. Subtract the 1 px AA contribution before
-        // pushing. Floored at a tiny positive epsilon (not 0) — Apos's shader treats
-        // thickness = 0 as "don't draw", and the 1 px halo dominates the visible width so the
-        // sub-pixel under-draw of the nominal stroke is invisible. Gated by
-        // IAntialiasedRenderable so the core stroke default (LineRectangle wrapper, no AA
-        // concept) still receives the raw value. Visible-thickness parity for axis-aligned
-        // straights is the headline — rounded corner arcs still get the AA they need.
+        // Mirror of CircleRuntime.PreRender — same two-case structure (user-set <= 0 vs
+        // positive thin stroke). See CircleRuntime.PreRender for the full rationale on why
+        // these two cases must stay separate. tl;dr:
+        //   - StrokeWidth <= 0 (user hide-stroke gate, #2950 follow-up) → push literal 0
+        //     so the renderable's HasVisibleOutput suppresses the draw.
+        //   - StrokeWidth > 0 with AA → subtract the 1 px Apos AA contribution and floor at
+        //     a tiny positive epsilon so thin strokes still render (#2818).
         const float aposAaContribution = 1f;
         const float aposMinThicknessEpsilon = 0.01f;
-        float renderableStrokeWidth = strokeWidth;
-        if (_isAntialiased && _stroke is IAntialiasedRenderable)
+        // #2936 — aposAaContribution is in SCREEN pixels; convert to world units. See
+        // CircleRuntime.PreRender for the full rationale.
+        float aposAaContributionWorld = aposAaContribution / cameraZoom;
+        float renderableStrokeWidth;
+        if (strokeWidth <= 0)
         {
-            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContribution);
+            renderableStrokeWidth = 0f;
+        }
+        else if (_isAntialiased && _stroke is IAntialiasedRenderable)
+        {
+            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContributionWorld);
+        }
+        else
+        {
+            renderableStrokeWidth = strokeWidth;
         }
         _stroke.StrokeWidth = renderableStrokeWidth;
 
@@ -1532,7 +1527,6 @@ public class RectangleRuntime : GraphicalUiElement
 
         if (_cornerRadiusUnits == DimensionUnitType.ScreenPixel)
         {
-            var camera = this.EffectiveManagers?.Renderer?.Camera;
             if (camera != null)
             {
                 cornerRadius /= camera.Zoom;
@@ -1597,6 +1591,17 @@ public class RectangleRuntime : GraphicalUiElement
     /// contained RoundedRectangle. Issue #2814 / #2818.
     /// </summary>
     protected override RenderableShapeBase ContainedRenderable => ContainedLineRectangle;
+
+    /// <inheritdoc cref="CircleRuntime.DropshadowBlur"/>
+    public float DropshadowBlur
+    {
+        get => DropshadowBlurX;
+        set
+        {
+            DropshadowBlurX = value;
+            DropshadowBlurY = value;
+        }
+    }
 
     /// <summary>
     /// Rounded-corner radius in pixels. Pushed to both slots each frame in
@@ -1733,7 +1738,7 @@ public class RectangleRuntime : GraphicalUiElement
             // produces a visible shadow without further setup.
             DropshadowAlpha = 255;
             DropshadowOffsetY = 3;
-            DropshadowBlurY = 3;
+            DropshadowBlur = 3;
 
             if (_fill is IPositionedSizedObject ctorFill && _stroke is IPositionedSizedObject ctorStroke)
             {

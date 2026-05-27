@@ -1,5 +1,4 @@
-﻿using Gum.Managers;
-using Gum.Plugins.BaseClasses;
+﻿using Gum.Plugins.BaseClasses;
 using Gum.Services;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
@@ -68,17 +67,6 @@ namespace Gum.Plugins.AlignmentButtons
                     shouldAdd = false;
                 }
 
-            }
-
-            if(shouldAdd && _selectedState.SelectedInstance != null)
-            {
-                var elementSave = ObjectFinder.Self.GetRootStandardElementSave(_selectedState.SelectedInstance);
-
-                if(elementSave?.Name == "Circle")
-                {
-                    // circles currently can't anchor...
-                    shouldAdd = false;
-                }
             }
 
             return shouldAdd;

@@ -212,8 +212,7 @@ public class CircleRuntimeTests
         sut.DropshadowColor = new Color(10, 20, 30, 40);
         sut.DropshadowOffsetX = 5;
         sut.DropshadowOffsetY = 7;
-        sut.DropshadowBlurX = 2;
-        sut.DropshadowBlurY = 4;
+        sut.DropshadowBlur = 2;
 
         Circle fill = (Circle)sut.RenderableComponent;
         Circle stroke = (Circle)fill.Children[0];
@@ -223,7 +222,6 @@ public class CircleRuntimeTests
         fill.DropshadowOffsetX.ShouldBe(5);
         fill.DropshadowOffsetY.ShouldBe(7);
         fill.DropshadowBlurX.ShouldBe(2);
-        fill.DropshadowBlurY.ShouldBe(4);
 
         // Stroke must stay shadow-free — see XML remarks on IDropshadowRenderable.
         stroke.HasDropshadow.ShouldBeFalse();
@@ -755,15 +753,13 @@ public class CircleRuntimeTests
 
         sut.SetProperty("DropshadowOffsetX", 19f);
         sut.SetProperty("DropshadowOffsetY", 11f);
-        sut.SetProperty("DropshadowBlurX", 3f);
-        sut.SetProperty("DropshadowBlurY", 0f);
+        sut.SetProperty("DropshadowBlur", 3f);
 
         Circle fill = (Circle)sut.RenderableComponent;
         Circle stroke = (Circle)fill.Children[0];
         stroke.DropshadowOffsetX.ShouldBe(19f);
         stroke.DropshadowOffsetY.ShouldBe(11f);
         stroke.DropshadowBlurX.ShouldBe(3f);
-        stroke.DropshadowBlurY.ShouldBe(0f);
     }
 
     [Fact]
@@ -781,5 +777,107 @@ public class CircleRuntimeTests
         Circle fill = (Circle)sut.RenderableComponent;
         Circle stroke = (Circle)fill.Children[0];
         stroke.DropshadowColor.ShouldBe(new Color(50, 100, 150, 200));
+    }
+
+    // Issue #2950 follow-up — when the user sets StrokeWidth = 0 (or negative), the runtime's
+    // PreRender previously clamped to a 0.01 epsilon floor "to hedge against Apos treating
+    // thickness = 0 as don't draw." That hedge defeated the intent: StrokeColor is non-nullable
+    // now (#2938) and StrokeWidth = 0 is the canonical hide-stroke gate. With the epsilon push,
+    // the stroke renderable still had StrokeWidth > 0 and Apos painted its 1 px AA fringe,
+    // showing a hairline of stroke color the user thought they had disabled. Honor a non-
+    // positive user value as a literal 0 so the renderable's HasVisibleOutput gate suppresses
+    // it entirely.
+
+    [Fact]
+    public void PreRender_StrokeWidthZero_PushesZeroToStrokeRenderable()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.StrokeWidth = 0f;
+
+        ((IRenderable)sut.RenderableComponent).PreRender();
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.StrokeWidth.ShouldBe(0f);
+        stroke.HasVisibleOutput.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void PreRender_StrokeWidthNegative_PushesZeroToStrokeRenderable()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.StrokeWidth = -3f;
+
+        ((IRenderable)sut.RenderableComponent).PreRender();
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.StrokeWidth.ShouldBe(0f);
+        stroke.HasVisibleOutput.ShouldBeFalse();
+    }
+
+    // Issue #2936 — at high camera zoom with a thin ScreenPixel stroke the user saw a visible
+    // gap between fill and stroke. Root cause: the aposAaContribution = 1 constant is in
+    // SCREEN pixels (Apos's hardcoded 1 px AA halo) but the surrounding math operates in
+    // world units. At Zoom > 1, the inset (= aaContribution) was too large relative to the
+    // visible 1 px stroke, so the fill receded farther than the stroke extended, opening a
+    // ring of background between them. Fix: convert aaContribution to world units (divide by
+    // zoom) before using it in either the AA-compensation subtraction or the inset clamp.
+
+    [Fact]
+    public void PreRender_StrokeWidthOneScreenPixel_AtZoom4_PushesQuarterWorldInsetToFill()
+    {
+        float originalZoom = RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
+        try
+        {
+            CircleRuntime sut = new();
+            sut.AddToManagers(RenderingLibrary.SystemManagers.Default, null);
+            sut.IsFilled = true;
+            sut.StrokeColor = new Color(255, 0, 255, 255);
+            sut.StrokeWidth = 1f;
+            sut.StrokeWidthUnits = DimensionUnitType.ScreenPixel;
+            RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = 4f;
+
+            ((IRenderable)sut.RenderableComponent).PreRender();
+
+            // Visible stroke band = 1 screen pixel = 0.25 world units at Zoom=4. The fill inset
+            // must match that world extent — not the unscaled 1 world unit that the original
+            // math produced, which left a 3 px gap between fill and stroke at this zoom.
+            Circle fill = (Circle)sut.RenderableComponent;
+            fill.FillRadiusInset.ShouldBe(0.25f, tolerance: 0.001f);
+        }
+        finally
+        {
+            RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = originalZoom;
+        }
+    }
+
+    [Fact]
+    public void PreRender_StrokeWidthOneAbsolute_AtZoom1_PushesUnityWorldInsetToFill()
+    {
+        // Regression guard for the original #2834 behavior: at Zoom = 1 the fix should be a
+        // no-op (aaContribution / 1 = 1), so the original 1-world-unit inset is preserved.
+        float originalZoom = RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
+        try
+        {
+            CircleRuntime sut = new();
+            sut.AddToManagers(RenderingLibrary.SystemManagers.Default, null);
+            sut.IsFilled = true;
+            sut.StrokeColor = new Color(255, 0, 255, 255);
+            sut.StrokeWidth = 1f;
+            sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+            RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = 1f;
+
+            ((IRenderable)sut.RenderableComponent).PreRender();
+
+            Circle fill = (Circle)sut.RenderableComponent;
+            fill.FillRadiusInset.ShouldBe(1f, tolerance: 0.001f);
+        }
+        finally
+        {
+            RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = originalZoom;
+        }
     }
 }

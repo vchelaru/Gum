@@ -60,6 +60,12 @@ public class RoundedRectangle : RenderableShapeBase,
 
     public override void Render(ISystemManagers managers)
     {
+        // Issue #2950 follow-up — see Circle.Render for the rationale on this gate.
+        if (!HasVisibleOutput)
+        {
+            return;
+        }
+
         var sb = ShapeRenderer.ShapeBatch;
 
         var absoluteLeft = this.GetAbsoluteLeft();
@@ -78,11 +84,21 @@ public class RoundedRectangle : RenderableShapeBase,
             dropshadowSize.X -= DropshadowBlurX;
             dropshadowSize.Y -= DropshadowBlurX;
 
+            // Issue #2950 — when stroke <= blur on a stroke-only RoundedRectangle, fade the
+            // shadow's starting alpha and clamp lineThickness positive so Apos still draws.
+            (float shadowStrokeWidth, Color shadowColor) =
+                ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
+
+            // Issue #2950 — keep blur world-anchored by scaling Apos's screen-pixel-space
+            // aaSize by camera zoom (see RenderableShapeBase.GetShadowAntiAliasSize).
+            var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+            int shadowAaSize = GetShadowAntiAliasSize(cameraZoom);
+
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowSize,
-                MathFunctions.RoundToInt(DropshadowBlurX),
-                StrokeWidth - DropshadowBlurX,
+                shadowAaSize,
+                shadowStrokeWidth,
                 rotationRadians,
-                forcedColor: EffectiveDropshadowColor);
+                forcedColor: shadowColor);
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, size, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians);

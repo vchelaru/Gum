@@ -196,8 +196,7 @@ public class RectangleRuntimeTests : BaseTestClass
         sut.DropshadowAlpha = 220;
         sut.DropshadowOffsetX = 6f;
         sut.DropshadowOffsetY = 4f;
-        sut.DropshadowBlurX = 6f;
-        sut.DropshadowBlurY = 4f;
+        sut.DropshadowBlur = 4f;
 
         sut.HasDropshadow.ShouldBeTrue();
         sut.DropshadowColor.R.ShouldBe((byte)220);

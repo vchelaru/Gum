@@ -414,8 +414,7 @@ internal class RectanglesScreen : GraphicalUiElement
         soft.HasDropshadow = true;
         soft.DropshadowOffsetX = 14;
         soft.DropshadowOffsetY = 14;
-        soft.DropshadowBlurX = 4;
-        soft.DropshadowBlurY = 4;
+        soft.DropshadowBlur = 4;
         row.Children.Add(soft);
 
         // Hard offset: bigger offset, no blur, semi-transparent black. Skia exposes only
@@ -428,8 +427,7 @@ internal class RectanglesScreen : GraphicalUiElement
         hard.DropshadowRed = 0; hard.DropshadowGreen = 0; hard.DropshadowBlue = 0; hard.DropshadowAlpha = 160;
         hard.DropshadowOffsetX = 16;
         hard.DropshadowOffsetY = 16;
-        hard.DropshadowBlurX = 0;
-        hard.DropshadowBlurY = 0;
+        hard.DropshadowBlur = 0;
         row.Children.Add(hard);
 
         // Colored shadow: magenta cast, real offset so the cast is visible against the blue
@@ -442,8 +440,7 @@ internal class RectanglesScreen : GraphicalUiElement
         colored.DropshadowRed = 220; colored.DropshadowGreen = 40; colored.DropshadowBlue = 160; colored.DropshadowAlpha = 220;
         colored.DropshadowOffsetX = 16;
         colored.DropshadowOffsetY = 16;
-        colored.DropshadowBlurX = 6;
-        colored.DropshadowBlurY = 6;
+        colored.DropshadowBlur = 6;
         row.Children.Add(colored);
 
         // Issue #2851 visual acceptance — body alpha multiplies into the shadow alpha.
@@ -453,8 +450,7 @@ internal class RectanglesScreen : GraphicalUiElement
         fadedBody.HasDropshadow = true;
         fadedBody.DropshadowOffsetX = 14;
         fadedBody.DropshadowOffsetY = 14;
-        fadedBody.DropshadowBlurX = 4;
-        fadedBody.DropshadowBlurY = 4;
+        fadedBody.DropshadowBlur = 4;
         row.Children.Add(fadedBody);
 
         return row;

@@ -179,15 +179,14 @@ public class CircleRuntimeTests : BaseTestClass
         // immediately produces a visible shadow without further setup.
         sut.DropshadowAlpha.ShouldBe(255);
         sut.DropshadowOffsetY.ShouldBe(3);
-        sut.DropshadowBlurY.ShouldBe(3);
+        sut.DropshadowBlur.ShouldBe(3);
         sut.HasDropshadow.ShouldBeFalse();
 
         sut.HasDropshadow = true;
         sut.DropshadowColor = new Color(10, 20, 30, 40);
         sut.DropshadowOffsetX = 5;
         sut.DropshadowOffsetY = 7;
-        sut.DropshadowBlurX = 2;
-        sut.DropshadowBlurY = 4;
+        sut.DropshadowBlur = 2;
 
         sut.HasDropshadow.ShouldBeTrue();
         sut.DropshadowColor.ShouldBe(new Color(10, 20, 30, 40));
@@ -197,8 +196,7 @@ public class CircleRuntimeTests : BaseTestClass
         sut.DropshadowAlpha.ShouldBe(40);
         sut.DropshadowOffsetX.ShouldBe(5);
         sut.DropshadowOffsetY.ShouldBe(7);
-        sut.DropshadowBlurX.ShouldBe(2);
-        sut.DropshadowBlurY.ShouldBe(4);
+        sut.DropshadowBlur.ShouldBe(2);
     }
 
     [Fact]

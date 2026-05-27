@@ -265,7 +265,7 @@ circle.AddToRoot();
 Other defaults preserved (no migration needed, listed for reference):
 
 - `IsFilled` still defaults to `false`, `StrokeWidth` still defaults to `1` with `StrokeWidthUnits = ScreenPixel`.
-- Dropshadow defaults (`DropshadowAlpha = 255`, `DropshadowOffsetY = 3`, `DropshadowBlurY = 3`) are still seeded; inert until `HasDropshadow` is set to `true`.
+- Dropshadow defaults (`DropshadowAlpha = 255`, `DropshadowOffsetY = 3`, `DropshadowBlur = 3`) are still seeded; inert until `HasDropshadow` is set to `true`. (Note: the plain `CircleRuntime` / `RectangleRuntime` expose a single isotropic `DropshadowBlur` — the older per-axis `DropshadowBlurX` / `DropshadowBlurY` properties only exist on the obsolete `ColoredCircleRuntime` / `RoundedRectangleRuntime` / `SkiaShapeRuntime` Skia surface.)
 
 Gradients, dropshadow, and dashed strokes remain Skia-only — those features have no equivalent on the XNA-likes / Raylib backends and stay gated behind `#if SKIA` in the shared source.
 

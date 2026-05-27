@@ -1033,8 +1033,8 @@ public class CircleRuntime : GraphicalUiElement
             target.DropshadowColor = _dropshadowColor;
             target.DropshadowOffsetX = _dropshadowOffsetX;
             target.DropshadowOffsetY = _dropshadowOffsetY;
-            target.DropshadowBlurX = _dropshadowBlurX;
-            target.DropshadowBlurY = _dropshadowBlurY;
+            target.DropshadowBlurX = _dropshadowBlur;
+            target.DropshadowBlurY = _dropshadowBlur;
         }
     }
 
@@ -1127,28 +1127,25 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 
-    float _dropshadowBlurX;
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
-    public float DropshadowBlurX
+    float _dropshadowBlur;
+    /// <summary>
+    /// Isotropic blur radius in pixels for the dropshadow. Pushes a single value to both
+    /// the underlying renderable's X and Y blur fields — Apos.Shapes approximates the
+    /// visible falloff via its <c>antiAliasSize</c> parameter and does not support a
+    /// per-axis blur. Mirrors industry convention (CSS <c>box-shadow</c> blur-radius,
+    /// Figma effects, Photoshop) where dropshadow blur is a single scalar.
+    /// </summary>
+    public float DropshadowBlur
     {
-        get => _dropshadowBlurX;
+        get => _dropshadowBlur;
         set
         {
-            _dropshadowBlurX = value;
-            if (DropshadowTarget is { } target) target.DropshadowBlurX = value;
-            NotifyPropertyChanged();
-        }
-    }
-
-    float _dropshadowBlurY;
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
-    public float DropshadowBlurY
-    {
-        get => _dropshadowBlurY;
-        set
-        {
-            _dropshadowBlurY = value;
-            if (DropshadowTarget is { } target) target.DropshadowBlurY = value;
+            _dropshadowBlur = value;
+            if (DropshadowTarget is { } target)
+            {
+                target.DropshadowBlurX = value;
+                target.DropshadowBlurY = value;
+            }
             NotifyPropertyChanged();
         }
     }
@@ -1216,38 +1213,67 @@ public class CircleRuntime : GraphicalUiElement
     /// </summary>
     public override void PreRender()
     {
+        // Resolve the camera once up front. It drives two unit conversions below: the
+        // ScreenPixel → world division for StrokeWidth (and dash/gap), and the screen → world
+        // division for aposAaContribution (which represents Apos's hardcoded 1-pixel AA halo,
+        // see #2936). Falls back to zoom = 1 in unit tests / pre-mount.
+        var camera = this.EffectiveManagers?.Renderer?.Camera;
+        float cameraZoom = camera?.Zoom ?? 1f;
+
         float strokeWidth = _strokeWidth;
         float strokeDashLength = _strokeDashLength;
         float strokeGapLength = _strokeGapLength;
-        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel && camera != null)
         {
-            var camera = this.EffectiveManagers?.Renderer?.Camera;
-            if (camera != null)
-            {
-                // Mirrors AposShapeRuntime.PreRender — dash and gap scale alongside stroke
-                // width so a "1 px dotted" pattern stays 1 px on screen regardless of zoom.
-                strokeWidth /= camera.Zoom;
-                strokeDashLength /= camera.Zoom;
-                strokeGapLength /= camera.Zoom;
-            }
+            // Mirrors AposShapeRuntime.PreRender — dash and gap scale alongside stroke
+            // width so a "1 px dotted" pattern stays 1 px on screen regardless of zoom.
+            strokeWidth /= cameraZoom;
+            strokeDashLength /= cameraZoom;
+            strokeGapLength /= cameraZoom;
         }
-        // Issue #2790 — Apos.Shapes' DrawCircle takes a stroke thickness plus an aaSize and
-        // renders aaSize pixels of antialiased halo OUTSIDE the nominal thickness. Gum/Apos's
-        // Circle.Render passes aaSize = 1 when IsAntialiased is true (see
-        // Runtimes/GumShapes/Renderables/Circle.cs), so Apos always contributes exactly 1 px
-        // to the visible thickness. Skia fits its AA WITHIN the nominal thickness, so the
-        // same user-set StrokeWidth would otherwise read 1 px wider on Apos than on Skia.
-        // Subtract that 1 px before pushing. Floored at a tiny positive epsilon (not 0) as a
-        // hedge against Apos's shader interpreting thickness = 0 as "don't draw"; the 1 px AA
-        // halo dominates the visible width either way, so the sub-pixel under-draw of the
-        // nominal stroke is invisible. Gated by IAntialiasedRenderable so the core stroke
-        // default (LineCircle wrapper, no AA concept) still receives the raw value.
+        // Two distinct cases for what to push to the renderable's StrokeWidth — don't collapse
+        // them, the difference is load-bearing:
+        //
+        // 1. User explicitly set StrokeWidth <= 0 → push a literal 0 (#2950 follow-up).
+        //    StrokeWidth = 0 is the canonical hide-stroke gate since #2938 made StrokeColor
+        //    non-nullable, so the user wants NO stroke at all. The renderable's
+        //    HasVisibleOutput predicate then short-circuits Circle.Render to skip the
+        //    stroke-slot draw entirely. **Do NOT route this case through the AA-compensation
+        //    path below** — the epsilon floor would push 0.01, the renderable's
+        //    HasVisibleOutput would return true (StrokeWidth > 0), and Apos's 1 px AA fringe
+        //    would render a hairline of stroke color the user thought they had disabled.
+        //
+        // 2. User set a positive StrokeWidth → subtract the 1 px Apos AA contribution
+        //    (#2790). Apos.Shapes' DrawCircle renders aaSize pixels of AA halo OUTSIDE the
+        //    nominal thickness; Circle.Render passes aaSize = 1 when IsAntialiased is true.
+        //    Skia fits AA WITHIN the thickness, so the same user-set StrokeWidth would
+        //    otherwise read 1 px wider on Apos than on Skia. The result is floored at a tiny
+        //    positive epsilon — NOT to hide a "0 means don't draw" case (that's handled
+        //    above by case 1), but to keep thin strokes like StrokeWidth = 1 visible: after
+        //    subtracting the AA contribution the math would be 0, which Apos refuses to draw
+        //    even with aaSize > 0. The epsilon push pairs with the 1 px AA halo to produce
+        //    the intended ~1 px visible stroke. Gated by IAntialiasedRenderable so the core
+        //    stroke default (LineCircle wrapper, no AA concept) still receives the raw value.
         const float aposAaContribution = 1f;
         const float aposMinThicknessEpsilon = 0.01f;
-        float renderableStrokeWidth = strokeWidth;
-        if (_isAntialiased && _stroke is IAntialiasedRenderable)
+        // Issue #2936 — aposAaContribution is in SCREEN pixels (Apos's hardcoded 1 px AA halo).
+        // Convert to world units before mixing with strokeWidth, which has already been
+        // resolved to world units above. At cameraZoom = 1 this is a no-op (original #2790
+        // behavior preserved); at cameraZoom > 1 the world value shrinks proportionally, which
+        // is what closes the gap below.
+        float aposAaContributionWorld = aposAaContribution / cameraZoom;
+        float renderableStrokeWidth;
+        if (strokeWidth <= 0)
         {
-            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContribution);
+            renderableStrokeWidth = 0f;
+        }
+        else if (_isAntialiased && _stroke is IAntialiasedRenderable)
+        {
+            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContributionWorld);
+        }
+        else
+        {
+            renderableStrokeWidth = strokeWidth;
         }
         _stroke.StrokeWidth = renderableStrokeWidth;
 
@@ -1309,7 +1335,10 @@ public class CircleRuntime : GraphicalUiElement
                 fillRadiusInset = renderableStrokeWidth;
                 if (_isAntialiased && _stroke is IAntialiasedRenderable)
                 {
-                    fillRadiusInset = Math.Max(fillRadiusInset, aposAaContribution);
+                    // #2936: aaContribution in WORLD units (= 1 screen px / zoom). At Zoom > 1
+                    // this is < 1 world unit, so the inset no longer over-shrinks the fill
+                    // relative to the visible stroke band's inward extent.
+                    fillRadiusInset = Math.Max(fillRadiusInset, aposAaContributionWorld);
                 }
             }
             _fill.FillRadiusInset = fillRadiusInset;
@@ -1562,30 +1591,20 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 
-    float _dropshadowBlurX;
-    /// <inheritdoc cref="Gum.Renderables.LineCircle.DropshadowBlurX"/>
-    public float DropshadowBlurX
+    float _dropshadowBlur;
+    /// <summary>
+    /// Isotropic blur radius in pixels for the dropshadow. The raylib renderable
+    /// approximates blur via concentric semi-transparent rings; pushing a single value
+    /// to both X and Y of the contained <see cref="Gum.Renderables.LineCircle"/>.
+    /// </summary>
+    public float DropshadowBlur
     {
-        get => _dropshadowBlurX;
+        get => _dropshadowBlur;
         set
         {
-            _dropshadowBlurX = value;
+            _dropshadowBlur = value;
 #if RAYLIB
             ContainedLineCircle.DropshadowBlurX = value;
-#endif
-            NotifyPropertyChanged();
-        }
-    }
-
-    float _dropshadowBlurY;
-    /// <inheritdoc cref="Gum.Renderables.LineCircle.DropshadowBlurY"/>
-    public float DropshadowBlurY
-    {
-        get => _dropshadowBlurY;
-        set
-        {
-            _dropshadowBlurY = value;
-#if RAYLIB
             ContainedLineCircle.DropshadowBlurY = value;
 #endif
             NotifyPropertyChanged();
@@ -1599,6 +1618,23 @@ public class CircleRuntime : GraphicalUiElement
     /// to the contained <see cref="Circle"/>.
     /// </summary>
     protected override RenderableShapeBase ContainedRenderable => ContainedLineCircle;
+
+    /// <summary>
+    /// Isotropic blur radius in pixels for the dropshadow. Convenience wrapper that pushes a
+    /// single value to both the inherited <see cref="SkiaShapeRuntime.DropshadowBlurX"/> and
+    /// <see cref="SkiaShapeRuntime.DropshadowBlurY"/>. Skia natively supports per-axis blur,
+    /// but the plain <see cref="CircleRuntime"/> surface mirrors industry convention (CSS
+    /// <c>box-shadow</c>, Figma, Photoshop) where blur is a single scalar.
+    /// </summary>
+    public float DropshadowBlur
+    {
+        get => DropshadowBlurX;
+        set
+        {
+            DropshadowBlurX = value;
+            DropshadowBlurY = value;
+        }
+    }
 
     /// <summary>
     /// Pushes the issue #2834 fill radius inset after the base runs its stroke-width and
@@ -1699,7 +1735,7 @@ public class CircleRuntime : GraphicalUiElement
             // setup. Issue #2797.
             DropshadowAlpha = 255;
             DropshadowOffsetY = 3;
-            DropshadowBlurY = 3;
+            DropshadowBlur = 3;
 
             // Mirror initial size to the stroke renderable when it's a child of fill — see
             // SyncStrokeSize comment in PreRender. Layout pushed Width/Height to fill but not

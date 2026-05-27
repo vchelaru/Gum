@@ -273,8 +273,7 @@ internal class CirclesScreen : FrameworkElement
         soft.HasDropshadow = true;
         soft.DropshadowOffsetX = 14;
         soft.DropshadowOffsetY = 14;
-        soft.DropshadowBlurX = 4;
-        soft.DropshadowBlurY = 4;
+        soft.DropshadowBlur = 4;
         row.AddChild(soft);
 
         // Hard offset: bigger offset, no blur, semi-transparent black.
@@ -285,8 +284,7 @@ internal class CirclesScreen : FrameworkElement
         hard.DropshadowColor = new Color(0, 0, 0, 160);
         hard.DropshadowOffsetX = 16;
         hard.DropshadowOffsetY = 16;
-        hard.DropshadowBlurX = 0;
-        hard.DropshadowBlurY = 0;
+        hard.DropshadowBlur = 0;
         row.AddChild(hard);
 
         // Colored shadow: magenta cast, real offset so the cast is visible against the blue
@@ -299,8 +297,7 @@ internal class CirclesScreen : FrameworkElement
         colored.DropshadowColor = new Color(220, 40, 160, 220);
         colored.DropshadowOffsetX = 16;
         colored.DropshadowOffsetY = 16;
-        colored.DropshadowBlurX = 6;
-        colored.DropshadowBlurY = 6;
+        colored.DropshadowBlur = 6;
         row.AddChild(colored);
 
         // Issue #2851 visual acceptance: same soft-shadow config as the second cell, but with
@@ -313,8 +310,7 @@ internal class CirclesScreen : FrameworkElement
         fadedBody.HasDropshadow = true;
         fadedBody.DropshadowOffsetX = 14;
         fadedBody.DropshadowOffsetY = 14;
-        fadedBody.DropshadowBlurX = 4;
-        fadedBody.DropshadowBlurY = 4;
+        fadedBody.DropshadowBlur = 4;
         row.AddChild(fadedBody);
 
         return row;

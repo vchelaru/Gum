@@ -73,6 +73,15 @@ public class Circle : RenderableShapeBase,
 
     public override void Render(ISystemManagers managers)
     {
+        // Issue #2950 follow-up — stroke-only Circle with StrokeWidth = 0 would otherwise draw
+        // a hairline AA ring in the stroke color (Apos paints a 1 px AA fringe regardless of
+        // strokeWidth). Skip the entire render — the shadow alpha would already be 0 via the
+        // ComputeStrokeShadowDrawParameters fade, so no visual is lost.
+        if (!HasVisibleOutput)
+        {
+            return;
+        }
+
         var sb = ShapeRenderer.ShapeBatch;
 
         var absoluteLeft = this.GetAbsoluteLeft();
@@ -98,11 +107,34 @@ public class Circle : RenderableShapeBase,
             dropshadowCenter.X += DropshadowOffsetX;
             dropshadowCenter.Y += DropshadowOffsetY;
 
-            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius - DropshadowBlurX / 2f,
-                MathFunctions.RoundToInt(DropshadowBlurX),
-                StrokeWidth - DropshadowBlurX,
+            // Issue #2950 — when stroke <= blur on a stroke-only Circle, fade the shadow's
+            // starting alpha and clamp lineThickness positive so Apos still draws (otherwise
+            // the shadow disappears entirely).
+            (float shadowStrokeWidth, Color shadowColor) =
+                ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
+
+            // Issue #2950 — strict-anchor shadow geometry. Returns the (rDisk, aaSize,
+            // alphaScale) triple that puts the smoothstep falloff's 50% line exactly at the
+            // host radius. When blur exceeds 2R the inner ramp edge would be negative; the
+            // helper handles that by truncating to rDisk=0 and reducing base alpha so the
+            // curve still passes through (R, 0.5) and (R + B/2, 0) — center becomes
+            // translucent, which is correct for big-blur cases. Camera zoom is folded into
+            // aaSize so the visible halo holds a constant world extent under zoom.
+            var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+            (float shadowRadius, int shadowAaSize, float shadowAlphaScale) =
+                ComputeShadowDrawGeometry(radius, cameraZoom);
+            if (shadowAlphaScale < 1f)
+            {
+                shadowColor = new Color(
+                    shadowColor.R, shadowColor.G, shadowColor.B,
+                    (byte)(shadowColor.A * shadowAlphaScale));
+            }
+
+            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, shadowRadius,
+                shadowAaSize,
+                shadowStrokeWidth,
                 rotationRadians,
-                EffectiveDropshadowColor);
+                shadowColor);
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians);
