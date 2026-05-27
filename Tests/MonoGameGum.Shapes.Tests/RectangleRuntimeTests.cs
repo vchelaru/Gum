@@ -545,4 +545,38 @@ public class RectangleRuntimeTests
         RoundedRectangle stroke = (RoundedRectangle)((RoundedRectangle)sut.RenderableComponent).Children[0];
         stroke.Color.ShouldBe(new Color(10, 20, 30, 200));
     }
+
+    // Issue #2931 — plain RectangleRuntime now exposes IsFilled / StrokeWidth /
+    // StrokeDashLength / StrokeGapLength in the tool's default state. The shape-side
+    // SetProperty dispatcher previously fell back to the renderable for non-RoundedRectangleRuntime
+    // GUEs, bypassing the runtime's PreRender ScreenPixel-zoom scaling.
+    [Fact]
+    public void SetProperty_StrokeDashLength_RoutesToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeDashLength", 6f);
+
+        sut.StrokeDashLength.ShouldBe(6f);
+    }
+
+    [Fact]
+    public void SetProperty_StrokeGapLength_RoutesToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeGapLength", 4f);
+
+        sut.StrokeGapLength.ShouldBe(4f);
+    }
+
+    [Fact]
+    public void SetProperty_StrokeWidth_RoutesToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeWidth", 7f);
+
+        sut.StrokeWidth.ShouldBe(7f);
+    }
 }

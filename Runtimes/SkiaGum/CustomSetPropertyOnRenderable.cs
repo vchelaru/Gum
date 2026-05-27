@@ -320,7 +320,13 @@ public class CustomSetPropertyOnRenderable
                     if(graphicalUiElement is RoundedRectangleRuntime asRoundedRectangleRuntime)
                     {
                         asRoundedRectangleRuntime.StrokeWidth = (float)value;
-
+                    }
+                    else if (graphicalUiElement is RectangleRuntime rectStrokeWidth)
+                    {
+                        // #2931: plain RectangleRuntime now owns StrokeWidth; route through the
+                        // runtime so PreRender's ScreenPixel-zoom scaling resolves against the
+                        // latest user value (matching the RoundedRectangleRuntime arm above).
+                        rectStrokeWidth.StrokeWidth = (float)value;
                     }
                     else
                     {
@@ -336,6 +342,10 @@ public class CustomSetPropertyOnRenderable
                     {
                         rrDashRuntime.StrokeDashLength = (float)value;
                     }
+                    else if (graphicalUiElement is RectangleRuntime rectDash)
+                    {
+                        rectDash.StrokeDashLength = (float)value;
+                    }
                     else
                     {
                         asRoundedRectangle.StrokeDashLength = (float)value;
@@ -346,6 +356,10 @@ public class CustomSetPropertyOnRenderable
                     if (graphicalUiElement is RoundedRectangleRuntime rrGapRuntime)
                     {
                         rrGapRuntime.StrokeGapLength = (float)value;
+                    }
+                    else if (graphicalUiElement is RectangleRuntime rectGap)
+                    {
+                        rectGap.StrokeGapLength = (float)value;
                     }
                     else
                     {
@@ -467,18 +481,55 @@ public class CustomSetPropertyOnRenderable
                 }
             }
 
+            // Stroke values must land on the runtime (not the renderable) so PreRender's
+            // ScreenPixel-zoom scaling resolves against the latest user value. Plain
+            // CircleRuntime joined ColoredCircleRuntime in exposing these in #2931, so
+            // dispatch on the actual GUE type rather than hard-casting.
             switch(propertyName)
             {
                 case nameof(ColoredCircleRuntime.StrokeWidth):
-                    ((ColoredCircleRuntime)graphicalUiElement).StrokeWidth = (float)value;
+                    if (graphicalUiElement is ColoredCircleRuntime ccStrokeWidth)
+                    {
+                        ccStrokeWidth.StrokeWidth = (float)value;
+                    }
+                    else if (graphicalUiElement is CircleRuntime cStrokeWidth)
+                    {
+                        cStrokeWidth.StrokeWidth = (float)value;
+                    }
+                    else
+                    {
+                        asCircle.StrokeWidth = (float)value;
+                    }
                     handled = true;
                     break;
                 case nameof(ColoredCircleRuntime.StrokeDashLength):
-                    ((ColoredCircleRuntime)graphicalUiElement).StrokeDashLength = (float)value;
+                    if (graphicalUiElement is ColoredCircleRuntime ccDash)
+                    {
+                        ccDash.StrokeDashLength = (float)value;
+                    }
+                    else if (graphicalUiElement is CircleRuntime cDash)
+                    {
+                        cDash.StrokeDashLength = (float)value;
+                    }
+                    else
+                    {
+                        asCircle.StrokeDashLength = (float)value;
+                    }
                     handled = true;
                     break;
                 case nameof(ColoredCircleRuntime.StrokeGapLength):
-                    ((ColoredCircleRuntime)graphicalUiElement).StrokeGapLength = (float)value;
+                    if (graphicalUiElement is ColoredCircleRuntime ccGap)
+                    {
+                        ccGap.StrokeGapLength = (float)value;
+                    }
+                    else if (graphicalUiElement is CircleRuntime cGap)
+                    {
+                        cGap.StrokeGapLength = (float)value;
+                    }
+                    else
+                    {
+                        asCircle.StrokeGapLength = (float)value;
+                    }
                     handled = true;
                     break;
             }

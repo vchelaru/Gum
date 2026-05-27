@@ -565,4 +565,38 @@ public class CircleRuntimeTests
         Circle stroke = (Circle)((Circle)sut.RenderableComponent).Children[0];
         stroke.Color.ShouldBe(new Color(10, 20, 30, 200));
     }
+
+    // Issue #2931 — plain CircleRuntime now exposes IsFilled / StrokeWidth /
+    // StrokeDashLength / StrokeGapLength in the tool's default state. The shape-side
+    // SetProperty dispatcher previously hard-cast to ColoredCircleRuntime for these
+    // names, which throws InvalidCastException when the GUE is a plain CircleRuntime.
+    [Fact]
+    public void SetProperty_StrokeDashLength_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeDashLength", 6f);
+
+        sut.StrokeDashLength.ShouldBe(6f);
+    }
+
+    [Fact]
+    public void SetProperty_StrokeGapLength_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeGapLength", 4f);
+
+        sut.StrokeGapLength.ShouldBe(4f);
+    }
+
+    [Fact]
+    public void SetProperty_StrokeWidth_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeWidth", 7f);
+
+        sut.StrokeWidth.ShouldBe(7f);
+    }
 }
