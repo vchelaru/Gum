@@ -12,7 +12,7 @@ using Xunit;
 namespace MonoGameGum.Tests.DataTypes;
 
 /// <summary>
-/// End-to-end tests for the loose-vs-bundle resolution rule (plan §4) layered on top of
+/// End-to-end tests for extension-based loose-vs-bundle resolution layered on top of
 /// <see cref="GumProjectSave.Load"/>. These exercise the full child-element walk, not just
 /// the .gumx, by reusing the GumProject.zip fixture that
 /// <see cref="GumProjectSaveTests.Load_ShouldLoadEntireProjectThroughCustomGetStreamFromFile_WhenAllFilesComeFromZip"/>
@@ -47,8 +47,10 @@ public class GumServiceBundleLoadTests : BaseTestClass, IDisposable
     }
 
     [Fact]
-    public void LoadProject_prefers_loose_provider_when_both_exist()
+    public void LoadProject_uses_loose_provider_when_caller_passes_gumx_extension()
     {
+        // Even when a sibling .gumpkg exists, passing the .gumx extension means loose-only.
+        // No probing happens; behavior matches the streaming-platform case.
         WriteEntriesAsLooseFiles(_projectDir);
         WriteBundle(_gumpkgPath, _entriesByRelativePath);
 
@@ -65,11 +67,11 @@ public class GumServiceBundleLoadTests : BaseTestClass, IDisposable
     }
 
     [Fact]
-    public void LoadProject_uses_bundle_provider_when_only_gumpkg_exists()
+    public void LoadProject_uses_bundle_provider_when_caller_passes_gumpkg_extension()
     {
         WriteBundle(_gumpkgPath, _entriesByRelativePath);
 
-        BundleResolution resolution = GumBundleLoader.Resolve(_gumxPath);
+        BundleResolution resolution = GumBundleLoader.Resolve(_gumpkgPath);
 
         resolution.UsedBundle.ShouldBeTrue();
         FileManager.CustomGetStreamFromFile.ShouldNotBeNull();
@@ -116,7 +118,7 @@ public class GumServiceBundleLoadTests : BaseTestClass, IDisposable
         File.Exists(_gumxPath).ShouldBeFalse();
 
         WriteBundle(_gumpkgPath, _entriesByRelativePath);
-        BundleResolution resolution = GumBundleLoader.Resolve(_gumxPath);
+        BundleResolution resolution = GumBundleLoader.Resolve(_gumpkgPath);
         resolution.UsedBundle.ShouldBeTrue();
 
         GumProjectSave? bundled = GumProjectSave.Load(resolution.ResolvedGumxPath, out GumLoadResult bundledResult);

@@ -608,6 +608,17 @@ public class GumService : IGumService
                 "Did you call GumUI.Initialize with a valid .gumx first?");
         }
 
+        // Probe each element for a sibling .ganx (animation) file. Elements without
+        // animations are the common case, so most probes legitimately miss. On real
+        // filesystems the miss is silent; on browser/streaming platforms (Blazor WASM)
+        // each miss is logged by the browser as a 404 — that noise is expected and
+        // harmless. Surfaced here once so developers seeing the 404s in DevTools can
+        // connect them to this probe loop instead of chasing them as real failures.
+        Console.WriteLine(
+            "[Gum] Probing each project element for an optional sibling Animations.ganx file. " +
+            "On browser/streaming platforms (e.g. Blazor WASM) elements without animations " +
+            "will appear as 404s in the network/console log — those are expected and benign.");
+
         foreach (var element in project.AllElements)
         {
             var animation = TryLoadAnimation(element);
@@ -729,10 +740,9 @@ public class GumService : IGumService
 
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
-            // Resolve loose-vs-bundle: if a sibling .gumpkg exists (and no loose .gumx),
-            // installs a CustomGetStreamFromFile hook that serves entries from the bundle.
-            // The hook stays installed so runtime asset loads (textures/fonts) also resolve
-            // from the bundle. Plan §4: loose wins when both exist.
+            // Resolve loose-vs-bundle off the file extension: ".gumx" = loose, ".gumpkg" = bundle.
+            // In bundle mode, installs a CustomGetStreamFromFile hook so runtime asset loads
+            // (textures/fonts) also resolve from the bundle.
             BundleResolution bundleResolution = GumBundleLoader.Resolve(gumProjectFile);
             gumProject = GumProjectSave.Load(bundleResolution.ResolvedGumxPath, out GumLoadResult loadResult);
             LastLoadResult = loadResult;
