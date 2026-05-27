@@ -825,8 +825,11 @@ public class ListBox : ItemsControl, IInputReceiver
 
         _suppressSelectionSync = false;
 
-        // Sync IsSelected state for all ListBoxItems
-        SyncIsSelectedFromSelectedItems();
+        // Sync IsSelected state for all ListBoxItems. Skip raising SelectionChanged
+        // from inside the sync — this handler already raises it below with the same
+        // added/removed items, so letting Sync raise too would double-fire the event
+        // on every click that changes the selection (issue #2942).
+        SyncIsSelectedFromSelectedItems(raiseSelectionChanged: false);
 
         // Fire SelectionChanged event
         if (args.AddedItems.Count > 0 || args.RemovedItems.Count > 0)
@@ -949,7 +952,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// <summary>
     /// Synchronizes the IsSelected state of all ListBoxItems based on the SelectedItems collection.
     /// </summary>
-    private void SyncIsSelectedFromSelectedItems()
+    private void SyncIsSelectedFromSelectedItems(bool raiseSelectionChanged = true)
     {
         if (_suppressSelectionSync)
         {
@@ -988,7 +991,8 @@ public class ListBox : ItemsControl, IInputReceiver
         selectedIndex = SelectedIndex;
 
         // Fire SelectionChanged event if there were changes
-        if (selectionChangedArgs.AddedItems.Count > 0 || selectionChangedArgs.RemovedItems.Count > 0)
+        if (raiseSelectionChanged &&
+            (selectionChangedArgs.AddedItems.Count > 0 || selectionChangedArgs.RemovedItems.Count > 0))
         {
             SelectionChanged?.Invoke(this, selectionChangedArgs);
         }

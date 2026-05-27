@@ -62,6 +62,168 @@ public class ListBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Click_ShouldFireSelectionChangedOncePerClick()
+    {
+        // Repro for issue #2942: SelectionChanged fires once on the first click but
+        // twice on every subsequent click that changes which item is selected. The
+        // second fire comes from SyncIsSelectedFromSelectedItems detecting that the
+        // previously-selected item needs to have its IsSelected cleared.
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        for (int i = 0; i < 5; i++)
+        {
+            listBox.Items!.Add(i);
+        }
+
+        int fireCount = 0;
+        listBox.SelectionChanged += (_, _) => fireCount++;
+
+        Mock<ICursor> firstCursor = SetupForPushOnItem(listBox, itemIndex: 0);
+        firstCursor.SetupProperty(x => x.VisualOver);
+        firstCursor.SetupProperty(x => x.WindowPushed);
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(
+            listBox.Visual,
+            firstCursor.Object,
+            null!,
+            0);
+
+        fireCount.ShouldBe(1);
+
+        Mock<ICursor> secondCursor = SetupForPushOnItem(listBox, itemIndex: 1);
+        secondCursor.SetupProperty(x => x.VisualOver);
+        secondCursor.SetupProperty(x => x.WindowPushed);
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(
+            listBox.Visual,
+            secondCursor.Object,
+            null!,
+            0);
+
+        fireCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Click_ShouldRaiseSelectionChanged_WithExpectedArgs()
+    {
+        // Pin args content on the click path so the fix for issue #2942 doesn't
+        // accidentally drop the previously-selected item from RemovedItems.
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        for (int i = 0; i < 3; i++)
+        {
+            listBox.Items!.Add("Item " + i);
+        }
+
+        listBox.SelectedIndex = 0;
+
+        SelectionChangedEventArgs? capturedArgs = null;
+        listBox.SelectionChanged += (_, args) => capturedArgs = args;
+
+        Mock<ICursor> cursor = SetupForPushOnItem(listBox, itemIndex: 1);
+        cursor.SetupProperty(x => x.VisualOver);
+        cursor.SetupProperty(x => x.WindowPushed);
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(
+            listBox.Visual,
+            cursor.Object,
+            null!,
+            0);
+
+        capturedArgs.ShouldNotBeNull();
+        capturedArgs.AddedItems.Count.ShouldBe(1);
+        capturedArgs.AddedItems[0]!.ShouldBe("Item 1");
+        capturedArgs.RemovedItems.Count.ShouldBe(1);
+        capturedArgs.RemovedItems[0]!.ShouldBe("Item 0");
+    }
+
+    [Fact]
+    public void MultipleMode_ClickToggle_ShouldFireSelectionChangedOncePerClick()
+    {
+        // Multiple-mode toggle-off goes through HandleItemSelected and then
+        // SyncIsSelectedFromSelectedItems, which is the double-fire vector for #2942.
+        ListBox listBox = new() { SelectionMode = SelectionMode.Multiple };
+        listBox.AddToRoot();
+        for (int i = 0; i < 3; i++)
+        {
+            listBox.Items!.Add("Item " + i);
+        }
+
+        int fireCount = 0;
+        listBox.SelectionChanged += (_, _) => fireCount++;
+
+        Mock<ICursor> firstCursor = SetupForPushOnItem(listBox, itemIndex: 0);
+        firstCursor.SetupProperty(x => x.VisualOver);
+        firstCursor.SetupProperty(x => x.WindowPushed);
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(
+            listBox.Visual,
+            firstCursor.Object,
+            null!,
+            0);
+
+        fireCount.ShouldBe(1);
+
+        // Click the same item again to toggle it off — this is where Sync detects
+        // a flipped IsSelected and (pre-fix) raises a second SelectionChanged.
+        Mock<ICursor> toggleCursor = SetupForPushOnItem(listBox, itemIndex: 0);
+        toggleCursor.SetupProperty(x => x.VisualOver);
+        toggleCursor.SetupProperty(x => x.WindowPushed);
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(
+            listBox.Visual,
+            toggleCursor.Object,
+            null!,
+            0);
+
+        fireCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void SelectedIndex_set_ShouldFireSelectionChangedOncePerAssignment()
+    {
+        ListBox listBox = new();
+        for (int i = 0; i < 3; i++)
+        {
+            listBox.Items!.Add("Item " + i);
+        }
+
+        int fireCount = 0;
+        listBox.SelectionChanged += (_, _) => fireCount++;
+
+        listBox.SelectedIndex = 0;
+        fireCount.ShouldBe(1);
+
+        listBox.SelectedIndex = 1;
+        fireCount.ShouldBe(2);
+
+        listBox.SelectedIndex = -1;
+        fireCount.ShouldBe(3);
+    }
+
+    [Fact]
+    public void SelectedObject_set_ShouldFireSelectionChangedOncePerAssignment()
+    {
+        ListBox listBox = new();
+        for (int i = 0; i < 3; i++)
+        {
+            listBox.Items!.Add("Item " + i);
+        }
+
+        int fireCount = 0;
+        listBox.SelectionChanged += (_, _) => fireCount++;
+
+        listBox.SelectedObject = "Item 0";
+        fireCount.ShouldBe(1);
+
+        listBox.SelectedObject = "Item 1";
+        fireCount.ShouldBe(2);
+
+        listBox.SelectedObject = null;
+        fireCount.ShouldBe(3);
+    }
+
+    [Fact]
     public void Click_ShouldSelect_IfEnabled()
     {
         ListBox listBox = new();
