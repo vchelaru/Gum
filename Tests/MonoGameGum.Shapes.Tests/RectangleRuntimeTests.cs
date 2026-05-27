@@ -268,8 +268,7 @@ public class RectangleRuntimeTests
         sut.DropshadowColor = new Color(10, 20, 30, 40);
         sut.DropshadowOffsetX = 5;
         sut.DropshadowOffsetY = 7;
-        sut.DropshadowBlurX = 2;
-        sut.DropshadowBlurY = 4;
+        sut.DropshadowBlur = 2;
 
         RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
@@ -279,7 +278,6 @@ public class RectangleRuntimeTests
         fill.DropshadowOffsetX.ShouldBe(5);
         fill.DropshadowOffsetY.ShouldBe(7);
         fill.DropshadowBlurX.ShouldBe(2);
-        fill.DropshadowBlurY.ShouldBe(4);
 
         stroke.HasDropshadow.ShouldBeFalse();
     }
@@ -712,15 +710,13 @@ public class RectangleRuntimeTests
 
         sut.SetProperty("DropshadowOffsetX", 19f);
         sut.SetProperty("DropshadowOffsetY", 11f);
-        sut.SetProperty("DropshadowBlurX", 3f);
-        sut.SetProperty("DropshadowBlurY", 0f);
+        sut.SetProperty("DropshadowBlur", 3f);
 
         RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
         stroke.DropshadowOffsetX.ShouldBe(19f);
         stroke.DropshadowOffsetY.ShouldBe(11f);
         stroke.DropshadowBlurX.ShouldBe(3f);
-        stroke.DropshadowBlurY.ShouldBe(0f);
     }
 
     [Fact]

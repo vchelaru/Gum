@@ -98,11 +98,17 @@ public class Circle : RenderableShapeBase,
             dropshadowCenter.X += DropshadowOffsetX;
             dropshadowCenter.Y += DropshadowOffsetY;
 
+            // Issue #2950 — when stroke <= blur on a stroke-only Circle, fade the shadow's
+            // starting alpha and clamp lineThickness positive so Apos still draws (otherwise
+            // the shadow disappears entirely).
+            (float shadowStrokeWidth, Color shadowColor) =
+                ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
+
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius - DropshadowBlurX / 2f,
                 MathFunctions.RoundToInt(DropshadowBlurX),
-                StrokeWidth - DropshadowBlurX,
+                shadowStrokeWidth,
                 rotationRadians,
-                EffectiveDropshadowColor);
+                shadowColor);
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians);

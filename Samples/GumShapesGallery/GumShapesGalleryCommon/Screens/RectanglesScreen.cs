@@ -303,8 +303,7 @@ internal class RectanglesScreen : FrameworkElement
         soft.HasDropshadow = true;
         soft.DropshadowOffsetX = 14;
         soft.DropshadowOffsetY = 14;
-        soft.DropshadowBlurX = 4;
-        soft.DropshadowBlurY = 4;
+        soft.DropshadowBlur = 4;
         row.AddChild(soft);
 
         RectangleRuntime hard = new();
@@ -314,8 +313,7 @@ internal class RectanglesScreen : FrameworkElement
         hard.DropshadowColor = new Color(0, 0, 0, 160);
         hard.DropshadowOffsetX = 16;
         hard.DropshadowOffsetY = 16;
-        hard.DropshadowBlurX = 0;
-        hard.DropshadowBlurY = 0;
+        hard.DropshadowBlur = 0;
         row.AddChild(hard);
 
         RectangleRuntime colored = new();
@@ -325,8 +323,7 @@ internal class RectanglesScreen : FrameworkElement
         colored.DropshadowColor = new Color(220, 40, 160, 220);
         colored.DropshadowOffsetX = 16;
         colored.DropshadowOffsetY = 16;
-        colored.DropshadowBlurX = 6;
-        colored.DropshadowBlurY = 6;
+        colored.DropshadowBlur = 6;
         row.AddChild(colored);
 
         // Issue #2851 visual acceptance — body alpha multiplies into the shadow alpha.
@@ -336,8 +333,7 @@ internal class RectanglesScreen : FrameworkElement
         fadedBody.HasDropshadow = true;
         fadedBody.DropshadowOffsetX = 14;
         fadedBody.DropshadowOffsetY = 14;
-        fadedBody.DropshadowBlurX = 4;
-        fadedBody.DropshadowBlurY = 4;
+        fadedBody.DropshadowBlur = 4;
         row.AddChild(fadedBody);
 
         return row;

@@ -1270,8 +1270,7 @@ public class StandardElementsManager
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Name = "DropshadowOffsetX", Category = "Dropshadow" });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3f, Name = "DropshadowOffsetY", Category = "Dropshadow" });
 
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Name = "DropshadowBlurX", Category = "Dropshadow" });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3f, Name = "DropshadowBlurY", Category = "Dropshadow" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3f, Name = "DropshadowBlur", Category = "Dropshadow" });
 
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "DropshadowAlpha", Category = "Dropshadow" });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowRed", Category = "Dropshadow" });

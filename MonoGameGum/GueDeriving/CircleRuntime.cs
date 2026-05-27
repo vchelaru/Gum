@@ -1033,8 +1033,8 @@ public class CircleRuntime : GraphicalUiElement
             target.DropshadowColor = _dropshadowColor;
             target.DropshadowOffsetX = _dropshadowOffsetX;
             target.DropshadowOffsetY = _dropshadowOffsetY;
-            target.DropshadowBlurX = _dropshadowBlurX;
-            target.DropshadowBlurY = _dropshadowBlurY;
+            target.DropshadowBlurX = _dropshadowBlur;
+            target.DropshadowBlurY = _dropshadowBlur;
         }
     }
 
@@ -1127,28 +1127,25 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 
-    float _dropshadowBlurX;
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
-    public float DropshadowBlurX
+    float _dropshadowBlur;
+    /// <summary>
+    /// Isotropic blur radius in pixels for the dropshadow. Pushes a single value to both
+    /// the underlying renderable's X and Y blur fields — Apos.Shapes approximates the
+    /// visible falloff via its <c>antiAliasSize</c> parameter and does not support a
+    /// per-axis blur. Mirrors industry convention (CSS <c>box-shadow</c> blur-radius,
+    /// Figma effects, Photoshop) where dropshadow blur is a single scalar.
+    /// </summary>
+    public float DropshadowBlur
     {
-        get => _dropshadowBlurX;
+        get => _dropshadowBlur;
         set
         {
-            _dropshadowBlurX = value;
-            if (DropshadowTarget is { } target) target.DropshadowBlurX = value;
-            NotifyPropertyChanged();
-        }
-    }
-
-    float _dropshadowBlurY;
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
-    public float DropshadowBlurY
-    {
-        get => _dropshadowBlurY;
-        set
-        {
-            _dropshadowBlurY = value;
-            if (DropshadowTarget is { } target) target.DropshadowBlurY = value;
+            _dropshadowBlur = value;
+            if (DropshadowTarget is { } target)
+            {
+                target.DropshadowBlurX = value;
+                target.DropshadowBlurY = value;
+            }
             NotifyPropertyChanged();
         }
     }
@@ -1562,30 +1559,20 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 
-    float _dropshadowBlurX;
-    /// <inheritdoc cref="Gum.Renderables.LineCircle.DropshadowBlurX"/>
-    public float DropshadowBlurX
+    float _dropshadowBlur;
+    /// <summary>
+    /// Isotropic blur radius in pixels for the dropshadow. The raylib renderable
+    /// approximates blur via concentric semi-transparent rings; pushing a single value
+    /// to both X and Y of the contained <see cref="Gum.Renderables.LineCircle"/>.
+    /// </summary>
+    public float DropshadowBlur
     {
-        get => _dropshadowBlurX;
+        get => _dropshadowBlur;
         set
         {
-            _dropshadowBlurX = value;
+            _dropshadowBlur = value;
 #if RAYLIB
             ContainedLineCircle.DropshadowBlurX = value;
-#endif
-            NotifyPropertyChanged();
-        }
-    }
-
-    float _dropshadowBlurY;
-    /// <inheritdoc cref="Gum.Renderables.LineCircle.DropshadowBlurY"/>
-    public float DropshadowBlurY
-    {
-        get => _dropshadowBlurY;
-        set
-        {
-            _dropshadowBlurY = value;
-#if RAYLIB
             ContainedLineCircle.DropshadowBlurY = value;
 #endif
             NotifyPropertyChanged();
@@ -1599,6 +1586,23 @@ public class CircleRuntime : GraphicalUiElement
     /// to the contained <see cref="Circle"/>.
     /// </summary>
     protected override RenderableShapeBase ContainedRenderable => ContainedLineCircle;
+
+    /// <summary>
+    /// Isotropic blur radius in pixels for the dropshadow. Convenience wrapper that pushes a
+    /// single value to both the inherited <see cref="SkiaShapeRuntime.DropshadowBlurX"/> and
+    /// <see cref="SkiaShapeRuntime.DropshadowBlurY"/>. Skia natively supports per-axis blur,
+    /// but the plain <see cref="CircleRuntime"/> surface mirrors industry convention (CSS
+    /// <c>box-shadow</c>, Figma, Photoshop) where blur is a single scalar.
+    /// </summary>
+    public float DropshadowBlur
+    {
+        get => DropshadowBlurX;
+        set
+        {
+            DropshadowBlurX = value;
+            DropshadowBlurY = value;
+        }
+    }
 
     /// <summary>
     /// Pushes the issue #2834 fill radius inset after the base runs its stroke-width and
@@ -1699,7 +1703,7 @@ public class CircleRuntime : GraphicalUiElement
             // setup. Issue #2797.
             DropshadowAlpha = 255;
             DropshadowOffsetY = 3;
-            DropshadowBlurY = 3;
+            DropshadowBlur = 3;
 
             // Mirror initial size to the stroke renderable when it's a child of fill — see
             // SyncStrokeSize comment in PreRender. Layout pushed Width/Height to fill but not

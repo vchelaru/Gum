@@ -532,23 +532,17 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 
-    /// <inheritdoc cref="Gum.Renderables.LineRectangle.DropshadowBlurX"/>
-    public float DropshadowBlurX
+    /// <summary>
+    /// Isotropic blur radius in pixels for the dropshadow. The raylib renderable
+    /// approximates blur via concentric semi-transparent rings; pushing a single value
+    /// to both X and Y of the contained <see cref="Gum.Renderables.LineRectangle"/>.
+    /// </summary>
+    public float DropshadowBlur
     {
         get => ContainedLineRectangle.DropshadowBlurX;
         set
         {
             ContainedLineRectangle.DropshadowBlurX = value;
-            NotifyPropertyChanged();
-        }
-    }
-
-    /// <inheritdoc cref="Gum.Renderables.LineRectangle.DropshadowBlurY"/>
-    public float DropshadowBlurY
-    {
-        get => ContainedLineRectangle.DropshadowBlurY;
-        set
-        {
             ContainedLineRectangle.DropshadowBlurY = value;
             NotifyPropertyChanged();
         }
@@ -1313,8 +1307,8 @@ public class RectangleRuntime : GraphicalUiElement
             target.DropshadowColor = _dropshadowColor;
             target.DropshadowOffsetX = _dropshadowOffsetX;
             target.DropshadowOffsetY = _dropshadowOffsetY;
-            target.DropshadowBlurX = _dropshadowBlurX;
-            target.DropshadowBlurY = _dropshadowBlurY;
+            target.DropshadowBlurX = _dropshadowBlur;
+            target.DropshadowBlurY = _dropshadowBlur;
         }
     }
 
@@ -1403,28 +1397,19 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 
-    float _dropshadowBlurX;
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
-    public float DropshadowBlurX
+    float _dropshadowBlur;
+    /// <inheritdoc cref="CircleRuntime.DropshadowBlur"/>
+    public float DropshadowBlur
     {
-        get => _dropshadowBlurX;
+        get => _dropshadowBlur;
         set
         {
-            _dropshadowBlurX = value;
-            if (DropshadowTarget is { } target) target.DropshadowBlurX = value;
-            NotifyPropertyChanged();
-        }
-    }
-
-    float _dropshadowBlurY;
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
-    public float DropshadowBlurY
-    {
-        get => _dropshadowBlurY;
-        set
-        {
-            _dropshadowBlurY = value;
-            if (DropshadowTarget is { } target) target.DropshadowBlurY = value;
+            _dropshadowBlur = value;
+            if (DropshadowTarget is { } target)
+            {
+                target.DropshadowBlurX = value;
+                target.DropshadowBlurY = value;
+            }
             NotifyPropertyChanged();
         }
     }
@@ -1598,6 +1583,17 @@ public class RectangleRuntime : GraphicalUiElement
     /// </summary>
     protected override RenderableShapeBase ContainedRenderable => ContainedLineRectangle;
 
+    /// <inheritdoc cref="CircleRuntime.DropshadowBlur"/>
+    public float DropshadowBlur
+    {
+        get => DropshadowBlurX;
+        set
+        {
+            DropshadowBlurX = value;
+            DropshadowBlurY = value;
+        }
+    }
+
     /// <summary>
     /// Rounded-corner radius in pixels. Pushed to both slots each frame in
     /// <see cref="PreRender"/> so the outline traces the same rounded corners as the fill.
@@ -1733,7 +1729,7 @@ public class RectangleRuntime : GraphicalUiElement
             // produces a visible shadow without further setup.
             DropshadowAlpha = 255;
             DropshadowOffsetY = 3;
-            DropshadowBlurY = 3;
+            DropshadowBlur = 3;
 
             if (_fill is IPositionedSizedObject ctorFill && _stroke is IPositionedSizedObject ctorStroke)
             {

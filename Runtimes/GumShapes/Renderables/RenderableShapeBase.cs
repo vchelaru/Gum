@@ -463,6 +463,37 @@ public abstract class RenderableShapeBase : RenderableBase
     }
 
     /// <summary>
+    /// Issue #2950 — when a stroke-only shape's dropshadow blur exceeds its stroke width, the
+    /// naive <c>lineThickness = StrokeWidth - DropshadowBlurX</c> goes ≤ 0 and the Apos.Shapes
+    /// shader refuses to draw, making the shadow disappear. Fix: clamp lineThickness to a small
+    /// positive epsilon so Apos still draws, and scale the shadow's starting alpha by
+    /// <c>StrokeWidth / DropshadowBlurX</c> so the visible band reads as the tail of the alpha
+    /// ramp — "start at a smaller alpha and advance to 0" — instead of vanishing. Filled mode,
+    /// blur = 0, and stroke &gt; blur all leave the values unchanged (existing behavior).
+    /// </summary>
+    /// <param name="baseColor">The pre-multiplied dropshadow color (typically
+    /// <see cref="EffectiveDropshadowColor"/>) that would otherwise be passed to the Apos draw
+    /// call before the stroke/blur fade is applied.</param>
+    public (float effectiveStrokeWidth, Color effectiveColor) ComputeStrokeShadowDrawParameters(Color baseColor)
+    {
+        float effectiveStrokeWidth = StrokeWidth - _dropshadowBlurX;
+        if (!IsFilled && effectiveStrokeWidth <= 0 && _dropshadowBlurX > 0)
+        {
+            float alphaScale = Microsoft.Xna.Framework.MathHelper.Clamp(StrokeWidth / _dropshadowBlurX, 0f, 1f);
+            baseColor = new Color(
+                baseColor.R,
+                baseColor.G,
+                baseColor.B,
+                (byte)(baseColor.A * alphaScale));
+            // Apos.Shapes treats lineThickness <= 0 as "don't draw." Push a small positive
+            // epsilon so the AA band still renders. The visible falloff is driven by aaSize
+            // (= DropshadowBlurX), not by this value.
+            effectiveStrokeWidth = 0.01f;
+        }
+        return (effectiveStrokeWidth, baseColor);
+    }
+
+    /// <summary>
     /// Invoked by <see cref="PreRender"/> each frame. The wrapping <see cref="MonoGameGum.GueDeriving.AposShapeRuntime"/>
     /// hooks this so it can resolve unit-bearing properties (notably StrokeWidth with ScreenPixel units,
     /// which depends on the current camera zoom) into the renderable's plain pixel values just before drawing.

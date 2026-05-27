@@ -212,8 +212,7 @@ public class CircleRuntimeTests
         sut.DropshadowColor = new Color(10, 20, 30, 40);
         sut.DropshadowOffsetX = 5;
         sut.DropshadowOffsetY = 7;
-        sut.DropshadowBlurX = 2;
-        sut.DropshadowBlurY = 4;
+        sut.DropshadowBlur = 2;
 
         Circle fill = (Circle)sut.RenderableComponent;
         Circle stroke = (Circle)fill.Children[0];
@@ -223,7 +222,6 @@ public class CircleRuntimeTests
         fill.DropshadowOffsetX.ShouldBe(5);
         fill.DropshadowOffsetY.ShouldBe(7);
         fill.DropshadowBlurX.ShouldBe(2);
-        fill.DropshadowBlurY.ShouldBe(4);
 
         // Stroke must stay shadow-free — see XML remarks on IDropshadowRenderable.
         stroke.HasDropshadow.ShouldBeFalse();
@@ -755,15 +753,13 @@ public class CircleRuntimeTests
 
         sut.SetProperty("DropshadowOffsetX", 19f);
         sut.SetProperty("DropshadowOffsetY", 11f);
-        sut.SetProperty("DropshadowBlurX", 3f);
-        sut.SetProperty("DropshadowBlurY", 0f);
+        sut.SetProperty("DropshadowBlur", 3f);
 
         Circle fill = (Circle)sut.RenderableComponent;
         Circle stroke = (Circle)fill.Children[0];
         stroke.DropshadowOffsetX.ShouldBe(19f);
         stroke.DropshadowOffsetY.ShouldBe(11f);
         stroke.DropshadowBlurX.ShouldBe(3f);
-        stroke.DropshadowBlurY.ShouldBe(0f);
     }
 
     [Fact]

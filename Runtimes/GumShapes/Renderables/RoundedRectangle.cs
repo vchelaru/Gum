@@ -78,11 +78,16 @@ public class RoundedRectangle : RenderableShapeBase,
             dropshadowSize.X -= DropshadowBlurX;
             dropshadowSize.Y -= DropshadowBlurX;
 
+            // Issue #2950 — when stroke <= blur on a stroke-only RoundedRectangle, fade the
+            // shadow's starting alpha and clamp lineThickness positive so Apos still draws.
+            (float shadowStrokeWidth, Color shadowColor) =
+                ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
+
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowSize,
                 MathFunctions.RoundToInt(DropshadowBlurX),
-                StrokeWidth - DropshadowBlurX,
+                shadowStrokeWidth,
                 rotationRadians,
-                forcedColor: EffectiveDropshadowColor);
+                forcedColor: shadowColor);
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, size, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians);

@@ -103,4 +103,121 @@ public class CircleRenderableTests
         effective.G.ShouldBe((byte)110);
         effective.B.ShouldBe((byte)120);
     }
+
+    // Issue #2950 — on a stroke-only Circle (no fill), when DropshadowBlur exceeds StrokeWidth
+    // the Apos lineThickness arg (StrokeWidth - DropshadowBlur) goes <= 0 and the Apos shader
+    // refuses to draw, so the shadow disappears entirely. Fix: clamp lineThickness to a small
+    // positive epsilon so Apos still draws, and scale the shadow's starting alpha by
+    // (StrokeWidth / DropshadowBlur) so the visible band represents the tail of the alpha
+    // ramp instead of the (impossible) full ramp. Matches the user's expected behavior:
+    // "start at a smaller alpha value and advance to 0."
+
+    [Fact]
+    public void ComputeStrokeShadowDrawParameters_FilledMode_LeavesValuesUnchanged()
+    {
+        Circle sut = new()
+        {
+            IsFilled = true,
+            StrokeWidth = 2f,
+            DropshadowBlurX = 8f,
+        };
+
+        Color baseColor = new(50, 60, 70, 200);
+        (float strokeWidth, Color color) = sut.ComputeStrokeShadowDrawParameters(baseColor);
+
+        strokeWidth.ShouldBe(-6f);
+        color.ShouldBe(baseColor);
+    }
+
+    [Fact]
+    public void ComputeStrokeShadowDrawParameters_StrokeOnly_BlurZero_LeavesValuesUnchanged()
+    {
+        Circle sut = new()
+        {
+            IsFilled = false,
+            StrokeWidth = 3f,
+            DropshadowBlurX = 0f,
+        };
+
+        Color baseColor = new(50, 60, 70, 200);
+        (float strokeWidth, Color color) = sut.ComputeStrokeShadowDrawParameters(baseColor);
+
+        strokeWidth.ShouldBe(3f);
+        color.ShouldBe(baseColor);
+    }
+
+    [Fact]
+    public void ComputeStrokeShadowDrawParameters_StrokeGreaterThanBlur_LeavesValuesUnchanged()
+    {
+        Circle sut = new()
+        {
+            IsFilled = false,
+            StrokeWidth = 10f,
+            DropshadowBlurX = 4f,
+        };
+
+        Color baseColor = new(50, 60, 70, 200);
+        (float strokeWidth, Color color) = sut.ComputeStrokeShadowDrawParameters(baseColor);
+
+        strokeWidth.ShouldBe(6f);
+        color.ShouldBe(baseColor);
+    }
+
+    [Fact]
+    public void ComputeStrokeShadowDrawParameters_StrokeEqualsBlur_FullAlpha_PositiveStrokeWidth()
+    {
+        // At stroke = blur, lineThickness = 0 — Apos would bail. Engage the fix with full alpha
+        // (ratio = 1) and a small positive stroke width so Apos still draws the AA-only band.
+        Circle sut = new()
+        {
+            IsFilled = false,
+            StrokeWidth = 4f,
+            DropshadowBlurX = 4f,
+        };
+
+        Color baseColor = new(50, 60, 70, 200);
+        (float strokeWidth, Color color) = sut.ComputeStrokeShadowDrawParameters(baseColor);
+
+        strokeWidth.ShouldBeGreaterThan(0f);
+        color.A.ShouldBe((byte)200);
+    }
+
+    [Fact]
+    public void ComputeStrokeShadowDrawParameters_StrokeHalfOfBlur_HalvesStartingAlpha()
+    {
+        Circle sut = new()
+        {
+            IsFilled = false,
+            StrokeWidth = 2f,
+            DropshadowBlurX = 4f,
+        };
+
+        Color baseColor = new(50, 60, 70, 200);
+        (float strokeWidth, Color color) = sut.ComputeStrokeShadowDrawParameters(baseColor);
+
+        strokeWidth.ShouldBeGreaterThan(0f);
+        color.A.ShouldBe((byte)100);
+        // RGB preserved — only alpha is scaled.
+        color.R.ShouldBe((byte)50);
+        color.G.ShouldBe((byte)60);
+        color.B.ShouldBe((byte)70);
+    }
+
+    [Fact]
+    public void ComputeStrokeShadowDrawParameters_ZeroStrokeWithBlur_ZeroAlpha()
+    {
+        // stroke = 0, blur > 0 → ratio = 0 → shadow effectively invisible.
+        Circle sut = new()
+        {
+            IsFilled = false,
+            StrokeWidth = 0f,
+            DropshadowBlurX = 4f,
+        };
+
+        Color baseColor = new(50, 60, 70, 200);
+        (float strokeWidth, Color color) = sut.ComputeStrokeShadowDrawParameters(baseColor);
+
+        strokeWidth.ShouldBeGreaterThan(0f);
+        color.A.ShouldBe((byte)0);
+    }
 }

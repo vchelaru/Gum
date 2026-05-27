@@ -406,17 +406,10 @@ public class CustomSetPropertyOnRenderable
                         handled = true;
                     }
                     break;
-                case nameof(RectangleRuntime.DropshadowBlurX):
-                    if (graphicalUiElement is RectangleRuntime rectDsBlurX)
+                case nameof(RectangleRuntime.DropshadowBlur):
+                    if (graphicalUiElement is RectangleRuntime rectDsBlur)
                     {
-                        rectDsBlurX.DropshadowBlurX = (float)value;
-                        handled = true;
-                    }
-                    break;
-                case nameof(RectangleRuntime.DropshadowBlurY):
-                    if (graphicalUiElement is RectangleRuntime rectDsBlurY)
-                    {
-                        rectDsBlurY.DropshadowBlurY = (float)value;
+                        rectDsBlur.DropshadowBlur = (float)value;
                         handled = true;
                     }
                     break;
@@ -718,17 +711,10 @@ public class CustomSetPropertyOnRenderable
                         handled = true;
                     }
                     break;
-                case nameof(CircleRuntime.DropshadowBlurX):
-                    if (graphicalUiElement is CircleRuntime cDsBlurX)
+                case nameof(CircleRuntime.DropshadowBlur):
+                    if (graphicalUiElement is CircleRuntime cDsBlur)
                     {
-                        cDsBlurX.DropshadowBlurX = (float)value;
-                        handled = true;
-                    }
-                    break;
-                case nameof(CircleRuntime.DropshadowBlurY):
-                    if (graphicalUiElement is CircleRuntime cDsBlurY)
-                    {
-                        cDsBlurY.DropshadowBlurY = (float)value;
+                        cDsBlur.DropshadowBlur = (float)value;
                         handled = true;
                     }
                     break;
