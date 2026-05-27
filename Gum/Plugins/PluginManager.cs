@@ -314,10 +314,10 @@ public class PluginManager : IPluginManager
     public void StateDelete(StateSave stateSave) =>
         CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave));
 
-    public void ReactToStateSaveSelected(StateSave? stateSave) =>
+    public virtual void ReactToStateSaveSelected(StateSave? stateSave) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveSelected(stateSave));
 
-    public void ReactToCustomStateSaveSelected(StateSave stateSave) =>
+    public virtual void ReactToCustomStateSaveSelected(StateSave stateSave) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToCustomStateSaveSelected(stateSave));
 
     public void RefreshStateTreeView() =>
@@ -336,7 +336,7 @@ public class PluginManager : IPluginManager
     public void CategoryDelete(StateSaveCategory category) =>
         CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category));
 
-    public void ReactToStateSaveCategorySelected(StateSaveCategory? category) =>
+    public virtual void ReactToStateSaveCategorySelected(StateSaveCategory? category) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
 
     public void VariableAdd(ElementSave elementSave, string variableName) =>
@@ -351,7 +351,7 @@ public class PluginManager : IPluginManager
         CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, unqualifiedChangedMemberName, oldValue), "VariableSet (Late)");
     }
 
-    public void VariableSelected(IStateContainer container, VariableSave variable) =>
+    public virtual void VariableSelected(IStateContainer container, VariableSave variable) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableSelected(container, variable));
 
     public void VariableRemovedFromCategory(string variableName, StateSaveCategory category) =>
@@ -371,7 +371,7 @@ public class PluginManager : IPluginManager
     }
 
 
-    public void ElementSelected(ElementSave? elementSave) =>
+    public virtual void ElementSelected(ElementSave? elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
 
     internal void TreeNodeSelected(TreeNode? treeNode) =>
@@ -411,13 +411,13 @@ public class PluginManager : IPluginManager
         return toReturn ?? Enumerable.Empty<ITreeNode>();
     }
 
-    public void BehaviorSelected(BehaviorSave? behaviorSave) =>
+    public virtual void BehaviorSelected(BehaviorSave? behaviorSave) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorSelected(behaviorSave));
 
-    public void BehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave elementSave) =>
+    public virtual void BehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorReferenceSelected(behaviorReference, elementSave));
 
-    public void BehaviorVariableSelected(VariableSave variable) =>
+    public virtual void BehaviorVariableSelected(VariableSave variable) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorVariableSelected(variable));
     public void BehaviorCreated(BehaviorSave behavior) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorCreated(behavior));
@@ -425,7 +425,7 @@ public class PluginManager : IPluginManager
     public void BehaviorDeleted(BehaviorSave behavior) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorDeleted(behavior));
 
-    public void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
+    public virtual void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
         CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));
 
     public virtual void InstanceAdd(ElementSave elementSave, InstanceSave instance) =>

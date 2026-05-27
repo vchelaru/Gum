@@ -117,8 +117,14 @@ public class SelectedState : ISelectedState
         var elementsBefore = SelectedElements.ToList();
         var instancesBefore = SelectedInstances.ToList();
 
+        var instanceClearedAsSideEffect = false;
         if (value?.Count > 0)
         {
+            // Setting an element implicitly deselects any selected instance. Fire
+            // InstanceSelected with a null instance so listeners (notably the variable
+            // grid) refresh — otherwise they keep displaying the deselected instance's
+            // variables. See issue #2946.
+            instanceClearedAsSideEffect = snapshot.SelectedInstance != null;
             snapshot.SelectedInstance = null;
             snapshot.SelectedBehavior = null;
         }
@@ -143,6 +149,11 @@ public class SelectedState : ISelectedState
         {
             snapshot.SelectedBehaviorReference = null;
             UpdateToSelectedElements(value);
+        }
+
+        if (instanceClearedAsSideEffect)
+        {
+            _pluginManager.InstanceSelected(SelectedElement, null);
         }
 
         if (differ || (instancesBefore.Count > 0 && SelectedElement?.Instances.Count == 0))
