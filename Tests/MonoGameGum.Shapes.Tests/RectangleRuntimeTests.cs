@@ -604,4 +604,30 @@ public class RectangleRuntimeTests
         RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
         fill.Color.A.ShouldBe((byte)0);
     }
+
+    [Fact]
+    public void SetProperty_FillChannels_RouteToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("FillRed", 255);
+        sut.SetProperty("FillGreen", 255);
+        sut.SetProperty("FillBlue", 255);
+        sut.SetProperty("FillAlpha", 255);
+
+        sut.FillColor.ShouldBe(new Color(255, 255, 255, 255));
+    }
+
+    [Fact]
+    public void SetProperty_StrokeChannels_RouteToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeRed", 10);
+        sut.SetProperty("StrokeGreen", 20);
+        sut.SetProperty("StrokeBlue", 30);
+        sut.SetProperty("StrokeAlpha", 200);
+
+        sut.StrokeColor.ShouldBe(new Color(10, 20, 30, 200));
+    }
 }

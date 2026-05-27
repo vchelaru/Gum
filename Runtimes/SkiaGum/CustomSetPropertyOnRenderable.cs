@@ -327,6 +327,63 @@ public class CustomSetPropertyOnRenderable
                         break;
                     }
                     break;
+                // #2931: same rationale as the Circle branch above.
+                case nameof(RectangleRuntime.FillRed):
+                    if (graphicalUiElement is RectangleRuntime rectFillRed)
+                    {
+                        rectFillRed.FillRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.FillGreen):
+                    if (graphicalUiElement is RectangleRuntime rectFillGreen)
+                    {
+                        rectFillGreen.FillGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.FillBlue):
+                    if (graphicalUiElement is RectangleRuntime rectFillBlue)
+                    {
+                        rectFillBlue.FillBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.FillAlpha):
+                    if (graphicalUiElement is RectangleRuntime rectFillAlpha)
+                    {
+                        rectFillAlpha.FillAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.StrokeRed):
+                    if (graphicalUiElement is RectangleRuntime rectStrokeRed)
+                    {
+                        rectStrokeRed.StrokeRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.StrokeGreen):
+                    if (graphicalUiElement is RectangleRuntime rectStrokeGreen)
+                    {
+                        rectStrokeGreen.StrokeGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.StrokeBlue):
+                    if (graphicalUiElement is RectangleRuntime rectStrokeBlue)
+                    {
+                        rectStrokeBlue.StrokeBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(RectangleRuntime.StrokeAlpha):
+                    if (graphicalUiElement is RectangleRuntime rectStrokeAlpha)
+                    {
+                        rectStrokeAlpha.StrokeAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
                 case nameof(RoundedRectangleRuntime.StrokeWidth):
                     if(graphicalUiElement is RoundedRectangleRuntime asRoundedRectangleRuntime)
                     {
@@ -507,6 +564,66 @@ public class CustomSetPropertyOnRenderable
                     if (graphicalUiElement is CircleRuntime cIsFilled)
                     {
                         cIsFilled.IsFilled = (bool)value;
+                        handled = true;
+                    }
+                    break;
+                // #2931: FillRed/Green/Blue/Alpha + StrokeRed/Green/Blue/Alpha live on the
+                // runtime, not on the Apos Circle renderable. Without these arms the dispatcher
+                // would fall through to SetPropertyThroughReflection on the renderable, find
+                // no matching property, and silently leave the fill at (0,0,0,0).
+                case nameof(CircleRuntime.FillRed):
+                    if (graphicalUiElement is CircleRuntime cFillRed)
+                    {
+                        cFillRed.FillRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.FillGreen):
+                    if (graphicalUiElement is CircleRuntime cFillGreen)
+                    {
+                        cFillGreen.FillGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.FillBlue):
+                    if (graphicalUiElement is CircleRuntime cFillBlue)
+                    {
+                        cFillBlue.FillBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.FillAlpha):
+                    if (graphicalUiElement is CircleRuntime cFillAlpha)
+                    {
+                        cFillAlpha.FillAlpha = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.StrokeRed):
+                    if (graphicalUiElement is CircleRuntime cStrokeRed)
+                    {
+                        cStrokeRed.StrokeRed = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.StrokeGreen):
+                    if (graphicalUiElement is CircleRuntime cStrokeGreen)
+                    {
+                        cStrokeGreen.StrokeGreen = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.StrokeBlue):
+                    if (graphicalUiElement is CircleRuntime cStrokeBlue)
+                    {
+                        cStrokeBlue.StrokeBlue = (int)value;
+                        handled = true;
+                    }
+                    break;
+                case nameof(CircleRuntime.StrokeAlpha):
+                    if (graphicalUiElement is CircleRuntime cStrokeAlpha)
+                    {
+                        cStrokeAlpha.StrokeAlpha = (int)value;
                         handled = true;
                     }
                     break;
