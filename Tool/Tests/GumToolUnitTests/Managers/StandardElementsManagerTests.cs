@@ -80,8 +80,19 @@ public class StandardElementsManagerTests : BaseTestClass
 
         state.Variables.Any(v => v.Name == "IsFilled").ShouldBeTrue();
         state.Variables.Any(v => v.Name == "StrokeWidth").ShouldBeTrue();
-        state.Variables.Any(v => v.Name == "StrokeDashLength").ShouldBeTrue();
-        state.Variables.Any(v => v.Name == "StrokeGapLength").ShouldBeTrue();
+    }
+
+    // Plain Circle / Rectangle don't support dashed strokes, so the dash/gap variables are not
+    // exposed on them (they remain on the legacy ColoredCircle / RoundedRectangle / Arc).
+    [Theory]
+    [InlineData("Circle")]
+    [InlineData("Rectangle")]
+    public void DefaultState_DoesNotExposeStrokeDashAndGap(string standardElementName)
+    {
+        var state = StandardElementsManager.Self.DefaultStates[standardElementName];
+
+        state.Variables.Any(v => v.Name == "StrokeDashLength").ShouldBeFalse();
+        state.Variables.Any(v => v.Name == "StrokeGapLength").ShouldBeFalse();
     }
 
     [Theory]

@@ -1300,10 +1300,9 @@ public class StandardElementsManager
     // visible fill instead of being a no-op against alpha 0.
     public static void AddFillAndStrokeVariables(StateSave stateSave, string category = "Rendering")
     {
-        // Stroke section
+        // Stroke section. Dashed strokes aren't supported on plain Circle / Rectangle, so unlike
+        // the legacy AddStrokeAndFilledVariables there is no StrokeDashLength / StrokeGapLength here.
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = category });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeDashLength", Category = category });
-        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "StrokeGapLength", Category = category });
 
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeAlpha", Category = category });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "StrokeRed", Category = category });
