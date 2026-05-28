@@ -280,6 +280,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// making reference-based searches fail.
     /// </summary>
     object? mRecordedSelectedContainer;
+
+    /// <summary>
+    /// The full set of selected instances captured at record time when more than one
+    /// instance is selected. Used to restore a multi-selection after a tree refresh so
+    /// it does not collapse to the single primary instance.
+    /// </summary>
+    List<InstanceSave> _recordedSelectedInstances;
     #endregion
 
     #region Properties
@@ -418,6 +425,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _projectState = Locator.GetRequiredService<IProjectState>();
         _standardElementsManagerGumTool = Locator.GetRequiredService<StandardElementsManagerGumTool>();
         _collapseToggleService = new CollapseToggleService();
+        _recordedSelectedInstances = new List<InstanceSave>();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
         _dragDropManager = Locator.GetRequiredService<IDragDropManager>();
@@ -1322,12 +1330,31 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         mRecordedSelectedContainer = _selectedState.SelectedInstance != null
             ? (object?)_selectedState.SelectedBehavior ?? _selectedState.SelectedElement
             : null;
+
+        // Record the full multi-selection so a tree refresh can restore every selected
+        // instance rather than collapsing to the single primary one (issue #2954).
+        _recordedSelectedInstances = _selectedState.SelectedInstances.ToList();
     }
 
     public void SelectRecordedSelection()
     {
         try
         {
+            // Restore a multi-selection first so it isn't collapsed to the single
+            // primary instance after a tree refresh (issue #2954).
+            if (_recordedSelectedInstances.Count > 1)
+            {
+                List<TreeNode> nodes = GetReselectableNodes(
+                    _recordedSelectedInstances,
+                    instance => FindTreeNodeFor(instance, mRecordedSelectedContainer));
+
+                if (nodes.Count > 1)
+                {
+                    Select(nodes);
+                    return;
+                }
+            }
+
             if (mRecordedSelectedObject != null)
             {
                 var desiredNode = FindTreeNodeForRecordedObject();
@@ -1359,9 +1386,33 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    private TreeNode? FindTreeNodeForRecordedObject()
+    /// <summary>
+    /// Maps each recorded instance to its current tree node via <paramref name="nodeFinder"/>,
+    /// dropping instances that no longer have a node (e.g. deleted before the refresh) while
+    /// preserving order. Used to restore a multi-selection after a tree refresh.
+    /// </summary>
+    internal static List<TreeNode> GetReselectableNodes(
+        IReadOnlyList<InstanceSave> recordedInstances,
+        Func<InstanceSave, TreeNode?> nodeFinder)
     {
-        if (mRecordedSelectedObject is InstanceSave instanceSave)
+        List<TreeNode> nodes = new List<TreeNode>();
+        foreach (InstanceSave instance in recordedInstances)
+        {
+            TreeNode? node = nodeFinder(instance);
+            if (node != null)
+            {
+                nodes.Add(node);
+            }
+        }
+        return nodes;
+    }
+
+    private TreeNode? FindTreeNodeForRecordedObject() =>
+        FindTreeNodeFor(mRecordedSelectedObject, mRecordedSelectedContainer);
+
+    private TreeNode? FindTreeNodeFor(object? recordedObject, object? recordedContainer)
+    {
+        if (recordedObject is InstanceSave instanceSave)
         {
             var behavior = ObjectFinder.Self.GetBehaviorContainerOf(instanceSave);
             if (behavior != null)
@@ -1384,7 +1435,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             // the reference is stale (undo/redo replaces instances with deep-cloned snapshots).
             // Fall back to name-based search using the container recorded before the refresh.
             if (!string.IsNullOrEmpty(instanceSave.Name) &&
-                mRecordedSelectedContainer is BehaviorSave recordedBehavior)
+                recordedContainer is BehaviorSave recordedBehavior)
             {
                 var behaviorNode = GetTreeNodeFor(recordedBehavior);
                 if (behaviorNode != null)
@@ -1393,11 +1444,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             return null;
         }
-        else if (mRecordedSelectedObject is ElementSave elementSave)
+        else if (recordedObject is ElementSave elementSave)
         {
             return GetTreeNodeFor(elementSave);
         }
-        else if (mRecordedSelectedObject is BehaviorSave behaviorSave)
+        else if (recordedObject is BehaviorSave behaviorSave)
         {
             return GetTreeNodeFor(behaviorSave);
         }
