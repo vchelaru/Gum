@@ -156,7 +156,12 @@ public class ProjectManager : IProjectManager
     {
         _gumProjectSave = new GumProjectSave
         {
-            FontGenerator = FontGeneratorType.KernSmith
+            FontGenerator = FontGeneratorType.KernSmith,
+            // PopulateProjectWithDefaultStandards (below) seeds the v3 shape variable surface
+            // on the standard Circle/Rectangle, so stamp the project at the matching version
+            // rather than the GumProjectSave ctor default. Without this, the variable-grid
+            // version gate hides Fill/Dropshadow/Gradient on a brand-new project.
+            Version = (int)GumProjectSave.GumxVersions.ShapeVariableExpansion
         };
         ObjectFinder.Self.GumProjectSave = _gumProjectSave;
 

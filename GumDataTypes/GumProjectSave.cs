@@ -116,10 +116,14 @@ public class GumProjectSave
     /// When a new <see cref="GumxVersions"/> value is added, update this constant to match.
     /// </summary>
     /// <remarks>
-    /// New <see cref="GumProjectSave"/> instances do NOT default to this version — see the
-    /// constructor. New projects stay at <see cref="GumxVersions.AttributeVersion"/> until
-    /// a feature gated on a higher version is actually used, so files remain readable by
-    /// older tool builds whenever they technically could be.
+    /// The <see cref="GumProjectSave"/> constructor still defaults to
+    /// <see cref="GumxVersions.AttributeVersion"/>, NOT this value. That ctor default is the
+    /// fallback for deserialized files that lack a Version element — a legacy file must read
+    /// back as the older version so the variable-grid gate keeps hiding v3-only shape variables.
+    /// Brand-new projects are a different case: they seed the v3 shape variable surface up front,
+    /// so the new-project factories (ProjectManager.CreateNewProject and ProjectCreator.Create)
+    /// explicitly stamp this version. Marking them v3 is honest — the project genuinely uses v3
+    /// features — and lets the gate show those variables on a fresh Circle/Rectangle.
     /// </remarks>
     public const int NativeVersion = (int)GumxVersions.ShapeVariableExpansion;
 
@@ -421,6 +425,15 @@ public class GumProjectSave
 
         LocalizationFiles = new List<string>();
 
+        // GOTCHA: this defaults to AttributeVersion, NOT NativeVersion, and that is deliberate.
+        // XmlSerializer runs this ctor first and then overwrites Version from the file's <Version>
+        // element. A legacy file that lacks that element keeps this default — so it MUST be an old
+        // version, otherwise the variable-grid version gate (ShapeVariableVersionGate) would stop
+        // hiding the newer-only shape variables on a legacy Circle/Rectangle.
+        // Brand-new projects are the opposite case (they seed the latest variable surface), so the
+        // new-project factories — ProjectManager.CreateNewProject and ProjectCreator.Create —
+        // explicitly stamp Version = NativeVersion instead of relying on this default.
+        // Do NOT "simplify" this to NativeVersion. See NativeVersion's remarks above.
         Version = (int)GumxVersions.AttributeVersion;
     }
 

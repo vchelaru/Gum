@@ -7,12 +7,15 @@ description: Gum's .gumx schema versioning and migration strategy. Triggers: sha
 
 ## The GumxVersions enum
 
-Located in `GumDataTypes/GumProjectSave.cs`. Currently two entries:
+Located in `GumDataTypes/GumProjectSave.cs`. The enum gains one entry per breaking schema change; the earliest entries cover the verbose→compact XML shift, later ones reserve slots for new variable surfaces. Read the enum itself for the current list and each entry's doc comment — don't rely on a copy here.
 
-- `InitialVersion = 1` — verbose XML (names as child elements)
-- `AttributeVersion = 2` — compact XML (names as attributes on `ElementReference` / `BehaviorReference`)
+`NativeVersion` is the highest version this tool build supports / writes.
 
-`NativeVersion` is the version that the current tool writes by default. A new `GumProjectSave` is constructed at `NativeVersion`.
+### Ctor default vs. new-project factories — they intentionally differ
+
+The `GumProjectSave` **constructor** does NOT default to `NativeVersion`. It defaults to an older version on purpose: the ctor default is the fallback for deserialized files that lack a `Version` element, so a legacy file reads back as the older version and the variable-grid version gate keeps hiding newer-only variables on it.
+
+A **brand-new project** is the opposite case — it seeds the latest standard-element variable surface up front, so it is honestly at `NativeVersion`. The new-project factories (`ProjectManager.CreateNewProject` for the tool, `ProjectCreator.Create` for headless/CLI) therefore stamp `Version = NativeVersion` explicitly in their initializers rather than relying on the ctor default. When adding a new way to create a project, set the version there too — and bump any verbatim-copied template `.gumx` (e.g. the Forms/theme templates) only if its bundled standards actually contain the newer variable surface.
 
 ## The three load-time behaviors
 
