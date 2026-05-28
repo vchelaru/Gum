@@ -77,6 +77,35 @@ public abstract class RenderableShapeBase : RenderableBase
         }
     }
 
+    #region Blend
+
+    /// <summary>
+    /// Issue #2937 — the blend mode used when this shape is drawn. Mirrors the Blend variable
+    /// surfaced on plain Circle/Rectangle (PR #2933) and the other shape runtimes. Default
+    /// <see cref="Gum.RenderingLibrary.Blend.Normal"/> preserves Apos.Shapes' historical
+    /// AlphaBlend rendering — see <see cref="GetEffectiveXnaBlendState"/>.
+    /// </summary>
+    public Gum.RenderingLibrary.Blend Blend { get; set; } = Gum.RenderingLibrary.Blend.Normal;
+
+    /// <summary>
+    /// Resolves <see cref="Blend"/> to the XNA <see cref="Microsoft.Xna.Framework.Graphics.BlendState"/>
+    /// handed to Apos.Shapes' <c>ShapeBatch.Begin</c> in <see cref="StartBatch"/>. Returns
+    /// <c>null</c> for <see cref="Gum.RenderingLibrary.Blend.Normal"/> so <c>Begin</c> keeps its
+    /// own <c>AlphaBlend</c> default — the blend every Apos shape has rendered with since before
+    /// this property existed — leaving existing content visually unchanged. Only an explicitly
+    /// non-Normal blend (Additive, etc.) overrides it.
+    /// </summary>
+    public Microsoft.Xna.Framework.Graphics.BlendState? GetEffectiveXnaBlendState()
+    {
+        if (Blend == Gum.RenderingLibrary.Blend.Normal)
+        {
+            return null;
+        }
+        return Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend).ToXNA();
+    }
+
+    #endregion
+
     #region Gradient
 
     private bool _useGradient;
@@ -839,7 +868,12 @@ public abstract class RenderableShapeBase : RenderableBase
             rasterizerState = spriteRenderer.ScissorTestRasterizerState;
         }
 
-        sb.Begin(view: view, rasterizerState: rasterizerState);
+        // Issue #2937 — honor the shape's Blend. GetEffectiveXnaBlendState returns null for
+        // Normal, which keeps Begin's AlphaBlend default (the historical behavior). Note:
+        // consecutive Apos shapes share one ShapeBatch (constant BatchKey), so the blend used
+        // for a run is the batch owner's — mixing Blend modes within an uninterrupted shape run
+        // is not resolved here (same pre-existing limitation as the rest of the batch state).
+        sb.Begin(view: view, blendState: GetEffectiveXnaBlendState(), rasterizerState: rasterizerState);
     }
 
     public override void EndBatch(ISystemManagers systemManagers)

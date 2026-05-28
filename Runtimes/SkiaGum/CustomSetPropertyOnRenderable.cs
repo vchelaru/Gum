@@ -98,19 +98,23 @@ public class CustomSetPropertyOnRenderable
             case nameof(RenderableShapeBase.Alpha):
                 renderableBase.Alpha = (int)value;
                 return true;
-#if SKIA
-            // .gumx stores Blend as the non-nullable Gum.RenderingLibrary.Blend enum, but the
-            // property is Blend?. SetPropertyThroughReflection's Convert.ChangeType fallback
-            // throws on enum -> Nullable<enum>, so the assignment has to land here. See the
-            // SilkNetGum sample crash that prompted this branch — every Standards/*.gutx with
-            // a default Blend variable hit the reflection path before this case was added.
+            // .gumx stores Blend as the non-nullable Gum.RenderingLibrary.Blend enum.
+            // SetPropertyThroughReflection's Convert.ChangeType fallback throws on
+            // enum -> Nullable<enum> (Skia's Blend?), so the assignment has to land here. See
+            // the SilkNetGum sample crash that prompted the Skia branch — every Standards/*.gutx
+            // with a default Blend variable hit the reflection path before this case was added.
             //
-            // SKIA-gated because this file is also file-linked into MonoGameGumShapes /
-            // KniGumShapes (Apos.Shapes side) where RenderableShapeBase resolves to a
-            // different type that doesn't have a Blend property — see the type alias in the
-            // file header.
+            // Issue #2937: the Apos.Shapes side (MonoGameGumShapes / KniGumShapes) now also has
+            // a Blend property on its RenderableShapeBase, so it gets its own arm. The type
+            // differs per platform (Skia: Blend?, Apos: non-nullable Gum.RenderingLibrary.Blend),
+            // hence the gate rather than a shared case.
+#if SKIA
             case nameof(RenderableShapeBase.Blend):
                 renderableBase.Blend = (Blend)value;
+                return true;
+#else
+            case nameof(RenderableShapeBase.Blend):
+                renderableBase.Blend = (Gum.RenderingLibrary.Blend)value;
                 return true;
 #endif
             case nameof(RenderableShapeBase.Alpha1):

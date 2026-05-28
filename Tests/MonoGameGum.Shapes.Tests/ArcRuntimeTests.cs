@@ -20,6 +20,21 @@ public class ArcRuntimeTests
         sut.Alpha.ShouldBe(128);
     }
 
+    // Issue #2937 — the Blend variable (.gumx pushes it via SetProperty) must land on the Apos
+    // renderable. Before the fix the dispatcher had no non-SKIA Blend case, so the value fell to
+    // reflection, found no "Blend" property on the renderable, and silently vanished.
+    [Fact]
+    public void Blend_ShouldRouteToRenderable_ThroughSetProperty()
+    {
+        ArcRuntime sut = new ArcRuntime();
+
+        sut.SetProperty("Blend", Gum.RenderingLibrary.Blend.Additive);
+
+        RenderableShapeBase shape = (RenderableShapeBase)sut.RenderableComponent;
+        shape.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+        shape.GetEffectiveXnaBlendState().ShouldBe(Microsoft.Xna.Framework.Graphics.BlendState.Additive);
+    }
+
     // Locked in unification (issue #2728): both backends default IsEndRounded to false
     // (matches Skia's prior behavior and graphics-convention flat caps). Existing Apos
     // consumers who relied on rounded caps must now set IsEndRounded = true explicitly.
