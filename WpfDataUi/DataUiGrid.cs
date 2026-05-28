@@ -677,6 +677,7 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
                 {
                     currentCategory = new MemberCategory();
                     currentCategory.Name = category.Name;
+                    currentCategory.HeaderColor = category.HeaderColor;
                     effectiveCategory.Add(currentCategory);
                 }
 
