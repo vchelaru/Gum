@@ -4,13 +4,16 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Background.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Green" SetsValue="true">
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
@@ -22,8 +25,8 @@
     <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -157,14 +160,8 @@
     <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
       <Value xsi:type="xsd:string">InnerPanelInstance</Value>
     </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
     <Variable Type="float" Name="FocusedIndicator.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -176,7 +173,13 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
-    <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
+    <Variable Type="int" Name="FocusedIndicator.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.StrokeWidth" SetsValue="true">
@@ -299,13 +302,13 @@
       </Variable>
     </State>
   </Category>
-  <Instance Name="Background" BaseType="RoundedRectangle" />
+  <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="VerticalScrollBarInstance" BaseType="Controls/ScrollBar" />
   <Instance Name="ClipContainerInstance" BaseType="Container" />
   <Instance Name="InnerPanelInstance" BaseType="Container" />
   <Instance Name="ClipAndScrollContainer" BaseType="Container" />
   <Instance Name="ClipContainerParent" BaseType="Container" />
-  <Instance Name="FocusedIndicator" BaseType="RoundedRectangle" />
+  <Instance Name="FocusedIndicator" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ItemsControlBehavior</BehaviorName>

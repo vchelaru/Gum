@@ -4,9 +4,6 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Background.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">18</Value>
     </Variable>
@@ -34,8 +31,14 @@
     <Variable Type="int" Name="Background.DropshadowRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Green" SetsValue="true">
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -49,8 +52,8 @@
     <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -77,17 +80,8 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="ButtonCategory" Name="ButtonCategoryState" SetsValue="false" />
-    <Variable Type="int" Name="FocusedIndicator.Alpha" SetsValue="true">
-      <Value xsi:type="xsd:int">90</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
     <Variable Type="float" Name="FocusedIndicator.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
@@ -98,7 +92,16 @@
     <Variable Type="bool" Name="FocusedIndicator.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
+    <Variable Type="int" Name="FocusedIndicator.StrokeAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">90</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.StrokeWidth" SetsValue="true">
@@ -199,9 +202,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.Red</string>
-        <string>Green = Components/Styles.White.Green</string>
-        <string>Blue = Components/Styles.White.Blue</string>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
         <string>Font = Components/Styles.Strong.Font</string>
         <string>FontSize = Components/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Styles.Strong.IsBold</string>
@@ -212,17 +215,17 @@
     <Name>ButtonCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">157</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-      </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -239,17 +242,17 @@
     </State>
     <State>
       <Name>Disabled</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">221</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
       </Variable>
       <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">205</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -266,17 +269,17 @@
     </State>
     <State>
       <Name>Highlighted</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">184</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">143</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-      </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -293,17 +296,17 @@
     </State>
     <State>
       <Name>Pushed</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">117</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">68</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
       </Variable>
       <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">204</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -320,17 +323,17 @@
     </State>
     <State>
       <Name>HighlightedFocused</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">184</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">143</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-      </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -347,17 +350,17 @@
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">157</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
-      </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -374,17 +377,17 @@
     </State>
     <State>
       <Name>DisabledFocused</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">221</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
       </Variable>
       <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">205</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -400,9 +403,9 @@
       </Variable>
     </State>
   </Category>
-  <Instance Name="Background" BaseType="RoundedRectangle" />
+  <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="TextInstance" BaseType="Text" />
-  <Instance Name="FocusedIndicator" BaseType="RoundedRectangle" />
+  <Instance Name="FocusedIndicator" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ButtonBehavior</BehaviorName>

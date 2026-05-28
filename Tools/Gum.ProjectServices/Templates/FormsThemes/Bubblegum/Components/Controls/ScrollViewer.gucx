@@ -4,13 +4,16 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Background.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Green" SetsValue="true">
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
@@ -23,8 +26,8 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Background.Parent" SetsValue="true" />
-    <Variable Type="int" Name="Background.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -50,14 +53,8 @@
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">204</Value>
-    </Variable>
     <Variable Type="float" Name="BorderInstance.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-    </Variable>
-    <Variable Type="int" Name="BorderInstance.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">170</Value>
     </Variable>
     <Variable Type="float" Name="BorderInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -68,7 +65,13 @@
     <Variable Type="bool" Name="BorderInstance.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
-    <Variable Type="int" Name="BorderInstance.Red" SetsValue="true">
+    <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">204</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
       <Value xsi:type="xsd:int">240</Value>
     </Variable>
     <Variable Type="float" Name="BorderInstance.StrokeWidth" SetsValue="true">
@@ -132,17 +135,8 @@
     <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
       <Value xsi:type="xsd:string">InnerPanelInstance</Value>
     </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Alpha" SetsValue="true">
-      <Value xsi:type="xsd:int">90</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
     <Variable Type="float" Name="FocusedIndicator.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
@@ -154,7 +148,16 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
-    <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
+    <Variable Type="int" Name="FocusedIndicator.StrokeAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">90</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.StrokeWidth" SetsValue="true">
@@ -350,26 +353,42 @@
     <Name>ScrollViewerCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">204</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">170</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">240</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">170</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
     </State>
   </Category>
-  <Instance Name="Background" BaseType="RoundedRectangle" />
+  <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="VerticalScrollBarInstance" BaseType="Controls/ScrollBar" />
   <Instance Name="HorizontalScrollBarInstance" BaseType="Controls/ScrollBar" />
   <Instance Name="ClipContainerInstance" BaseType="Container" />
   <Instance Name="InnerPanelInstance" BaseType="Container" />
-  <Instance Name="BorderInstance" BaseType="RoundedRectangle" />
-  <Instance Name="FocusedIndicator" BaseType="RoundedRectangle" />
+  <Instance Name="BorderInstance" BaseType="Rectangle" />
+  <Instance Name="FocusedIndicator" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ScrollViewerBehavior</BehaviorName>
