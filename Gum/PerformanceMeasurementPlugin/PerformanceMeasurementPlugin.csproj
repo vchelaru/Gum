@@ -16,6 +16,11 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Gum.csproj" />
+    <!-- The tool's KNI runtime defines the concrete RenderingLibrary.Graphics.Renderer and
+         SystemManagers used by the editor. Referenced for compile-time access to
+         Renderer.SpriteRenderer / RenderStateChangeStatistics; at runtime the assembly is
+         already loaded by EditorTabPlugin_XNA, so the post-build copies only this plugin's dll. -->
+    <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\PerformanceView.xaml">

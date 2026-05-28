@@ -205,6 +205,13 @@ public class Renderer : IRenderer
     }
 
     /// <summary>
+    /// Per-frame counters for render-state changes that <see cref="SpriteRenderer.LastFrameDrawStates"/>
+    /// does not capture — currently the Apos.Shapes <c>ShapeBatch</c> begins, which live on a
+    /// separate GPU command stream. Reset at the start of each <see cref="Draw(SystemManagers)"/>.
+    /// </summary>
+    public RenderStateChangeStatistics RenderStateChangeStatistics { get; private set; }
+
+    /// <summary>
     /// Controls which XNA BlendState is used for the Rendering Library's Blend.Normal value.
     /// </summary>
     /// <remarks>
@@ -270,6 +277,7 @@ public class Renderer : IRenderer
         _layers = new List<Layer>();
         _layersReadOnly = new ReadOnlyCollection<Layer>(_layers);
         mCamera = new RenderingLibrary.Camera();
+        RenderStateChangeStatistics = new RenderStateChangeStatistics();
 
     }
 
@@ -1082,6 +1090,7 @@ public class Renderer : IRenderer
     public void ClearPerformanceRecordingVariables()
     {
         spriteRenderer.ClearPerformanceRecordingVariables();
+        RenderStateChangeStatistics.Reset();
     }
 
     /// <summary>

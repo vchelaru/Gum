@@ -877,7 +877,7 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         // SpriteBatchStack re-Begins SpriteBatch on a blend/scissor change while keeping one
         // logical batch. GetEffectiveXnaBlendState returns null for Normal, so Begin keeps its
         // AlphaBlend default (the historical behavior).
-        ShapeRenderer.BeginBatch(view, rasterizerState, this);
+        ShapeRenderer.BeginBatch(view, rasterizerState, this, managers?.Renderer?.RenderStateChangeStatistics);
     }
 
     public override void EndBatch(ISystemManagers systemManagers)
