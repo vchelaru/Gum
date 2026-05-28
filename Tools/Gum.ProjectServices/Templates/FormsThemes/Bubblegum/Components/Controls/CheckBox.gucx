@@ -4,14 +4,8 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">204</Value>
-    </Variable>
     <Variable Type="float" Name="BoxBorder.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">6</Value>
-    </Variable>
-    <Variable Type="int" Name="BoxBorder.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">170</Value>
     </Variable>
     <Variable Type="float" Name="BoxBorder.Height" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
@@ -23,7 +17,13 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="BoxBorder.Parent" SetsValue="true" />
-    <Variable Type="int" Name="BoxBorder.Red" SetsValue="true">
+    <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">204</Value>
+    </Variable>
+    <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
       <Value xsi:type="xsd:int">240</Value>
     </Variable>
     <Variable Type="float" Name="BoxBorder.StrokeWidth" SetsValue="true">
@@ -53,13 +53,16 @@
     <Variable Type="PositionUnitType" Name="BoxBorder.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
     <Variable Type="float" Name="CheckBoxBackground.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">6</Value>
     </Variable>
-    <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+    <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="CheckBoxBackground.Height" SetsValue="true">
@@ -71,8 +74,8 @@
     <Variable Type="bool" Name="CheckBoxBackground.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="CheckBoxBackground.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="CheckBoxBackground.Width" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
@@ -93,14 +96,17 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="CheckBoxCategory" Name="CheckBoxCategoryState" SetsValue="false" />
-    <Variable Type="int" Name="DashIndicator.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
     <Variable Type="float" Name="DashIndicator.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
-    <Variable Type="int" Name="DashIndicator.Green" SetsValue="true">
+    <Variable Type="int" Name="DashIndicator.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="DashIndicator.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="DashIndicator.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="DashIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
@@ -114,8 +120,8 @@
     <Variable Type="string" Name="DashIndicator.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">CheckBoxBackground</Value>
     </Variable>
-    <Variable Type="int" Name="DashIndicator.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="DashIndicator.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -144,17 +150,8 @@
     <Variable Type="PositionUnitType" Name="DashIndicator.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Alpha" SetsValue="true">
-      <Value xsi:type="xsd:int">90</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
     <Variable Type="float" Name="FocusedIndicator.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
@@ -166,7 +163,16 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
-    <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
+    <Variable Type="int" Name="FocusedIndicator.StrokeAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">90</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.StrokeWidth" SetsValue="true">
@@ -333,9 +339,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Black.Red</string>
-        <string>Green = Components/Styles.Black.Green</string>
-        <string>Blue = Components/Styles.Black.Blue</string>
+        <string>Red = Components/Styles.Black.FillRed</string>
+        <string>Green = Components/Styles.Black.FillGreen</string>
+        <string>Blue = Components/Styles.Black.FillBlue</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
       </Value>
@@ -345,347 +351,893 @@
     <Name>CheckBoxCategory</Name>
     <State>
       <Name>EnabledOff</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">204</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">170</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">240</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">170</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>HighlightedOff</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>FocusedOff</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>HighlightedFocusedOff</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>PushedOff</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>DisabledOff</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">234</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">245</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">248</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">234</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">245</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">217</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">168</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">201</Value>
+      </Variable>
     </State>
     <State>
       <Name>DisabledFocusedOff</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">234</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">245</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">248</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">234</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">245</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">217</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">168</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">201</Value>
+      </Variable>
     </State>
     <State>
       <Name>EnabledOn</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>HighlightedOn</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>FocusedOn</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>HighlightedFocusedOn</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>PushedOn</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">117</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">68</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">204</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">117</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">68</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">204</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">68</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">68</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>DisabledOn</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">234</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">245</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">248</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">234</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">245</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">217</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">168</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">201</Value>
+      </Variable>
     </State>
     <State>
       <Name>DisabledFocusedOn</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">234</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">245</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">248</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">234</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">245</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">217</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">168</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">201</Value>
+      </Variable>
     </State>
     <State>
       <Name>EnabledIndeterminate</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>HighlightedIndeterminate</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>FocusedIndeterminate</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>HighlightedFocusedIndeterminate</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>PushedIndeterminate</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">117</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">68</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">204</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">68</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>DisabledIndeterminate</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">234</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">245</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">248</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">234</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">245</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">217</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">168</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">201</Value>
+      </Variable>
     </State>
     <State>
       <Name>DisabledFocusedIndeterminate</Name>
-      <Variable Type="int" Name="BoxBorder.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="BoxBorder.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">234</Value></Variable>
-      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">245</Value></Variable>
-      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">217</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">201</Value></Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">248</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">234</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">245</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">217</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">168</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">201</Value>
+      </Variable>
     </State>
   </Category>
-  <Instance Name="CheckBoxBackground" BaseType="RoundedRectangle" />
-  <Instance Name="BoxBorder" BaseType="RoundedRectangle" />
+  <Instance Name="CheckBoxBackground" BaseType="Rectangle" />
+  <Instance Name="BoxBorder" BaseType="Rectangle" />
   <Instance Name="InnerCheck" BaseType="Text" />
-  <Instance Name="DashIndicator" BaseType="RoundedRectangle" />
+  <Instance Name="DashIndicator" BaseType="Rectangle" />
   <Instance Name="TextInstance" BaseType="Text" />
-  <Instance Name="FocusedIndicator" BaseType="RoundedRectangle" />
+  <Instance Name="FocusedIndicator" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>CheckBoxBehavior</BehaviorName>

@@ -4,13 +4,16 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Background.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Green" SetsValue="true">
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
@@ -22,8 +25,8 @@
     <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -49,14 +52,8 @@
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">204</Value>
-    </Variable>
     <Variable Type="float" Name="BorderInstance.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
-    </Variable>
-    <Variable Type="int" Name="BorderInstance.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">170</Value>
     </Variable>
     <Variable Type="float" Name="BorderInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -67,7 +64,13 @@
     <Variable Type="bool" Name="BorderInstance.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
-    <Variable Type="int" Name="BorderInstance.Red" SetsValue="true">
+    <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">204</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
       <Value xsi:type="xsd:int">240</Value>
     </Variable>
     <Variable Type="float" Name="BorderInstance.StrokeWidth" SetsValue="true">
@@ -103,17 +106,8 @@
     <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
       <Value xsi:type="xsd:string">ListBoxInstance</Value>
     </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Alpha" SetsValue="true">
-      <Value xsi:type="xsd:int">90</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
     <Variable Type="float" Name="FocusedIndicator.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
@@ -125,7 +119,16 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
-    <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
+    <Variable Type="int" Name="FocusedIndicator.StrokeAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">90</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.StrokeWidth" SetsValue="true">
@@ -295,9 +298,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Black.Red</string>
-        <string>Green = Components/Styles.Black.Green</string>
-        <string>Blue = Components/Styles.Black.Blue</string>
+        <string>Red = Components/Styles.Black.FillRed</string>
+        <string>Green = Components/Styles.Black.FillGreen</string>
+        <string>Blue = Components/Styles.Black.FillBlue</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
       </Value>
@@ -307,22 +310,22 @@
     <Name>ComboBoxCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">204</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">170</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">240</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -349,22 +352,22 @@
     </State>
     <State>
       <Name>Disabled</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">248</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">234</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">245</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">221</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">174</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">205</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -391,22 +394,22 @@
     </State>
     <State>
       <Name>Highlighted</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">157</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">107</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -433,22 +436,22 @@
     </State>
     <State>
       <Name>Pushed</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">117</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">68</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">204</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -475,22 +478,22 @@
     </State>
     <State>
       <Name>HighlightedFocused</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">157</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">107</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -517,22 +520,22 @@
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">157</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">107</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -559,22 +562,22 @@
     </State>
     <State>
       <Name>DisabledFocused</Name>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">248</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">234</Value>
       </Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">245</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">221</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">174</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true">
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">205</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -600,12 +603,12 @@
       </Variable>
     </State>
   </Category>
-  <Instance Name="Background" BaseType="RoundedRectangle" />
+  <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="TextInstance" BaseType="Text" />
   <Instance Name="ListBoxInstance" BaseType="Controls/ListBox" />
   <Instance Name="IconInstance" BaseType="Text" />
-  <Instance Name="BorderInstance" BaseType="RoundedRectangle" />
-  <Instance Name="FocusedIndicator" BaseType="RoundedRectangle" />
+  <Instance Name="BorderInstance" BaseType="Rectangle" />
+  <Instance Name="FocusedIndicator" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ComboBoxBehavior</BehaviorName>

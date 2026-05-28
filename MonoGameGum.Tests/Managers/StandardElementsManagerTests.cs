@@ -42,6 +42,29 @@ public class StandardElementsManagerTests
     }
 
     [Fact]
+    public void DefaultStates_Circle_ShouldNotIncludeCornerRadius()
+    {
+        // A circle has no corners; CornerRadius belongs only on Rectangle.
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        self.DefaultStates["Circle"].Variables
+            .ShouldNotContain(v => v.Name == "CornerRadius");
+    }
+
+    [Fact]
+    public void DefaultStates_Rectangle_ShouldIncludeCornerRadius()
+    {
+        // v3 Rectangle absorbs RoundedRectangle's rounded-corner surface so the legacy
+        // RoundedRectangle standard can be retired.
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        self.DefaultStates["Rectangle"].Variables
+            .ShouldContain(v => v.Name == "CornerRadius");
+    }
+
+    [Fact]
     public void DefaultStates_ShouldStillIncludeColoredRectangle_ForLegacyLoad()
     {
         // ColoredRectangle is no longer seeded into new projects, but it must remain in the

@@ -3,14 +3,17 @@
   <Name>DemoScreenGum</Name>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Background.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">242</Value>
-    </Variable>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">14</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Green" SetsValue="true">
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">242</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">231</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -24,8 +27,8 @@
     <Variable Type="string" Name="Background.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -50,9 +53,6 @@
     </Variable>
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
-    </Variable>
-    <Variable Type="int" Name="Background1.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">242</Value>
     </Variable>
     <Variable Type="float" Name="Background1.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">14</Value>
@@ -81,8 +81,14 @@
     <Variable Type="int" Name="Background1.DropshadowRed" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>
     </Variable>
-    <Variable Type="int" Name="Background1.Green" SetsValue="true">
+    <Variable Type="int" Name="Background1.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">242</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">231</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="bool" Name="Background1.HasDropshadow" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -99,8 +105,8 @@
     <Variable Type="string" Name="Background1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">DemoDialog</Value>
     </Variable>
-    <Variable Type="int" Name="Background1.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="Background1.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Background1.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -693,9 +699,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.Red</string>
-        <string>Green = Components/Styles.Primary.Green</string>
-        <string>Blue = Components/Styles.Primary.Blue</string>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
         <string>Font = Components/Styles.Title.Font</string>
         <string>FontSize = Components/Styles.Title.FontSize</string>
         <string>IsBold = Components/Styles.Title.IsBold</string>
@@ -708,9 +714,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.Red</string>
-        <string>Green = Components/Styles.Primary.Green</string>
-        <string>Blue = Components/Styles.Primary.Blue</string>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
         <string>Font = Components/Styles.Title.Font</string>
         <string>FontSize = Components/Styles.Title.FontSize</string>
         <string>IsBold = Components/Styles.Title.IsBold</string>
@@ -718,7 +724,7 @@
     </VariableList>
   </State>
   <Instance Name="DemoSettingsMenu" BaseType="Container" />
-  <Instance Name="Background" BaseType="RoundedRectangle" />
+  <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="MenuTitle" BaseType="Container" />
   <Instance Name="MenuTitle1" BaseType="Container" />
   <Instance Name="MenuItems" BaseType="Container" />
@@ -739,7 +745,7 @@
   <Instance Name="RadioButtonInstance1" BaseType="Controls/RadioButton" />
   <Instance Name="RadioButtonInstance2" BaseType="Controls/RadioButton" />
   <Instance Name="DifficultyLabel" BaseType="Controls/Label" />
-  <Instance Name="Background1" BaseType="RoundedRectangle" />
+  <Instance Name="Background1" BaseType="Rectangle" />
   <Instance Name="ComboBoxInstance" BaseType="Controls/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
   <Instance Name="ButtonConfirmInstance" BaseType="Controls/Button" />

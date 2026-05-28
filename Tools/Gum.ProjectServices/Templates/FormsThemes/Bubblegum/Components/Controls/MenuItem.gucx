@@ -4,13 +4,16 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Background.Alpha" SetsValue="true">
+    <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Blue" SetsValue="true">
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Green" SetsValue="true">
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
@@ -19,9 +22,12 @@
     <Variable Type="DimensionUnitType" Name="Background.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
     <Variable Type="string" Name="Background.Parent" SetsValue="true" />
-    <Variable Type="int" Name="Background.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
+    <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -102,6 +108,12 @@
     <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">85</Value>
     </Variable>
+    <Variable Type="string" Name="SubmenuIndicatorInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
+    <Variable Type="int" Name="SubmenuIndicatorInstance.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
     <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
       <Value xsi:type="xsd:int">17</Value>
     </Variable>
@@ -119,12 +131,6 @@
     </Variable>
     <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">61</Value>
-    </Variable>
-    <Variable Type="string" Name="SubmenuIndicatorInstance.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Nunito</Value>
-    </Variable>
-    <Variable Type="int" Name="SubmenuIndicatorInstance.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
     </Variable>
     <Variable Type="string" Name="SubmenuIndicatorInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">&gt;</Value>
@@ -159,6 +165,12 @@
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">85</Value>
     </Variable>
+    <Variable Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
     <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
       <Value xsi:type="xsd:int">17</Value>
     </Variable>
@@ -176,12 +188,6 @@
     </Variable>
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">61</Value>
-    </Variable>
-    <Variable Type="string" Name="TextInstance.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Nunito</Value>
-    </Variable>
-    <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
     </Variable>
     <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Header" SetsValue="true">
       <Value xsi:type="xsd:string">Menu Item</Value>
@@ -264,71 +270,171 @@
     <Name>MenuItemCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable Type="int" Name="Background.Alpha" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>Highlighted</Name>
-      <Variable Type="int" Name="Background.Alpha" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true"><Value xsi:type="xsd:int">246</Value></Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true"><Value xsi:type="xsd:int">240</Value></Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">246</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>Selected</Name>
-      <Variable Type="int" Name="Background.Alpha" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true"><Value xsi:type="xsd:int">237</Value></Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true"><Value xsi:type="xsd:int">222</Value></Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">117</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">68</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">204</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">117</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">68</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">204</Value></Variable>
+      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">237</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">222</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">68</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">68</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable Type="int" Name="Background.Alpha" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true"><Value xsi:type="xsd:int">246</Value></Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true"><Value xsi:type="xsd:int">240</Value></Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">85</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">17</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">61</Value></Variable>
+      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">246</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">85</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">17</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">61</Value>
+      </Variable>
     </State>
     <State>
       <Name>Disabled</Name>
-      <Variable Type="int" Name="Background.Alpha" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="Background.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="Background.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="Background.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
+      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
     </State>
   </Category>
-  <Instance Name="Background" BaseType="ColoredRectangle" />
+  <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="TextInstance" BaseType="Text" />
   <Instance Name="SubmenuIndicatorInstance" BaseType="Text" />
   <Instance Name="ContainerInstance" BaseType="Container" />

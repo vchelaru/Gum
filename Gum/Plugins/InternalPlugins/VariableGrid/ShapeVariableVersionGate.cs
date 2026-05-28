@@ -61,6 +61,8 @@ internal class ShapeVariableVersionGate
         "GradientInnerRadiusUnits",
         "GradientOuterRadius",
         "GradientOuterRadiusUnits",
+        // Rounded corners (Rectangle only — absorbed from the retired RoundedRectangle standard)
+        "CornerRadius",
         "Red1",
         "Green1",
         "Blue1",

@@ -58,9 +58,6 @@
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">128</Value>
     </Variable>
-    <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
     <Variable Type="float" Name="NineSliceInstance.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">14</Value>
     </Variable>
@@ -88,8 +85,14 @@
     <Variable Type="int" Name="NineSliceInstance.DropshadowRed" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>
     </Variable>
-    <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+    <Variable Type="int" Name="NineSliceInstance.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="bool" Name="NineSliceInstance.HasDropshadow" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -103,8 +106,8 @@
     <Variable Type="bool" Name="NineSliceInstance.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="NineSliceInstance.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="NineSliceInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -183,15 +186,15 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.Red</string>
-        <string>Green = Components/Styles.White.Green</string>
-        <string>Blue = Components/Styles.White.Blue</string>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
       </Value>
     </VariableList>
   </State>
-  <Instance Name="NineSliceInstance" BaseType="RoundedRectangle" />
+  <Instance Name="NineSliceInstance" BaseType="Rectangle" />
   <Instance Name="TextInstance" BaseType="Text" />
   <Instance Name="ContinueIndicatorInstance" BaseType="Text" />
   <Behaviors>

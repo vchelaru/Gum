@@ -8,8 +8,6 @@
 # equivalent output. Switching re-rasterizes every font in the project.
 FontGenerator: KernSmith
 
-# Bubblegum uses Skia-backed Standards (RoundedRectangle, ColoredCircle)
-# for its chrome. The apply step adds the full Skia shape bundle —
-# Arc, Canvas, ColoredCircle, Line, LottieAnimation, RoundedRectangle, Svg —
-# since they ship as a unit.
-RequiresSkiaShapes: true
+# Bubblegum's chrome is built entirely from the v3 Rectangle / Circle
+# standards (fill, stroke, corner radius, dropshadow), so it no longer pulls
+# in the Skia shape bundle. RequiresSkiaShapes is intentionally omitted.

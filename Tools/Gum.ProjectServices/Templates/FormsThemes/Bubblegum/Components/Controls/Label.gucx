@@ -43,9 +43,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Black.Red</string>
-        <string>Green = Components/Styles.Black.Green</string>
-        <string>Blue = Components/Styles.Black.Blue</string>
+        <string>Red = Components/Styles.Black.FillRed</string>
+        <string>Green = Components/Styles.Black.FillGreen</string>
+        <string>Blue = Components/Styles.Black.FillBlue</string>
         <string>Font = Components/Styles.Strong.Font</string>
         <string>FontSize = Components/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Styles.Strong.IsBold</string>
