@@ -387,9 +387,12 @@ public class StandardElementsManager
 
             AddPositioningVariables(stateSave);
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Radius", Category = "Dimensions" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Width", IsHiddenInPropertyGrid = true });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height", IsHiddenInPropertyGrid = true });
+            // Issue #2947 — Circle now sizes via Width/Height like every other visual instead of
+            // a one-off Radius variable. The rendered radius is min(Width, Height)/2, so a square
+            // box (the default 32x32, matching the old Radius=16 diameter) draws a circle and a
+            // non-square box draws an ellipse. Existing Radius values are migrated to
+            // Width = Height = Radius * 2 on load (GumProjectSaveExtensionMethods.MigrateCircleRadiusToWidthHeight).
+            AddDimensionsVariables(stateSave, 32, 32, DimensionVariableAction.ExcludeFileOptions);
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 

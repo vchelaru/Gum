@@ -25,6 +25,23 @@ public class StandardElementsManagerTests
     }
 
     [Fact]
+    public void CircleDefault_ShouldExposeWidthAndHeight_NotRadius()
+    {
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        var circle = self.DefaultStates["Circle"];
+
+        circle.Variables.ShouldNotContain(v => v.Name == "Radius");
+
+        var width = circle.Variables.First(v => v.Name == "Width");
+        width.IsHiddenInPropertyGrid.ShouldBeFalse();
+        circle.Variables.ShouldContain(v => v.Name == "Height" && !v.IsHiddenInPropertyGrid);
+        circle.Variables.ShouldContain(v => v.Name == "WidthUnits");
+        circle.Variables.ShouldContain(v => v.Name == "HeightUnits");
+    }
+
+    [Fact]
     public void DefaultStates_Circle_ShouldNotIncludeCornerRadius()
     {
         // A circle has no corners; CornerRadius belongs only on Rectangle.

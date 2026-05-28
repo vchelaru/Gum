@@ -103,10 +103,11 @@ public class GumProjectSave
         /// <summary>
         /// Reserves a version slot for the expanded Circle/Rectangle variable surface
         /// (gradient, dropshadow, stroke-and-fill, antialiasing, etc.) introduced in
-        /// the #2925/#2927 follow-up PRs. Files saved at this version use the same XML
-        /// format as <see cref="AttributeVersion"/>; the bump exists so tool builds
-        /// without the new variable definitions refuse to load the file rather than
-        /// silently dropping the new variables on the next save.
+        /// the #2925/#2927 follow-up PRs, and the #2947 switch of Circle from a one-off
+        /// Radius variable to the standard Width/Height (with units). Files saved at this
+        /// version use the same XML format as <see cref="AttributeVersion"/>; the bump exists
+        /// so tool builds without the new variable definitions refuse to load the file rather
+        /// than silently dropping the new variables (or mis-showing a stale Radius) on the next save.
         /// </summary>
         ShapeVariableExpansion = 3,
     }
