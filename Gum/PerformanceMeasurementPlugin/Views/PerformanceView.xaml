@@ -4,29 +4,45 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="120"
+    d:DesignHeight="200"
     d:DesignWidth="300"
     mc:Ignorable="d">
-    <Grid Margin="4">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+    <StackPanel Margin="4">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <Label Grid.Row="0" Grid.Column="0">SpriteBatch begins:</Label>
-        <Label Grid.Row="0" Grid.Column="1" Content="{Binding SpriteBatchBeginCount}" />
+            <Label Grid.Row="0" Grid.Column="0">SpriteBatch begins:</Label>
+            <Label Grid.Row="0" Grid.Column="1" Content="{Binding SpriteBatchBeginCount}" />
 
-        <Label Grid.Row="1" Grid.Column="0">Apos.Shapes begins:</Label>
-        <Label Grid.Row="1" Grid.Column="1" Content="{Binding ShapeBatchBeginCount}" />
+            <Label Grid.Row="1" Grid.Column="0">Apos.Shapes begins:</Label>
+            <Label Grid.Row="1" Grid.Column="1" Content="{Binding ShapeBatchBeginCount}" />
 
-        <Label Grid.Row="2" Grid.Column="0" FontWeight="Bold">Total render-state changes:</Label>
-        <Label Grid.Row="2" Grid.Column="1" FontWeight="Bold" Content="{Binding TotalRenderStateChanges}" />
+            <Label Grid.Row="2" Grid.Column="0" FontWeight="Bold">Total render-state changes:</Label>
+            <Label Grid.Row="2" Grid.Column="1" FontWeight="Bold" Content="{Binding TotalRenderStateChanges}" />
+        </Grid>
 
-    </Grid>
+        <Separator Margin="0,6" />
+
+        <Label FontWeight="Bold">Sibling render order:</Label>
+        <RadioButton
+            Margin="8,2,0,2"
+            Content="Depth-first (hierarchical)"
+            GroupName="RenderOrder"
+            IsChecked="{Binding RenderDepthFirst, Mode=TwoWay}" />
+        <RadioButton
+            Margin="8,2,0,2"
+            Content="Sort by batch"
+            GroupName="RenderOrder"
+            IsChecked="{Binding SortByBatchKey, Mode=TwoWay}" />
+
+    </StackPanel>
 </UserControl>
