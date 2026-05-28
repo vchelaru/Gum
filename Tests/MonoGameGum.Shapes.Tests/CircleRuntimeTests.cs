@@ -244,6 +244,23 @@ public class CircleRuntimeTests
         stroke.HasDropshadow.ShouldBeFalse();
     }
 
+    // Issue #2977 — a negative DropshadowBlur is meaningless (blur is a radius) and used to make
+    // the shadow vanish on the stroke path: it became a negative aaSize, which Apos.Shapes won't
+    // draw. The renderable clamps negative blur to 0 so it renders identically to 0. Tested
+    // through the user-facing scalar DropshadowBlur (the runtime exposes no BlurX/BlurY); the
+    // assert reads the pushed renderable value, mirroring Dropshadow_PropertiesPushedToFillSlotOnly.
+    [Fact]
+    public void DropshadowBlur_Negative_RendersAsZero()
+    {
+        CircleRuntime sut = new();
+
+        sut.DropshadowBlur = -5f;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.DropshadowBlurX.ShouldBe(0f);
+        fill.DropshadowBlurY.ShouldBe(0f);
+    }
+
     // Issue #2796: dashed-stroke props on CircleRuntime push to the stroke slot only (not
     // fill). Dashing is a stroke-mode operation — the Apos Circle's RenderDashed path is
     // guarded by !IsFilled — so pushing to fill would be ignored. Routed through PreRender
