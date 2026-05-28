@@ -134,21 +134,40 @@ public class Circle : RenderableShapeBase,
             (float shadowStrokeWidth, Color shadowColor) =
                 ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
 
-            // Issue #2950 — strict-anchor shadow geometry. Returns the (rDisk, aaSize,
-            // alphaScale) triple that puts the smoothstep falloff's 50% line exactly at the
-            // host radius. When blur exceeds 2R the inner ramp edge would be negative; the
-            // helper handles that by truncating to rDisk=0 and reducing base alpha so the
-            // curve still passes through (R, 0.5) and (R + B/2, 0) — center becomes
-            // translucent, which is correct for big-blur cases. Camera zoom is folded into
-            // aaSize so the visible halo holds a constant world extent under zoom.
             var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
-            (float shadowRadius, int shadowAaSize, float shadowAlphaScale) =
-                ComputeShadowDrawGeometry(radius, cameraZoom);
-            if (shadowAlphaScale < 1f)
+
+            float shadowRadius;
+            int shadowAaSize;
+            if (IsFilled)
             {
-                shadowColor = new Color(
-                    shadowColor.R, shadowColor.G, shadowColor.B,
-                    (byte)(shadowColor.A * shadowAlphaScale));
+                // Issue #2950 — filled-disk strict-anchor shadow geometry. Returns the (rDisk,
+                // aaSize, alphaScale) triple that puts the smoothstep falloff's 50% line exactly
+                // at the host radius. When blur exceeds 2R the inner ramp edge would be negative;
+                // the helper truncates to rDisk=0 and reduces base alpha so the curve still passes
+                // through (R, 0.5) and (R + B/2, 0) — center becomes translucent, which is correct
+                // for big-blur cases. Camera zoom is folded into aaSize so the visible halo holds a
+                // constant world extent under zoom.
+                (float diskRadius, int diskAaSize, float shadowAlphaScale) =
+                    ComputeShadowDrawGeometry(radius, cameraZoom);
+                shadowRadius = diskRadius;
+                shadowAaSize = diskAaSize;
+                if (shadowAlphaScale < 1f)
+                {
+                    shadowColor = new Color(
+                        shadowColor.R, shadowColor.G, shadowColor.B,
+                        (byte)(shadowColor.A * shadowAlphaScale));
+                }
+            }
+            else
+            {
+                // Issue #2977 — a stroke-only shadow is a ring, not a disk, so the filled-disk
+                // anchor above (which pulls the radius inward by blur/2) would drag the ring
+                // inward as blur grows past the stroke width, making the shape look like it
+                // contracts. Anchor the ring centerline at the body stroke's centerline instead;
+                // blur only widens the AA halo. ComputeStrokeShadowDrawParameters already faded
+                // the alpha for the large-blur case, so no alphaScale is applied here.
+                shadowRadius = ComputeStrokeShadowDrawRadius(radius, shadowStrokeWidth);
+                shadowAaSize = GetShadowAntiAliasSize(cameraZoom);
             }
 
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, shadowRadius,

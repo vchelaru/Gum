@@ -429,7 +429,11 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         get => _dropshadowBlurX;
         set
         {
-            _dropshadowBlurX = value;
+            // Issue #2977 — blur is a radius; a negative value is meaningless and used to make
+            // the shadow vanish (a negative aaSize, which Apos.Shapes won't draw). Clamp here so
+            // negative blur behaves identically to 0 for every consumer (Circle fill/stroke,
+            // RoundedRectangle, Arc, gradient offsets).
+            _dropshadowBlurX = System.Math.Max(0f, value);
         }
     }
 
@@ -441,7 +445,7 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         get => _dropshadowBlurY;
         set
         {
-            _dropshadowBlurY = value;
+            _dropshadowBlurY = System.Math.Max(0f, value);
         }
     }
 
@@ -611,6 +615,24 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
             effectiveStrokeWidth = 0.01f;
         }
         return (effectiveStrokeWidth, baseColor);
+    }
+
+    /// <summary>
+    /// Issue #2977 — shadow ring radius for a stroke-only shape. The filled-disk anchor model in
+    /// <see cref="ComputeShadowDrawGeometry"/> pulls the radius inward by <c>blur/2</c>, which is
+    /// correct for a solid disk but wrong for a ring: once blur exceeds the stroke width,
+    /// <see cref="ComputeStrokeShadowDrawParameters"/> clamps the effective shadow stroke width to
+    /// a ~0 epsilon, so the ring centerline collapses to <c>hostRadius - blur/2</c> and marches
+    /// inward as blur grows — the shape visibly contracts. Instead anchor the shadow ring's
+    /// centerline at the body stroke's centerline (<c>hostRadius - StrokeWidth/2</c>) regardless of
+    /// blur; only the AA halo (aaSize) grows. Solve
+    /// <c>shadowRadius - effectiveShadowStrokeWidth/2 = hostRadius - StrokeWidth/2</c> for the outer
+    /// radius Apos.Shapes' <c>DrawCircle</c> expects. For <c>blur &lt; StrokeWidth</c> this reduces
+    /// to the legacy <c>hostRadius - blur/2</c>, leaving the common small-blur case unchanged.
+    /// </summary>
+    public float ComputeStrokeShadowDrawRadius(float hostRadius, float effectiveShadowStrokeWidth)
+    {
+        return hostRadius - StrokeWidth / 2f + effectiveShadowStrokeWidth / 2f;
     }
 
     /// <summary>
