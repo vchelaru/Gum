@@ -71,6 +71,23 @@ public class Circle : RenderableShapeBase,
     /// </remarks>
     public float FillRadiusInset { get; set; }
 
+    /// <summary>
+    /// Issue #2958 — the body and the dropshadow share <see cref="RenderInternal"/>, but
+    /// <see cref="FillRadiusInset"/> only applies to the body pass (it exists to hide the seam
+    /// between fill and stroke per #2834). The shadow must draw at the full <paramref name="radius"/>
+    /// so its outer edge lines up with the body's outer edge — otherwise the shadow comes up
+    /// short by <c>FillRadiusInset</c> world units (1 px at zoom = 1, more when zoomed in).
+    /// Clamped at 0 on the body pass so a runaway inset can't render an inverted disk.
+    /// </summary>
+    public float ComputeFillDrawRadius(float radius, bool isShadowPass)
+    {
+        if (isShadowPass)
+        {
+            return radius;
+        }
+        return System.Math.Max(0f, radius - FillRadiusInset);
+    }
+
     public override void Render(ISystemManagers managers)
     {
         // Issue #2950 follow-up — stroke-only Circle with StrokeWidth = 0 would otherwise draw
@@ -179,9 +196,10 @@ public class Circle : RenderableShapeBase,
 
             // Issue #2834 — pull the fill's outer edge inside the companion stroke slot's
             // opaque band so the two AA boundaries don't composite into a visible color
-            // bleed. Clamped at 0 so a runaway inset (larger than the radius) can't render an
-            // inverted disk. Only the fill branch consumes this; stroke ignores it.
-            float fillRadius = System.Math.Max(0f, radius - FillRadiusInset);
+            // bleed. Only the fill branch consumes this; stroke ignores it. Issue #2958 —
+            // the shadow pass shares this branch but must NOT inherit the inset, or its
+            // outer edge falls short of the body's outer edge.
+            float fillRadius = ComputeFillDrawRadius(radius, isShadowPass: forcedColor != null);
 
             if (ShouldPaintGradient(forcedColor))
             {
