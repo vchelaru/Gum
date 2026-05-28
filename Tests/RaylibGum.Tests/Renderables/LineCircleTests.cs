@@ -222,4 +222,141 @@ public class LineCircleTests
         circle.Color.B.ShouldBe((byte)56);
         circle.Color.A.ShouldBe((byte)78);
     }
+
+    // Issue #2956 — UseGradient is a *pattern* flag, not a *visibility* flag. The effective
+    // fill color is `FillColor ?? Color`; when its alpha is 0 the slot is invisible and the
+    // gradient must not paint over it. Mirrors the SkPaint contract (paint.Color.alpha
+    // modulates shader output) that the SkiaGum backend enforces naturally. Apos and raylib
+    // both used to leak — see fix in EmitGradientVertex / DrawGradientFan gating.
+
+    [Fact]
+    public void ShouldPaintFillGradient_FillColorOpaque_True()
+    {
+        LineCircle circle = new() { UseGradient = true, FillColor = new Color(10, 20, 30, 255) };
+
+        circle.ShouldPaintFillGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_FillColorTransparent_False()
+    {
+        LineCircle circle = new() { UseGradient = true, FillColor = new Color(10, 20, 30, 0) };
+
+        circle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_GradientOff_False()
+    {
+        LineCircle circle = new() { UseGradient = false, FillColor = new Color(10, 20, 30, 255) };
+
+        circle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_LegacyFillViaIsFilled_OpaqueColor_True()
+    {
+        LineCircle circle = new() { UseGradient = true, IsFilled = true };
+
+        // Default Color is opaque white, so the legacy fill path lights up.
+        circle.ShouldPaintFillGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_LegacyFillViaIsFilled_TransparentColor_False()
+    {
+        LineCircle circle = new() { UseGradient = true, IsFilled = true, Alpha = 0 };
+
+        circle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_NoFillSlotEnabled_False()
+    {
+        // Default LineCircle: IsFilled = false, FillColor = null → fill pass doesn't run at all,
+        // so the gradient cannot paint regardless of UseGradient.
+        LineCircle circle = new() { UseGradient = true };
+
+        circle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    // Issue #2934 / #2956 — LineCircle.Render previously ignored Rotation entirely. The disc
+    // is rotation-symmetric so its position doesn't change, but the gradient axis (defined in
+    // object-local bbox coords) must rotate around the bbox center to track the shape — same
+    // contract Apos's RenderableShapeBase.GetGradient enforces (PR #2945). The fix rotates
+    // GradientX1/Y1 and GradientX2/Y2 around the bbox center (Radius, Radius) before
+    // projection in EmitGradientVertex. Rotation convention mirrors LineRectangle's R helper
+    // (visual CCW on screen: [cos sin; -sin cos]).
+
+    [Fact]
+    public void GetRotatedGradientEndpoints_ZeroRotation_ReturnsOriginalEndpoints()
+    {
+        LineCircle circle = new()
+        {
+            Width = 56,
+            Height = 56,
+            GradientX1 = 0f,
+            GradientY1 = 0f,
+            GradientX2 = 20f,
+            GradientY2 = 0f,
+        };
+
+        (float x1, float y1, float x2, float y2) = circle.GetRotatedGradientEndpoints(rotationDegrees: 0f);
+
+        x1.ShouldBe(0f);
+        y1.ShouldBe(0f);
+        x2.ShouldBe(20f);
+        y2.ShouldBe(0f);
+    }
+
+    [Fact]
+    public void GetRotatedGradientEndpoints_NinetyDegrees_PivotsAroundBboxCenter()
+    {
+        // bbox is 56x56, center is at (28, 28) in local coords. Original axis runs from
+        // (0, 0) to (20, 0). A 90° CCW rotation (visual) around (28, 28) maps:
+        //   (0, 0)  → (28 - 28, 28 + 28) = (0, 56)   (delta -28,-28 → cos sin = 0,1 → 0*0 + -28*1 = -28; -(-28)*1 + -28*0 = 28; (28-28, 28+28) = (0, 56))
+        // hmm let me recompute by hand using LineRectangle's formula: (cx + dx*cos + dy*sin, cy - dx*sin + dy*cos)
+        // (0,0): dx=-28, dy=-28; cos(90°)=0, sin(90°)=1 → (28 + 0 + -28, 28 - -28 + 0) = (0, 56)
+        // (20,0): dx=-8, dy=-28 → (28 + 0 + -28, 28 - -8 + 0) = (0, 36)
+        LineCircle circle = new()
+        {
+            Width = 56,
+            Height = 56,
+            GradientX1 = 0f,
+            GradientY1 = 0f,
+            GradientX2 = 20f,
+            GradientY2 = 0f,
+        };
+
+        (float x1, float y1, float x2, float y2) = circle.GetRotatedGradientEndpoints(rotationDegrees: 90f);
+
+        x1.ShouldBe(0f, tolerance: 0.001);
+        y1.ShouldBe(56f, tolerance: 0.001);
+        x2.ShouldBe(0f, tolerance: 0.001);
+        y2.ShouldBe(36f, tolerance: 0.001);
+    }
+
+    [Fact]
+    public void GetRotatedGradientEndpoints_OneHundredEightyDegrees_FlipsAcrossBboxCenter()
+    {
+        // 180° flips both endpoints across the bbox center (28, 28).
+        // (0, 0)  → (56, 56)
+        // (20, 0) → (36, 56)
+        LineCircle circle = new()
+        {
+            Width = 56,
+            Height = 56,
+            GradientX1 = 0f,
+            GradientY1 = 0f,
+            GradientX2 = 20f,
+            GradientY2 = 0f,
+        };
+
+        (float x1, float y1, float x2, float y2) = circle.GetRotatedGradientEndpoints(rotationDegrees: 180f);
+
+        x1.ShouldBe(56f, tolerance: 0.001);
+        y1.ShouldBe(56f, tolerance: 0.001);
+        x2.ShouldBe(36f, tolerance: 0.001);
+        y2.ShouldBe(56f, tolerance: 0.001);
+    }
 }

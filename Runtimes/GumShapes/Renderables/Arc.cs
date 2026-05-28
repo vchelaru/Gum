@@ -141,7 +141,7 @@ internal class Arc : RenderableShapeBase
 
         if(_isEndRounded)
         {
-            if (UseGradient && forcedColor == null)
+            if (ShouldPaintGradient(forcedColor))
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop);
                 sb.DrawArc(center,
@@ -191,7 +191,7 @@ internal class Arc : RenderableShapeBase
                 return;
             }
 
-            if (UseGradient && forcedColor == null)
+            if (ShouldPaintGradient(forcedColor))
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop);
                 sb.DrawRing(center,

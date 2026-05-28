@@ -193,4 +193,56 @@ public class LineRectangleTests
         rectangle.Color.B.ShouldBe((byte)56);
         rectangle.Color.A.ShouldBe((byte)78);
     }
+
+    // Issue #2956 — see LineCircleTests.ShouldPaintFillGradient_* for the full contract.
+    // Same gating logic applies to LineRectangle's fill gradient path (linear quad + radial
+    // concentric circles).
+
+    [Fact]
+    public void ShouldPaintFillGradient_FillColorOpaque_True()
+    {
+        LineRectangle rectangle = new() { UseGradient = true, FillColor = new Color(10, 20, 30, 255) };
+
+        rectangle.ShouldPaintFillGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_FillColorTransparent_False()
+    {
+        LineRectangle rectangle = new() { UseGradient = true, FillColor = new Color(10, 20, 30, 0) };
+
+        rectangle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_GradientOff_False()
+    {
+        LineRectangle rectangle = new() { UseGradient = false, FillColor = new Color(10, 20, 30, 255) };
+
+        rectangle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_LegacyFillViaIsFilled_OpaqueColor_True()
+    {
+        LineRectangle rectangle = new() { UseGradient = true, IsFilled = true };
+
+        rectangle.ShouldPaintFillGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_LegacyFillViaIsFilled_TransparentColor_False()
+    {
+        LineRectangle rectangle = new() { UseGradient = true, IsFilled = true, Alpha = 0 };
+
+        rectangle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_NoFillSlotEnabled_False()
+    {
+        LineRectangle rectangle = new() { UseGradient = true };
+
+        rectangle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
 }
