@@ -30,6 +30,66 @@ namespace MonoGameGumShapes;
 
 public class CustomSetPropertyOnRenderable
 {
+    // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
+    // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
+    // gradient color channels, gradient endpoints, etc.) forward to BOTH slots; reflection
+    // writes on the contained renderable hit only the fill slot. The dispatcher branches
+    // below special-case the properties they know about, but every new runtime property is
+    // a chance to forget — and forgetting silently leaves the stroke slot at its default
+    // (typically white opaque, which renders as a solid outline regardless of what the user
+    // configured).
+    //
+    // This helper closes the gap: when the GUE is the strongly-typed runtime and the
+    // property name resolves to a runtime-declared setter, route through it. If not, return
+    // false and let the renderable-side fallback take over. Cost is one PropertyInfo lookup
+    // per unhandled property (reflection on the runtime's type, not the renderable's).
+    //
+    // Visible bug this fixes: UseGradient = true + IsFilled = false in the tool produced a
+    // solid stroke instead of a gradient one, because `_stroke.UseGradient` never flipped.
+    private static bool TrySetPropertyOnRuntime(GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        System.Reflection.PropertyInfo? pi = graphicalUiElement.GetType().GetProperty(propertyName);
+        if (pi == null || !pi.CanWrite)
+        {
+            return false;
+        }
+        // Skip properties declared on GraphicalUiElement itself — those are size/position/
+        // rotation/etc., already routed via TrySetValueOnThis earlier in the pipeline. We
+        // only want to intercept properties added by the typed runtime subclasses (CircleRuntime
+        // / RectangleRuntime / SkiaShapeRuntime / etc.).
+        if (pi.DeclaringType == typeof(GraphicalUiElement))
+        {
+            return false;
+        }
+        Type valueType = value.GetType();
+        if (valueType != pi.PropertyType)
+        {
+            if (valueType == typeof(PositionUnitType) && pi.PropertyType == typeof(GeneralUnitType))
+            {
+                value = UnitConverter.ConvertToGeneralUnit((PositionUnitType)value);
+            }
+            else
+            {
+                try
+                {
+                    value = System.Convert.ChangeType(value, pi.PropertyType);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+        try
+        {
+            pi.SetValue(graphicalUiElement, value);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
     private static bool TrySetPropertiesOnRenderableBase(RenderableShapeBase renderableBase, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
@@ -535,6 +595,11 @@ public class CustomSetPropertyOnRenderable
                     }
                     break;
             }
+            // Issue #2956 follow-up — see the Circle branch above for the rationale.
+            if (!handled)
+            {
+                handled = TrySetPropertyOnRuntime(graphicalUiElement, propertyName, value);
+            }
             if (!handled)
             {
                 handled = TrySetPropertiesOnRenderableBase(asRoundedRectangle, graphicalUiElement, propertyName, value);
@@ -793,6 +858,14 @@ public class CustomSetPropertyOnRenderable
                     break;
             }
 
+            // Issue #2956 follow-up — try the runtime first so any runtime-declared property
+            // (UseGradient, gradient endpoints, gradient color channels, etc.) routes through
+            // the runtime's typed setter, which forwards to both slots. Falling straight to
+            // TrySetPropertiesOnRenderableBase would write to the fill slot only.
+            if (!handled)
+            {
+                handled = TrySetPropertyOnRuntime(graphicalUiElement, propertyName, value);
+            }
             if(!handled)
             {
                 handled = TrySetPropertiesOnRenderableBase(asCircle, graphicalUiElement, propertyName, value);

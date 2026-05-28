@@ -880,4 +880,79 @@ public class CircleRuntimeTests
             RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = originalZoom;
         }
     }
+
+    // Issue #2956 follow-up — the Gum tool's variable grid drives runtime properties via
+    // GraphicalUiElement.SetProperty(name, value), which dispatches through
+    // CustomSetPropertyOnRenderable. That dispatcher's CircleRuntime-typed branch only
+    // special-cases the legacy single-slot properties (Color/Red/Green/Blue/Alpha/Radius);
+    // every other property falls through to reflection on the *contained renderable*. For a
+    // two-slot CircleRuntime the contained renderable is the fill slot, so two-slot variables
+    // (UseGradient, IsFilled, FillColor, StrokeColor, etc.) only reach the fill slot — the
+    // stroke slot never sees them. Visible symptom: `UseGradient = true` + `IsFilled = false`
+    // makes the stroke render solid because the stroke slot's UseGradient never flipped.
+    //
+    // These tests pin the contract that SetProperty routes through the *runtime's* typed
+    // setters for two-slot variables. Each test confirms a runtime-level side effect that
+    // only happens when the runtime setter is called (not when reflection writes directly to
+    // the contained renderable).
+
+    [Fact]
+    public void SetProperty_UseGradient_ForwardsToBothSlots()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("UseGradient", true);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        fill.UseGradient.ShouldBeTrue();
+        stroke.UseGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SetProperty_IsFilled_RoutesThroughRuntimeSetter()
+    {
+        // The runtime's IsFilled setter zeros _fill.Color.A when IsFilled = false; reflection
+        // writing IsFilled directly to the fill renderable would instead flip the renderable's
+        // own IsFilled flag (which the factory pins to true). The runtime-level Color.A = 0 is
+        // the visible signature that the runtime setter ran.
+        CircleRuntime sut = new();
+        sut.FillColor = new Color(200, 100, 50, 255);
+
+        sut.SetProperty("IsFilled", false);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Color.A.ShouldBe((byte)0);
+        // Runtime keeps the renderable's IsFilled pinned to true (factory contract); only
+        // _fill.Color.A is zeroed when the runtime's IsFilled toggles off.
+        fill.IsFilled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SetProperty_StrokeColor_WritesToStrokeSlot()
+    {
+        // Reflection on the contained renderable (fill slot) would write Color on the fill,
+        // not the stroke — and there's no "StrokeColor" property on Apos's Circle renderable
+        // at all, so reflection would silently no-op. Going through the runtime's StrokeColor
+        // setter writes _stroke.Color.
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeColor", new Color(10, 20, 30, 255));
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.Color.ShouldBe(new Color(10, 20, 30, 255));
+    }
+
+    [Fact]
+    public void SetProperty_FillColor_WritesToFillSlot()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("FillColor", new Color(60, 70, 80, 255));
+
+        sut.FillColor.ShouldBe(new Color(60, 70, 80, 255));
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Color.ShouldBe(new Color(60, 70, 80, 255));
+    }
 }
