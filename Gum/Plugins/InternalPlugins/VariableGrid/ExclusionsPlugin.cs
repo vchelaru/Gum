@@ -38,7 +38,7 @@ public class ExclusionsPlugin : PriorityPlugin
         this.VariableSet += HandleVariableSet;
     }
 
-    private void HandleVariableSet(ElementSave save1, InstanceSave save2, string variableName, object oldValue)
+    private void HandleVariableSet(ElementSave save1, InstanceSave? save2, string variableName, object? oldValue)
     {
         if(variableName == "ChildrenLayout")
         {
@@ -98,7 +98,7 @@ public class ExclusionsPlugin : PriorityPlugin
 
     private string? GetCurrentRootStandardTypeName()
     {
-        ElementSave element = _selectedState.SelectedElement;
+        ElementSave? element = _selectedState.SelectedElement;
 
         if (element != null && _selectedState.SelectedInstance != null)
         {
@@ -119,14 +119,14 @@ public class ExclusionsPlugin : PriorityPlugin
     {
         get
         {
-            ElementSave element = _selectedState.SelectedElement;
+            ElementSave? element = _selectedState.SelectedElement;
 
             if (element != null && _selectedState.SelectedInstance != null)
             {
                 element = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance);
             }
 
-            ElementSave baseElement = null;
+            ElementSave? baseElement = null;
 
             if (element != null)
             {
@@ -167,7 +167,7 @@ public class ExclusionsPlugin : PriorityPlugin
         if(currentElement is ScreenSave currentScreen && _selectedState.SelectedInstance == null)
         {
             // exclude it if the value is null and there is only one screen:
-            var isOnlyScreen = _objectFinder.GumProjectSave.Screens.Count == 1;
+            var isOnlyScreen = _objectFinder.GumProjectSave?.Screens.Count == 1;
             var isEmpty = string.IsNullOrEmpty(currentScreen.BaseType);
 
             return isOnlyScreen && isEmpty;

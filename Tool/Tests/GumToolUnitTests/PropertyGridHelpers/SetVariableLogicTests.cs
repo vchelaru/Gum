@@ -349,6 +349,53 @@ public class SetVariableLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactToPropertyValueChanged_ShouldNotRebuildTreeView_WhenCommitIsIntermediate()
+    {
+        // Dragging the StrokeWidth label scrubs the value via intermediate commits. A structural
+        // rebuild (tree view + grid) per tick destroys the control being dragged and breaks the
+        // drag. The rebuild must wait for the full commit on release.
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+
+        _setVariableLogic.ReactToPropertyValueChanged(
+            "StrokeWidth",
+            2f,
+            screen,
+            null,
+            state,
+            refresh: true,
+            recordUndo: false,
+            trySave: false,
+            isFullCommit: false);
+
+        mocker.GetMock<IGuiCommands>()
+            .Verify(x => x.RefreshElementTreeView(It.IsAny<ElementSave>()), Times.Never);
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldRebuildTreeView_WhenCommitIsFull()
+    {
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+
+        _setVariableLogic.ReactToPropertyValueChanged(
+            "StrokeWidth",
+            2f,
+            screen,
+            null,
+            state,
+            refresh: true,
+            recordUndo: false,
+            trySave: false,
+            isFullCommit: true);
+
+        mocker.GetMock<IGuiCommands>()
+            .Verify(x => x.RefreshElementTreeView(It.IsAny<ElementSave>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
     public void IsStateVariable_ShouldReturnTrue_WhenCategoryIsInheritedFromBaseType()
     {
         // DerivedComponent inherits from BaseComponent which defines Category1.

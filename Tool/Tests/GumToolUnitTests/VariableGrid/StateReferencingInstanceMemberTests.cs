@@ -34,7 +34,7 @@ public class StateReferencingInstanceMemberTests
         setVariableLogic
             .Setup(x => x.PropertyValueChanged(It.IsAny<string>(), It.IsAny<object?>(),
                 It.IsAny<InstanceSave>(), It.IsAny<StateSave>() , It.IsAny<bool>() , It.IsAny<bool>(),
-                It.IsAny<bool>()))
+                It.IsAny<bool>(), It.IsAny<bool>()))
             .Returns(GeneralResponse.SuccessfulResponse);
 
         _sut = new StateReferencingInstanceMember(

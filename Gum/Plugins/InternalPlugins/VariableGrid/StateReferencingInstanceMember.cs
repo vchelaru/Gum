@@ -1156,7 +1156,7 @@ public class StateReferencingInstanceMember : InstanceMember
                 {
                     handledByExposedVariable = true;
 
-                    _setVariableLogic.ReactToPropertyValueChanged(variable.GetRootName(), LastOldFullCommitValue, elementSave, instanceInElement, this.StateSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
+                    _setVariableLogic.ReactToPropertyValueChanged(variable.GetRootName(), LastOldFullCommitValue, elementSave, instanceInElement, this.StateSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo, isFullCommit: commitType == SetPropertyCommitType.Full);
                 }
 
             }
@@ -1195,7 +1195,8 @@ public class StateReferencingInstanceMember : InstanceMember
                     stateToSet,
                     refresh: effectiveRefresh,
                     recordUndo: effectiveRecordUndo,
-                    trySave: trySave);
+                    trySave: trySave,
+                    isFullCommit: commitType == SetPropertyCommitType.Full);
             }
             else if (_selectedState.SelectedBehavior != null &&
                      gumElementOrInstanceSaveAsObject is BehaviorInstanceSave behaviorInstance)

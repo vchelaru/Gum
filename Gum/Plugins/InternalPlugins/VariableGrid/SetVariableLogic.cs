@@ -135,7 +135,7 @@ public class SetVariableLogic : ISetVariableLogic
     // added instance property so we can change values even if a tree view is selected
     public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object? oldValue,
         InstanceSave instance, StateSave stateContainingVariable, bool refresh = true, bool recordUndo = true,
-        bool trySave = true)
+        bool trySave = true, bool isFullCommit = true)
     {
         IInstanceContainer? instanceContainer = null;
 
@@ -170,7 +170,7 @@ public class SetVariableLogic : ISetVariableLogic
             stateContainingVariable = containerElement.DefaultState;
         }
 
-        var response = ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, instanceContainer, instance, stateContainingVariable, refresh, recordUndo: recordUndo, trySave: trySave);
+        var response = ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, instanceContainer, instance, stateContainingVariable, refresh, recordUndo: recordUndo, trySave: trySave, isFullCommit: isFullCommit);
         return response;
     }
 
@@ -184,7 +184,7 @@ public class SetVariableLogic : ISetVariableLogic
     /// <param name="currentState">The state where the variable was set - the current state save</param>
     /// <param name="refresh"></param>
     public GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object? oldValue, IInstanceContainer instanceContainer,
-        InstanceSave instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true)
+        InstanceSave instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true, bool isFullCommit = true)
     {
         GeneralResponse response = GeneralResponse.SuccessfulResponse;
         ObjectFinder.Self.EnableCache();
@@ -206,8 +206,6 @@ public class SetVariableLogic : ISetVariableLogic
 
             if(response.Succeeded)
             {
-                bool didSetDeepReference = false;
-
                 if (parentElement != null)
                 {
                     string qualifiedName = unqualifiedMember;
@@ -232,7 +230,7 @@ public class SetVariableLogic : ISetVariableLogic
 
                     if (refresh)
                     {
-                        RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName);
+                        RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName, isFullCommit);
 
                     }
                 }
@@ -265,8 +263,16 @@ public class SetVariableLogic : ISetVariableLogic
 
 
     void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement,
-        InstanceSave instance, string qualifiedName)
+        InstanceSave instance, string qualifiedName, bool isFullCommit = true)
     {
+        // This method only performs structural grid changes (rebuilding the tree view / category
+        // list, which adds or removes rows). Those must wait for a committed value: doing them on
+        // an intermediate scrub tick (e.g. dragging the StrokeWidth label) destroys the control
+        // being dragged, breaking mouse capture. The full commit on release performs the rebuild.
+        if (!isFullCommit)
+        {
+            return;
+        }
 
         var needsToRefreshEntireElement = VariablesRequiringRefresh.ContainsKey(unqualifiedMember);
 
@@ -582,8 +588,6 @@ public class SetVariableLogic : ISetVariableLogic
                 float outX = 0;
                 float outY = 0;
 
-                bool isWidthOrHeight = false;
-
                 object unitTypeAsObject = _elementCommands.GetCurrentValueForVariable(changedMember, _selectedState.SelectedInstance);
                 GeneralUnitType unitType = UnitConverter.ConvertToGeneralUnit(unitTypeAsObject);
 
@@ -602,14 +606,12 @@ public class SetVariableLogic : ISetVariableLogic
                 else if (changedMember == "WidthUnits")
                 {
                     variableToSet = "Width";
-                    isWidthOrHeight = true;
                     xOrY = XOrY.X;
 
                 }
                 else if (changedMember == "HeightUnits")
                 {
                     variableToSet = "Height";
-                    isWidthOrHeight = true;
                     xOrY = XOrY.Y;
                 }
 
