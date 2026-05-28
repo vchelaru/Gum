@@ -949,12 +949,20 @@ public class ElementSaveDisplayer
 
         if (shouldInclude)
         {
-            // Hide v3-only shape variables when an older project is loaded so the grid doesn't
-            // surface variables the project's runtime won't honor. See ShapeVariableVersionGate.
+            // Hide v3-only fill/dropshadow/gradient variables on plain Circle/Rectangle when an
+            // older project is loaded so the grid doesn't surface variables the project's runtime
+            // won't honor. See ShapeVariableVersionGate.
             var projectVersion = ObjectFinder.Self.GumProjectSave?.Version ?? 0;
-            if (_shapeVariableVersionGate.GetIfHiddenForProjectVersion(defaultVariable.GetRootName(), projectVersion))
+            if (projectVersion < (int)GumProjectSave.GumxVersions.ShapeVariableExpansion)
             {
-                shouldInclude = false;
+                var rootStandardTypeName = (instanceSave != null
+                    ? ObjectFinder.Self.GetRootStandardElementSave(instanceSave)
+                    : ObjectFinder.Self.GetRootStandardElementSave(elementSave))?.Name;
+                if (_shapeVariableVersionGate.GetIfHiddenForProjectVersion(
+                        defaultVariable.GetRootName(), rootStandardTypeName, projectVersion))
+                {
+                    shouldInclude = false;
+                }
             }
         }
 
