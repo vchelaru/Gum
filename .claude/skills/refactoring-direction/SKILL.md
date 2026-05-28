@@ -17,8 +17,8 @@ When refactoring Gum code, **always move toward instances, interfaces, and dedic
 
 4. **Prefer constructor injection over `*.Self` singletons.** Don't reverse the tool's migration off static singletons.
    - `ObjectFinder.Self` is the sanctioned exception — fine in new or refactored code; it won't be removed. No other singletons should be reintroduced.
-   - Plugins are MEF-composed: inject deps via an `[ImportingConstructor]`, not a plain ctor (see `MainStatePlugin`).
-   - Replacing a `Locator.GetRequiredService<T>()` call with an injected `T` is good drive-by cleanup.
+   - Plugins are MEF-composed: `[ImportingConstructor]` can inject only interfaces registered in `PluginManager.LoadPlugins` via `batch.AddExportedValue<T>` (today just `ISelectedState`). To inject anything else, register it there first; otherwise keep `Locator.GetRequiredService<T>()` in the body (see `MainStatePlugin`).
+   - Replacing a `Locator.GetRequiredService<T>()` call with an injected `T` (one already exported to MEF) is good drive-by cleanup.
 
 ## When testability is the driver
 
