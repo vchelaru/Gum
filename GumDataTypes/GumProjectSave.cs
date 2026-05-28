@@ -425,6 +425,15 @@ public class GumProjectSave
 
         LocalizationFiles = new List<string>();
 
+        // GOTCHA: this defaults to AttributeVersion, NOT NativeVersion, and that is deliberate.
+        // XmlSerializer runs this ctor first and then overwrites Version from the file's <Version>
+        // element. A legacy file that lacks that element keeps this default — so it MUST be an old
+        // version, otherwise the variable-grid version gate (ShapeVariableVersionGate) would stop
+        // hiding the newer-only shape variables on a legacy Circle/Rectangle.
+        // Brand-new projects are the opposite case (they seed the latest variable surface), so the
+        // new-project factories — ProjectManager.CreateNewProject and ProjectCreator.Create —
+        // explicitly stamp Version = NativeVersion instead of relying on this default.
+        // Do NOT "simplify" this to NativeVersion. See NativeVersion's remarks above.
         Version = (int)GumxVersions.AttributeVersion;
     }
 
