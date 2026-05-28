@@ -7,7 +7,7 @@
   <UseFontCharacterFile>false</UseFontCharacterFile>
   <AutoSizeFontOutputs>false</AutoSizeFontOutputs>
   <FontGenerator>KernSmith</FontGenerator>
-  <Version>2</Version>
+  <Version>3</Version>
   <DefaultCanvasWidth>1024</DefaultCanvasWidth>
   <DefaultCanvasHeight>768</DefaultCanvasHeight>
   <CustomCanvasSizes>

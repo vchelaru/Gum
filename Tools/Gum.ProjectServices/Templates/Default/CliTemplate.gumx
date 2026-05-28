@@ -6,7 +6,7 @@
   <FontSpacingHorizontal>1</FontSpacingHorizontal>
   <UseFontCharacterFile>false</UseFontCharacterFile>
   <AutoSizeFontOutputs>false</AutoSizeFontOutputs>
-  <Version>2</Version>
+  <Version>3</Version>
   <DefaultCanvasWidth>800</DefaultCanvasWidth>
   <DefaultCanvasHeight>600</DefaultCanvasHeight>
   <CustomCanvasSizes>
