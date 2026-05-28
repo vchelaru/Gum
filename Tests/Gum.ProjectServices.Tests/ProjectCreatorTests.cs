@@ -62,13 +62,27 @@ public class ProjectCreatorTests : IDisposable
         _sut.Create(filePath);
 
         string standardsDir = Path.Combine(_tempDirectory, "Standards");
-        string[] expectedElements = { "Circle", "ColoredRectangle", "Component", "Container",
+        string[] expectedElements = { "Circle", "Component", "Container",
             "NineSlice", "Polygon", "Rectangle", "Sprite", "Text" };
 
         foreach (string name in expectedElements)
         {
             File.Exists(Path.Combine(standardsDir, $"{name}.gutx")).ShouldBeTrue($"{name}.gutx should exist");
         }
+    }
+
+    [Fact]
+    public void Create_ShouldNotSeedColoredRectangle()
+    {
+        // The v3 Rectangle carries the full fill/stroke/gradient/dropshadow surface, making
+        // ColoredRectangle redundant for new projects (#2965 phase 2). It stays loadable for
+        // legacy projects, but is no longer seeded.
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+
+        GumProjectSave project = _sut.Create(filePath);
+
+        File.Exists(Path.Combine(_tempDirectory, "Standards", "ColoredRectangle.gutx")).ShouldBeFalse();
+        project.StandardElementReferences.ShouldNotContain(r => r.Name == "ColoredRectangle");
     }
 
     [Fact]
@@ -88,7 +102,7 @@ public class ProjectCreatorTests : IDisposable
 
         GumProjectSave project = _sut.Create(filePath);
 
-        project.StandardElementReferences.Count.ShouldBe(9);
+        project.StandardElementReferences.Count.ShouldBe(8);
         project.StandardElementReferences.ShouldContain(r => r.Name == "Container");
         project.StandardElementReferences.ShouldContain(r => r.Name == "NineSlice");
         project.StandardElementReferences.ShouldContain(r => r.Name == "Sprite");
@@ -151,7 +165,7 @@ public class ProjectCreatorTests : IDisposable
         ProjectLoadResult result = loader.Load(filePath);
 
         result.Success.ShouldBeTrue();
-        result.Project!.StandardElements.Count.ShouldBe(9);
+        result.Project!.StandardElements.Count.ShouldBe(8);
         result.Project.StandardElements.ShouldContain(e => e.Name == "Container");
         result.Project.StandardElements.ShouldContain(e => e.Name == "NineSlice");
     }
