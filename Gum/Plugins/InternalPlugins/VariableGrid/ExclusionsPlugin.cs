@@ -23,10 +23,12 @@ public class ExclusionsPlugin : PriorityPlugin
 {
     private readonly ISelectedState _selectedState;
     private ObjectFinder _objectFinder;
+    private readonly ShapeVariableExclusionLogic _shapeVariableExclusionLogic = new();
 
-    public ExclusionsPlugin()
+    [ImportingConstructor]
+    public ExclusionsPlugin(ISelectedState selectedState)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState = selectedState;
         _objectFinder = ObjectFinder.Self;
     }
 
@@ -71,7 +73,8 @@ public class ExclusionsPlugin : PriorityPlugin
         }
 
         // Shape gradient / dropshadow / stroke channel exclusions
-        if(GetIfShapeVariableIsExcluded(variable, rootName, finder, out bool shapeExcluded))
+        var prefix = string.IsNullOrEmpty(variable.SourceObject) ? "" : variable.SourceObject + '.';
+        if(_shapeVariableExclusionLogic.GetIfShapeVariableIsExcluded(rootName, finder, GetCurrentRootStandardTypeName(), prefix, out bool shapeExcluded))
         {
             return shapeExcluded;
         }
@@ -92,120 +95,6 @@ public class ExclusionsPlugin : PriorityPlugin
     }
 
     #region Shape Exclusions (gradient / dropshadow / stroke)
-
-    // Moved from Gum/SvgPlugin/Managers/DefaultStateManager.GetIfVariableIsExcluded — these
-    // rules historically lived in MainSkiaPlugin because gradient/dropshadow/IsFilled were
-    // Skia-only, but #2929/#2933/#2931 promoted them to plain Circle/Rectangle. The gating
-    // is shape-agnostic now, so it belongs in the general ExclusionsPlugin.
-    private bool GetIfShapeVariableIsExcluded(VariableSave variable, string rootName, RecursiveVariableFinder finder, out bool shouldExclude)
-    {
-        var prefix = string.IsNullOrEmpty(variable.SourceObject) ? "" : variable.SourceObject + '.';
-
-        if (rootName == "Red" || rootName == "Green" || rootName == "Blue")
-        {
-            var usesGradients = finder.GetValue(prefix + "UseGradient");
-            if (usesGradients is bool asBool && asBool)
-            {
-                shouldExclude = true;
-                return true;
-            }
-        }
-        else if (rootName == "Red1" || rootName == "Green1" || rootName == "Blue1" || rootName == "Alpha1" ||
-            rootName == "GradientX1" || rootName == "GradientY1" ||
-            rootName == "GradientX1Units" || rootName == "GradientY1Units" ||
-            rootName == "Red2" || rootName == "Green2" || rootName == "Blue2" || rootName == "Alpha2" ||
-            rootName == "GradientType")
-        {
-            var usesGradients = finder.GetValue(prefix + "UseGradient");
-            var effectiveUsesGradient = usesGradients is bool asBool && asBool;
-            shouldExclude = !effectiveUsesGradient;
-            return true;
-        }
-        else if (rootName == "GradientX2" || rootName == "GradientY2" || rootName == "GradientX2Units" || rootName == "GradientY2Units")
-        {
-            var usesGradients = finder.GetValue(prefix + "UseGradient");
-            var effectiveUsesGradient = usesGradients is bool asBool && asBool;
-
-            var gradientTypeAsObject = finder.GetValue(prefix + "GradientType");
-            GradientType? gradientType = gradientTypeAsObject as GradientType?;
-
-            shouldExclude = effectiveUsesGradient == false || gradientType != GradientType.Linear;
-            return true;
-        }
-        else if (rootName == "GradientInnerRadius" || rootName == "GradientOuterRadius" ||
-            rootName == "GradientInnerRadiusUnits" || rootName == "GradientOuterRadiusUnits")
-        {
-            var usesGradients = finder.GetValue(prefix + "UseGradient");
-            var effectiveUsesGradient = usesGradients is bool asBool && asBool;
-
-            var gradientTypeAsObject = finder.GetValue(prefix + "GradientType");
-            GradientType? gradientType = gradientTypeAsObject as GradientType?;
-
-            shouldExclude = effectiveUsesGradient == false || gradientType != GradientType.Radial;
-            return true;
-        }
-
-        if (rootName == "DropshadowOffsetX" || rootName == "DropshadowOffsetY" || rootName == "DropshadowBlur" ||
-            rootName == "DropshadowAlpha" || rootName == "DropshadowRed" || rootName == "DropshadowGreen" || rootName == "DropshadowBlue")
-        {
-            var hasDropshadow = finder.GetValue(prefix + "HasDropshadow");
-            var effectiveHasDropshadow = hasDropshadow is bool asBool && asBool;
-            shouldExclude = !effectiveHasDropshadow;
-            return true;
-        }
-
-        // #2931 / #2938: stroke vs. fill model is type-specific.
-        //
-        // Legacy shapes (ColoredCircle / RoundedRectangle / Arc) treat IsFilled as
-        // "fill OR stroke" — when IsFilled is true the stroke vars are meaningless and
-        // hidden. Plain Circle / Rectangle (#2938) expose fill and stroke as independent
-        // surfaces; stroke vars stay visible regardless of IsFilled, gated only by
-        // StrokeWidth = 0.
-        //
-        // Symmetric on the fill side: the channel-decomp FillRed/Green/Blue/Alpha exist
-        // only on plain Circle / Rectangle (#2931) and are meaningless when IsFilled is
-        // false.
-        var rootStandardTypeName = GetCurrentRootStandardTypeName();
-        var hasSeparateFillAndStroke = rootStandardTypeName == "Circle" || rootStandardTypeName == "Rectangle";
-
-        if (rootName == "StrokeWidth" || rootName == "StrokeDashLength" || rootName == "StrokeGapLength")
-        {
-            if (!hasSeparateFillAndStroke)
-            {
-                var isFilled = finder.GetValue(prefix + "IsFilled");
-                if (isFilled is true)
-                {
-                    shouldExclude = true;
-                    return true;
-                }
-            }
-        }
-
-        if (hasSeparateFillAndStroke &&
-            (rootName == "FillRed" || rootName == "FillGreen" || rootName == "FillBlue" || rootName == "FillAlpha"))
-        {
-            // Hidden when IsFilled = false (no fill drawn) or when UseGradient = true
-            // (gradient paints the fill slot, the solid fill channels are unused). Stroke
-            // channels stay visible regardless of UseGradient — gradient targets fill only.
-            var isFilled = finder.GetValue(prefix + "IsFilled");
-            if (isFilled is false)
-            {
-                shouldExclude = true;
-                return true;
-            }
-            var usesGradient = finder.GetValue(prefix + "UseGradient");
-            if (usesGradient is true)
-            {
-                shouldExclude = true;
-                return true;
-            }
-            shouldExclude = false;
-            return true;
-        }
-
-        shouldExclude = false;
-        return false;
-    }
 
     private string? GetCurrentRootStandardTypeName()
     {

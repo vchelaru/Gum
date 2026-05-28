@@ -60,6 +60,9 @@ public class SetVariableLogic : ISetVariableLogic
         {"GradientType",                                           VariableRefreshType.FullGridRefresh   },
         {"HasDropshadow",                                          VariableRefreshType.FullGridRefresh   },
         {"IsFilled",                                               VariableRefreshType.FullGridRefresh   },
+        // StrokeWidth = 0 hides the dash/gap and stroke-color channels. The refresh fires only
+        // on a Full commit (drag release / Enter / focus loss), not per intermediate drag tick.
+        {"StrokeWidth",                                            VariableRefreshType.FullGridRefresh   },
         // Refreshing on locked causes the grid to refresh. This is a way to update it when selecting Locked from right-click
         {"Locked",                                                  VariableRefreshType.FullGridRefresh   },
         // These are handled in the SubtextLogic

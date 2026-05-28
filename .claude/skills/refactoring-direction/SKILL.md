@@ -15,7 +15,10 @@ When refactoring Gum code, **always move toward instances, interfaces, and dedic
 
 3. **Prefer extracting a new single-responsibility class over adding to a "god class."** `GraphicalUiElement`, `CodeGenerator`, and similar large classes should not grow. New behavior goes in a new controller/service class that the existing class composes with, even if the new class starts with one method.
 
-4. **Prefer constructor injection over `*.Self` singletons.** The Gum tool has been progressively migrating off static singletons (see project `CLAUDE.md`). Don't reverse that. `ObjectFinder.Self` is the documented exception — no other singletons should be reintroduced.
+4. **Prefer constructor injection over `*.Self` singletons.** Don't reverse the tool's migration off static singletons.
+   - `ObjectFinder.Self` is the sanctioned exception — fine in new or refactored code; it won't be removed. No other singletons should be reintroduced.
+   - Plugins are MEF-composed: inject deps via an `[ImportingConstructor]`, not a plain ctor (see `MainStatePlugin`).
+   - Replacing a `Locator.GetRequiredService<T>()` call with an injected `T` is good drive-by cleanup.
 
 ## When testability is the driver
 
