@@ -6,7 +6,7 @@
   <FontSpacingHorizontal>1</FontSpacingHorizontal>
   <UseFontCharacterFile>false</UseFontCharacterFile>
   <AutoSizeFontOutputs>false</AutoSizeFontOutputs>
-  <Version>2</Version>
+  <Version>3</Version>
   <DefaultCanvasWidth>1024</DefaultCanvasWidth>
   <DefaultCanvasHeight>768</DefaultCanvasHeight>
   <CustomCanvasSizes>
@@ -99,7 +99,6 @@
   <ComponentReference Name="Elements/VerticalLines" />
   <ComponentReference Name="Styles" />
   <StandardElementReference Name="Circle" />
-  <StandardElementReference Name="ColoredRectangle" />
   <StandardElementReference Name="Component" />
   <StandardElementReference Name="Container" />
   <StandardElementReference Name="NineSlice" />

@@ -4,29 +4,41 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Accent.Blue" SetsValue="true">
+    <Variable Type="int" Name="Accent.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">138</Value>
     </Variable>
-    <Variable Type="int" Name="Accent.Green" SetsValue="true">
+    <Variable Type="int" Name="Accent.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Accent.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">140</Value>
+    </Variable>
+    <Variable Type="bool" Name="Accent.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Accent.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="Accent.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">140</Value>
+    <Variable Type="float" Name="Accent.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
-    <Variable Type="int" Name="Black.Blue" SetsValue="true">
+    <Variable Type="int" Name="Black.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="int" Name="Black.Green" SetsValue="true">
+    <Variable Type="int" Name="Black.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Black.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="Black.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Black.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="Black.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
+    <Variable Type="float" Name="Black.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="ChildrenLayout" Name="Colors.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -61,29 +73,41 @@
     <Variable Type="PositionUnitType" Name="Colors.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="int" Name="Danger.Blue" SetsValue="true">
+    <Variable Type="int" Name="Danger.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">41</Value>
     </Variable>
-    <Variable Type="int" Name="Danger.Green" SetsValue="true">
+    <Variable Type="int" Name="Danger.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">18</Value>
+    </Variable>
+    <Variable Type="int" Name="Danger.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">212</Value>
+    </Variable>
+    <Variable Type="bool" Name="Danger.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Danger.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="Danger.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">212</Value>
+    <Variable Type="float" Name="Danger.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
-    <Variable Type="int" Name="DarkGray.Blue" SetsValue="true">
+    <Variable Type="int" Name="DarkGray.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">80</Value>
     </Variable>
-    <Variable Type="int" Name="DarkGray.Green" SetsValue="true">
+    <Variable Type="int" Name="DarkGray.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
+    </Variable>
+    <Variable Type="int" Name="DarkGray.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">70</Value>
+    </Variable>
+    <Variable Type="bool" Name="DarkGray.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="DarkGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="DarkGray.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">70</Value>
+    <Variable Type="float" Name="DarkGray.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Emphasis.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
@@ -97,17 +121,23 @@
     <Variable Type="string" Name="Emphasis.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Emphasis</Value>
     </Variable>
-    <Variable Type="int" Name="Gray.Blue" SetsValue="true">
+    <Variable Type="int" Name="Gray.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
     </Variable>
-    <Variable Type="int" Name="Gray.Green" SetsValue="true">
+    <Variable Type="int" Name="Gray.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="int" Name="Gray.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="bool" Name="Gray.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Gray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="Gray.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">130</Value>
+    <Variable Type="float" Name="Gray.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="H1.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">22</Value>
@@ -151,17 +181,23 @@
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="int" Name="LightGray.Blue" SetsValue="true">
+    <Variable Type="int" Name="LightGray.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
     </Variable>
-    <Variable Type="int" Name="LightGray.Green" SetsValue="true">
+    <Variable Type="int" Name="LightGray.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="int" Name="LightGray.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="bool" Name="LightGray.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="LightGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="LightGray.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">170</Value>
+    <Variable Type="float" Name="LightGray.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Normal.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
@@ -172,41 +208,59 @@
     <Variable Type="string" Name="Normal.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
     </Variable>
-    <Variable Type="int" Name="Primary.Blue" SetsValue="true">
+    <Variable Type="int" Name="Primary.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
-    <Variable Type="int" Name="Primary.Green" SetsValue="true">
+    <Variable Type="int" Name="Primary.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
+    </Variable>
+    <Variable Type="int" Name="Primary.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="bool" Name="Primary.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Primary.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="Primary.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">6</Value>
+    <Variable Type="float" Name="Primary.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
-    <Variable Type="int" Name="PrimaryDark.Blue" SetsValue="true">
+    <Variable Type="int" Name="PrimaryDark.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">137</Value>
     </Variable>
-    <Variable Type="int" Name="PrimaryDark.Green" SetsValue="true">
+    <Variable Type="int" Name="PrimaryDark.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">120</Value>
+    </Variable>
+    <Variable Type="int" Name="PrimaryDark.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="PrimaryDark.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="PrimaryDark.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="PrimaryDark.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">4</Value>
+    <Variable Type="float" Name="PrimaryDark.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
-    <Variable Type="int" Name="PrimaryLight.Blue" SetsValue="true">
+    <Variable Type="int" Name="PrimaryLight.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">193</Value>
     </Variable>
-    <Variable Type="int" Name="PrimaryLight.Green" SetsValue="true">
+    <Variable Type="int" Name="PrimaryLight.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="int" Name="PrimaryLight.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
+    </Variable>
+    <Variable Type="bool" Name="PrimaryLight.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="PrimaryLight.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="PrimaryLight.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">74</Value>
+    <Variable Type="float" Name="PrimaryLight.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Small.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">12</Value>
@@ -232,17 +286,23 @@
     <Variable Type="string" Name="Strong.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Strong</Value>
     </Variable>
-    <Variable Type="int" Name="Success.Blue" SetsValue="true">
+    <Variable Type="int" Name="Success.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">48</Value>
     </Variable>
-    <Variable Type="int" Name="Success.Green" SetsValue="true">
+    <Variable Type="int" Name="Success.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">167</Value>
+    </Variable>
+    <Variable Type="int" Name="Success.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">62</Value>
+    </Variable>
+    <Variable Type="bool" Name="Success.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Success.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="Success.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">62</Value>
+    <Variable Type="float" Name="Success.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="ChildrenLayout" Name="TextStyles.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
@@ -281,20 +341,32 @@
     <Variable Type="string" Name="Title.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Title</Value>
     </Variable>
-    <Variable Type="int" Name="Warning.Blue" SetsValue="true">
+    <Variable Type="int" Name="Warning.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">25</Value>
     </Variable>
-    <Variable Type="int" Name="Warning.Green" SetsValue="true">
+    <Variable Type="int" Name="Warning.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">171</Value>
+    </Variable>
+    <Variable Type="int" Name="Warning.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">232</Value>
+    </Variable>
+    <Variable Type="bool" Name="Warning.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Warning.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
-    <Variable Type="int" Name="Warning.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">232</Value>
+    <Variable Type="float" Name="Warning.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="White.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="White.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="White.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
@@ -322,18 +394,18 @@
     </Variable>
   </State>
   <Instance Name="Colors" BaseType="Container" Locked="true" />
-  <Instance Name="Black" BaseType="ColoredRectangle" />
-  <Instance Name="DarkGray" BaseType="ColoredRectangle" />
-  <Instance Name="Gray" BaseType="ColoredRectangle" />
-  <Instance Name="LightGray" BaseType="ColoredRectangle" />
-  <Instance Name="White" BaseType="ColoredRectangle" />
-  <Instance Name="PrimaryDark" BaseType="ColoredRectangle" />
-  <Instance Name="Primary" BaseType="ColoredRectangle" />
-  <Instance Name="PrimaryLight" BaseType="ColoredRectangle" />
-  <Instance Name="Success" BaseType="ColoredRectangle" />
-  <Instance Name="Warning" BaseType="ColoredRectangle" />
-  <Instance Name="Danger" BaseType="ColoredRectangle" />
-  <Instance Name="Accent" BaseType="ColoredRectangle" />
+  <Instance Name="Black" BaseType="Rectangle" />
+  <Instance Name="DarkGray" BaseType="Rectangle" />
+  <Instance Name="Gray" BaseType="Rectangle" />
+  <Instance Name="LightGray" BaseType="Rectangle" />
+  <Instance Name="White" BaseType="Rectangle" />
+  <Instance Name="PrimaryDark" BaseType="Rectangle" />
+  <Instance Name="Primary" BaseType="Rectangle" />
+  <Instance Name="PrimaryLight" BaseType="Rectangle" />
+  <Instance Name="Success" BaseType="Rectangle" />
+  <Instance Name="Warning" BaseType="Rectangle" />
+  <Instance Name="Danger" BaseType="Rectangle" />
+  <Instance Name="Accent" BaseType="Rectangle" />
   <Instance Name="Tiny" BaseType="Text" />
   <Instance Name="Small" BaseType="Text" />
   <Instance Name="Normal" BaseType="Text" />
