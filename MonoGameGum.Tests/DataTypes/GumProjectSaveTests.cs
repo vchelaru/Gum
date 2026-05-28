@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using RenderingLibrary;
 using Shouldly;
 using System;
@@ -356,6 +357,67 @@ public class GumProjectSaveTests : BaseTestClass
         // tool builds without the new variable definitions refuse to silently drop them.
         GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.ShapeVariableExpansion);
         ((int)GumProjectSave.GumxVersions.ShapeVariableExpansion).ShouldBe(3);
+    }
+
+    [Fact]
+    public void MigrateCircleRadiusToWidthHeight_ConvertsQualifiedRadius_ToWidthAndHeight()
+    {
+        var component = new ComponentSave { Name = "MyComponent" };
+        var state = new Gum.DataTypes.Variables.StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Name = "CircleInstance.Radius", Type = "float", Value = 20.0f, SetsValue = true });
+        component.States.Add(state);
+
+        var project = new GumProjectSave();
+        project.Components.Add(component);
+
+        var didChange = project.MigrateCircleRadiusToWidthHeight();
+
+        didChange.ShouldBeTrue();
+        state.Variables.ShouldNotContain(v => v.Name == "CircleInstance.Radius");
+        state.Variables.First(v => v.Name == "CircleInstance.Width").Value.ShouldBe(40.0f);
+        state.Variables.First(v => v.Name == "CircleInstance.Height").Value.ShouldBe(40.0f);
+    }
+
+    [Fact]
+    public void MigrateCircleRadiusToWidthHeight_ConvertsUnqualifiedRadius_OnCircleDerivedElement()
+    {
+        // A component deriving from Circle can override Radius in its own default state with
+        // an unqualified "Radius" variable.
+        var component = new ComponentSave { Name = "MyCircle" };
+        var state = new Gum.DataTypes.Variables.StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Name = "Radius", Type = "float", Value = 8.0f, SetsValue = true });
+        component.States.Add(state);
+
+        var project = new GumProjectSave();
+        project.Components.Add(component);
+
+        project.MigrateCircleRadiusToWidthHeight();
+
+        state.Variables.ShouldNotContain(v => v.Name == "Radius");
+        state.Variables.First(v => v.Name == "Width").Value.ShouldBe(16.0f);
+        state.Variables.First(v => v.Name == "Height").Value.ShouldBe(16.0f);
+    }
+
+    [Fact]
+    public void MigrateCircleRadiusToWidthHeight_LeavesGradientAndCornerRadius_Untouched()
+    {
+        var component = new ComponentSave { Name = "MyComponent" };
+        var state = new Gum.DataTypes.Variables.StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Name = "CircleInstance.GradientInnerRadius", Type = "float", Value = 5.0f, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "CircleInstance.GradientOuterRadius", Type = "float", Value = 10.0f, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "RoundedInstance.CornerRadius", Type = "float", Value = 3.0f, SetsValue = true });
+        component.States.Add(state);
+
+        var project = new GumProjectSave();
+        project.Components.Add(component);
+
+        var didChange = project.MigrateCircleRadiusToWidthHeight();
+
+        didChange.ShouldBeFalse();
+        state.Variables.ShouldContain(v => v.Name == "CircleInstance.GradientInnerRadius");
+        state.Variables.ShouldContain(v => v.Name == "CircleInstance.GradientOuterRadius");
+        state.Variables.ShouldContain(v => v.Name == "RoundedInstance.CornerRadius");
+        state.Variables.ShouldNotContain(v => v.Name.EndsWith(".Width"));
     }
 
     [Fact]

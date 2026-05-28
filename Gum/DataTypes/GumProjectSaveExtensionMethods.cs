@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Gum.Managers;
 using Gum.DataTypes.Variables;
 
@@ -276,6 +277,77 @@ namespace Gum.DataTypes
                 }
             }
 
+        }
+
+        /// <summary>
+        /// Issue #2947 — Circle used to expose a "Radius" variable. It now sizes via Width/Height
+        /// like every other visual (the rendered radius is min(Width, Height)/2), so saved
+        /// "Radius" values are converted to Width = Height = Radius * 2 to preserve existing sizes.
+        /// </summary>
+        /// <remarks>
+        /// Only variables whose final name segment is exactly "Radius" are migrated, so
+        /// GradientInnerRadius, GradientOuterRadius, and CornerRadius are left untouched. Handles
+        /// both an unqualified "Radius" (a Circle-derived element overriding it in its own state)
+        /// and a qualified "Instance.Radius" (a Circle instance inside another element).
+        /// </remarks>
+        public static bool MigrateCircleRadiusToWidthHeight(this GumProjectSave gumProjectSave)
+        {
+            bool didChange = false;
+            foreach (var element in gumProjectSave.AllElements)
+            {
+                foreach (var state in element.AllStates)
+                {
+                    if (MigrateRadiusInState(state))
+                    {
+                        didChange = true;
+                    }
+                }
+            }
+            return didChange;
+        }
+
+        private static bool MigrateRadiusInState(StateSave state)
+        {
+            const string radiusName = "Radius";
+
+            // Snapshot first because Width/Height variables are added while iterating.
+            var radiusVariables = state.Variables
+                .Where(v => v.Name != null && GetLastNameSegment(v.Name) == radiusName && v.Value is float)
+                .ToList();
+
+            foreach (var radiusVariable in radiusVariables)
+            {
+                var prefix = radiusVariable.Name.Substring(0, radiusVariable.Name.Length - radiusName.Length);
+                var diameter = (float)radiusVariable.Value * 2f;
+
+                SetOrAddFloat(state, prefix + "Width", diameter);
+                SetOrAddFloat(state, prefix + "Height", diameter);
+
+                state.Variables.Remove(radiusVariable);
+            }
+
+            return radiusVariables.Count > 0;
+        }
+
+        private static void SetOrAddFloat(StateSave state, string variableName, float value)
+        {
+            var existing = state.Variables.FirstOrDefault(v => v.Name == variableName);
+            if (existing != null)
+            {
+                existing.Type = "float";
+                existing.Value = value;
+                existing.SetsValue = true;
+            }
+            else
+            {
+                state.Variables.Add(new VariableSave { Name = variableName, Type = "float", Value = value, SetsValue = true });
+            }
+        }
+
+        private static string GetLastNameSegment(string variableName)
+        {
+            var lastDotIndex = variableName.LastIndexOf('.');
+            return lastDotIndex < 0 ? variableName : variableName.Substring(lastDotIndex + 1);
         }
     }
 }

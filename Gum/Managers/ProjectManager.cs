@@ -270,6 +270,10 @@ public class ProjectManager : IProjectManager
                 {
                     wasModified = true;
                 }
+                if (_gumProjectSave.MigrateCircleRadiusToWidthHeight())
+                {
+                    wasModified = true;
+                }
                 if (RemoveDuplicateVariables(_gumProjectSave))
                 {
                     wasModified = true;
