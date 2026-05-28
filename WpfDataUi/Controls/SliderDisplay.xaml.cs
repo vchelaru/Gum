@@ -72,6 +72,13 @@ namespace WpfDataUi.Controls
 
         TextBoxDisplayLogic mTextBoxLogic;
 
+        // True while we push a value into the slider ourselves. WPF coerces Slider.Value
+        // into [Minimum, Maximum], and that coercion raises ValueChanged with the clamped
+        // value. We must not echo that clamped value back into the text box, or a value
+        // outside the slider range (the text box is the source of truth) would be silently
+        // overwritten with the clamped one.
+        bool _isSettingSliderValueProgrammatically;
+
         public bool SuppressSettingProperty { get; set; }
 
         /// <summary>
@@ -313,35 +320,50 @@ namespace WpfDataUi.Controls
 
         private void SetSliderValue(object valueOnInstance)
         {
-            if (valueOnInstance is float)
+            _isSettingSliderValueProgrammatically = true;
+            try
             {
-                this.Slider.Value = (float)valueOnInstance;
+                if (valueOnInstance is float)
+                {
+                    this.Slider.Value = (float)valueOnInstance;
+                }
+                else if (valueOnInstance is double)
+                {
+                    this.Slider.Value = (double)valueOnInstance;
+                }
+                else if(valueOnInstance is int)
+                {
+                    this.Slider.Value = (int)valueOnInstance;
+                }
+                else if(valueOnInstance is decimal)
+                {
+                    this.Slider.Value = (double)(decimal)valueOnInstance;
+                }
+                else if(valueOnInstance is long)
+                {
+                    this.Slider.Value = (long)valueOnInstance;
+                }
+                else if(valueOnInstance is byte)
+                {
+                    this.Slider.Value = (byte)valueOnInstance;
+                }
             }
-            else if (valueOnInstance is double)
+            finally
             {
-                this.Slider.Value = (double)valueOnInstance;
-            }
-            else if(valueOnInstance is int)
-            {
-                this.Slider.Value = (int)valueOnInstance;
-            }
-            else if(valueOnInstance is decimal)
-            {
-                this.Slider.Value = (double)(decimal)valueOnInstance;
-            }
-            else if(valueOnInstance is long)
-            {
-                this.Slider.Value = (long)valueOnInstance;
-            }
-            else if(valueOnInstance is byte)
-            {
-                this.Slider.Value = (byte)valueOnInstance;
+                _isSettingSliderValueProgrammatically = false;
             }
         }
 
         DateTime lastSliderTime = new DateTime();
         private void Slider_ValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            // Ignore changes we caused by pushing a value into the slider; only user-driven
+            // slider movement should flow back into the text box. See the field comment.
+            if (_isSettingSliderValueProgrammatically)
+            {
+                return;
+            }
+
             // This is required to prevent weird flickering on the slider. Putting 100 ms frequency limiter makes everything work just fine.
             // It's a hack but...not sure what else to do. I also have Slider_DragCompleted so the last value is always pushed.
             // Update 2 - this causes all kinds of problems if we update in realtime. 
