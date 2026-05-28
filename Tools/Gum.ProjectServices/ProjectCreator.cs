@@ -16,10 +16,12 @@ public class ProjectCreator : IProjectCreator
         "Behaviors"
     };
 
+    // ColoredRectangle is intentionally omitted: the v3 Rectangle carries the full
+    // fill/stroke/gradient/dropshadow surface, making it redundant for new projects
+    // (#2965 phase 2). It stays loadable for legacy projects that already contain it.
     private static readonly string[] StandardElementNames =
     {
         "Circle",
-        "ColoredRectangle",
         "Component",
         "Container",
         "NineSlice",
