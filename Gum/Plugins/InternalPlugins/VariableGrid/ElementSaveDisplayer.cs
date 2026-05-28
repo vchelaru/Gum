@@ -53,6 +53,7 @@ public class ElementSaveDisplayer
     private readonly IFileCommands _fileCommands;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly ShapeVariableVersionGate _shapeVariableVersionGate;
 
     #endregion
 
@@ -104,6 +105,7 @@ public class ElementSaveDisplayer
         _fileCommands = fileCommands;
         _setVariableLogic = setVariableLogic;
         _wireframeObjectManager = wireframeObjectManager;
+        _shapeVariableVersionGate = new ShapeVariableVersionGate();
     }
 
     private List<PropertyData> GetProperties(ElementSave instanceOwner, InstanceSave instanceSave, StateSave stateSave)
@@ -944,6 +946,17 @@ public class ElementSaveDisplayer
             !string.IsNullOrEmpty(defaultVariable.ExposedAsName));
 
         shouldInclude &= !addedNames.Contains(defaultVariable.Name);
+
+        if (shouldInclude)
+        {
+            // Hide v3-only shape variables when an older project is loaded so the grid doesn't
+            // surface variables the project's runtime won't honor. See ShapeVariableVersionGate.
+            var projectVersion = ObjectFinder.Self.GumProjectSave?.Version ?? 0;
+            if (_shapeVariableVersionGate.GetIfHiddenForProjectVersion(defaultVariable.GetRootName(), projectVersion))
+            {
+                shouldInclude = false;
+            }
+        }
 
         if (shouldInclude && instanceSave != null)
         {
