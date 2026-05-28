@@ -440,6 +440,10 @@ public class StandardElementsManager
             // v3 (#2929 / #2931): mirror of the Circle block above — see comment there for why
             // AddColorVariables is intentionally omitted.
             AddFillAndStrokeVariables(stateSave, category: "Rendering");
+            // CornerRadius absorbs the legacy RoundedRectangle's rounded-corner surface so that
+            // standard can be retired; default 0 keeps the historical hard-cornered visual. Only
+            // Rectangle gets this (a Circle has no corners). Gated to v3 in ShapeVariableVersionGate.
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "CornerRadius", Category = "Rendering" });
             AddGradientVariables(stateSave);
             AddDropshadowVariables(stateSave);
             AddBlendVariable(stateSave);

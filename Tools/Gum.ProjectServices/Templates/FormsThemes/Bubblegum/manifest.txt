@@ -90,7 +90,6 @@ Screens/NewScreen1Gum.gusx
 Screens/PolygonScreenGum.gusx
 Screens/StylesScreen.gusx
 Standards/Circle.gutx
-Standards/ColoredRectangle.gutx
 Standards/Component.gutx
 Standards/Container.gutx
 Standards/NineSlice.gutx

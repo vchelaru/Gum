@@ -82,14 +82,11 @@
   <ComponentReference Name="Elements/Icon" />
   <ComponentReference Name="Styles" />
   <StandardElementReference Name="Circle" />
-  <StandardElementReference Name="ColoredCircle" />
-  <StandardElementReference Name="ColoredRectangle" />
   <StandardElementReference Name="Component" />
   <StandardElementReference Name="Container" />
   <StandardElementReference Name="NineSlice" />
   <StandardElementReference Name="Polygon" />
   <StandardElementReference Name="Rectangle" />
-  <StandardElementReference Name="RoundedRectangle" />
   <StandardElementReference Name="Sprite" />
   <StandardElementReference Name="Text" />
   <BehaviorReference Name="ButtonBehavior" />

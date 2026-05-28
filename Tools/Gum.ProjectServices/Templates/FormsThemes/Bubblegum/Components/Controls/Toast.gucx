@@ -4,9 +4,6 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Background.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">28</Value>
     </Variable>
@@ -34,8 +31,14 @@
     <Variable Type="int" Name="Background.DropshadowRed" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Green" SetsValue="true">
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -52,8 +55,8 @@
     <Variable Type="string" Name="Background.Parent" SetsValue="true">
       <Value xsi:type="xsd:string"></Value>
     </Variable>
-    <Variable Type="int" Name="Background.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -107,10 +110,10 @@
     <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
+    <Variable Type="string" Name="TextInstance.Parent" SetsValue="true" />
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="string" Name="TextInstance.Parent" SetsValue="true" />
     <Variable Type="string" Name="TextInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Toast Text!!!!</Value>
     </Variable>
@@ -169,16 +172,16 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.Red</string>
-        <string>Green = Components/Styles.White.Green</string>
-        <string>Blue = Components/Styles.White.Blue</string>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
         <string>Font = Components/Styles.Strong.Font</string>
         <string>FontSize = Components/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Styles.Strong.IsBold</string>
       </Value>
     </VariableList>
   </State>
-  <Instance Name="Background" BaseType="RoundedRectangle" />
+  <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="TextInstance" BaseType="Text" />
   <Behaviors>
     <ElementBehaviorReference>

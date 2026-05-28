@@ -4,10 +4,13 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Background.Blue" SetsValue="true">
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Green" SetsValue="true">
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
@@ -16,8 +19,11 @@
     <Variable Type="DimensionUnitType" Name="Background.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -43,11 +49,14 @@
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="int" Name="BottomSeparator.Blue" SetsValue="true">
+    <Variable Type="int" Name="BottomSeparator.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">204</Value>
     </Variable>
-    <Variable Type="int" Name="BottomSeparator.Green" SetsValue="true">
+    <Variable Type="int" Name="BottomSeparator.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="int" Name="BottomSeparator.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">240</Value>
     </Variable>
     <Variable Type="float" Name="BottomSeparator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
@@ -55,8 +64,11 @@
     <Variable Type="DimensionUnitType" Name="BottomSeparator.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="int" Name="BottomSeparator.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">240</Value>
+    <Variable Type="bool" Name="BottomSeparator.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="BottomSeparator.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="BottomSeparator.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -158,8 +170,8 @@
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
   </State>
-  <Instance Name="Background" BaseType="ColoredRectangle" />
-  <Instance Name="BottomSeparator" BaseType="ColoredRectangle" />
+  <Instance Name="Background" BaseType="Rectangle" />
+  <Instance Name="BottomSeparator" BaseType="Rectangle" />
   <Instance Name="InnerPanelInstance" BaseType="Container" />
   <Behaviors>
     <ElementBehaviorReference>

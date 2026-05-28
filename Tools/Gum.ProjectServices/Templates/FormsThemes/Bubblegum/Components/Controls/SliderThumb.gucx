@@ -4,9 +4,6 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Body.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
     <Variable Type="int" Name="Body.DropshadowAlpha" SetsValue="true">
       <Value xsi:type="xsd:int">160</Value>
     </Variable>
@@ -31,7 +28,13 @@
     <Variable Type="int" Name="Body.DropshadowRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="int" Name="Body.Green" SetsValue="true">
+    <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Body.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
@@ -46,8 +49,11 @@
     <Variable Type="bool" Name="Body.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <Variable Type="int" Name="Body.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="Body.Radius" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Body.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Body.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -73,12 +79,6 @@
     <Variable Type="PositionUnitType" Name="Body.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
-    <Variable Type="int" Name="BorderInstance.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
-    </Variable>
     <Variable Type="float" Name="BorderInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -88,7 +88,16 @@
     <Variable Type="bool" Name="BorderInstance.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
-    <Variable Type="int" Name="BorderInstance.Red" SetsValue="true">
+    <Variable Type="float" Name="BorderInstance.Radius" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="BorderInstance.StrokeWidth" SetsValue="true">
@@ -119,15 +128,6 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="ButtonCategory" Name="ButtonCategoryState" SetsValue="false" />
-    <Variable Type="int" Name="FocusedIndicator.Alpha" SetsValue="true">
-      <Value xsi:type="xsd:int">90</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
-    </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">6</Value>
     </Variable>
@@ -137,7 +137,19 @@
     <Variable Type="bool" Name="FocusedIndicator.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
-    <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
+    <Variable Type="float" Name="FocusedIndicator.Radius" SetsValue="true">
+      <Value xsi:type="xsd:float">3</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">90</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.StrokeRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.StrokeWidth" SetsValue="true">
@@ -188,85 +200,197 @@
     <Name>ButtonCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable Type="int" Name="Body.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="Body.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="Body.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
     </State>
     <State>
       <Name>Highlighted</Name>
-      <Variable Type="int" Name="Body.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="Body.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="Body.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
     </State>
     <State>
       <Name>Pushed</Name>
-      <Variable Type="int" Name="Body.Blue" SetsValue="true"><Value xsi:type="xsd:int">237</Value></Variable>
-      <Variable Type="int" Name="Body.Green" SetsValue="true"><Value xsi:type="xsd:int">222</Value></Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="Body.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">117</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">68</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">204</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">237</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">222</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">68</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable Type="int" Name="Body.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="Body.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="Body.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
     </State>
     <State>
       <Name>HighlightedFocused</Name>
-      <Variable Type="int" Name="Body.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="Body.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="Body.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">157</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">107</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">157</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">107</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
     </State>
     <State>
       <Name>Disabled</Name>
-      <Variable Type="int" Name="Body.Blue" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-      <Variable Type="int" Name="Body.Green" SetsValue="true"><Value xsi:type="xsd:int">234</Value></Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="Body.Red" SetsValue="true"><Value xsi:type="xsd:int">245</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">248</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">234</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">245</Value>
+      </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
     </State>
     <State>
       <Name>DisabledFocused</Name>
-      <Variable Type="int" Name="Body.Blue" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-      <Variable Type="int" Name="Body.Green" SetsValue="true"><Value xsi:type="xsd:int">234</Value></Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="Body.Red" SetsValue="true"><Value xsi:type="xsd:int">245</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="BorderInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
-      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">248</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">234</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">245</Value>
+      </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
     </State>
   </Category>
-  <Instance Name="Body" BaseType="ColoredCircle" />
-  <Instance Name="BorderInstance" BaseType="ColoredCircle" />
-  <Instance Name="FocusedIndicator" BaseType="ColoredCircle" />
+  <Instance Name="Body" BaseType="Circle" />
+  <Instance Name="BorderInstance" BaseType="Circle" />
+  <Instance Name="FocusedIndicator" BaseType="Circle" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ButtonBehavior</BehaviorName>

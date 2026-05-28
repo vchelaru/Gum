@@ -38,6 +38,8 @@ public class ShapeVariableVersionGateTests
     [InlineData("GradientOuterRadiusUnits")]
     [InlineData("Red1")]
     [InlineData("Alpha2")]
+    // CornerRadius (Rectangle-only v3 surface absorbed from the retired RoundedRectangle)
+    [InlineData("CornerRadius")]
     public void GetIfHidden_HidesFillDropshadowGradient_OnOlderCircleAndRectangle(string variableName)
     {
         _gate.GetIfHiddenForProjectVersion(variableName, "Circle", OlderThanV3).ShouldBeTrue();

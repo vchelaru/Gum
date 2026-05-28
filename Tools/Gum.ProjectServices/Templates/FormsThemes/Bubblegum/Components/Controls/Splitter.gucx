@@ -7,11 +7,14 @@
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">5</Value>
     </Variable>
-    <Variable Type="int" Name="LineInstance.Blue" SetsValue="true">
+    <Variable Type="int" Name="LineInstance.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">204</Value>
     </Variable>
-    <Variable Type="int" Name="LineInstance.Green" SetsValue="true">
+    <Variable Type="int" Name="LineInstance.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="int" Name="LineInstance.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">240</Value>
     </Variable>
     <Variable Type="float" Name="LineInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
@@ -19,8 +22,11 @@
     <Variable Type="DimensionUnitType" Name="LineInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="int" Name="LineInstance.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">240</Value>
+    <Variable Type="bool" Name="LineInstance.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="LineInstance.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="LineInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
@@ -65,7 +71,7 @@
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
   </State>
-  <Instance Name="LineInstance" BaseType="ColoredRectangle" />
+  <Instance Name="LineInstance" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>SplitterBehavior</BehaviorName>

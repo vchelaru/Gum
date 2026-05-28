@@ -4,9 +4,6 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Background.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -34,7 +31,13 @@
     <Variable Type="int" Name="Background.DropshadowRed" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>
     </Variable>
-    <Variable Type="int" Name="Background.Green" SetsValue="true">
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
@@ -50,8 +53,8 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Background.Parent" SetsValue="true" />
-    <Variable Type="int" Name="Background.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -349,11 +352,14 @@
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
-    <Variable Type="int" Name="TitleBarFill.Blue" SetsValue="true">
+    <Variable Type="int" Name="TitleBarFill.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">157</Value>
     </Variable>
-    <Variable Type="int" Name="TitleBarFill.Green" SetsValue="true">
+    <Variable Type="int" Name="TitleBarFill.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleBarFill.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="TitleBarFill.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -361,11 +367,14 @@
     <Variable Type="DimensionUnitType" Name="TitleBarFill.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="bool" Name="TitleBarFill.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
     <Variable Type="string" Name="TitleBarFill.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TitleBarInstance</Value>
     </Variable>
-    <Variable Type="int" Name="TitleBarFill.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="TitleBarFill.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="TitleBarFill.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -418,11 +427,14 @@
     <Variable Type="PositionUnitType" Name="TitleBarInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="int" Name="TitleBarSeparator.Blue" SetsValue="true">
+    <Variable Type="int" Name="TitleBarSeparator.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">204</Value>
     </Variable>
-    <Variable Type="int" Name="TitleBarSeparator.Green" SetsValue="true">
+    <Variable Type="int" Name="TitleBarSeparator.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleBarSeparator.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">240</Value>
     </Variable>
     <Variable Type="float" Name="TitleBarSeparator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
@@ -430,11 +442,14 @@
     <Variable Type="DimensionUnitType" Name="TitleBarSeparator.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
+    <Variable Type="bool" Name="TitleBarSeparator.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
     <Variable Type="string" Name="TitleBarSeparator.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TitleBarInstance</Value>
     </Variable>
-    <Variable Type="int" Name="TitleBarSeparator.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">240</Value>
+    <Variable Type="float" Name="TitleBarSeparator.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="TitleBarSeparator.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -464,11 +479,11 @@
       <Value xsi:type="xsd:float">256</Value>
     </Variable>
   </State>
-  <Instance Name="Background" BaseType="RoundedRectangle" />
+  <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="InnerPanelInstance" BaseType="Controls/Panel" />
   <Instance Name="TitleBarInstance" BaseType="Controls/Panel" />
-  <Instance Name="TitleBarFill" BaseType="ColoredRectangle" />
-  <Instance Name="TitleBarSeparator" BaseType="ColoredRectangle" />
+  <Instance Name="TitleBarFill" BaseType="Rectangle" />
+  <Instance Name="TitleBarSeparator" BaseType="Rectangle" />
   <Instance Name="BorderTopLeftInstance" BaseType="Controls/Panel" />
   <Instance Name="BorderTopRightInstance" BaseType="Controls/Panel" />
   <Instance Name="BorderBottomLeftInstance" BaseType="Controls/Panel" />

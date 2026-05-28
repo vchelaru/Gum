@@ -37,14 +37,17 @@
     <Variable Type="PositionUnitType" Name="ThumbInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="int" Name="TrackBackground.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">237</Value>
-    </Variable>
     <Variable Type="float" Name="TrackBackground.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
     </Variable>
-    <Variable Type="int" Name="TrackBackground.Green" SetsValue="true">
+    <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">237</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBackground.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">222</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="TrackBackground.Height" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
@@ -58,8 +61,8 @@
     <Variable Type="string" Name="TrackBackground.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TrackInstance</Value>
     </Variable>
-    <Variable Type="int" Name="TrackBackground.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+    <Variable Type="float" Name="TrackBackground.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="TrackBackground.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -123,20 +126,32 @@
     </State>
     <State>
       <Name>Disabled</Name>
-      <Variable Type="int" Name="TrackBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="TrackBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="TrackBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Disabled</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
       </Variable>
     </State>
     <State>
       <Name>DisabledFocused</Name>
-      <Variable Type="int" Name="TrackBackground.Blue" SetsValue="true"><Value xsi:type="xsd:int">221</Value></Variable>
-      <Variable Type="int" Name="TrackBackground.Green" SetsValue="true"><Value xsi:type="xsd:int">174</Value></Variable>
-      <Variable Type="int" Name="TrackBackground.Red" SetsValue="true"><Value xsi:type="xsd:int">205</Value></Variable>
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">DisabledFocused</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">221</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">174</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">205</Value>
       </Variable>
     </State>
     <State>
@@ -165,7 +180,7 @@
     </State>
   </Category>
   <Instance Name="TrackInstance" BaseType="Container" />
-  <Instance Name="TrackBackground" BaseType="RoundedRectangle" />
+  <Instance Name="TrackBackground" BaseType="Rectangle" />
   <Instance Name="ThumbInstance" BaseType="Controls/SliderThumb" />
   <Behaviors>
     <ElementBehaviorReference>
