@@ -24,6 +24,25 @@ public class CircleRuntimeTests
         AposShapeRuntime.RegisterRuntimeTypes();
     }
 
+    // Issue #2937 — Blend folds into the renderable's BatchKey, and the two-slot model draws
+    // fill and stroke as separate renderables. If Blend only reached the fill slot, fill and
+    // stroke would carry different BatchKeys and the orchestrator would flush between them,
+    // rendering the stroke with the wrong blend. The runtime forwards Blend to BOTH slots so
+    // they share a key and batch together.
+    [Fact]
+    public void Blend_ForwardsToBothSlots_SoFillAndStrokeShareABatchKey()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("Blend", Gum.RenderingLibrary.Blend.Additive);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        fill.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+        stroke.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+        fill.BatchKey.ShouldBe(stroke.BatchKey);
+    }
+
     [Fact]
     public void Constructor_BindsAposCircle_AsFillContainedObject_StrokeAsChild()
     {

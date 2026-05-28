@@ -667,6 +667,26 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 
+    Gum.RenderingLibrary.Blend _blend = Gum.RenderingLibrary.Blend.Normal;
+    /// <summary>
+    /// Issue #2937 — blend mode for the circle. Pushed to BOTH slots (matching UseGradient /
+    /// IsAntialiased) because blend is folded into each renderable's BatchKey: a fill/stroke
+    /// disagreement would split them across two ShapeBatches and render the stroke with the
+    /// wrong blend. Visual effect requires the optional MonoGameGumShapes (Apos.Shapes) package;
+    /// without it the value round-trips but renders as a no-op (graceful degradation).
+    /// </summary>
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get => _blend;
+        set
+        {
+            _blend = value;
+            if (_fill is IBlendedRenderable fillBlend) fillBlend.Blend = value;
+            if (_stroke is IBlendedRenderable strokeBlend) strokeBlend.Blend = value;
+            NotifyPropertyChanged();
+        }
+    }
+
     #region Gradient
 
     // Issue #2791: gradient pass-through. Backing fields live on the runtime so values
@@ -1391,6 +1411,8 @@ public class CircleRuntime : GraphicalUiElement
         // constructed in its default state.
         toReturn.FillColor = toReturn.FillColor;
         toReturn.IsFilled = toReturn.IsFilled;
+        // Issue #2937 — re-fire Blend onto the freshly-built slots for the same reason.
+        toReturn.Blend = toReturn.Blend;
         if (toReturn._fill != null)
         {
             toReturn._stroke.Radius = toReturn._fill.Radius;
