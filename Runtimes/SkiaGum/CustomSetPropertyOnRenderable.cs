@@ -365,6 +365,22 @@ public class CustomSetPropertyOnRenderable
                     }
                     handled = true;
                     break;
+                // #2949: the single isotropic DropshadowBlur variable must land on the runtime so
+                // its DropshadowBlur setter fans out to both per-axis shims (which SkiaShapeRuntime
+                // then pushes to the renderable in PreRender). Writing straight to the renderable
+                // would be clobbered by that PreRender push.
+                case nameof(ArcRuntime.DropshadowBlur):
+                    if (graphicalUiElement is ArcRuntime arcDropshadowBlurRuntime)
+                    {
+                        arcDropshadowBlurRuntime.DropshadowBlur = (float)value;
+                    }
+                    else
+                    {
+                        asArc.DropshadowBlurX = (float)value;
+                        asArc.DropshadowBlurY = (float)value;
+                    }
+                    handled = true;
+                    break;
             }
             if (!handled)
             {
