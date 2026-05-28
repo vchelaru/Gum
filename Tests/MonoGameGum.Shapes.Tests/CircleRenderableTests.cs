@@ -371,6 +371,43 @@ public class CircleRenderableTests
         alphaScale.ShouldBe(1f);
     }
 
+    // Issue #2977 — a stroke-only Circle's dropshadow is a ring, not a filled disk, so the
+    // filled-disk anchor model in ComputeShadowDrawGeometry (which pulls the radius inward by
+    // blur/2) is wrong for it: once blur exceeds the stroke width, the effective shadow stroke
+    // width is clamped to ~0 and the ring centerline collapses to R - blur/2, marching inward as
+    // blur grows — the shape visibly "shrinks." ComputeStrokeShadowDrawRadius anchors the shadow
+    // ring's centerline (shadowRadius - effectiveShadowStrokeWidth/2) at the body stroke's
+    // centerline (R - StrokeWidth/2) regardless of blur; blur only widens the AA halo (aaSize).
+
+    [Fact]
+    public void ComputeStrokeShadowDrawRadius_AnchorsCenterlineAtStrokeCenterline_RegardlessOfBlur()
+    {
+        // Stroke centerline = R - StrokeWidth/2 = 50 - 4/2 = 48. The shadow ring centerline
+        // (shadowRadius - effectiveShadowStrokeWidth/2) must equal 48 no matter how the effective
+        // shadow stroke width was clamped for blur.
+        Circle sut = new() { IsFilled = false, StrokeWidth = 4f };
+
+        // blur < stroke → effective shadow stroke width = StrokeWidth - blur = 4 - 2 = 2.
+        float radiusSmallBlur = sut.ComputeStrokeShadowDrawRadius(hostRadius: 50f, effectiveShadowStrokeWidth: 2f);
+        (radiusSmallBlur - 2f / 2f).ShouldBe(48f, tolerance: 0.001f);
+
+        // blur >= stroke → effective shadow stroke width clamped to the ~0 epsilon.
+        float radiusLargeBlur = sut.ComputeStrokeShadowDrawRadius(hostRadius: 50f, effectiveShadowStrokeWidth: 0.01f);
+        (radiusLargeBlur - 0.01f / 2f).ShouldBe(48f, tolerance: 0.001f);
+    }
+
+    [Fact]
+    public void ComputeStrokeShadowDrawRadius_BlurLessThanStroke_MatchesLegacyDiskRadius()
+    {
+        // For blur < StrokeWidth the new stroke anchor reduces to the old radius - blur/2, so the
+        // common small-blur case is unchanged. R=50, StrokeWidth=10, blur=4 →
+        // effectiveShadowStrokeWidth = StrokeWidth - blur = 6, so the radius is
+        // 50 - 10/2 + 6/2 = 48 = 50 - blur/2.
+        Circle sut = new() { IsFilled = false, StrokeWidth = 10f };
+
+        sut.ComputeStrokeShadowDrawRadius(hostRadius: 50f, effectiveShadowStrokeWidth: 6f).ShouldBe(48f);
+    }
+
     [Fact]
     public void ComputeStrokeShadowDrawParameters_ZeroStrokeWithBlur_ZeroAlpha()
     {
