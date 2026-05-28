@@ -105,8 +105,11 @@
     <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
-    <Variable Type="float" Name="Height" SetsValue="true" IsHiddenInPropertyGrid="true">
-      <Value xsi:type="xsd:float">16</Value>
+    <Variable Type="float" Name="Height" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="bool" Name="IgnoredByParentSize" Category="Parent" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -114,10 +117,11 @@
     <Variable Type="bool" Name="IsFilled" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float?" Name="MaxHeight" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MaxWidth" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MinHeight" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="MinWidth" Category="Dimensions" SetsValue="true" />
     <Variable Type="string" Name="Parent" Category="Parent" SetsValue="true" />
-    <Variable Type="float" Name="Radius" Category="Dimensions" SetsValue="true">
-      <Value xsi:type="xsd:float">16</Value>
-    </Variable>
     <Variable Type="int" Name="Red1" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -151,8 +155,11 @@
     <Variable Type="bool" Name="Visible" Category="States and Visibility" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <Variable Type="float" Name="Width" SetsValue="true" IsHiddenInPropertyGrid="true">
-      <Value xsi:type="xsd:float">16</Value>
+    <Variable Type="float" Name="Width" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="X" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
