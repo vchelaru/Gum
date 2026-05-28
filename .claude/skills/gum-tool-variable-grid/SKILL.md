@@ -71,6 +71,22 @@ All members in the Variables tab use `StateReferencingInstanceMember` (subclass 
 
 ---
 
+## Custom Displayers (how a variable gets non-default UI)
+
+Most variables render with a default control inferred from their type. A variable gets a *different* control — slider, angle dial, alignment/origin toggles, parent dropdown — through three knobs on `InstanceMember`:
+
+- **`PreferredDisplayer`** (a `Type`) — selects which WPF control renders the row; `SingleDataUiContainer` instantiates it. This is what creates e.g. a `SliderDisplay`.
+- **`PropertiesToSetOnDisplayer`** (a `Dictionary<string, object>`) — after the control exists, the container *reflectively* sets each named property on it. A slider's `MinValue`/`MaxValue` (the "range") are just two such pushes onto a control already chosen by `PreferredDisplayer` — they do **not** create the slider on their own.
+- **`UiCreated` event** — for config that must be computed per-instance instead of a constant (see `MakeDegreesAngle`, and the WpfDataUi sample's per-character `MaxValue`).
+
+Gum's built-in variables are wired in `StandardElementsManager.GumTool.cs` (slider for color channels, angle dial, alignment, origin, parent dropdown). That file is where to look or add.
+
+> Naming trap: `MinWidth`/`MaxWidth`/`MinHeight`/`MaxHeight` in `StandardElementsManager.cs` are real runtime layout clamps — unrelated to a displayer's slider `MinValue`/`MaxValue`.
+
+The icon-based displayers (origin/alignment/dock toggles) get their glyphs from the `GumIcon` pipeline — see [gum-icons](../gum-icons/SKILL.md).
+
+---
+
 ## Refresh Trigger Flow
 
 ```

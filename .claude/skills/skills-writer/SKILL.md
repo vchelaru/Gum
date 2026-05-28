@@ -9,6 +9,8 @@ description: Creates and updates skill files (.claude/skills/*/SKILL.md). Trigge
 
 A skill is **a map and a list of landmines** — not an encyclopedia. It points an agent at the right code and docs, and warns about things that are not obvious from reading either. If a fact is already in source or in `docs/`, the skill should *link*, not restate.
 
+Think **signpost, not explanation**: a short pointer plus a direction ("the wiring lives in X; watch out for Y"), never a lengthy walkthrough or a code dump. Brevity is a feature, not a compromise — every line is re-read into context on every load, so a skill that explains *less* but points *accurately* is doing its job better than a thorough one.
+
 ## Authoritative Sources (do not duplicate)
 
 Before writing anything, identify where the ground truth already lives:

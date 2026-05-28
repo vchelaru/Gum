@@ -22,6 +22,8 @@ Don't mix them. A tree-view PNG is not a `GumIcon`. A `GumIcon` `PathGeometry` c
 
 The standard for any icon in the WPF tool **outside the tree view**. Replaces ad-hoc `{wpf:FluentIcon …}` usage from the FluentIcons.Wpf NuGet.
 
+These icons live *inside* WPF displayer controls (e.g. the variable grid's origin/alignment/dock toggles). For how such a displayer gets attached to a variable, see [gum-tool-variable-grid](../gum-tool-variable-grid/SKILL.md).
+
 **Components:**
 - `Gum/Content/Svg/*.svg` — authored sources.
 - `Gum/GumFigmaIconRipper/Program.cs` — console tool. Uses SharpVectors at build time only (no runtime dependency). Walks the SVG drawing tree; flattens into a primary geometry (≥95% opacity fills/strokes) and an optional `.Secondary` geometry (lower-opacity detail). Clips to a 2px live area inside a 32×32 viewBox.
