@@ -12,6 +12,43 @@ namespace MonoGameGum.Shapes.Tests;
 // inspectable from a unit test.
 public class RenderableShapeBaseTests
 {
+    // Issue #2937 — Blend had no visual effect on Apos shapes because StartBatch never passed
+    // a BlendState to ShapeBatch.Begin (which then fell back to its AlphaBlend default) and the
+    // Blend variable had nowhere to land on the Apos renderable. GetEffectiveXnaBlendState is the
+    // device-free seam StartBatch consults; pinning it here avoids needing a GraphicsDevice.
+    [Fact]
+    public void GetEffectiveXnaBlendState_AdditiveBlend_ReturnsXnaAdditive()
+    {
+        TestShape shape = new() { Blend = Gum.RenderingLibrary.Blend.Additive };
+
+        shape.GetEffectiveXnaBlendState().ShouldBe(Microsoft.Xna.Framework.Graphics.BlendState.Additive);
+    }
+
+    [Fact]
+    public void GetEffectiveXnaBlendState_NormalBlend_ReturnsNullSoBeginKeepsItsAlphaBlendDefault()
+    {
+        // Normal is the default, and Apos shapes have always rendered with Begin's AlphaBlend
+        // default. Returning null (rather than NonPremultiplied) preserves that exact behavior
+        // so no existing content changes appearance.
+        TestShape shape = new();
+
+        shape.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Normal);
+        shape.GetEffectiveXnaBlendState().ShouldBeNull();
+    }
+
+    // Issue #2937 — BatchKey names the rendering tech, NOT internal state like blend (mirroring
+    // how all SpriteBatch renderables share one key and SpriteBatchStack handles blend changes
+    // internally). Blend differences are resolved by ShapeRenderer.EnsureBlend re-opening the
+    // batch, not by splitting the key. This guards against regressing to a blend-keyed batch.
+    [Fact]
+    public void BatchKey_IsTechOnly_AndDoesNotVaryWithBlend()
+    {
+        TestShape normal = new();
+        TestShape additive = new() { Blend = Gum.RenderingLibrary.Blend.Additive };
+
+        additive.BatchKey.ShouldBe(normal.BatchKey);
+    }
+
     [Fact]
     public void GetRotatedCenter_ZeroRotation_ReturnsAxisAlignedCenter()
     {

@@ -66,6 +66,9 @@ public class RoundedRectangle : RenderableShapeBase,
             return;
         }
 
+        // Issue #2937 — re-open the shared ShapeBatch with this shape's blend if it differs.
+        ShapeRenderer.EnsureBlend(this);
+
         var sb = ShapeRenderer.ShapeBatch;
 
         var absoluteLeft = this.GetAbsoluteLeft();

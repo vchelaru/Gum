@@ -24,6 +24,23 @@ public class CircleRuntimeTests
         AposShapeRuntime.RegisterRuntimeTypes();
     }
 
+    // Issue #2937 — the two-slot model draws fill and stroke as separate renderables. The user
+    // sets one Blend for the shape, so it must reach BOTH slots: ShapeRenderer.EnsureBlend keys
+    // off each renderable's Blend, so if the stroke kept the default the batch would flip back
+    // to Normal when drawing it. The runtime forwards Blend to both slots.
+    [Fact]
+    public void Blend_ForwardsToBothSlots()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("Blend", Gum.RenderingLibrary.Blend.Additive);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        fill.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+        stroke.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+    }
+
     [Fact]
     public void Constructor_BindsAposCircle_AsFillContainedObject_StrokeAsChild()
     {

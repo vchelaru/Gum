@@ -24,7 +24,7 @@ namespace MonoGameAndGum.Renderables;
 // implemented on the concrete shape classes (Circle, RoundedRectangle) directly, not the
 // shared base. The base no longer participates in any renderable-registry contract — only
 // the concrete shape classes do.
-public abstract class RenderableShapeBase : RenderableBase
+public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBlendedRenderable
 {
     protected ShapeRenderer ShapeRenderer => ShapeRenderer.Self;
 
@@ -76,6 +76,38 @@ public abstract class RenderableShapeBase : RenderableBase
             this.Color = new Color((byte)value, this.Color.G, this.Color.B, this.Color.A);
         }
     }
+
+    #region Blend
+
+    /// <summary>
+    /// Issue #2937 — the blend mode used when this shape is drawn. Mirrors the Blend variable
+    /// surfaced on plain Circle/Rectangle (PR #2933) and the other shape runtimes. Default
+    /// <see cref="Gum.RenderingLibrary.Blend.Normal"/> preserves Apos.Shapes' historical
+    /// AlphaBlend rendering — see <see cref="GetEffectiveXnaBlendState"/>. The blend is NOT part
+    /// of <see cref="BatchKey"/> (that names the rendering tech, not internal state); instead the
+    /// shared <see cref="ShapeRenderer"/> re-opens the ShapeBatch with this blend when a shape
+    /// draws with one different from the batch's current blend — see <c>ShapeRenderer.EnsureBlend</c>.
+    /// </summary>
+    public Gum.RenderingLibrary.Blend Blend { get; set; } = Gum.RenderingLibrary.Blend.Normal;
+
+    /// <summary>
+    /// Resolves <see cref="Blend"/> to the XNA <see cref="Microsoft.Xna.Framework.Graphics.BlendState"/>
+    /// handed to Apos.Shapes' <c>ShapeBatch.Begin</c> in <see cref="StartBatch"/>. Returns
+    /// <c>null</c> for <see cref="Gum.RenderingLibrary.Blend.Normal"/> so <c>Begin</c> keeps its
+    /// own <c>AlphaBlend</c> default — the blend every Apos shape has rendered with since before
+    /// this property existed — leaving existing content visually unchanged. Only an explicitly
+    /// non-Normal blend (Additive, etc.) overrides it.
+    /// </summary>
+    public Microsoft.Xna.Framework.Graphics.BlendState? GetEffectiveXnaBlendState()
+    {
+        if (Blend == Gum.RenderingLibrary.Blend.Normal)
+        {
+            return null;
+        }
+        return Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend).ToXNA();
+    }
+
+    #endregion
 
     #region Gradient
 
@@ -839,12 +871,17 @@ public abstract class RenderableShapeBase : RenderableBase
             rasterizerState = spriteRenderer.ScissorTestRasterizerState;
         }
 
-        sb.Begin(view: view, rasterizerState: rasterizerState);
+        // Issue #2937 — open the batch with this shape's blend and remember the begin
+        // parameters so EnsureBlend (called from each shape's Render) can re-open the batch
+        // with a different blend mid-run without changing BatchKey. This mirrors how
+        // SpriteBatchStack re-Begins SpriteBatch on a blend/scissor change while keeping one
+        // logical batch. GetEffectiveXnaBlendState returns null for Normal, so Begin keeps its
+        // AlphaBlend default (the historical behavior).
+        ShapeRenderer.BeginBatch(view, rasterizerState, this);
     }
 
     public override void EndBatch(ISystemManagers systemManagers)
     {
-        var sb = ShapeRenderer.ShapeBatch;
-        sb.End();
+        ShapeRenderer.EndBatch();
     }
 }

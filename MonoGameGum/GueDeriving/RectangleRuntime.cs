@@ -845,6 +845,20 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 
+    Gum.RenderingLibrary.Blend _blend = Gum.RenderingLibrary.Blend.Normal;
+    /// <inheritdoc cref="CircleRuntime.Blend"/>
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get => _blend;
+        set
+        {
+            _blend = value;
+            if (_fill is IBlendedRenderable fillBlend) fillBlend.Blend = value;
+            if (_stroke is IBlendedRenderable strokeBlend) strokeBlend.Blend = value;
+            NotifyPropertyChanged();
+        }
+    }
+
     bool _isAntialiased = true;
 
     /// <inheritdoc cref="CircleRuntime.IsAntialiased"/>
@@ -1581,6 +1595,8 @@ public class RectangleRuntime : GraphicalUiElement
         // constructed in its default state.
         toReturn.FillColor = toReturn.FillColor;
         toReturn.IsFilled = toReturn.IsFilled;
+        // Issue #2937 — re-fire Blend onto the freshly-built slots for the same reason.
+        toReturn.Blend = toReturn.Blend;
         return toReturn;
     }
 #endif

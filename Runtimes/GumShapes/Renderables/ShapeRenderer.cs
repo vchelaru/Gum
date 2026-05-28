@@ -24,12 +24,65 @@ public class ShapeRenderer
     static ShapeRenderer _self = default!;
     ShapeBatch _sb = default!;
 
+    // Issue #2937 — mid-batch blend state, mirroring SpriteBatchStack. BatchKey identifies the
+    // tech ("Apos.Shapes"), NOT the blend, so a whole run of shapes shares one batch. When a
+    // shape draws with a blend different from the one the batch is currently using, EnsureBlend
+    // ends and re-begins the ShapeBatch with the new blend, reusing the view/rasterizer the
+    // batch was opened with (the same End/Begin trick SpriteBatchStack.ReplaceRenderStates uses).
+    Microsoft.Xna.Framework.Matrix? _currentView;
+    RasterizerState? _currentRasterizerState;
+    Gum.RenderingLibrary.Blend _currentBlend;
+    bool _isBatchBegun;
+
     public ShapeBatch ShapeBatch
     {
         get
         {
             return _sb;
         }
+    }
+
+    /// <summary>
+    /// Opens the ShapeBatch for a run of shapes with <paramref name="shape"/>'s blend, recording
+    /// the begin parameters so a later <see cref="EnsureBlend"/> can re-open with a different
+    /// blend mid-run. Called by the batch owner from <c>RenderableShapeBase.StartBatch</c>.
+    /// </summary>
+    public void BeginBatch(Microsoft.Xna.Framework.Matrix? view, RasterizerState? rasterizerState, RenderableShapeBase shape)
+    {
+        _currentView = view;
+        _currentRasterizerState = rasterizerState;
+        _currentBlend = shape.Blend;
+        _isBatchBegun = true;
+        _sb.Begin(view: view, blendState: shape.GetEffectiveXnaBlendState(), rasterizerState: rasterizerState);
+    }
+
+    /// <summary>
+    /// Ensures the open ShapeBatch is drawing with <paramref name="shape"/>'s blend. If it
+    /// differs from the blend the batch is currently using, the batch is flushed (End) and
+    /// re-opened (Begin) with the new blend, reusing the cached view/rasterizer — the same
+    /// in-place state-change mechanism <c>SpriteBatchStack</c> uses for SpriteBatch.
+    /// No-op when the blend already matches or no batch is open (e.g. unit tests with no device).
+    /// Each shape's <c>Render</c> calls this before drawing.
+    /// </summary>
+    public void EnsureBlend(RenderableShapeBase shape)
+    {
+        if (!_isBatchBegun || shape.Blend == _currentBlend)
+        {
+            return;
+        }
+        _sb.End();
+        _currentBlend = shape.Blend;
+        _sb.Begin(view: _currentView, blendState: shape.GetEffectiveXnaBlendState(), rasterizerState: _currentRasterizerState);
+    }
+
+    /// <summary>
+    /// Ends the open ShapeBatch. Called by the batch owner from <c>RenderableShapeBase.EndBatch</c>
+    /// when the BatchOrchestrator transitions away from the Apos.Shapes batch.
+    /// </summary>
+    public void EndBatch()
+    {
+        _isBatchBegun = false;
+        _sb.End();
     }
 
     public bool IsInitialized { get; private set; }

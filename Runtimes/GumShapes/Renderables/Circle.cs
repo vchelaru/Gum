@@ -99,6 +99,10 @@ public class Circle : RenderableShapeBase,
             return;
         }
 
+        // Issue #2937 — re-open the shared ShapeBatch with this shape's blend if it differs
+        // from the one the batch is currently using (no-op when it matches).
+        ShapeRenderer.EnsureBlend(this);
+
         var sb = ShapeRenderer.ShapeBatch;
 
         var absoluteLeft = this.GetAbsoluteLeft();
