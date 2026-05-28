@@ -1,3 +1,4 @@
+using Gum.DataTypes;
 using Gum.ProjectServices;
 using Shouldly;
 
@@ -57,13 +58,16 @@ public class FormsTemplateCreatorTests : IDisposable
         _sut.Create(filePath);
 
         string standardsDir = Path.Combine(_tempDirectory, "Standards");
-        string[] expectedElements = { "Circle", "ColoredRectangle", "Component", "Container",
+        string[] expectedElements = { "Circle", "Component", "Container",
             "NineSlice", "Polygon", "Rectangle", "Sprite", "Text" };
 
         foreach (string name in expectedElements)
         {
             File.Exists(Path.Combine(standardsDir, $"{name}.gutx")).ShouldBeTrue($"{name}.gutx should exist");
         }
+
+        // ColoredRectangle was dropped from the v3 FormsTemplate in favor of Rectangle's full fill surface.
+        File.Exists(Path.Combine(standardsDir, "ColoredRectangle.gutx")).ShouldBeFalse();
     }
 
     [Fact]
@@ -88,6 +92,8 @@ public class FormsTemplateCreatorTests : IDisposable
 
         result.Success.ShouldBeTrue();
         result.Project.ShouldNotBeNull();
+        result.LoadErrors.ShouldBeEmpty();
+        result.Project!.Version.ShouldBe(GumProjectSave.NativeVersion);
     }
 
     [Fact]
