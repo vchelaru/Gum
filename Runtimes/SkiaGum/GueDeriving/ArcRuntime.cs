@@ -344,6 +344,22 @@ public class ArcRuntime : GraphicalUiElement
     }
 
     /// <summary>
+    /// Isotropic blur radius in pixels for the dropshadow. Convenience wrapper that pushes a
+    /// single value to both <see cref="DropshadowBlurX"/> and <see cref="DropshadowBlurY"/>
+    /// (#2949), mirroring industry convention (CSS <c>box-shadow</c>, Figma, Photoshop) where
+    /// dropshadow blur is a single scalar. Reading returns the X axis.
+    /// </summary>
+    public float DropshadowBlur
+    {
+        get => DropshadowBlurX;
+        set
+        {
+            DropshadowBlurX = value;
+            DropshadowBlurY = value;
+        }
+    }
+
+    /// <summary>
     /// Initializes a new raylib <c>ArcRuntime</c>. Constructor defaults mirror the Skia/Apos
     /// branch so cross-backend sample code starts from the same baseline (Width = Height = 100,
     /// SweepAngle = 90, Thickness = 10, Color = White, dropshadow off but pre-seeded with a
@@ -537,6 +553,23 @@ public class ArcRuntime
     {
         get => ContainedArc.IsEndRounded;
         set => ContainedArc.IsEndRounded = value;
+    }
+
+    /// <summary>
+    /// Isotropic blur radius in pixels for the dropshadow. Convenience wrapper that pushes a
+    /// single value to both the inherited <see cref="SkiaShapeRuntime.DropshadowBlurX"/> and
+    /// <see cref="SkiaShapeRuntime.DropshadowBlurY"/> (#2949). Skia natively supports per-axis
+    /// blur, but the user-facing arc surface mirrors industry convention (CSS <c>box-shadow</c>,
+    /// Figma, Photoshop) where blur is a single scalar. Reading returns the X axis.
+    /// </summary>
+    public float DropshadowBlur
+    {
+        get => DropshadowBlurX;
+        set
+        {
+            DropshadowBlurX = value;
+            DropshadowBlurY = value;
+        }
     }
 
     /// <summary>

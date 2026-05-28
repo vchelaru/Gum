@@ -9,6 +9,20 @@ namespace SkiaGum.Tests.GueDeriving;
 
 public class ArcRuntimeTests
 {
+    // #2949: ArcRuntime exposes a single isotropic DropshadowBlur (mirroring CSS box-shadow /
+    // Figma / Photoshop). Setting it writes both per-axis shims; reading returns the X axis.
+    [Fact]
+    public void ArcRuntime_DropshadowBlur_ShouldSetBothBlurXAndY()
+    {
+        ArcRuntime arcRuntime = new();
+
+        arcRuntime.DropshadowBlur = 5;
+
+        arcRuntime.DropshadowBlurX.ShouldBe(5);
+        arcRuntime.DropshadowBlurY.ShouldBe(5);
+        arcRuntime.DropshadowBlur.ShouldBe(5);
+    }
+
     // Locked in unification (issue #2728): dropshadow defaults are seeded on both backends so
     // ctor state is consistent. Values are inert until HasDropshadow is set true. Apos seeded
     // these before unification; Skia did not.

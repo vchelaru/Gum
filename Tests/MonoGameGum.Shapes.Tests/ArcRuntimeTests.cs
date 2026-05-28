@@ -35,6 +35,35 @@ public class ArcRuntimeTests
         shape.GetEffectiveXnaBlendState().ShouldBe(Microsoft.Xna.Framework.Graphics.BlendState.Additive);
     }
 
+    // #2949: ArcRuntime exposes a single isotropic DropshadowBlur (mirroring CSS box-shadow /
+    // Figma / Photoshop). Setting it writes both per-axis shims; reading returns the X axis.
+    [Fact]
+    public void DropshadowBlur_ShouldSetBothBlurXAndY()
+    {
+        ArcRuntime sut = new ArcRuntime();
+
+        sut.DropshadowBlur = 5;
+
+        sut.DropshadowBlurX.ShouldBe(5);
+        sut.DropshadowBlurY.ShouldBe(5);
+        sut.DropshadowBlur.ShouldBe(5);
+    }
+
+    // #2949: the single DropshadowBlur variable .gumx persists must route through
+    // CustomSetPropertyOnRenderable to both per-axis blur properties on the renderable. On Apos
+    // the runtime forwards straight to the renderable, so no PreRender is needed.
+    [Fact]
+    public void DropshadowBlur_ShouldRouteToRenderable_ThroughSetProperty()
+    {
+        ArcRuntime sut = new ArcRuntime();
+
+        sut.SetProperty("DropshadowBlur", 3f);
+
+        RenderableShapeBase shape = (RenderableShapeBase)sut.RenderableComponent;
+        shape.DropshadowBlurX.ShouldBe(3f);
+        shape.DropshadowBlurY.ShouldBe(3f);
+    }
+
     // Locked in unification (issue #2728): both backends default IsEndRounded to false
     // (matches Skia's prior behavior and graphics-convention flat caps). Existing Apos
     // consumers who relied on rounded caps must now set IsEndRounded = true explicitly.
