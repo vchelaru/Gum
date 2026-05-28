@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Gum.DataTypes;
 using Gum.Logic;
 using GumFormsPlugin.Services;
@@ -8,6 +10,22 @@ namespace GumToolUnitTests.FormsPlugin;
 
 public class ThemeRequirementsTests
 {
+    [Fact]
+    public void BubblegumTheme_DoesNotRequireSkiaShapes()
+    {
+        // Bubblegum was migrated off the Skia-backed RoundedRectangle / ColoredCircle standards
+        // onto the v3 Rectangle / Circle standards, so importing it must no longer inject the
+        // full Skia shape bundle into the user's project.
+        string themeDirectory = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Bubblegum");
+
+        ThemeRequirements requirements = ThemeRequirements.LoadFromThemeDirectory(themeDirectory);
+
+        requirements.RequiresSkiaShapes.ShouldBeFalse();
+        requirements.FontGenerator.ShouldBe(FontGeneratorType.KernSmith);
+    }
+
+
     [Fact]
     public void Apply_AddsSkiaShapesAndSwitchesFontGenerator()
     {
@@ -84,5 +102,24 @@ public class ThemeRequirementsTests
 
         requirements.FontGenerator.ShouldBeNull();
         requirements.RequiresSkiaShapes.ShouldBeFalse();
+    }
+
+    private static string FindRepoRoot()
+    {
+        string current = AppContext.BaseDirectory;
+        for (int i = 0; i < 10; i++)
+        {
+            if (Directory.Exists(Path.Combine(current, "Tools", "Gum.ProjectServices", "Templates")))
+            {
+                return current;
+            }
+            string? parent = Path.GetDirectoryName(current);
+            if (string.IsNullOrEmpty(parent) || parent == current)
+            {
+                break;
+            }
+            current = parent;
+        }
+        throw new InvalidOperationException("could not locate repo root from " + AppContext.BaseDirectory);
     }
 }
