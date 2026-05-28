@@ -484,19 +484,32 @@ public class LineCircle : InvisibleRenderable
     }
 
     /// <summary>
-    /// Emits a triangle fan around (<paramref name="cx"/>, <paramref name="cy"/>) with per-vertex
-    /// colors computed from the user's gradient configuration. Mirrors the immediate-mode
-    /// pattern raylib itself uses for <c>DrawCircleGradient</c> in <c>rshapes.c</c> — N
-    /// segments × 3 vertices per triangle, color set via <see cref="Rlgl.Color4ub"/> before
-    /// each <see cref="Rlgl.Vertex2f"/>. The GPU rasterizes the per-vertex colors via
-    /// barycentric interpolation, giving smooth gradients across each triangle.
+    /// Tessellates the disc with concentric annular bands so the gradient renders smoothly
+    /// regardless of how the gradient axis sits relative to the disc center. Each vertex
+    /// samples the gradient at its actual world position, so barycentric interpolation
+    /// across each small triangle is locally close to linear.
     /// </summary>
     /// <remarks>
-    /// Quality note: the center vertex contributes a single t-value to every fan triangle,
-    /// so very high-contrast linear gradients can show a faint "star" near the center where
-    /// adjacent triangles meet. Same artifact <c>DrawCircleGradient</c> has on raylib itself.
-    /// 36+ segments at typical radii is enough that the effect is invisible.
+    /// <para>
+    /// History: raylib's <c>DrawCircleGradient</c> in <c>rshapes.c</c> uses a triangle fan
+    /// from the disc center to N rim vertices. That works when the gradient is centered on
+    /// the disc (the center vertex's t-value matches its geometric expectation), but fails
+    /// loudly when the gradient axis is narrow or off-center: the center vertex's color
+    /// becomes a constant outlier that every fan triangle inherits, producing a visible
+    /// "spoke" or "pinch" artifact (#2956 follow-up — the narrow-band rotation gallery cell
+    /// at <c>(0,0)→(20,0)</c> on a 56 px disc puts the center at clamped t = 1, every
+    /// triangle inherits Color2, and the gradient appears to converge to a point).
+    /// </para>
+    /// <para>
+    /// Fix: tessellate as <see cref="RadialLayers"/> concentric annular bands (each band a
+    /// quad strip of 2 × N triangles) plus one small fan at the inner core. Every annulus
+    /// vertex sits at a known radius and angle, so its gradient color matches its position.
+    /// The fan artifact still exists at the innermost layer, but it's squeezed into a region
+    /// of radius <c>r / RadialLayers</c>, invisible at typical sizes.
+    /// </para>
     /// </remarks>
+    private const int RadialLayers = 8;
+
     private void DrawGradientFan(float cx, float cy, float radius)
     {
         int segments = System.Math.Max(36, (int)(radius * 2));
@@ -513,22 +526,38 @@ public class LineCircle : InvisibleRenderable
         (float gx1, float gy1, float gx2, float gy2) = GetRotatedGradientEndpoints(rotDeg);
 
         Rlgl.Begin((int)DrawMode.Triangles);
-        for (int i = 0; i < segments; i++)
-        {
-            float a0 = (i / (float)segments) * System.MathF.PI * 2f;
-            float a1 = ((i + 1) / (float)segments) * System.MathF.PI * 2f;
-            float v1x = cx + System.MathF.Cos(a0) * radius;
-            float v1y = cy + System.MathF.Sin(a0) * radius;
-            float v2x = cx + System.MathF.Cos(a1) * radius;
-            float v2y = cy + System.MathF.Sin(a1) * radius;
 
-            // Vertex order: center → later-angle → earlier-angle. Matches raylib's own
-            // DrawCircleGradient winding (src/rshapes.c). Reversing the two rim vertices
-            // produces back-facing triangles for raylib's default front-face setting, which
-            // get culled and render as nothing.
-            EmitGradientVertex(cx, cy, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
-            EmitGradientVertex(v2x, v2y, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
-            EmitGradientVertex(v1x, v1y, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+        // Outer annular bands. Each layer is the annulus between two concentric rings; each
+        // angular segment of the annulus is a quad split into two triangles. Vertex winding
+        // matches raylib's own CCW-in-window-coords (visually CW in screen-Y-down) so the
+        // triangles render front-facing under the default culling.
+        for (int layer = 0; layer < RadialLayers; layer++)
+        {
+            float rOuter = radius * (RadialLayers - layer) / RadialLayers;
+            float rInner = radius * (RadialLayers - layer - 1) / RadialLayers;
+            for (int i = 0; i < segments; i++)
+            {
+                float a0 = (i / (float)segments) * System.MathF.PI * 2f;
+                float a1 = ((i + 1) / (float)segments) * System.MathF.PI * 2f;
+                float c0 = System.MathF.Cos(a0), s0 = System.MathF.Sin(a0);
+                float c1 = System.MathF.Cos(a1), s1 = System.MathF.Sin(a1);
+
+                float ox0 = cx + c0 * rOuter, oy0 = cy + s0 * rOuter;
+                float ox1 = cx + c1 * rOuter, oy1 = cy + s1 * rOuter;
+                float ix0 = cx + c0 * rInner, iy0 = cy + s0 * rInner;
+                float ix1 = cx + c1 * rInner, iy1 = cy + s1 * rInner;
+
+                // Two triangles forming the annular quad. Winding follows the original fan
+                // (inner-like → outer-later → outer-earlier), generalized: pick one corner as
+                // the "tip" and orbit later → earlier on the opposite ring.
+                EmitGradientVertex(ix0, iy0, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+                EmitGradientVertex(ox1, oy1, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+                EmitGradientVertex(ox0, oy0, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+
+                EmitGradientVertex(ix0, iy0, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+                EmitGradientVertex(ix1, iy1, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+                EmitGradientVertex(ox1, oy1, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+            }
         }
         Rlgl.End();
     }
