@@ -19,6 +19,9 @@
     <Variable Type="string" Name="Accent.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
+    <Variable Type="float" Name="Accent.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="int" Name="Black.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
@@ -33,6 +36,9 @@
     </Variable>
     <Variable Type="string" Name="Black.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="Black.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="ChildrenLayout" Name="Colors.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -82,6 +88,9 @@
     <Variable Type="string" Name="Danger.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
+    <Variable Type="float" Name="Danger.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="int" Name="DarkGray.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">80</Value>
     </Variable>
@@ -96,6 +105,9 @@
     </Variable>
     <Variable Type="string" Name="DarkGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="DarkGray.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Emphasis.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
@@ -123,6 +135,9 @@
     </Variable>
     <Variable Type="string" Name="Gray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="Gray.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="H1.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">22</Value>
@@ -181,6 +196,9 @@
     <Variable Type="string" Name="LightGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
+    <Variable Type="float" Name="LightGray.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="int" Name="Normal.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
     </Variable>
@@ -205,6 +223,9 @@
     <Variable Type="string" Name="Primary.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
+    <Variable Type="float" Name="Primary.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="int" Name="PrimaryDark.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">137</Value>
     </Variable>
@@ -220,6 +241,9 @@
     <Variable Type="string" Name="PrimaryDark.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
+    <Variable Type="float" Name="PrimaryDark.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="int" Name="PrimaryLight.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">193</Value>
     </Variable>
@@ -234,6 +258,9 @@
     </Variable>
     <Variable Type="string" Name="PrimaryLight.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="PrimaryLight.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Small.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">12</Value>
@@ -273,6 +300,9 @@
     </Variable>
     <Variable Type="string" Name="Success.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="Success.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="ChildrenLayout" Name="TextStyles.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
@@ -326,11 +356,17 @@
     <Variable Type="string" Name="Warning.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
     </Variable>
+    <Variable Type="float" Name="Warning.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="bool" Name="White.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="White.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="White.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>

@@ -44,23 +44,20 @@
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="int" Name="HighlightRectangle.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="int" Name="HighlightRectangle.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">128</Value>
-    </Variable>
-    <Variable Type="int" Name="HighlightRectangle.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
     <Variable Type="float" Name="HighlightRectangle.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-6</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="HighlightRectangle.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="bool" Name="HighlightRectangle.IsFilled" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
+    <Variable Type="int" Name="HighlightRectangle.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="HighlightRectangle.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="int" Name="HighlightRectangle.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="bool" Name="HighlightRectangle.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
