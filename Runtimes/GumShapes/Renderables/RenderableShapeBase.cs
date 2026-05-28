@@ -79,26 +79,16 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
 
     #region Blend
 
-    private Gum.RenderingLibrary.Blend _blend = Gum.RenderingLibrary.Blend.Normal;
-    private string _batchKey = BatchKeyPrefix + Gum.RenderingLibrary.Blend.Normal;
-
     /// <summary>
     /// Issue #2937 — the blend mode used when this shape is drawn. Mirrors the Blend variable
     /// surfaced on plain Circle/Rectangle (PR #2933) and the other shape runtimes. Default
     /// <see cref="Gum.RenderingLibrary.Blend.Normal"/> preserves Apos.Shapes' historical
-    /// AlphaBlend rendering — see <see cref="GetEffectiveXnaBlendState"/>. Folded into
-    /// <see cref="BatchKey"/> so a blend change between adjacent shapes forces a fresh
-    /// ShapeBatch; the key is recomputed here on set to avoid per-frame string allocation.
+    /// AlphaBlend rendering — see <see cref="GetEffectiveXnaBlendState"/>. The blend is NOT part
+    /// of <see cref="BatchKey"/> (that names the rendering tech, not internal state); instead the
+    /// shared <see cref="ShapeRenderer"/> re-opens the ShapeBatch with this blend when a shape
+    /// draws with one different from the batch's current blend — see <c>ShapeRenderer.EnsureBlend</c>.
     /// </summary>
-    public Gum.RenderingLibrary.Blend Blend
-    {
-        get => _blend;
-        set
-        {
-            _blend = value;
-            _batchKey = BatchKeyPrefix + value;
-        }
-    }
+    public Gum.RenderingLibrary.Blend Blend { get; set; } = Gum.RenderingLibrary.Blend.Normal;
 
     /// <summary>
     /// Resolves <see cref="Blend"/> to the XNA <see cref="Microsoft.Xna.Framework.Graphics.BlendState"/>
@@ -848,12 +838,7 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
             pivot.Y + dx * sin + dy * cos);
     }
 
-    // Issue #2937 — blend is part of the key so the BatchOrchestrator flushes and re-Begins
-    // (capturing the new blend) when an adjacent shape's blend differs. The two-slot runtimes
-    // push the same blend to fill and stroke so a single shape's slots still share one key.
-    private const string BatchKeyPrefix = "Apos.Shapes.";
-
-    public override string BatchKey => _batchKey;
+    public override string BatchKey => "Apos.Shapes";
 
     public override void StartBatch(ISystemManagers systemManagers)
     {
@@ -886,16 +871,17 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
             rasterizerState = spriteRenderer.ScissorTestRasterizerState;
         }
 
-        // Issue #2937 — honor the shape's Blend. GetEffectiveXnaBlendState returns null for
-        // Normal, which keeps Begin's AlphaBlend default (the historical behavior). Adjacent
-        // shapes with different blends no longer collide: blend is part of BatchKey, so the
-        // orchestrator flushes this batch and re-Begins with the next shape's blend.
-        sb.Begin(view: view, blendState: GetEffectiveXnaBlendState(), rasterizerState: rasterizerState);
+        // Issue #2937 — open the batch with this shape's blend and remember the begin
+        // parameters so EnsureBlend (called from each shape's Render) can re-open the batch
+        // with a different blend mid-run without changing BatchKey. This mirrors how
+        // SpriteBatchStack re-Begins SpriteBatch on a blend/scissor change while keeping one
+        // logical batch. GetEffectiveXnaBlendState returns null for Normal, so Begin keeps its
+        // AlphaBlend default (the historical behavior).
+        ShapeRenderer.BeginBatch(view, rasterizerState, this);
     }
 
     public override void EndBatch(ISystemManagers systemManagers)
     {
-        var sb = ShapeRenderer.ShapeBatch;
-        sb.End();
+        ShapeRenderer.EndBatch();
     }
 }

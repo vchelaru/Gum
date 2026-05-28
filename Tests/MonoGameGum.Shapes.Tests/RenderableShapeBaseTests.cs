@@ -36,26 +36,17 @@ public class RenderableShapeBaseTests
         shape.GetEffectiveXnaBlendState().ShouldBeNull();
     }
 
-    // Issue #2937 — blend is folded into BatchKey so the BatchOrchestrator flushes the open
-    // ShapeBatch and starts a fresh one (with the new blend) when an adjacent shape's blend
-    // differs. Without this, a whole run of Apos shapes shares one Begin and only the batch
-    // owner's blend takes effect.
+    // Issue #2937 — BatchKey names the rendering tech, NOT internal state like blend (mirroring
+    // how all SpriteBatch renderables share one key and SpriteBatchStack handles blend changes
+    // internally). Blend differences are resolved by ShapeRenderer.EnsureBlend re-opening the
+    // batch, not by splitting the key. This guards against regressing to a blend-keyed batch.
     [Fact]
-    public void BatchKey_DiffersByBlend_SoABlendChangeForcesANewBatch()
+    public void BatchKey_IsTechOnly_AndDoesNotVaryWithBlend()
     {
         TestShape normal = new();
         TestShape additive = new() { Blend = Gum.RenderingLibrary.Blend.Additive };
 
-        normal.BatchKey.ShouldNotBe(additive.BatchKey);
-    }
-
-    [Fact]
-    public void BatchKey_SameBlend_IsEqual_SoSameBlendShapesShareOneBatch()
-    {
-        TestShape a = new() { Blend = Gum.RenderingLibrary.Blend.Additive };
-        TestShape b = new() { Blend = Gum.RenderingLibrary.Blend.Additive };
-
-        a.BatchKey.ShouldBe(b.BatchKey);
+        additive.BatchKey.ShouldBe(normal.BatchKey);
     }
 
     [Fact]
