@@ -1,0 +1,69 @@
+using CommonFormsAndControls;
+using Gum.DataTypes;
+using Gum.Managers;
+using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+using Xunit;
+
+namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
+
+public class ElementTreeViewManagerSelectionTests : BaseTestClass
+{
+    [Fact]
+    public void GetReselectableNodes_AllInstancesResolve_ReturnsAllInOrder()
+    {
+        // Issue #2954: a tree refresh (e.g. toggling HasDropshadow on a
+        // multi-selection) must re-select every previously-selected instance,
+        // not collapse to the first one.
+        InstanceSave first = new InstanceSave { Name = "First" };
+        InstanceSave second = new InstanceSave { Name = "Second" };
+        TreeNode firstNode = new TreeNode { Tag = first };
+        TreeNode secondNode = new TreeNode { Tag = second };
+
+        Dictionary<InstanceSave, TreeNode> lookup = new()
+        {
+            { first, firstNode },
+            { second, secondNode },
+        };
+
+        List<TreeNode> result = ElementTreeViewManager.GetReselectableNodes(
+            new List<InstanceSave> { first, second },
+            instance => lookup.TryGetValue(instance, out TreeNode? node) ? node : null);
+
+        result.ShouldBe(new[] { firstNode, secondNode });
+    }
+
+    [Fact]
+    public void GetReselectableNodes_SomeInstancesMissing_FiltersNullsPreservingOrder()
+    {
+        InstanceSave first = new InstanceSave { Name = "First" };
+        InstanceSave deleted = new InstanceSave { Name = "Deleted" };
+        InstanceSave third = new InstanceSave { Name = "Third" };
+        TreeNode firstNode = new TreeNode { Tag = first };
+        TreeNode thirdNode = new TreeNode { Tag = third };
+
+        Dictionary<InstanceSave, TreeNode> lookup = new()
+        {
+            { first, firstNode },
+            { third, thirdNode },
+        };
+
+        List<TreeNode> result = ElementTreeViewManager.GetReselectableNodes(
+            new List<InstanceSave> { first, deleted, third },
+            instance => lookup.TryGetValue(instance, out TreeNode? node) ? node : null);
+
+        result.ShouldBe(new[] { firstNode, thirdNode });
+    }
+
+    [Fact]
+    public void GetReselectableNodes_EmptyInput_ReturnsEmpty()
+    {
+        List<TreeNode> result = ElementTreeViewManager.GetReselectableNodes(
+            new List<InstanceSave>(),
+            _ => null);
+
+        result.ShouldBeEmpty();
+    }
+}

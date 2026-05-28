@@ -254,7 +254,14 @@ namespace WpfDataUi.Controls
             else
             {
                 TryGetValueOnUi(out object? valueOnInstance);
-                if (valueOnInstance == null)
+                if (InstanceMember?.IsIndeterminate == true)
+                {
+                    // Multiple selected instances disagree on this value. The text box is
+                    // intentionally blank, so showing "<NULL>" would misleadingly imply the
+                    // value is unset. The indeterminate background color is the visual cue.
+                    PlaceholderText.Visibility = Visibility.Collapsed;
+                }
+                else if (valueOnInstance == null)
                 {
                     PlaceholderText.Visibility = Visibility.Visible;
                     PlaceholderText.Text = "<NULL>";

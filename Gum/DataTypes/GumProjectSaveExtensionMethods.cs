@@ -194,9 +194,9 @@ namespace Gum.DataTypes
         public static bool AddNewStandardElementTypes(this GumProjectSave gumProjectSave)
         {
             bool modified = false;
-            foreach(string typeName in StandardElementsManager.Self.DefaultTypes)
+            foreach(string typeName in StandardElementsManager.Self.SeedableStandardTypes)
             {
-                if (typeName != "Screen" && !gumProjectSave.StandardElements.ContainsName(typeName))
+                if (!gumProjectSave.StandardElements.ContainsName(typeName))
                 {
                     StandardElementsManager.Self.AddStandardElementSaveInstance(
                         gumProjectSave, typeName);

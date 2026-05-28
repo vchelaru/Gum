@@ -62,6 +62,21 @@ public class StandardElementsManager
 
     static StandardElementsManager mSelf;
 
+    // Standard types kept in mDefaults so legacy projects that already contain them still load
+    // with correct default variable values, but which are no longer seeded into newly created
+    // projects. The v3 Rectangle carries the full fill/stroke/gradient/dropshadow surface, making
+    // ColoredRectangle redundant for new work (#2965 phase 2).
+    readonly HashSet<string> _deprecatedStandardTypeNames;
+
+    #endregion
+
+    #region Constructor
+
+    public StandardElementsManager()
+    {
+        _deprecatedStandardTypeNames = new HashSet<string> { "ColoredRectangle" };
+    }
+
     #endregion
 
     #region Properties
@@ -76,6 +91,14 @@ public class StandardElementsManager
             }
         }
     }
+
+    /// <summary>
+    /// The standard element type names that should be seeded into newly created projects and
+    /// auto-added to existing projects on load. Excludes "Screen" (created on demand, never a
+    /// standard element) and deprecated types retained only for backward-compatible loading.
+    /// </summary>
+    public IEnumerable<string> SeedableStandardTypes =>
+        mDefaults.Keys.Where(name => name != "Screen" && !_deprecatedStandardTypeNames.Contains(name));
 
     public static StandardElementsManager Self
     {
@@ -903,15 +926,9 @@ public class StandardElementsManager
         }
 
 
-        foreach (KeyValuePair<string, StateSave> kvp in mDefaults)
+        foreach (string type in SeedableStandardTypes)
         {
-
-            string type = kvp.Key;
-
-            if (type != "Screen")
-            {
-                AddStandardElementSaveInstance(gumProjectSave, type);
-            }
+            AddStandardElementSaveInstance(gumProjectSave, type);
         }
     }
 

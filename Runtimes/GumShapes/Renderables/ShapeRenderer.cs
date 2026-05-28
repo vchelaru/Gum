@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,6 +35,11 @@ public class ShapeRenderer
     Gum.RenderingLibrary.Blend _currentBlend;
     bool _isBatchBegun;
 
+    // Per-frame ShapeBatch begin counter, owned by the active Renderer and reset each frame.
+    // Captured in BeginBatch so EnsureBlend's mid-run re-begins are counted too. Null when the
+    // batch was opened without a Renderer in scope (e.g. unit tests), making the records no-ops.
+    RenderStateChangeStatistics? _statistics;
+
     public ShapeBatch ShapeBatch
     {
         get
@@ -47,12 +53,14 @@ public class ShapeRenderer
     /// the begin parameters so a later <see cref="EnsureBlend"/> can re-open with a different
     /// blend mid-run. Called by the batch owner from <c>RenderableShapeBase.StartBatch</c>.
     /// </summary>
-    public void BeginBatch(Microsoft.Xna.Framework.Matrix? view, RasterizerState? rasterizerState, RenderableShapeBase shape)
+    public void BeginBatch(Microsoft.Xna.Framework.Matrix? view, RasterizerState? rasterizerState, RenderableShapeBase shape, RenderStateChangeStatistics? statistics)
     {
         _currentView = view;
         _currentRasterizerState = rasterizerState;
         _currentBlend = shape.Blend;
         _isBatchBegun = true;
+        _statistics = statistics;
+        _statistics?.RecordShapeBatchBegin();
         _sb.Begin(view: view, blendState: shape.GetEffectiveXnaBlendState(), rasterizerState: rasterizerState);
     }
 
@@ -72,6 +80,7 @@ public class ShapeRenderer
         }
         _sb.End();
         _currentBlend = shape.Blend;
+        _statistics?.RecordShapeBatchBegin();
         _sb.Begin(view: _currentView, blendState: shape.GetEffectiveXnaBlendState(), rasterizerState: _currentRasterizerState);
     }
 

@@ -95,6 +95,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\HierarchicalOrderer.cs" Link="RenderingLibrary\HierarchicalOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\IRenderableOrderer.cs" Link="RenderingLibrary\IRenderableOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\RenderStateChangeStatistics.cs" Link="RenderingLibrary\RenderStateChangeStatistics.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderTargetService.cs" Link="RenderingLibrary\RenderTargetService.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteBatchRenderableBase.cs" Link="RenderingLibrary\SpriteBatchRenderableBase.cs" />

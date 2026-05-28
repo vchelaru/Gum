@@ -196,7 +196,19 @@ namespace WpfDataUi.Controls
         {
             TextBox.Text = mAngle?.ToString();
 
-            if (Angle == null)
+            RefreshPlaceholderText();
+        }
+
+        private void RefreshPlaceholderText()
+        {
+            if (InstanceMember?.IsIndeterminate == true)
+            {
+                // Multiple selected instances disagree on this value. The text box is
+                // intentionally blank, so showing "<NULL>" would misleadingly imply the
+                // value is unset. The indeterminate background color is the visual cue.
+                PlaceholderText.Visibility = Visibility.Collapsed;
+            }
+            else if (Angle == null)
             {
                 PlaceholderText.Visibility = Visibility.Visible;
                 PlaceholderText.Text = "<NULL>";
@@ -394,15 +406,7 @@ namespace WpfDataUi.Controls
                 toReturn = ApplyValueResult.Success;
             }
 
-            if(Angle == null)
-            {
-                PlaceholderText.Visibility = Visibility.Visible;
-                PlaceholderText.Text = "<NULL>";
-            }
-            else
-            {
-                PlaceholderText.Visibility = Visibility.Collapsed;
-            }
+            RefreshPlaceholderText();
 
             return toReturn;
         }
