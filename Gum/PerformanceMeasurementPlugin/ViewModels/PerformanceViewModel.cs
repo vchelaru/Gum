@@ -52,8 +52,8 @@ public class PerformanceViewModel : INotifyPropertyChanged
     /// <summary>
     /// True when the renderer regroups same-BatchKey draws into contiguous runs
     /// (<see cref="BatchKeyGroupedOrderer"/>), reducing batch flushes at the cost of a reorder
-    /// pass. Setting this swaps the global <see cref="Renderer.SiblingOrdering"/> and forces a
-    /// redraw so the effect (and the begin counts above) update immediately.
+    /// pass. Setting this swaps the global <see cref="Renderer.SiblingOrdering"/>; the editor
+    /// renders continuously, so the next frame (and the begin counts above) reflect the change.
     /// </summary>
     public bool SortByBatchKey
     {
@@ -69,7 +69,6 @@ public class PerformanceViewModel : INotifyPropertyChanged
                 ? BatchKeyGroupedOrderer.Instance
                 : HierarchicalOrderer.Instance;
 
-            SystemManagers.Default?.InvalidateSurface();
             RaiseAllChanged();
         }
     }

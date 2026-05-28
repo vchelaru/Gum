@@ -8,6 +8,20 @@
     d:DesignWidth="300"
     mc:Ignorable="d">
     <StackPanel Margin="4">
+        <Label FontWeight="Bold">Sibling render order:</Label>
+        <RadioButton
+            Margin="8,2,0,2"
+            Content="Depth-first (hierarchical)"
+            GroupName="RenderOrder"
+            IsChecked="{Binding RenderDepthFirst, Mode=TwoWay}" />
+        <RadioButton
+            Margin="8,2,0,2"
+            Content="Sort by batch"
+            GroupName="RenderOrder"
+            IsChecked="{Binding SortByBatchKey, Mode=TwoWay}" />
+
+        <Separator Margin="0,6" />
+
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -29,20 +43,6 @@
             <Label Grid.Row="2" Grid.Column="0" FontWeight="Bold">Total render-state changes:</Label>
             <Label Grid.Row="2" Grid.Column="1" FontWeight="Bold" Content="{Binding TotalRenderStateChanges}" />
         </Grid>
-
-        <Separator Margin="0,6" />
-
-        <Label FontWeight="Bold">Sibling render order:</Label>
-        <RadioButton
-            Margin="8,2,0,2"
-            Content="Depth-first (hierarchical)"
-            GroupName="RenderOrder"
-            IsChecked="{Binding RenderDepthFirst, Mode=TwoWay}" />
-        <RadioButton
-            Margin="8,2,0,2"
-            Content="Sort by batch"
-            GroupName="RenderOrder"
-            IsChecked="{Binding SortByBatchKey, Mode=TwoWay}" />
 
     </StackPanel>
 </UserControl>
