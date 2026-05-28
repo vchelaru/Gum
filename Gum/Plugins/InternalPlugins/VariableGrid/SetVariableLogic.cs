@@ -262,8 +262,8 @@ public class SetVariableLogic : ISetVariableLogic
     }
 
 
-    void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement,
-        InstanceSave instance, string qualifiedName, bool isFullCommit = true)
+    void RefreshInResponseToVariableChange(string unqualifiedMember, object? oldValue, ElementSave parentElement,
+        InstanceSave? instance, string qualifiedName, bool isFullCommit = true)
     {
         // This method only performs structural grid changes (rebuilding the tree view / category
         // list, which adds or removes rows). Those must wait for a committed value: doing them on
@@ -302,7 +302,7 @@ public class SetVariableLogic : ISetVariableLogic
         }
     }
 
-    internal static bool IsStateVariable(string unqualifiedMember, ElementSave parentElement, InstanceSave instance)
+    internal static bool IsStateVariable(string unqualifiedMember, ElementSave? parentElement, InstanceSave? instance)
     {
         if (parentElement == null)
         {
@@ -365,7 +365,7 @@ public class SetVariableLogic : ISetVariableLogic
         return response;
     }
 
-    private void ReactIfChangedBaseType(IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave, string rootVariableName, object oldValue)
+    private void ReactIfChangedBaseType(IInstanceContainer instanceContainer, InstanceSave? instance, StateSave stateSave, string rootVariableName, object oldValue)
     {
 
         if (rootVariableName == "BaseType")
@@ -392,7 +392,7 @@ public class SetVariableLogic : ISetVariableLogic
 
     private void ReactIfChangedMemberIsDefaultChildContainer(ElementSave parentElement, InstanceSave instance, string rootVariableName, object oldValue)
     {
-        VariableSave variable = _selectedState.SelectedVariableSave;
+        VariableSave? variable = _selectedState.SelectedVariableSave;
 
         if (variable != null && rootVariableName == "DefaultChildContainer")
         {
@@ -450,7 +450,7 @@ public class SetVariableLogic : ISetVariableLogic
         if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness" ||
             changedMember == "UseFontSmoothing" || changedMember == "IsItalic" || changedMember == "IsBold")
         {
-            StateSave stateSave = _selectedState.SelectedStateSave;
+            StateSave? stateSave = _selectedState.SelectedStateSave;
 
             // If the user has a category selected but no state in the category, then use the default:
             if (stateSave == null && _selectedState.SelectedStateCategorySave != null)
@@ -476,14 +476,14 @@ public class SetVariableLogic : ISetVariableLogic
 
         var instancePrefix = instance != null ? $"{instance.Name}." : "";
         var variableFullName = $"{instancePrefix}{changedMember}";
-        VariableSave variable = _selectedState.SelectedStateSave?.GetVariableSave(variableFullName);
+        VariableSave? variable = _selectedState.SelectedStateSave?.GetVariableSave(variableFullName);
 
         if (variable == null || string.IsNullOrWhiteSpace(variable.Value as string))
         {
             return GeneralResponse.SuccessfulResponse;
         }
 
-        string value = variable.Value as string;
+        string? value = variable.Value as string;
 
         // Only handle .ttf file paths, not system font names like "Arial"
         if (!BmfcSave.IsFontFilePath(value))
@@ -545,8 +545,8 @@ public class SetVariableLogic : ISetVariableLogic
     private void ReactIfChangedMemberIsUnitType(ElementSave parentElement, string changedMember, object oldValueAsObject)
     {
         bool wasAnythingSet = false;
-        string variableToSet = null;
-        StateSave stateSave = _selectedState.SelectedStateSave;
+        string? variableToSet = null;
+        StateSave? stateSave = _selectedState.SelectedStateSave;
         float valueToSet = 0;
 
         var wereUnitValuesChanged =
@@ -560,7 +560,7 @@ public class SetVariableLogic : ISetVariableLogic
 
             if (UnitConverter.TryConvertToGeneralUnit(oldValueAsObject, out oldValue))
             {
-                IRenderableIpso currentIpso =
+                IRenderableIpso? currentIpso =
                     _wireframeObjectManager.GetSelectedRepresentation();
 
                 float parentWidth = ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth;
@@ -646,9 +646,9 @@ public class SetVariableLogic : ISetVariableLogic
 
         if (wasAnythingSet && AttemptToPersistPositionsOnUnitChanges && !float.IsPositiveInfinity(valueToSet))
         {
-            InstanceSave instanceSave = _selectedState.SelectedInstance;
+            InstanceSave? instanceSave = _selectedState.SelectedInstance;
 
-            string unqualifiedVariableToSet = variableToSet;
+            string? unqualifiedVariableToSet = variableToSet;
             if (_selectedState.SelectedInstance != null)
             {
                 variableToSet = _selectedState.SelectedInstance.Name + "." + variableToSet;
@@ -669,7 +669,7 @@ public class SetVariableLogic : ISetVariableLogic
         }
     }
 
-    private GeneralResponse ReactIfChangedMemberIsSourceFile(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
+    private GeneralResponse ReactIfChangedMemberIsSourceFile(ElementSave parentElement, InstanceSave instance, string changedMember, object? oldValue)
     {
         ////////////Early Out /////////////////////////////
 
@@ -679,18 +679,21 @@ public class SetVariableLogic : ISetVariableLogic
 
         variableFullName = $"{instancePrefix}{changedMember}";
 
-        VariableSave variable = _selectedState.SelectedStateSave?.GetVariableSave(variableFullName);
+        StateSave? selectedStateSave = _selectedState.SelectedStateSave;
+        VariableSave? variable = selectedStateSave?.GetVariableSave(variableFullName);
 
         bool isSourcefile = variable?.GetRootName() == "SourceFile";
 
-        if (!isSourcefile || string.IsNullOrWhiteSpace(variable.Value as string))
+        string? sourceFileValue = variable?.Value as string;
+
+        if (variable == null || !isSourcefile || string.IsNullOrWhiteSpace(sourceFileValue))
         {
             return GeneralResponse.SuccessfulResponse;
         }
 
         ////////////End Early Out/////////////////////////
 
-        string errorMessage = GetWhySourcefileIsInvalid(variable.Value as string, parentElement, instance, changedMember);
+        string errorMessage = GetWhySourcefileIsInvalid(sourceFileValue, parentElement, instance, changedMember);
 
         if (!string.IsNullOrEmpty(errorMessage))
         {
@@ -711,16 +714,16 @@ public class SetVariableLogic : ISetVariableLogic
             else
             {
                 // Case 1: variable didn't exist before the property grid created it — remove entirely.
-                _selectedState.SelectedStateSave.Variables.Remove(variable);
+                selectedStateSave.Variables.Remove(variable);
             }
             return GeneralResponse.UnsuccessfulWith(errorMessage);
         }
         else
         {
-            string value;
+            string? value;
 
             value = variable.Value as string;
-            StateSave stateSave = _selectedState.SelectedStateSave;
+            StateSave stateSave = selectedStateSave;
 
             if (!string.IsNullOrEmpty(value))
             {
@@ -929,7 +932,7 @@ public class SetVariableLogic : ISetVariableLogic
 
     private void ReactIfChangedMemberIsParent(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue, GeneralResponse response)
     {
-        VariableSave variable = _selectedState.SelectedVariableSave;
+        VariableSave? variable = _selectedState.SelectedVariableSave;
         // Eventually need to handle tunneled variables
         if (variable != null && changedMember == "Parent" && response.Succeeded)
         {
