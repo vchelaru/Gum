@@ -429,7 +429,11 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         get => _dropshadowBlurX;
         set
         {
-            _dropshadowBlurX = value;
+            // Issue #2977 — blur is a radius; a negative value is meaningless and used to make
+            // the shadow vanish (a negative aaSize, which Apos.Shapes won't draw). Clamp here so
+            // negative blur behaves identically to 0 for every consumer (Circle fill/stroke,
+            // RoundedRectangle, Arc, gradient offsets).
+            _dropshadowBlurX = System.Math.Max(0f, value);
         }
     }
 
@@ -441,7 +445,7 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         get => _dropshadowBlurY;
         set
         {
-            _dropshadowBlurY = value;
+            _dropshadowBlurY = System.Math.Max(0f, value);
         }
     }
 

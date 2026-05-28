@@ -379,6 +379,33 @@ public class CircleRenderableTests
     // ring's centerline (shadowRadius - effectiveShadowStrokeWidth/2) at the body stroke's
     // centerline (R - StrokeWidth/2) regardless of blur; blur only widens the AA halo (aaSize).
 
+    // Issue #2977 follow-up — a negative dropshadow blur is meaningless (blur is a radius) and
+    // previously made the shadow vanish on the stroke path: GetShadowAntiAliasSize returned a
+    // negative aaSize, which Apos.Shapes won't draw. Clamp negative blur to 0 at the renderable
+    // boundary so it behaves identically to 0 across every shape (Circle fill/stroke,
+    // RoundedRectangle, Arc) and the gradient-offset math.
+
+    [Fact]
+    public void DropshadowBlurX_Negative_ClampsToZero()
+    {
+        Circle sut = new();
+
+        sut.DropshadowBlurX = -5f;
+
+        sut.DropshadowBlurX.ShouldBe(0f);
+        sut.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(0);
+    }
+
+    [Fact]
+    public void DropshadowBlurY_Negative_ClampsToZero()
+    {
+        Circle sut = new();
+
+        sut.DropshadowBlurY = -5f;
+
+        sut.DropshadowBlurY.ShouldBe(0f);
+    }
+
     [Fact]
     public void ComputeStrokeShadowDrawRadius_AnchorsCenterlineAtStrokeCenterline_RegardlessOfBlur()
     {
