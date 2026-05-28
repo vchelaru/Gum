@@ -225,7 +225,7 @@ public class RightClickViewModelTests
 
         instance.Locked.ShouldBeTrue();
         _setVariableLogic.Verify(x => x.PropertyValueChanged(
-            "Locked", false, instance, element.DefaultState, true, true, true), Times.Once);
+            "Locked", false, instance, element.DefaultState, true, true, true, It.IsAny<bool>()), Times.Once);
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public class RightClickViewModelTests
 
         instance.Locked.ShouldBeFalse();
         _setVariableLogic.Verify(x => x.PropertyValueChanged(
-            "Locked", true, instance, element.DefaultState, true, true, true), Times.Once);
+            "Locked", true, instance, element.DefaultState, true, true, true, It.IsAny<bool>()), Times.Once);
     }
 
     [Fact]

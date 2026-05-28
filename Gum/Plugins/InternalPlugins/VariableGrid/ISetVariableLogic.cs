@@ -17,10 +17,10 @@ public interface ISetVariableLogic
 
     GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object? oldValue,
         InstanceSave instance, StateSave stateContainingVariable, bool refresh = true, bool recordUndo = true,
-        bool trySave = true);
+        bool trySave = true, bool isFullCommit = true);
 
     GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object? oldValue, IInstanceContainer instanceContainer,
-        InstanceSave instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true);
+        InstanceSave instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true, bool isFullCommit = true);
 
     GeneralResponse PropertyValueChangedOnBehaviorInstance(string memberName, object? oldValue,
         BehaviorSave behavior, BehaviorInstanceSave instance);
