@@ -397,6 +397,44 @@ public class CircleRenderableTests
     // does not, so we gate the gradient draw explicitly at the call site. Sample cells in the
     // gallery now set FillColor opaque to keep the gradient visible — see migration note.
 
+    // Issue #2958 — FillRadiusInset exists to pull the filled body's outer edge inside the
+    // companion stroke band (#2834). The shadow pass shares the same RenderInternal but must
+    // NOT inherit that inset — otherwise the shadow draws with a smaller radius than the body's
+    // outer edge, leaving a visible ring of missing shadow under the stroke (worse at higher
+    // camera zoom because the inset is in world units).
+
+    [Fact]
+    public void ComputeFillDrawRadius_BodyPass_NoInset_ReturnsRadius()
+    {
+        Circle sut = new() { FillRadiusInset = 0f };
+
+        sut.ComputeFillDrawRadius(radius: 50f, isShadowPass: false).ShouldBe(50f);
+    }
+
+    [Fact]
+    public void ComputeFillDrawRadius_BodyPass_WithInset_SubtractsInset()
+    {
+        Circle sut = new() { FillRadiusInset = 4f };
+
+        sut.ComputeFillDrawRadius(radius: 50f, isShadowPass: false).ShouldBe(46f);
+    }
+
+    [Fact]
+    public void ComputeFillDrawRadius_BodyPass_InsetExceedsRadius_ClampsToZero()
+    {
+        Circle sut = new() { FillRadiusInset = 60f };
+
+        sut.ComputeFillDrawRadius(radius: 50f, isShadowPass: false).ShouldBe(0f);
+    }
+
+    [Fact]
+    public void ComputeFillDrawRadius_ShadowPass_IgnoresInset()
+    {
+        Circle sut = new() { FillRadiusInset = 4f };
+
+        sut.ComputeFillDrawRadius(radius: 50f, isShadowPass: true).ShouldBe(50f);
+    }
+
     [Fact]
     public void ShouldPaintGradient_GradientOff_False()
     {
