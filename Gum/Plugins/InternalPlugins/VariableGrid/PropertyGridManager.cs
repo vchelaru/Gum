@@ -76,7 +76,7 @@ public partial class PropertyGridManager
     /// </summary>
     public List<object> ObjectsSuppressingRefresh { get; private set; } = new List<object>();
 
-    private ColorPickerLogic _colorPickerLogic;
+    private CompositeMemberLogic _compositeMemberLogic;
     private StateSaveCategoryDisplayer _stateSaveCategoryDisplayer;
 
     #endregion
@@ -137,12 +137,12 @@ public partial class PropertyGridManager
     // so some of it will happen here:
     public void InitializeEarly()
     {
-        _colorPickerLogic = new ColorPickerLogic(_selectedState,
+        _compositeMemberLogic = new CompositeMemberLogic(_selectedState,
             _exposeVariableService,
             _undoManager,
             _guiCommands,
             _objectFinder,
-            _setVariableLogic);
+            Locator.GetRequiredService<ICompositeMemberRegistry>());
         var deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
         var editVariableService = Locator.GetRequiredService<IEditVariableService>();
         var hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
@@ -764,7 +764,7 @@ public partial class PropertyGridManager
         // of refatoring. We need to move off of the intermediate PropertyDescriptor class.
         AdjustStringPreferredDisplayer(categories, stateSave, instance);
 
-        _colorPickerLogic.UpdateColorCategory(categories, element, instance);
+        _compositeMemberLogic.Apply(categories, element, instance);
 
         UpdateFileFilters(categories);
 

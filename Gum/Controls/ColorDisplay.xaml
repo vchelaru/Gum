@@ -25,6 +25,7 @@
             MinHeight="12"
             Margin="0,5,0,5"
             VerticalAlignment="Stretch"
+            ShowAlpha="False"
             ColorChanged="HandleColorChange"
             MouseUp="ColorPicker_MouseUp"
             PreviewMouseUp="ColorPicker_PreviewMouseUp" />

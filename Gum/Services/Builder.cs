@@ -164,6 +164,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<IEditCommands, EditCommands>();
         services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();
+        services.AddSingleton<ICompositeMemberRegistry, CompositeMemberRegistry>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<FileChangeReactionLogic>();
