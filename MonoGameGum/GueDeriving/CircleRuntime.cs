@@ -1642,20 +1642,43 @@ public class CircleRuntime : GraphicalUiElement
     protected override RenderableShapeBase ContainedRenderable => ContainedLineCircle;
 
     /// <summary>
-    /// Isotropic blur radius in pixels for the dropshadow. Convenience wrapper that pushes a
-    /// single value to both the inherited <see cref="SkiaShapeRuntime.DropshadowBlurX"/> and
-    /// <see cref="SkiaShapeRuntime.DropshadowBlurY"/>. Skia natively supports per-axis blur,
-    /// but the plain <see cref="CircleRuntime"/> surface mirrors industry convention (CSS
-    /// <c>box-shadow</c>, Figma, Photoshop) where blur is a single scalar.
+    /// Isotropic blur radius in pixels for the dropshadow. The plain <see cref="CircleRuntime"/>
+    /// dropshadow blur is a single scalar by design (issue #2761 new-shape contract), mirroring
+    /// industry convention (CSS <c>box-shadow</c>, Figma, Photoshop). Skia natively supports
+    /// per-axis blur, so this pushes the value to both the inherited per-axis fields; the
+    /// per-axis members are hidden/obsolete on this surface (see below).
     /// </summary>
     public float DropshadowBlur
     {
-        get => DropshadowBlurX;
+        get => base.DropshadowBlurX;
         set
         {
-            DropshadowBlurX = value;
-            DropshadowBlurY = value;
+            base.DropshadowBlurX = value;
+            base.DropshadowBlurY = value;
         }
+    }
+
+    /// <summary>
+    /// Obsolete on the plain <see cref="CircleRuntime"/> — use <see cref="DropshadowBlur"/>.
+    /// Hidden shadow of the inherited per-axis blur, kept only so existing code compiles; the
+    /// new-shape contract exposes a single scalar (per-axis blur stays on the legacy Skia shapes
+    /// like <c>RoundedRectangleRuntime</c> / <c>ColoredCircleRuntime</c>).
+    /// </summary>
+    [Obsolete("Use DropshadowBlur (scalar). The plain Circle dropshadow blur is a single isotropic value by design.")]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public new float DropshadowBlurX
+    {
+        get => base.DropshadowBlurX;
+        set => base.DropshadowBlurX = value;
+    }
+
+    /// <inheritdoc cref="DropshadowBlurX"/>
+    [Obsolete("Use DropshadowBlur (scalar). The plain Circle dropshadow blur is a single isotropic value by design.")]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public new float DropshadowBlurY
+    {
+        get => base.DropshadowBlurY;
+        set => base.DropshadowBlurY = value;
     }
 
     /// <summary>
@@ -1792,9 +1815,11 @@ public class CircleRuntime : GraphicalUiElement
 
             // Dropshadow is off by default; pre-seed alpha + offset/blur so toggling
             // HasDropshadow = true at runtime produces a visible shadow without further setup.
+            // Use the scalar DropshadowBlur (isotropic 3) so the default matches MonoGame/raylib;
+            // the previous DropshadowBlurY-only seed left the scalar getter (X axis) reading 0.
             DropshadowAlpha = 255;
             DropshadowOffsetY = 3;
-            DropshadowBlurY = 3;
+            DropshadowBlur = 3;
 #else
             circle.CircleOrigin = CircleOrigin.TopLeft;
             circle.Color = ColorExtensions.White;

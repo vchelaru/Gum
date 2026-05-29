@@ -10,16 +10,21 @@ namespace SkiaGum.Tests.GueDeriving;
 public class ArcRuntimeTests
 {
     // #2949: ArcRuntime exposes a single isotropic DropshadowBlur (mirroring CSS box-shadow /
-    // Figma / Photoshop). Setting it writes both per-axis shims; reading returns the X axis.
+    // Figma / Photoshop). Setting the scalar fans the value out to both axes; asserted on the
+    // renderable's per-axis blur (which stays a real API at the renderable layer), not the
+    // deprecated per-axis runtime members. Skia pushes blur to the renderable in PreRender
+    // (ApplyDropshadow).
     [Fact]
-    public void ArcRuntime_DropshadowBlur_ShouldSetBothBlurXAndY()
+    public void ArcRuntime_DropshadowBlur_ShouldSetBothAxesOnRenderable()
     {
         ArcRuntime arcRuntime = new();
 
         arcRuntime.DropshadowBlur = 5;
+        arcRuntime.PreRender();
 
-        arcRuntime.DropshadowBlurX.ShouldBe(5);
-        arcRuntime.DropshadowBlurY.ShouldBe(5);
+        RenderableShapeBase shape = (RenderableShapeBase)arcRuntime.RenderableComponent;
+        shape.DropshadowBlurX.ShouldBe(5f);
+        shape.DropshadowBlurY.ShouldBe(5f);
         arcRuntime.DropshadowBlur.ShouldBe(5);
     }
 

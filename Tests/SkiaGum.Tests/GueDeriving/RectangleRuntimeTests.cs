@@ -193,6 +193,17 @@ public class RectangleRuntimeTests
         strokeSlot.CustomRadiusBottomRight.ShouldBe(4f);
     }
 
+    // Scalar-blur collapse: the plain Rectangle exposes a single isotropic DropshadowBlur. The
+    // Skia ctor seeds it to 3 so a freshly-constructed runtime matches MonoGame/raylib (where the
+    // scalar already defaults to 3). Previously the Skia ctor seeded only the Y axis, leaving the
+    // scalar getter (which reads the X axis) reporting 0 — a cross-backend inconsistency.
+    [Fact]
+    public void DropshadowBlur_ShouldBe3_ByDefault()
+    {
+        RectangleRuntime sut = new();
+        sut.DropshadowBlur.ShouldBe(3);
+    }
+
     // Issue #2938 — IsFilled gates dropshadow routing. When IsFilled = false, the shadow lands
     // on the stroke slot (a stroke-only ring still casts a shadow).
     [Fact]

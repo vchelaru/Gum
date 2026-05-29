@@ -277,7 +277,7 @@ public class RectangleRuntimeTests
         fill.DropshadowColor.ShouldBe(new Color(10, 20, 30, 40));
         fill.DropshadowOffsetX.ShouldBe(5);
         fill.DropshadowOffsetY.ShouldBe(7);
-        fill.DropshadowBlurX.ShouldBe(2);
+        fill.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(2);
 
         stroke.HasDropshadow.ShouldBeFalse();
     }
@@ -716,7 +716,7 @@ public class RectangleRuntimeTests
         RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
         stroke.DropshadowOffsetX.ShouldBe(19f);
         stroke.DropshadowOffsetY.ShouldBe(11f);
-        stroke.DropshadowBlurX.ShouldBe(3f);
+        stroke.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(3);
     }
 
     [Fact]
