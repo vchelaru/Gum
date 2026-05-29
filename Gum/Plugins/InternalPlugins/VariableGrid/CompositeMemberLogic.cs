@@ -53,8 +53,8 @@ public class CompositeMemberLogic
     }
 
     /// <summary>
-    /// Applies every registered descriptor to every category, collapsing complete, unexposed channel
-    /// triples into composite rows.
+    /// Applies every registered descriptor to every category, collapsing each complete channel triple into a
+    /// composite row (exposed or not; exposure is surfaced via subtext and an Un-expose menu item).
     /// </summary>
     public void Apply(List<MemberCategory> categories, ElementSave element, InstanceSave? instance)
     {
@@ -87,14 +87,10 @@ public class CompositeMemberLogic
 
         foreach (CompositeTriple triple in triples)
         {
-            // Collapse condition is exposure-only: if any channel is individually exposed, leave the raw
-            // channel rows so the exposure stays visible/manageable.
-            bool anyExposed = triple.ChannelRootNames.Any((rootName) =>
-                IsChannelExposed(rootName, element, instance));
-            if (!anyExposed)
-            {
-                BuildAndInsertComposite(descriptor, category, triple, instance);
-            }
+            // Always collapse a complete triple to a swatch, even when channels are exposed. Exposure is
+            // surfaced via the composite's subtext and an Un-expose context menu item rather than by falling
+            // back to raw channel rows.
+            BuildAndInsertComposite(descriptor, category, triple, element, instance);
         }
     }
 
@@ -145,7 +141,7 @@ public class CompositeMemberLogic
     }
 
     private void BuildAndInsertComposite(CompositeMemberDescriptor descriptor, MemberCategory category,
-        CompositeTriple triple, InstanceSave? instance)
+        CompositeTriple triple, ElementSave element, InstanceSave? instance)
     {
         string compositeName = descriptor.CompositeNameFormat
             .Replace("{prefix}", triple.Prefix)
@@ -161,6 +157,15 @@ public class CompositeMemberLogic
         composite.PreferredDisplayer = descriptor.Displayer;
         composite.SupportsMakeDefault = false;
         composite.DisplayName = ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(compositeName);
+
+        // When channels are exposed the swatch stays, but we surface the exposure as subtext so the user can
+        // see it's exposed and under which names (the raw per-channel rows used to carry this).
+        List<VariableSave> exposedChannelVariables = GetExposedChannelVariables(triple, element, instance);
+        if (exposedChannelVariables.Count > 0)
+        {
+            composite.DetailText = "Exposed as " +
+                string.Join(", ", exposedChannelVariables.Select((variable) => variable.ExposedAsName));
+        }
 
         // Single undo for the whole composite write. The undo lock must live here (Gum-side) because the
         // WpfDataUi substrate has no access to the undo manager.
@@ -200,7 +205,7 @@ public class CompositeMemberLogic
 
         composite.ContextMenuEvents.Add("Make Default", (_, _) => HandleMakeDefault(triple.ChannelMembers));
 
-        TryAddExposeMenu(composite, descriptor, triple, instance);
+        TryAddExposeMenu(composite, descriptor, triple, element, instance, exposedChannelVariables);
 
         int insertIndex = triple.ChannelMembers.Min((member) => category.Members.IndexOf(member));
         foreach (InstanceMember channelMember in triple.ChannelMembers)
@@ -223,21 +228,41 @@ public class CompositeMemberLogic
     }
 
     private void TryAddExposeMenu(CompositeInstanceMember composite, CompositeMemberDescriptor descriptor,
-        CompositeTriple triple, InstanceSave? instance)
+        CompositeTriple triple, ElementSave element, InstanceSave? instance,
+        IReadOnlyList<VariableSave> exposedChannelVariables)
     {
         if (instance == null)
         {
             return;
         }
 
-        string channelList = string.Join(", ", descriptor.ChannelRootNames);
         string compositeBaseName = descriptor.CompositeNameFormat
             .Replace("{prefix}", triple.Prefix)
             .Replace("{suffix}", triple.Suffix);
-        List<string> channelRootNames = triple.ChannelRootNames.ToList();
 
-        composite.ContextMenuEvents.Add($"Expose {compositeBaseName} ({channelList})",
-            (_, _) => HandleExpose(channelRootNames, instance));
+        if (exposedChannelVariables.Count > 0)
+        {
+            // Already exposed: offer to un-expose. The raw channel rows used to carry this action.
+            composite.ContextMenuEvents.Add($"Un-expose {compositeBaseName}",
+                (_, _) => HandleUnexpose(exposedChannelVariables, element));
+        }
+        else
+        {
+            string channelList = string.Join(", ", descriptor.ChannelRootNames);
+            List<string> channelRootNames = triple.ChannelRootNames.ToList();
+            composite.ContextMenuEvents.Add($"Expose {compositeBaseName} ({channelList})",
+                (_, _) => HandleExpose(channelRootNames, instance));
+        }
+    }
+
+    private void HandleUnexpose(IReadOnlyList<VariableSave> exposedChannelVariables, ElementSave element)
+    {
+        // One undo lock coalesces the per-channel un-expose calls into a single undo.
+        using IDisposable undoLock = _undoManager.RequestLock();
+        foreach (VariableSave exposedVariable in exposedChannelVariables)
+        {
+            _exposeVariableService.HandleUnexposeVariableClick(exposedVariable, element);
+        }
     }
 
     private void HandleExpose(IReadOnlyList<string> channelRootNames, InstanceSave instance)
@@ -312,19 +337,30 @@ public class CompositeMemberLogic
             : whyNot;
     }
 
-    private bool IsChannelExposed(string channelRootName, ElementSave element, InstanceSave? instance)
+    /// <summary>
+    /// Returns the exposed channel variables of the triple (those whose <see cref="VariableSave.ExposedAsName"/>
+    /// is set), in channel order. Empty when nothing is exposed.
+    /// </summary>
+    private List<VariableSave> GetExposedChannelVariables(CompositeTriple triple, ElementSave element,
+        InstanceSave? instance)
     {
-        VariableSave? variable;
-        if (instance != null)
+        List<VariableSave> exposed = new();
+        foreach (string channelRootName in triple.ChannelRootNames)
         {
-            variable = element.DefaultState.GetVariableSave($"{instance.Name}.{channelRootName}");
+            VariableSave? variable = GetChannelVariable(channelRootName, element, instance);
+            if (!string.IsNullOrEmpty(variable?.ExposedAsName))
+            {
+                exposed.Add(variable);
+            }
         }
-        else
-        {
-            variable = element.DefaultState.GetVariableSave(channelRootName);
-        }
+        return exposed;
+    }
 
-        return !string.IsNullOrEmpty(variable?.ExposedAsName);
+    private VariableSave? GetChannelVariable(string channelRootName, ElementSave element, InstanceSave? instance)
+    {
+        return instance != null
+            ? element.DefaultState.GetVariableSave($"{instance.Name}.{channelRootName}")
+            : element.DefaultState.GetVariableSave(channelRootName);
     }
 
     private string? GetRootVariableName(InstanceMember member, ElementSave element, InstanceSave? instance)

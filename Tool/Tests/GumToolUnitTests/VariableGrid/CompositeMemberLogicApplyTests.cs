@@ -95,8 +95,9 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
     }
 
     [Fact]
-    public void Apply_ShouldNotCollapse_WhenAChannelIsExposed()
+    public void Apply_ShouldStillCollapse_WhenAChannelIsExposed()
     {
+        // Exposure no longer suppresses the swatch; the triple still collapses (a partially-exposed color too).
         ComponentSave component = MakeColorComponent();
         component.DefaultState.GetVariableSave("Red")!.ExposedAsName = "MyColorRed";
 
@@ -108,8 +109,72 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
 
         _logic.Apply(categories, component, instance: null);
 
-        category.Members.Count.ShouldBe(3);
-        category.Members.ShouldNotContain(m => m is CompositeInstanceMember);
+        category.Members.Count.ShouldBe(1);
+        category.Members[0].ShouldBeOfType<CompositeInstanceMember>();
+    }
+
+    [Fact]
+    public void Apply_ShouldSetExposedSubtext_ListingExposedNames_WhenChannelsExposed()
+    {
+        ComponentSave component = MakeColorComponent();
+        component.DefaultState.GetVariableSave("Red")!.ExposedAsName = "MyColorRed";
+        component.DefaultState.GetVariableSave("Green")!.ExposedAsName = "MyColorGreen";
+        component.DefaultState.GetVariableSave("Blue")!.ExposedAsName = "MyColorBlue";
+
+        MemberCategory category = CategoryWith(
+            new InstanceMember("Red", null!),
+            new InstanceMember("Green", null!),
+            new InstanceMember("Blue", null!));
+        List<MemberCategory> categories = new() { category };
+
+        _logic.Apply(categories, component, instance: null);
+        CompositeInstanceMember composite = (CompositeInstanceMember)category.Members.Single();
+
+        composite.DetailText.ShouldContain("MyColorRed");
+        composite.DetailText.ShouldContain("MyColorGreen");
+        composite.DetailText.ShouldContain("MyColorBlue");
+    }
+
+    [Fact]
+    public void Apply_ShouldNotSetExposedSubtext_WhenNotExposed()
+    {
+        ComponentSave component = MakeColorComponent();
+        MemberCategory category = CategoryWith(
+            new InstanceMember("Red", null!),
+            new InstanceMember("Green", null!),
+            new InstanceMember("Blue", null!));
+        List<MemberCategory> categories = new() { category };
+
+        _logic.Apply(categories, component, instance: null);
+        CompositeInstanceMember composite = (CompositeInstanceMember)category.Members.Single();
+
+        composite.DetailText.ShouldBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void Apply_ShouldOfferUnexposeNotExpose_WhenChannelsExposed()
+    {
+        InstanceSave instance = SetUpInstanceForExpose(out ComponentSave container);
+        ExposeChannelsOnInstance(container, instance);
+        CompositeInstanceMember composite = BuildInstanceComposite(container, instance);
+
+        composite.ContextMenuEvents.Keys.ShouldContain(k => k.StartsWith("Un-expose"));
+        composite.ContextMenuEvents.Keys.ShouldNotContain(k => k.StartsWith("Expose"));
+    }
+
+    [Fact]
+    public void Unexpose_ShouldUnexposeEveryExposedChannel_UnderASingleUndoLock()
+    {
+        InstanceSave instance = SetUpInstanceForExpose(out ComponentSave container);
+        ExposeChannelsOnInstance(container, instance);
+        CompositeInstanceMember composite = BuildInstanceComposite(container, instance);
+
+        string unexposeKey = composite.ContextMenuEvents.Keys.Single(k => k.StartsWith("Un-expose"));
+        composite.ContextMenuEvents[unexposeKey].Invoke(composite, null!);
+
+        _exposeVariableService.Verify(
+            x => x.HandleUnexposeVariableClick(It.IsAny<VariableSave>(), container), Times.Exactly(3));
+        _undoManager.Verify(x => x.RequestLock(), Times.Once);
     }
 
     [Fact]
@@ -247,6 +312,19 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
 
         _selectedState.Setup(x => x.SelectedElement).Returns(container);
         return instance;
+    }
+
+    private static void ExposeChannelsOnInstance(ComponentSave container, InstanceSave instance, string prefix = "")
+    {
+        foreach (string token in new[] { "Red", "Green", "Blue" })
+        {
+            container.DefaultState.Variables.Add(new VariableSave
+            {
+                Name = $"{instance.Name}.{prefix}{token}",
+                Type = "int",
+                ExposedAsName = $"My{prefix}{token}",
+            });
+        }
     }
 
     private CompositeInstanceMember BuildInstanceComposite(ComponentSave container, InstanceSave instance, string prefix = "")

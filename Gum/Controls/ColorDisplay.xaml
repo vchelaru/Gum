@@ -6,7 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-    <Grid x:Name="MainGrid">
+    <StackPanel>
+        <Grid x:Name="MainGrid">
         <Grid.ContextMenu>
             <ContextMenu />
         </Grid.ContextMenu>
@@ -48,5 +49,15 @@
                 TextChanged="HexTextBox_TextChanged"
                 ToolTip="Type or paste a hex color (RRGGBB or RRGGBBAA). Alpha is ignored." />
         </StackPanel>
-    </Grid>
+        </Grid>
+
+        <!--  Subtext (e.g. "Exposed as ...") mirrored from InstanceMember.DetailText, like the other displayers.  -->
+        <TextBlock
+            x:Name="HintTextBlock"
+            Margin="0,0,4,4"
+            HorizontalAlignment="Left"
+            FontSize="10"
+            TextWrapping="Wrap"
+            Visibility="Collapsed" />
+    </StackPanel>
 </UserControl>
