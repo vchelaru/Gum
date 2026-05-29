@@ -20,7 +20,7 @@ public class ScrollBarThumbVisual : InteractiveGue
 {
     private const float CornerRadius = 1f;
 
-    private readonly RoundedRectangleRuntime _body;
+    private readonly RectangleRuntime _body;
 
     private StateSaveCategory _buttonCategory = null!;
 
@@ -38,9 +38,9 @@ public class ScrollBarThumbVisual : InteractiveGue
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateBody()
+    private static RectangleRuntime CreateBody()
     {
-        RoundedRectangleRuntime body = new RoundedRectangleRuntime();
+        RectangleRuntime body = new RectangleRuntime();
         body.Name = "NeonScrollThumbBody";
         body.X = 0;
         body.Y = 0;
@@ -54,7 +54,8 @@ public class ScrollBarThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.CornerRadius = CornerRadius;
         body.IsFilled = true;
-        body.Color = NeonPalette.ScrollThumb;
+        body.FillColor = NeonPalette.ScrollThumb;
+        body.StrokeWidth = 0;
         return body;
     }
 
@@ -67,25 +68,25 @@ public class ScrollBarThumbVisual : InteractiveGue
         // Muted steel-blue at rest. Hover/push step toward cyan but stay a
         // shade below full Accent so the scroll bar reads as secondary chrome.
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => _body.Color = NeonPalette.ScrollThumb);
+            () => _body.FillColor = NeonPalette.ScrollThumb);
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => _body.Color = NeonPalette.ScrollThumbHover);
+            () => _body.FillColor = NeonPalette.ScrollThumbHover);
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => _body.Color = NeonPalette.ScrollThumbHover);
+            () => _body.FillColor = NeonPalette.ScrollThumbHover);
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => _body.Color = NeonPalette.ScrollThumb);
+            () => _body.FillColor = NeonPalette.ScrollThumb);
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => _body.Color = NeonPalette.ScrollThumbHover);
+            () => _body.FillColor = NeonPalette.ScrollThumbHover);
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => _body.Color = NeonColors.Disabled);
+            () => _body.FillColor = NeonColors.Disabled);
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => _body.Color = NeonColors.Disabled);
+            () => _body.FillColor = NeonColors.Disabled);
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

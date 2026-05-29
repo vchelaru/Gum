@@ -19,9 +19,9 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     private const float FocusRingInset = 4f;
     private const float FocusRingThickness = 1f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public ScrollViewerVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -50,9 +50,9 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "NeonScrollViewerFill";
         fill.X = 0;
         fill.Y = 0;
@@ -66,13 +66,14 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = NeonColors.Surface1;
+        fill.FillColor = NeonColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "NeonScrollViewerBorder";
         border.X = 0;
         border.Y = 0;
@@ -88,13 +89,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = NeonColors.Border;
+        border.StrokeColor = NeonColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "NeonScrollViewerFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -110,7 +111,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = NeonPalette.FocusRing;
+        ring.StrokeColor = NeonPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -119,13 +120,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     {
         States.Enabled.Apply = () =>
         {
-            _border.Color = NeonColors.Border;
+            _border.StrokeColor = NeonColors.Border;
             _focusRing.Visible = false;
         };
 
         States.Focused.Apply = () =>
         {
-            _border.Color = NeonColors.Accent;
+            _border.StrokeColor = NeonColors.Accent;
             _focusRing.Visible = true;
         };
     }

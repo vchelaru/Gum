@@ -20,10 +20,10 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private const float FocusRingThickness = 1f;
     private const float BoxToLabelGap = 8f;
 
-    private readonly ColoredCircleRuntime _focusRing;
-    private readonly ColoredCircleRuntime _outerFill;
-    private readonly ColoredCircleRuntime _outerBorder;
-    private readonly ColoredCircleRuntime _innerDot;
+    private readonly CircleRuntime _focusRing;
+    private readonly CircleRuntime _outerFill;
+    private readonly CircleRuntime _outerBorder;
+    private readonly CircleRuntime _innerDot;
 
     public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -49,9 +49,9 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         WireStates();
     }
 
-    private static ColoredCircleRuntime CreateOuterFill()
+    private static CircleRuntime CreateOuterFill()
     {
-        ColoredCircleRuntime c = new ColoredCircleRuntime();
+        CircleRuntime c = new CircleRuntime();
         c.Name = "NeonRadioOuterFill";
         c.X = 0;
         c.Y = 0;
@@ -64,13 +64,14 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.WidthUnits = DimensionUnitType.Absolute;
         c.HeightUnits = DimensionUnitType.Absolute;
         c.IsFilled = true;
-        c.Color = NeonColors.Surface1;
+        c.FillColor = NeonColors.Surface1;
+        c.StrokeWidth = 0;
         return c;
     }
 
-    private static ColoredCircleRuntime CreateOuterBorder()
+    private static CircleRuntime CreateOuterBorder()
     {
-        ColoredCircleRuntime c = new ColoredCircleRuntime();
+        CircleRuntime c = new CircleRuntime();
         c.Name = "NeonRadioOuterBorder";
         c.X = 0;
         c.Y = 0;
@@ -85,13 +86,13 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.IsFilled = false;
         c.StrokeWidth = BorderThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
-        c.Color = NeonColors.Border;
+        c.StrokeColor = NeonColors.Border;
         return c;
     }
 
-    private static ColoredCircleRuntime CreateFocusRing()
+    private static CircleRuntime CreateFocusRing()
     {
-        ColoredCircleRuntime c = new ColoredCircleRuntime();
+        CircleRuntime c = new CircleRuntime();
         c.Name = "NeonRadioFocusRing";
         c.X = -FocusRingInset;
         c.Y = 0;
@@ -106,15 +107,15 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.IsFilled = false;
         c.StrokeWidth = FocusRingThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
-        c.Color = NeonPalette.FocusRing;
+        c.StrokeColor = NeonPalette.FocusRing;
         c.Visible = false;
         return c;
     }
 
-    private static ColoredCircleRuntime CreateInnerDot()
+    private static CircleRuntime CreateInnerDot()
     {
         const float inset = (OuterSize - InnerSize) / 2f;
-        ColoredCircleRuntime dot = new ColoredCircleRuntime();
+        CircleRuntime dot = new CircleRuntime();
         dot.Name = "NeonRadioInnerDot";
         dot.X = inset;
         dot.Y = 0;
@@ -127,7 +128,8 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         dot.WidthUnits = DimensionUnitType.Absolute;
         dot.HeightUnits = DimensionUnitType.Absolute;
         dot.IsFilled = true;
-        dot.Color = NeonColors.Accent;
+        dot.FillColor = NeonColors.Accent;
+        dot.StrokeWidth = 0;
         dot.Visible = false;
         return dot;
     }
@@ -201,13 +203,13 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private void Apply(Color fill, Color border, Color text, bool innerVisible, bool ring,
         Color? innerColor = null)
     {
-        _outerFill.Color = fill;
-        _outerBorder.Color = border;
+        _outerFill.FillColor = fill;
+        _outerBorder.StrokeColor = border;
         TextInstance.Color = text;
         _innerDot.Visible = innerVisible;
         if (innerColor.HasValue)
         {
-            _innerDot.Color = innerColor.Value;
+            _innerDot.FillColor = innerColor.Value;
         }
         _focusRing.Visible = ring;
     }

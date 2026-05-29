@@ -18,9 +18,9 @@ public class ListBoxVisual : BaseListBoxVisual
     private const float FocusRingInset = 4f;
     private const float FocusRingThickness = 1f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public ListBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -52,9 +52,9 @@ public class ListBoxVisual : BaseListBoxVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "NeonListBoxFill";
         fill.X = 0;
         fill.Y = 0;
@@ -68,13 +68,14 @@ public class ListBoxVisual : BaseListBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = NeonColors.Surface1;
+        fill.FillColor = NeonColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "NeonListBoxBorder";
         border.X = 0;
         border.Y = 0;
@@ -90,13 +91,13 @@ public class ListBoxVisual : BaseListBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = NeonColors.Border;
+        border.StrokeColor = NeonColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "NeonListBoxFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -112,7 +113,7 @@ public class ListBoxVisual : BaseListBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = NeonPalette.FocusRing;
+        ring.StrokeColor = NeonPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -143,8 +144,8 @@ public class ListBoxVisual : BaseListBoxVisual
 
     private void ApplyPalette(Color border, bool showFocusRing, bool fillDisabled = false)
     {
-        _fill.Color = fillDisabled ? NeonColors.Disabled : NeonColors.Surface1;
-        _border.Color = border;
+        _fill.FillColor = fillDisabled ? NeonColors.Disabled : NeonColors.Surface1;
+        _border.StrokeColor = border;
         _focusRing.Visible = showFocusRing;
     }
 }
