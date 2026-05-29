@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Shouldly;
 using System;
@@ -42,6 +43,21 @@ public class StandardElementsManagerTests
     }
 
     [Fact]
+    public void DefaultStates_Circle_ShouldDefaultTo32x32_MatchingCircleRuntime()
+    {
+        // The in-tool standard default size must match the runtime constructor so a Circle
+        // created in code matches one created in the tool. CircleRuntime's ctor seeds 32x32
+        // (Radius 16). Reconciled in #2947/PR#2976.
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        StateSave circle = self.DefaultStates["Circle"];
+
+        circle.Variables.First(v => v.Name == "Width").Value.ShouldBe(32f);
+        circle.Variables.First(v => v.Name == "Height").Value.ShouldBe(32f);
+    }
+
+    [Fact]
     public void DefaultStates_Circle_ShouldNotIncludeCornerRadius()
     {
         // A circle has no corners; CornerRadius belongs only on Rectangle.
@@ -50,6 +66,20 @@ public class StandardElementsManagerTests
 
         self.DefaultStates["Circle"].Variables
             .ShouldNotContain(v => v.Name == "CornerRadius");
+    }
+
+    [Fact]
+    public void DefaultStates_Rectangle_ShouldDefaultTo50x50_MatchingRectangleRuntime()
+    {
+        // The in-tool standard default size must match the runtime constructor so a Rectangle
+        // created in code matches one created in the tool. RectangleRuntime's ctor seeds 50x50.
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        StateSave rectangle = self.DefaultStates["Rectangle"];
+
+        rectangle.Variables.First(v => v.Name == "Width").Value.ShouldBe(50f);
+        rectangle.Variables.First(v => v.Name == "Height").Value.ShouldBe(50f);
     }
 
     [Fact]

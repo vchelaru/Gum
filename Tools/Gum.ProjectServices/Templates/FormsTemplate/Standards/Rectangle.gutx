@@ -109,7 +109,7 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="Height" Category="Dimensions" SetsValue="true">
-      <Value xsi:type="xsd:float">16</Value>
+      <Value xsi:type="xsd:float">50</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="HeightUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -159,7 +159,7 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="float" Name="Width" Category="Dimensions" SetsValue="true">
-      <Value xsi:type="xsd:float">16</Value>
+      <Value xsi:type="xsd:float">50</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="WidthUnits" Category="Dimensions" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>

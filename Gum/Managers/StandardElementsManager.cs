@@ -436,7 +436,10 @@ public class StandardElementsManager
 
             AddPositioningVariables(stateSave);
 
-            AddDimensionsVariables(stateSave, 16, 16, DimensionVariableAction.ExcludeFileOptions);
+            // 50x50 matches RectangleRuntime's constructor so a Rectangle created in code is the
+            // same size as one created in-tool from this standard (reconcile mirror of #2947's
+            // Circle 32x32).
+            AddDimensionsVariables(stateSave, 50, 50, DimensionVariableAction.ExcludeFileOptions);
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 
