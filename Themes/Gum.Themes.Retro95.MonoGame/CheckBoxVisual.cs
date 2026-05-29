@@ -24,7 +24,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private readonly ContainerRuntime _boxContainer;
     private readonly Retro95Bevel _bevel;
     private readonly TextRuntime _checkGlyph;
-    private readonly ColoredRectangleRuntime _dashIndicator;
+    private readonly RectangleRuntime _dashIndicator;
     private readonly Retro95DottedFocusRect _focusRect;
 
     public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -110,9 +110,9 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         return glyph;
     }
 
-    private static ColoredRectangleRuntime CreateDashIndicator()
+    private static RectangleRuntime CreateDashIndicator()
     {
-        ColoredRectangleRuntime dash = new ColoredRectangleRuntime();
+        RectangleRuntime dash = new RectangleRuntime();
         dash.Name = "Retro95CheckDash";
         dash.X = 0;
         dash.Y = 0;
@@ -124,7 +124,9 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         dash.Height = DashHeight;
         dash.WidthUnits = DimensionUnitType.Absolute;
         dash.HeightUnits = DimensionUnitType.Absolute;
-        dash.Color = Retro95Colors.Selection;
+        dash.IsFilled = true;
+        dash.FillColor = Retro95Colors.Selection;
+        dash.StrokeWidth = 0;
         return dash;
     }
 

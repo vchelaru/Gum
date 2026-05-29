@@ -19,8 +19,8 @@ public class SliderVisual : BaseSliderVisual
     private const float TrackHeight = 6f;
     private const float TrackCornerRadius = 3f;
 
-    private readonly RoundedRectangleRuntime _track;
-    private readonly RoundedRectangleRuntime _fill;
+    private readonly RectangleRuntime _track;
+    private readonly RectangleRuntime _fill;
     private readonly SliderThumbVisual _thumb;
 
     public SliderVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -93,9 +93,9 @@ public class SliderVisual : BaseSliderVisual
         _fill.Width = (float)(pct * 100.0);
     }
 
-    private static RoundedRectangleRuntime CreateTrack()
+    private static RectangleRuntime CreateTrack()
     {
-        RoundedRectangleRuntime track = new RoundedRectangleRuntime();
+        RectangleRuntime track = new RectangleRuntime();
         track.Name = "ForestGladeSliderTrack";
         track.XUnits = GeneralUnitType.PixelsFromMiddle;
         track.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -107,13 +107,14 @@ public class SliderVisual : BaseSliderVisual
         track.HeightUnits = DimensionUnitType.Absolute;
         track.CornerRadius = TrackCornerRadius;
         track.IsFilled = true;
-        track.Color = ForestGladePalette.SliderTrack;
+        track.FillColor = ForestGladePalette.SliderTrack;
+        track.StrokeWidth = 0;
         return track;
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeSliderFill";
         fill.XUnits = GeneralUnitType.PixelsFromSmall;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -125,6 +126,7 @@ public class SliderVisual : BaseSliderVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = TrackCornerRadius;
         fill.IsFilled = true;
+        fill.StrokeWidth = 0;
         // CSS .fg-sldr-fill: linear-gradient(90deg, canopy-lit, leaf-bright 70%, sun-pale).
         // Horizontal gradient — endpoints span left/right via PixelsFromSmall/PixelsFromLarge.
         fill.UseGradient = true;
@@ -162,7 +164,7 @@ public class SliderVisual : BaseSliderVisual
 
     private void ApplyTrack(Color trackFill, Color fillLeft, Color fillRight)
     {
-        _track.Color = trackFill;
+        _track.FillColor = trackFill;
         _fill.Color1 = fillLeft;
         _fill.Color2 = fillRight;
     }

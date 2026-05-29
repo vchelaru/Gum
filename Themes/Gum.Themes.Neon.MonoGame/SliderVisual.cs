@@ -20,8 +20,8 @@ public class SliderVisual : BaseSliderVisual
     private const float TrackHeight = 8f;
     private const float TrackCornerRadius = 2f;
 
-    private readonly RoundedRectangleRuntime _track;
-    private readonly RoundedRectangleRuntime _fill;
+    private readonly RectangleRuntime _track;
+    private readonly RectangleRuntime _fill;
     private readonly SliderThumbVisual _thumb;
 
     public SliderVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -94,9 +94,9 @@ public class SliderVisual : BaseSliderVisual
         _fill.Width = (float)(pct * 100.0);
     }
 
-    private static RoundedRectangleRuntime CreateTrack()
+    private static RectangleRuntime CreateTrack()
     {
-        RoundedRectangleRuntime track = new RoundedRectangleRuntime();
+        RectangleRuntime track = new RectangleRuntime();
         track.Name = "NeonSliderTrack";
         track.X = 0;
         track.Y = 0;
@@ -110,13 +110,14 @@ public class SliderVisual : BaseSliderVisual
         track.HeightUnits = DimensionUnitType.Absolute;
         track.CornerRadius = TrackCornerRadius;
         track.IsFilled = true;
-        track.Color = NeonColors.AccentDim;
+        track.FillColor = NeonColors.AccentDim;
+        track.StrokeWidth = 0;
         return track;
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "NeonSliderFill";
         fill.X = 0;
         fill.Y = 0;
@@ -130,7 +131,8 @@ public class SliderVisual : BaseSliderVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = TrackCornerRadius;
         fill.IsFilled = true;
-        fill.Color = NeonColors.Accent;
+        fill.FillColor = NeonColors.Accent;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
@@ -147,7 +149,7 @@ public class SliderVisual : BaseSliderVisual
 
     private void ApplyTrack(Color trackFill, Color fillBar)
     {
-        _track.Color = trackFill;
-        _fill.Color = fillBar;
+        _track.FillColor = trackFill;
+        _fill.FillColor = fillBar;
     }
 }

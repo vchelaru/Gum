@@ -38,8 +38,8 @@ public class ScrollBarVisual : BaseScrollBarVisual
     private const float FrameBorderThickness = 1f;
 
     private readonly ScrollBarThumbVisual _thumb;
-    private readonly RoundedRectangleRuntime _frameFill;
-    private readonly RoundedRectangleRuntime _frameBorder;
+    private readonly RectangleRuntime _frameFill;
+    private readonly RectangleRuntime _frameBorder;
     private bool _isHorizontal;
 
     public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -189,9 +189,9 @@ public class ScrollBarVisual : BaseScrollBarVisual
         }
     }
 
-    private static RoundedRectangleRuntime CreateFrameFill()
+    private static RectangleRuntime CreateFrameFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProScrollBarFrameFill";
         fill.X = 0;
         fill.Y = 0;
@@ -205,13 +205,14 @@ public class ScrollBarVisual : BaseScrollBarVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = FrameCornerRadius;
         fill.IsFilled = true;
-        fill.Color = DarkProColors.Surface1;
+        fill.FillColor = DarkProColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateFrameBorder()
+    private static RectangleRuntime CreateFrameBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "DarkProScrollBarFrameBorder";
         border.X = 0;
         border.Y = 0;
@@ -227,7 +228,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         border.IsFilled = false;
         border.StrokeWidth = FrameBorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = DarkProColors.Border;
+        border.StrokeColor = DarkProColors.Border;
         return border;
     }
 }

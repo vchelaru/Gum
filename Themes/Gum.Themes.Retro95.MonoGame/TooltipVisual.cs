@@ -16,11 +16,11 @@ public class TooltipVisual : BaseTooltipVisual
     // Win95 tooltip yellow ≈ #FFFFE1.
     private static readonly Color TooltipFill = new Color(255, 255, 225);
 
-    private readonly ColoredRectangleRuntime _fill;
-    private readonly ColoredRectangleRuntime _outerTop;
-    private readonly ColoredRectangleRuntime _outerBottom;
-    private readonly ColoredRectangleRuntime _outerLeft;
-    private readonly ColoredRectangleRuntime _outerRight;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _outerTop;
+    private readonly RectangleRuntime _outerBottom;
+    private readonly RectangleRuntime _outerLeft;
+    private readonly RectangleRuntime _outerRight;
 
     public TooltipVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -44,9 +44,9 @@ public class TooltipVisual : BaseTooltipVisual
         TextInstance.Color = Retro95Colors.Text;
     }
 
-    private static ColoredRectangleRuntime NewStretched(string name, Color color)
+    private static RectangleRuntime NewStretched(string name, Color color)
     {
-        ColoredRectangleRuntime r = new ColoredRectangleRuntime();
+        RectangleRuntime r = new RectangleRuntime();
         r.Name = name;
         r.X = 0; r.Y = 0;
         r.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -56,15 +56,19 @@ public class TooltipVisual : BaseTooltipVisual
         r.Width = 0; r.Height = 0;
         r.WidthUnits = DimensionUnitType.RelativeToParent;
         r.HeightUnits = DimensionUnitType.RelativeToParent;
-        r.Color = color;
+        r.IsFilled = true;
+        r.FillColor = color;
+        r.StrokeWidth = 0;
         return r;
     }
 
-    private static ColoredRectangleRuntime NewEdge(string name, bool horizontal, bool top)
+    private static RectangleRuntime NewEdge(string name, bool horizontal, bool top)
     {
-        ColoredRectangleRuntime r = new ColoredRectangleRuntime();
+        RectangleRuntime r = new RectangleRuntime();
         r.Name = name;
-        r.Color = Retro95Colors.Text;
+        r.IsFilled = true;
+        r.FillColor = Retro95Colors.Text;
+        r.StrokeWidth = 0;
         if (horizontal)
         {
             r.X = 0;

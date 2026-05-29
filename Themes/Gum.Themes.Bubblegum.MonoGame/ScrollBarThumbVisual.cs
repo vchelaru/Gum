@@ -20,7 +20,7 @@ public class ScrollBarThumbVisual : InteractiveGue
 {
     private const float CornerRadius = 6f;
 
-    private readonly RoundedRectangleRuntime _body;
+    private readonly RectangleRuntime _body;
 
     private StateSaveCategory _buttonCategory = null!;
 
@@ -38,9 +38,9 @@ public class ScrollBarThumbVisual : InteractiveGue
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateBody()
+    private static RectangleRuntime CreateBody()
     {
-        RoundedRectangleRuntime body = new RoundedRectangleRuntime();
+        RectangleRuntime body = new RectangleRuntime();
         body.Name = "BubblegumScrollThumbBody";
         body.X = 0;
         body.Y = 0;
@@ -54,7 +54,8 @@ public class ScrollBarThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.CornerRadius = CornerRadius;
         body.IsFilled = true;
-        body.Color = BubblegumColors.Accent;
+        body.FillColor = BubblegumColors.Accent;
+        body.StrokeWidth = 0;
         return body;
     }
 
@@ -65,25 +66,25 @@ public class ScrollBarThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => _body.Color = BubblegumColors.Accent);
+            () => _body.FillColor = BubblegumColors.Accent);
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => _body.Color = BubblegumColors.AccentHover);
+            () => _body.FillColor = BubblegumColors.AccentHover);
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => _body.Color = BubblegumColors.AccentDark);
+            () => _body.FillColor = BubblegumColors.AccentDark);
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => _body.Color = BubblegumColors.Accent);
+            () => _body.FillColor = BubblegumColors.Accent);
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => _body.Color = BubblegumColors.AccentHover);
+            () => _body.FillColor = BubblegumColors.AccentHover);
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => _body.Color = BubblegumColors.Disabled);
+            () => _body.FillColor = BubblegumColors.Disabled);
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => _body.Color = BubblegumColors.Disabled);
+            () => _body.FillColor = BubblegumColors.Disabled);
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

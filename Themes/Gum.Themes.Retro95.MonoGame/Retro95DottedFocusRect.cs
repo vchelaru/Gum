@@ -8,7 +8,7 @@ namespace Gum.Themes.Retro95;
 
 /// <summary>
 /// The canonical Win95 1-pixel dotted focus rectangle. Implemented as a single
-/// stroked-and-dashed <see cref="RoundedRectangleRuntime"/> with <c>CornerRadius=0</c>:
+/// stroked-and-dashed <see cref="RectangleRuntime"/> with <c>CornerRadius=0</c>:
 /// Apos.Shapes natively rasterizes the dash pattern via <c>StrokeDashLength</c> /
 /// <c>StrokeGapLength</c>, so the chrome scales cleanly with the host visual without
 /// any per-frame dot bookkeeping or sensitivity to layout timing.
@@ -30,7 +30,7 @@ public sealed class Retro95DottedFocusRect
     private const float StrokeWidth = 1f;
 
     private readonly ContainerRuntime _container;
-    private readonly RoundedRectangleRuntime _rect;
+    private readonly RectangleRuntime _rect;
 
     /// <summary>The wrapper container holding the dashed-stroke rectangle. Adjust its
     /// X/Y/Width/Height before <see cref="Show"/> to scope the focus rect to a sub-region.</summary>
@@ -58,7 +58,7 @@ public sealed class Retro95DottedFocusRect
         _container.Visible = false;
         host.AddChild(_container);
 
-        _rect = new RoundedRectangleRuntime();
+        _rect = new RectangleRuntime();
         _rect.Name = "Retro95FocusRectStroke";
         _rect.X = 0; _rect.Y = 0;
         _rect.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -75,7 +75,7 @@ public sealed class Retro95DottedFocusRect
         _rect.StrokeDashLength = DashLength;
         _rect.StrokeGapLength = GapLength;
         _rect.IsAntialiased = false;
-        _rect.Color = Retro95Colors.Text;
+        _rect.StrokeColor = Retro95Colors.Text;
         _container.AddChild(_rect);
     }
 

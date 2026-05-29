@@ -21,9 +21,9 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private const float BorderThickness = 1f;
     private const float BoxToLabelGap = 6f;
 
-    private readonly ColoredCircleRuntime _outerFill;
-    private readonly ColoredCircleRuntime _outerBorder;
-    private readonly ColoredCircleRuntime _innerDot;
+    private readonly CircleRuntime _outerFill;
+    private readonly CircleRuntime _outerBorder;
+    private readonly CircleRuntime _innerDot;
     private readonly Retro95DottedFocusRect _focusRect;
 
     public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -64,9 +64,9 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         WireStates();
     }
 
-    private static ColoredCircleRuntime CreateCircle(string name, float size, bool filled, Color color)
+    private static CircleRuntime CreateCircle(string name, float size, bool filled, Color color)
     {
-        ColoredCircleRuntime c = new ColoredCircleRuntime();
+        CircleRuntime c = new CircleRuntime();
         c.Name = name;
         c.X = 0;
         c.Y = 0;
@@ -79,14 +79,22 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.WidthUnits = DimensionUnitType.Absolute;
         c.HeightUnits = DimensionUnitType.Absolute;
         c.IsFilled = filled;
-        c.Color = color;
+        if (filled)
+        {
+            c.FillColor = color;
+            c.StrokeWidth = 0;
+        }
+        else
+        {
+            c.StrokeColor = color;
+        }
         return c;
     }
 
-    private static ColoredCircleRuntime CreateInnerDot()
+    private static CircleRuntime CreateInnerDot()
     {
         const float inset = (OuterSize - InnerSize) / 2f;
-        ColoredCircleRuntime dot = new ColoredCircleRuntime();
+        CircleRuntime dot = new CircleRuntime();
         dot.Name = "Retro95RadioDot";
         dot.X = inset;
         dot.Y = 0;
@@ -99,7 +107,8 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         dot.WidthUnits = DimensionUnitType.Absolute;
         dot.HeightUnits = DimensionUnitType.Absolute;
         dot.IsFilled = true;
-        dot.Color = Retro95Colors.Text;
+        dot.FillColor = Retro95Colors.Text;
+        dot.StrokeWidth = 0;
         return dot;
     }
 
@@ -126,7 +135,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
 
     private void Apply(bool white, Color text, bool dotVisible, bool focus)
     {
-        _outerFill.Color = white ? Retro95Colors.WhiteFill : Retro95Colors.Surface;
+        _outerFill.FillColor = white ? Retro95Colors.WhiteFill : Retro95Colors.Surface;
         TextInstance.Color = text;
         _innerDot.Visible = dotVisible;
         if (focus) _focusRect.Show(); else _focusRect.Hide();

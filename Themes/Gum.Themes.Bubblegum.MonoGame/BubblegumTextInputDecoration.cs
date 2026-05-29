@@ -20,9 +20,9 @@ internal sealed class BubblegumTextInputDecoration
     private const float FocusRingInset = 2f;
     private const float FocusRingThickness = 3f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public BubblegumTextInputDecoration(TextBoxBaseVisual host)
     {
@@ -50,9 +50,9 @@ internal sealed class BubblegumTextInputDecoration
         WireStates(host);
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "BubblegumTextInputFill";
         fill.X = 0;
         fill.Y = 0;
@@ -66,13 +66,14 @@ internal sealed class BubblegumTextInputDecoration
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = BubblegumColors.Surface1;
+        fill.FillColor = BubblegumColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "BubblegumTextInputBorder";
         border.X = 0;
         border.Y = 0;
@@ -88,13 +89,13 @@ internal sealed class BubblegumTextInputDecoration
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = BubblegumColors.Border;
+        border.StrokeColor = BubblegumColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "BubblegumTextInputFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -110,7 +111,7 @@ internal sealed class BubblegumTextInputDecoration
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = BubblegumPalette.FocusRing;
+        ring.StrokeColor = BubblegumPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -141,8 +142,8 @@ internal sealed class BubblegumTextInputDecoration
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text,
         Color placeholder, Color caret, Color selection, bool ring)
     {
-        _fill.Color = fill;
-        _border.Color = border;
+        _fill.FillColor = fill;
+        _border.StrokeColor = border;
         host.TextInstance.Color = text;
         host.PlaceholderTextInstance.Color = placeholder;
         host.CaretInstance.Color = caret;

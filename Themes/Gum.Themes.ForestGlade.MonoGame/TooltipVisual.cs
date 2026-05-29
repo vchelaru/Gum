@@ -16,8 +16,8 @@ public class TooltipVisual : BaseTooltipVisual
 {
     private const float BorderThickness = 1f;
 
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public TooltipVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -35,9 +35,9 @@ public class TooltipVisual : BaseTooltipVisual
         TextInstance.Color = ForestGladeColors.Text;
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeTooltipFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -49,13 +49,14 @@ public class TooltipVisual : BaseTooltipVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyMedium(fill);
         fill.IsFilled = true;
-        fill.Color = ForestGladePalette.WindowBody;
+        fill.FillColor = ForestGladePalette.WindowBody;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "ForestGladeTooltipBorder";
         border.XUnits = GeneralUnitType.PixelsFromMiddle;
         border.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -69,7 +70,7 @@ public class TooltipVisual : BaseTooltipVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = new Color(232, 255, 117, 56);
+        border.StrokeColor = new Color(232, 255, 117, 56);
         return border;
     }
 }

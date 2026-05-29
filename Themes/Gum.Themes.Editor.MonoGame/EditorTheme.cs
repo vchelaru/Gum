@@ -68,5 +68,24 @@ public static class EditorTheme
         TryAdd(typeof(ScrollBar), (_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ScrollViewer), (_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Slider), (_, c) => new SliderVisual(tryCreateFormsObject: c));
+
+        // Controls Editor does not restyle are pinned to their stock V3 visuals so that
+        // EditorTheme.Apply fully specifies the template set. FrameworkElement.DefaultFormsTemplates
+        // is global static state; without re-registering these, re-applying a theme at runtime
+        // (the showcase's 1-6 swap, or a consumer switching skins) would leave a previously-applied
+        // theme's visual in place for these controls, because Editor never overwrites their entries.
+        // These are the same visuals a single-theme Editor run already falls back to, so this is a
+        // no-op for consumers who apply Editor once.
+        TryAdd(typeof(RadioButton), (_, c) => new Gum.Forms.DefaultVisuals.V3.RadioButtonVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ToggleButton), (_, c) => new Gum.Forms.DefaultVisuals.V3.ToggleButtonVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(PasswordBox), (_, c) => new Gum.Forms.DefaultVisuals.V3.PasswordBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Menu), (_, c) => new Gum.Forms.DefaultVisuals.V3.MenuVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(MenuItem), (_, c) => new Gum.Forms.DefaultVisuals.V3.MenuItemVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Window), (_, c) => new Gum.Forms.DefaultVisuals.V3.WindowVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Splitter), (_, c) => new Gum.Forms.DefaultVisuals.V3.SplitterVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Label), (_, c) => new Gum.Forms.DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ItemsControl), (_, c) => new Gum.Forms.DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Tooltip), (_, c) => new Gum.Forms.DefaultVisuals.V3.TooltipVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Gum.Forms.Controls.Games.DialogBox), (_, c) => new Gum.Forms.DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));
     }
 }

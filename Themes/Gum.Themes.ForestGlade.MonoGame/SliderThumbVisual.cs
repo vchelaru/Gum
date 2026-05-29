@@ -24,9 +24,9 @@ public class SliderThumbVisual : InteractiveGue
     private const float ShadowBlur = 22f;
     private const float ShadowBlurHover = 30f;
 
-    private readonly ColoredCircleRuntime _focusRing;
-    private readonly ColoredCircleRuntime _body;
-    private readonly ColoredCircleRuntime _border;
+    private readonly CircleRuntime _focusRing;
+    private readonly CircleRuntime _body;
+    private readonly CircleRuntime _border;
 
     private StateSaveCategory _buttonCategory = null!;
 
@@ -50,9 +50,9 @@ public class SliderThumbVisual : InteractiveGue
         WireStates();
     }
 
-    private static ColoredCircleRuntime CreateBody()
+    private static CircleRuntime CreateBody()
     {
-        ColoredCircleRuntime body = new ColoredCircleRuntime();
+        CircleRuntime body = new CircleRuntime();
         body.Name = "ForestGladeSliderThumbBody";
         body.XUnits = GeneralUnitType.PixelsFromMiddle;
         body.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -63,6 +63,7 @@ public class SliderThumbVisual : InteractiveGue
         body.WidthUnits = DimensionUnitType.RelativeToParent;
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.IsFilled = true;
+        body.StrokeWidth = 0;
         // CSS radial-gradient(circle at 35% 30%, sun-pale, leaf-bright 65%, #008c2e).
         // 2-stop approximation: sun-pale centre → canopy-lit edge. Offset of
         // 35%/30% is implemented by nudging the gradient origin off-centre
@@ -84,14 +85,13 @@ public class SliderThumbVisual : InteractiveGue
         body.DropshadowColor = ForestGladePalette.GlowMedium;
         body.DropshadowOffsetX = 0f;
         body.DropshadowOffsetY = 0f;
-        body.DropshadowBlurX = ShadowBlur;
-        body.DropshadowBlurY = ShadowBlur;
+        body.DropshadowBlur = ShadowBlur;
         return body;
     }
 
-    private static ColoredCircleRuntime CreateBorder()
+    private static CircleRuntime CreateBorder()
     {
-        ColoredCircleRuntime border = new ColoredCircleRuntime();
+        CircleRuntime border = new CircleRuntime();
         border.Name = "ForestGladeSliderThumbBorder";
         border.XUnits = GeneralUnitType.PixelsFromMiddle;
         border.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -104,13 +104,13 @@ public class SliderThumbVisual : InteractiveGue
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = new Color(232, 255, 117, 128); // sun-pale .5 alpha
+        border.StrokeColor = new Color(232, 255, 117, 128); // sun-pale .5 alpha
         return border;
     }
 
-    private static ColoredCircleRuntime CreateFocusRing()
+    private static CircleRuntime CreateFocusRing()
     {
-        ColoredCircleRuntime ring = new ColoredCircleRuntime();
+        CircleRuntime ring = new CircleRuntime();
         ring.Name = "ForestGladeSliderThumbFocusRing";
         ring.XUnits = GeneralUnitType.PixelsFromMiddle;
         ring.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -123,7 +123,7 @@ public class SliderThumbVisual : InteractiveGue
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeColors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -181,11 +181,10 @@ public class SliderThumbVisual : InteractiveGue
         _body.UseGradient = gradient;
         _body.Color1 = centre;
         _body.Color2 = edge;
-        _body.Color = centre;
+        _body.FillColor = centre;
         _body.HasDropshadow = showShadow;
-        _body.DropshadowBlurX = blur;
-        _body.DropshadowBlurY = blur;
-        _border.Color = border;
+        _body.DropshadowBlur = blur;
+        _border.StrokeColor = border;
         _focusRing.Visible = ring;
     }
 }

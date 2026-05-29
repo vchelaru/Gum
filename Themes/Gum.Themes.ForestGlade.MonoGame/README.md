@@ -2,7 +2,7 @@
 
 A lush canopy / forest theme for Gum UI Forms controls. Deep teal-green canopy backdrop, saturated leaf-green fills, sunlit yellow border tints, and a signature leaf-shaped corner silhouette (sharp top-left / bottom-right, rounded top-right / bottom-left). Body text uses Nunito; the Window title bar uses Fraunces italic.
 
-The leaf silhouette uses the per-corner radii API added to Gum's `RoundedRectangleRuntime` in #2721 (requires Apos.Shapes 0.6.9 or later).
+The leaf silhouette uses the per-corner radii API on Gum's `RectangleRuntime` (requires Apos.Shapes 0.6.9 or later for the rounded-corner rendering).
 
 ## Install
 

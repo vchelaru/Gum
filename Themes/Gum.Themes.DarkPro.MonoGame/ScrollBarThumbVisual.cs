@@ -23,7 +23,7 @@ public class ScrollBarThumbVisual : InteractiveGue
 {
     private const float CornerRadius = 2f;
 
-    private readonly RoundedRectangleRuntime _body;
+    private readonly RectangleRuntime _body;
 
     private StateSaveCategory _buttonCategory = null!;
 
@@ -43,9 +43,9 @@ public class ScrollBarThumbVisual : InteractiveGue
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateBody()
+    private static RectangleRuntime CreateBody()
     {
-        RoundedRectangleRuntime body = new RoundedRectangleRuntime();
+        RectangleRuntime body = new RectangleRuntime();
         body.Name = "DarkProScrollThumbBody";
         body.X = 0;
         body.Y = 0;
@@ -59,7 +59,8 @@ public class ScrollBarThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.CornerRadius = CornerRadius;
         body.IsFilled = true;
-        body.Color = DarkProColors.Border;
+        body.FillColor = DarkProColors.Border;
+        body.StrokeWidth = 0;
         return body;
     }
 
@@ -70,28 +71,28 @@ public class ScrollBarThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => _body.Color = DarkProColors.Border);
+            () => _body.FillColor = DarkProColors.Border);
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => _body.Color = DarkProColors.BorderHover);
+            () => _body.FillColor = DarkProColors.BorderHover);
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => _body.Color = DarkProColors.Muted);
+            () => _body.FillColor = DarkProColors.Muted);
 
         // No focus ring on a scroll-bar thumb — keyboard scroll focus lives
         // on the scrollable container, not the thumb itself. Match the
         // Enabled / Highlighted look so a focused thumb still de-emphasizes.
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => _body.Color = DarkProColors.Border);
+            () => _body.FillColor = DarkProColors.Border);
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => _body.Color = DarkProColors.BorderHover);
+            () => _body.FillColor = DarkProColors.BorderHover);
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => _body.Color = DarkProColors.DisabledBorder);
+            () => _body.FillColor = DarkProColors.DisabledBorder);
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => _body.Color = DarkProColors.DisabledBorder);
+            () => _body.FillColor = DarkProColors.DisabledBorder);
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

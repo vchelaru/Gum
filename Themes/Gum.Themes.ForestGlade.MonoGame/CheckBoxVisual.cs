@@ -25,11 +25,11 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private const float DashHeight = 2f;
     private const float GlyphContainerSize = 22f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _boxFill;
-    private readonly RoundedRectangleRuntime _boxBorder;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _boxFill;
+    private readonly RectangleRuntime _boxBorder;
     private readonly TextRuntime _checkGlyph;
-    private readonly RoundedRectangleRuntime _dashIndicator;
+    private readonly RectangleRuntime _dashIndicator;
 
     public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -66,9 +66,9 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateBoxFill()
+    private static RectangleRuntime CreateBoxFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeBoxFill";
         fill.X = 0;
         fill.Y = 0;
@@ -85,13 +85,14 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // CSS .fg-cbox uses a 160deg linear gradient from rgba(232,255,117,.06) to
         // rgba(0,0,0,.35) — translucent over the canopy bg. We approximate with
         // an opaque pre-blend toward dark (canopy-deep slightly darker).
-        fill.Color = new Color(3, 28, 32);
+        fill.FillColor = new Color(3, 28, 32);
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBoxBorder()
+    private static RectangleRuntime CreateBoxBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "ForestGladeBoxBorder";
         border.X = 0;
         border.Y = 0;
@@ -109,13 +110,13 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
         // CSS .fg-cbox border: rgba(232,255,117,.30). Higher alpha than .Border so
         // the box is clearly outlined against the page background.
-        border.Color = new Color(232, 255, 117, 76);
+        border.StrokeColor = new Color(232, 255, 117, 76);
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "ForestGladeBoxFocusRing";
         ring.X = -FocusRingInset;
         ring.Y = 0;
@@ -137,7 +138,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeColors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -162,9 +163,9 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         return glyph;
     }
 
-    private static RoundedRectangleRuntime CreateDashIndicator()
+    private static RectangleRuntime CreateDashIndicator()
     {
-        RoundedRectangleRuntime dash = new RoundedRectangleRuntime();
+        RectangleRuntime dash = new RectangleRuntime();
         dash.Name = "ForestGladeDashIndicator";
         dash.X = BoxSize / 2f;
         dash.Y = 0;
@@ -178,7 +179,8 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         dash.HeightUnits = DimensionUnitType.Absolute;
         dash.CornerRadius = 1f;
         dash.IsFilled = true;
-        dash.Color = ForestGladeColors.SunPale;
+        dash.FillColor = ForestGladeColors.SunPale;
+        dash.StrokeWidth = 0;
         return dash;
     }
 
@@ -296,8 +298,8 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private void Apply(Color fill, Color border, Color text, GlyphKind glyph, bool ring,
         Color? glyphColor = null)
     {
-        _boxFill.Color = fill;
-        _boxBorder.Color = border;
+        _boxFill.FillColor = fill;
+        _boxBorder.StrokeColor = border;
         TextInstance.Color = text;
         _focusRing.Visible = ring;
         _checkGlyph.Visible = glyph == GlyphKind.Check;

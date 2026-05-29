@@ -37,10 +37,10 @@ public class WindowVisual : BaseWindowVisual
     private const float ShadowBlur = 28f;
     private static readonly Color ShadowColor = new Color(180, 80, 120, 80);
 
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
-    private readonly ColoredRectangleRuntime _titleBarFill;
-    private readonly ColoredRectangleRuntime _titleBarSeparator;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
+    private readonly RectangleRuntime _titleBarFill;
+    private readonly RectangleRuntime _titleBarSeparator;
 
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -82,9 +82,9 @@ public class WindowVisual : BaseWindowVisual
         _titleBarSeparator.Parent = TitleBarInstance.Visual;
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "BubblegumWindowFill";
         fill.X = 0;
         fill.Y = 0;
@@ -98,20 +98,20 @@ public class WindowVisual : BaseWindowVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = BubblegumColors.Surface1;
+        fill.FillColor = BubblegumColors.Surface1;
+        fill.StrokeWidth = 0;
         // Native Gaussian drop shadow — replaces the prior three-layer stack.
         fill.HasDropshadow = true;
         fill.DropshadowColor = ShadowColor;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = ShadowOffsetY;
-        fill.DropshadowBlurX = ShadowBlur;
-        fill.DropshadowBlurY = ShadowBlur;
+        fill.DropshadowBlur = ShadowBlur;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "BubblegumWindowBorder";
         border.X = 0;
         border.Y = 0;
@@ -127,16 +127,16 @@ public class WindowVisual : BaseWindowVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = BubblegumColors.Border;
+        border.StrokeColor = BubblegumColors.Border;
         return border;
     }
 
-    private static ColoredRectangleRuntime CreateTitleBarFill()
+    private static RectangleRuntime CreateTitleBarFill()
     {
         // CSS uses a gradient (linear-gradient(135deg,#FF8FB8,var(--acc))); we
         // approximate with a flat Accent fill. A real gradient would need a
         // gradient-capable renderable that doesn't exist in the runtime yet.
-        ColoredRectangleRuntime fill = new ColoredRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "BubblegumWindowTitleBarFill";
         fill.X = 0;
         fill.Y = 0;
@@ -148,13 +148,15 @@ public class WindowVisual : BaseWindowVisual
         fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.Color = BubblegumColors.Accent;
+        fill.IsFilled = true;
+        fill.FillColor = BubblegumColors.Accent;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static ColoredRectangleRuntime CreateTitleBarSeparator()
+    private static RectangleRuntime CreateTitleBarSeparator()
     {
-        ColoredRectangleRuntime separator = new ColoredRectangleRuntime();
+        RectangleRuntime separator = new RectangleRuntime();
         separator.Name = "BubblegumWindowTitleBarSeparator";
         separator.X = 0;
         separator.Y = 0;
@@ -166,7 +168,9 @@ public class WindowVisual : BaseWindowVisual
         separator.Height = TitleBarSeparatorHeight;
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
-        separator.Color = BubblegumColors.Border;
+        separator.IsFilled = true;
+        separator.FillColor = BubblegumColors.Border;
+        separator.StrokeWidth = 0;
         return separator;
     }
 }

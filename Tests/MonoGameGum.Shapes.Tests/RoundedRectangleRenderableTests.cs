@@ -125,4 +125,25 @@ public class RoundedRectangleRenderableTests
         aaSize.ShouldBe(0);
         alphaScale.ShouldBe(1f);
     }
+
+    // Issue #2998 — gradient visibility keys off the gradient STOP alphas (Alpha1 / Alpha2), not the
+    // slot's solid Color. ShouldPaintGradient lives on the shared RenderableShapeBase (also covered
+    // by CircleRenderableTests); these duplicate the contract on RoundedRectangle because it is the
+    // shape the Forest Glade buttons / list rows actually use — the originally-reported regression.
+
+    [Fact]
+    public void ShouldPaintGradient_BothGradientStopsTransparent_OpaqueSolid_False()
+    {
+        RoundedRectangle sut = new() { UseGradient = true, Color = new Color(255, 255, 255, 255), Alpha1 = 0, Alpha2 = 0 };
+
+        sut.ShouldPaintGradient(forcedColor: null).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintGradient_VisibleGradientStops_TransparentSolid_True()
+    {
+        RoundedRectangle sut = new() { UseGradient = true, Color = new Color(0, 0, 0, 0), Alpha1 = 255, Alpha2 = 255 };
+
+        sut.ShouldPaintGradient(forcedColor: null).ShouldBeTrue();
+    }
 }

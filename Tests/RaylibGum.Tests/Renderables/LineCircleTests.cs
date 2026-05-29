@@ -223,24 +223,23 @@ public class LineCircleTests
         circle.Color.A.ShouldBe((byte)78);
     }
 
-    // Issue #2956 — UseGradient is a *pattern* flag, not a *visibility* flag. The effective
-    // fill color is `FillColor ?? Color`; when its alpha is 0 the slot is invisible and the
-    // gradient must not paint over it. Mirrors the SkPaint contract (paint.Color.alpha
-    // modulates shader output) that the SkiaGum backend enforces naturally. Apos and raylib
-    // both used to leak — see fix in EmitGradientVertex / DrawGradientFan gating.
+    // Issue #2998 — UseGradient is a *pattern* flag, not a *visibility* flag. Visibility is driven
+    // by the gradient STOP alphas (Color1 / Color2), NOT the slot's solid fill color. A fill slot
+    // must exist (FillColor set or IsFilled), but its solid alpha is irrelevant. Replaces the #2956
+    // gate, which keyed off `FillColor ?? Color` alpha and went invisible once RectangleRuntime /
+    // CircleRuntime defaulted the solid fill transparent (#2938 stroke-only default).
 
     [Fact]
-    public void ShouldPaintFillGradient_FillColorOpaque_True()
+    public void ShouldPaintFillGradient_BothGradientStopsTransparent_OpaqueFill_False()
     {
-        LineCircle circle = new() { UseGradient = true, FillColor = new Color(10, 20, 30, 255) };
-
-        circle.ShouldPaintFillGradient.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ShouldPaintFillGradient_FillColorTransparent_False()
-    {
-        LineCircle circle = new() { UseGradient = true, FillColor = new Color(10, 20, 30, 0) };
+        // Both stops invisible → no gradient, even with an opaque solid fill.
+        LineCircle circle = new()
+        {
+            UseGradient = true,
+            FillColor = new Color(10, 20, 30, 255),
+            Color1 = new Color(1, 2, 3, 0),
+            Color2 = new Color(4, 5, 6, 0),
+        };
 
         circle.ShouldPaintFillGradient.ShouldBeFalse();
     }
@@ -254,30 +253,62 @@ public class LineCircleTests
     }
 
     [Fact]
-    public void ShouldPaintFillGradient_LegacyFillViaIsFilled_OpaqueColor_True()
+    public void ShouldPaintFillGradient_IsFilled_VisibleStops_True()
     {
-        LineCircle circle = new() { UseGradient = true, IsFilled = true };
+        LineCircle circle = new()
+        {
+            UseGradient = true,
+            IsFilled = true,
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 255),
+        };
 
-        // Default Color is opaque white, so the legacy fill path lights up.
         circle.ShouldPaintFillGradient.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ShouldPaintFillGradient_LegacyFillViaIsFilled_TransparentColor_False()
-    {
-        LineCircle circle = new() { UseGradient = true, IsFilled = true, Alpha = 0 };
-
-        circle.ShouldPaintFillGradient.ShouldBeFalse();
     }
 
     [Fact]
     public void ShouldPaintFillGradient_NoFillSlotEnabled_False()
     {
         // Default LineCircle: IsFilled = false, FillColor = null → fill pass doesn't run at all,
-        // so the gradient cannot paint regardless of UseGradient.
-        LineCircle circle = new() { UseGradient = true };
+        // so the gradient cannot paint regardless of UseGradient or stop alphas.
+        LineCircle circle = new()
+        {
+            UseGradient = true,
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 255),
+        };
 
         circle.ShouldPaintFillGradient.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_OneGradientStopVisible_True()
+    {
+        LineCircle circle = new()
+        {
+            UseGradient = true,
+            IsFilled = true,
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 0),
+        };
+
+        circle.ShouldPaintFillGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_TransparentFill_VisibleStops_True()
+    {
+        // Core regression repro: solid fill transparent (the new CircleRuntime default), gradient
+        // stops opaque → the gradient must still paint.
+        LineCircle circle = new()
+        {
+            UseGradient = true,
+            FillColor = new Color(10, 20, 30, 0),
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 255),
+        };
+
+        circle.ShouldPaintFillGradient.ShouldBeTrue();
     }
 
     // Issue #2934 / #2956 — LineCircle.Render previously ignored Rotation entirely. The disc

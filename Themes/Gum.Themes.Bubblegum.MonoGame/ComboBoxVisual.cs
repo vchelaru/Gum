@@ -30,9 +30,9 @@ public class ComboBoxVisual : BaseComboBoxVisual
     private const float TextLeftPadding = 12f;
     private const float TextRightClearance = 4f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
     private readonly TextRuntime _dropdownGlyph;
 
     public ComboBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -64,9 +64,9 @@ public class ComboBoxVisual : BaseComboBoxVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "BubblegumComboFill";
         fill.X = 0;
         fill.Y = 0;
@@ -80,13 +80,14 @@ public class ComboBoxVisual : BaseComboBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = BubblegumColors.Surface1;
+        fill.FillColor = BubblegumColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "BubblegumComboBorder";
         border.X = 0;
         border.Y = 0;
@@ -102,13 +103,13 @@ public class ComboBoxVisual : BaseComboBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = BubblegumColors.Border;
+        border.StrokeColor = BubblegumColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "BubblegumComboFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -124,7 +125,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = BubblegumPalette.FocusRing;
+        ring.StrokeColor = BubblegumPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -188,8 +189,8 @@ public class ComboBoxVisual : BaseComboBoxVisual
 
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
-        _fill.Color = fillDisabled ? BubblegumColors.DisabledFill : BubblegumColors.Surface1;
-        _border.Color = border;
+        _fill.FillColor = fillDisabled ? BubblegumColors.DisabledFill : BubblegumColors.Surface1;
+        _border.StrokeColor = border;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;
         _focusRing.Visible = ring;

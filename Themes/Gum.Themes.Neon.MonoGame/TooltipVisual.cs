@@ -15,8 +15,8 @@ public class TooltipVisual : BaseTooltipVisual
     private const float CornerRadius = 1f;
     private const float BorderThickness = 2f;
 
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public TooltipVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -34,9 +34,9 @@ public class TooltipVisual : BaseTooltipVisual
         TextInstance.Color = NeonColors.Text;
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "NeonTooltipFill";
         fill.X = 0;
         fill.Y = 0;
@@ -50,13 +50,14 @@ public class TooltipVisual : BaseTooltipVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = NeonColors.Surface1;
+        fill.FillColor = NeonColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "NeonTooltipBorder";
         border.X = 0;
         border.Y = 0;
@@ -72,7 +73,7 @@ public class TooltipVisual : BaseTooltipVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = NeonColors.Border;
+        border.StrokeColor = NeonColors.Border;
         return border;
     }
 }

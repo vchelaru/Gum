@@ -76,7 +76,7 @@ public static class NeonTheme
         BmfcSave.AddCharacters("✓✕▼▲◀▶");
 
         // Neon's visuals build their bodies out of Apos.Shapes-backed
-        // RoundedRectangleRuntime / ColoredCircleRuntime instances, which
+        // RectangleRuntime / CircleRuntime instances, which
         // require ShapeRenderer to be initialized. Guard in case the host app
         // already initialized it (mixing themes / using shape runtimes
         // elsewhere).
@@ -236,5 +236,16 @@ public static class NeonTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] =
             new VisualTemplate((_, c) => new TooltipVisual(tryCreateFormsObject: c));
+
+        // Controls Neon does not restyle are pinned to their stock V3 visuals so
+        // NeonTheme.Apply fully specifies the template set. FrameworkElement.DefaultFormsTemplates
+        // is global static state; without re-registering these, re-applying a theme at runtime
+        // (theme switching) would leave a previously-applied theme's visual in place for these
+        // controls. These match what a single-theme Neon run already falls back to.
+        FrameworkElement.DefaultFormsTemplates[typeof(ItemsControl)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Gum.Forms.Controls.Games.DialogBox)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));
     }
 }

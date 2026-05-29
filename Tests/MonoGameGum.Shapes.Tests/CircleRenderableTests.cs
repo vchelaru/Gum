@@ -472,35 +472,55 @@ public class CircleRenderableTests
         sut.ComputeFillDrawRadius(radius: 50f, isShadowPass: true).ShouldBe(50f);
     }
 
+    // Issue #2998 — the gradient-visibility gate keys off the GRADIENT STOP alphas (Alpha1 /
+    // Alpha2), NOT the slot's solid Color. The new RectangleRuntime / CircleRuntime default
+    // FillColor to transparent (#2938 stroke-only default); a theme that wants a gradient fill
+    // sets UseGradient + Color1/Color2 and never touches the solid color, so gating on Color.A
+    // suppressed the gradient entirely (Forest Glade buttons / list rows went invisible). The
+    // solid color is irrelevant to whether a gradient paints — only the stops are.
+
     [Fact]
-    public void ShouldPaintGradient_GradientOff_False()
+    public void ShouldPaintGradient_BothGradientStopsTransparent_OpaqueSolid_False()
     {
-        Circle sut = new() { UseGradient = false, Color = new Color(255, 255, 255, 255) };
+        // Both stops invisible → no gradient, regardless of an opaque solid color.
+        Circle sut = new() { UseGradient = true, Color = new Color(255, 255, 255, 255), Alpha1 = 0, Alpha2 = 0 };
 
         sut.ShouldPaintGradient(forcedColor: null).ShouldBeFalse();
     }
 
     [Fact]
-    public void ShouldPaintGradient_GradientOn_ForcedColor_False()
+    public void ShouldPaintGradient_ForcedColor_False()
     {
-        Circle sut = new() { UseGradient = true, Color = new Color(255, 255, 255, 255) };
+        // forcedColor means the slot is painting a dropshadow this pass, never the gradient.
+        Circle sut = new() { UseGradient = true, Alpha1 = 255, Alpha2 = 255 };
 
         sut.ShouldPaintGradient(forcedColor: new Color(0, 0, 0, 255)).ShouldBeFalse();
     }
 
     [Fact]
-    public void ShouldPaintGradient_GradientOn_OpaqueSlot_True()
+    public void ShouldPaintGradient_GradientOff_False()
     {
-        Circle sut = new() { UseGradient = true, Color = new Color(255, 255, 255, 255) };
+        Circle sut = new() { UseGradient = false, Alpha1 = 255, Alpha2 = 255 };
+
+        sut.ShouldPaintGradient(forcedColor: null).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPaintGradient_OneGradientStopVisible_TransparentSolid_True()
+    {
+        // A single visible stop is enough; the transparent solid color must not suppress it.
+        Circle sut = new() { UseGradient = true, Color = new Color(0, 0, 0, 0), Alpha1 = 255, Alpha2 = 0 };
 
         sut.ShouldPaintGradient(forcedColor: null).ShouldBeTrue();
     }
 
     [Fact]
-    public void ShouldPaintGradient_GradientOn_TransparentSlot_False()
+    public void ShouldPaintGradient_VisibleGradientStops_TransparentSolid_True()
     {
-        Circle sut = new() { UseGradient = true, Color = new Color(255, 255, 255, 0) };
+        // The core regression repro: gradient stops are opaque but the solid fill is transparent
+        // (the new default). The gradient must still paint.
+        Circle sut = new() { UseGradient = true, Color = new Color(0, 0, 0, 0), Alpha1 = 255, Alpha2 = 255 };
 
-        sut.ShouldPaintGradient(forcedColor: null).ShouldBeFalse();
+        sut.ShouldPaintGradient(forcedColor: null).ShouldBeTrue();
     }
 }

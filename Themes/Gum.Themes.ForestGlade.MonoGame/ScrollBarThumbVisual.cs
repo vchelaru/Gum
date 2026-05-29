@@ -17,7 +17,7 @@ namespace Gum.Themes.ForestGlade;
 /// </summary>
 public class ScrollBarThumbVisual : InteractiveGue
 {
-    private readonly RoundedRectangleRuntime _body;
+    private readonly RectangleRuntime _body;
 
     private StateSaveCategory _buttonCategory = null!;
 
@@ -35,9 +35,9 @@ public class ScrollBarThumbVisual : InteractiveGue
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateBody()
+    private static RectangleRuntime CreateBody()
     {
-        RoundedRectangleRuntime body = new RoundedRectangleRuntime();
+        RectangleRuntime body = new RectangleRuntime();
         body.Name = "ForestGladeScrollThumbBody";
         body.XUnits = GeneralUnitType.PixelsFromMiddle;
         body.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -49,7 +49,8 @@ public class ScrollBarThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplySmall(body);
         body.IsFilled = true;
-        body.Color = ForestGladePalette.ScrollThumb;
+        body.FillColor = ForestGladePalette.ScrollThumb;
+        body.StrokeWidth = 0;
         // CSS .fg-sb-thm linear-gradient(180deg, rgba(71,246,65,.55), rgba(0,140,46,.55))
         // — vertical, leaf-bright at top fading to canopy-lit at the bottom.
         body.UseGradient = true;
@@ -105,7 +106,7 @@ public class ScrollBarThumbVisual : InteractiveGue
         _body.UseGradient = gradient;
         _body.Color1 = top;
         _body.Color2 = bottom;
-        _body.Color = top;
+        _body.FillColor = top;
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

@@ -636,20 +636,27 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     }
 
     /// <summary>
-    /// Issue #2956 — gates whether this renderable's gradient pass should actually draw.
-    /// <see cref="UseGradient"/> is a *pattern* flag, not a *visibility* flag — a slot whose
-    /// solid <see cref="Color"/> alpha is 0 (e.g. the default-transparent fill on a stroke-only
-    /// plain Circle) must NOT paint its gradient. Apos.Shapes' gradient draw bypasses the
-    /// slot's solid color, so without this gate it would paint an opaque gradient on a slot
-    /// the user explicitly hid. SkiaSharp gets this right naturally because
-    /// <c>SKPaint.Color.alpha</c> modulates the shader output; we replicate that contract
-    /// here. <paramref name="forcedColor"/> is the per-call dropshadow override every render
-    /// path already short-circuits on — when set, the slot is painting the shadow, not the
-    /// gradient, so the gate must return false.
+    /// Issue #2956 / #2998 — gates whether this renderable's gradient pass should actually draw.
+    /// <see cref="UseGradient"/> is a *pattern* flag, not a *visibility* flag: a gradient with two
+    /// fully-transparent stops must NOT paint (it would draw nothing useful and, on Apos, the
+    /// gradient draw otherwise produces visible output). Visibility is decided by the gradient's
+    /// OWN alpha — at least one of <see cref="Alpha1"/> / <see cref="Alpha2"/> must be &gt; 0.
+    ///
+    /// This deliberately does NOT key off the slot's solid <see cref="Color"/>. The two-slot
+    /// RectangleRuntime / CircleRuntime default their solid fill to transparent (#2938 stroke-only
+    /// default), and a gradient fill is configured purely via UseGradient + Color1/Color2, never
+    /// the solid color — so gating on <c>Color.A</c> (the original #2956 gate) suppressed legitimate
+    /// gradient fills whose solid color was simply left at the transparent default (Forest Glade
+    /// buttons / list rows). The gradient stops carry their own alpha, which is the correct and
+    /// only signal for whether the gradient is meant to show.
+    ///
+    /// <paramref name="forcedColor"/> is the per-call dropshadow override every render path already
+    /// short-circuits on — when set, the slot is painting the shadow, not the gradient, so the gate
+    /// must return false.
     /// </summary>
     public bool ShouldPaintGradient(Color? forcedColor)
     {
-        return UseGradient && forcedColor == null && Color.A > 0;
+        return UseGradient && forcedColor == null && (Alpha1 > 0 || Alpha2 > 0);
     }
 
     /// <summary>

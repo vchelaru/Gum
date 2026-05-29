@@ -31,11 +31,11 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     // (which uses a slightly wider advance than ASCII Latin) doesn't get clipped.
     private const float GlyphContainerSize = 24f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _boxFill;
-    private readonly RoundedRectangleRuntime _boxBorder;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _boxFill;
+    private readonly RectangleRuntime _boxBorder;
     private readonly TextRuntime _checkGlyph;
-    private readonly RoundedRectangleRuntime _dashIndicator;
+    private readonly RectangleRuntime _dashIndicator;
 
     public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -73,9 +73,9 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateBoxFill()
+    private static RectangleRuntime CreateBoxFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "NeonBoxFill";
         fill.X = 0;
         fill.Y = 0;
@@ -89,13 +89,14 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = NeonColors.Surface1;
+        fill.FillColor = NeonColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBoxBorder()
+    private static RectangleRuntime CreateBoxBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "NeonBoxBorder";
         border.X = 0;
         border.Y = 0;
@@ -111,13 +112,13 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = NeonColors.Border;
+        border.StrokeColor = NeonColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "NeonBoxFocusRing";
         ring.X = -FocusRingInset;
         ring.Y = 0;
@@ -133,7 +134,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = NeonPalette.FocusRing;
+        ring.StrokeColor = NeonPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -158,10 +159,10 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         return glyph;
     }
 
-    private static RoundedRectangleRuntime CreateDashIndicator()
+    private static RectangleRuntime CreateDashIndicator()
     {
         // Indeterminate pill: 10x2 (matches .bb-ck-dash), accent-colored, centered.
-        RoundedRectangleRuntime dash = new RoundedRectangleRuntime();
+        RectangleRuntime dash = new RectangleRuntime();
         dash.Name = "NeonDashIndicator";
         dash.X = BoxSize / 2f;
         dash.Y = 0;
@@ -175,7 +176,8 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         dash.HeightUnits = DimensionUnitType.Absolute;
         dash.CornerRadius = 1f;
         dash.IsFilled = true;
-        dash.Color = NeonColors.Accent;
+        dash.FillColor = NeonColors.Accent;
+        dash.StrokeWidth = 0;
         return dash;
     }
 
@@ -286,8 +288,8 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private void Apply(Color fill, Color border, Color text, GlyphKind glyph, bool ring,
         Color? glyphColor = null)
     {
-        _boxFill.Color = fill;
-        _boxBorder.Color = border;
+        _boxFill.FillColor = fill;
+        _boxBorder.StrokeColor = border;
         TextInstance.Color = text;
         _focusRing.Visible = ring;
         _checkGlyph.Visible = glyph == GlyphKind.Check;

@@ -28,11 +28,11 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     // Latin but its Dingbats / Geometric Shapes glyphs are wider than the cell).
     private const float GlyphContainerSize = 24f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _boxFill;
-    private readonly RoundedRectangleRuntime _boxBorder;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _boxFill;
+    private readonly RectangleRuntime _boxBorder;
     private readonly TextRuntime _checkGlyph;
-    private readonly RoundedRectangleRuntime _dashIndicator;
+    private readonly RectangleRuntime _dashIndicator;
 
     public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -74,9 +74,9 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateBoxFill()
+    private static RectangleRuntime CreateBoxFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProBoxFill";
         fill.X = 0;
         fill.Y = 0;
@@ -90,13 +90,14 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = DarkProColors.Surface1;
+        fill.FillColor = DarkProColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBoxBorder()
+    private static RectangleRuntime CreateBoxBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "DarkProBoxBorder";
         border.X = 0;
         border.Y = 0;
@@ -112,15 +113,15 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = DarkProColors.Border;
+        border.StrokeColor = DarkProColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
         // (BoxSize + 2px) per axis, centered on the box, so the 1px stroke
         // sits exactly one pixel outside the box border.
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "DarkProBoxFocusRing";
         ring.X = -FocusRingInset;
         ring.Y = 0;
@@ -136,7 +137,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = DarkProColors.Accent;
+        ring.StrokeColor = DarkProColors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -167,11 +168,11 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         return glyph;
     }
 
-    private static RoundedRectangleRuntime CreateDashIndicator()
+    private static RectangleRuntime CreateDashIndicator()
     {
         // Indeterminate dash from the CSS spec: 8x2 pill, accent-colored,
         // centered inside the box.
-        RoundedRectangleRuntime dash = new RoundedRectangleRuntime();
+        RectangleRuntime dash = new RectangleRuntime();
         dash.Name = "DarkProDashIndicator";
         dash.X = BoxSize / 2f;
         dash.Y = 0;
@@ -185,7 +186,8 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         dash.HeightUnits = DimensionUnitType.Absolute;
         dash.CornerRadius = 1f;
         dash.IsFilled = true;
-        dash.Color = DarkProColors.Accent;
+        dash.FillColor = DarkProColors.Accent;
+        dash.StrokeWidth = 0;
         return dash;
     }
 
@@ -298,8 +300,8 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private void Apply(Color fill, Color border, Color text, GlyphKind glyph, bool ring,
         Color? glyphColor = null)
     {
-        _boxFill.Color = fill;
-        _boxBorder.Color = border;
+        _boxFill.FillColor = fill;
+        _boxBorder.StrokeColor = border;
         TextInstance.Color = text;
         _focusRing.Visible = ring;
         _checkGlyph.Visible = glyph == GlyphKind.Check;

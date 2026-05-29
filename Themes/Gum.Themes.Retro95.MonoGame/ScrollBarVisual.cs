@@ -51,7 +51,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         if (downBtn != null) downBtn.Parent = null;
         existingThumbContainer.Parent = null;
 
-        ColoredRectangleRuntime trackFill = NewStretched("Retro95ScrollBarTrackFill", Retro95Colors.Surface);
+        RectangleRuntime trackFill = NewStretched("Retro95ScrollBarTrackFill", Retro95Colors.Surface);
         AddChild(trackFill);
 
         if (upBtn != null) AddChild(upBtn);
@@ -208,9 +208,9 @@ public class ScrollBarVisual : BaseScrollBarVisual
         return t;
     }
 
-    private static ColoredRectangleRuntime NewStretched(string name, Microsoft.Xna.Framework.Color color)
+    private static RectangleRuntime NewStretched(string name, Microsoft.Xna.Framework.Color color)
     {
-        ColoredRectangleRuntime r = new ColoredRectangleRuntime();
+        RectangleRuntime r = new RectangleRuntime();
         r.Name = name;
         r.X = 0; r.Y = 0;
         r.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -220,7 +220,9 @@ public class ScrollBarVisual : BaseScrollBarVisual
         r.Width = 0; r.Height = 0;
         r.WidthUnits = DimensionUnitType.RelativeToParent;
         r.HeightUnits = DimensionUnitType.RelativeToParent;
-        r.Color = color;
+        r.IsFilled = true;
+        r.FillColor = color;
+        r.StrokeWidth = 0;
         return r;
     }
 }

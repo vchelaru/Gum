@@ -20,7 +20,7 @@ public class WindowVisual : BaseWindowVisual
     private const float TitleBarHeight = 18f;
 
     private readonly Retro95Bevel _bodyBevel;
-    private readonly ColoredRectangleRuntime _titleBarFill;
+    private readonly RectangleRuntime _titleBarFill;
 
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -76,11 +76,13 @@ public class WindowVisual : BaseWindowVisual
         AddChild(NewOutlineEdge(top: false, vertical: true));
     }
 
-    private static ColoredRectangleRuntime NewOutlineEdge(bool top, bool vertical)
+    private static RectangleRuntime NewOutlineEdge(bool top, bool vertical)
     {
-        ColoredRectangleRuntime r = new ColoredRectangleRuntime();
+        RectangleRuntime r = new RectangleRuntime();
         r.Name = "Retro95WindowOutline";
-        r.Color = Color.Black;
+        r.IsFilled = true;
+        r.FillColor = Color.Black;
+        r.StrokeWidth = 0;
         if (!vertical)
         {
             r.X = 0;
@@ -110,9 +112,9 @@ public class WindowVisual : BaseWindowVisual
         return r;
     }
 
-    private static ColoredRectangleRuntime CreateTitleBarFill()
+    private static RectangleRuntime CreateTitleBarFill()
     {
-        ColoredRectangleRuntime fill = new ColoredRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "Retro95WindowTitleBarFill";
         fill.X = 0; fill.Y = 0;
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -122,7 +124,9 @@ public class WindowVisual : BaseWindowVisual
         fill.Width = 0; fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.Color = Retro95Colors.Selection;
+        fill.IsFilled = true;
+        fill.FillColor = Retro95Colors.Selection;
+        fill.StrokeWidth = 0;
         return fill;
     }
 }

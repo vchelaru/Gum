@@ -20,8 +20,8 @@ public class ScrollBarVisual : BaseScrollBarVisual
     private const float FrameBorderThickness = 1f;
 
     private readonly ScrollBarThumbVisual _thumb;
-    private readonly RoundedRectangleRuntime _frameFill;
-    private readonly RoundedRectangleRuntime _frameBorder;
+    private readonly RectangleRuntime _frameFill;
+    private readonly RectangleRuntime _frameBorder;
     private bool _isHorizontal;
 
     public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -137,9 +137,9 @@ public class ScrollBarVisual : BaseScrollBarVisual
         }
     }
 
-    private static RoundedRectangleRuntime CreateFrameFill()
+    private static RectangleRuntime CreateFrameFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeScrollBarFrameFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -151,13 +151,14 @@ public class ScrollBarVisual : BaseScrollBarVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyMedium(fill);
         fill.IsFilled = true;
-        fill.Color = ForestGladePalette.ScrollTrack;
+        fill.FillColor = ForestGladePalette.ScrollTrack;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateFrameBorder()
+    private static RectangleRuntime CreateFrameBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "ForestGladeScrollBarFrameBorder";
         border.XUnits = GeneralUnitType.PixelsFromMiddle;
         border.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -171,7 +172,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         border.IsFilled = false;
         border.StrokeWidth = FrameBorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = ForestGladeColors.Border;
+        border.StrokeColor = ForestGladeColors.Border;
         return border;
     }
 }

@@ -45,8 +45,8 @@ public class ButtonVisual : BaseButtonVisual
     private const float ShadowBlur = 12f;
     private static readonly Color ShadowColor = new Color(255, 107, 157, 160);
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
 
     public ButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -76,9 +76,9 @@ public class ButtonVisual : BaseButtonVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "BubblegumFill";
         fill.X = 0;
         fill.Y = 0;
@@ -92,23 +92,23 @@ public class ButtonVisual : BaseButtonVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = BubblegumColors.Accent;
+        fill.FillColor = BubblegumColors.Accent;
+        fill.StrokeWidth = 0;
         // Native Gaussian drop shadow — replaces the old three-layer stack.
         // Toggled per state via WireStates (off when pressed/disabled).
         fill.HasDropshadow = true;
         fill.DropshadowColor = ShadowColor;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = ShadowOffsetY;
-        fill.DropshadowBlurX = ShadowBlur;
-        fill.DropshadowBlurY = ShadowBlur;
+        fill.DropshadowBlur = ShadowBlur;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
         // Sized to (parent + 2*FocusRingInset) per axis, stroked with
         // FocusRingThickness translucent accent. Visible only when focused.
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "BubblegumFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -124,7 +124,7 @@ public class ButtonVisual : BaseButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = new Color(255, 107, 157, 90); // translucent accent
+        ring.StrokeColor = new Color(255, 107, 157, 90); // translucent accent
         ring.Visible = false;
         return ring;
     }
@@ -180,7 +180,7 @@ public class ButtonVisual : BaseButtonVisual
 
     private void ApplyPalette(Color fill, Color text, bool showShadow, bool showFocusRing)
     {
-        _fill.Color = fill;
+        _fill.FillColor = fill;
         _fill.HasDropshadow = showShadow;
         TextInstance.Color = text;
         _focusRing.Visible = showFocusRing;

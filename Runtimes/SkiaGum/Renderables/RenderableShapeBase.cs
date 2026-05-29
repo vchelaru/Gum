@@ -798,6 +798,14 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         if (UseGradient)
         {
             ApplyGradientToPaint(boundingRect, paint, absoluteRotation);
+
+            // Issue #2998 — gradient visibility comes from the stop alphas (Alpha1 / Alpha2), not
+            // the solid fill color. SkiaSharp modulates a shader's output by SKPaint.Color.alpha,
+            // so leaving the (transparent-by-default) solid fill alpha in place would suppress a
+            // legitimate gradient. Force the paint opaque so the stops drive visibility — two
+            // transparent stops still render nothing. Mirrors the Apos ShouldPaintGradient and
+            // raylib ShouldPaintFillGradient gates, which also ignore the solid fill alpha.
+            paint.Color = new SKColor(paint.Color.Red, paint.Color.Green, paint.Color.Blue, 255);
         }
 
         if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0)

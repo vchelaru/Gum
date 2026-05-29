@@ -23,9 +23,9 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     private const float BorderThickness = 1f;
     private const float FocusRingInset = 1f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public ScrollViewerVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -57,9 +57,9 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProScrollViewerFill";
         fill.X = 0;
         fill.Y = 0;
@@ -73,13 +73,14 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = DarkProColors.Surface1;
+        fill.FillColor = DarkProColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "DarkProScrollViewerBorder";
         border.X = 0;
         border.Y = 0;
@@ -95,13 +96,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = DarkProColors.Border;
+        border.StrokeColor = DarkProColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "DarkProScrollViewerFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -117,7 +118,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = DarkProColors.Accent;
+        ring.StrokeColor = DarkProColors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -134,13 +135,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         // applies, but they're harmless because FocusedIndicator has no parent.
         States.Enabled.Apply = () =>
         {
-            _border.Color = DarkProColors.Border;
+            _border.StrokeColor = DarkProColors.Border;
             _focusRing.Visible = false;
         };
 
         States.Focused.Apply = () =>
         {
-            _border.Color = DarkProColors.Accent;
+            _border.StrokeColor = DarkProColors.Accent;
             _focusRing.Visible = true;
         };
     }

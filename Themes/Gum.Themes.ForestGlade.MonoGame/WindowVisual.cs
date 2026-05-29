@@ -20,10 +20,10 @@ public class WindowVisual : BaseWindowVisual
 
     private const float ShadowBlur = 40f;
 
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
-    private readonly RoundedRectangleRuntime _titleBarFill;
-    private readonly ColoredRectangleRuntime _titleBarSeparator;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
+    private readonly RectangleRuntime _titleBarFill;
+    private readonly RectangleRuntime _titleBarSeparator;
 
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -67,9 +67,9 @@ public class WindowVisual : BaseWindowVisual
         _titleBarSeparator.Parent = TitleBarInstance.Visual;
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeWindowFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -81,19 +81,19 @@ public class WindowVisual : BaseWindowVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyExtraLarge(fill);
         fill.IsFilled = true;
-        fill.Color = ForestGladePalette.WindowBody;
+        fill.FillColor = ForestGladePalette.WindowBody;
+        fill.StrokeWidth = 0;
         fill.HasDropshadow = true;
         fill.DropshadowColor = ForestGladePalette.GlowMedium;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = 0f;
-        fill.DropshadowBlurX = ShadowBlur;
-        fill.DropshadowBlurY = ShadowBlur;
+        fill.DropshadowBlur = ShadowBlur;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "ForestGladeWindowBorder";
         border.XUnits = GeneralUnitType.PixelsFromMiddle;
         border.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -107,11 +107,11 @@ public class WindowVisual : BaseWindowVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = ForestGladeColors.Bark;
+        border.StrokeColor = ForestGladeColors.Bark;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateTitleBarFill()
+    private static RectangleRuntime CreateTitleBarFill()
     {
         // CSS spec is a wood-grain repeating gradient — represented here by
         // a single bark-soft fill so the title bar reads as warm wood
@@ -124,7 +124,7 @@ public class WindowVisual : BaseWindowVisual
         // rectangular fill would spill past the body's rounded top-right
         // corner — the 1 px body border isn't thick enough to mask 24 px
         // of spill on its own.
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeWindowTitleBarFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -140,13 +140,14 @@ public class WindowVisual : BaseWindowVisual
         fill.CustomRadiusBottomRight = 0f;
         fill.CustomRadiusBottomLeft = 0f;
         fill.IsFilled = true;
-        fill.Color = ForestGladePalette.WindowTitleBar;
+        fill.FillColor = ForestGladePalette.WindowTitleBar;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static ColoredRectangleRuntime CreateTitleBarSeparator()
+    private static RectangleRuntime CreateTitleBarSeparator()
     {
-        ColoredRectangleRuntime separator = new ColoredRectangleRuntime();
+        RectangleRuntime separator = new RectangleRuntime();
         separator.Name = "ForestGladeWindowTitleBarSeparator";
         separator.XUnits = GeneralUnitType.PixelsFromMiddle;
         separator.YUnits = GeneralUnitType.PixelsFromLarge;
@@ -157,7 +158,9 @@ public class WindowVisual : BaseWindowVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         // CSS box-shadow: inset 0 -1px 0 rgba(232,255,117,.12)
-        separator.Color = new Color(232, 255, 117, 31);
+        separator.IsFilled = true;
+        separator.FillColor = new Color(232, 255, 117, 31);
+        separator.StrokeWidth = 0;
         return separator;
     }
 }

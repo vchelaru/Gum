@@ -21,9 +21,9 @@ internal sealed class ForestGladeTextInputDecoration
     private const float FocusHaloThickness = 3f;
     private const float FocusGlowBlur = 14f;
 
-    private readonly RoundedRectangleRuntime _focusHalo;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusHalo;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public ForestGladeTextInputDecoration(TextBoxBaseVisual host)
     {
@@ -51,9 +51,9 @@ internal sealed class ForestGladeTextInputDecoration
         WireStates(host);
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeInputFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -65,7 +65,8 @@ internal sealed class ForestGladeTextInputDecoration
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyMedium(fill);
         fill.IsFilled = true;
-        fill.Color = ForestGladePalette.InputFill;
+        fill.FillColor = ForestGladePalette.InputFill;
+        fill.StrokeWidth = 0;
         // CSS .fg-input: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.18))
         // over the canopy background — translates to a vertical gradient on
         // the fill with a slightly darker top blending into a lighter base.
@@ -84,9 +85,9 @@ internal sealed class ForestGladeTextInputDecoration
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "ForestGladeInputBorder";
         border.XUnits = GeneralUnitType.PixelsFromMiddle;
         border.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -100,16 +101,16 @@ internal sealed class ForestGladeTextInputDecoration
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = new Color(232, 255, 117, 56); // CSS .22 alpha
+        border.StrokeColor = new Color(232, 255, 117, 56); // CSS .22 alpha
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusHalo()
+    private static RectangleRuntime CreateFocusHalo()
     {
         // Leaf-medium with corners bumped by FocusHaloThickness so the halo
         // sits ~3 px outside the body's outer edge on every side.
         const float halo = FocusHaloThickness;
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "ForestGladeInputFocusHalo";
         ring.XUnits = GeneralUnitType.PixelsFromMiddle;
         ring.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -127,7 +128,7 @@ internal sealed class ForestGladeTextInputDecoration
         ring.IsFilled = false;
         ring.StrokeWidth = FocusHaloThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeColors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -167,7 +168,7 @@ internal sealed class ForestGladeTextInputDecoration
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text,
         Color placeholder, Color caret, Color selection, bool haloVisible, bool glow)
     {
-        _fill.Color = fill;
+        _fill.FillColor = fill;
         // Recompute the vertical gradient stops from the state's base fill so
         // each state stays subtly darker at the top than the bottom.
         _fill.Color1 = Darken(fill, 0.65f);
@@ -178,10 +179,9 @@ internal sealed class ForestGladeTextInputDecoration
             _fill.DropshadowColor = ForestGladePalette.GlowMedium;
             _fill.DropshadowOffsetX = 0f;
             _fill.DropshadowOffsetY = 0f;
-            _fill.DropshadowBlurX = FocusGlowBlur;
-            _fill.DropshadowBlurY = FocusGlowBlur;
+            _fill.DropshadowBlur = FocusGlowBlur;
         }
-        _border.Color = border;
+        _border.StrokeColor = border;
         host.TextInstance.Color = text;
         host.PlaceholderTextInstance.Color = placeholder;
         host.CaretInstance.Color = caret;

@@ -27,9 +27,9 @@ public class SliderVisual : BaseSliderVisual
     private const float TrackCornerRadius = 3f;
     private const float BorderThickness = 1f;
 
-    private readonly RoundedRectangleRuntime _track;
-    private readonly RoundedRectangleRuntime _trackBorder;
-    private readonly RoundedRectangleRuntime _fill;
+    private readonly RectangleRuntime _track;
+    private readonly RectangleRuntime _trackBorder;
+    private readonly RectangleRuntime _fill;
     private readonly SliderThumbVisual _thumb;
 
     public SliderVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -128,9 +128,9 @@ public class SliderVisual : BaseSliderVisual
         _fill.Width = (float)(pct * 100.0);
     }
 
-    private static RoundedRectangleRuntime CreateTrack()
+    private static RectangleRuntime CreateTrack()
     {
-        RoundedRectangleRuntime track = new RoundedRectangleRuntime();
+        RectangleRuntime track = new RectangleRuntime();
         track.Name = "DarkProSliderTrack";
         track.X = 0;
         track.Y = 0;
@@ -144,13 +144,14 @@ public class SliderVisual : BaseSliderVisual
         track.HeightUnits = DimensionUnitType.Absolute;
         track.CornerRadius = TrackCornerRadius;
         track.IsFilled = true;
-        track.Color = DarkProColors.Surface2;
+        track.FillColor = DarkProColors.Surface2;
+        track.StrokeWidth = 0;
         return track;
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProSliderFill";
         fill.X = 0;
         fill.Y = 0;
@@ -165,13 +166,14 @@ public class SliderVisual : BaseSliderVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = TrackCornerRadius;
         fill.IsFilled = true;
-        fill.Color = DarkProColors.Accent;
+        fill.FillColor = DarkProColors.Accent;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateTrackBorder()
+    private static RectangleRuntime CreateTrackBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "DarkProSliderTrackBorder";
         border.X = 0;
         border.Y = 0;
@@ -187,7 +189,7 @@ public class SliderVisual : BaseSliderVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = DarkProColors.Border;
+        border.StrokeColor = DarkProColors.Border;
         return border;
     }
 
@@ -208,8 +210,8 @@ public class SliderVisual : BaseSliderVisual
 
     private void ApplyTrack(Color trackFill, Color border, Color fillBar)
     {
-        _track.Color = trackFill;
-        _trackBorder.Color = border;
-        _fill.Color = fillBar;
+        _track.FillColor = trackFill;
+        _trackBorder.StrokeColor = border;
+        _fill.FillColor = fillBar;
     }
 }
