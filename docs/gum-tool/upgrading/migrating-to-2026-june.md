@@ -1,11 +1,11 @@
-# Migrating to 2026 May
+# Migrating to 2026 June
 
 ## Introduction
 
-This page discusses breaking changes and other considerations when migrating from `2026 April` to `2026 May`.
+This page discusses breaking changes and other considerations when migrating from `2026 April` to `2026 June`.
 
 {% hint style="warning" %}
-The `2026 May` version of Gum has not yet been released. This page is a work in progress and will be updated when the release is published. In the meantime, if you want to use the changes described below, you will need to build Gum from source.
+The `2026 June` version of Gum has not yet been released. This page is a work in progress and will be updated when the release is published. In the meantime, if you want to use the changes described below, you will need to build Gum from source.
 {% endhint %}
 
 ## Upgrading Gum Tool
@@ -28,7 +28,7 @@ Run the upgrade `gum upgrade` or `~/bin/gum upgrade`
 
 ## Upgrading Runtime
 
-The `2026.5` NuGet packages have not yet been published. Once released, upgrade your Gum NuGet packages to the new version. For more information, see the NuGet packages for your particular platform:
+The `2026.6` NuGet packages have not yet been published. Once released, upgrade your Gum NuGet packages to the new version. For more information, see the NuGet packages for your particular platform:
 
 * MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
@@ -68,7 +68,7 @@ using Gum.GueDeriving;
 
 The `Gum.Analyzers` package ships a one-click code fix for `using` directives — place the cursor on the warning, trigger the lightbulb (Ctrl+.), and choose **Change to 'using Gum.GueDeriving'**. Use **Fix all in solution** to migrate the entire project at once.
 
-The compatibility shims will remain in place until at least the November 2026 release. After that window, they will be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
+The compatibility shims will remain in place until at least the December 2026 release. After that window, they will be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
 
 For full details, including handling of fully-qualified references and a `RenderingLibrary` namespace-shadowing gotcha, see [Syntax Version 1](syntax-version-1.md).
 
@@ -156,7 +156,7 @@ error CS0121: The call is ambiguous between the following methods or properties:
 
 If you see `CS0121` on a call like `textBox.AddToRoot();`, add `using Gum.Forms.Controls;` to the file if it isn't already there. No call-site changes are needed.
 
-❌ Old (compiles in April 2026, ambiguous in May 2026 once `Gum.Forms.Controls` is also in scope):
+❌ Old (compiles in April 2026, ambiguous in June 2026 once `Gum.Forms.Controls` is also in scope):
 
 ```csharp
 using MonoGameGum;
@@ -267,11 +267,13 @@ Other defaults preserved (no migration needed, listed for reference):
 - `IsFilled` still defaults to `false`, `StrokeWidth` still defaults to `1` with `StrokeWidthUnits = ScreenPixel`.
 - Dropshadow defaults (`DropshadowAlpha = 255`, `DropshadowOffsetY = 3`, `DropshadowBlur = 3`) are still seeded; inert until `HasDropshadow` is set to `true`. (Note: the plain `CircleRuntime` / `RectangleRuntime` expose a single isotropic `DropshadowBlur` — the older per-axis `DropshadowBlurX` / `DropshadowBlurY` properties only exist on the obsolete `ColoredCircleRuntime` / `RoundedRectangleRuntime` / `SkiaShapeRuntime` Skia surface.)
 
-Gradients, dropshadow, and dashed strokes remain Skia-only — those features have no equivalent on the XNA-likes / Raylib backends and stay gated behind `#if SKIA` in the shared source.
+These richer effects — gradient, drop shadow, and dashed strokes — are built in natively on Skia and raylib. On MonoGame and KNI they are provided by the shape support package (`Gum.Shapes.MonoGame` / `Gum.Shapes.KNI`); FNA renders the outline only. See the [Shapes](../../code/standard-visuals/shapes-apos.shapes.md) page for the per-platform matrix.
 
 ### Shape runtime shims obsolete: `ColoredCircleRuntime`, `ColoredRectangleRuntime`, `SolidRectangleRuntime`, `RoundedRectangleRuntime`
 
-`CircleRuntime` and `RectangleRuntime` now cover the full fill + stroke + corner-radius surface on every backend (MonoGame, FNA, KNI, Raylib, Skia, and Apos.Shapes) via a two-slot composition model — one renderable for the fill, a second parented under it for the stroke. With that consolidation in place, the older shape runtime types that wrapped a single renderable each are now `[Obsolete]` and will be removed in a future release.
+`CircleRuntime` and `RectangleRuntime` now cover the full fill + outline (stroke) + corner-radius surface on every backend (MonoGame, FNA, KNI, Raylib, Skia). With that consolidation in place, the older shape runtime types are now `[Obsolete]` and will be removed in a future release.
+
+On MonoGame, FNA, and KNI, the outline (`StrokeColor`, `StrokeWidth`, `StrokeWidthUnits`) renders out of the box, but the fill and the richer effects (`FillColor`, gradient, drop shadow, dashed stroke, anti-aliasing) require the shape support package. This package ships for MonoGame (`Gum.Shapes.MonoGame`) and KNI (`Gum.Shapes.KNI`) only; FNA has no shape support package, so on FNA only the outline renders. Without the package those properties round-trip but silently do not draw. On Skia and raylib the full surface is supported natively. See the [Shapes](../../code/standard-visuals/shapes-apos.shapes.md) page for the per-platform details.
 
 Existing code continues to compile, but each reference now produces a `CS0618` compiler warning. The replacement types live alongside the obsolete ones in `Gum.GueDeriving`, so the only change at most call sites is the type name (and the property name, per the mapping below).
 
@@ -285,11 +287,11 @@ The obsoleted types and their replacements:
 | `RoundedRectangleRuntime` (Apos + Skia) | `RectangleRuntime` + `CornerRadius` | `Red` / `Green` / `Blue` → `FillColor`; existing `CornerRadius` maps 1:1 |
 
 {% hint style="info" %}
-**`ColoredCircleRuntime.Color` is a passthrough — the rendered slot depends on `IsFilled`.** The Apos constructor defaults `IsFilled = true`, so `Color` paints the **fill** in the common case. If your code sets `IsFilled = false` (outline-only circle), migrate `Color` to `StrokeColor` instead. If the circle is both filled and outlined, set `FillColor` and `StrokeColor` explicitly on the new `CircleRuntime`.
+**`ColoredCircleRuntime.Color` is a passthrough — what it paints depends on `IsFilled`.** The Apos constructor defaults `IsFilled = true`, so `Color` paints the **fill** in the common case. If your code sets `IsFilled = false` (outline-only circle), migrate `Color` to `StrokeColor` instead. If the circle is both filled and outlined, set `FillColor` and `StrokeColor` explicitly on the new `CircleRuntime`.
 {% endhint %}
 
 {% hint style="warning" %}
-**`CircleRuntime` ships with a default 1 px white outline.** `ColoredCircleRuntime` had no stroke slot, so a freshly-constructed `ColoredCircleRuntime` with only `Color` set rendered as a solid disc with no outline. `CircleRuntime` (#2790 two-slot model) defaults to `StrokeColor = White` so cells that only set `FillColor` still get a visible outline — which means a literal `new CircleRuntime { FillColor = Color.Red }` renders as a red disc surrounded by a thin white ring. If you want the old solid-disc visual, suppress the outline explicitly:
+**`CircleRuntime` ships with a default 1 px white outline.** `ColoredCircleRuntime` had no outline, so a freshly-constructed `ColoredCircleRuntime` with only `Color` set rendered as a solid disc with no outline. `CircleRuntime` defaults to `StrokeColor = White` so cells that only set `FillColor` still get a visible outline — which means a literal `new CircleRuntime { FillColor = Color.Red }` renders as a red disc surrounded by a thin white ring. If you want the old solid-disc visual, suppress the outline explicitly:
 
 ```csharp
 CircleRuntime circle = new();
@@ -302,9 +304,9 @@ The same caveat applies anywhere you migrate a fill-only `ColoredCircleRuntime` 
 
 ### Breaking: `FillColor` / `StrokeColor` are now non-nullable
 
-Earlier in this same unreleased cycle (issue #2790 / #2814) `CircleRuntime` and `RectangleRuntime` briefly exposed `FillColor` and `StrokeColor` as nullable (`Color?` on XNA-likes / Raylib, `SKColor?` on Skia), with `null` meaning "hide this slot." Issue #2938 walks that back: the properties are non-nullable again, and visibility is gated by orthogonal knobs:
+Earlier in this same unreleased cycle (issue #2790 / #2814) `CircleRuntime` and `RectangleRuntime` briefly exposed `FillColor` and `StrokeColor` as nullable (`Color?` on XNA-likes / Raylib, `SKColor?` on Skia), with `null` meaning "hide the fill / outline." Issue #2938 walks that back: the properties are non-nullable again, and visibility is gated by orthogonal knobs:
 
-- **Hide fill** — set `IsFilled = false` (mirrors the Skia renderable's existing `IsFilled` toggle and survives round-tripping the color value).
+- **Hide fill** — set `IsFilled = false` (survives round-tripping the color value).
 - **Hide stroke** — set `StrokeWidth = 0` (a zero-width stroke is already a no-op in every backend, so this expresses intent without a separate flag).
 
 **Default visual is unchanged:** a freshly-constructed `CircleRuntime` / `RectangleRuntime` still renders as a stroke-only outline, preserving the pre-#2938 visual that existing sample code assumes ("construct + only set `StrokeColor`"). This is achieved by defaulting `FillColor` to transparent (alpha 0) while leaving `IsFilled = true`. Assigning `FillColor` to a visible color lights up the fill without flipping `IsFilled` — so existing code like `frame.FillColor = darkGray;` continues to work.
@@ -328,7 +330,7 @@ circle.IsFilled = false;    // hide the fill
 circle.StrokeWidth = 0;     // hide the stroke
 ```
 
-This is a breaking change relative to the nullable form, but only against code written against an unreleased prerelease. Released callers were on the legacy single-slot `Color` API and are unaffected.
+This is a breaking change relative to the nullable form, but only against code written against an unreleased prerelease. Released callers were on the legacy single-`Color` API and are unaffected.
 
 ❌ Old:
 
@@ -367,13 +369,13 @@ rounded.CornerRadius = 8;
 
 The `Gum.Analyzers` package ships an automated code fix (`GUM002`) — place the cursor on the warning, trigger the lightbulb (Ctrl+.), and choose **Replace '`ColoredCircleRuntime`' with '`CircleRuntime`'** (or the matching `RectangleRuntime` fix for the rectangle variants). The fix also renames `.Color` accesses on rewritten instances: `ColoredCircleRuntime.Color` → `CircleRuntime.StrokeColor` (matching the legacy outline-painting semantic), and `ColoredRectangleRuntime.Color` / `SolidRectangleRuntime.Color` → `RectangleRuntime.FillColor`. `RoundedRectangleRuntime` rewrites to `RectangleRuntime` with `CornerRadius` carried over unchanged. Use **Fix all in solution** to migrate the entire project at once.
 
-The obsolete types will remain in place until at least the November 2026 release. After that window, they may be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
+The obsolete types will remain in place until at least the December 2026 release. After that window, they may be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
 
-### Breaking: `UseGradient` no longer paints over a transparent fill slot
+### Breaking: `UseGradient` no longer paints over a transparent fill
 
-Issue #2956 — `UseGradient` is a *pattern* flag, not a *visibility* flag. A slot whose effective color alpha is 0 (e.g. the default-transparent fill on a stroke-only plain `CircleRuntime` / `RectangleRuntime`) no longer paints its gradient. This brings the Apos.Shapes (MonoGame/FNA/KNI) and raylib backends in line with the SkiaGum backend, which has always enforced this naturally — `SKPaint.Color.alpha` modulates the shader output, so a transparent paint color suppresses the gradient.
+Issue #2956 — `UseGradient` is a *pattern* flag, not a *visibility* flag. A fill or outline whose effective color alpha is 0 (e.g. the default-transparent fill on a stroke-only plain `CircleRuntime` / `RectangleRuntime`) no longer paints its gradient. This brings the Apos.Shapes (MonoGame/FNA/KNI) and raylib backends in line with the SkiaGum backend, which has always enforced this naturally — `SKPaint.Color.alpha` modulates the shader output, so a transparent paint color suppresses the gradient.
 
-Before the fix, the same code rendered differently across backends: Apos and raylib painted an opaque gradient on a fill slot the user had explicitly hidden via the documented default; Skia correctly suppressed it. After the fix, all three backends agree.
+Before the fix, the same code rendered differently across backends: Apos and raylib painted an opaque gradient on a fill the user had explicitly hidden via the documented default; Skia correctly suppressed it. After the fix, all three backends agree.
 
 ❌ Old (worked accidentally on Apos / raylib, silent no-op on Skia):
 
@@ -392,13 +394,13 @@ circle.Color2 = Color.White;
 ```csharp
 var circle = new CircleRuntime();
 circle.Radius = 28;
-circle.FillColor = Color.White;   // light the fill slot up — opaque, RGB irrelevant
+circle.FillColor = Color.White;   // light the fill up — opaque, RGB irrelevant
 circle.UseGradient = true;
 circle.Color1 = Color.Black;
 circle.Color2 = Color.White;
 ```
 
-The RGB of `FillColor` doesn't matter — the gradient overrides the per-pixel color. Only the alpha gates whether the slot paints at all. `StrokeColor` works the same way for the stroke slot on backends that support gradient-on-stroke (Skia + Apos two-slot; raylib's stroke is solid only).
+The RGB of `FillColor` doesn't matter — the gradient overrides the per-pixel color. Only the alpha gates whether the fill paints at all. `StrokeColor` works the same way for the outline on backends that support gradient-on-stroke (Skia and Apos.Shapes; raylib's outline is solid only).
 
 ### Forms controls moved to GumCommon — input types widened
 

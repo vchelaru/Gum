@@ -25,7 +25,7 @@ Run the upgrade `gum upgrade` or `~/bin/gum upgrade`
 
 ## Upgrading Runtime
 
-Upgrade your Gum NuGet packages to version **2026.5.2.1**. For more information, see the NuGet packages for your particular platform:
+Upgrade your Gum NuGet packages to version **2026.4.2.1**. For more information, see the NuGet packages for your particular platform:
 
 * MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)

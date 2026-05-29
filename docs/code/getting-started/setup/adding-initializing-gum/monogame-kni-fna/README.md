@@ -272,6 +272,58 @@ If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/G
 
 For more information, see the [Runtime Variable References](../../../../styling/runtime-variable-references.md) page.
 
+## Adding Shape Support (Recommended)
+
+Gum's `Circle` and `Rectangle` elements have a **fill** and an **outline (stroke)**. On MonoGame, KNI, and FNA, an outlined `Circle` or `Rectangle` renders out of the box — `StrokeColor`, `StrokeWidth`, `StrokeWidthUnits`, and the geometry properties (`Width`, `Height`, `Radius`, `CornerRadius`) all work with no extra package.
+
+Filling a shape and the richer effects need the shape support package. We recommend installing it for most projects so that fill, gradient, drop shadow, dashed stroke, and anti-aliasing all draw. Without it, the following properties are stored and round-trip correctly, but silently do not draw: `FillColor` (and the fill color channels), gradient (`UseGradient` and the gradient properties), drop shadow (`HasDropshadow` and the dropshadow properties), dashed stroke (`StrokeDashLength` / `StrokeGapLength`), anti-aliasing (`IsAntialiased`), and `Blend`. Nothing throws — the shape simply renders without that feature.
+
+To enable fill and effects, add the shape support package for your platform (the `Gum.Shapes.*` package, which uses Apos.Shapes under the hood):
+
+{% tabs %}
+{% tab title="MonoGame" %}
+```xml
+<PackageReference Include="Gum.Shapes.MonoGame" Version="*" />
+```
+
+Or add through command line:
+
+```bash
+dotnet add package Gum.Shapes.MonoGame
+```
+{% endtab %}
+
+{% tab title="KNI" %}
+```xml
+<PackageReference Include="Gum.Shapes.KNI" Version="*" />
+```
+
+Or add through command line:
+
+```bash
+dotnet add package Gum.Shapes.KNI
+```
+{% endtab %}
+
+{% tab title="FNA" %}
+There is no shape support NuGet package for FNA. An outlined `Circle` or `Rectangle` still renders without any package (`StrokeColor`, `StrokeWidth`, and geometry all work), but fill and the richer effects are currently available on MonoGame and KNI only.
+{% endtab %}
+{% endtabs %}
+
+Next, add the following line after `GumUI.Initialize(...)` in your `Initialize` method:
+
+```csharp
+// Initialize
+GumUI.Initialize(this);
+ShapeRenderer.Self.Initialize();
+```
+
+{% hint style="info" %}
+The fill + outline `Circle` and `Rectangle` surface ships in the June 2026 release. Before then, you can use it by building Gum from source.
+{% endhint %}
+
+For the full set of fill, outline, gradient, drop shadow, and corner-radius properties, see the [Shapes](../../../../standard-visuals/shapes-apos.shapes.md) page.
+
 ## Adding a Button (Testing the Setup)
 
 Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:

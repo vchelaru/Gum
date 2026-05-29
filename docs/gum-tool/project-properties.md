@@ -82,7 +82,7 @@ The Font Generator project property controls which tool Gum uses to bake `.fnt` 
 You can change the setting at any time in **Project Properties**. The next FontCache rebuild uses the chosen generator.
 
 {% hint style="info" %}
-**As of May 2026:** New projects default to **KernSmith**. Before this, the default was **BMFont**. Existing projects keep their current setting — opening an older project in a newer version of the Gum tool does not switch its generator, and there is no auto-migration.
+**As of June 2026:** New projects default to **KernSmith**. Before this, the default was **BMFont**. Existing projects keep their current setting — opening an older project in a newer version of the Gum tool does not switch its generator, and there is no auto-migration.
 {% endhint %}
 
 {% hint style="warning" %}
