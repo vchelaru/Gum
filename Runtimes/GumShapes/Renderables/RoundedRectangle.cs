@@ -58,6 +58,54 @@ public class RoundedRectangle : RenderableShapeBase,
     public float? CustomRadiusBottomRight { get; set; }
     public float? CustomRadiusBottomLeft { get; set; }
 
+    /// <summary>
+    /// Issue #2979 — dropshadow draw size, AA halo, and alpha scale for a rectangle of nominal
+    /// <paramref name="hostSize"/>, mirroring <see cref="Circle"/>'s split (#2950/#2977).
+    /// Apos.Shapes' <c>DrawRectangle</c> anchors the stroke at the outer edge (like
+    /// <c>DrawCircle</c>), so a naive <c>size -= blur</c> shadow pass marches the outline inward
+    /// as blur grows — a stroke-only rectangle visibly contracts.
+    /// <list type="bullet">
+    /// <item><description><b>Filled:</b> the disk strict-anchor (<see cref="RenderableShapeBase.ComputeShadowDrawGeometry"/>),
+    /// keyed off the smaller half-dimension so the same inset applies to both axes; the 50%
+    /// alpha line lands on the original edge. Beyond <c>blur &gt; min(Width,Height)</c> the helper
+    /// truncates the inner ramp (the smaller dimension collapses to 0) and returns an alpha
+    /// scale &lt; 1 so the center fades instead of inverting.</description></item>
+    /// <item><description><b>Stroke-only:</b> anchor the band centerline at the body stroke
+    /// centerline regardless of blur — each side pulls in <c>(StrokeWidth - effectiveShadowStrokeWidth)/2</c>,
+    /// so once blur exceeds the stroke width (effective shadow stroke clamped to a ~0 epsilon by
+    /// <see cref="RenderableShapeBase.ComputeStrokeShadowDrawParameters"/>) the box stops shrinking
+    /// at <c>hostSize - StrokeWidth</c> and only the AA halo (aaSize) keeps growing.</description></item>
+    /// </list>
+    /// </summary>
+    public (Vector2 size, int aaSize, float alphaScale) ComputeShadowDrawParameters(
+        Vector2 hostSize, float effectiveShadowStrokeWidth, float cameraZoom)
+    {
+        float insetPerSide;
+        int aaSize;
+        float alphaScale;
+
+        if (IsFilled)
+        {
+            float minHalf = System.Math.Min(hostSize.X, hostSize.Y) / 2f;
+            (float effectiveRadius, int effAaSize, float effAlphaScale) =
+                ComputeShadowDrawGeometry(minHalf, cameraZoom);
+            insetPerSide = minHalf - effectiveRadius;
+            aaSize = effAaSize;
+            alphaScale = effAlphaScale;
+        }
+        else
+        {
+            insetPerSide = (StrokeWidth - effectiveShadowStrokeWidth) / 2f;
+            aaSize = GetShadowAntiAliasSize(cameraZoom);
+            alphaScale = 1f;
+        }
+
+        Vector2 size = new(
+            System.Math.Max(0f, hostSize.X - 2f * insetPerSide),
+            System.Math.Max(0f, hostSize.Y - 2f * insetPerSide));
+        return (size, aaSize, alphaScale);
+    }
+
     public override void Render(ISystemManagers managers)
     {
         // Issue #2950 follow-up — see Circle.Render for the rationale on this gate.
@@ -79,23 +127,28 @@ public class RoundedRectangle : RenderableShapeBase,
 
         if(HasDropshadow)
         {
-            var shadowLeft = absoluteLeft + DropshadowOffsetX + DropshadowBlurX/2;
-            var shadowTop = absoluteTop + DropshadowOffsetY + DropshadowBlurY/2;
-
-            // Currently apos shapes doesn't support different sizes for anti-aliasing on X and Y
-            var dropshadowSize = size;
-            dropshadowSize.X -= DropshadowBlurX;
-            dropshadowSize.Y -= DropshadowBlurX;
-
             // Issue #2950 — when stroke <= blur on a stroke-only RoundedRectangle, fade the
             // shadow's starting alpha and clamp lineThickness positive so Apos still draws.
             (float shadowStrokeWidth, Color shadowColor) =
                 ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
 
-            // Issue #2950 — keep blur world-anchored by scaling Apos's screen-pixel-space
-            // aaSize by camera zoom (see RenderableShapeBase.GetShadowAntiAliasSize).
+            // Issue #2979 — strict-anchor shadow geometry (filled disk anchor / stroke centerline
+            // anchor), mirroring Circle.Render. Replaces the old naive `size -= blur` that drove
+            // the outline inward as blur grew. aaSize is world-anchored (scaled by camera zoom).
             var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
-            int shadowAaSize = GetShadowAntiAliasSize(cameraZoom);
+            (Vector2 dropshadowSize, int shadowAaSize, float shadowAlphaScale) =
+                ComputeShadowDrawParameters(size, shadowStrokeWidth, cameraZoom);
+            if (shadowAlphaScale < 1f)
+            {
+                shadowColor = new Color(
+                    shadowColor.R, shadowColor.G, shadowColor.B,
+                    (byte)(shadowColor.A * shadowAlphaScale));
+            }
+
+            // Re-center the (shrunken) shadow box on the body so only the halo extends outward;
+            // the per-side inset equals (size - dropshadowSize)/2 in each axis.
+            var shadowLeft = absoluteLeft + DropshadowOffsetX + (size.X - dropshadowSize.X) / 2f;
+            var shadowTop = absoluteTop + DropshadowOffsetY + (size.Y - dropshadowSize.Y) / 2f;
 
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowSize,
                 shadowAaSize,
