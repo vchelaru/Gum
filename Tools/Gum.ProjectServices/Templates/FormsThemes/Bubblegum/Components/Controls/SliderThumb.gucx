@@ -49,9 +49,6 @@
     <Variable Type="bool" Name="Body.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <Variable Type="float" Name="Body.Radius" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
     <Variable Type="float" Name="Body.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -87,9 +84,6 @@
     </Variable>
     <Variable Type="bool" Name="BorderInstance.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.Radius" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
       <Value xsi:type="xsd:int">157</Value>
@@ -136,9 +130,6 @@
     </Variable>
     <Variable Type="bool" Name="FocusedIndicator.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="float" Name="FocusedIndicator.Radius" SetsValue="true">
-      <Value xsi:type="xsd:float">3</Value>
     </Variable>
     <Variable Type="int" Name="FocusedIndicator.StrokeAlpha" SetsValue="true">
       <Value xsi:type="xsd:int">90</Value>

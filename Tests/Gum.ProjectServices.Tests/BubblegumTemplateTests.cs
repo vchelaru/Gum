@@ -12,9 +12,9 @@ namespace Gum.ProjectServices.Tests;
 
 /// <summary>
 /// Validates the bundled Bubblegum theme template after its migration off the retired
-/// ColoredRectangle / RoundedRectangle / ColoredCircle standards (see
-/// <see cref="BubblegumShapeMigrationHelper"/>). Guards against a regression where a future edit
-/// reintroduces a retired standard or leaves a dangling color reference.
+/// ColoredRectangle / RoundedRectangle / ColoredCircle standards (PR #2975). Guards against a
+/// regression where a future edit reintroduces a retired standard or leaves a dangling color
+/// reference.
 /// </summary>
 public class BubblegumTemplateTests
 {
@@ -32,6 +32,32 @@ public class BubblegumTemplateTests
         result.Success.ShouldBeTrue();
         result.LoadErrors.ShouldBeEmpty();
         return result.Project!;
+    }
+
+    [Fact]
+    public void Load_CircleInstances_ShouldNotCarryRadiusVariable()
+    {
+        // Circle sizes via Width/Height since #2947 — "Radius" was dropped from the standard.
+        // PR #2975 left redundant "Radius = Width/2" writes on the radio/slider-thumb circles;
+        // they self-heal on load but should not linger in the committed template.
+        GumProjectSave project = LoadBubblegum();
+
+        List<string> offenders = new();
+        foreach (ElementSave element in project.AllElements)
+        {
+            foreach (StateSave state in element.AllStates)
+            {
+                foreach (VariableSave variable in state.Variables)
+                {
+                    if (variable.Name != null && GetLastNameSegment(variable.Name) == "Radius")
+                    {
+                        offenders.Add($"{element.Name} / {state.Name}: {variable.Name}");
+                    }
+                }
+            }
+        }
+
+        offenders.ShouldBeEmpty();
     }
 
     [Fact]
@@ -109,6 +135,12 @@ public class BubblegumTemplateTests
         }
 
         dangling.ShouldBeEmpty();
+    }
+
+    private static string GetLastNameSegment(string variableName)
+    {
+        int lastDotIndex = variableName.LastIndexOf('.');
+        return lastDotIndex < 0 ? variableName : variableName.Substring(lastDotIndex + 1);
     }
 
     private static string FindRepoRoot()
