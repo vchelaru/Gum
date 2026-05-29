@@ -3,6 +3,7 @@ using System.Linq;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
@@ -165,8 +166,7 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
 
         InvokeExpose(composite);
 
-        _dialogService.Verify(
-            x => x.GetUserString(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<GetUserStringOptions>()), Times.Once);
+        _dialogService.Verify(x => x.Show(It.IsAny<ExposeColorDialogViewModel>()), Times.Once);
     }
 
     [Fact]
@@ -194,8 +194,8 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
         CompositeInstanceMember composite = BuildInstanceComposite(container, instance);
 
         _dialogService
-            .Setup(x => x.GetUserString(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<GetUserStringOptions>()))
-            .Returns((string?)null);
+            .Setup(x => x.Show(It.IsAny<ExposeColorDialogViewModel>()))
+            .Returns(false);
 
         InvokeExpose(composite);
 
@@ -226,9 +226,12 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
 
     private void SetUpPrompt(string baseName)
     {
+        // Simulate the user entering a base name and clicking OK: set BaseName on the dialog VM the logic
+        // constructs, then report an affirmative result.
         _dialogService
-            .Setup(x => x.GetUserString(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<GetUserStringOptions>()))
-            .Returns(baseName);
+            .Setup(x => x.Show(It.IsAny<ExposeColorDialogViewModel>()))
+            .Callback((ExposeColorDialogViewModel vm) => vm.BaseName = baseName)
+            .Returns(true);
     }
 
     private InstanceSave SetUpInstanceForExpose(out ComponentSave container, string prefix = "")

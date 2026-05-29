@@ -1,6 +1,7 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -250,39 +251,37 @@ public class CompositeMemberLogic
         }
         //////////////////////End Early Out/////////////////////
 
-        // Single prompt for one base name; each channel is exposed as base + channelRootName. Suffixing the
-        // full root name (e.g. "StrokeRed", not just "Red") reproduces the historical per-channel default and
-        // keeps affixed colors (Stroke/Fill/gradient) from colliding.
-        string message = $"Enter a base name. Channels {string.Join(", ", channelRootNames)} will be appended:";
-        string title = "Expose color";
+        // One prompt for a base name; each channel is exposed as base + channelRootName, previewed live in the
+        // dialog. An empty base exposes the raw root names (e.g. FillRed/FillGreen/FillBlue). Suffixing the full
+        // root name reproduces the historical per-channel default and keeps affixed colors (Stroke/Fill/gradient)
+        // from colliding. The dialog owns the name derivation (ExposedNames); we read it back here.
+        ExposeColorDialogViewModel dialogViewModel = new(
+            defaultBaseName: instance.Name,
+            channelRootNames: channelRootNames,
+            validateExposedName: (exposedName) => ValidateExposedName(exposedName, element));
 
-        GetUserStringOptions options = new()
-        {
-            InitialValue = instance.Name,
-            Validator = (baseName) => ValidateBaseName(baseName, channelRootNames, element),
-        };
-
-        if (_dialogService.GetUserString(message, title, options) is not { } enteredBaseName)
+        if (!_dialogService.Show(dialogViewModel))
         {
             // User cancelled: expose nothing.
             return;
         }
+
+        IReadOnlyList<string> exposedNames = dialogViewModel.ExposedNames;
 
         using IDisposable undoLock = _undoManager.RequestLock();
 
         List<VariableSave> toRevert = new();
         bool shouldRevert = false;
 
-        foreach (string rootName in channelRootNames)
+        for (int i = 0; i < channelRootNames.Count; i++)
         {
             if (shouldRevert)
             {
                 break;
             }
 
-            string exposedName = enteredBaseName + rootName;
             OptionallyAttemptedGeneralResponse<VariableSave> response =
-                _exposeVariableService.ExposeVariable(instance, rootName, exposedName);
+                _exposeVariableService.ExposeVariable(instance, channelRootNames[i], exposedNames[i]);
 
             if (response.DidAttempt && response.Succeeded == false)
             {
@@ -304,20 +303,13 @@ public class CompositeMemberLogic
     }
 
     /// <summary>
-    /// Validates the single base name by checking every derived channel name (base + root name). Returns the
-    /// first failure reason, or null if all derived names are valid.
+    /// Validates a single exposed channel name against the element. Returns the failure reason, or null if valid.
     /// </summary>
-    private string? ValidateBaseName(string? baseName, IReadOnlyList<string> channelRootNames, ElementSave element)
+    private string? ValidateExposedName(string exposedName, ElementSave element)
     {
-        foreach (string rootName in channelRootNames)
-        {
-            string derivedName = (baseName ?? "") + rootName;
-            if (!_nameVerifier.IsVariableNameValid(derivedName, element, null!, out string? whyNot))
-            {
-                return whyNot;
-            }
-        }
-        return null;
+        return _nameVerifier.IsVariableNameValid(exposedName, element, null!, out string? whyNot)
+            ? null
+            : whyNot;
     }
 
     private bool IsChannelExposed(string channelRootName, ElementSave element, InstanceSave? instance)

@@ -1,0 +1,44 @@
+<UserControl
+    x:Class="Gum.Dialogs.ExposeColorDialogView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
+    xmlns:local="clr-namespace:Gum.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Width="450"
+    d:DataContext="{d:DesignInstance Type={x:Type local:ExposeColorDialogViewModel},
+                                     IsDesignTimeCreatable=False}"
+    dialogs:Dialog.DialogTitle="Expose Color"
+    mc:Ignorable="d">
+    <StackPanel>
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+        <TextBox
+            x:Name="BaseNameTextBox"
+            Margin="0,8,0,0"
+            Text="{Binding BaseName, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+            Margin="0,12,0,2"
+            Style="{StaticResource Frb.Styles.TextBlock.Caption}"
+            Text="Variables to create:" />
+        <ItemsControl Margin="8,0,0,0" ItemsSource="{Binding ExposedNames}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock FontWeight="Bold" Text="{Binding}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <!--
+            The error TextBlock is always laid out (no collapse) with a MinHeight, so the window's initial
+            size-to-content already reserves room for a validation message. Without this, the error appears
+            after the window has locked to Manual sizing and the content gets a scrollbar instead.
+        -->
+        <TextBlock
+            MinHeight="32"
+            Margin="0,10,0,0"
+            Foreground="{StaticResource Frb.Brushes.Error}"
+            Style="{StaticResource Frb.Styles.TextBlock.Caption}"
+            Text="{Binding Error}"
+            TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>
