@@ -4,7 +4,7 @@
 
 GumUI supports rendering vector shapes as visuals. The two primary shape runtimes are:
 
-* `CircleRuntime` — a circle (or ellipse) sized by `Width` and `Height` (or `Radius`).
+* `CircleRuntime` — a circle sized to fit within its `Width` × `Height` bounds.
 * `RectangleRuntime` — a rectangle with an optional uniform or per-corner `CornerRadius`.
 
 Each shape has a **fill** and an **outline (stroke)**. The fill is controlled by `FillColor` (and `IsFilled`); the outline is controlled by `StrokeColor`, `StrokeWidth`, and `StrokeWidthUnits`. On top of fill and outline, shapes can render a gradient, a drop shadow, and a dashed outline.
@@ -135,7 +135,8 @@ public class Game1 : Game
 
         var circle = new CircleRuntime();
         circle.AddToRoot();
-        circle.Radius = 50;
+        circle.Width = 100;
+        circle.Height = 100;
         circle.FillColor = Color.Red;
 
         var rectangle = new RectangleRuntime();
@@ -181,7 +182,7 @@ public class Game1 : Game
 
 * **Fill** — `FillColor` sets the fill color; `FillRed` / `FillGreen` / `FillBlue` / `FillAlpha` set individual channels (0–255). `IsFilled = false` hides the fill. By default `FillColor` is transparent, so a freshly-constructed shape renders as an outline only — assign a visible `FillColor` to light up the fill.
 * **Outline (stroke)** — `StrokeColor` sets the outline color (with `StrokeRed` / `StrokeGreen` / `StrokeBlue` / `StrokeAlpha` channels); `StrokeWidth` controls thickness and `StrokeWidthUnits` controls how that thickness is interpreted. `StrokeWidth = 0` hides the outline.
-* **Geometry** — `CircleRuntime` is sized by `Width` / `Height` (or `Radius`); `RectangleRuntime` is sized by `Width` / `Height` with an optional uniform or per-corner `CornerRadius`.
+* **Geometry** — `CircleRuntime` is sized to fit within its `Width` / `Height` bounds; `RectangleRuntime` is sized by `Width` / `Height` with an optional uniform or per-corner `CornerRadius`.
 
 The gradient, drop shadow, and dashed-outline properties match the names in the tables below.
 
@@ -271,7 +272,7 @@ Defaults: `Width` = `Height` = 100, `StartAngle` = 0, `SweepAngle` = 90, `IsEndR
 
 ### ColoredCircleRuntime
 
-`ColoredCircleRuntime` draws a circle (or ellipse) sized by its `Width` and `Height`. It does not add any properties beyond the common set — its size is controlled by `Width`/`Height`, and its appearance is controlled by the common color, gradient, drop shadow, and fill/stroke properties.
+`ColoredCircleRuntime` draws a circle sized to fit within its `Width` and `Height` bounds. It does not add any properties beyond the common set — its size is controlled by `Width`/`Height`, and its appearance is controlled by the common color, gradient, drop shadow, and fill/stroke properties.
 
 Defaults: `Width` = `Height` = 100, `IsFilled` = `true`, `StrokeWidth` = 1, `Color` = `White`.
 
