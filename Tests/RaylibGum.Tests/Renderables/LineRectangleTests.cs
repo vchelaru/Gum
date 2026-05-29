@@ -194,22 +194,23 @@ public class LineRectangleTests
         rectangle.Color.A.ShouldBe((byte)78);
     }
 
-    // Issue #2956 — see LineCircleTests.ShouldPaintFillGradient_* for the full contract.
-    // Same gating logic applies to LineRectangle's fill gradient path (linear quad + radial
-    // concentric circles).
+    // Issue #2998 — see LineCircleTests.ShouldPaintFillGradient_* for the full contract.
+    // Gradient visibility is driven by the gradient STOP alphas (Color1 / Color2), NOT the slot's
+    // solid fill color — a fill slot must exist (FillColor set or IsFilled), but its solid alpha is
+    // irrelevant. Replaces the #2956 gate (which keyed off the solid fill alpha and went invisible
+    // once RectangleRuntime defaulted FillColor transparent).
 
     [Fact]
-    public void ShouldPaintFillGradient_FillColorOpaque_True()
+    public void ShouldPaintFillGradient_BothGradientStopsTransparent_OpaqueFill_False()
     {
-        LineRectangle rectangle = new() { UseGradient = true, FillColor = new Color(10, 20, 30, 255) };
-
-        rectangle.ShouldPaintFillGradient.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ShouldPaintFillGradient_FillColorTransparent_False()
-    {
-        LineRectangle rectangle = new() { UseGradient = true, FillColor = new Color(10, 20, 30, 0) };
+        // Both stops invisible → no gradient, even with an opaque solid fill.
+        LineRectangle rectangle = new()
+        {
+            UseGradient = true,
+            FillColor = new Color(10, 20, 30, 255),
+            Color1 = new Color(1, 2, 3, 0),
+            Color2 = new Color(4, 5, 6, 0),
+        };
 
         rectangle.ShouldPaintFillGradient.ShouldBeFalse();
     }
@@ -223,26 +224,60 @@ public class LineRectangleTests
     }
 
     [Fact]
-    public void ShouldPaintFillGradient_LegacyFillViaIsFilled_OpaqueColor_True()
+    public void ShouldPaintFillGradient_IsFilled_VisibleStops_True()
     {
-        LineRectangle rectangle = new() { UseGradient = true, IsFilled = true };
+        LineRectangle rectangle = new()
+        {
+            UseGradient = true,
+            IsFilled = true,
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 255),
+        };
 
         rectangle.ShouldPaintFillGradient.ShouldBeTrue();
     }
 
     [Fact]
-    public void ShouldPaintFillGradient_LegacyFillViaIsFilled_TransparentColor_False()
+    public void ShouldPaintFillGradient_NoFillSlotEnabled_False()
     {
-        LineRectangle rectangle = new() { UseGradient = true, IsFilled = true, Alpha = 0 };
+        // Visible stops are not enough — without a fill slot there is nothing to fill.
+        LineRectangle rectangle = new()
+        {
+            UseGradient = true,
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 255),
+        };
 
         rectangle.ShouldPaintFillGradient.ShouldBeFalse();
     }
 
     [Fact]
-    public void ShouldPaintFillGradient_NoFillSlotEnabled_False()
+    public void ShouldPaintFillGradient_OneGradientStopVisible_True()
     {
-        LineRectangle rectangle = new() { UseGradient = true };
+        LineRectangle rectangle = new()
+        {
+            UseGradient = true,
+            IsFilled = true,
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 0),
+        };
 
-        rectangle.ShouldPaintFillGradient.ShouldBeFalse();
+        rectangle.ShouldPaintFillGradient.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldPaintFillGradient_TransparentFill_VisibleStops_True()
+    {
+        // Core regression repro: solid fill transparent (the new RectangleRuntime default), gradient
+        // stops opaque → the gradient must still paint.
+        LineRectangle rectangle = new()
+        {
+            UseGradient = true,
+            FillColor = new Color(10, 20, 30, 0),
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 255),
+        };
+
+        rectangle.ShouldPaintFillGradient.ShouldBeTrue();
     }
 }

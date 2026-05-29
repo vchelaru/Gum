@@ -226,17 +226,20 @@ public class LineCircle : InvisibleRenderable
     }
 
     /// <summary>
-    /// Issue #2956 — true when the fill pass should paint its gradient. Mirrors the SkPaint
-    /// contract enforced by SkiaGum: <see cref="UseGradient"/> is a *pattern* flag, not a
-    /// *visibility* flag, so a slot whose effective fill alpha is 0 (e.g. the default-
-    /// transparent fill on a stroke-only plain Circle) must NOT paint its gradient. Without
-    /// this gate <see cref="DrawGradientFan"/> would emit opaque triangles regardless of
-    /// <see cref="FillColor"/>'s alpha. The fill slot is enabled when an explicit
-    /// <see cref="FillColor"/> is set OR <see cref="IsFilled"/> is true (legacy
-    /// <see cref="Color"/> path); the effective fill color is then <c>FillColor ?? Color</c>.
+    /// Issue #2998 — true when the fill pass should paint its gradient. <see cref="UseGradient"/>
+    /// is a *pattern* flag, not a *visibility* flag: visibility is decided by the gradient's OWN
+    /// alpha — at least one of <see cref="Color1"/> / <see cref="Color2"/> must be visible. It
+    /// deliberately does NOT key off the slot's solid fill alpha: the two-slot RectangleRuntime /
+    /// CircleRuntime default the solid fill transparent (#2938 stroke-only default) and configure a
+    /// gradient purely via UseGradient + Color1/Color2, so gating on <c>FillColor ?? Color</c> alpha
+    /// (the original #2956 gate) suppressed legitimate gradient fills. The fill slot must still be
+    /// enabled — an explicit <see cref="FillColor"/> is set OR <see cref="IsFilled"/> is true — but
+    /// its solid alpha is irrelevant to the gradient. Without this gate <see cref="DrawGradientFan"/>
+    /// would emit triangles whose per-vertex alpha comes only from the stops, which is exactly what
+    /// we want once the stops carry the visibility.
     /// </summary>
     public bool ShouldPaintFillGradient =>
-        UseGradient && (FillColor.HasValue || IsFilled) && (FillColor ?? Color).A > 0;
+        UseGradient && (FillColor.HasValue || IsFilled) && (Color1.A > 0 || Color2.A > 0);
 
     /// <summary>
     /// Issue #2934 / #2956 — returns the linear gradient axis endpoints rotated around the
@@ -396,12 +399,11 @@ public class LineCircle : InvisibleRenderable
                 // detector. The fan structure matches raylib's own DrawCircle implementation
                 // in rshapes.c — center vertex + N rim vertices fan into N triangles.
                 //
-                // Issue #2956 — suppress the fan when the slot's effective fill alpha is 0.
-                // DrawGradientFan emits per-vertex Color1/Color2 directly with no modulation
-                // by fillColor.A, so without this gate a default-transparent fill would still
-                // paint an opaque gradient (Skia naturally avoids this via paint.Color.alpha
-                // modulating the shader; we replicate it explicitly). See ShouldPaintFillGradient.
-                if (fillColor.A > 0)
+                // Issue #2998 — gradient visibility comes from the gradient STOP alphas, not the
+                // solid fill alpha. DrawGradientFan emits per-vertex Color1/Color2 directly, so
+                // route through ShouldPaintFillGradient (the single source of truth): a transparent
+                // solid fill with visible stops still paints; two transparent stops paint nothing.
+                if (ShouldPaintFillGradient)
                 {
                     DrawGradientFan(cx, cy, Radius);
                 }
