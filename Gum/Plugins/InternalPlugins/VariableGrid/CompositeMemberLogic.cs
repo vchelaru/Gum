@@ -1,8 +1,10 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
 using System;
@@ -27,6 +29,8 @@ public class CompositeMemberLogic
     private readonly IGuiCommands _guiCommands;
     private readonly ObjectFinder _objectFinder;
     private readonly ICompositeMemberRegistry _registry;
+    private readonly IDialogService _dialogService;
+    private readonly INameVerifier _nameVerifier;
 
     public CompositeMemberLogic(
         ISelectedState selectedState,
@@ -34,7 +38,9 @@ public class CompositeMemberLogic
         IUndoManager undoManager,
         IGuiCommands guiCommands,
         ObjectFinder objectFinder,
-        ICompositeMemberRegistry registry)
+        ICompositeMemberRegistry registry,
+        IDialogService dialogService,
+        INameVerifier nameVerifier)
     {
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
@@ -42,6 +48,8 @@ public class CompositeMemberLogic
         _guiCommands = guiCommands;
         _objectFinder = objectFinder;
         _registry = registry;
+        _dialogService = dialogService;
+        _nameVerifier = nameVerifier;
     }
 
     /// <summary>
@@ -243,12 +251,29 @@ public class CompositeMemberLogic
         }
         //////////////////////End Early Out/////////////////////
 
+        // One prompt for a base name; each channel is exposed as base + channelRootName, previewed live in the
+        // dialog. An empty base exposes the raw root names (e.g. FillRed/FillGreen/FillBlue). Suffixing the full
+        // root name reproduces the historical per-channel default and keeps affixed colors (Stroke/Fill/gradient)
+        // from colliding. The dialog owns the name derivation (ExposedNames); we read it back here.
+        ExposeColorDialogViewModel dialogViewModel = new(
+            defaultBaseName: instance.Name,
+            channelRootNames: channelRootNames,
+            validateExposedName: (exposedName) => ValidateExposedName(exposedName, element));
+
+        if (!_dialogService.Show(dialogViewModel))
+        {
+            // User cancelled: expose nothing.
+            return;
+        }
+
+        IReadOnlyList<string> exposedNames = dialogViewModel.ExposedNames;
+
         using IDisposable undoLock = _undoManager.RequestLock();
 
         List<VariableSave> toRevert = new();
         bool shouldRevert = false;
 
-        foreach (string rootName in channelRootNames)
+        for (int i = 0; i < channelRootNames.Count; i++)
         {
             if (shouldRevert)
             {
@@ -256,7 +281,7 @@ public class CompositeMemberLogic
             }
 
             OptionallyAttemptedGeneralResponse<VariableSave> response =
-                _exposeVariableService.HandleExposeVariableClick(instance, rootName);
+                _exposeVariableService.ExposeVariable(instance, channelRootNames[i], exposedNames[i]);
 
             if (response.DidAttempt && response.Succeeded == false)
             {
@@ -275,6 +300,16 @@ public class CompositeMemberLogic
                 _exposeVariableService.HandleUnexposeVariableClick(variableToRevert, element);
             }
         }
+    }
+
+    /// <summary>
+    /// Validates a single exposed channel name against the element. Returns the failure reason, or null if valid.
+    /// </summary>
+    private string? ValidateExposedName(string exposedName, ElementSave element)
+    {
+        return _nameVerifier.IsVariableNameValid(exposedName, element, null!, out string? whyNot)
+            ? null
+            : whyNot;
     }
 
     private bool IsChannelExposed(string channelRootName, ElementSave element, InstanceSave? instance)

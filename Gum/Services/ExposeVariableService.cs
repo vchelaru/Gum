@@ -23,7 +23,19 @@ namespace Gum.Services;
 
 public interface IExposeVariableService
 {
+    /// <summary>
+    /// Exposes a single instance variable, prompting the user for the exposed name via a dialog. Used by the
+    /// standalone "Expose Variable" row context menu.
+    /// </summary>
     OptionallyAttemptedGeneralResponse<VariableSave> HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName);
+
+    /// <summary>
+    /// Exposes a single instance variable under a caller-supplied name, without prompting. Used by callers that
+    /// already determined the exposed name (e.g. the composite color swatch's single-prompt expose, which derives
+    /// every channel's name from one shared base name).
+    /// </summary>
+    OptionallyAttemptedGeneralResponse<VariableSave> ExposeVariable(InstanceSave instanceSave, string rootVariableName, string exposedName);
+
     void HandleUnexposeVariableClick(VariableSave variableSave, ElementSave elementSave);
 }
 
@@ -87,74 +99,103 @@ internal class ExposeVariableService : IExposeVariableService
         {
             InitialValue = fullVariableName.Replace(".", "").Replace(" ", ""),
             Validator = v =>
-                _nameVerifier.IsVariableNameValid(v, _selectedState.SelectedElement, variableSave, out string whyNot)
+                _nameVerifier.IsVariableNameValid(v, _selectedState.SelectedElement, variableSave, out string? whyNot)
                     ? null
                     : whyNot
         };
 
-        var toReturn = new OptionallyAttemptedGeneralResponse<VariableSave>();
-        toReturn.DidAttempt = true;
-        toReturn.Succeeded = false;
-
         if (_dialogService.GetUserString(message, title, options) is { } result)
         {
-
-            var elementSave = _selectedState.SelectedElement;
-            // if there is an inactive variable,
-            // we should get rid of it:
-            var existingVariable = _selectedState.SelectedElement.GetVariableFromThisOrBase(result);
-
-            // there's a variable but we shouldn't consider it
-            // unless it's "Active" - inactive variables may be
-            // leftovers from a type change
-
-            using var undoLocl = _undoManager.RequestLock();
-            if (existingVariable != null)
-            {
-                var isActive = _variableSaveLogic.GetIfVariableIsActive(existingVariable, elementSave, null);
-                if (isActive == false)
-                {
-                    // gotta remove the variable:
-                    if (elementSave.DefaultState.Variables.Contains(existingVariable))
-                    {
-                        // We may need to worry about inheritance...eventually
-                        elementSave.DefaultState.Variables.Remove(existingVariable);
-                    }
-                }
-
-            }
-
-            if(variableSave == null)
-            {
-                StateSave stateToExposeOn = _selectedState.SelectedElement.DefaultState;
-
-                var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer);
-
-                if(variableInDefault == null)
-                {
-                    throw new Exception($"Error getting root variable for {fullVariableName} in {instanceSave.ParentContainer}");
-                }
-
-                string variableType = variableInDefault.Type;
-                stateToExposeOn.SetValue(fullVariableName, null, instanceSave, variableType);
-
-                variableSave = stateToExposeOn.GetVariableSave(fullVariableName);
-
-                // Not sure if we need this, but setting SetsValue to false matches the old behavior when
-                // this code used to be part of validation
-                variableSave.SetsValue = false;
-            }
-
-            variableSave.ExposedAsName = result;
-
-            PluginManager.Self.VariableAdd(elementSave, result);
-
-            _fileCommands.TryAutoSaveCurrentElement();
-            _guiCommands.RefreshVariables(force: true);
-            toReturn.Data = variableSave;
-            toReturn.Succeeded = true;
+            return ApplyExposure(instanceSave, rootVariableName, variableSave, result);
         }
-        return toReturn;
+
+        // User cancelled the prompt: attempted, but nothing exposed.
+        return new OptionallyAttemptedGeneralResponse<VariableSave> { DidAttempt = true, Succeeded = false };
+    }
+
+    public OptionallyAttemptedGeneralResponse<VariableSave> ExposeVariable(InstanceSave instanceSave, string rootVariableName, string exposedName)
+    {
+        var parentElement = instanceSave.ParentContainer;
+        var variableSave = parentElement?.DefaultState.GetVariableSave(
+            $"{instanceSave.Name}.{rootVariableName}");
+
+        var canExpose = GetIfCanExpose(instanceSave, variableSave, rootVariableName);
+
+        if (canExpose.Succeeded == false)
+        {
+            _dialogService.ShowMessage(canExpose.Message);
+            return OptionallyAttemptedGeneralResponse<VariableSave>.SuccessfulWithoutAttempt;
+        }
+
+        return ApplyExposure(instanceSave, rootVariableName, variableSave, exposedName);
+    }
+
+    /// <summary>
+    /// Performs the actual exposure once the final exposed name is known. Shared by the prompt-driven
+    /// <see cref="HandleExposeVariableClick"/> and the name-supplied <see cref="ExposeVariable"/>.
+    /// </summary>
+    private OptionallyAttemptedGeneralResponse<VariableSave> ApplyExposure(InstanceSave instanceSave,
+        string rootVariableName, VariableSave? variableSave, string exposedName)
+    {
+        var fullVariableName = instanceSave.Name + "." + rootVariableName;
+        var elementSave = _selectedState.SelectedElement;
+
+        // if there is an inactive variable, we should get rid of it:
+        var existingVariable = elementSave.GetVariableFromThisOrBase(exposedName);
+
+        // there's a variable but we shouldn't consider it
+        // unless it's "Active" - inactive variables may be
+        // leftovers from a type change
+
+        using var undoLock = _undoManager.RequestLock();
+        if (existingVariable != null)
+        {
+            var isActive = _variableSaveLogic.GetIfVariableIsActive(existingVariable, elementSave, null);
+            if (isActive == false)
+            {
+                // gotta remove the variable:
+                if (elementSave.DefaultState.Variables.Contains(existingVariable))
+                {
+                    // We may need to worry about inheritance...eventually
+                    elementSave.DefaultState.Variables.Remove(existingVariable);
+                }
+            }
+        }
+
+        if (variableSave == null)
+        {
+            StateSave stateToExposeOn = elementSave.DefaultState;
+
+            var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer);
+
+            if (variableInDefault == null)
+            {
+                throw new Exception($"Error getting root variable for {fullVariableName} in {instanceSave.ParentContainer}");
+            }
+
+            string variableType = variableInDefault.Type;
+            stateToExposeOn.SetValue(fullVariableName, null, instanceSave, variableType);
+
+            variableSave = stateToExposeOn.GetVariableSave(fullVariableName);
+
+            // Not sure if we need this, but setting SetsValue to false matches the old behavior when
+            // this code used to be part of validation
+            variableSave.SetsValue = false;
+        }
+
+        variableSave.ExposedAsName = exposedName;
+
+        PluginManager.Self.VariableAdd(elementSave, exposedName);
+
+        _fileCommands.TryAutoSaveCurrentElement();
+        _guiCommands.RefreshVariables(force: true);
+
+        return new OptionallyAttemptedGeneralResponse<VariableSave>
+        {
+            DidAttempt = true,
+            Succeeded = true,
+            Data = variableSave,
+        };
     }
 
     private GeneralResponse GetIfCanExpose(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)

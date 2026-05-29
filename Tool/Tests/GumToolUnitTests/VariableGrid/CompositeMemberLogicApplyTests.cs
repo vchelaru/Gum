@@ -3,9 +3,11 @@ using System.Linq;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
@@ -23,6 +25,8 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
     private readonly Mock<IExposeVariableService> _exposeVariableService;
     private readonly Mock<IGuiCommands> _guiCommands;
     private readonly Mock<IUndoManager> _undoManager;
+    private readonly Mock<IDialogService> _dialogService;
+    private readonly Mock<INameVerifier> _nameVerifier;
     private readonly UndoManager _realUndoManager;
     private readonly CompositeMemberLogic _logic;
 
@@ -34,6 +38,8 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
         _selectedState = new Mock<ISelectedState>();
         _exposeVariableService = new Mock<IExposeVariableService>();
         _guiCommands = new Mock<IGuiCommands>();
+        _dialogService = new Mock<IDialogService>();
+        _nameVerifier = new Mock<INameVerifier>();
 
         _realUndoManager = new UndoManager(null!, null!, null!, null!, null!, null!);
         _undoManager = new Mock<IUndoManager>();
@@ -45,16 +51,18 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
             _undoManager.Object,
             _guiCommands.Object,
             ObjectFinder.Self,
-            new CompositeMemberRegistry());
+            new CompositeMemberRegistry(),
+            _dialogService.Object,
+            _nameVerifier.Object);
     }
 
-    private ComponentSave MakeColorComponent()
+    private ComponentSave MakeColorComponent(string prefix = "")
     {
         ComponentSave component = new() { Name = "Colored" };
         component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
-        component.DefaultState.Variables.Add(new VariableSave { Name = "Red", Type = "int", Value = 0 });
-        component.DefaultState.Variables.Add(new VariableSave { Name = "Green", Type = "int", Value = 0 });
-        component.DefaultState.Variables.Add(new VariableSave { Name = "Blue", Type = "int", Value = 0 });
+        component.DefaultState.Variables.Add(new VariableSave { Name = prefix + "Red", Type = "int", Value = 0 });
+        component.DefaultState.Variables.Add(new VariableSave { Name = prefix + "Green", Type = "int", Value = 0 });
+        component.DefaultState.Variables.Add(new VariableSave { Name = prefix + "Blue", Type = "int", Value = 0 });
         _project.Components.Add(component);
         return component;
     }
@@ -90,7 +98,7 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
     public void Apply_ShouldNotCollapse_WhenAChannelIsExposed()
     {
         ComponentSave component = MakeColorComponent();
-        component.DefaultState.GetVariableSave("Red").ExposedAsName = "MyColorRed";
+        component.DefaultState.GetVariableSave("Red")!.ExposedAsName = "MyColorRed";
 
         MemberCategory category = CategoryWith(
             new InstanceMember("Red", null!),
@@ -131,17 +139,68 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
         InstanceSave instance = SetUpInstanceForExpose(out ComponentSave container);
         CompositeInstanceMember composite = BuildInstanceComposite(container, instance);
 
+        SetUpPrompt(baseName: "MyColor");
         _exposeVariableService
-            .Setup(x => x.HandleExposeVariableClick(instance, It.IsAny<string>()))
-            .Returns((InstanceSave _, string root) => Attempted(succeeded: true, new VariableSave { Name = root }));
+            .Setup(x => x.ExposeVariable(instance, It.IsAny<string>(), It.IsAny<string>()))
+            .Returns((InstanceSave _, string _, string exposed) => Attempted(succeeded: true, new VariableSave { Name = exposed }));
 
         InvokeExpose(composite);
 
-        _exposeVariableService.Verify(x => x.HandleExposeVariableClick(instance, "Red"), Times.Once);
-        _exposeVariableService.Verify(x => x.HandleExposeVariableClick(instance, "Green"), Times.Once);
-        _exposeVariableService.Verify(x => x.HandleExposeVariableClick(instance, "Blue"), Times.Once);
+        _exposeVariableService.Verify(x => x.ExposeVariable(instance, "Red", "MyColorRed"), Times.Once);
+        _exposeVariableService.Verify(x => x.ExposeVariable(instance, "Green", "MyColorGreen"), Times.Once);
+        _exposeVariableService.Verify(x => x.ExposeVariable(instance, "Blue", "MyColorBlue"), Times.Once);
         _exposeVariableService.Verify(
             x => x.HandleUnexposeVariableClick(It.IsAny<VariableSave>(), It.IsAny<ElementSave>()), Times.Never);
+    }
+
+    [Fact]
+    public void Expose_ShouldPromptExactlyOnce_ForAllChannels()
+    {
+        InstanceSave instance = SetUpInstanceForExpose(out ComponentSave container);
+        CompositeInstanceMember composite = BuildInstanceComposite(container, instance);
+
+        SetUpPrompt(baseName: "MyColor");
+        _exposeVariableService
+            .Setup(x => x.ExposeVariable(instance, It.IsAny<string>(), It.IsAny<string>()))
+            .Returns((InstanceSave _, string _, string exposed) => Attempted(succeeded: true, new VariableSave { Name = exposed }));
+
+        InvokeExpose(composite);
+
+        _dialogService.Verify(x => x.Show(It.IsAny<ExposeColorDialogViewModel>()), Times.Once);
+    }
+
+    [Fact]
+    public void Expose_ShouldSuffixFullChannelRootName_ForAffixedColors()
+    {
+        InstanceSave instance = SetUpInstanceForExpose(out ComponentSave container, prefix: "Stroke");
+        CompositeInstanceMember composite = BuildInstanceComposite(container, instance, prefix: "Stroke");
+
+        SetUpPrompt(baseName: "MyShape");
+        _exposeVariableService
+            .Setup(x => x.ExposeVariable(instance, It.IsAny<string>(), It.IsAny<string>()))
+            .Returns((InstanceSave _, string _, string exposed) => Attempted(succeeded: true, new VariableSave { Name = exposed }));
+
+        InvokeExpose(composite);
+
+        _exposeVariableService.Verify(x => x.ExposeVariable(instance, "StrokeRed", "MyShapeStrokeRed"), Times.Once);
+        _exposeVariableService.Verify(x => x.ExposeVariable(instance, "StrokeGreen", "MyShapeStrokeGreen"), Times.Once);
+        _exposeVariableService.Verify(x => x.ExposeVariable(instance, "StrokeBlue", "MyShapeStrokeBlue"), Times.Once);
+    }
+
+    [Fact]
+    public void Expose_ShouldDoNothing_WhenPromptCancelled()
+    {
+        InstanceSave instance = SetUpInstanceForExpose(out ComponentSave container);
+        CompositeInstanceMember composite = BuildInstanceComposite(container, instance);
+
+        _dialogService
+            .Setup(x => x.Show(It.IsAny<ExposeColorDialogViewModel>()))
+            .Returns(false);
+
+        InvokeExpose(composite);
+
+        _exposeVariableService.Verify(
+            x => x.ExposeVariable(It.IsAny<InstanceSave>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -150,23 +209,34 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
         InstanceSave instance = SetUpInstanceForExpose(out ComponentSave container);
         CompositeInstanceMember composite = BuildInstanceComposite(container, instance);
 
-        VariableSave exposedRed = new() { Name = "Red" };
+        SetUpPrompt(baseName: "MyColor");
+        VariableSave exposedRed = new() { Name = "MyColorRed" };
         _exposeVariableService
-            .Setup(x => x.HandleExposeVariableClick(instance, "Red"))
+            .Setup(x => x.ExposeVariable(instance, "Red", "MyColorRed"))
             .Returns(Attempted(succeeded: true, exposedRed));
         _exposeVariableService
-            .Setup(x => x.HandleExposeVariableClick(instance, "Green"))
+            .Setup(x => x.ExposeVariable(instance, "Green", "MyColorGreen"))
             .Returns(Attempted(succeeded: false, null));
 
         InvokeExpose(composite);
 
-        _exposeVariableService.Verify(x => x.HandleExposeVariableClick(instance, "Blue"), Times.Never);
+        _exposeVariableService.Verify(x => x.ExposeVariable(instance, "Blue", "MyColorBlue"), Times.Never);
         _exposeVariableService.Verify(x => x.HandleUnexposeVariableClick(exposedRed, container), Times.Once);
     }
 
-    private InstanceSave SetUpInstanceForExpose(out ComponentSave container)
+    private void SetUpPrompt(string baseName)
     {
-        ComponentSave baseComponent = MakeColorComponent();
+        // Simulate the user entering a base name and clicking OK: set BaseName on the dialog VM the logic
+        // constructs, then report an affirmative result.
+        _dialogService
+            .Setup(x => x.Show(It.IsAny<ExposeColorDialogViewModel>()))
+            .Callback((ExposeColorDialogViewModel vm) => vm.BaseName = baseName)
+            .Returns(true);
+    }
+
+    private InstanceSave SetUpInstanceForExpose(out ComponentSave container, string prefix = "")
+    {
+        ComponentSave baseComponent = MakeColorComponent(prefix);
 
         container = new ComponentSave { Name = "Container" };
         container.States.Add(new StateSave { Name = "Default", ParentContainer = container });
@@ -179,12 +249,12 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
         return instance;
     }
 
-    private CompositeInstanceMember BuildInstanceComposite(ComponentSave container, InstanceSave instance)
+    private CompositeInstanceMember BuildInstanceComposite(ComponentSave container, InstanceSave instance, string prefix = "")
     {
         MemberCategory category = CategoryWith(
-            new InstanceMember("Red", null!),
-            new InstanceMember("Green", null!),
-            new InstanceMember("Blue", null!));
+            new InstanceMember(prefix + "Red", null!),
+            new InstanceMember(prefix + "Green", null!),
+            new InstanceMember(prefix + "Blue", null!));
         List<MemberCategory> categories = new() { category };
 
         _logic.Apply(categories, container, instance);
