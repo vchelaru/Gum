@@ -23,6 +23,12 @@ namespace Gum.Controls.DataUi
         Type mInstancePropertyType;
         private bool needsToPushFullCommitOnMouseUp;
 
+        // Set in the constructor so the invalid-hex border can be cleared back to the control's themed default.
+        private readonly Brush _defaultHexBorderBrush;
+        private readonly Brush _invalidHexBorderBrush;
+        // Guards the hex text box against re-validating / re-committing while we sync it programmatically.
+        private bool _isSyncingHexText;
+
         #endregion
 
         #region Properties
@@ -61,6 +67,9 @@ namespace Gum.Controls.DataUi
         public ColorDisplay()
         {
             InitializeComponent();
+
+            _defaultHexBorderBrush = HexTextBox.BorderBrush;
+            _invalidHexBorderBrush = Brushes.Red;
         }
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
@@ -124,11 +133,12 @@ namespace Gum.Controls.DataUi
                 windowsColor.B = color.B;
 
                 this.ColorPicker.SelectedColor = windowsColor;
+                SyncHexTextFromPicker();
                 // This is beign set from the underlying data object to the UI
                 // which means the UI hasn't updated yet, so we don't want to push
                 // the value back to the UI
                 needsToPushFullCommitOnMouseUp = false;
-                 
+
                 return ApplyValueResult.Success;
             }
             else 
@@ -142,6 +152,7 @@ namespace Gum.Controls.DataUi
                 windowsColor.B = drawingColor.B;
 
                 this.ColorPicker.SelectedColor = windowsColor;
+                SyncHexTextFromPicker();
                 return ApplyValueResult.Success;
             }
             return ApplyValueResult.NotSupported;
@@ -243,6 +254,7 @@ namespace Gum.Controls.DataUi
 
             SetCurrentColorValueOnInstance(commitType);
 
+            SyncHexTextFromPicker();
         }
 
         bool isSetting = false;
@@ -290,6 +302,86 @@ namespace Gum.Controls.DataUi
             System.Diagnostics.Debug.WriteLine($"Preview Mouse up at {DateTime.Now}");
 
             e.Handled = false;
+        }
+
+        private void HexTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                CommitHexText();
+                e.Handled = true;
+            }
+        }
+
+        private void HexTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            CommitHexText();
+        }
+
+        private void HexTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isSyncingHexText)
+            {
+                return;
+            }
+            UpdateHexValidationVisual();
+        }
+
+        /// <summary>
+        /// Parses the hex text box and, if valid, applies it to the picker (preserving the current
+        /// alpha) so the existing color-change path performs a single Full commit (one undo). The
+        /// text box is then normalized to the canonical hex of the applied color; invalid input is
+        /// reverted without committing.
+        /// </summary>
+        private void CommitHexText()
+        {
+            if (HexColorParser.TryParse(HexTextBox.Text, out byte r, out byte g, out byte b))
+            {
+                Color current = ColorPicker.SelectedColor;
+                Color newColor = Color.FromArgb(current.A, r, g, b);
+                if (newColor != current)
+                {
+                    // Raises ColorChanged -> HandleColorChange, which commits Full because the mouse
+                    // is not pressed during a keyboard/focus commit -> a single undo entry.
+                    ColorPicker.SelectedColor = newColor;
+                }
+            }
+
+            // Normalize (on success) or revert (on invalid input) to the currently applied color.
+            Color applied = ColorPicker.SelectedColor;
+            SetHexText(HexColorParser.ToHexRgb(applied.R, applied.G, applied.B));
+            UpdateHexValidationVisual();
+        }
+
+        /// <summary>
+        /// Updates the hex text box to match the picker's current color, unless the user is actively
+        /// editing it (so their in-progress typing is never clobbered).
+        /// </summary>
+        private void SyncHexTextFromPicker()
+        {
+            if (HexTextBox.IsKeyboardFocusWithin)
+            {
+                return;
+            }
+
+            Color color = ColorPicker.SelectedColor;
+            SetHexText(HexColorParser.ToHexRgb(color.R, color.G, color.B));
+            UpdateHexValidationVisual();
+        }
+
+        private void SetHexText(string text)
+        {
+            _isSyncingHexText = true;
+            HexTextBox.Text = text;
+            _isSyncingHexText = false;
+        }
+
+        private void UpdateHexValidationVisual()
+        {
+            // Empty input is treated as neutral (not an error) so clearing the box to retype isn't jarring.
+            bool isNeutral = string.IsNullOrWhiteSpace(HexTextBox.Text)
+                || HexColorParser.TryParse(HexTextBox.Text, out _, out _, out _);
+            HexTextBox.BorderBrush = isNeutral ? _defaultHexBorderBrush : _invalidHexBorderBrush;
         }
     }
 }

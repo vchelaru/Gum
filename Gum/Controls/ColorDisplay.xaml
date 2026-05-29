@@ -13,6 +13,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
 
@@ -29,5 +30,23 @@
             ColorChanged="HandleColorChange"
             MouseUp="ColorPicker_MouseUp"
             PreviewMouseUp="ColorPicker_PreviewMouseUp" />
+
+        <!--  Inline hex entry: paste/type a 6- or 8-digit hex (alpha stripped) without opening the picker popup.  -->
+        <StackPanel
+            Grid.Column="2"
+            Margin="4,5,0,5"
+            VerticalAlignment="Center"
+            Orientation="Horizontal">
+            <TextBlock VerticalAlignment="Center" Text="#" />
+            <TextBox
+                x:Name="HexTextBox"
+                Width="72"
+                VerticalAlignment="Center"
+                VerticalContentAlignment="Center"
+                KeyDown="HexTextBox_KeyDown"
+                LostFocus="HexTextBox_LostFocus"
+                TextChanged="HexTextBox_TextChanged"
+                ToolTip="Type or paste a hex color (RRGGBB or RRGGBBAA). Alpha is ignored." />
+        </StackPanel>
     </Grid>
 </UserControl>
