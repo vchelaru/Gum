@@ -331,8 +331,8 @@ public class CircleRuntimeTests
         sut.StrokeColor = Color.Blue;
 #pragma warning disable CS0618 // exercising deprecated legacy routing on purpose
         sut.Color = Color.Lime;
-#pragma warning restore CS0618
         sut.Radius = 25f;
+#pragma warning restore CS0618
         sut.IsFilled = false;
         sut.StrokeWidth = 0;
 

@@ -566,6 +566,7 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 #elif !SKIA
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
     public int Alpha
     {
         get => ContainedLineRectangle.Color.A;
@@ -591,6 +592,7 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 #elif !SKIA
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
     public int Red
     {
         get => ContainedLineRectangle.Color.R;
@@ -616,6 +618,7 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 #elif !SKIA
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
     public int Green
     {
         get => ContainedLineRectangle.Color.G;
@@ -641,6 +644,7 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 #elif !SKIA
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
     public int Blue
     {
         get => ContainedLineRectangle.Color.B;
@@ -671,7 +675,9 @@ public class RectangleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
 #elif RAYLIB || SOKOL
+        [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
         get => ContainedLineRectangle.Color;
+        [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
         set
         {
             ContainedLineRectangle.Color = value;
@@ -1607,6 +1613,44 @@ public class RectangleRuntime : GraphicalUiElement
     /// contained RoundedRectangle. Issue #2814 / #2818.
     /// </summary>
     protected override RenderableShapeBase ContainedRenderable => ContainedLineRectangle;
+
+    // Unified-API cleanup: RectangleRuntime is a new fill+stroke shape, so the single-color
+    // legacy members it inherits from SkiaShapeRuntime (the base for ALL Skia shapes) are
+    // obsolete on this surface — users typed as RectangleRuntime are steered to FillColor /
+    // StrokeColor, matching the XNA-like and raylib surfaces. The members stay live on the base
+    // for the legacy single-color shapes (Arc, RoundedRectangle, ColoredCircle, ...). Color is
+    // already [Obsolete] on the base, so only Red/Green/Blue/Alpha need shadowing here.
+    /// <summary>Obsolete: use <see cref="SkiaShapeRuntime.FillColor"/> or <see cref="SkiaShapeRuntime.StrokeColor"/>.</summary>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public new int Alpha
+    {
+        get => base.Alpha;
+        set => base.Alpha = value;
+    }
+
+    /// <inheritdoc cref="Alpha"/>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public new int Red
+    {
+        get => base.Red;
+        set => base.Red = value;
+    }
+
+    /// <inheritdoc cref="Alpha"/>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public new int Green
+    {
+        get => base.Green;
+        set => base.Green = value;
+    }
+
+    /// <inheritdoc cref="Alpha"/>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public new int Blue
+    {
+        get => base.Blue;
+        set => base.Blue = value;
+    }
 
     /// <inheritdoc cref="CircleRuntime.DropshadowBlur"/>
     public float DropshadowBlur

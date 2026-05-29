@@ -104,6 +104,7 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 #elif !SKIA
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public int Alpha
     {
         get => ContainedLineCircle.Color.A;
@@ -132,6 +133,7 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 #elif !SKIA
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public int Red
     {
         get => ContainedLineCircle.Color.R;
@@ -160,6 +162,7 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 #elif !SKIA
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public int Green
     {
         get => ContainedLineCircle.Color.G;
@@ -188,6 +191,7 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 #elif !SKIA
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public int Blue
     {
         get => ContainedLineCircle.Color.B;
@@ -199,6 +203,12 @@ public class CircleRuntime : GraphicalUiElement
     }
 #endif
 
+    /// <summary>
+    /// Obsolete: set <c>Width</c> and <c>Height</c> instead. Retained for back-compat — the
+    /// setter now only proxies size (sets <c>Width</c> = <c>Height</c> = <c>Radius</c> * 2) and
+    /// pushes the radius to the renderable. See the June 2026 migration guide (issue #2761).
+    /// </summary>
+    [Obsolete("Set Width and Height instead (Radius now proxies Width = Height = Radius * 2). See migration guide for issue #2761.")]
     public float Radius
     {
 #if XNALIKE
@@ -238,6 +248,7 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 #elif !SKIA
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public Color Color
     {
         get => ContainedLineCircle.Color;
@@ -1640,6 +1651,44 @@ public class CircleRuntime : GraphicalUiElement
     /// to the contained <see cref="Circle"/>.
     /// </summary>
     protected override RenderableShapeBase ContainedRenderable => ContainedLineCircle;
+
+    // Unified-API cleanup: CircleRuntime is a new fill+stroke shape, so the single-color legacy
+    // members it inherits from SkiaShapeRuntime (the base for ALL Skia shapes) are obsolete on
+    // this surface — users typed as CircleRuntime are steered to FillColor / StrokeColor, the
+    // same way the XNA-like and raylib surfaces do it. The members stay live on the base for the
+    // legacy single-color shapes (Arc, RoundedRectangle, ColoredCircle, ...). Color is already
+    // [Obsolete] on the base, so only Red/Green/Blue/Alpha need shadowing here.
+    /// <summary>Obsolete: use <see cref="SkiaShapeRuntime.FillColor"/> or <see cref="SkiaShapeRuntime.StrokeColor"/>.</summary>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
+    public new int Alpha
+    {
+        get => base.Alpha;
+        set => base.Alpha = value;
+    }
+
+    /// <inheritdoc cref="Alpha"/>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
+    public new int Red
+    {
+        get => base.Red;
+        set => base.Red = value;
+    }
+
+    /// <inheritdoc cref="Alpha"/>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
+    public new int Green
+    {
+        get => base.Green;
+        set => base.Green = value;
+    }
+
+    /// <inheritdoc cref="Alpha"/>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
+    public new int Blue
+    {
+        get => base.Blue;
+        set => base.Blue = value;
+    }
 
     /// <summary>
     /// Isotropic blur radius in pixels for the dropshadow. The plain <see cref="CircleRuntime"/>

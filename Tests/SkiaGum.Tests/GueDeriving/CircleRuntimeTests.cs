@@ -98,7 +98,9 @@ public class CircleRuntimeTests
     public void Radius_ShouldBe16_ByDefault()
     {
         CircleRuntime sut = new();
+#pragma warning disable CS0618 // Radius is obsolete (use Width/Height); pinning the default here
         sut.Radius.ShouldBe(16);
+#pragma warning restore CS0618
     }
 
     [Fact]
