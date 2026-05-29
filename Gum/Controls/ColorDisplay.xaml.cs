@@ -104,7 +104,7 @@ namespace Gum.Controls.DataUi
 
             this.RefreshContextMenu(MainGrid.ContextMenu);
 
-            // todo - eventually we may want a HintTextBlock. If so, add it here:
+            RefreshHintText();
 
             SuppressSettingProperty = false;
         }
@@ -208,11 +208,22 @@ namespace Gum.Controls.DataUi
 
         private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "Value")
+            if (e.PropertyName == "Value" || e.PropertyName == nameof(InstanceMember.DetailText))
             {
                 this.Refresh();
 
             }
+        }
+
+        // Mirrors InstanceMember.DetailText into the subtext line, matching how the WpfDataUi displayers
+        // (TextBoxDisplay, SliderDisplay, etc.) surface their DetailText.
+        private void RefreshHintText()
+        {
+            string? detailText = InstanceMember?.DetailText;
+            HintTextBlock.Text = detailText;
+            HintTextBlock.Visibility = string.IsNullOrEmpty(detailText)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
         }
 
         private void HandleColorChange(object? sender, RoutedEventArgs e)
