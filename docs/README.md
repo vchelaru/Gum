@@ -34,7 +34,7 @@ Grab the NuGet, add a few lines of code, see your Gum project in game! You can u
 
 Gum objects can be created and modified in code. Create fully-featured UI by subscribing to common UI events.
 
-```
+```c#
 void CustomInitialize()
 {
     MyButton.Click += HandleOkButtonClick;
