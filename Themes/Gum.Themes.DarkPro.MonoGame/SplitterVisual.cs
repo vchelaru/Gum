@@ -19,7 +19,7 @@ namespace Gum.Themes.DarkPro;
 /// </summary>
 public class SplitterVisual : BaseSplitterVisual
 {
-    private readonly ColoredRectangleRuntime _fill;
+    private readonly RectangleRuntime _fill;
 
     public SplitterVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -30,9 +30,9 @@ public class SplitterVisual : BaseSplitterVisual
         AddChild(_fill);
     }
 
-    private static ColoredRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        ColoredRectangleRuntime fill = new ColoredRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProSplitterFill";
         fill.X = 0;
         fill.Y = 0;
@@ -44,7 +44,9 @@ public class SplitterVisual : BaseSplitterVisual
         fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.Color = DarkProColors.Border;
+        fill.IsFilled = true;
+        fill.FillColor = DarkProColors.Border;
+        fill.StrokeWidth = 0;
         return fill;
     }
 }

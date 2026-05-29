@@ -16,7 +16,7 @@ namespace Gum.Themes.DarkPro;
 /// </summary>
 public class ListBoxItemVisual : BaseListBoxItemVisual
 {
-    private readonly RoundedRectangleRuntime _fill;
+    private readonly RectangleRuntime _fill;
 
     public ListBoxItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -43,9 +43,9 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProListItemFill";
         fill.X = 0;
         fill.Y = 0;
@@ -59,7 +59,8 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = 0f;
         fill.IsFilled = true;
-        fill.Color = Color.Transparent;
+        fill.FillColor = Color.Transparent;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
@@ -88,7 +89,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
 
     private void ApplyPalette(Color fill, Color text)
     {
-        _fill.Color = fill;
+        _fill.FillColor = fill;
         TextInstance.Color = text;
     }
 }

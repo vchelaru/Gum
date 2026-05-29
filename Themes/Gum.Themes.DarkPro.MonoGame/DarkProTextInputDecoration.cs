@@ -23,9 +23,9 @@ internal sealed class DarkProTextInputDecoration
     private const float BorderThickness = 1f;
     private const float FocusRingInset = 1f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public DarkProTextInputDecoration(TextBoxBaseVisual host)
     {
@@ -52,9 +52,9 @@ internal sealed class DarkProTextInputDecoration
         WireStates(host);
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProTextInputFill";
         fill.X = 0;
         fill.Y = 0;
@@ -68,13 +68,14 @@ internal sealed class DarkProTextInputDecoration
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = DarkProColors.Surface1;
+        fill.FillColor = DarkProColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "DarkProTextInputBorder";
         border.X = 0;
         border.Y = 0;
@@ -90,15 +91,15 @@ internal sealed class DarkProTextInputDecoration
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = DarkProColors.Border;
+        border.StrokeColor = DarkProColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
         // 1px stroke sitting one pixel outside the border, matching the CSS
         // `box-shadow: 0 0 0 1px var(--acc)` from the mockup.
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "DarkProTextInputFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -114,7 +115,7 @@ internal sealed class DarkProTextInputDecoration
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = DarkProColors.Accent;
+        ring.StrokeColor = DarkProColors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -154,8 +155,8 @@ internal sealed class DarkProTextInputDecoration
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text,
         Color placeholder, Color caret, Color selection, bool ring)
     {
-        _fill.Color = fill;
-        _border.Color = border;
+        _fill.FillColor = fill;
+        _border.StrokeColor = border;
         host.TextInstance.Color = text;
         host.PlaceholderTextInstance.Color = placeholder;
         host.CaretInstance.Color = caret;

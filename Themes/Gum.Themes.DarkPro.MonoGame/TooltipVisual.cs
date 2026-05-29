@@ -17,8 +17,8 @@ public class TooltipVisual : BaseTooltipVisual
     private const float CornerRadius = 2f;
     private const float BorderThickness = 1f;
 
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public TooltipVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -39,9 +39,9 @@ public class TooltipVisual : BaseTooltipVisual
         TextInstance.Color = DarkProColors.Text;
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProTooltipFill";
         fill.X = 0;
         fill.Y = 0;
@@ -55,13 +55,14 @@ public class TooltipVisual : BaseTooltipVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = DarkProColors.Surface1;
+        fill.FillColor = DarkProColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "DarkProTooltipBorder";
         border.X = 0;
         border.Y = 0;
@@ -77,7 +78,7 @@ public class TooltipVisual : BaseTooltipVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = DarkProColors.Border;
+        border.StrokeColor = DarkProColors.Border;
         return border;
     }
 }

@@ -23,8 +23,8 @@ public class SliderThumbVisual : InteractiveGue
     private const float FocusRingInset = 2f;
     private const float BorderThickness = 1f;
 
-    private readonly ColoredCircleRuntime _focusRing;
-    private readonly ColoredCircleRuntime _body;
+    private readonly CircleRuntime _focusRing;
+    private readonly CircleRuntime _body;
 
     private StateSaveCategory _buttonCategory = null!;
 
@@ -45,9 +45,9 @@ public class SliderThumbVisual : InteractiveGue
         WireStates();
     }
 
-    private static ColoredCircleRuntime CreateBody()
+    private static CircleRuntime CreateBody()
     {
-        ColoredCircleRuntime body = new ColoredCircleRuntime();
+        CircleRuntime body = new CircleRuntime();
         body.Name = "DarkProSliderThumbBody";
         body.X = 0;
         body.Y = 0;
@@ -60,15 +60,16 @@ public class SliderThumbVisual : InteractiveGue
         body.WidthUnits = DimensionUnitType.RelativeToParent;
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.IsFilled = true;
-        body.Color = DarkProColors.Accent;
+        body.FillColor = DarkProColors.Accent;
+        body.StrokeWidth = 0;
         return body;
     }
 
-    private static ColoredCircleRuntime CreateFocusRing()
+    private static CircleRuntime CreateFocusRing()
     {
         // Sized (Size + 2 * FocusRingInset) so the 1-px stroke sits FocusRingInset
         // pixels outside the body.
-        ColoredCircleRuntime ring = new ColoredCircleRuntime();
+        CircleRuntime ring = new CircleRuntime();
         ring.Name = "DarkProSliderThumbFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -83,7 +84,7 @@ public class SliderThumbVisual : InteractiveGue
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = DarkProColors.Accent;
+        ring.StrokeColor = DarkProColors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -125,7 +126,7 @@ public class SliderThumbVisual : InteractiveGue
 
     private void Apply(Color body, bool ring)
     {
-        _body.Color = body;
+        _body.FillColor = body;
         _focusRing.Visible = ring;
     }
 }

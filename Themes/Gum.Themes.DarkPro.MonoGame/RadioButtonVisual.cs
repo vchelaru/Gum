@@ -11,7 +11,7 @@ namespace Gum.Themes.DarkPro;
 /// <summary>
 /// Dark Pro styled RadioButton visual. Replaces the V3 RadioButtonVisual's
 /// NineSlice circular background, sprite-based inner dot, and underline focus
-/// indicator with an Apos.Shapes ColoredCircleRuntime stack: filled outer
+/// indicator with an Apos.Shapes CircleRuntime stack: filled outer
 /// circle, 1px stroked outer ring, filled inner dot (visible when selected),
 /// and a 1px focus ring sized one pixel outside the outer ring.
 /// </summary>
@@ -23,10 +23,10 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private const float FocusRingInset = 1f;
     private const float BoxToLabelGap = 8f;
 
-    private readonly ColoredCircleRuntime _focusRing;
-    private readonly ColoredCircleRuntime _outerFill;
-    private readonly ColoredCircleRuntime _outerBorder;
-    private readonly ColoredCircleRuntime _innerDot;
+    private readonly CircleRuntime _focusRing;
+    private readonly CircleRuntime _outerFill;
+    private readonly CircleRuntime _outerBorder;
+    private readonly CircleRuntime _innerDot;
 
     public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -55,9 +55,9 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         WireStates();
     }
 
-    private static ColoredCircleRuntime CreateOuterFill()
+    private static CircleRuntime CreateOuterFill()
     {
-        ColoredCircleRuntime circle = new ColoredCircleRuntime();
+        CircleRuntime circle = new CircleRuntime();
         circle.Name = "DarkProRadioOuterFill";
         circle.X = 0;
         circle.Y = 0;
@@ -70,13 +70,14 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         circle.WidthUnits = DimensionUnitType.Absolute;
         circle.HeightUnits = DimensionUnitType.Absolute;
         circle.IsFilled = true;
-        circle.Color = DarkProColors.Surface1;
+        circle.FillColor = DarkProColors.Surface1;
+        circle.StrokeWidth = 0;
         return circle;
     }
 
-    private static ColoredCircleRuntime CreateOuterBorder()
+    private static CircleRuntime CreateOuterBorder()
     {
-        ColoredCircleRuntime circle = new ColoredCircleRuntime();
+        CircleRuntime circle = new CircleRuntime();
         circle.Name = "DarkProRadioOuterBorder";
         circle.X = 0;
         circle.Y = 0;
@@ -91,16 +92,16 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         circle.IsFilled = false;
         circle.StrokeWidth = BorderThickness;
         circle.StrokeWidthUnits = DimensionUnitType.Absolute;
-        circle.Color = DarkProColors.Border;
+        circle.StrokeColor = DarkProColors.Border;
         return circle;
     }
 
-    private static ColoredCircleRuntime CreateFocusRing()
+    private static CircleRuntime CreateFocusRing()
     {
         // 18-px outer (16 + 2 for the 1-px ring overhang on each side).
         // The outer rings sit on parent.Left; offset the focus ring by -1 so
         // it's centered horizontally on the outer ring.
-        ColoredCircleRuntime ring = new ColoredCircleRuntime();
+        CircleRuntime ring = new CircleRuntime();
         ring.Name = "DarkProRadioFocusRing";
         ring.X = -FocusRingInset;
         ring.Y = 0;
@@ -115,18 +116,18 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = DarkProColors.Accent;
+        ring.StrokeColor = DarkProColors.Accent;
         ring.Visible = false;
         return ring;
     }
 
-    private static ColoredCircleRuntime CreateInnerDot()
+    private static CircleRuntime CreateInnerDot()
     {
         // 8-px filled circle centered on the 16-px outer circle. Outer is at
         // parent.Left (Left origin), so the inner is offset by (Outer-Inner)/2
         // = 4 from the left.
         const float inset = (OuterSize - InnerSize) / 2f;
-        ColoredCircleRuntime dot = new ColoredCircleRuntime();
+        CircleRuntime dot = new CircleRuntime();
         dot.Name = "DarkProRadioInnerDot";
         dot.X = inset;
         dot.Y = 0;
@@ -139,7 +140,8 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         dot.WidthUnits = DimensionUnitType.Absolute;
         dot.HeightUnits = DimensionUnitType.Absolute;
         dot.IsFilled = true;
-        dot.Color = DarkProColors.Accent;
+        dot.FillColor = DarkProColors.Accent;
+        dot.StrokeWidth = 0;
         dot.Visible = false;
         return dot;
     }
@@ -222,13 +224,13 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private void Apply(Color fill, Color border, Color text, bool innerVisible, bool ring,
         Color? innerColor = null)
     {
-        _outerFill.Color = fill;
-        _outerBorder.Color = border;
+        _outerFill.FillColor = fill;
+        _outerBorder.StrokeColor = border;
         TextInstance.Color = text;
         _innerDot.Visible = innerVisible;
         if (innerColor.HasValue)
         {
-            _innerDot.Color = innerColor.Value;
+            _innerDot.FillColor = innerColor.Value;
         }
         _focusRing.Visible = ring;
     }

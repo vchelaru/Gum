@@ -21,9 +21,9 @@ public class ButtonVisual : BaseButtonVisual
     private const float BorderThickness = 1f;
     private const float FocusRingInset = 1f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public ButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -55,9 +55,9 @@ public class ButtonVisual : BaseButtonVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProFill";
         fill.X = 0;
         fill.Y = 0;
@@ -71,13 +71,14 @@ public class ButtonVisual : BaseButtonVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = DarkProColors.Surface1;
+        fill.FillColor = DarkProColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "DarkProBorder";
         border.X = 0;
         border.Y = 0;
@@ -93,16 +94,16 @@ public class ButtonVisual : BaseButtonVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = DarkProColors.Border;
+        border.StrokeColor = DarkProColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
         // Sized to (parent + 2px) per axis and centered, so the 1px stroke
         // sits exactly one pixel outside the border. Matches the
         // `box-shadow: 0 0 0 1px var(--acc)` effect from the mockup CSS.
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "DarkProFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -118,7 +119,7 @@ public class ButtonVisual : BaseButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = DarkProColors.Accent;
+        ring.StrokeColor = DarkProColors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -174,8 +175,8 @@ public class ButtonVisual : BaseButtonVisual
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showFocusRing)
     {
-        _fill.Color = fill;
-        _border.Color = border;
+        _fill.FillColor = fill;
+        _border.StrokeColor = border;
         TextInstance.Color = text;
         _focusRing.Visible = showFocusRing;
     }

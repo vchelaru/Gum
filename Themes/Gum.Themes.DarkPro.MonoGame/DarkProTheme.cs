@@ -64,8 +64,8 @@ public static class DarkProTheme
         BmfcSave.AddCharacters("✓✕▾▴▲▼◀▶");
 
         // Dark Pro's visuals build their bodies out of Apos.Shapes-backed
-        // RoundedRectangleRuntime instances, which require ShapeRenderer to
-        // be initialized. Initialize here so consumers don't need to know
+        // RectangleRuntime / CircleRuntime instances, which require ShapeRenderer
+        // to be initialized. Initialize here so consumers don't need to know
         // the theme uses shapes internally. Guard for the case where the
         // host app already initialized it (e.g. mixing themes or using
         // shape runtimes elsewhere).
@@ -224,5 +224,16 @@ public static class DarkProTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] =
             new VisualTemplate((_, c) => new TooltipVisual(tryCreateFormsObject: c));
+
+        // Controls Dark Pro does not restyle are pinned to their stock V3 visuals so
+        // DarkProTheme.Apply fully specifies the template set. FrameworkElement.DefaultFormsTemplates
+        // is global static state; without re-registering these, re-applying a theme at runtime
+        // (theme switching) would leave a previously-applied theme's visual in place for these
+        // controls. These match what a single-theme Dark Pro run already falls back to.
+        FrameworkElement.DefaultFormsTemplates[typeof(ItemsControl)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Gum.Forms.Controls.Games.DialogBox)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));
     }
 }

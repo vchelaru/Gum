@@ -25,10 +25,10 @@ public class WindowVisual : BaseWindowVisual
     private const float BorderThickness = 1f;
     private const float TitleBarSeparatorHeight = 1f;
 
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
-    private readonly ColoredRectangleRuntime _titleBarFill;
-    private readonly ColoredRectangleRuntime _titleBarSeparator;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
+    private readonly RectangleRuntime _titleBarFill;
+    private readonly RectangleRuntime _titleBarSeparator;
 
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -74,9 +74,8 @@ public class WindowVisual : BaseWindowVisual
         AddChild(BorderRightInstance.Visual);
 
         // Surface2 fill child of the title bar so the drag area is visibly
-        // chrome. GraphicalUiElement subclasses (ColoredRectangleRuntime,
-        // RoundedRectangleRuntime) don't intercept events, so this won't
-        // block the title bar's drag handling.
+        // chrome. GraphicalUiElement subclasses (RectangleRuntime) don't
+        // intercept events, so this won't block the title bar's drag handling.
         _titleBarFill = CreateTitleBarFill();
         _titleBarFill.Parent = TitleBarInstance.Visual;
 
@@ -87,9 +86,9 @@ public class WindowVisual : BaseWindowVisual
         _titleBarSeparator.Parent = TitleBarInstance.Visual;
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProWindowFill";
         fill.X = 0;
         fill.Y = 0;
@@ -103,13 +102,14 @@ public class WindowVisual : BaseWindowVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = DarkProColors.Surface1;
+        fill.FillColor = DarkProColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "DarkProWindowBorder";
         border.X = 0;
         border.Y = 0;
@@ -125,13 +125,13 @@ public class WindowVisual : BaseWindowVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = DarkProColors.Border;
+        border.StrokeColor = DarkProColors.Border;
         return border;
     }
 
-    private static ColoredRectangleRuntime CreateTitleBarFill()
+    private static RectangleRuntime CreateTitleBarFill()
     {
-        ColoredRectangleRuntime fill = new ColoredRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "DarkProWindowTitleBarFill";
         fill.X = 0;
         fill.Y = 0;
@@ -143,13 +143,15 @@ public class WindowVisual : BaseWindowVisual
         fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.Color = DarkProColors.Surface2;
+        fill.IsFilled = true;
+        fill.FillColor = DarkProColors.Surface2;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static ColoredRectangleRuntime CreateTitleBarSeparator()
+    private static RectangleRuntime CreateTitleBarSeparator()
     {
-        ColoredRectangleRuntime separator = new ColoredRectangleRuntime();
+        RectangleRuntime separator = new RectangleRuntime();
         separator.Name = "DarkProWindowTitleBarSeparator";
         separator.X = 0;
         separator.Y = 0;
@@ -161,7 +163,9 @@ public class WindowVisual : BaseWindowVisual
         separator.Height = TitleBarSeparatorHeight;
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
-        separator.Color = DarkProColors.Border;
+        separator.IsFilled = true;
+        separator.FillColor = DarkProColors.Border;
+        separator.StrokeWidth = 0;
         return separator;
     }
 }
