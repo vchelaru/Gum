@@ -6,7 +6,7 @@
 
 A freshly-constructed `RectangleRuntime` renders as a **stroke-only outline** — `FillColor` defaults to transparent, `StrokeColor` defaults to white, and `StrokeWidth` defaults to `1`. Assign a visible `FillColor` to light up the fill, or set `StrokeWidth` to `0` to hide the outline.
 
-For the full property surface — fill, outline, corner radius, gradient, drop shadow, dashed stroke, and the platform/package requirements — see the [Shapes](shapes-apos.shapes.md) page. The examples below cover the common cases.
+For the full property surface — fill, outline, corner radius, gradient, drop shadow, dashed stroke, and the platform/package requirements — see the [Shapes](shapes-apos.shapes.md#circleruntime-and-rectangleruntime) page. The examples below cover the common cases.
 
 {% hint style="info" %}
 On MonoGame, KNI, and FNA the outline and geometry render out of the box, but the **fill** and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing) only draw once the `Gum.Shapes.<platform>` package is added — otherwise they are stored and round-trip but silently do not draw. Skia, .NET MAUI, and raylib support the full surface natively. See the [Shapes](shapes-apos.shapes.md) page for setup.

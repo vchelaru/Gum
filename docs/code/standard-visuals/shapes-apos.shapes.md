@@ -178,17 +178,148 @@ public class Game1 : Game
 
 ## CircleRuntime and RectangleRuntime
 
-`CircleRuntime` and `RectangleRuntime` are the current shape runtimes. Each has a **fill** and an **outline (stroke)**, plus optional gradient, drop shadow, and dashed-outline effects.
+`CircleRuntime` and `RectangleRuntime` are the current shape runtimes. Each has a **fill** and an **outline (stroke)**, plus optional gradient, drop shadow, dashed-outline, and anti-aliasing effects. `RectangleRuntime` adds rounded-corner support.
 
-* **Fill** — `FillColor` sets the fill color; `FillRed` / `FillGreen` / `FillBlue` / `FillAlpha` set individual channels (0–255). `IsFilled = false` hides the fill. By default `FillColor` is transparent, so a freshly-constructed shape renders as an outline only — assign a visible `FillColor` to light up the fill.
-* **Outline (stroke)** — `StrokeColor` sets the outline color (with `StrokeRed` / `StrokeGreen` / `StrokeBlue` / `StrokeAlpha` channels); `StrokeWidth` controls thickness and `StrokeWidthUnits` controls how that thickness is interpreted. `StrokeWidth = 0` hides the outline.
-* **Geometry** — `CircleRuntime` is sized to fit within its `Width` / `Height` bounds; `RectangleRuntime` is sized by `Width` / `Height` with an optional uniform or per-corner `CornerRadius`.
-
-The gradient, drop shadow, and dashed-outline properties match the names in the tables below.
+A freshly-constructed shape renders as a **stroke-only outline**: `FillColor` defaults to transparent, `StrokeColor` defaults to white, and `StrokeWidth` defaults to `1`. Assign a visible `FillColor` to light up the fill, or set `StrokeWidth` to `0` to hide the outline. A `CircleRuntime` is 32 × 32 by default; a `RectangleRuntime` is 50 × 50.
 
 {% hint style="info" %}
-On MonoGame, KNI, and FNA the outline and geometry render without the shapes package, but the fill and effects (gradient, drop shadow, dashed stroke, anti-aliasing, `Blend`) only draw once the `Gum.Shapes.<platform>` package is added — otherwise they are silent no-ops. Skia, .NET MAUI, and raylib support the full surface natively.
+On MonoGame, KNI, and FNA the outline and geometry render without the shapes package, but the fill and effects (gradient, drop shadow, dashed stroke, anti-aliasing, `Blend`) only draw once the `Gum.Shapes.<platform>` package is added — otherwise the values round-trip but silently do not draw. Skia and .NET MAUI support the full surface natively; raylib supports a near-full subset (see [Shape Support Across Platforms](../../gum-tool/gum-elements/skia-standard-elements/shapes-platform-support.md)).
 {% endhint %}
+
+The property tables in this section describe both runtimes. Properties marked **Rectangle only** do not exist on `CircleRuntime`.
+
+### Geometry
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `Width`, `Height` | `float` | Size of the shape. A `CircleRuntime` is drawn to fit within these bounds. (`Width` / `Height` use the standard `WidthUnits` / `HeightUnits` from [GraphicalUiElement](../gum-code-reference/graphicaluielement/README.md), like any other visual.) |
+| `CornerRadius` | `float` | **Rectangle only.** Uniform corner radius, in pixels. `0` produces square corners. |
+| `CornerRadiusUnits` | `DimensionUnitType` | **Rectangle only.** How `CornerRadius` (and the per-corner overrides) are interpreted. `Absolute` is in pixels; `ScreenPixel` divides by the camera zoom each frame so corners hold a constant on-screen size. |
+| `CustomRadiusTopLeft`, `CustomRadiusTopRight`, `CustomRadiusBottomLeft`, `CustomRadiusBottomRight` | `float?` | **Rectangle only.** Per-corner radius overrides. When non-null, that corner uses the override; when `null` (the default), the corner falls back to `CornerRadius`. Lets a single rectangle render asymmetric corners. |
+
+{% hint style="info" %}
+A `CircleRuntime` also exposes a `Radius` property, but sizing through `Width` / `Height` is recommended — it keeps shapes consistent with every other visual and participates in the layout system. Setting `Radius` simply sets `Width` and `Height` to `Radius × 2`.
+{% endhint %}
+
+### Fill
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `FillColor` | `Color` | The fill color. Defaults to transparent, so a freshly-constructed shape renders as an outline only — assign a visible color to light up the fill. |
+| `FillRed`, `FillGreen`, `FillBlue`, `FillAlpha` | `int` | Individual fill channels (0–255). |
+| `IsFilled` | `bool` | Gates the fill. `true` by default; setting it to `false` renders an outline-only shape without discarding `FillColor`. |
+
+### Outline (stroke)
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `StrokeColor` | `Color` | The outline color. Defaults to white. |
+| `StrokeRed`, `StrokeGreen`, `StrokeBlue`, `StrokeAlpha` | `int` | Individual stroke channels (0–255). |
+| `StrokeWidth` | `float` | Outline thickness. Defaults to `1`. `0` hides the outline. |
+| `StrokeWidthUnits` | `DimensionUnitType` | How `StrokeWidth` is interpreted. `Absolute` is in world pixels; `ScreenPixel` divides by the camera zoom each frame so the outline holds a constant on-screen size regardless of zoom. |
+
+### Gradient
+
+When `UseGradient` is `true`, the shape is filled with a gradient between `Color1` and `Color2` instead of the solid `FillColor`. The endpoints (`GradientX1`/`GradientY1` and `GradientX2`/`GradientY2`) define the gradient vector for `Linear` gradients; for `Radial` gradients only the start point and the radius properties are used.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `UseGradient` | `bool` | If `true`, the gradient properties drive the fill. If `false`, the solid `FillColor` is used. |
+| `GradientType` | `GradientType` | `Linear` (the default) or `Radial`. |
+| `Color1` | `Color` | The first gradient color. Shortcut for setting `Red1`, `Green1`, `Blue1`, and `Alpha1`. |
+| `Red1`, `Green1`, `Blue1`, `Alpha1` | `int` | Channels for the first gradient color (0–255). |
+| `Color2` | `Color` | The second gradient color. Shortcut for setting `Red2`, `Green2`, `Blue2`, and `Alpha2`. |
+| `Red2`, `Green2`, `Blue2`, `Alpha2` | `int` | Channels for the second gradient color (0–255). |
+| `GradientX1`, `GradientY1` | `float` | Coordinates of the gradient start point. Interpretation depends on the matching `Units` value. |
+| `GradientX1Units`, `GradientY1Units` | `GeneralUnitType` | Coordinate system used to interpret `GradientX1` / `GradientY1`. |
+| `GradientX2`, `GradientY2` | `float` | Coordinates of the gradient end point (`Linear` gradients only). |
+| `GradientX2Units`, `GradientY2Units` | `GeneralUnitType` | Coordinate system used to interpret `GradientX2` / `GradientY2`. |
+| `GradientInnerRadius` | `float` | Inner radius (`Radial` gradients only). Inside this radius the shape is filled with `Color1`. |
+| `GradientInnerRadiusUnits` | `DimensionUnitType` | Unit type for `GradientInnerRadius`. `Absolute` (pixels), `PercentageOfParent` (percentage of the shape's `Width`, so `100` = `Width`), or `RelativeToParent` (pixel offset from the shape's `Width`, so `0` = `Width` and `-10` = `Width − 10`). The shape's natural inscribed radius is `Width / 2` — to fit a circle inside the shape, use `50` (`PercentageOfParent`) or `-Width/2` (`RelativeToParent`). |
+| `GradientOuterRadius` | `float` | Outer radius at which the gradient has fully blended to `Color2` (`Radial` gradients only). |
+| `GradientOuterRadiusUnits` | `DimensionUnitType` | Unit type for `GradientOuterRadius`. Same options as `GradientInnerRadiusUnits`. |
+
+### Drop shadow
+
+A shape can render a drop shadow behind itself. The shadow is only drawn when `HasDropshadow` is `true`. `DropshadowOffsetX` / `DropshadowOffsetY` position the shadow relative to the shape, and `DropshadowBlur` controls how soft the edges are.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `HasDropshadow` | `bool` | Whether the drop shadow is rendered. |
+| `DropshadowColor` | `Color` | The drop shadow color. Shortcut for the four channel properties below. |
+| `DropshadowRed`, `DropshadowGreen`, `DropshadowBlue`, `DropshadowAlpha` | `int` | Drop shadow color channels (0–255). |
+| `DropshadowOffsetX`, `DropshadowOffsetY` | `float` | Horizontal / vertical offset of the shadow, in pixels. |
+| `DropshadowBlur` | `float` | Blur radius, in pixels. `0` is a sharp shadow; larger values soften the edges. This is a single scalar (matching CSS `box-shadow` blur), not a per-axis pair. |
+
+### Dashed stroke
+
+Setting both `StrokeDashLength` and `StrokeGapLength` to non-zero values renders the outline as a dashed line instead of a solid one.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `StrokeDashLength` | `float` | Length of each dash segment, in `StrokeWidthUnits`. `0` (the default) produces a solid stroke. |
+| `StrokeGapLength` | `float` | Length of each gap between dashes, in `StrokeWidthUnits`. Ignored when `StrokeDashLength` is `0`. |
+
+{% hint style="info" %}
+Both `StrokeDashLength` and `StrokeGapLength` must be greater than `0` for dashed rendering to engage. The dash perimeter walk assumes uniform corners — dashed strokes are not aware of the per-corner `CustomRadius*` overrides.
+{% endhint %}
+
+### Anti-aliasing and blend
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `IsAntialiased` | `bool` | When `true` (the default) the shape's edge is anti-aliased. Set it to `false` for crisp, hard-edged rasterization — useful for pixel-art / retro themes and hairline borders. |
+| `Blend` | `Gum.RenderingLibrary.Blend` | Blend mode used when drawing the shape. Defaults to `Normal`. Other values: `Additive`, `Replace`, `SubtractAlpha`, `ReplaceAlpha`, `MinAlpha`. |
+
+### Examples
+
+A filled circle with a soft drop shadow:
+
+```csharp
+// Initialize
+var circle = new CircleRuntime();
+circle.Width = 100;
+circle.Height = 100;
+circle.FillColor = Color.Red;
+circle.HasDropshadow = true;
+circle.DropshadowColor = Color.Black;
+circle.DropshadowOffsetX = 4;
+circle.DropshadowOffsetY = 4;
+circle.DropshadowBlur = 6;
+container.Children.Add(circle);
+```
+
+A rounded rectangle filled with a linear gradient:
+
+```csharp
+// Initialize
+var rectangle = new RectangleRuntime();
+rectangle.Width = 200;
+rectangle.Height = 80;
+rectangle.CornerRadius = 12;
+rectangle.FillColor = Color.White; // light up the fill so the gradient draws
+rectangle.UseGradient = true;
+rectangle.Color1 = Color.Blue;
+rectangle.Color2 = Color.Green;
+container.Children.Add(rectangle);
+```
+
+A dashed, stroke-only rectangle with asymmetric corners:
+
+```csharp
+// Initialize
+var rectangle = new RectangleRuntime();
+rectangle.Width = 160;
+rectangle.Height = 48;
+rectangle.IsFilled = false;          // outline only
+rectangle.StrokeColor = Color.White;
+rectangle.StrokeWidth = 2;
+rectangle.StrokeDashLength = 8;
+rectangle.StrokeGapLength = 4;
+rectangle.CornerRadius = 4;
+rectangle.CustomRadiusTopRight = 16; // override a single corner
+container.Children.Add(rectangle);
+```
 
 ## Obsolete shape runtimes
 
@@ -196,7 +327,7 @@ On MonoGame, KNI, and FNA the outline and geometry render without the shapes pac
 **`ColoredCircleRuntime`, `RoundedRectangleRuntime`, `ColoredRectangleRuntime`, and `SolidRectangleRuntime` are obsolete shims being phased out.** Use `CircleRuntime` (for `ColoredCircleRuntime`) and `RectangleRuntime` (for the rectangle variants, with `CornerRadius` covering `RoundedRectangleRuntime`) instead. For the property mapping and the automated code fix, see [Migrating to 2026 June](../../gum-tool/upgrading/migrating-to-2026-june.md). `ArcRuntime` is **not** obsolete — it has no `CircleRuntime` / `RectangleRuntime` equivalent and remains the way to draw a circular arc.
 {% endhint %}
 
-The property tables below document the shared surface of the obsolete shims and `ArcRuntime`, which derive from `AposShapeRuntime`. The equivalent fill and outline properties on `CircleRuntime` / `RectangleRuntime` are described above.
+The property tables below document the shared surface of the obsolete shims and `ArcRuntime`, which derive from `AposShapeRuntime`. They use older names that differ from the current shapes — for example `Color` (the solid fill) instead of `FillColor`, and per-axis `DropshadowBlurX` / `DropshadowBlurY` instead of the scalar `DropshadowBlur`. For the current `CircleRuntime` / `RectangleRuntime` surface, use the [CircleRuntime and RectangleRuntime](#circleruntime-and-rectangleruntime) tables above.
 
 ### Common Properties
 
