@@ -14,7 +14,7 @@ A theme restyles Forms controls by subclassing each V3 default visual, swapping 
 1. Wire KernSmith if the theme uses dynamic fonts: `CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(gd);`
 2. `BmfcSave.AddCharacters("…")` for any non-ASCII glyphs visuals will render. Must come before any text rendering — KernSmith only bakes characters it knows about at atlas-creation time.
 3. Register embedded TTFs via `KernSmithFontCreator.RegisterFont(family, bytes, style)`. See "Icon fonts" below.
-4. If your visuals use Apos.Shapes runtimes (`RoundedRectangleRuntime`, `ColoredCircleRuntime`, etc.), `if (!ShapeRenderer.Self.IsInitialized) ShapeRenderer.Self.Initialize();` — consumers shouldn't have to know your theme reaches for shapes internally.
+4. If your visuals use `RectangleRuntime` / `CircleRuntime` features backed by Apos.Shapes (rounded corners, circles, drop shadows — i.e. the `MonoGameGumShapes` package), `if (!ShapeRenderer.Self.IsInitialized) ShapeRenderer.Self.Initialize();` — consumers shouldn't have to know your theme reaches for shapes internally.
 5. Populate `Styling.ActiveStyle` (Text.Normal/Strong, Colors, optional SpriteSheet override) and `FrameworkElement.DefaultFormsTemplates[typeof(Button)] = new VisualTemplate((_, c) => new MyButtonVisual(tryCreateFormsObject: c));` for each restyled control.
 
 ## Visual-primitive options
@@ -32,7 +32,7 @@ Pick what matches the design. The replacement pattern below applies regardless o
 Each visual subclasses `Gum.Forms.DefaultVisuals.V3.*Visual`. In its constructor:
 
 1. **Detach** the children you're replacing — typically `Background.Parent = null; FocusedIndicator.Parent = null;` (and `ClipContainer.Parent = null;` for TextBox-style controls — see "ClipContainer reordering").
-2. **Add** the replacement children — NineSlice with new textures, Apos shapes, ColoredRectangles, whatever fits.
+2. **Add** the replacement children — NineSlice with new textures, `RectangleRuntime` / `CircleRuntime` shapes, whatever fits. (Mind the split fill/stroke surface: a fresh `RectangleRuntime`/`CircleRuntime` defaults to a *transparent fill + 1px white outline*, so a solid fill needs `FillColor = c; StrokeWidth = 0;` and an outline/ring needs `IsFilled = false; StrokeColor = c;`. `CornerRadius` rounds a Rectangle; both are Apos-backed when `MonoGameGumShapes` is referenced.)
 3. **Reattach** anything you detached for ordering reasons (TextInstance, ClipContainer) last so it renders on top of the new background layer.
 4. **Re-wire state callbacks with `=` (not `+=`)** so the base's color-pumping into the now-detached children is fully replaced. Each `States.{Enabled, Highlighted, Pushed, Focused, …}.Apply` becomes a fresh lambda that mutates your replacement children.
 
@@ -44,7 +44,7 @@ Different controls have different state sets — Button has 7, TextBox has 4 (no
 
 ## Dashed strokes are built into Apos.Shapes
 
-Need a dotted / dashed outline (Win95 focus rectangle, marching-ants selection, etc.)? Don't spawn many small `ColoredRectangleRuntime` "dot" instances along the edges. `RoundedRectangleRuntime` (and the other Apos shape runtimes) expose `StrokeDashLength` and `StrokeGapLength`. Set `IsFilled = false`, `StrokeWidth = 1`, both dash properties to your desired pattern, and the shape renders as a properly-rasterized dashed stroke — one node in the render tree, sized via the usual `RelativeToParent` units, with no per-frame dot bookkeeping and no sensitivity to layout timing.
+Need a dotted / dashed outline (Win95 focus rectangle, marching-ants selection, etc.)? Don't spawn many small `RectangleRuntime` "dot" instances along the edges. `RectangleRuntime` / `CircleRuntime` (and the other Apos shape runtimes) expose `StrokeDashLength` and `StrokeGapLength`. Set `IsFilled = false`, `StrokeWidth = 1`, both dash properties to your desired pattern, and the shape renders as a properly-rasterized dashed stroke — one node in the render tree, sized via the usual `RelativeToParent` units, with no per-frame dot bookkeeping and no sensitivity to layout timing.
 
 The dotted-rectangle materialization approach (place N tiny rectangles at fixed offsets) looks superficially simpler, but ends up needing `GetAbsoluteWidth()` to compute N — and that returns stale values when the consumer sets `control.Width = X; control.IsFocused = true;` back-to-back: the state callback fires before the next layout pass, so the dot count is computed off the construction-time size. The visible artifact is a half-drawn focus rect that "self-heals" once a hover fires another state change after layout has run.
 
@@ -52,7 +52,7 @@ The dotted-rectangle materialization approach (place N tiny rectangles at fixed 
 
 `ContainerRuntime`'s constructor sets `HasEvents = true`. If you wrap a control's chrome in a sub-container to constrain a fill primitive to a sub-region of the parent (the 13×13 checkbox box inside a 200×16 CheckBox visual, a dropdown-button-sized area inside a ComboBox, the slider-track inside the SliderVisual root), that wrapper will capture clicks that should bubble up to the InteractiveGue root — the control will look right and refuse to register clicks on the wrapped area.
 
-**Why:** `Bubblegum` and `DarkPro` never hit this because their primitives are single Apos.Shapes rects positioned and sized directly on the visual root (no wrapper needed). A theme that builds its chrome from multiple ColoredRectangleRuntime strips (bevels, dotted focus rings, etc.) typically needs a sized wrapper, and that's where the gotcha bites.
+**Why:** `Bubblegum` and `DarkPro` never hit this because their primitives are single `RectangleRuntime`/`CircleRuntime` shapes positioned and sized directly on the visual root (no wrapper needed). A theme that builds its chrome from multiple `RectangleRuntime` strips (Retro 95's bevels, dotted focus rings, etc.) typically needs a sized wrapper, and that's where the gotcha bites.
 
 **How to apply:** Any time you write `new ContainerRuntime()` inside a visual subclass, immediately set `HasEvents = false` unless you specifically want that container to absorb clicks (rare — usually only the Forms-control root and explicit drag-handle InteractiveGues should). Same goes for any other `InteractiveGue`-derived wrapper you introduce.
 
@@ -89,20 +89,20 @@ Wiring (all four steps required):
 
 Size the glyph's `TextRuntime` `Absolute`, **larger** than the box it sits in (~1.5x), centered. DejaVu Sans Mono and most icon-coverage fonts aren't truly monospaced for non-Latin — symbol glyphs have wider advance widths than ASCII, and a runtime sized exactly to the box clips or drops them.
 
-Building glyphs from Apos.Shapes primitives (`LineRuntime` strokes, rotated `RoundedRectangleRuntime`s) is technically possible but rarely worth it once you have more than one or two glyphs. Stick with DejaVu unless you have a strong reason — the icon font's ~600 KB is the cheapest entry point in the theme.
+Building glyphs from Apos.Shapes primitives (`LineRuntime` strokes, rotated `RectangleRuntime`s) is technically possible but rarely worth it once you have more than one or two glyphs. Stick with DejaVu unless you have a strong reason — the icon font's ~600 KB is the cheapest entry point in the theme.
 
 ## Drop shadows: use the native Apos.Shapes API, not stacked rects
 
-Apos.Shapes runtimes (`RoundedRectangleRuntime`, `ColoredCircleRuntime`, `ArcRuntime`) expose a native Gaussian drop shadow via `AposShapeRuntime`. Use it. Do not stack progressively-larger, fainter shapes underneath the body to fake a falloff — that approach is a holdover from a misreading of the Apos.Shapes capabilities and produces visible concentric banding because each layer is a hard-edged shape.
+Apos.Shapes-backed runtimes (`RectangleRuntime`, `CircleRuntime`) expose a native Gaussian drop shadow. Use it. Do not stack progressively-larger, fainter shapes underneath the body to fake a falloff — that approach is a holdover from a misreading of the Apos.Shapes capabilities and produces visible concentric banding because each layer is a hard-edged shape.
 
 Properties (all forwarded from the runtime to the underlying renderable):
 
 - `HasDropshadow` (`bool`) — master switch. Toggle per state.
 - `DropshadowColor` (`Color`) — RGBA. Match the CSS source alpha directly (`.4 alpha = 102 / 255`).
 - `DropshadowOffsetX`, `DropshadowOffsetY` (`float`) — pixel offset of the shadow from the body.
-- `DropshadowBlurX`, `DropshadowBlurY` (`float`) — blur radius per axis. Match the CSS `box-shadow` blur radius value directly. `0` = sharp.
+- `DropshadowBlur` (`float`) — blur radius. Match the CSS `box-shadow` blur radius value directly. `0` = sharp.
 
-Set the shadow once at construction (on the same `RoundedRectangleRuntime` that paints the body fill), then flip `HasDropshadow` in state callbacks for press/disabled — exactly the way state code already toggles `Visible`. No separate child shape, no z-order to manage.
+Set the shadow once at construction (on the same `RectangleRuntime` that paints the body fill), then flip `HasDropshadow` in state callbacks for press/disabled — exactly the way state code already toggles `Visible`. No separate child shape, no z-order to manage.
 
 CSS-to-Apos translation cheatsheet — `box-shadow: <offsetX> <offsetY> <blur> rgba(<r>,<g>,<b>,<a>)` maps to:
 
@@ -110,8 +110,7 @@ CSS-to-Apos translation cheatsheet — `box-shadow: <offsetX> <offsetY> <blur> r
 fill.HasDropshadow = true;
 fill.DropshadowOffsetX = <offsetX>;
 fill.DropshadowOffsetY = <offsetY>;
-fill.DropshadowBlurX   = <blur>;
-fill.DropshadowBlurY   = <blur>;
+fill.DropshadowBlur    = <blur>;
 fill.DropshadowColor   = new Color(r, g, b, (int)(a * 255));
 ```
 
@@ -119,7 +118,7 @@ The CSS `spread` argument (the optional fourth length value) has no direct equiv
 
 **Visual fidelity vs numerical fidelity.** A 1:1 number translation will not look the same as the CSS source. Two pipeline differences stack:
 
-- **Blur kernel semantics.** CSS treats `blur-radius` roughly as Gaussian standard deviation; Apos.Shapes interprets `DropshadowBlurX/Y` differently. Same value → different falloff width → different perceived softness.
+- **Blur kernel semantics.** CSS treats `blur-radius` roughly as Gaussian standard deviation; Apos.Shapes interprets `DropshadowBlur` differently. Same value → different falloff width → different perceived softness.
 - **Color space.** Browsers composite alpha in linear RGB (perceptually correct). MonoGame / Apos.Shapes composite in sRGB. Identical alpha math reads markedly darker in a browser; the in-game render comes out fainter.
 
 Treat CSS values as a *starting point* — typically you'll bump alpha by ~1.5–2× and tweak blur by eye until the perceived weight matches the source. The Bubblegum Button shadow ended at alpha 160 / blur 12, up from the spec's 102 / 10.
@@ -151,7 +150,7 @@ The ring living outside the body means painting it on top doesn't obscure any in
 
 ## Rounded outline + rectangular clip container: paint the border last
 
-Gum's clip containers are axis-aligned rectangles. They do not clip to rounded paths. If a themed container has a rounded outline (`RoundedRectangleRuntime` border) AND a child clip container that renders content (text, list items, hovered rows with their own pink fills), naively painting the border *behind* the clip container makes content visibly poke past the rounded outline at the corners.
+Gum's clip containers are axis-aligned rectangles. They do not clip to rounded paths. If a themed container has a rounded outline (`RectangleRuntime` border with `CornerRadius`) AND a child clip container that renders content (text, list items, hovered rows with their own pink fills), naively painting the border *behind* the clip container makes content visibly poke past the rounded outline at the corners.
 
 Fix: reattach so the **border renders last** (on top of the clip container). The stroke masks the corner-region content with the theme's accent color, and the result reads as rounded clipping even though no actual rounded clipping is happening.
 
@@ -183,9 +182,9 @@ Pattern (see Bubblegum's `BubblegumTextInputDecoration` for the worked example):
 ```csharp
 internal sealed class MyTextInputDecoration
 {
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public MyTextInputDecoration(TextBoxBaseVisual host)
     {
