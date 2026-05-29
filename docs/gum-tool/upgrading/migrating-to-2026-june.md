@@ -266,7 +266,8 @@ circle.AddToRoot();
 
 ```csharp
 CircleRuntime circle = new CircleRuntime();
-circle.Radius = 50; // or set Width = 100; Height = 100;
+circle.Width = 100;  // restore the previous Skia default (Radius is now obsolete)
+circle.Height = 100;
 circle.AddToRoot();
 ```
 
@@ -379,6 +380,43 @@ The `Gum.Analyzers` package ships an automated code fix (`GUM002`) — place the
 
 The obsolete types will remain in place until at least the December 2026 release. After that window, they may be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
 
+### Legacy single-color members and `Radius` on `CircleRuntime` / `RectangleRuntime` are now `[Obsolete]`
+
+`CircleRuntime` and `RectangleRuntime` are the new fill + stroke shapes, so their inherited single-color members — `Color`, `Red`, `Green`, `Blue`, `Alpha` — and `CircleRuntime.Radius` are superseded by the fill/stroke color API and by `Width` / `Height`. Each is now `[Obsolete]` on **every** backend (MonoGame, FNA, KNI, Raylib, Skia). Existing code keeps compiling, but each reference now produces a `CS0618` compiler warning.
+
+{% hint style="info" %}
+These members were already obsolete on the XNA-likes (MonoGame / FNA / KNI) earlier in this cycle; the June 2026 change extends the same deprecation to Raylib and Skia so the two shapes present one consistent API. If you build for Raylib or Skia you may see new `CS0618` warnings on code that compiled cleanly before.
+{% endhint %}
+
+The deprecation applies only to `CircleRuntime` / `RectangleRuntime`. The same members stay non-obsolete on the legacy single-color shapes (`ColoredCircleRuntime`, `RoundedRectangleRuntime`, `ArcRuntime`, etc.), where they remain the primary API — on Skia those shapes share the `SkiaShapeRuntime` base, which is deliberately left unchanged.
+
+| Member | Replacement |
+| --- | --- |
+| `Color` | `StrokeColor` (the legacy `Color` painted the outline) — or `FillColor` for a filled shape |
+| `Red` / `Green` / `Blue` / `Alpha` | `StrokeRed` / `StrokeGreen` / `StrokeBlue` / `StrokeAlpha` — or the matching `Fill…` channels for a filled shape |
+| `CircleRuntime.Radius` | `Width` / `Height` (the setter already proxies `Width = Height = Radius * 2`) |
+
+❌ Old:
+
+```csharp
+// Initialize
+var circle = new CircleRuntime();
+circle.Radius = 28;          // obsolete
+circle.Color = Color.Yellow; // obsolete legacy single-color member (painted the outline)
+circle.AddToRoot();
+```
+
+✅ New:
+
+```csharp
+// Initialize
+var circle = new CircleRuntime();
+circle.Width = 56;
+circle.Height = 56;
+circle.StrokeColor = Color.Yellow; // or FillColor for a filled disc
+circle.AddToRoot();
+```
+
 ### Breaking: `UseGradient` no longer paints over a transparent fill
 
 Issue #2956 — `UseGradient` is a *pattern* flag, not a *visibility* flag. A fill or outline whose effective color alpha is 0 (e.g. the default-transparent fill on a stroke-only plain `CircleRuntime` / `RectangleRuntime`) no longer paints its gradient. This brings the Apos.Shapes (MonoGame/FNA/KNI) and raylib backends in line with the SkiaGum backend, which has always enforced this naturally — `SKPaint.Color.alpha` modulates the shader output, so a transparent paint color suppresses the gradient.
@@ -389,7 +427,8 @@ Before the fix, the same code rendered differently across backends: Apos and ray
 
 ```csharp
 var circle = new CircleRuntime();
-circle.Radius = 28;
+circle.Width = 56;
+circle.Height = 56;
 circle.UseGradient = true;
 circle.Color1 = Color.Black;
 circle.Color2 = Color.White;
@@ -401,7 +440,8 @@ circle.Color2 = Color.White;
 
 ```csharp
 var circle = new CircleRuntime();
-circle.Radius = 28;
+circle.Width = 56;
+circle.Height = 56;
 circle.FillColor = Color.White;   // light the fill up — opaque, RGB irrelevant
 circle.UseGradient = true;
 circle.Color1 = Color.Black;
