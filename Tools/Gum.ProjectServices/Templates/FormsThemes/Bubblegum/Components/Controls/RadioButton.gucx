@@ -14,9 +14,6 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
-    <Variable Type="float" Name="FocusedIndicator.Radius" SetsValue="true">
-      <Value xsi:type="xsd:float">12</Value>
-    </Variable>
     <Variable Type="int" Name="FocusedIndicator.StrokeAlpha" SetsValue="true">
       <Value xsi:type="xsd:int">90</Value>
     </Variable>
@@ -72,9 +69,6 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="OuterBorder.Parent" SetsValue="true" />
-    <Variable Type="float" Name="OuterBorder.Radius" SetsValue="true">
-      <Value xsi:type="xsd:float">10</Value>
-    </Variable>
     <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
       <Value xsi:type="xsd:int">204</Value>
     </Variable>
@@ -138,9 +132,6 @@
     <Variable Type="string" Name="Radio.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">RadioBackground</Value>
     </Variable>
-    <Variable Type="float" Name="Radio.Radius" SetsValue="true">
-      <Value xsi:type="xsd:float">4</Value>
-    </Variable>
     <Variable Type="float" Name="Radio.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -188,9 +179,6 @@
     </Variable>
     <Variable Type="bool" Name="RadioBackground.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
-    </Variable>
-    <Variable Type="float" Name="RadioBackground.Radius" SetsValue="true">
-      <Value xsi:type="xsd:float">10</Value>
     </Variable>
     <Variable Type="float" Name="RadioBackground.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -25,8 +24,8 @@ namespace Gum.ProjectServices.Tests;
 ///     would draw an unwanted one).
 ///   - outline (IsFilled false): Red/Green/Blue/Alpha -> Stroke*, IsFilled=false, StrokeWidth left as-is.
 /// RoundedRectangle's CornerRadius / dropshadow / gradient carry across unchanged (Rectangle now
-/// exposes CornerRadius). ColoredCircle sizes by Width/Height but a Circle renders by Radius, so
-/// Radius = Width/2 is written for each state that sizes the circle.
+/// exposes CornerRadius). ColoredCircle and Circle both size by Width/Height (since #2947), so
+/// the size variables carry across unchanged.
 /// VariableReferences targeting the Styles swatch colors (Styles.X.Red) are repointed to .FillX.
 /// </summary>
 public class BubblegumShapeMigrationHelper
@@ -74,7 +73,7 @@ public class BubblegumShapeMigrationHelper
                 }
 
                 bool isFilled = ResolveIsFilled(element, instance.Name);
-                MigrateInstance(element, instance.Name, newType, isFilled);
+                MigrateInstance(element, instance.Name, isFilled);
                 instance.BaseType = newType;
                 changed = true;
             }
@@ -115,7 +114,7 @@ public class BubblegumShapeMigrationHelper
         return true;
     }
 
-    private static void MigrateInstance(ElementSave element, string instanceName, string newType, bool isFilled)
+    private static void MigrateInstance(ElementSave element, string instanceName, bool isFilled)
     {
         string prefix = instanceName + ".";
         string colorTarget = isFilled ? "Fill" : "Stroke";
@@ -139,18 +138,6 @@ public class BubblegumShapeMigrationHelper
             // Drop dash variables that don't exist on the v3 Rectangle / Circle surface.
             state.Variables.RemoveAll(v => v.Name == prefix + "StrokeDashLength"
                 || v.Name == prefix + "StrokeGapLength");
-
-            // ColoredCircle sized by Width; a Circle renders by Radius. Write Radius for each state
-            // that sizes the circle so the visual diameter is preserved.
-            if (newType == "Circle")
-            {
-                VariableSave? widthVariable = state.Variables.FirstOrDefault(v => v.Name == prefix + "Width");
-                if (widthVariable?.Value != null)
-                {
-                    float width = Convert.ToSingle(widthVariable.Value, CultureInfo.InvariantCulture);
-                    SetVariable(state, prefix + "Radius", "float", width / 2f);
-                }
-            }
         }
 
         StateSave defaultState = element.DefaultState!;
