@@ -318,7 +318,11 @@ public class ArcRuntime : GraphicalUiElement
     }
 
     float _dropshadowBlurX;
-    /// <inheritdoc cref="LineArc.DropshadowBlurX"/>
+    /// <summary>
+    /// Deprecated on <c>ArcRuntime</c> — use <see cref="DropshadowBlur"/> (scalar). Kept
+    /// functional for back-compat; the arc surface is moving to a single isotropic blur.
+    /// </summary>
+    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value.")]
     public float DropshadowBlurX
     {
         get => _dropshadowBlurX;
@@ -331,7 +335,8 @@ public class ArcRuntime : GraphicalUiElement
     }
 
     float _dropshadowBlurY;
-    /// <inheritdoc cref="LineArc.DropshadowBlurY"/>
+    /// <inheritdoc cref="DropshadowBlurX"/>
+    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value.")]
     public float DropshadowBlurY
     {
         get => _dropshadowBlurY;
@@ -344,18 +349,21 @@ public class ArcRuntime : GraphicalUiElement
     }
 
     /// <summary>
-    /// Isotropic blur radius in pixels for the dropshadow. Convenience wrapper that pushes a
-    /// single value to both <see cref="DropshadowBlurX"/> and <see cref="DropshadowBlurY"/>
-    /// (#2949), mirroring industry convention (CSS <c>box-shadow</c>, Figma, Photoshop) where
-    /// dropshadow blur is a single scalar. Reading returns the X axis.
+    /// Isotropic blur radius in pixels for the dropshadow. The user-facing arc surface mirrors
+    /// industry convention (CSS <c>box-shadow</c>, Figma, Photoshop) where dropshadow blur is a
+    /// single scalar (#2949). Pushes the value to both per-axis fields (deprecated on this
+    /// surface) and the contained <see cref="LineArc"/>. Reading returns the X axis.
     /// </summary>
     public float DropshadowBlur
     {
-        get => DropshadowBlurX;
+        get => _dropshadowBlurX;
         set
         {
-            DropshadowBlurX = value;
-            DropshadowBlurY = value;
+            _dropshadowBlurX = value;
+            _dropshadowBlurY = value;
+            ContainedLineArc.DropshadowBlurX = value;
+            ContainedLineArc.DropshadowBlurY = value;
+            NotifyPropertyChanged();
         }
     }
 
@@ -382,11 +390,15 @@ public class ArcRuntime : GraphicalUiElement
 
             // Pre-seed dropshadow offset/blur so toggling HasDropshadow = true at runtime
             // produces a visible shadow without further setup — same default the Skia/Apos
-            // branch lands via the SkiaShapeRuntime/AposShapeRuntime constructor.
+            // branch lands via the SkiaShapeRuntime/AposShapeRuntime constructor. Anisotropic
+            // seed (X = 0, Y = 3) is intentional; per-axis is deprecated but DropshadowBlur
+            // (scalar) can't express the asymmetry.
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
+#pragma warning disable CS0618
             DropshadowBlurX = 0;
             DropshadowBlurY = 3;
+#pragma warning restore CS0618
         }
     }
 
@@ -556,20 +568,41 @@ public class ArcRuntime
     }
 
     /// <summary>
-    /// Isotropic blur radius in pixels for the dropshadow. Convenience wrapper that pushes a
-    /// single value to both the inherited <see cref="SkiaShapeRuntime.DropshadowBlurX"/> and
-    /// <see cref="SkiaShapeRuntime.DropshadowBlurY"/> (#2949). Skia natively supports per-axis
-    /// blur, but the user-facing arc surface mirrors industry convention (CSS <c>box-shadow</c>,
-    /// Figma, Photoshop) where blur is a single scalar. Reading returns the X axis.
+    /// Isotropic blur radius in pixels for the dropshadow. The user-facing arc surface mirrors
+    /// industry convention (CSS <c>box-shadow</c>, Figma, Photoshop) where blur is a single
+    /// scalar (#2949); this pushes the value to both inherited per-axis fields. Skia natively
+    /// supports per-axis blur, so the per-axis members remain functional but are deprecated on
+    /// the arc surface (see below). Reading returns the X axis.
     /// </summary>
     public float DropshadowBlur
     {
-        get => DropshadowBlurX;
+        get => base.DropshadowBlurX;
         set
         {
-            DropshadowBlurX = value;
-            DropshadowBlurY = value;
+            base.DropshadowBlurX = value;
+            base.DropshadowBlurY = value;
         }
+    }
+
+    /// <summary>
+    /// Deprecated on <c>ArcRuntime</c> — use <see cref="DropshadowBlur"/> (scalar). Kept
+    /// functional (forwards to the inherited per-axis blur) for back-compat; the arc surface is
+    /// moving to a single isotropic blur. Per-axis blur stays as the real API on the legacy Skia
+    /// shapes (<c>RoundedRectangleRuntime</c> / <c>ColoredCircleRuntime</c>).
+    /// </summary>
+    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value.")]
+    public new float DropshadowBlurX
+    {
+        get => base.DropshadowBlurX;
+        set => base.DropshadowBlurX = value;
+    }
+
+    /// <inheritdoc cref="DropshadowBlurX"/>
+    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value.")]
+    public new float DropshadowBlurY
+    {
+        get => base.DropshadowBlurY;
+        set => base.DropshadowBlurY = value;
     }
 
     /// <summary>
@@ -626,8 +659,13 @@ public class ArcRuntime
 
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
+            // Anisotropic seed (X = 0, Y = 3) is intentional — the arc's default shadow blurs
+            // only vertically. Per-axis is deprecated on the public surface but kept here for
+            // that default; DropshadowBlur (scalar) can't express the asymmetry.
+#pragma warning disable CS0618
             DropshadowBlurX = 0;
             DropshadowBlurY = 3;
+#pragma warning restore CS0618
         }
     }
 

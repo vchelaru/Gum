@@ -36,16 +36,20 @@ public class ArcRuntimeTests
     }
 
     // #2949: ArcRuntime exposes a single isotropic DropshadowBlur (mirroring CSS box-shadow /
-    // Figma / Photoshop). Setting it writes both per-axis shims; reading returns the X axis.
+    // Figma / Photoshop). Setting the scalar fans the value out to both axes; asserted on the
+    // rendered shadow halo (GetShadowAntiAliasSize, the X axis) and the renderable's Y blur,
+    // not the deprecated per-axis runtime members. On Apos the runtime forwards straight to the
+    // renderable, so no PreRender is needed.
     [Fact]
-    public void DropshadowBlur_ShouldSetBothBlurXAndY()
+    public void DropshadowBlur_ShouldSetBothAxesOnRenderable()
     {
         ArcRuntime sut = new ArcRuntime();
 
         sut.DropshadowBlur = 5;
 
-        sut.DropshadowBlurX.ShouldBe(5);
-        sut.DropshadowBlurY.ShouldBe(5);
+        RenderableShapeBase shape = (RenderableShapeBase)sut.RenderableComponent;
+        shape.GetShadowAntiAliasSize(cameraZoom: 1f).ShouldBe(5);
+        shape.DropshadowBlurY.ShouldBe(5f);
         sut.DropshadowBlur.ShouldBe(5);
     }
 

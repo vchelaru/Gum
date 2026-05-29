@@ -447,6 +447,17 @@ public class CircleRuntimeTests
         sut.DropshadowAlpha.ShouldBe(40);
     }
 
+    // Scalar-blur collapse: the plain Circle exposes a single isotropic DropshadowBlur. The Skia
+    // ctor seeds it to 3 so a freshly-constructed runtime matches MonoGame/raylib (where the
+    // scalar already defaults to 3). Previously the Skia ctor seeded only the Y axis, leaving the
+    // scalar getter (which reads the X axis) reporting 0 — a cross-backend inconsistency.
+    [Fact]
+    public void DropshadowBlur_ShouldBe3_ByDefault()
+    {
+        CircleRuntime sut = new();
+        sut.DropshadowBlur.ShouldBe(3);
+    }
+
     [Fact]
     public void Dropshadow_TargetSwitch_ClearsPreviousSlot()
     {

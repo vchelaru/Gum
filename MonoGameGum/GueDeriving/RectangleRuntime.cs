@@ -1611,12 +1611,35 @@ public class RectangleRuntime : GraphicalUiElement
     /// <inheritdoc cref="CircleRuntime.DropshadowBlur"/>
     public float DropshadowBlur
     {
-        get => DropshadowBlurX;
+        get => base.DropshadowBlurX;
         set
         {
-            DropshadowBlurX = value;
-            DropshadowBlurY = value;
+            base.DropshadowBlurX = value;
+            base.DropshadowBlurY = value;
         }
+    }
+
+    /// <summary>
+    /// Obsolete on the plain <see cref="RectangleRuntime"/> — use <see cref="DropshadowBlur"/>.
+    /// Hidden shadow of the inherited per-axis blur, kept only so existing code compiles; the
+    /// new-shape contract exposes a single scalar (per-axis blur stays on the legacy Skia shapes
+    /// like <c>RoundedRectangleRuntime</c> / <c>ColoredCircleRuntime</c>).
+    /// </summary>
+    [Obsolete("Use DropshadowBlur (scalar). The plain Rectangle dropshadow blur is a single isotropic value by design.")]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public new float DropshadowBlurX
+    {
+        get => base.DropshadowBlurX;
+        set => base.DropshadowBlurX = value;
+    }
+
+    /// <inheritdoc cref="DropshadowBlurX"/>
+    [Obsolete("Use DropshadowBlur (scalar). The plain Rectangle dropshadow blur is a single isotropic value by design.")]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public new float DropshadowBlurY
+    {
+        get => base.DropshadowBlurY;
+        set => base.DropshadowBlurY = value;
     }
 
     /// <summary>
@@ -1793,10 +1816,12 @@ public class RectangleRuntime : GraphicalUiElement
             StrokeWidthUnits = DimensionUnitType.ScreenPixel;
 
             // Dropshadow off by default; pre-seed alpha/offset/blur so toggling HasDropshadow =
-            // true at runtime produces a visible shadow without further setup.
+            // true at runtime produces a visible shadow without further setup. Use the scalar
+            // DropshadowBlur (isotropic 3) so the default matches MonoGame/raylib; the previous
+            // DropshadowBlurY-only seed left the scalar getter (X axis) reading 0.
             DropshadowAlpha = 255;
             DropshadowOffsetY = 3;
-            DropshadowBlurY = 3;
+            DropshadowBlur = 3;
 
             Width = 50;
             Height = 50;

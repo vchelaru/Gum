@@ -331,8 +331,7 @@ internal class ArcsScreen : FrameworkElement
         soft.HasDropshadow = true;
         soft.DropshadowOffsetX = 14;
         soft.DropshadowOffsetY = 14;
-        soft.DropshadowBlurX = 4;
-        soft.DropshadowBlurY = 4;
+        soft.DropshadowBlur = 4;
         row.AddChild(soft);
 
         ArcRuntime hard = new();
@@ -344,8 +343,7 @@ internal class ArcsScreen : FrameworkElement
         hard.DropshadowColor = new Color(0, 0, 0, 160);
         hard.DropshadowOffsetX = 16;
         hard.DropshadowOffsetY = 16;
-        hard.DropshadowBlurX = 0;
-        hard.DropshadowBlurY = 0;
+        hard.DropshadowBlur = 0;
         row.AddChild(hard);
 
         ArcRuntime colored = new();
@@ -357,8 +355,7 @@ internal class ArcsScreen : FrameworkElement
         colored.DropshadowColor = new Color(220, 40, 160, 220);
         colored.DropshadowOffsetX = 16;
         colored.DropshadowOffsetY = 16;
-        colored.DropshadowBlurX = 6;
-        colored.DropshadowBlurY = 6;
+        colored.DropshadowBlur = 6;
         row.AddChild(colored);
 
         ArcRuntime fadedBody = new();
@@ -369,8 +366,7 @@ internal class ArcsScreen : FrameworkElement
         fadedBody.HasDropshadow = true;
         fadedBody.DropshadowOffsetX = 14;
         fadedBody.DropshadowOffsetY = 14;
-        fadedBody.DropshadowBlurX = 4;
-        fadedBody.DropshadowBlurY = 4;
+        fadedBody.DropshadowBlur = 4;
         row.AddChild(fadedBody);
 
         return row;
