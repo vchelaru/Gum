@@ -4,6 +4,11 @@ using Raylib_cs;
 using RenderingLibrary.Graphics;
 using Shouldly;
 
+// CircleRuntime's legacy single-color members (Color/Red/Green/Blue/Alpha) and Radius are now
+// [Obsolete] under the unified fill/stroke API, but this file exists to pin their back-compat
+// routing on the raylib backend — so CS0618 is silenced for the whole file.
+#pragma warning disable CS0618
+
 namespace RaylibGum.Tests.Runtimes;
 
 public class CircleRuntimeTests : BaseTestClass
