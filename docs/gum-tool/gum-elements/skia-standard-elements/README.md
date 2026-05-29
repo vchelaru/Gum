@@ -4,7 +4,11 @@
 
 Skia standard elements are a collection of elements which use SkiaSharp for rendering. Skia standard elements provide additional types of visuals supported by Gum, but not all runtimes support Skia standard elements.
 
-Skia adds advanced vector graphics support for shapes such as Arc, ColoredCircle, and RoundedRectangle. Skia also adds support for vector file formats such as SVG and Lottie.
+Skia adds advanced vector graphics support, including the **Arc** shape and vector file formats such as SVG and Lottie.
+
+{% hint style="info" %}
+The older **ColoredCircle**, **RoundedRectangle**, and **SolidRectangle** Skia shapes are being phased out. Use the core **Circle** and **Rectangle** standard elements instead — they support fill, outline, gradients, drop shadows, dashed strokes, and rounded corners, and are not Skia standard elements, so they work without adding Skia to your project. The old shapes remain available so existing projects keep working, but will be removed in a future release.
+{% endhint %}
 
 {% hint style="warning" %}
 Using Skia Standard Elements may limit which platforms can run your Gum project. For more information, see the [Shapes Platform Support](shapes-platform-support.md) page.

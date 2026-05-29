@@ -20,12 +20,12 @@ Sprite element is selected in the image above. Notice that since a **SourceFile*
 
 ### Standard Types
 
-* ![](<../../../.gitbook/assets/image (51).png>) Circle - circle outline. These are usually not used for UI, but can be used if you are defining collision in your Gum objects for a game.
-* ![](<../../../.gitbook/assets/image (53).png>) ColoredRectangle - filled-in rectangle. These are often used for solid-colored backgrounds and frames.
+* ![](<../../../.gitbook/assets/image (51).png>) Circle - a circle which can be filled in, outlined, or both. Often used for visualizations or for defining collision in your Gum objects for a game.
+* ![](<../../../.gitbook/assets/image (53).png>) ColoredRectangle - a legacy filled-in rectangle. New projects use **Rectangle** instead (which can be both filled and outlined); ColoredRectangle remains available for existing projects.
 * ![](<../../../.gitbook/assets/image (54).png>) Container - invisible object used to contain other objects. These are used to provide margins, change layouts (such as vertical vs horizontal stacking), and to organize your UI.
 * ![](<../../../.gitbook/assets/image (55).png>) NineSlice - visual object which uses nine sprites to create a resizable object from a source PNG (or portion of a PNG). The corner sprites (4) are not resized. The top, bottom, left, and right sprites are stretched on one axis. The middle sprite stretches both horizontally and vertically. These are used to create resizable frames.
 * ![](<../../../.gitbook/assets/image (56).png>) Polygon - polygon outline which can have any number of points. These are usually not used for UI, but can be used if you are defining collision in your Gum objects for a game.
-* ![](<../../../.gitbook/assets/image (57).png>) Rectangle - rectangle outline. These can be used for single-line frames or if you are defining collision in your Gum objects for a game.
+* ![](<../../../.gitbook/assets/image (57).png>) Rectangle - a rectangle which can be filled in, outlined, or both. Used for solid-colored backgrounds, frames, blocking out a UI, or for defining collision in your Gum objects for a game.
 * ![](<../../../.gitbook/assets/image (58).png>) Sprite - a visual object which displays a source PNG (or a portion of a PNG). These are used for icons, backgrounds, and other visual objects which are usually not resized dynamically.
 * ![](<../../../.gitbook/assets/image (59).png>) Text - a visual object which can display characters. These are used for any situation where text needs to be displayed such as labels and paragraphs.
 
