@@ -28,7 +28,7 @@ Creates a project pre-populated with the full Forms UI control set:
 Creates a minimal project with only the standard elements:
 
 - Subfolders: Screens, Components, Standards, Behaviors
-- 9 standard elements (Circle, ColoredRectangle, Component, Container, NineSlice, Polygon, Rectangle, Sprite, Text)
+- 8 standard elements (Circle, Component, Container, NineSlice, Polygon, Rectangle, Sprite, Text)
 - `ExampleSpriteFrame.png` (default NineSlice texture)
 
 ## Examples
