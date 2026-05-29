@@ -21,8 +21,8 @@ The detected version is displayed in the Code tab under "Project-Wide Code Gener
 | Version | Introduced | Changes |
 |---|---|---|
 | 0 | 2026.4.x | Baseline. Attribute system introduced. No breaking changes from prior releases. All existing namespace conventions are preserved. |
-| 1 | 2026.5.x | Runtime class namespace unification (non-breaking). Runtime classes like `TextRuntime`, `SpriteRuntime`, etc. move to the unified `Gum.GueDeriving` namespace. Old namespaces (`MonoGameGum.GueDeriving`, `SkiaGum.GueDeriving`) continue to work via compatibility shims marked `[Obsolete]`. See [Syntax Version 1](syntax-version-1.md) for details. |
-| 2 | 2026.5.x | Shape runtime collapse. `ColoredCircleRuntime`, `ColoredRectangleRuntime`, and `RoundedRectangleRuntime` are collapsed into `CircleRuntime` and `RectangleRuntime`, which now expose `FillColor`, `StrokeColor`, and `StrokeWidth` (and `CornerRadius` on `RectangleRuntime`). See PR #2769 / issue #2768. |
+| 1 | 2026.6.x | Runtime class namespace unification (non-breaking). Runtime classes like `TextRuntime`, `SpriteRuntime`, etc. move to the unified `Gum.GueDeriving` namespace. Old namespaces (`MonoGameGum.GueDeriving`, `SkiaGum.GueDeriving`) continue to work via compatibility shims marked `[Obsolete]`. See [Syntax Version 1](syntax-version-1.md) for details. |
+| 2 | 2026.6.x | Shape runtime collapse. `ColoredCircleRuntime`, `ColoredRectangleRuntime`, and `RoundedRectangleRuntime` are collapsed into `CircleRuntime` and `RectangleRuntime`, which now expose `FillColor`, `StrokeColor`, and `StrokeWidth` (and `CornerRadius` on `RectangleRuntime`). See PR #2769 / issue #2768. |
 | 3 | TBD | Layout enum namespace unification (breaking). Enums like `DimensionUnitType`, `ChildrenLayout`, `HorizontalAlignment`, etc. move to a unified namespace. The bundled Roslyn analyzer provides one-click migration. |
 
 When a new syntax version is introduced, the corresponding monthly migration page will document the specific changes. See the [runtime refactoring plan](../../contributing/runtime-refactoring.md) for full details.

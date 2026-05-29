@@ -2,17 +2,26 @@
 
 ## Introduction
 
-GumUI supports rendering vector shapes as visuals. The following shapes are supported.
+GumUI supports rendering vector shapes as visuals. The two primary shape runtimes are:
 
-* ArcRuntime
-* ColoredCircleRuntime
-* RoundedRectangleRuntime
+* `CircleRuntime` — a circle (or ellipse) sized by `Width` and `Height` (or `Radius`).
+* `RectangleRuntime` — a rectangle with an optional uniform or per-corner `CornerRadius`.
 
-## Adding NuGet packages
+Each shape has a **fill** and an **outline (stroke)**. The fill is controlled by `FillColor` (and `IsFilled`); the outline is controlled by `StrokeColor`, `StrokeWidth`, and `StrokeWidthUnits`. On top of fill and outline, shapes can render a gradient, a drop shadow, and a dashed outline.
+
+A third shape, `ArcRuntime`, draws a stroked circular arc. It has no direct `CircleRuntime` / `RectangleRuntime` equivalent and remains a current, supported shape.
+
+{% hint style="info" %}
+The fill + outline `CircleRuntime` / `RectangleRuntime` surface described on this page ships in the June 2026 release. Earlier releases used separate `ColoredCircleRuntime` and `RoundedRectangleRuntime` types (documented further down), which are now obsolete shims.
+{% endhint %}
+
+## Adding Shape Support (Recommended)
+
+On MonoGame, KNI, and FNA, an outlined shape (`StrokeColor`, `StrokeWidth`, `StrokeWidthUnits`) and the geometry properties (`Width`, `Height`, `Radius`, `CornerRadius`) render out of the box with no extra package. The fill and the richer effects require the shape support package for your platform (the `Gum.Shapes.*` package, which uses Apos.Shapes under the hood). We recommend installing it for most projects so that fill, gradient, drop shadow, dashed stroke, and anti-aliasing all draw. Without it, `FillColor` (and the fill channels), gradient (`UseGradient`), drop shadow (`HasDropshadow`), dashed stroke (`StrokeDashLength` / `StrokeGapLength`), anti-aliasing (`IsAntialiased`), and `Blend` are stored and round-trip but silently do not draw — nothing throws.
 
 {% tabs %}
 {% tab title="MonoGame" %}
-The Gum.Shapes.MonoGame NuGet package adds support for rendering shapes. Add the following NuGet package:
+The Gum.Shapes.MonoGame NuGet package adds fill and effect support for shapes. Add the following NuGet package:
 
 [https://www.nuget.org/packages/Gum.Shapes.MonoGame](https://www.nuget.org/packages/Gum.Shapes.MonoGame)
 
@@ -27,12 +36,10 @@ Or add through command line:
 ```bash
 dotnet add package Gum.Shapes.MonoGame
 ```
-
-Future versions of Gum may not require adding this package explicitly.
 {% endtab %}
 
 {% tab title="KNI" %}
-The Gum.Shapes.KNI NuGet package adds support for rendering shapes. Add the following NuGet package:
+The Gum.Shapes.KNI NuGet package adds fill and effect support for shapes. Add the following NuGet package:
 
 [https://www.nuget.org/packages/Gum.Shapes.KNI](https://www.nuget.org/packages/Gum.Shapes.KNI)
 
@@ -48,8 +55,6 @@ Or add through command line:
 dotnet add package Gum.Shapes.KNI
 ```
 
-Future versions of Gum may not require adding this package explicitly.
-
 {% hint style="warning" %}
 Apos.Shapes compiles a shader at compile time which is used by the library to draw shapes. As of January 2026 shader compilation is not supported on Linux for KNI. Therefore, libraries must be compiled on Windows.
 
@@ -57,12 +62,16 @@ For more information, see this issue: [https://github.com/vchelaru/Gum/issues/20
 {% endhint %}
 {% endtab %}
 
+{% tab title="FNA" %}
+There is no shape support NuGet package for FNA. An outlined `Circle` or `Rectangle` renders without any package (`StrokeColor`, `StrokeWidth`, and geometry all work), but fill and the richer effects are currently available on MonoGame and KNI only.
+{% endtab %}
+
 {% tab title=".NET MAUI" %}
-No additional setup is required to use shapes in .NET MAUI
+No additional setup is required to use shapes in .NET MAUI. The full fill, outline, gradient, drop shadow, dashed-stroke, and corner-radius surface is supported natively.
 {% endtab %}
 
 {% tab title="raylib" %}
-No additional setup is required to use shapes on raylib. The equivalent fill, stroke, gradient, dashed-stroke, drop-shadow, and corner-radius features are built into `CircleRuntime`, `RectangleRuntime`, and `PolygonRuntime` natively — no extra NuGet package or initialization is needed. The `ArcRuntime` / `ColoredCircleRuntime` / `RoundedRectangleRuntime` classes described on this page do not exist on raylib; use the equivalent base runtime instead.
+No additional setup is required to use shapes on raylib. The full surface — fill, outline (stroke), gradient, drop shadow, dashed stroke, and corner-radius — is built into `CircleRuntime` and `RectangleRuntime` natively; no extra NuGet package or initialization is needed.
 {% endtab %}
 
 {% tab title="Silk.NET" %}
@@ -73,26 +82,18 @@ No additional setup is required to use shapes in Silk.NET.
 ## Setup in Code
 
 {% tabs %}
-{% tab title="MonoGame / KNI" %}
-Whether you are using code-only or the Gum tool, you must add the following line of code in your Initialize method:
-
-If using December 2025 or earlier:
+{% tab title="MonoGame / KNI / FNA" %}
+Whether you are using code-only or the Gum tool, add the following line of code in your Initialize method, after `GumUI.Initialize(...)`:
 
 ```csharp
 // Initialize
 GumUI.Initialize(...);
-// Initialize ShapeRenderer after GumUI:
-ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-```
-
-If using January 2026 or later:
-
-```csharp
-// Initialize
-GumUI.Initialize(...);
-// Initialize ShapeRenderer after GumUI:
 ShapeRenderer.Self.Initialize();
 ```
+
+{% hint style="info" %}
+**December 2025 and earlier** used a different signature that took the graphics device and content manager: `ShapeRenderer.Self.Initialize(GraphicsDevice, Content);`. From January 2026 on, the parameterless `Initialize()` is the form to use.
+{% endhint %}
 {% endtab %}
 
 {% tab title=".NET MAUI" %}
@@ -100,7 +101,7 @@ No additional setup is needed if you have already added SkiaSharp and Gum to you
 {% endtab %}
 
 {% tab title="raylib" %}
-No additional setup is required. The equivalent shape features are built into `CircleRuntime`, `RectangleRuntime`, and `PolygonRuntime` — see those pages for their full property surface. The `ArcRuntime` / `ColoredCircleRuntime` / `RoundedRectangleRuntime` classes do not exist on raylib; use the equivalent base runtime instead.
+No additional setup is required. The full surface — fill, outline (stroke), gradient, drop shadow, dashed stroke, and corner-radius — is built into `CircleRuntime` and `RectangleRuntime` natively — see those pages for their full property surface.
 {% endtab %}
 
 {% tab title="Silk.NET" %}
@@ -129,23 +130,22 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumUI.Initialize(this);
-        // Initialize shape renderer:
-        Renderables.ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
+        // Initialize shape renderer after GumUI:
+        ShapeRenderer.Self.Initialize();
 
-        GumUI.Draw();
-
-        var circle = new ColoredCircleRuntime();
+        var circle = new CircleRuntime();
         circle.AddToRoot();
-        circle.Color = Color.Red;
+        circle.Radius = 50;
+        circle.FillColor = Color.Red;
 
-        var rectangle = new RoundedRectangleRuntime();
+        var rectangle = new RectangleRuntime();
         rectangle.AddToRoot();
         rectangle.X = 100;
         rectangle.CornerRadius = 15;
+        rectangle.FillColor = Color.White; // light the fill up so the gradient draws
         rectangle.UseGradient = true;
         rectangle.Color1 = Color.Blue;
         rectangle.Color2 = Color.Green;
-        base.Initialize();
 
         var arc = new ArcRuntime();
         arc.AddToRoot();
@@ -154,6 +154,8 @@ public class Game1 : Game
         arc.Thickness = 20;
         arc.StartAngle = 0;
         arc.SweepAngle = 270;
+
+        base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)
@@ -173,13 +175,31 @@ public class Game1 : Game
 
 <figure><img src="../../.gitbook/assets/06_05 57 11.png" alt=""><figcaption><p>Shapes rendered in an otherwise empty project</p></figcaption></figure>
 
-## Properties
+## CircleRuntime and RectangleRuntime
 
-All three shapes — `ArcRuntime`, `ColoredCircleRuntime`, and `RoundedRectangleRuntime` — derive from `AposShapeRuntime` and therefore share a common set of properties for color, gradient, drop shadow, and fill/stroke. Each shape additionally exposes a small number of properties unique to its geometry.
+`CircleRuntime` and `RectangleRuntime` are the current shape runtimes. Each has a **fill** and an **outline (stroke)**, plus optional gradient, drop shadow, and dashed-outline effects.
+
+* **Fill** — `FillColor` sets the fill color; `FillRed` / `FillGreen` / `FillBlue` / `FillAlpha` set individual channels (0–255). `IsFilled = false` hides the fill. By default `FillColor` is transparent, so a freshly-constructed shape renders as an outline only — assign a visible `FillColor` to light up the fill.
+* **Outline (stroke)** — `StrokeColor` sets the outline color (with `StrokeRed` / `StrokeGreen` / `StrokeBlue` / `StrokeAlpha` channels); `StrokeWidth` controls thickness and `StrokeWidthUnits` controls how that thickness is interpreted. `StrokeWidth = 0` hides the outline.
+* **Geometry** — `CircleRuntime` is sized by `Width` / `Height` (or `Radius`); `RectangleRuntime` is sized by `Width` / `Height` with an optional uniform or per-corner `CornerRadius`.
+
+The gradient, drop shadow, and dashed-outline properties match the names in the tables below.
+
+{% hint style="info" %}
+On MonoGame, KNI, and FNA the outline and geometry render without the shapes package, but the fill and effects (gradient, drop shadow, dashed stroke, anti-aliasing, `Blend`) only draw once the `Gum.Shapes.<platform>` package is added — otherwise they are silent no-ops. Skia, .NET MAUI, and raylib support the full surface natively.
+{% endhint %}
+
+## Obsolete shape runtimes
+
+{% hint style="info" %}
+**`ColoredCircleRuntime`, `RoundedRectangleRuntime`, `ColoredRectangleRuntime`, and `SolidRectangleRuntime` are obsolete shims being phased out.** Use `CircleRuntime` (for `ColoredCircleRuntime`) and `RectangleRuntime` (for the rectangle variants, with `CornerRadius` covering `RoundedRectangleRuntime`) instead. For the property mapping and the automated code fix, see [Migrating to 2026 June](../../gum-tool/upgrading/migrating-to-2026-june.md). `ArcRuntime` is **not** obsolete — it has no `CircleRuntime` / `RectangleRuntime` equivalent and remains the way to draw a circular arc.
+{% endhint %}
+
+The property tables below document the shared surface of the obsolete shims and `ArcRuntime`, which derive from `AposShapeRuntime`. The equivalent fill and outline properties on `CircleRuntime` / `RectangleRuntime` are described above.
 
 ### Common Properties
 
-These properties are available on every shape.
+These properties are available on every shape that derives from `AposShapeRuntime` (the obsolete shims and `ArcRuntime`).
 
 #### Solid Color
 
@@ -287,7 +307,7 @@ leaf.CustomRadiusBottomLeft  = 12f;
 // leaf.CustomRadiusTopLeft = null;
 ```
 
-Per-corner radii require Apos.Shapes 0.6.9 or later (which Gum.Shapes.MonoGame / Gum.Shapes.KNI depend on as of this release). The Skia backend has supported the same properties for longer.
+Per-corner radii require Apos.Shapes 0.6.9 or later (which `Gum.Shapes.MonoGame` / `Gum.Shapes.KNI` depend on as of this release). The Skia backend has supported the same properties for longer.
 
 The Gum tool's variable grid does not yet expose the four `CustomRadius*` variables — only `CornerRadius`. To use per-corner radii today, set the properties in code on the runtime instance after the visual is created. Tool-side parity is tracked in [issue #2720](https://github.com/vchelaru/Gum/issues/2720).
 
